@@ -34,6 +34,7 @@ from smarter.common.helpers.console_helpers import formatted_text, formatted_tex
 from smarter.lib import json
 
 logger = logging.getLogger(__name__)
+logger_prefix = formatted_text(__name__ + ".settings.base.py")
 
 
 # pylint: disable=W0621
@@ -1468,6 +1469,8 @@ TAGGIT_CASE_INSENSITIVE = os.environ.get("TAGGIT_CASE_INSENSITIVE", "True").lowe
 # 3. for each environment variable that matches a setting name,
 #    cast the value to the same type as the existing setting value
 #    and override the default setting value.
+# 4. Django settings are prefixed with "DJANGO_" and Smarter settings are
+#    prefixed with "SMARTER_"
 ###############################################################################
 
 # step 2: load environment variables from .env file (if present)
@@ -1475,39 +1478,124 @@ load_dotenv()
 
 # step 3: override settings from environment variables
 ASCII_CONTROL_CHAR_REGEX = re.compile(r"[\x00-\x1F\x7F]")
+if any(key.startswith("DJANGO_") for key, _ in os.environ.items()):
+    logger.debug("=" * 80)
+    logger.debug("%s Django settings overrides %s", "=" * (40 - 13), "=" * (40 - 14))
+    logger.debug("=" * 80)
 for key, value in os.environ.items():
+    if not key.startswith("DJANGO_"):
+        continue
+    if key == "DJANGO_SETTINGS_MODULE":
+        continue
+
+    # Remove the "DJANGO_" prefix to get the actual Django setting name
+    key = key.upper().replace("DJANGO_", "")
+
+    # Remove any ASCII control characters from the value to prevent issues with
+    # non-printable characters in environment variables, which can sometimes
+    # occur due to copy-paste errors or other issues. This is a common source
+    # of hard-to-debug problems with environment variable configuration.
     value = ASCII_CONTROL_CHAR_REGEX.sub("", str(value).strip())
-    if key in globals():
-        default_value = globals()[key]
-        cast_value = smart_cast(value, default_value)
+    logger.debug("%s Processing Django setting override: %s", logger_prefix, key)
+
+    # If the environment variable does not match any existing Django setting,
+    # analyze the value passed to attempt to infer the intended data type the value.
+    # This allows for dynamic creation of new settings from environment variables,
+    # which can be useful for custom or third-party app configuration without
+    # needing to modify the settings file.
+    if key not in globals():
+        logger.debug(
+            formatted_text(
+                "%s Environment variable %s does not match any existing Django setting. Inspecting the value to attempt to determine its intended type and usage: %s=%s"
+            ),
+            logger_prefix,
+            key,
+            key,
+            value,
+        )
+        # Type inference and conversion
+        raw_value = value
+        # Integer
+        if str(raw_value).replace(".", "").isdigit():
+            try:
+                cast_value = int(raw_value)
+                logger.debug("%s Inferred type 'int' for %s=%s", logger_prefix, key, cast_value)
+            except ValueError:
+                try:
+                    cast_value = float(raw_value)
+                    logger.debug("%s Inferred type 'float' for %s=%s", logger_prefix, key, cast_value)
+                except ValueError:
+                    cast_value = raw_value
+                    logger.warning(
+                        "%s could not cast as a numeric value. Falling back to string for %s=%s",
+                        logger_prefix,
+                        key,
+                        cast_value,
+                    )
+        # Date (ISO format)
+        elif re.match(r"^\d{4}-\d{2}-\d{2}$", raw_value):
+            from datetime import datetime
+
+            cast_value = datetime.strptime(raw_value, "%Y-%m-%d").date()
+            logger.debug("%s Inferred type 'date' for %s=%s", logger_prefix, key, cast_value)
+        # List (comma-separated)
+        elif "," in raw_value:
+            cast_value = [item.strip() for item in raw_value.split(",")]
+            logger.debug("%s Inferred type 'list' for %s=%s", logger_prefix, key, cast_value)
+        # Dict (JSON)
+        elif raw_value.startswith("{") and raw_value.endswith("}"):
+            try:
+                cast_value = json.loads(raw_value)
+                logger.debug("%s Inferred type 'dict' for %s=%s", logger_prefix, key, cast_value)
+            # pylint: disable=broad-except
+            except Exception:
+                cast_value = raw_value
+        # String (default)
+        else:
+            cast_value = str(raw_value)
+            logger.debug("%s Inferred type 'str' for %s=%s", logger_prefix, key, cast_value)
+
         globals()[key] = cast_value
-        if smarter_settings.settings_output:
-            if key not in [
-                "SECRET_KEY",
-                "SMTP_PASSWORD",
-                "SMTP_USERNAME",
-                "AWS_ACCESS_KEY_ID",
-                "AWS_SECRET_ACCESS_KEY",
-            ]:
-                logger.debug(
-                    formatted_text_green("%s Overriding Django setting from environment variable: %s=%s"),
-                    __name__ + ".settings.base.py",
-                    key,
-                    repr(cast_value),
-                )
-            else:
-                logger.debug(
-                    formatted_text_green("%s Overriding Django setting from environment variable: %s=******"),
-                    __name__ + ".settings.base.py",
-                    key,
-                )
+        logger.info(
+            "%s Created new Django setting from environment variable: %s=%s of Type '%s'",
+            logger_prefix,
+            key,
+            repr(cast_value),
+            type(cast_value),
+        )
+        continue
+    default_value = globals()[key]
+    cast_value = smart_cast(value, default_value)
+    globals()[key] = cast_value
+    if smarter_settings.settings_output:
+        if key not in [
+            "SECRET_KEY",
+            "SMTP_PASSWORD",
+            "SMTP_USERNAME",
+            "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY",
+        ]:
+            logger.info(
+                "%s Overriding Django setting from environment variable: %s=%s",
+                logger_prefix,
+                key,
+                repr(cast_value),
+            )
+        else:
+            logger.info(
+                "%s Overriding Django setting from environment variable: %s=******",
+                logger_prefix,
+                key,
+            )
 
 ###############################################################################
 # Settings diagnostics information for all environments
 ###############################################################################
 if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.debug("=" * 80)
-    logger.debug(formatted_text(__name__))
+    logger.debug("%s Settings diagnostics information %s", "=" * (40 - 17), "=" * (40 - 18))
+    logger.debug("=" * 80)
+    logger.debug("%s Django settings module: %s", logger_prefix, os.environ.get("DJANGO_SETTINGS_MODULE"))
 
     try:
         with open("/proc/uptime", encoding="utf-8") as f:
