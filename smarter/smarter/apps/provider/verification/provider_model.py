@@ -49,7 +49,7 @@ def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_steaming()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.STREAMING
@@ -82,7 +82,7 @@ def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_tools()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TOOLS
@@ -125,7 +125,7 @@ def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
     Verify text input capabilities of the provider model.
     """
     prefix = formatted_text(module_prefix + "verify_text_input()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TEXT_INPUT
@@ -155,7 +155,7 @@ def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_image_input()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.IMAGE_INPUT
@@ -198,7 +198,7 @@ def verify_model_audio_input(provider_model: ProviderModel, **kwargs) -> bool:
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_audio_input()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.AUDIO_INPUT
@@ -237,7 +237,7 @@ def verify_model_fine_tuning(provider_model: ProviderModel, **kwargs) -> bool:
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_fine_tuning()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.FINE_TUNING
@@ -270,7 +270,7 @@ def verify_model_search(provider_model: ProviderModel, **kwargs) -> bool:
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_search()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.SEARCH
@@ -286,7 +286,7 @@ def verify_model_code_interpreter(provider_model: ProviderModel, **kwargs) -> bo
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_code_interpreter()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.CODE_INTERPRETER
@@ -312,7 +312,7 @@ def verify_model_text_to_image(provider_model: ProviderModel, **kwargs) -> bool:
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_text_to_image()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TEXT_TO_IMAGE
@@ -340,7 +340,7 @@ def verify_model_text_to_audio(provider_model: ProviderModel, **kwargs) -> bool:
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_text_to_audio()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TEXT_TO_AUDIO
@@ -370,7 +370,7 @@ def verify_model_text_to_text(provider_model: ProviderModel, **kwargs) -> bool:
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_text_to_text()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TEXT_TO_TEXT
@@ -390,7 +390,7 @@ def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_translation()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.TRANSLATION
@@ -422,7 +422,7 @@ def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
     """
     success = False
     prefix = formatted_text(module_prefix + "verify_summarization()")
-    logger.info("%s for provider model: %s", prefix, provider_model)
+    logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
         provider_model=provider_model, verification_type=ProviderModelVerificationTypes.SUMMARIZATION
@@ -503,7 +503,7 @@ def verify_provider_model(provider_model_id, **kwargs):
         provider_model.is_active = True
         provider_model.save(update_fields=["is_active"])
         model_verification_success.send(sender=ProviderModel, provider_model=provider_model)
-        logger.info("Verification tests succeeded for provider model: %s", provider_model.name)
+        logger.debug("Verification tests succeeded for provider model: %s", provider_model.name)
     else:
         provider_model.is_active = False
         provider_model.save(update_fields=["is_active"])

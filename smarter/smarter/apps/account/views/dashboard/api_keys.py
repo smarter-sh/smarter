@@ -196,12 +196,12 @@ class APIKeyView(APIKeyBase):
         return self._handle_create(request)
 
     def patch(self, request, key_id):
-        logger.info("Received PATCH request: %s", request)
+        logger.debug("Received PATCH request: %s", request)
 
         return self._handle_write_request(request, key_id)
 
     def delete(self, request, key_id):
-        logger.info("Received DELETE request: %s", request)
+        logger.debug("Received DELETE request: %s", request)
         try:
             apikey = SmarterAuthToken.objects.get(key_id=key_id)
         except SmarterAuthToken.DoesNotExist:

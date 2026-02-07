@@ -41,7 +41,7 @@ class AWSAPIGateway(AWSBase):
                 retries={"max_attempts": SettingsDefaults.AWS_APIGATEWAY_MAX_ATTEMPTS},
             )
             self.client = self.aws_session.client(self._client_type, config=config)
-            logger.info("%s.client() AWS API Gateway client created successfully", self.formatted_class_name)
+            logger.debug("%s.client() AWS API Gateway client created successfully", self.formatted_class_name)
         except botocore.exceptions.BotoCoreError as e:
             logger.error("%s.client() Failed to create AWS API Gateway client: %s", self.formatted_class_name, str(e))
             return None

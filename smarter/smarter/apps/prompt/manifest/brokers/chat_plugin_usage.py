@@ -234,7 +234,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
             except Chat.DoesNotExist:
                 pass
             plugin_usages = ChatPluginUsage.objects.filter(chat=chat).order_by("created_at")[:MAX_RESULTS]
-            logger.info(
+            logger.debug(
                 "SAMChatPluginUsageBroker().get() found %s plugin_usage records for chat session %s in account %s",
                 plugin_usages.count(),
                 chat.session_key,
