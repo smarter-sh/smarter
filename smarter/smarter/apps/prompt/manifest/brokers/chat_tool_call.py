@@ -233,7 +233,7 @@ class SAMChatToolCallBroker(AbstractBroker):
             except Chat.DoesNotExist:
                 pass
             tool_calls = ChatToolCall.objects.filter(chat=chat).order_by("-created_at")[:MAX_RESULTS]
-            logger.info(
+            logger.debug(
                 "SAMChatBroker().get() found %s tool_call records for chat session %s in account %s",
                 tool_calls.count(),
                 chat.session_key,

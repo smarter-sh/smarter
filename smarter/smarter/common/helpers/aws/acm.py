@@ -91,9 +91,9 @@ class AWSCertificateManager(AWSBase):
                     if domain_validation_options:
                         resource_record = domain_validation_options[0].get("ResourceRecord")
                         if resource_record:
-                            logger.info("Found DNS records for ACM certificate ARN: %s", certificate_arn)
+                            logger.debug("Found DNS records for ACM certificate ARN: %s", certificate_arn)
                             return certificate_detail
-                logger.info("Waiting for DNS records to be generated for ACM certificate ARN: %s", certificate_arn)
+                logger.debug("Waiting for DNS records to be generated for ACM certificate ARN: %s", certificate_arn)
                 attempts += 1
                 time.sleep(sleep_interval)
             except self.client.exceptions.ResourceNotFoundException as e:

@@ -231,7 +231,7 @@ class SAMChatBroker(AbstractBroker):
         chats = chats or Chat.objects.none()
         chats = chats.order_by("-created_at")[:MAX_RESULTS]
 
-        logger.info("SAMChatBroker().get() found %s Chats for account %s", chats.count(), self.account)
+        logger.debug("SAMChatBroker().get() found %s Chats for account %s", chats.count(), self.account)
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Chat
         for chat in chats:

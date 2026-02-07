@@ -1489,14 +1489,14 @@ for key, value in os.environ.items():
                 "AWS_ACCESS_KEY_ID",
                 "AWS_SECRET_ACCESS_KEY",
             ]:
-                logger.info(
+                logger.debug(
                     formatted_text_green("%s Overriding Django setting from environment variable: %s=%s"),
                     __name__ + ".settings.base.py",
                     key,
                     repr(cast_value),
                 )
             else:
-                logger.info(
+                logger.debug(
                     formatted_text_green("%s Overriding Django setting from environment variable: %s=******"),
                     __name__ + ".settings.base.py",
                     key,
@@ -1506,14 +1506,14 @@ for key, value in os.environ.items():
 # Settings diagnostics information for all environments
 ###############################################################################
 if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
-    logger.info("=" * 80)
-    logger.info(formatted_text(__name__))
+    logger.debug("=" * 80)
+    logger.debug(formatted_text(__name__))
 
     try:
         with open("/proc/uptime", encoding="utf-8") as f:
             uptime_seconds = float(f.readline().split()[0])
             uptime_str = time.strftime("%H:%M:%S", time.gmtime(uptime_seconds))
-            logger.info("Container uptime: %s", uptime_str)
+            logger.debug("Container uptime: %s", uptime_str)
     except FileNotFoundError:
         logger.warning("Container uptime not available")
     except OSError as e:
@@ -1552,10 +1552,10 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
             mem_kib = int(mem_total_line.split()[1])
             mem_limit = mem_kib / 1024 / 1024
 
-        logger.info("CPU limit: %s cores", cpu_limit)
+        logger.debug("CPU limit: %s cores", cpu_limit)
         if cpu_limit < 2:
             logger.warning("Recommended minimum CPU limit is 2. Detected: %s cores", cpu_limit)
-        logger.info("Memory limit: %.2f GiB", mem_limit)
+        logger.debug("Memory limit: %.2f GiB", mem_limit)
         if mem_limit < 4.0:
             logger.warning("Recommended minimum memory limit is 4 GiB. Detected: %.2f GiB", mem_limit)
     except (OSError, subprocess.CalledProcessError) as e:
@@ -1567,29 +1567,29 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
         debian_version = "not found"
         with open("/etc/debian_version", encoding="utf-8") as f:
             debian_version = f.read().strip()
-        logger.info("Debian v%s %s", debian_version, os.uname().version)
+        logger.debug("Debian v%s %s", debian_version, os.uname().version)
     except FileNotFoundError:
         logger.error("Debian version file not found")
     except OSError as e:
         logger.error("Error reading Debian version: %s", e)
 
-    logger.info("Python v%s", sys.version)
+    logger.debug("Python v%s", sys.version)
     from django import get_version
 
-    logger.info("Django v%s", get_version())
-    logger.info("Smarter v%s", smarter_version)
-    logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)
-    logger.info("Storages backend: %s", STORAGES["default"]["BACKEND"])
+    logger.debug("Django v%s", get_version())
+    logger.debug("Smarter v%s", smarter_version)
+    logger.debug("Default file storage: %s", DEFAULT_FILE_STORAGE)
+    logger.debug("Storages backend: %s", STORAGES["default"]["BACKEND"])
 
     if smarter_settings.smtp_is_configured:
-        logger.info("SMTP server configured: %s:%s (SSL=%s, TLS=%s)", SMTP_HOST, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS)
+        logger.debug("SMTP server configured: %s:%s (SSL=%s, TLS=%s)", SMTP_HOST, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS)
     else:
         logger.warning("SMTP server not configured")
     if smarter_settings.aws_is_configured:
-        logger.info("AWS credentials detected")
+        logger.debug("AWS credentials detected")
     else:
         logger.warning("AWS credentials not found.")
-    logger.info("=" * 80)
+    logger.debug("=" * 80)
 
 __all__ = [
     name

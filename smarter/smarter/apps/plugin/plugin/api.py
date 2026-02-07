@@ -275,14 +275,14 @@ class ApiPlugin(PluginBase):
         # to conform to openai's function calling schema.
         recasted_parameters = {"type": "object", "properties": {}, "required": [], "additionalProperties": False}
         parameters = self.manifest.spec.apiData.parameters if self.manifest and self.manifest.spec else None
-        logger.info("%s.plugin_data_django_model() recasting parameters: %s", self.formatted_class_name, parameters)
+        logger.debug("%s.plugin_data_django_model() recasting parameters: %s", self.formatted_class_name, parameters)
         if isinstance(parameters, list):
             for parameter in parameters:
                 if isinstance(parameter, Parameter):
                     # if the parameter is a Pydantic model, we need to convert it to a
                     # standard json dict.
                     parameter = parameter.model_dump()
-                logger.info(
+                logger.debug(
                     "%s.plugin_data_django_model() processing parameter: %s %s",
                     self.formatted_class_name,
                     type(parameter),
@@ -456,7 +456,7 @@ class ApiPlugin(PluginBase):
         """
         super().create()
 
-        logger.info("%s.create() called.", self.formatted_class_name)
+        logger.debug("%s.create() called.", self.formatted_class_name)
 
     def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[Union[dict, list, str]]:
         """

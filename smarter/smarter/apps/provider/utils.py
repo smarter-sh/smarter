@@ -47,11 +47,11 @@ def get_provider_verification_for_type(
     Get the provider verification for a specific type.
     """
     prefix = formatted_text(module_prefix + "get_provider_verification_for_type()")
-    logger.info("%s Getting provider verification for %s of type %s", prefix, provider.name, verification_type)
+    logger.debug("%s Getting provider verification for %s of type %s", prefix, provider.name, verification_type)
 
     instance, _ = ProviderVerification.objects.get_or_create(provider=provider, verification_type=verification_type)
     if instance.is_valid:
-        logger.info("%s Provider verification for %s is still valid %s", prefix, provider, instance.updated_at)
+        logger.debug("%s Provider verification for %s is still valid %s", prefix, provider, instance.updated_at)
     return instance
 
 
@@ -62,13 +62,13 @@ def get_model_verification_for_type(
     Get the model verification for a specific type.
     """
     prefix = formatted_text(module_prefix + "get_model_verification_for_type()")
-    logger.info("%s Getting model verification for %s of type %s", prefix, provider_model.name, verification_type)
+    logger.debug("%s Getting model verification for %s of type %s", prefix, provider_model.name, verification_type)
 
     instance, _ = ProviderModelVerification.objects.get_or_create(
         provider_model=provider_model, verification_type=verification_type
     )
     if instance.is_valid:
-        logger.info("%s Streaming verification for %s is still valid %s", prefix, provider_model, instance.updated_at)
+        logger.debug("%s Streaming verification for %s is still valid %s", prefix, provider_model, instance.updated_at)
     return instance
 
 
@@ -79,7 +79,7 @@ def set_model_verification(
     Set the model verification status.
     """
     prefix = formatted_text(module_prefix + "set_model_verification()")
-    logger.info(
+    logger.debug(
         "%s Setting model verification for %s to %s",
         prefix,
         provider_model_verification.provider_model.name,
@@ -103,7 +103,7 @@ def set_provider_verification(provider_verification: ProviderVerification, is_su
     Set the provider verification status.
     """
     prefix = formatted_text(module_prefix + "set_provider_verification()")
-    logger.info(
+    logger.debug(
         "%s Setting provider verification for %s to %s",
         prefix,
         provider_verification.provider.name,
@@ -123,7 +123,7 @@ def test_web_page(url: str, test_str: str) -> bool:
     Test a web page to see if it is valid.
     """
     prefix = formatted_text(module_prefix + "test_web_page()")
-    logger.info("%s Testing web page %s", prefix, url)
+    logger.debug("%s Testing web page %s", prefix, url)
 
     try:
         response = requests.get(url, timeout=10)
@@ -132,7 +132,7 @@ def test_web_page(url: str, test_str: str) -> bool:
             and ("<html" in response.text.lower() or "<!doctype html" in response.text.lower())
             and test_str.lower() in response.text.lower()
         ):
-            logger.info("%s Web page test succeeded.", prefix)
+            logger.debug("%s Web page test succeeded.", prefix)
             return True
         else:
             logger.error("%s Web page test failed: Non-200 status or missing documentation HTML.", prefix)
