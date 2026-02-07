@@ -144,7 +144,6 @@ python-init:
 	npm install && \
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
-	PIP_CACHE_DIR=.pypi_cache $(PIP) install --upgrade pip && \
 	make python-requirements && \
 	PIP_CACHE_DIR=.pypi_cache $(PIP) install -r smarter/requirements/local.txt
 
@@ -158,7 +157,8 @@ python-clean:
 	find ./smarter/ -name __pycache__ -type d -exec rm -rf {} +
 
 python-requirements:
-	pip install --upgrade pip setuptools wheel pip-tools
+	pip install pip==25.3 setuptools wheel pip-tools
+	pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
 	pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
 	pip-compile smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
 

@@ -8,7 +8,7 @@ import requests
 from celery import __version__ as celery_version
 from django import get_version as get_django_version
 from django.http import JsonResponse
-from google.generativeai import __version__ as google_genai_version
+from google.genai import __version__ as google_genai_version
 from Levenshtein import __version__ as levenshtein_version
 from openai.version import VERSION as openai_version
 from pandas.util._print_versions import show_versions as pandas_version
