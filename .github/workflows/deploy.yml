@@ -65,6 +65,12 @@ jobs:
             exit 1
           fi
 
+      - name: Get Version
+        id: get_version
+        run: |
+          VERSION=$(cat smarter/smarter/__version__.py | grep "__version__" | head -n 1 | sed 's/__version__ = \"\(.*\)\"/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Deploy
         uses: ./.github/actions/deploy
         with:
@@ -108,4 +114,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
           subject: "GHA - Deployed ${{ env.ENVIRONMENT }}.platform.smarter.sh"
-          body: "${{ env.ENVIRONMENT }}.platform.smarter.sh was deployed successfully."
+          body: "${{ env.ENVIRONMENT }}.platform.smarter.sh version ${{ env.VERSION }} was deployed successfully."
+        env:
+          VERSION: ${{ env.VERSION }}
