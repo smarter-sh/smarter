@@ -120,7 +120,7 @@ Example::
     chatbot_deploy_status_changed.send(sender=self.__class__, chatbot=self)
 
 """
-chatbot_undeployed = Signal()
+chatbot_undeploy = Signal()
 
 # tasks
 pre_verify_certificate = Signal()
