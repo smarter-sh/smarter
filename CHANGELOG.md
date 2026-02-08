@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.122](https://github.com/smarter-sh/smarter/compare/v0.13.121...v0.13.122) (2026-02-08)
+
+### Bug Fixes
+
+* gemini flash 1.5 is deprecated ([a39911d](https://github.com/smarter-sh/smarter/commit/a39911df73e25edd8c16dbc1c651e8fe0dc7d6a3))
+* swap deprecated google.generativeai for google.genai ([1745dff](https://github.com/smarter-sh/smarter/commit/1745dffa495eafb354ddf25da305ddfb4a36403b))
+* update default model ([0c27533](https://github.com/smarter-sh/smarter/commit/0c275334e64630b77d8fff6a28e95586dba75122))
+* update googleai model family ([2dd21a2](https://github.com/smarter-sh/smarter/commit/2dd21a2644af117ec493c5cc8772e28761b912c6))
+
 ## [0.13.121](https://github.com/smarter-sh/smarter/compare/v0.13.120...v0.13.121) (2026-02-07)
 
 ### Bug Fixes
