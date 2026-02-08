@@ -147,16 +147,18 @@ def verify_certificate(certificate_arn: str):
     if not isinstance(aws_helper.acm, AWSCertificateManager):
         return False
 
-    pre_verify_certificate.send(sender=verify_certificate, certificate_arn=certificate_arn)
+    task_id = verify_certificate.request.id
+
+    pre_verify_certificate.send(sender=verify_certificate, certificate_arn=certificate_arn, task_id=task_id)
     prefix = logger_prefix + ".verify_certificate()"
-    logger.info("%s - %s task_id: %s", prefix, certificate_arn, verify_certificate.request.id)
+    logger.info("%s - %s task_id: %s", prefix, certificate_arn, task_id)
 
     verified = aws_helper.acm.verify_certificate(certificate_arn=certificate_arn)
     if verified:
-        logger.info("%s - certificate %s verified.", prefix, certificate_arn)
+        logger.info("%s - certificate %s verified. task_id: %s", prefix, certificate_arn, task_id)
     else:
-        logger.error("%s - certificate %s verification failed.", prefix, certificate_arn)
-    post_verify_certificate.send(sender=verify_certificate, certificate_arn=certificate_arn)
+        logger.error("%s - certificate %s verification failed. task_id: %s", prefix, certificate_arn, task_id)
+    post_verify_certificate.send(sender=verify_certificate, certificate_arn=certificate_arn, task_id=task_id)
 
 
 @app.task(
@@ -168,8 +170,10 @@ def verify_certificate(certificate_arn: str):
 def create_chatbot_request(chatbot_id: int, request_data: dict):
     """Create a ChatBot request record."""
 
-    pre_create_chatbot_request.send(sender=create_chatbot_request, chatbot_id=chatbot_id, request_data=request_data)
     task_id = create_chatbot_request.request.id
+    pre_create_chatbot_request.send(
+        sender=create_chatbot_request, chatbot_id=chatbot_id, request_data=request_data, task_id=task_id
+    )
     logger.info(
         "%s - chatbot %s",
         logger_prefix + f".{create_chatbot_request.__name__}() task_id: %s",
@@ -179,7 +183,9 @@ def create_chatbot_request(chatbot_id: int, request_data: dict):
     chatbot = ChatBot.objects.get(id=chatbot_id)
     session_key = request_data.get(SMARTER_CHAT_SESSION_KEY_NAME)
     ChatBotRequests.objects.create(chatbot=chatbot, request=request_data, session_key=session_key)
-    post_create_chatbot_request.send(sender=create_chatbot_request, chatbot_id=chatbot_id, request_data=request_data)
+    post_create_chatbot_request.send(
+        sender=create_chatbot_request, chatbot_id=chatbot_id, request_data=request_data, task_id=task_id
+    )
 
 
 @app.task(
@@ -200,12 +206,14 @@ def register_custom_domain(account_id: int, domain_name: str):
     if not isinstance(aws_helper.route53, AWSRoute53):
         return False
 
-    pre_register_custom_domain.send(sender=register_custom_domain, account_id=account_id, domain_name=domain_name)
+    task_id = register_custom_domain.request.id
+    pre_register_custom_domain.send(
+        sender=register_custom_domain, account_id=account_id, domain_name=domain_name, task_id=task_id
+    )
     account = Account.objects.get(id=account_id)
     admin = get_cached_admin_user_for_account(account=account)
     admin_user_profile = get_cached_user_profile(user=admin, account=account)  # type: ignore[assignment]
     domain_name = aws_helper.aws.domain_resolver(domain_name)
-    task_id = register_custom_domain.request.id
 
     logger.info(
         "%s - Account %s %s attempting to register custom domain %s",
@@ -224,17 +232,42 @@ def register_custom_domain(account_id: int, domain_name: str):
             raise AWSACMVerificationNotFound
 
         # we found the custom domain, and its certificate is verified
-        post_register_custom_domain.send(sender=register_custom_domain, account_id=account_id, domain_name=domain_name)
+        logger.debug(
+            "%s - custom domain %s already exists for account %s and certificate is verified. Nothing to do. task_id: %s",
+            logger_prefix,
+            domain_name,
+            account.company_name,
+            task_id,
+        )
+        post_register_custom_domain.send(
+            sender=register_custom_domain, account_id=account_id, domain_name=domain_name, task_id=task_id
+        )
         return
     except ChatBotCustomDomain.DoesNotExist:
         # the custom domain doesn't exist, so we need to create it
-        pass
+        logger.debug(
+            "%s - custom domain %s not found for account %s. Proceeding to create it. task_id: %s",
+            logger_prefix,
+            domain_name,
+            account.company_name,
+            task_id,
+        )
     except AWSACMCertificateNotFound:
         # the certificate was not found, so we need to create it
-        pass
+        logger.debug(
+            "%s - certificate for domain %s not found. Proceeding to create it. task_id: %s",
+            logger_prefix,
+            domain_name,
+            task_id,
+        )
     except AWSACMVerificationNotFound:
         # the certificate has not been verified, so we need to verify it
-        pass
+        logger.debug(
+            "%s - certificate for domain %s is not verified. Proceeding to verify it. task_id: %s",
+            logger_prefix,
+            domain_name,
+            task_id,
+        )
 
     try:
         # verify that the domain is available to register.
@@ -244,7 +277,7 @@ def register_custom_domain(account_id: int, domain_name: str):
         raise ChatBotCustomDomainExists(err)
     except ChatBotCustomDomain.DoesNotExist:
         # domain was not previously registered by another account, so we can continue.
-        pass
+        logger.debug("%s - domain %s is available to register. task_id: %s", logger_prefix, domain_name, task_id)
 
     # create a Hosted Zone for the custom domain
 
@@ -262,7 +295,9 @@ def register_custom_domain(account_id: int, domain_name: str):
     # create a DNS record for the certificate and wait for it to be verified.
     aws_helper.acm.get_or_create_certificate_dns_record(certificate_arn=certificate_arn)
     verify_certificate.delay(certificate_arn=certificate_arn)
-    post_register_custom_domain.send(sender=register_custom_domain, account_id=account_id, domain_name=domain_name)
+    post_register_custom_domain.send(
+        sender=register_custom_domain, account_id=account_id, domain_name=domain_name, task_id=task_id
+    )
 
 
 @app.task(
@@ -311,6 +346,7 @@ def create_custom_domain_dns_record(
         record_type=record_type,
         record_value=record_value,
         record_ttl=record_ttl,
+        task_id=task_id,
     )
     try:
         custom_domain = ChatBotCustomDomain.objects.get(id=chatbot_custom_domain_id)
@@ -354,6 +390,7 @@ def create_custom_domain_dns_record(
         record_type=record_type,
         record_value=record_value,
         record_ttl=record_ttl,
+        task_id=task_id,
     )
 
 
@@ -392,7 +429,7 @@ def verify_custom_domain(
         task_id,
     )
 
-    pre_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id)
+    pre_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
 
     HOURS = 24
     hosted_zone = aws_helper.route53.get_hosted_zone_by_id(hosted_zone_id=hosted_zone_id)
@@ -474,7 +511,9 @@ def verify_custom_domain(
                 except ChatBotCustomDomain.DoesNotExist:
                     pass
 
-                post_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id)
+                post_verify_custom_domain.send(
+                    sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id
+                )
                 return True
 
         # If we get here, then the hosted zone is not verified
@@ -495,7 +534,7 @@ def verify_custom_domain(
     AccountContact.send_email_to_account(account=account, subject=subject, body=body)
     msg = f"{fn_name} - Domain verification failed for domain {domain_name} for account {account.company_name} {account.account_number} task_id: {task_id}"
     logger.error(msg)
-    post_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id)
+    post_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
     return False
 
 
@@ -511,6 +550,7 @@ def verify_domain(
     chatbot: Optional[ChatBot] = None,
     activate_chatbot: bool = False,
     hosted_zone_id: Optional[str] = None,
+    task_id: Optional[str] = None,
 ) -> bool:
     """
     Verify that an Internet domain name resolves to NS records.
@@ -526,17 +566,18 @@ def verify_domain(
         return False
 
     fn_name = f"{logger_prefix}.verify_domain()"
-    task_id = verify_domain.request.id
+    task_id = verify_domain.request.id or task_id
     logger.info("%s - verifying domain %s task_id: %s", fn_name, domain_name, task_id)
 
-    pre_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
-    chatbot_dns_verification_initiated.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
+    pre_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id)
+    chatbot_dns_verification_initiated.send(
+        sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
+    )
 
     domain_name = aws_helper.aws.domain_resolver(domain_name)
     sleep_interval = 300
     max_attempts = 48
 
-    logger.info("%s - %s", fn_name, domain_name)
     for i in range(max_attempts):
         logger.info(
             "%s - Attempt %s of %s to verify domain %s task_id: %s",
@@ -575,42 +616,68 @@ def verify_domain(
                     domain_name,
                     task_id,
                 )
-                post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
+                if chatbot:
+                    chatbot_dns_failed.send(
+                        sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
+                    )
+                    chatbot.dns_verification_status = ChatBot.DNS_VERIFICATION_FAILED
+                    chatbot.save(asynchronous=True)
+                post_verify_domain.send(
+                    sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
+                )
                 return False
 
             # 2. verify that the domain resolves to the correct NS records
             dns_ns_records = {rdata.to_text() for rdata in dns.resolver.query(domain_name)}
-            logger.info("%s successfully resolved domain %s using NS records %s", fn_name, domain_name, dns_ns_records)
+            logger.info(
+                "%s successfully resolved domain %s using NS records %s task_id: %s",
+                fn_name,
+                domain_name,
+                dns_ns_records,
+                task_id,
+            )
+            chatbot_dns_verified.send(
+                sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
+            )
 
             if not activate_chatbot:
-                post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
+                post_verify_domain.send(
+                    sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
+                )
                 return True
 
             # 3. if this domain is associated with a ChatBot then we should ensure that it is activated
-            if chatbot:
+            if chatbot and not chatbot.deployed:
                 chatbot.deployed = True
                 chatbot.save(asynchronous=True)
                 logger.info(
                     "%s Chatbot %s has been deployed to %s task_id: %s", fn_name, chatbot.name, domain_name, task_id
                 )
 
-            post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
-            chatbot_dns_verified.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
+            post_verify_domain.send(
+                sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
+            )
             return True
         except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
             logger.warning("%s unable to resolve domain %s task_id: %s", fn_name, domain_name, task_id)
+            chatbot_dns_failed.send(
+                sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
+            )
             continue
         except dns.resolver.Timeout:
             logger.warning(
                 "%s timeout exceeded while querying the domain %s task_id: %s", fn_name, domain_name, task_id
+            )
+            chatbot_dns_failed.send(
+                sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
             )
             continue
 
     logger.error(
         "%s unable to verify domain %s after %s attempts task_id: %s", fn_name, domain_name, max_attempts, task_id
     )
-    post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
-    chatbot_dns_failed.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
+    post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id)
+    chatbot_dns_failed.send(sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id)
     return False
 
 
@@ -621,12 +688,14 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
     if not aws_helper.route53:
         return
 
-    pre_destroy_domain_A_record.send(sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain)
+    task_id = destroy_domain_A_record.request.id
+    pre_destroy_domain_A_record.send(
+        sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain, task_id=task_id
+    )
 
     fn_name = logger_prefix + ".destroy_domain_A_record()"
     hostname = aws_helper.aws.domain_resolver(hostname)
     api_host_domain = aws_helper.aws.domain_resolver(api_host_domain)
-    task_id = destroy_domain_A_record.request.id
     logger.info("%s - %s task_id: %s", fn_name, hostname, task_id)
 
     # locate the aws route53 hosted zone for the customer API domain
@@ -672,7 +741,7 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
         record_resource_records=record_resource_records,
     )
     post_destroy_domain_A_record.send(
-        sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain
+        sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain, task_id=task_id
     )
 
 
@@ -706,7 +775,10 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     activate = False
 
     pre_deploy_default_api.send(
-        sender=deploy_default_api, chatbot_id=chatbot_id, with_domain_verification=with_domain_verification
+        sender=deploy_default_api,
+        chatbot_id=chatbot_id,
+        with_domain_verification=with_domain_verification,
+        task_id=task_id,
     )
 
     try:
@@ -715,7 +787,10 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         logger.error("%s Chatbot %s not found. Nothing to do, returning. task_id: %s", fn_name, chatbot_id, task_id)
 
         chatbot_deploy_failed.send(
-            sender=deploy_default_api, chatbot_id=chatbot_id, with_domain_verification=with_domain_verification
+            sender=deploy_default_api,
+            chatbot_id=chatbot_id,
+            with_domain_verification=with_domain_verification,
+            task_id=task_id,
         )
         return None
 
@@ -723,6 +798,12 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     if not aws_helper.route53:
         chatbot_deploy_failed.send(
             sender=deploy_default_api, chatbot_id=chatbot_id, with_domain_verification=with_domain_verification
+        )
+        post_deploy_default_api.send(
+            sender=deploy_default_api,
+            chatbot_id=chatbot_id,
+            with_domain_verification=with_domain_verification,
+            task_id=task_id,
         )
         return None
 
@@ -742,14 +823,27 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     if smarter_settings.chatbot_tasks_create_dns_record and with_domain_verification:
         chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
         chatbot.save(asynchronous=True)
-        activate = verify_domain(domain_name, record_type="A", chatbot=chatbot, activate_chatbot=True)
+        activate = verify_domain(domain_name, record_type="A", chatbot=chatbot, activate_chatbot=True, task_id=task_id)
         if not activate:
             chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.FAILED
             chatbot.save(asynchronous=True)
+            chatbot_deploy_failed.send(
+                sender=deploy_default_api,
+                chatbot_id=chatbot_id,
+                with_domain_verification=with_domain_verification,
+                task_id=task_id,
+            )
+            post_deploy_default_api.send(
+                sender=deploy_default_api,
+                chatbot_id=chatbot_id,
+                with_domain_verification=with_domain_verification,
+                task_id=task_id,
+            )
+            return
     else:
         activate = True
 
-    if activate and not chatbot.deployed:
+    if activate:
         chatbot.deployed = True
         chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFIED
         chatbot.save(asynchronous=True)
@@ -773,6 +867,19 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
             chatbot.name,
             task_id,
         )
+        chatbot_deploy_failed.send(
+            sender=deploy_default_api,
+            chatbot_id=chatbot_id,
+            with_domain_verification=with_domain_verification,
+            task_id=task_id,
+        )
+        post_deploy_default_api.send(
+            sender=deploy_default_api,
+            chatbot_id=chatbot_id,
+            with_domain_verification=with_domain_verification,
+            task_id=task_id,
+        )
+        return
 
     # if we're running in Kubernetes then we should create an ingress manifest
     # for the customer API domain so that we can issue a certificate for it.
@@ -780,7 +887,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         smarter_settings.chatbot_tasks_create_ingress_manifest
         and smarter_settings.environment != SmarterEnvironments.LOCAL
     ):
-        logger.info("%s creating ingress manifest for %s task_id: %s", fn_name, domain_name, task_id)
+        logger.info("%s verifying/creating ingress manifest for %s task_id: %s", fn_name, domain_name, task_id)
         ingress_values = {
             "cluster_issuer": smarter_settings.environment_api_domain,
             "environment_namespace": smarter_settings.environment_namespace,
@@ -833,13 +940,27 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
             )
             chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.FAILED
             chatbot.save(asynchronous=True)
+            chatbot_deploy_failed.send(
+                sender=deploy_default_api,
+                chatbot_id=chatbot_id,
+                with_domain_verification=with_domain_verification,
+                task_id=task_id,
+            )
+            post_deploy_default_api.send(
+                sender=deploy_default_api,
+                chatbot_id=chatbot_id,
+                with_domain_verification=with_domain_verification,
+                task_id=task_id,
+            )
+            return
 
         post_deploy_default_api.send(
             sender=deploy_default_api,
             chatbot_id=chatbot_id,
             with_domain_verification=with_domain_verification,
+            task_id=task_id,
         )
-        chatbot_deployed.send(sender=deploy_default_api, chatbot=chatbot)
+        chatbot_deployed.send(sender=deploy_default_api, chatbot=chatbot, task_id=task_id)
 
 
 @app.task(
@@ -853,9 +974,9 @@ def undeploy_default_api(chatbot_id: int):
     if not is_taskable():
         return
 
-    pre_undeploy_default_api.send(sender=undeploy_default_api, chatbot_id=chatbot_id)
-    prefix = logger_prefix + f".{undeploy_default_api.__name__}()"
     task_id = undeploy_default_api.request.id
+    pre_undeploy_default_api.send(sender=undeploy_default_api, chatbot_id=chatbot_id, task_id=task_id)
+    prefix = logger_prefix + f".{undeploy_default_api.__name__}()"
     logger.info("%s - chatbot %s task_id: %s", prefix, chatbot_id, task_id)
 
     chatbot: ChatBot
@@ -869,7 +990,7 @@ def undeploy_default_api(chatbot_id: int):
     chatbot.deployed = False
     chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.NOT_VERIFIED
     chatbot.save(asynchronous=True)
-    post_undeploy_default_api.send(sender=undeploy_default_api, chatbot_id=chatbot_id)
+    post_undeploy_default_api.send(sender=undeploy_default_api, chatbot_id=chatbot_id, task_id=task_id)
 
 
 @app.task(
@@ -887,10 +1008,12 @@ def delete_default_api(url: str, account_number: str, name: str):
     if not is_taskable():
         return
 
-    pre_delete_default_api.send(sender=delete_default_api, url=url, account_number=account_number, name=name)
+    task_id = delete_default_api.request.id
+    pre_delete_default_api.send(
+        sender=delete_default_api, url=url, account_number=account_number, name=name, task_id=task_id
+    )
 
     prefix = logger_prefix + f".{delete_default_api.__name__}()"
-    task_id = delete_default_api.request.id
     logger.info(
         "%s - chatbot %s account_number: %s name: %s task_id: %s",
         prefix,
@@ -928,8 +1051,9 @@ def delete_default_api(url: str, account_number: str, name: str):
             name,
             task_id,
         )
-
-    post_delete_default_api.send(sender=delete_default_api, url=url, account_number=account_number, name=name)
+    post_delete_default_api.send(
+        sender=delete_default_api, url=url, account_number=account_number, name=name, task_id=task_id
+    )
 
 
 @app.task(
@@ -956,7 +1080,7 @@ def deploy_custom_api(chatbot_id: int):
             chatbot.name,
             task_id,
         )
-        post_deploy_custom_api.send(sender=deploy_custom_api, chatbot_id=chatbot_id)
+        post_deploy_custom_api.send(sender=deploy_custom_api, chatbot_id=chatbot_id, task_id=task_id)
         return
 
     if not is_taskable():
@@ -967,4 +1091,4 @@ def deploy_custom_api(chatbot_id: int):
     # verify the hosted zone of the custom domain
     hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name)  # type: ignore[union-attr]
     verify_custom_domain(hosted_zone_id)
-    post_deploy_custom_api.send(sender=deploy_custom_api, chatbot_id=chatbot_id)
+    post_deploy_custom_api.send(sender=deploy_custom_api, chatbot_id=chatbot_id, task_id=task_id)
