@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.123](https://github.com/smarter-sh/smarter/compare/v0.13.122...v0.13.123) (2026-02-08)
+
+### Bug Fixes
+
+* add Celery task id to all asyncronous task log entries ([65bc036](https://github.com/smarter-sh/smarter/commit/65bc0368831899c21b91b2b83ebe4a2b49d991e9))
+* resolve django.template.response.ContentNotRenderedError: The response content must be rendered before it can be accessed. ([6c63699](https://github.com/smarter-sh/smarter/commit/6c636991db3e0efdd8e6826182687264d9fe0942))
+
 ## [0.13.122](https://github.com/smarter-sh/smarter/compare/v0.13.121...v0.13.122) (2026-02-08)
 
 ### Bug Fixes
