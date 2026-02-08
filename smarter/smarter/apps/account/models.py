@@ -552,13 +552,24 @@ class AccountContact(TimestampedModel):
             )
 
         """
+        prefix = formatted_text(__name__ + ".AccountContact.send_email_to_primary_contact()")
         contact = cls.get_primary_contact(account)
+        logger.debug(
+            "%s.send_email_to_primary_contact() Attempting to send email to primary contact for account %s. Found contact: %s, subject: %s, body: %s, html: %s, from_email: %s",
+            prefix,
+            account,
+            contact,
+            subject,
+            body,
+            html,
+            from_email,
+        )
         if contact:
             contact.send_email(subject=subject, body=body, html=html, from_email=from_email)
         else:
             logger.error(
                 "%s.send_email_to_primary_contact() No primary contact found for account %s",
-                formatted_text(__name__ + ".AccountContact()"),
+                prefix,
                 account,
             )
 
@@ -588,6 +599,8 @@ class AccountContact(TimestampedModel):
             contact.save()  # Ensures uniqueness and sends welcome email if needed
 
         """
+        prefix = formatted_text(__name__ + ".AccountContact.save()")
+        logger.debug("%s called with args: %s, kwargs: %s", prefix, args, kwargs)
         if self.is_primary:
             # Check for another primary contact for this account (excluding self if updating)
             qs = AccountContact.objects.filter(account=self.account, is_primary=True)

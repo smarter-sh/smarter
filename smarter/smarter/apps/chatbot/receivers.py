@@ -37,7 +37,7 @@ from .signals import (
     chatbot_dns_verification_initiated,
     chatbot_dns_verification_status_changed,
     chatbot_dns_verified,
-    chatbot_undeployed,
+    chatbot_undeploy,
     post_create_chatbot_request,
     post_create_custom_domain_dns_record,
     post_delete_default_api,
@@ -106,8 +106,6 @@ def handle_chatbot_deploy_failed(sender, **kwargs):
     prefix = formatted_text(f"{module_prefix}.chatbot_deploy_failed()")
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.error("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
-    if chatbot:
-        undeploy_default_api.delay(chatbot_id=chatbot.id)
 
 
 @receiver(post_save, sender=ChatBot)
@@ -235,13 +233,12 @@ def handle_chatbot_deploy_status_changed(sender, **kwargs):
     )
 
 
-@receiver(chatbot_undeployed, dispatch_uid="chatbot_undeployed")
-def handle_chatbot_undeployed(sender, **kwargs):
-    """Handle chatbot_undeployed signal."""
-    prefix = formatted_text(f"{module_prefix}.chatbot_undeployed()")
+@receiver(chatbot_undeploy, dispatch_uid="chatbot_undeploy")
+def handle_chatbot_undeploy(sender, chatbot: Optional[ChatBot] = None, **kwargs):
+    """Handle chatbot_undeploy signal."""
+    prefix = formatted_text(f"{module_prefix}.chatbot_undeploy()")
 
-    chatbot: Optional[ChatBot] = kwargs.get("chatbot")
-    logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
+    logger.info("%s - %s", prefix, chatbot if chatbot else "No chatbot instance provided")
     if chatbot:
         undeploy_default_api.delay(chatbot_id=chatbot.id)
 

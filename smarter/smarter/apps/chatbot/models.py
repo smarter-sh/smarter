@@ -57,7 +57,7 @@ from .signals import (
     chatbot_dns_verification_initiated,
     chatbot_dns_verification_status_changed,
     chatbot_dns_verified,
-    chatbot_undeployed,
+    chatbot_undeploy,
 )
 
 CACHE_PREFIX = "ChatBotHelper_"
@@ -837,17 +837,27 @@ class ChatBot(MetaDataWithOwnershipModel):
         # default to default mode as a safety measure
         return self.Modes.UNKNOWN
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, asynchronous=False, **kwargs):
         """
         Override save() to validate domain and send signals on status changes.
 
         :raises SmarterValueError: If invalid hostname is provided.
 
         :args: Positional arguments for the save method.
+        :asynchronous: If True, skips signal sending for asynchronous operations.
         :kwargs: Keyword arguments for the save method.
         :returns: None
         """
-        logger.debug("%s.save() called for ChatBot id: %s %s", formatted_text(__name__), self.pk, self.default_host)
+        logger_prefix = formatted_text(__name__ + ".Chatbot()")
+        logger.debug("%s.save() called for ChatBot id: %s %s", logger_prefix, self.pk, self.default_host)
+        if asynchronous:
+            logger.debug(
+                "%s.save() running in asynchronous mode for ChatBot id: %s. Skipping signal sending.",
+                logger_prefix,
+                self.pk,
+            )
+            super().save(*args, **kwargs)
+            return
         is_new = self.pk is None
         SmarterValidator.validate_domain(self.hostname)
         should_deploy = False
@@ -873,9 +883,11 @@ class ChatBot(MetaDataWithOwnershipModel):
                 should_undeploy = True
         super().save(*args, **kwargs)
         if should_deploy:
+            logger.debug("%s.ChatBot.save() sending chatbot_deploy signal for ChatBot id: %s", logger_prefix, self.pk)
             chatbot_deploy.send(sender=self.__class__, chatbot=self)
         if should_undeploy:
-            chatbot_undeployed.send(sender=self.__class__, chatbot=self)
+            logger.debug("%s.ChatBot.save() sending chatbot_undeploy signal for ChatBot id: %s", logger_prefix, self.pk)
+            chatbot_undeploy.send(sender=self.__class__, chatbot=self)
 
 
 class ChatBotAPIKey(TimestampedModel):
