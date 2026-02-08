@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.124](https://github.com/smarter-sh/smarter/compare/v0.13.123...v0.13.124) (2026-02-08)
+
+### Bug Fixes
+
+* stope endless cycle of deploy-undeploy ([a658fb1](https://github.com/smarter-sh/smarter/commit/a658fb15c38bc466198ced964f4ebe019dd748df))
+
 ## [0.13.123](https://github.com/smarter-sh/smarter/compare/v0.13.122...v0.13.123) (2026-02-08)
 
 ### Bug Fixes

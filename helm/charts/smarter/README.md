@@ -11,7 +11,7 @@ A Helm chart for deploying Smarter, a no-code, cloud-native AI orchestration pla
 
 ```bash
 helm upgrade --install --force smarter oci://ghcr.io/smarter-sh/charts/smarter \
-  --version 0.13.123 \
+  --version 0.13.124 \
   --timeout 900s \
   --namespace smarter-prod \
   --create-namespace \
