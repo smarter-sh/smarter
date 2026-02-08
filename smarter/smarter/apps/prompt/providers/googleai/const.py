@@ -8,6 +8,7 @@ DEFAULT_MODEL = "gemini-flash-latest"
 
 
 # https://ai.google.dev/gemini-api/docs/models
+# note: as of feb-2026.
 VALID_CHAT_COMPLETION_MODELS = [
     "gemini-flash-latest",
     "gemini-3-pro-preview",
