@@ -2071,7 +2071,7 @@ class ChatBotHelper(SmarterRequestMixin):
                     pass
 
         if not self._chatbot_custom_domain:
-            logger.warning(
+            logger.debug(
                 "%s.chatbot_custom_domain() did not find ChatBotCustomDomain for rootdomain: %s",
                 self.formatted_class_name,
                 self.root_domain,

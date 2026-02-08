@@ -16,6 +16,7 @@ annotated-types==0.7.0
     # via pydantic
 anyio==4.12.1
     # via
+    #   google-genai
     #   httpx
     #   openai
 asgiref==3.11.0
@@ -88,7 +89,9 @@ defusedxml==0.7.1
     #   python3-openid
     #   social-auth-core
 distro==1.9.0
-    # via openai
+    # via
+    #   google-genai
+    #   openai
 django==5.2.10
     # via
     #   -r smarter/requirements/in/base.in
@@ -147,48 +150,20 @@ frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-google-ai-generativelanguage==0.6.15
-    # via google-generativeai
-google-api-core[grpc]==2.29.0
-    # via
-    #   google-ai-generativelanguage
-    #   google-api-python-client
-    #   google-generativeai
-google-api-python-client==2.188.0
-    # via google-generativeai
-google-auth==2.48.0rc0
-    # via
-    #   google-ai-generativelanguage
-    #   google-api-core
-    #   google-api-python-client
-    #   google-auth-httplib2
-    #   google-generativeai
-google-auth-httplib2==0.3.0
-    # via google-api-python-client
-google-generativeai==0.8.5
+google-auth[requests]==2.48.0rc0
+    # via google-genai
+google-genai==1.62.0
     # via -r smarter/requirements/in/base.in
-googleapis-common-protos==1.72.0
-    # via
-    #   google-api-core
-    #   grpcio-status
 googlemaps==4.10.0
     # via -r smarter/requirements/in/base.in
-grpcio==1.76.0
-    # via
-    #   google-api-core
-    #   grpcio-status
-grpcio-status==1.71.2
-    # via google-api-core
 h11==0.16.0
     # via httpcore
 httpcore==1.0.9
     # via httpx
-httplib2==0.31.2
-    # via
-    #   google-api-python-client
-    #   google-auth-httplib2
 httpx==0.28.1
-    # via openai
+    # via
+    #   google-genai
+    #   openai
 idna==3.11
     # via
     #   anyio
@@ -270,18 +245,6 @@ propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-proto-plus==1.27.0
-    # via
-    #   google-ai-generativelanguage
-    #   google-api-core
-protobuf==5.29.5
-    # via
-    #   google-ai-generativelanguage
-    #   google-api-core
-    #   google-generativeai
-    #   googleapis-common-protos
-    #   grpcio-status
-    #   proto-plus
 pyasn1==0.6.2
     # via
     #   pyasn1-modules
@@ -295,7 +258,7 @@ pycparser==3.0
 pydantic==2.12.5
     # via
     #   -r smarter/requirements/in/base.in
-    #   google-generativeai
+    #   google-genai
     #   openai
     #   pydantic-settings
 pydantic-core==2.41.5
@@ -308,8 +271,6 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pynacl==1.6.2
     # via paramiko
-pyparsing==3.3.2
-    # via httplib2
 python-crontab==3.3.0
     # via django-celery-beat
 python-dateutil==2.9.0.post0
@@ -350,7 +311,8 @@ regex==2026.1.15
 requests==2.32.5
     # via
     #   -r smarter/requirements/in/base.in
-    #   google-api-core
+    #   google-auth
+    #   google-genai
     #   googlemaps
     #   llamaai
     #   mailchimp-marketing
@@ -378,7 +340,9 @@ six==1.17.0
     #   mailchimp-marketing
     #   python-dateutil
 sniffio==1.3.1
-    # via openai
+    # via
+    #   google-genai
+    #   openai
 social-auth-app-django==5.7.0
     # via -r smarter/requirements/in/base.in
 social-auth-core==4.8.3
@@ -388,14 +352,15 @@ soupsieve==2.8.3
 sqlparse==0.5.5
     # via django
 tenacity==9.1.2
-    # via celery-redbeat
+    # via
+    #   celery-redbeat
+    #   google-genai
 textblob==0.19.0
     # via -r smarter/requirements/in/base.in
 tldextract==5.3.1
     # via -r smarter/requirements/in/base.in
 tqdm==4.67.1
     # via
-    #   google-generativeai
     #   nltk
     #   openai
 typeguard==4.4.4
@@ -405,8 +370,7 @@ typing-extensions==4.15.0
     #   beautifulsoup4
     #   cattrs
     #   cron-descriptor
-    #   google-generativeai
-    #   grpcio
+    #   google-genai
     #   openai
     #   pydantic
     #   pydantic-core
@@ -424,9 +388,7 @@ tzdata==2025.3
 tzlocal==5.3.1
     # via celery
 uritemplate==4.2.0
-    # via
-    #   drf-yasg
-    #   google-api-python-client
+    # via drf-yasg
 url-normalize==2.2.1
     # via requests-cache
 urllib3==2.6.3
@@ -445,6 +407,8 @@ vine==5.1.0
     #   kombu
 wcwidth==0.3.1
     # via prompt-toolkit
+websockets==15.0.1
+    # via google-genai
 whitenoise==6.9.0
     # via -r smarter/requirements/in/base.in
 yarl==1.22.0
