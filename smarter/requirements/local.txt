@@ -109,7 +109,7 @@ coverage==7.10.5
     # via -r smarter/requirements/in/local.in
 cron-descriptor==2.0.6
     # via django-celery-beat
-cryptography==46.0.4
+cryptography==46.0.5
     # via
     #   google-auth
     #   paramiko
