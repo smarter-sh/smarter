@@ -351,7 +351,7 @@ social-auth-core==4.7.0
     # via social-auth-app-django
 soupsieve==2.8
     # via beautifulsoup4
-sqlparse==0.5.3
+sqlparse==0.5.4
     # via django
 tenacity==9.1.2
     # via
