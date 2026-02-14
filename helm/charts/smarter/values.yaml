@@ -323,6 +323,7 @@ redis:
     persistence:
       enabled: true
       size: 1Gi
+      storageClass: gp3
     podSecurityContext:
       enabled: true
     resources:
