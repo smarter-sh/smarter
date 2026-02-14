@@ -4,6 +4,10 @@ branding:
   icon: "play-circle"
   color: "green"
 inputs:
+  namespace-base:
+    description: "The base name for the Kubernetes namespace (the environment name - alpha, beta, prod - will be appended to this)"
+    required: false
+    default: "smarter-ubc"
   anthropic-api-key:
     description: "The Anthropic API key"
     required: true
@@ -117,15 +121,14 @@ runs:
     - name: Initialize environment variables
       shell: bash
       run: |-
-        echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ inputs.environment }}" >> $GITHUB_ENV
+        echo "NAMESPACE=${{ inputs.namespace-base }}-${{ inputs.environment }}" >> $GITHUB_ENV
         echo "DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_BASE }}.${{ inputs.environment }}" >> $GITHUB_ENV
         echo "CACHES_LOCATION=${{ env.REDIS_URL }}" >> $GITHUB_ENV
         echo "CELERY_BROKER_URL=${{ env.REDIS_URL }}" >> $GITHUB_ENV
         echo "CELERY_RESULT_BACKEND=${{ env.REDIS_URL }}" >> $GITHUB_ENV
       env:
-        REDIS_URL: redis://:smarter@smarter-redis-master.smarter-platform-${{ inputs.environment }}.svc.cluster.local:6379/1
+        REDIS_URL: redis://:smarter@smarter-redis-master.${{ inputs.namespace-base }}-${{ inputs.environment }}.svc.cluster.local:6379/1
         DJANGO_SETTINGS_BASE: smarter.settings
-        NAMESPACE_BASE: smarter-platform
 
     # Checkout all code referenced by this action
     - name: Checkout code
