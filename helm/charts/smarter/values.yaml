@@ -318,31 +318,37 @@ names:
 # -----------------------------------------------------------------------------
 # Redis Configuration
 # -----------------------------------------------------------------------------
-master:
-  containerSecurityContext:
-    enabled: true
-  persistence:
-    enabled: true
-    size: 1Gi
-    storageClass: gp3
-  podSecurityContext:
-    enabled: true
-  resources:
-    requests:
-      memory: "512Mi"
-      cpu: "100m"
-    limits:
-      memory: "1Gi"
-      cpu: "512m"
-  service:
-    headless:
-      sessionAffinity: None
-
-fullnameOverride: "smarter-redis"
-auth:
+redis:
   enabled: true
-  password: "smarter"
-architecture: standalone
+  external:
+    host: ""
+    port: 6379
+    password: ""
+  fullnameOverride: "smarter-redis"
+  auth:
+    enabled: true
+    password: "smarter"
+  architecture: standalone
+  master:
+    containerSecurityContext:
+      enabled: true
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClass: gp3
+    podSecurityContext:
+      enabled: true
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "100m"
+      limits:
+        memory: "1Gi"
+        cpu: "512m"
+    service:
+      headless:
+        sessionAffinity: None
+
 
 # ----------------------------------------------------------------------------
 # Monitoring Components
