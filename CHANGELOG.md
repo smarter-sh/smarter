@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.125](https://github.com/smarter-sh/smarter/compare/v0.13.124...v0.13.125) (2026-02-08)
+
+### Bug Fixes
+
+* pass task_id to receivers for logging ([8c93406](https://github.com/smarter-sh/smarter/commit/8c93406fd2fa33f5da46a1159b1c25d7c0543205))
+
 ## [0.13.124](https://github.com/smarter-sh/smarter/compare/v0.13.123...v0.13.124) (2026-02-08)
 
 ### Bug Fixes
