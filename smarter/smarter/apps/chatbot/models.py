@@ -1495,7 +1495,7 @@ class ChatBotHelper(SmarterRequestMixin):
         :param kwargs: Additional keyword arguments.
         """
         chatbot_helper_logger.debug(
-            "%s.__init__() called with url: %s args: %s, %s",
+            "%s.__init__() called with url: %s args: %s, kwargs: %s",
             self.formatted_class_name,
             request.build_absolute_uri() if request else None,
             args,
@@ -1734,46 +1734,57 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         if self.chatbot_custom_domain:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() returning true because chatbot_custom_domain is set",
+                "%s.%s() returning true because chatbot_custom_domain is set",
                 self.formatted_class_name,
+                self.is_chatbothelper_ready.__name__,
             )
             return True
 
         if not self.is_chatbot:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() returning false because is_chatbot is false", self.formatted_class_name
+                "%s.%s() returning false because is_chatbot is false",
+                self.formatted_class_name,
+                self.is_chatbothelper_ready.__name__,
             )
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() confirmed URL is a chatbot URL. url=%s",
+                "%s.%s() confirmed URL is a chatbot URL. url=%s",
                 self.formatted_class_name,
+                self.is_chatbothelper_ready.__name__,
                 self._url,
             )
         if not self.user or not self.user.is_authenticated:
             chatbot_helper_logger.warning(
-                "%s.__init__() called with unauthenticated request", self.formatted_class_name
+                "%s.%s() called with unauthenticated request",
+                self.formatted_class_name,
+                self.is_chatbothelper_ready.__name__,
             )
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() confirmed request user is authenticated: %s",
+                "%s.%s() confirmed request user is authenticated: %s",
                 self.formatted_class_name,
+                self.is_chatbothelper_ready.__name__,
                 self.user.username,
             )
         if not self.account:
-            chatbot_helper_logger.warning("%s.__init__() called with no account", self.formatted_class_name)
+            chatbot_helper_logger.warning(
+                "%s.%s() called with no account", self.formatted_class_name, self.is_chatbothelper_ready.__name__
+            )
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready()confirmed account is assigned: %s",
+                "%s.%s() confirmed account is assigned: %s",
                 self.formatted_class_name,
+                self.is_chatbothelper_ready.__name__,
                 self.account,
             )
         if not isinstance(self.name, str):
             chatbot_helper_logger.warning(
-                "%s.__init__() did not find a name for the chatbot.",
+                "%s.%s() did not find a name for the chatbot. args: %s, kwargs: %s",
                 self.formatted_class_name,
+                self.is_chatbothelper_ready.__name__,
             )
             return False
         else:

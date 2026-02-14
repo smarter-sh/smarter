@@ -6,7 +6,6 @@ from typing import Optional
 
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
-from django.http import HttpRequest
 
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import plugin_deleting
@@ -313,7 +312,6 @@ def handle_chatbot_called(sender, **kwargs):
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
 
-    request: Optional[HttpRequest] = kwargs.get("request")
     request_data = kwargs.get("data")
     try:
         if chatbot and request_data:
@@ -364,7 +362,12 @@ def handle_pre_create_chatbot_request(sender, **kwargs):
     chatbot_id = kwargs.get("chatbot_id")
     request_data = kwargs.get("request_data")
     request_data = json.loads(request_data) if isinstance(request_data, str) else request_data
-    logger.info("%s - chatbot_id: %s, request_data: %s", prefix, chatbot_id, formatted_json(request_data))
+    logger.info(
+        "%s - chatbot_id: %s, request_data: %s",
+        prefix,
+        chatbot_id,
+        formatted_json(request_data) if request_data else "No data",
+    )
 
 
 @receiver(post_create_chatbot_request, dispatch_uid="post_create_chatbot_request")
@@ -374,7 +377,12 @@ def handle_post_create_chatbot_request(sender, **kwargs):
     chatbot_id = kwargs.get("chatbot_id")
     request_data = kwargs.get("request_data")
     request_data = json.loads(request_data) if isinstance(request_data, str) else request_data
-    logger.info("%s - chatbot_id: %s, request_data: %s", prefix, chatbot_id, formatted_json(request_data))
+    logger.info(
+        "%s - chatbot_id: %s, request_data: %s",
+        prefix,
+        chatbot_id,
+        formatted_json(request_data) if request_data else "No data",
+    )
 
 
 @receiver(pre_register_custom_domain, dispatch_uid="pre_register_custom_domain")

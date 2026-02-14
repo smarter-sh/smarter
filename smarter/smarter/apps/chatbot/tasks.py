@@ -975,9 +975,9 @@ def undeploy_default_api(chatbot_id: int):
         return
 
     task_id = undeploy_default_api.request.id
-    pre_undeploy_default_api.send(sender=undeploy_default_api, chatbot_id=chatbot_id, task_id=task_id)
     prefix = logger_prefix + f".{undeploy_default_api.__name__}()"
     logger.info("%s - chatbot %s task_id: %s", prefix, chatbot_id, task_id)
+    pre_undeploy_default_api.send(sender=undeploy_default_api, chatbot_id=chatbot_id, task_id=task_id)
 
     chatbot: ChatBot
     try:
