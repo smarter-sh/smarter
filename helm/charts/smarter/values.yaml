@@ -23,77 +23,9 @@
 # Documentation: https://github.com/smarter-sh/smarter
 # ==============================================================================
 
-
-# Global Configuration
-# ----------------------------------------------------------------------------
-global:
-  image:
-    pullPolicy: IfNotPresent
-    repository: lpm0073/smarter
-    tag: v0.13.124
-  affinity:
-    nodeAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          preference:
-            matchExpressions:
-              - key: node-group
-                operator: In
-                values:
-                  - smarter
-  imagePullSecrets:
-    - name: dockerhub-secret
-
-  tolerations:
-    - key: "node-group"
-      operator: "Equal"
-      value: "smarter"
-      effect: "NoSchedule"
-
-
-# Application Configuration
-# ----------------------------------------------------------------------------
-app:
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: "500m"
-      memory: "1Gi"
-    limits:
-      cpu: "2"
-      memory: "4Gi"
-  extraVolumeMounts: []
-
-worker:
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: "250m"
-      memory: "512Mi"
-    limits:
-      cpu: "1"
-      memory: "2Gi"
-
-beat:
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "256Mi"
-    limits:
-      cpu: "500m"
-      memory: "1Gi"
-
-database:
-  type: mysql   # Options: mysql, mariadb, external
-
-## @param deployTimestamp Deployment timestamp for forcing pod restarts
-deployTimestamp: ""
-
-deployment:
-  containerPort: 8000
-
+# -----------------------------------------------------------------------------
 ## @param env Environment variables for the Smarter application
+# -----------------------------------------------------------------------------
 env:
   AUTHENTICATION_BACKENDS: "social_core.backends.google.GoogleOAuth2,social_core.backends.github.GithubOAuth2,django.contrib.auth.backends.ModelBackend"
   AWS_ACCESS_KEY_ID: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -177,9 +109,86 @@ env:
   SMTP_USE_SSL: "false"
   SMTP_USE_TLS: "true"
 
+
+# -----------------------------------------------------------------------------
+# Global Configuration
+# -----------------------------------------------------------------------------
+global:
+  image:
+    pullPolicy: IfNotPresent
+    repository: lpm0073/smarter
+    tag: v0.13.124
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node-group
+                operator: In
+                values:
+                  - smarter
+  defaultStorageClass: gp3
+  imagePullSecrets:
+    - name: dockerhub-secret
+
+  tolerations:
+    - key: "node-group"
+      operator: "Equal"
+      value: "smarter"
+      effect: "NoSchedule"
+
+
+# -----------------------------------------------------------------------------
+# Smarter Application Configuration
+# ----------------------------------------------------------------------------
+app:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+  extraVolumeMounts: []
+
+service:
+  port: 8000
+  targetPort: 8000
+
+worker:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+beat:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+
+database:
+  type: mysql   # Options: mysql, mariadb, external
+
+## @param deployTimestamp Deployment timestamp for forcing pod restarts
+deployTimestamp: ""
+
+deployment:
+  containerPort: 8000
+
+# -----------------------------------------------------------------------------
 # Backing Services Configuration
 # ----------------------------------------------------------------------------
-
 externalDatabase:
   host: ""        # Will use .Values.env.MYSQL_HOST if empty
   port: 3306      # Will use .Values.env.MYSQL_PORT if empty
@@ -306,40 +315,36 @@ names:
   mysqlName: mysql
   mariadbName: mariadb
 
-redis:
-  enabled: true
-  external:
-    host: ""
-    port: 6379
-    password: ""
-  fullnameOverride: "smarter-redis"
-  auth:
+# -----------------------------------------------------------------------------
+# Redis Configuration
+# -----------------------------------------------------------------------------
+master:
+  containerSecurityContext:
     enabled: true
-    password: "smarter"
-  architecture: standalone
-  master:
-    containerSecurityContext:
-      enabled: true
-    persistence:
-      enabled: true
-      size: 1Gi
-      storageClassName: gp3
-    podSecurityContext:
-      enabled: true
-    resources:
-      requests:
-        memory: "512Mi"
-        cpu: "100m"
-      limits:
-        memory: "1Gi"
-        cpu: "512m"
-    service:
-      headless:
-        sessionAffinity: None
-service:
-  port: 8000
-  targetPort: 8000
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: gp3
+  podSecurityContext:
+    enabled: true
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "100m"
+    limits:
+      memory: "1Gi"
+      cpu: "512m"
+  service:
+    headless:
+      sessionAffinity: None
 
+fullnameOverride: "smarter-redis"
+auth:
+  enabled: true
+  password: "smarter"
+architecture: standalone
+
+# ----------------------------------------------------------------------------
 # Monitoring Components
 # Enable/disable and configure Prometheus, Grafana, and Loki
 # ----------------------------------------------------------------------------
