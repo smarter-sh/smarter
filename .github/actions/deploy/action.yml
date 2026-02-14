@@ -31,6 +31,9 @@ inputs:
   environment:
     description: "The environment to deploy"
     required: true
+  eks-cluster-name:
+    description: "The name of the EKS cluster to deploy to"
+    required: true
   fernet-encryption-key:
     description: "The Fernet encryption key"
     required: true
@@ -164,12 +167,10 @@ runs:
       id: kubectl-configure
       shell: bash
       run: |-
-        aws eks --region ${{ inputs.aws-region }} update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --alias ${{ env.EKS_CLUSTER_NAME }}
+        aws eks --region ${{ inputs.aws-region }} update-kubeconfig --name ${{ inputs.eks-cluster-name }} --alias ${{ inputs.eks-cluster-name }}
         echo "kubectl version and diagnostic info:"
         echo "------------------------------------"
         kubectl version
-      env:
-        EKS_CLUSTER_NAME: apps-hosting-service
 
     # figure out the Docker image to add to the Helm values for the
     # Kubernetes deployment manifest.
