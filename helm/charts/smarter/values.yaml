@@ -143,6 +143,7 @@ global:
 # Smarter Application Configuration
 # ----------------------------------------------------------------------------
 app:
+  name: smarter
   replicaCount: 1
   resources:
     requests:
@@ -152,6 +153,10 @@ app:
       cpu: "2"
       memory: "4Gi"
   extraVolumeMounts: []
+
+names:
+  mysqlName: mysql
+  mariadbName: mariadb
 
 service:
   port: 8000
@@ -310,10 +315,6 @@ mariadb:
     headless:
       sessionAffinity: None
 
-names:
-  appName: smarter
-  mysqlName: mysql
-  mariadbName: mariadb
 
 # -----------------------------------------------------------------------------
 # Redis Configuration
