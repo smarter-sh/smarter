@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.128](https://github.com/smarter-sh/smarter/compare/v0.13.127...v0.13.128) (2026-02-16)
+
+### Bug Fixes
+
+* Values should be .Values ([6971e50](https://github.com/smarter-sh/smarter/commit/6971e50f404d97393a8e1d2e1bcb3703ea17df19))
+
 ## [0.13.127](https://github.com/smarter-sh/smarter/compare/v0.13.126...v0.13.127) (2026-02-16)
 
 ### Bug Fixes
