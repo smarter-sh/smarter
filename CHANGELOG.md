@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.127](https://github.com/smarter-sh/smarter/compare/v0.13.126...v0.13.127) (2026-02-16)
+
+### Bug Fixes
+
+* Values.env.SMARTER should be Values.env.SMARTER_MYSQL_ ([d60a00c](https://github.com/smarter-sh/smarter/commit/d60a00c6240a4ae1dce1d5678a023ab560a3d3d9))
+
+## [0.13.126](https://github.com/smarter-sh/smarter/compare/v0.13.125...v0.13.126) (2026-02-14)
+
+### Bug Fixes
+
+* revert/restore original Redis default values ([d36eff2](https://github.com/smarter-sh/smarter/commit/d36eff280552388b144e31a01124aba010569fa0))
+
 ## [0.13.125](https://github.com/smarter-sh/smarter/compare/v0.13.124...v0.13.125) (2026-02-08)
 
 ### Bug Fixes
