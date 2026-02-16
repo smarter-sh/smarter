@@ -34,8 +34,8 @@ spec:
           imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
           env:
             - name: MYSQL_ROOT_PASSWORD
-              {{- if .Values.env.MYSQL_ROOT_PASSWORD }}
-              value: {{ .Values.env.MYSQL_ROOT_PASSWORD | quote }}
+              {{- if .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}
+              value: {{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD | quote }}
               {{- else }}
               valueFrom:
                 secretKeyRef:
@@ -43,12 +43,12 @@ spec:
                   key: mysql-root-password
               {{- end }}
             - name: MYSQL_DATABASE
-              value: {{ .Values.env.MYSQL_DATABASE | default .Values.mysql.auth.database | quote }}
+              value: {{ .Values.env.SMARTER_MYSQL_DATABASE | default .Values.mysql.auth.database | quote }}
             - name: MYSQL_USER
-              value: {{ .Values.env.MYSQL_USER | default .Values.mysql.auth.username | quote }}
-            {{- if .Values.env.MYSQL_PASSWORD }}
+              value: {{ .Values.env.SMARTER_MYSQL_USER | default .Values.mysql.auth.username | quote }}
+            {{- if .Values.env.SMARTER_MYSQL_PASSWORD }}
             - name: MYSQL_PASSWORD
-              value: {{ .Values.env.MYSQL_PASSWORD | quote }}
+              value: {{ .Values.env.SMARTER_MYSQL_PASSWORD | quote }}
             {{- else }}
             - name: MYSQL_PASSWORD
               valueFrom:
