@@ -143,6 +143,7 @@ global:
 # Smarter Application Configuration
 # ----------------------------------------------------------------------------
 app:
+  name: smarter
   replicaCount: 1
   resources:
     requests:
@@ -152,6 +153,10 @@ app:
       cpu: "2"
       memory: "4Gi"
   extraVolumeMounts: []
+
+names:
+  mysqlName: mysql
+  mariadbName: mariadb
 
 service:
   port: 8000
@@ -190,11 +195,11 @@ deployment:
 # Backing Services Configuration
 # ----------------------------------------------------------------------------
 externalDatabase:
-  host: ""        # Will use .Values.env.MYSQL_HOST if empty
-  port: 3306      # Will use .Values.env.MYSQL_PORT if empty
-  database: ""    # Will use .Values.env.MYSQL_DATABASE if empty
-  username: ""    # Will use .Values.env.MYSQL_USER if empty
-  password: ""    # Will use .Values.env.MYSQL_PASSWORD if empty
+  host: ""        # Will use .Values.env.SMARTER_MYSQL_HOST if empty
+  port: 3306      # Will use .Values.env.SMARTER_MYSQL_PORT if empty
+  database: ""    # Will use .Values.env.SMARTER_MYSQL_DATABASE if empty
+  username: ""    # Will use .Values.env.SMARTER_MYSQL_USER if empty
+  password: ""    # Will use .Values.env.SMARTER_MYSQL_PASSWORD if empty
 
 mysql:
   enabled: false
@@ -310,10 +315,6 @@ mariadb:
     headless:
       sessionAffinity: None
 
-names:
-  appName: smarter
-  mysqlName: mysql
-  mariadbName: mariadb
 
 # -----------------------------------------------------------------------------
 # Redis Configuration

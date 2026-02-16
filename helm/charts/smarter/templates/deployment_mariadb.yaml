@@ -3,12 +3,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    meta.helm.sh/release-name: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
+    meta.helm.sh/release-name: {{ .Values.app.name | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Values.version }}
   labels:
-    App: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
-  name: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
+    App: {{ .Values.app.name | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
+  name: {{ .Values.app.name | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
   namespace: {{ .Values.namespace }}
 
 spec:
@@ -37,20 +37,20 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.names.appName | default "smarter" }}-root-{{ .Values.names.mariadbName | default "mariadb" }}
+                  name: {{ .Values.app.name | default "smarter" }}-root-{{ .Values.names.mariadbName | default "mariadb" }}
                   key: mariadb-root-password
             - name: MYSQL_DATABASE
-              value: {{ .Values.env.MYSQL_DATABASE | default .Values.mariadb.auth.database | quote }}
+              value: {{ Values.env.SMARTER_MYSQL_DATABASE | default .Values.mariadb.auth.database | quote }}
             - name: MYSQL_USER
-              value: {{ .Values.env.MYSQL_USER | default .Values.mariadb.auth.username | quote }}
-{{- if .Values.env.MYSQL_PASSWORD }}
+              value: {{ Values.env.SMARTER_MYSQL_USER | default .Values.mariadb.auth.username | quote }}
+{{- if Values.env.SMARTER_MYSQL_PASSWORD }}
             - name: MYSQL_PASSWORD
-              value: {{ .Values.env.MYSQL_PASSWORD | quote }}
+              value: {{ Values.env.SMARTER_MYSQL_PASSWORD | quote }}
 {{- else }}
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.names.appName | default "smarter" }}-user-{{ .Values.names.mariadbName | default "mariadb" }}
+                  name: {{ .Values.app.name | default "smarter" }}-user-{{ .Values.names.mariadbName | default "mariadb" }}
                   key: mariadb-password
 {{- end }}
           ports:
@@ -68,5 +68,5 @@ spec:
       volumes:
         - name: mariadb-data
           persistentVolumeClaim:
-            claimName: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}-pvc
+            claimName: {{ .Values.app.name | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}-pvc
 {{- end }}
