@@ -577,7 +577,7 @@ class SettingsDefaults:
     )
 
     SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}", is_required=True)
-    SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}", is_required=True)
+    SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{PLATFORM_SUBDOMAIN}.{ROOT_DOMAIN}", is_required=True)
     SMTP_HOST = get_env("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
     SMTP_PORT = int(get_env("SMTP_PORT", "587"))
     SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False))
@@ -4229,14 +4229,14 @@ class Settings(BaseSettings):
 
         Example:
             >>> print(smarter_settings.root_api_domain)
-            'api.example.com'
+            'api.platform.example.com'
 
         See Also:
             - SMARTER_API_SUBDOMAIN
-            - smarter_settings.root_domain
+            - smarter_settings.environment_platform_domain
             - smarter_settings.api_subdomain
         """
-        return f"{self.api_subdomain}.{self.root_domain}"
+        return f"{self.api_subdomain}.{self.platform_subdomain}.{self.root_domain}"
 
     @cached_property
     def environment_api_domain(self) -> str:
