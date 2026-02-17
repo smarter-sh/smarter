@@ -1,4 +1,3 @@
-{{- if .Values.mysql.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -88,4 +87,3 @@ spec:
           configMap:
             name: {{ .Values.app.name | default "smarter" }}-mysql-init-scripts
         {{- end }}
-{{- end }}
