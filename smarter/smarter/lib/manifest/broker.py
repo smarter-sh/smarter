@@ -778,12 +778,14 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         """
         Return the Django ORM model instance for the broker. There are
         multiple strategies to retrieve the ORM instance:
+
         1. If the instance is already cached in self._orm_instance, return it.
         2. If the broker is not ready or the name is not set, log a warning and return None.
         3. Attempt to retrieve the ORM instance using the user_profile and name.
            If not found, attempt to retrieve using the admin user_profile for the account.
            If still not found, attempt to retrieve using the Smarter platform admin user_profile.
         4. Cache the retrieved instance for future access.
+
 
         :return: The Django ORM model instance for the broker.
         :rtype: Optional[MetaDataWithOwnershipModel]

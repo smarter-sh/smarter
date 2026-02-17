@@ -902,7 +902,9 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
     .. seealso::
 
         - :class:`UserProfile`
-    **Example usage**:
+
+    Example usage:
+
     .. code-block:: python
 
         from smarter.apps.account.models import UserProfile
