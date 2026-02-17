@@ -416,11 +416,11 @@ runs:
         helm upgrade --install --force smarter ./helm/charts/smarter/ \
           --namespace ${{ env.NAMESPACE }} \
           --timeout 900s \
-          --set mysql.auth.rootPassword="${{ env.SMARTER_MYSQL_ROOT_PASSWORD }}" \
-          --set mysql.auth.rootUsername="${{ env.SMARTER_MYSQL_ROOT_USERNAME }}" \
+          --set mysql.auth.rootPassword="${{ env.MYSQL_ROOT_PASSWORD }}" \
+          --set mysql.auth.rootUsername="${{ env.MYSQL_ROOT_USERNAME }}" \
           --set mysql.auth.password="${{ env.SMARTER_MYSQL_PASSWORD }}" \
           --set mysql.auth.database="${{ env.SMARTER_MYSQL_DATABASE }}" \
-          --set mysql.auth.username="${{ env.SMARTER_MYSQL_USER }}" \
+          --set mysql.auth.username="${{ env.SMARTER_MYSQL_USERNAME }}" \
           --values /tmp/values.yaml
 
     # Clean up secrets file
