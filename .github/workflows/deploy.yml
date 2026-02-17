@@ -118,7 +118,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-          subject: "GHA - Deployed ${{ env.ENVIRONMENT }}.platform.smarter.sh"
-          body: "${{ env.ENVIRONMENT }}.platform.smarter.sh version ${{ env.VERSION }} was deployed successfully."
+          subject: "GHA - Deployed ${{ env.ENVIRONMENT }}.${{ env.PLATFORM_SUBDOMAIN }}.smarter.sh"
+          body: "${{ env.ENVIRONMENT }}.${{ env.PLATFORM_SUBDOMAIN }}.smarter.sh version ${{ env.VERSION }} was deployed successfully."
         env:
           VERSION: ${{ env.VERSION }}
