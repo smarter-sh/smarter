@@ -203,6 +203,11 @@ externalDatabase:
 
 mysql:
   enabled: true
+  auth:
+    rootPassword: {{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}
+    password: {{ .Values.env.SMARTER_MYSQL_PASSWORD }}
+    database: {{ .Values.env.SMARTER_MYSQL_DATABASE }}
+    username: {{ .Values.env.SMARTER_MYSQL_USER }}
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
