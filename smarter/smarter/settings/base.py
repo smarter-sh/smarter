@@ -30,7 +30,6 @@ from dotenv import load_dotenv
 
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
 from smarter.lib import json
 
@@ -729,7 +728,7 @@ which defines the URL patterns for the Smarter web platform console.
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#root-urlconf
 """
 
-DEFAULT_HOST = SMARTER_PLATFORM_SUBDOMAIN
+DEFAULT_HOST = smarter_settings.platform_subdomain
 """
 The default host name for django-hosts. This is set to the Smarter platform subdomain.
 
