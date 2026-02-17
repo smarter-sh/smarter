@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.133](https://github.com/smarter-sh/smarter/compare/v0.13.132...v0.13.133) (2026-02-17)
+
+### Bug Fixes
+
+* sphinx linter errors ([30ca7e9](https://github.com/smarter-sh/smarter/commit/30ca7e9d47b5ead0fd48413840693709e6147722))
+
 ## [0.13.132](https://github.com/smarter-sh/smarter/compare/v0.13.131...v0.13.132) (2026-02-17)
 
 ### Bug Fixes
