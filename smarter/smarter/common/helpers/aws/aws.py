@@ -15,7 +15,6 @@ from smarter.common.conf import Services, smarter_settings
 # our stuff
 from smarter.common.const import (
     SMARTER_API_SUBDOMAIN,
-    SMARTER_PLATFORM_SUBDOMAIN,
     SmarterEnvironments,
 )
 from smarter.common.exceptions import SmarterException
@@ -531,7 +530,7 @@ class AWSBase(SmarterHelperMixin):
         :return: environment domain
         :rtype: str
         """
-        return f"{self.environment}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+        return smarter_settings.environment_platform_domain
 
     @property
     def environment_api_domain(self) -> str:

@@ -68,6 +68,9 @@ inputs:
   openai-api-key:
     description: "The OpenAI API key"
     required: true
+  platform-subdomain:
+    description: "The platform subdomain to use in constructing URLs and email addresses"
+    required: true
   pinecone-api-key:
     description: "The Pinecone API key"
     required: true
@@ -128,6 +131,7 @@ runs:
           helm-${{ runner.os }}-
 
     # Initialize environment variables that are derived from the inputs
+    # mcdaniel: we're not accomplishing anything by doing this bc this matches the default in aws_base.py
     - name: Initialize environment variables
       shell: bash
       run: |-
@@ -360,6 +364,7 @@ runs:
             "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME": "smarter_test_db",
             "SMARTER_MYSQL_USER": ${{ env.SMARTER_MYSQL_USERNAME && format('"{0}"', env.SMARTER_MYSQL_USERNAME) || 'null' }},
             "SMARTER_OPENAI_API_KEY": ${{ inputs.openai-api-key && format('"{0}"', inputs.openai-api-key) || 'null' }},
+            "SMARTER_PLATFORM_SUBDOMAIN": ${{ inputs.platform-subdomain && format('"{0}"', inputs.platform-subdomain) || 'null' }},
             "SMARTER_PINECONE_API_KEY": ${{ inputs.pinecone-api-key && format('"{0}"', inputs.pinecone-api-key) || 'null' }},
             "SMARTER_PINECONE_ENVIRONMENT": ${{ inputs.pinecone-environment && format('"{0}"', inputs.pinecone-environment) || 'null' }},
             "SMARTER_ROOT_DOMAIN": ${{ inputs.root-domain && format('"{0}"', inputs.root-domain) || 'null' }},
