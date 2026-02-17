@@ -210,8 +210,6 @@ mysql:
     runAsGroup: 1001
     fsGroup: 1001
   image:
-    repository: bitnami/mysql
-    tag: "8.0"
     pullPolicy: IfNotPresent
   initdbScripts: {}
   livenessProbe:
