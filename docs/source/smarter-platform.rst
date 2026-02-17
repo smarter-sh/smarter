@@ -1,5 +1,5 @@
-Smarter Platform
-=================
+Platform Administration Guide
+===============================
 
 The Smarter platform is a batteries-included solution
 that is designed to provide large organizations with a robust and scalable foundation

@@ -234,7 +234,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         .. seealso::
 
-            :class:`ApiConnection`
+            :class:`smarter.apps.plugin.manifest.models.api_connection.spec.ApiConnection`
             :meth:`SAMApiConnectionBroker.SerializerClass`
             :meth:`SAMApiConnectionBroker.manifest`
 

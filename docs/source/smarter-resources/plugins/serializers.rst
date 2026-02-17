@@ -1,7 +1,7 @@
 DRF Serializers
 ================
 
-.. automodule:: smarter.apps.plugin.serializers
+.. automodule:: smarter.apps.account.serializers.SecretSerializer
     :members:
     :undoc-members:
     :show-inheritance:
