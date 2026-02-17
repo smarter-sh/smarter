@@ -203,11 +203,6 @@ externalDatabase:
 
 mysql:
   enabled: true
-  auth:
-    rootPassword: ""
-    password: ""
-    database: ""
-    username: ""
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
