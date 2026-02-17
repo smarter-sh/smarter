@@ -254,6 +254,31 @@ mysql:
 
 mariadb:
   enabled: true
+  containers:
+    resources:
+      requests:
+        cpu: "0.25"
+        memory: "1Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+    image:
+      pullPolicy: IfNotPresent
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+      successThreshold: 1
+    nodeSelector: {}
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+      successThreshold: 1
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
@@ -262,24 +287,7 @@ mariadb:
   extraEnv: []
   extraVolumeMounts: []
   extraVolumes: []
-  image:
-    pullPolicy: IfNotPresent
   initdbScripts: {}
-  livenessProbe:
-    enabled: true
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 6
-    successThreshold: 1
-  nodeSelector: {}
-  readinessProbe:
-    enabled: true
-    initialDelaySeconds: 5
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 6
-    successThreshold: 1
   persistence:
     enabled: true
     size: 8Gi
@@ -289,13 +297,6 @@ mariadb:
   podSecurityContext:
     enabled: true
     fsGroup: 1001
-  resources:
-    requests:
-      cpu: "0.25"
-      memory: "1Gi"
-    limits:
-      cpu: "2"
-      memory: "4Gi"
   service:
     type: ClusterIP
     port: 3306
