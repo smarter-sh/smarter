@@ -1,5 +1,5 @@
-Smarter Resources
-=================
+Smarter AI Resource Reference
+==============================
 
 Smarter Resources are a combination of :doc:`LLM Provider APIs <smarter-resources/smarter-provider>`, :doc:`SQL database data <smarter-framework/django>`,
 :doc:`AWS cloud infrastructure <smarter-framework/aws>`, and :doc:`Kubernetes resources <smarter-framework/kubernetes>`
