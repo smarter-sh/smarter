@@ -13,3 +13,14 @@ section#smarter-settings
   > dt#smarter\.common\.conf\.Settings.sig.sig-object.py {
   display: none;
 }
+
+.wy-table-responsive table td,
+.wy-table-responsive table th {
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.img-bottom-margin {
+  margin-bottom: 2em;
+}

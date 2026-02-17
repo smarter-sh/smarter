@@ -25,6 +25,7 @@ A modest amount of advance planning and an understanding of some basic organizat
 Smarter's fundamental identification and organizational units are as follows:
 
 .. list-table::
+   :widths: 25 75
 
    * - **root_domain**
      - This is the root domain that you will use for your Smarter deployment. For example,
@@ -51,18 +52,62 @@ Smarter's fundamental identification and organizational units are as follows:
 These four organizational units are combined in various ways to create higher-level naming conventions for both cloud resources as
 well as application-level resources. Some examples:
 
-- Kubernetes namespaces are named using the convention ``{platform_name}-{shared_resource_identifier}-{environment}``, which by default would be 'smarter-platform-prod'.
-- S3 buckets are named using the convention ``{environment}.{shared_resource_identifier}.{root_domain}``, which by default would be 'alpha.platform.smarter.sh'.
-- EKS clusters are named using the convention ``{platform_name}-{shared_resource_identifier}-{platform_region}-{{unique_id}}``, which by default would be 'smarter-platform-us-{{unique_id}}'.
-- k8s namespaces are named using the convention ``{platform_name}-{shared_resource_identifier}-{environment}``, which by default would be 'smarter-platform-prod'.
-- IAM roles are prefixed with ``{platform_name}-{shared_resource_identifier}-{platform_region}``, which by default would be 'smarter-platform-us'.
+- Kubernetes namespaces are named using the convention
+
+  ``{platform_name}-{shared_resource_identifier}-{environment}``
+
+  which by default would be 'smarter-platform-prod'.
+- S3 buckets are named using the convention
+
+  ``{environment}.{shared_resource_identifier}.{root_domain}``
+
+  which by default would be 'alpha.platform.example.com'.
+- EKS clusters are named using the convention
+
+  ``{platform_name}-{shared_resource_identifier}-{platform_region}-{{unique_id}}``
+
+  which by default would be 'smarter-platform-us-{{unique_id}}'.
+- k8s namespaces are named using the convention
+
+  ``{platform_name}-{shared_resource_identifier}-{environment}``
+
+  which by default would be 'smarter-platform-prod'.
+- IAM roles are prefixed with
+
+  ``{platform_name}-{shared_resource_identifier}-{platform_region}``
+
+  which by default would be 'smarter-platform-us'.
 
 Within the Smarter application itself, these organizational units are combined to create higher-level organizational units. Examples:
 
-- environment_namespaces are named using the convention ``{platform_name}-{shared_resource_identifier}-{environment}``, which by default would be 'smarter-platform-prod'.
-- environment_platform_domain is named using the convention ``{environment}.{shared_resource_identifier}.{root_domain}``, which by default would be 'alpha.platform.smarter.sh'.
-- CDN domains are named using the convention ``cdn.{environment}.{shared_resource_identifier}.{root_domain}``, which by default would be 'cdn.alpha.platform.smarter.sh'.
-- API domains are named using the convention ``{environment}.api.{shared_resource_identifier}.{root_domain}``, which by default would be 'alpha.api.platform.smarter.sh'.
+- environment_namespaces are named using the convention
+
+  ``{platform_name}-{shared_resource_identifier}-{environment}``
+
+  which by default would be 'smarter-platform-prod'.
+- environment_platform_domain is named using the convention
+
+  ``{environment}.{shared_resource_identifier}.{root_domain}``
+
+  which by default would be 'alpha.platform.example.com'.
+- CDN domains are named using the convention
+
+  ``cdn.{environment}.{shared_resource_identifier}.{root_domain}``
+
+  which by default would be 'cdn.alpha.platform.example.com'.
+- API domains are named using the convention
+
+  ``{environment}.api.{shared_resource_identifier}.{root_domain}``
+
+  which by default would be 'alpha.api.platform.example.com'.
+
+**Example Kubernetes Deployment**
+
+.. figure:: https://cdn.smarter.sh/images/example-kubernetes-deployment.png
+  :alt: Example Kubernetes Deployment
+  :align: center
+  :width: 100%
+  :class: img-bottom-margin
 
 
 Infrastructure
@@ -152,5 +197,36 @@ Begin by reviewing the following documentation:
   of the source code helpful for understanding how to configure the application. Of interest
   are the `Django settings files <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`__,
   the `Smarter Settings module <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf.py>`__,
+  the `Smarter Settings documentation <../smarter-framework/smarter-settings.html>`__,
   the `Python requirements <https://github.com/smarter-sh/smarter/tree/main/smarter/requirements>`__, and the
   `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__.
+
+.. important::
+
+    1. You will need to create your own Deployment workflow. You can use the `Smarter GitHub Actions Deployment workflow <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/deploy.yml>`__
+    and `Smarter GitHub Deployment Action <https://github.com/smarter-sh/smarter/blob/main/.github/actions/deploy/action.yml>`__
+    in the official Smarter repo as a reference, but you should not attempt to use it directly unless you have forked
+    the Smarter repo. The deployment workflow depends on a number GitHub Secrets that you must configure in your own GitHub repository.
+    If possible, see `Smarter Settings - Secrets <https://github.com/smarter-sh/smarter/settings/secrets/actions>`__.
+
+    2. You will need an AWS IAM key-pair with sufficient permissions to deploy the application to your Kubernetes cluster.
+    At a minimum, this key-pair will need complete control of the EKS service, in addition to permissions to create and
+    manage the various resources that the application depends on such as EC2 instances, EBS volumes, S3 buckets,
+    SES resources, and more.
+
+
+Trouble Shooting
+------------------
+
+Permissions and naming are the two most common sources of deployment-related problems. Consider the example
+Kubernetes Ingress manifest below. It contains eleven references, created by either of Terraform or
+the Smarter Platform application itself. These names have to agree, and must be able "hand shake" as necessary
+between Kubernetes and the Smarter Platform application.
+
+
+
+.. figure:: https://cdn.smarter.sh/images/naming-example.png
+  :alt: Example Kubernetes Ingress Manifest
+  :align: center
+  :width: 100%
+  :class: img-bottom-margin
