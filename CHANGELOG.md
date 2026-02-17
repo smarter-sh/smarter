@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.129](https://github.com/smarter-sh/smarter/compare/v0.13.128...v0.13.129) (2026-02-17)
+
+### Bug Fixes
+
+* parameterize smarter_settings.platform_subdomain ([34752d5](https://github.com/smarter-sh/smarter/commit/34752d53ff92029927cb98363083140d799127d6))
+
 ## [0.13.128](https://github.com/smarter-sh/smarter/compare/v0.13.127...v0.13.128) (2026-02-16)
 
 ### Bug Fixes
