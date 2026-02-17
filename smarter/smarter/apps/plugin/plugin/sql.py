@@ -21,11 +21,11 @@ A PLugin that uses a remote SQL database server to retrieve its return data
     :language: yaml
     :caption: 2.) Example Smarter SQL Connection Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-api.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml
     :language: yaml
     :caption: 3.) Example Stackademy SQL Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-api.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml
     :language: yaml
     :caption: 4.) Example Stackademy Chatbot Manifest
 
@@ -78,6 +78,7 @@ from smarter.lib.manifest.enum import SAMKeys
 from .base import PluginBase, SmarterPluginError
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -474,7 +475,7 @@ class SqlPlugin(PluginBase):
                     pass
             if not plugin_data_sqlconnection:
                 raise SmarterSqlPluginError(
-                    f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for account {account}. Error: {e}"
+                    f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for account {account}."
                 )
 
             sql_data["connection"] = plugin_data_sqlconnection
@@ -589,7 +590,6 @@ class SqlPlugin(PluginBase):
         )
         connection = "example_connection"
         sql_data = SqlData(
-            description="Query the Django User model to retrieve detailed account information about the courses available at Stackademy .",
             sqlQuery="SELECT c.course_code, c.course_name, c.description, c.cost, prerequisite.course_code AS prerequisite_course_code, prerequisite.course_name AS prerequisite_course_name FROM courses c LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id WHERE ((c.description LIKE CONCAT('%', {description}, '%')) OR ({description} IS NULL)) AND (c.cost <= {max_cost} OR {max_cost} IS NULL) ORDER BY c.prerequisite_id;\n",
             parameters=[
                 Parameter(
