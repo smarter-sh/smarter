@@ -117,6 +117,16 @@ runs:
     # worry about cleaning up after ourselves.
     # -------------------------------------------------------------------------
   steps:
+    - name: Cache Helm dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/helm
+          helm/charts/smarter/charts
+        key: helm-${{ runner.os }}-${{ hashFiles('helm/charts/smarter/Chart.yaml') }}-${{ hashFiles('helm/charts/smarter/requirements.yaml') }}
+        restore-keys: |
+          helm-${{ runner.os }}-
+
     # Initialize environment variables that are derived from the inputs
     - name: Initialize environment variables
       shell: bash
@@ -421,6 +431,11 @@ runs:
           --set mysql.auth.password="${{ env.SMARTER_MYSQL_PASSWORD }}" \
           --set mysql.auth.database="${{ env.SMARTER_MYSQL_DATABASE }}" \
           --set mysql.auth.username="${{ env.SMARTER_MYSQL_USERNAME }}" \
+          --set mariadb.auth.rootPassword="${{ env.MYSQL_ROOT_PASSWORD }}" \
+          --set mariadb.auth.rootUsername="${{ env.MYSQL_ROOT_USERNAME }}" \
+          --set mariadb.auth.password="${{ env.SMARTER_MYSQL_PASSWORD }}" \
+          --set mariadb.auth.database="${{ env.SMARTER_MYSQL_DATABASE }}" \
+          --set mariadb.auth.username="${{ env.SMARTER_MYSQL_USERNAME }}" \
           --values /tmp/values.yaml
 
     # Clean up secrets file
