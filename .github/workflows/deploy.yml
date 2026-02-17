@@ -41,6 +41,7 @@ env:
   AWS_REGION: ca-central-1
   ROOT_DOMAIN: "smarter.sh"
   NAMESPACE_BASE: "smarter-ubc"
+  PLATFORM_SUBDOMAIN: "ubc"
 
 jobs:
   deploy:
@@ -96,6 +97,7 @@ jobs:
           mistral-api-key: ${{ secrets.MISTRAL_API_KEY }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          platform-subdomain: ${{ env.PLATFORM_SUBDOMAIN }}
           pinecone-api-key: ${{ secrets.PINECONE_API_KEY }}
           pinecone-environment: ${{ secrets.PINECONE_ENVIRONMENT }}
           root-domain: ${{ env.ROOT_DOMAIN }}

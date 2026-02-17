@@ -86,7 +86,7 @@ from .const import (
     SMARTER_API_KEY_MAX_LIFETIME_DAYS,
     SMARTER_API_SUBDOMAIN,
     SMARTER_DEFAULT_APP_LOADER_PATH,
-    SMARTER_PLATFORM_SUBDOMAIN,
+    SMARTER_PLATFORM_DEFAULT_SUBDOMAIN,
     VERSION,
     SmarterEnvironments,
 )
@@ -550,6 +550,7 @@ class SettingsDefaults:
     OPENAI_API_KEY: SecretStr = SecretStr(get_env("OPENAI_API_KEY", is_secret=True, is_required=True))
     OPENAI_ENDPOINT_IMAGE_N = get_env("OPENAI_ENDPOINT_IMAGE_N", 4)
     OPENAI_ENDPOINT_IMAGE_SIZE = get_env("OPENAI_ENDPOINT_IMAGE_SIZE", "1024x768")
+    PLATFORM_SUBDOMAIN = get_env("PLATFORM_SUBDOMAIN", SMARTER_PLATFORM_DEFAULT_SUBDOMAIN)
     PINECONE_API_KEY: SecretStr = SecretStr(get_env("PINECONE_API_KEY", is_secret=True))
 
     REACTJS_APP_LOADER_PATH = get_env("REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
@@ -2994,6 +2995,13 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid image size string.
     """
 
+    platform_subdomain: Optional[str] = Field(
+        SettingsDefaults.PLATFORM_SUBDOMAIN,
+        description="The subdomain for the platform, used in constructing URLs and email addresses.",
+        examples=["platform", "ubc"],
+        title="Platform Subdomain",
+    )
+
     @before_field_validator("openai_endpoint_image_size")
     def validate_openai_endpoint_image_size(cls, v: Optional[str]) -> str:
         """Validates the `openai_endpoint_image_size` field.
@@ -4006,20 +4014,6 @@ class Settings(BaseSettings):
                 "Please check your environment settings."
             )
         return retval
-
-    @property
-    def platform_subdomain(self) -> str:
-        """
-        Return the platform subdomain.
-
-        Example:
-            >>> print(smarter_settings.platform_subdomain)
-            'platform'
-
-        See Also:
-            - SMARTER_PLATFORM_SUBDOMAIN
-        """
-        return SMARTER_PLATFORM_SUBDOMAIN
 
     @cached_property
     def root_platform_domain(self) -> str:
