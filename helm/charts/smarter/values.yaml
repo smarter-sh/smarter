@@ -203,6 +203,7 @@ externalDatabase:
 
 mysql:
   enabled: true
+  fullnameOverride: "smarter-mysql"
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
