@@ -577,7 +577,7 @@ class SettingsDefaults:
     )
 
     SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}", is_required=True)
-    SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}", is_required=True)
+    SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{PLATFORM_SUBDOMAIN}.{ROOT_DOMAIN}", is_required=True)
     SMTP_HOST = get_env("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
     SMTP_PORT = int(get_env("SMTP_PORT", "587"))
     SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False))
@@ -1597,6 +1597,7 @@ class Settings(BaseSettings):
     :type: int
     :default: Value from ``SettingsDefaults.CHAT_CACHE_EXPIRATION``
     :raises SmarterConfigurationError: If the value is not a positive integer.
+
     see: :class:`smarter.apps.prompt.models.ChatHelper`
     """
 
@@ -3303,7 +3304,7 @@ class Settings(BaseSettings):
     It is required for enabling users to log in using their Google accounts.
 
     :type: SecretStr
-    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY``
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID.
     """
 
@@ -3368,7 +3369,7 @@ class Settings(BaseSettings):
     It is required for enabling users to log in using their GitHub accounts.
 
     :type: SecretStr
-    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY``
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID
     """
 
@@ -3401,7 +3402,7 @@ class Settings(BaseSettings):
     It is required for enabling users to log in using their GitHub accounts.
 
     :type: SecretStr
-    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET``
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 
@@ -3470,7 +3471,7 @@ class Settings(BaseSettings):
     It was required for enabling users to log in using their LinkedIn accounts.
 
     :type: SecretStr
-    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET``
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 
@@ -4229,14 +4230,14 @@ class Settings(BaseSettings):
 
         Example:
             >>> print(smarter_settings.root_api_domain)
-            'api.example.com'
+            'api.platform.example.com'
 
         See Also:
             - SMARTER_API_SUBDOMAIN
-            - smarter_settings.root_domain
+            - smarter_settings.environment_platform_domain
             - smarter_settings.api_subdomain
         """
-        return f"{self.api_subdomain}.{self.root_domain}"
+        return f"{self.api_subdomain}.{self.platform_subdomain}.{self.root_domain}"
 
     @cached_property
     def environment_api_domain(self) -> str:

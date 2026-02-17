@@ -19,14 +19,15 @@ class AbstractController(abc.ABC, AccountMixin):
     ensuring that the correct subclass is used for each manifest type. It also provides account and user context
     through the `AccountMixin`.
 
-    **Parameters:**
+    Parameters
+
         account (Account): The account associated with the controller instance. Must be a saved model.
         user (User): The user associated with the controller instance. Must be a saved model.
         user_profile (optional): The user's profile, if available.
         request (optional): The request object, if available.
         *args, **kwargs: Additional arguments passed to the mixin and controller.
 
-    **Usage Example:**
+    Usage Example
 
         .. code-block:: python
 

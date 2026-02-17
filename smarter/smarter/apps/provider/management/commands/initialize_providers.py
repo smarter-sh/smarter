@@ -51,17 +51,20 @@ class Command(SmarterCommand):
     def initialize_provider_models(self, provider: Provider, bearer_token: str, default_model: str):
         """
         Initialize models by fetching them from the OpenAI compatible API end point.
-        example response:
-        {
-            "object": "list",
-            "data": [
-                {
-                    "id": "gpt-4-0613",
-                    "object": "model",
-                    "created": 1686588896,
-                    "owned_by": "openai"
-                },
-            ]
+
+        Example response::
+
+            {
+                "object": "list",
+                "data": [
+                    {
+                        "id": "gpt-4-0613",
+                        "object": "model",
+                        "created": 1686588896,
+                        "owned_by": "openai"
+                    }
+                ]
+            }
         """
         log_prefix = f"initialize_provider_models({provider.name}):"
         self.stdout.write("-" * 80)

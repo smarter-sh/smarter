@@ -25,6 +25,7 @@ The Smarter platform's fundamental building blocks to this extent are:
    :caption: Platform Administration Guide
 
    smarter-platform/quick-start
+   smarter-platform/production-deployment
    smarter-platform/prerequisites
    smarter-platform/trouble-shooting
    smarter-platform/cloud-infrastructure

@@ -27,7 +27,7 @@ integrations with a variety of cloud infrastructure services in a
 variety of environments, configured by a variety of different possible
 sources of data including environment variables, .env file,
 terraform.tfvars and system constants. We use it for the
-`Settings https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf.py`__ class in this
+`Settings <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf.py>`__ class in this
 project, and also for validating yaml
 `manifests <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/manifest>`__ for the OpenAI Function
 Calling feature. It’s an important addition because it enforces strong
