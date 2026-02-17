@@ -7,6 +7,9 @@ inputs:
   environment:
     description: "The environment to deploy"
     required: true
+  subdomain:
+    description: "The subdomain to deploy"
+    required: true
   aws-access-key-id:
     description: "The AWS access key ID"
     required: true
@@ -47,7 +50,7 @@ runs:
       shell: bash
       run: |
         aws ses send-email \
-          --from "no-reply@${{ inputs.environment }}.platform.smarter.sh" \
+          --from "no-reply@${{ inputs.environment }}.${{ inputs.subdomain }}.smarter.sh" \
           --destination "ToAddresses=lpm0073@gmail.com,kent@querium.com" \
           --message "Subject={Data=${{ inputs.subject }},Charset=utf8},Body={Text={Data=${{ inputs.body }},Charset=utf8}}" \
-          --reply-to-addresses "no-reply@${{ inputs.environment }}.platform.smarter.sh"
+          --reply-to-addresses "no-reply@${{ inputs.environment }}.${{ inputs.subdomain }}.smarter.sh"
