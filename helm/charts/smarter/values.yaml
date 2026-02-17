@@ -202,7 +202,7 @@ externalDatabase:
   password: ""    # Will use .Values.env.SMARTER_MYSQL_PASSWORD if empty
 
 mysql:
-  enabled: true
+  enabled: false
   fullnameOverride: "smarter-mysql"
   containerSecurityContext:
     enabled: true
@@ -245,12 +245,7 @@ mysql:
     successThreshold: 1
 
 mariadb:
-  enabled: false
-  auth:
-    rootPassword: ""
-    password: ""
-    database: ""
-    username: ""
+  enabled: true
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
@@ -260,8 +255,6 @@ mariadb:
   extraVolumeMounts: []
   extraVolumes: []
   image:
-    repository: mariadb
-    tag: "24.0.2"
     pullPolicy: IfNotPresent
   initdbScripts: {}
   livenessProbe:
