@@ -1,5 +1,5 @@
-Smarter Framework
-======================
+Smarter Development Framework
+=============================
 
 The Smarter :doc:`cloud-native <smarter-framework/kubernetes>` application framework consists fundamentally of a
 set of software that spans the complete lifecycle of
