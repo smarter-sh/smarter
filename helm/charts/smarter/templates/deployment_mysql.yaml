@@ -26,16 +26,26 @@ spec:
         {{- toYaml .Values.global.affinity | nindent 8 }}
       tolerations:
         {{- toYaml .Values.global.tolerations | nindent 8 }}
+      nodeSelector:
+        {{- toYaml .Values.mysql.nodeSelector | nindent 8 }}
       securityContext:
         fsGroup: {{ .Values.mysql.podSecurityContext.fsGroup | default 1001 }}
       containers:
         - name: mysql
           image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
           imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
+          {{- if .Values.mysql.containerSecurityContext.enabled }}
+          securityContext:
+            runAsUser: {{ .Values.mysql.containerSecurityContext.runAsUser }}
+            runAsGroup: {{ .Values.mysql.containerSecurityContext.runAsGroup }}
+            fsGroup: {{ .Values.mysql.containerSecurityContext.fsGroup }}
+          {{- end }}
           env:
             - name: MYSQL_ROOT_PASSWORD
               {{- if .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}
               value: {{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD | quote }}
+              {{- else if .Values.mysql.auth.rootPassword }}
+              value: {{ .Values.mysql.auth.rootPassword | quote }}
               {{- else }}
               valueFrom:
                 secretKeyRef:
@@ -46,22 +56,27 @@ spec:
               value: {{ .Values.env.SMARTER_MYSQL_DATABASE | default .Values.mysql.auth.database | quote }}
             - name: MYSQL_USER
               value: {{ .Values.env.SMARTER_MYSQL_USER | default .Values.mysql.auth.username | quote }}
-            {{- if .Values.env.SMARTER_MYSQL_PASSWORD }}
             - name: MYSQL_PASSWORD
+              {{- if .Values.env.SMARTER_MYSQL_PASSWORD }}
               value: {{ .Values.env.SMARTER_MYSQL_PASSWORD | quote }}
-            {{- else }}
-            - name: MYSQL_PASSWORD
+              {{- else if .Values.mysql.auth.password }}
+              value: {{ .Values.mysql.auth.password | quote }}
+              {{- else }}
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.app.name | default "smarter" }}-user-{{ .Values.names.mysqlName | default "mysql" }}
                   key: mysql-password
-            {{- end }}
+              {{- end }}
           ports:
             - containerPort: 3306
               name: mysql
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
+            {{- if .Values.mysql.initdbScripts }}
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+            {{- end }}
           resources:
             {{- toYaml .Values.mysql.resources | nindent 12 }}
           livenessProbe:
@@ -72,4 +87,9 @@ spec:
         - name: mysql-data
           persistentVolumeClaim:
             claimName: {{ .Values.app.name | default "smarter" }}-{{ .Values.names.mysqlName | default "mysql" }}
+        {{- if .Values.mysql.initdbScripts }}
+        - name: init-scripts
+          configMap:
+            name: {{ .Values.app.name | default "smarter" }}-mysql-init-scripts
+        {{- end }}
 {{- end }}

@@ -202,7 +202,7 @@ externalDatabase:
   password: ""    # Will use .Values.env.SMARTER_MYSQL_PASSWORD if empty
 
 mysql:
-  enabled: false
+  enabled: true
   auth:
     rootPassword: ""
     password: ""
@@ -213,9 +213,6 @@ mysql:
     runAsUser: 1001
     runAsGroup: 1001
     fsGroup: 1001
-  extraEnv: []
-  extraVolumeMounts: []
-  extraVolumes: []
   image:
     repository: mysql
     tag: "8.0"
@@ -232,7 +229,7 @@ mysql:
   persistence:
     enabled: true
     size: 8Gi
-    storageClass: "gp3"
+    storageClassName: "gp3"
     accessModes:
       - ReadWriteOnce
   podSecurityContext:
@@ -252,11 +249,6 @@ mysql:
     timeoutSeconds: 5
     failureThreshold: 6
     successThreshold: 1
-  service:
-    type: ClusterIP
-    port: 3306
-    headless:
-      sessionAffinity: None
 
 mariadb:
   enabled: false
