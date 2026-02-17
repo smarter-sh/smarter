@@ -135,7 +135,8 @@ being used in this repo, before proceeding.
     cloud infrastructure is complex and has many interdependencies that would
     be difficult if not impossible to manage manually. Additionally, the
     Terraform scripts create a detailed set of resource tags that are the
-    sole means of effectively tracking these resources once they've been created.
+    sole means of effectively tracking these resources inside your AWS account
+    once they've been created.
 
 
 II. ReactJS Component
