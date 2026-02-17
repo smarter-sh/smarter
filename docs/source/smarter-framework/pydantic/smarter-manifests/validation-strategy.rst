@@ -1,5 +1,5 @@
 SAM Validation Strategy
-=====================
+===========================
 
 The point of using yaml manifest files is to facilitate a human readable way to define
 complex AI resources and their configurations, taking into consideration that something
