@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.130](https://github.com/smarter-sh/smarter/compare/v0.13.129...v0.13.130) (2026-02-17)
+
+### Bug Fixes
+
+* add a deployment page. fix linter errors ([3307903](https://github.com/smarter-sh/smarter/commit/3307903a52f0786332ddd42550bd9c488f841a0c))
+* root_api_domain should be of the form api.platform.example.com ([73e14b1](https://github.com/smarter-sh/smarter/commit/73e14b144c2a4100bb5a356b96bc5460c9930ed9))
+
 ## [0.13.129](https://github.com/smarter-sh/smarter/compare/v0.13.128...v0.13.129) (2026-02-17)
 
 ### Bug Fixes
