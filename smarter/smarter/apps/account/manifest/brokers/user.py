@@ -218,10 +218,13 @@ class SAMUserBroker(AbstractBroker):
            - If no matching `User` exists for the broker's username, `None` is returned.
 
         **Example usage:**
+
         .. code-block:: python
-              user = broker.brokered_user
-                if user:
-                    print(user.first_name, user.last_name, user.email)
+
+            user = broker.brokered_user
+            if user:
+                print(user.first_name, user.last_name, user.email)
+
         See Also:
               - :class:`smarter.apps.account.models.User`
         """
@@ -255,10 +258,12 @@ class SAMUserBroker(AbstractBroker):
 
         :param value: A `User` instance to associate with the broker.
 
-        **Example usage:**
-        .. code-block:: python
+          Example usage:
+
+          .. code-block:: python
               broker.brokered_user = user_instance
-        See Also:
+
+          See Also:
               - :class:`smarter.apps.account.models.User`
         """
         self._brokered_user = value

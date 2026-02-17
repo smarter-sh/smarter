@@ -1597,6 +1597,7 @@ class Settings(BaseSettings):
     :type: int
     :default: Value from ``SettingsDefaults.CHAT_CACHE_EXPIRATION``
     :raises SmarterConfigurationError: If the value is not a positive integer.
+
     see: :class:`smarter.apps.prompt.models.ChatHelper`
     """
 
@@ -3303,7 +3304,7 @@ class Settings(BaseSettings):
     It is required for enabling users to log in using their Google accounts.
 
     :type: SecretStr
-    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY``
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID.
     """
 
@@ -3368,7 +3369,7 @@ class Settings(BaseSettings):
     It is required for enabling users to log in using their GitHub accounts.
 
     :type: SecretStr
-    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY``
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID
     """
 
@@ -3401,7 +3402,7 @@ class Settings(BaseSettings):
     It is required for enabling users to log in using their GitHub accounts.
 
     :type: SecretStr
-    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET``
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 
@@ -3470,7 +3471,7 @@ class Settings(BaseSettings):
     It was required for enabling users to log in using their LinkedIn accounts.
 
     :type: SecretStr
-    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET``
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 
