@@ -1,0 +1,11 @@
+{{- if and .Values.mysql.enabled .Values.mysql.initdbScripts }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.app.name | default "smarter" }}-mysql-init-scripts
+  namespace: {{ .Values.namespace }}
+  labels:
+    App: {{ .Values.app.name | default "smarter" }}-{{ .Values.names.mysqlName | default "mysql" }}
+data:
+  {{- toYaml .Values.mysql.initdbScripts | nindent 2 }}
+{{- end }}
