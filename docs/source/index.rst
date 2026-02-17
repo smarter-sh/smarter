@@ -107,10 +107,7 @@ Usage
    :caption: External Resources
 
    external-links/support-smarter
-   external-links/smarter-docs
    external-links/swagger
-   external-links/redoc
    external-links/manifest-reference
    external-links/json-schemas
-   external-links/smarter-tutorial
    external-links/youtube
