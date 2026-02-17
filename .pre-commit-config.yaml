@@ -70,7 +70,7 @@ repos:
       - id: check-xml
         exclude: "smarter/smarter/static/|smarter/smarter/templates/"
       - id: check-yaml
-        exclude: ^smarter/smarter/apps/api/v1/cli/tests/data/api-connection\.yaml$|^helm/charts/smarter/templates/.*\.yaml$|^docs/source/example-manifests/
+        exclude: ^helm/charts/smarter/values\.yaml$|^smarter/smarter/apps/api/v1/cli/tests/data/api-connection\.yaml$|^helm/charts/smarter/templates/.*\.yaml$|^docs/source/example-manifests/
       - id: destroyed-symlinks
       - id: detect-aws-credentials
         args: ["--allow-missing-credentials"]
