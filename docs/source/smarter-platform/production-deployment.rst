@@ -25,7 +25,7 @@ A modest amount of advance planning and an understanding of some basic organizat
 Smarter's fundamental identification and organizational units are as follows:
 
 .. list-table::
-   :widths: 25 75
+   :widths: 20 80
 
    * - **root_domain**
      - This is the root domain that you will use for your Smarter deployment. For example,
@@ -34,9 +34,8 @@ Smarter's fundamental identification and organizational units are as follows:
        and it affects the naming of various resources such as DNS records and Hosted Zones.
    * - **platform_name**
      - Default is "smarter". Ensure that this matches in both Terraform and Helm configurations.
-       Ideally this should be consistent with your root domain. For example, if your root
-       domain is "example.com", consider using "example" as the platform name to maintain
-       consistency and clarity in resource naming.
+       Within the Smarter Platform application, the platform_name is derived from the root_domain by taking the first segment.
+       For example, if your root domain is "example.com", then the platform_name will be "example".
    * - **shared_resource_identifier**
      - Default is "platform". Ensure that this matches in both Terraform and Helm configurations.
        Consider using a unique identifier such as your organization's domain name or abbreviation
@@ -110,8 +109,8 @@ Within the Smarter application itself, these organizational units are combined t
   :class: img-bottom-margin
 
 
-Infrastructure
------------------
+I. Infrastructure
+-------------------
 
 The entire AWS infrastructure build is fully automated using Terraform and Terragrunt
 scripts. You should begin by reviewing the following documentation:
@@ -139,8 +138,8 @@ being used in this repo, before proceeding.
     sole means of effectively tracking these resources once they've been created.
 
 
-ReactJS Component
--------------------
+II. ReactJS Component
+----------------------
 
 The Chat functionality in the Smarter Prompt Engineer Workbench is delivered as a deployed ReactJS component
 served from a CDN at runtime. You will need to build and deploy this component separately from the main
@@ -172,8 +171,8 @@ Begin by reviewing the following documentation:
    <br/>
 
 
-Smarter Platform Application
-------------------------------
+III. Smarter Platform Application
+-----------------------------------
 
 The Smarter Platform application consists of a Python-Django backend that supports an
 API and a Web Console frontend. This single code base is deployed to Kubernetes as
@@ -220,7 +219,7 @@ Trouble Shooting
 
 Permissions and naming are the two most common sources of deployment-related problems. Consider the example
 Kubernetes Ingress manifest below. It contains eleven references, created by either of Terraform or
-the Smarter Platform application itself. These names have to agree, and must be able "hand shake" as necessary
+the Smarter Platform application itself. These names have to agree, and must be able to "hand shake" as necessary
 between Kubernetes and the Smarter Platform application.
 
 
