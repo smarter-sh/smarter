@@ -254,14 +254,14 @@ mysql:
 
 mariadb:
   enabled: true
-  containers:
+  primary:
     resources:
       requests:
-        cpu: "0.25"
-        memory: "1Gi"
+        cpu: 500m
+        memory: 2Gi
       limits:
-        cpu: "2"
-        memory: "4Gi"
+        cpu: 2
+        memory: 4Gi
     image:
       pullPolicy: IfNotPresent
     livenessProbe:
