@@ -279,29 +279,12 @@ mariadb:
       timeoutSeconds: 5
       failureThreshold: 6
       successThreshold: 1
-  containerSecurityContext:
-    enabled: true
-    runAsUser: 1001
-    runAsGroup: 1001
-    fsGroup: 1001
-  extraEnv: []
-  extraVolumeMounts: []
-  extraVolumes: []
-  initdbScripts: {}
-  persistence:
-    enabled: true
-    size: 8Gi
-    storageClass: "gp3"
-    accessModes:
-      - ReadWriteOnce
-  podSecurityContext:
-    enabled: true
-    fsGroup: 1001
-  service:
-    type: ClusterIP
-    port: 3306
-    headless:
-      sessionAffinity: None
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: "gp3"
+      accessModes:
+        - ReadWriteOnce
 
 
 # -----------------------------------------------------------------------------
