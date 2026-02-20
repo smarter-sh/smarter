@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.135](https://github.com/smarter-sh/smarter/compare/v0.13.134...v0.13.135) (2026-02-20)
+
+### Bug Fixes
+
+* convert api ingress to traefik ([58b2bb6](https://github.com/smarter-sh/smarter/commit/58b2bb6eff4099875f36cd08aac9fa0a4082b46a))
+
 ## [0.13.134](https://github.com/smarter-sh/smarter/compare/v0.13.133...v0.13.134) (2026-02-20)
 
 ### Bug Fixes
