@@ -1732,77 +1732,69 @@ class ChatBotHelper(SmarterRequestMixin):
         :returns: ``True`` if the helper is initialized and has a valid ChatBot, otherwise ``False``.
         :rtype: bool
         """
+        logger_prefix = f"{self.formatted_class_name}.is_chatbothelper_ready()"
         if self.chatbot_custom_domain:
             chatbot_helper_logger.debug(
-                "%s.%s() returning true because chatbot_custom_domain is set",
-                self.formatted_class_name,
-                self.is_chatbothelper_ready.__name__,
+                "%s returning true because chatbot_custom_domain is set",
+                logger_prefix,
             )
             return True
 
         if not self.is_chatbot:
             chatbot_helper_logger.debug(
-                "%s.%s() returning false because is_chatbot is false",
-                self.formatted_class_name,
-                self.is_chatbothelper_ready.__name__,
+                "%s returning false because is_chatbot is false",
+                logger_prefix,
             )
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.%s() confirmed URL is a chatbot URL. url=%s",
-                self.formatted_class_name,
-                self.is_chatbothelper_ready.__name__,
+                "%s confirmed URL is a chatbot URL. url=%s",
+                logger_prefix,
                 self._url,
             )
         if not self.user or not self.user.is_authenticated:
             chatbot_helper_logger.warning(
-                "%s.%s() called with unauthenticated request",
-                self.formatted_class_name,
-                self.is_chatbothelper_ready.__name__,
+                "%s called with unauthenticated request",
+                logger_prefix,
             )
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.%s() confirmed request user is authenticated: %s",
-                self.formatted_class_name,
-                self.is_chatbothelper_ready.__name__,
+                "%s confirmed request user is authenticated: %s",
+                logger_prefix,
                 self.user.username,
             )
         if not self.account:
-            chatbot_helper_logger.warning(
-                "%s.%s() called with no account", self.formatted_class_name, self.is_chatbothelper_ready.__name__
-            )
+            chatbot_helper_logger.warning("%s called with no account", logger_prefix)
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.%s() confirmed account is assigned: %s",
-                self.formatted_class_name,
-                self.is_chatbothelper_ready.__name__,
+                "%s confirmed account is assigned: %s",
+                logger_prefix,
                 self.account,
             )
         if not isinstance(self.name, str):
             chatbot_helper_logger.warning(
-                "%s.%s() did not find a name for the chatbot. args: %s, kwargs: %s",
-                self.formatted_class_name,
-                self.is_chatbothelper_ready.__name__,
+                "%s did not find a name for the chatbot. args: %s, kwargs: %s",
+                logger_prefix,
             )
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() confirmed chatbot name is assigned: %s",
-                self.formatted_class_name,
+                "%s confirmed chatbot name is assigned: %s",
+                logger_prefix,
                 self.name,
             )
         if not isinstance(self._chatbot, ChatBot):
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() confirmed ChatBot is not initialized.",
-                self.formatted_class_name,
+                "%s confirmed ChatBot is not initialized.",
+                logger_prefix,
             )
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() confirmed ChatBot is initialized: %s",
-                self.formatted_class_name,
+                "%s confirmed ChatBot is initialized: %s",
+                logger_prefix,
                 self._chatbot,
             )
         return True
