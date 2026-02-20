@@ -1,7 +1,7 @@
 SAMLoader Class
 ====================
 
-SAMLoader is a lightweight utility class for loading and parsing Smarter Api Manifest (SAM) files into Pydantic models.
+SAMLoader is a lightweight utility class for loading and parsing Smarter API Manifest (SAM) files into Pydantic models.
 It provides a simple interface for reading manifest files, validating their contents, and converting them
 into lightweight structured data models that can be used for initializing SAM Pydantic models.
 

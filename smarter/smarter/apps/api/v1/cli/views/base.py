@@ -458,7 +458,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
         In this base class implementation, the primary objective is to provide robust exception handling for all CLI API views. The method attempts to map known exceptions to appropriate HTTP status codes and, where possible, adds additional context to error messages. This ensures that clients receive meaningful and actionable error responses, even if an unexpected error occurs.
 
-        Ideally, child views should handle their own exceptions and return a ``SmarterJournaledJsonErrorResponse`` or similar structured response. However, this base implementation acts as a safety net, catching any unhandled exceptions and returning a generic error message along with a bug report URL for further troubleshooting.
+        Ideally, child views should handle their own exceptions and return a ``SmarterJournaledJsonErrorResponse`` or similar structured response. However, this base implementation acts as a safety net, catching any unhandled exceptions and returning a generic error message along with a bug report URL for further trouble shooting.
 
         Signals are emitted to indicate the completion or failure of API requests, which can be used for logging, auditing, or triggering other side effects.
 

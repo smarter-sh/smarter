@@ -47,7 +47,7 @@ Proprietary Security Features
 - **Excessive 404 Protection**. Custom middleware (above DRF's rate-limiting) to protect against blind/random file access attempts. See `smarter/lib/django/middleware/excessive_404.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/excessive_404.py>`_
 - **Enhanced CSRF Protection**. Custom middleware to enhance CSRF protection for Smarter ChatBot/Agent API endpoints. See `smarter/lib/django/middleware/csrf.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/csrf.py>`_
 - **Enhanced CORS Protection**. Custom middleware to enhance CORS protection for Smarter ChatBot/Agent API endpoints. See `smarter/lib/django/middleware/cors.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/cors.py>`_
-- **Enhanced Json HTTP Response Protection**. Custom middleware to ensure that REST Api responses exclusively return Json in the http response body. See `smarter/lib/django/middleware/json.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/json.py>`_
+- **Enhanced Json HTTP Response Protection**. Custom middleware to ensure that REST API responses exclusively return Json in the http response body. See `smarter/lib/django/middleware/json.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/json.py>`_
 - **Audit Logging**. See `Smarter Journal <smarter-journal.html>`_ for details on logging security-related events.
 - **Configurable Application Logs**. See `Configuration Management <configuration.html>`_ for details on logging configuration changes.
 
@@ -135,7 +135,7 @@ Django Security Features
 Secure Remote Access
 ---------------------
 
-Smarter is designed as an Api-first application, even though it also includes a web-based
+Smarter is designed as an API-first application, even though it also includes a web-based
 Prompt Engineer Workbench and Django Admin interface. This affords the Smarter platform the
 luxury of minimizing its attack surface primarily to http and https traffic only, and at that,
 to a limited set of URL endpoints.

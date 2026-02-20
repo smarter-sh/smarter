@@ -31,7 +31,7 @@ class Command(SmarterCommand):
     """
     Management command for verifying the functionality of ``api/v1/cli/`` endpoints in the Smarter platform.
 
-    This command is designed as both a utility and an instructional tool, allowing developers and administrators to manually exercise and validate the API endpoints that are typically covered by automated unit tests. It provides formatted output to facilitate understanding and troubleshooting.
+    This command is designed as both a utility and an instructional tool, allowing developers and administrators to manually exercise and validate the API endpoints that are typically covered by automated unit tests. It provides formatted output to facilitate understanding and trouble shooting.
 
     **Key Features and Demonstrations:**
 

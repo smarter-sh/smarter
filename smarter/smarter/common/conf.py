@@ -2065,7 +2065,7 @@ class Settings(BaseSettings):
     True if debug mode is enabled. This enables verbose logging and other debug features.
 
     When debug mode is enabled, the platform will log additional information useful for
-    troubleshooting and development. This may include detailed error messages, stack traces, and
+    troubles hooting and development. This may include detailed error messages, stack traces, and
     other diagnostic data that can help identify issues during development or testing.
 
     :type: bool
@@ -2102,7 +2102,7 @@ class Settings(BaseSettings):
     When enabled, the platform will log or output the default configuration values
     used during initialization. This can help developers and administrators
     understand the effective configuration of the system, especially when
-    troubleshooting issues related to settings.
+    trouble shooting issues related to settings.
 
     :type: bool
     :default: Value from ``SettingsDefaults.DUMP_DEFAULTS``

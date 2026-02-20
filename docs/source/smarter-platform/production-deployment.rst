@@ -3,12 +3,12 @@ Production Deployment
 
 .. attention::
 
-   This is a complex deployment process that requires advanced knowledge of Linux, Docker, Kubernetes,
-   Helm, Terraform, AWS cloud infrastructure, Python-Django applications, and GitHub Actions.
-   Consider using one of our recommended hosting partners, or a certified installation expert.
+  This is a complex deployment process that requires advanced knowledge of `Linux <https://www.linux.org/>`__, `Docker <https://www.docker.com/>`__, `Kubernetes <https://kubernetes.io/>`__,
+  `Helm <https://helm.sh/>`__, `Terraform <https://developer.hashicorp.com/terraform>`__, `AWS cloud infrastructure <https://docs.aws.amazon.com/>`__, `Python <https://www.python.org/>`__-`Django <https://www.djangoproject.com/>`__ applications, and `GitHub Actions <https://github.com/features/actions>`__.
+  Consider using one of our recommended `hosting partners <https://smarter.sh/>`__, or a certified installation expert.
 
 
-Smarter runs natively on Kubernetes using spot-priced compute instances. This is a cost-effective, resilient, and
+(Smarter runs natively on Kubernetes using `spot-priced <https://aws.amazon.com/ec2/spot/pricing/>`__ compute instances. This is a cost-effective, resilient, and
 scalable architecture that requires minimal maintenance once deployed. It natively handles multiple environments
 (alpha, beta, next, prod) for the same installation, maintaining clean separation of resources and
 data between environments. It also natively handles multiple deployments of Smarter within the same AWS account.
@@ -175,7 +175,8 @@ Begin by reviewing the following documentation:
 III. Smarter Platform Application
 -----------------------------------
 
-The Smarter Platform application consists of a Python-Django backend that supports an
+The Smarter Platform application is deployed to Kubernetes using the `official Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__.
+The application itself consists of a Python-Django backend that supports an
 API and a Web Console frontend. This single code base is deployed to Kubernetes as
 an application server and also as a Celery worker and a Celery Beat worker.
 The application follows 12-factor app principles and is designed to be horizontally

@@ -9,12 +9,12 @@ platform consists of:
 +======================+===================================================================================================================================+
 | Web Application      | A web application for Prompt Engineers and system administrators.                                                                 |
 +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-| REST API             | A REST Api that supports client software including the command-line interface (CLI), the Smarter Chat React UI component, and     |
+| REST API             | A REST API that supports client software including the command-line interface (CLI), the Smarter Chat React UI component, and     |
 |                      | third-party integrations.                                                                                                         |
 +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-| Sandbox Endpoints    | REST Api endpoints for sandbox (undeployed) ChatBots/Agents                                                                       |
+| Sandbox Endpoints    | REST API endpoints for sandbox (undeployed) ChatBots/Agents                                                                       |
 +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-| Deployed Endpoints   | REST Api endpoints for deployed ChatBot/Agents                                                                                    |
+| Deployed Endpoints   | REST API endpoints for deployed ChatBot/Agents                                                                                    |
 +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 
 the URL patterns are implements using Django's URL routing system. For more information on the URL configuration, see

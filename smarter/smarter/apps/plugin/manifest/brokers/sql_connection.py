@@ -725,7 +725,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         .. note::
 
             - returns `False` if no connection is found.
-            - If validation fails, a warning is logged with the reason. Check logs for troubleshooting.
+            - If validation fails, a warning is logged with the reason. Check logs for trouble shooting.
 
         .. seealso::
 

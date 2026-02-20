@@ -28,7 +28,7 @@ known to work, and is the recommended path; initially at least.
    There are multiple hosts, databases, caches, message queues, and other components that must be configured and connected properly. The Kubernetes
    infrastructure assumes the existence of certain AWS resources (e.g., S3 buckets, RDS instances, ElastiCache clusters, IAM roles, etc.) and Kubernetes services
    that must be created and configured. Ingresses, DNS, TLS/SSL certificates, and other networking components must also be configured correctly, and,
-   these are handled multiple ways depending on your environment as well as the specific AI resource in question (e.g., ChatBot vs. Agent, user, Api key, etc.).
+   these are handled multiple ways depending on your environment as well as the specific AI resource in question (e.g., ChatBot vs. Agent, user, API key, etc.).
 
    Moreover (and not to beat on a dead horse, but ....), the AWS VPN networking layer on which Smarter runs is highly secure, requiring
    some forethought and planning to ensure that all components can communicate as expected while still maintaining a strong security posture. For example,

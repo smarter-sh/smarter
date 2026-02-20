@@ -208,7 +208,7 @@ class ChatBotCustomDomainDNS(TimestampedModel):
     The primary use case for this model is to facilitate the automation and tracking of DNS
     configurations necessary for deploying chatbots on customer-branded domains. By maintaining a
     record of all DNS entries related to a chatbot's custom domain, the platform can automate DNS
-    verification, support troubleshooting, and ensure that all required DNS records are present and
+    verification, support trouble shooting, and ensure that all required DNS records are present and
     correctly configured.
 
     **Key Features**
@@ -231,7 +231,7 @@ class ChatBotCustomDomainDNS(TimestampedModel):
 
     - Closely linked to :class:`ChatBotCustomDomain`, providing a one-to-many relationship between
       a custom domain and its DNS records.
-    - Referenced by deployment, verification, and troubleshooting workflows within the Smarter platform.
+    - Referenced by deployment, verification, and trouble shooting workflows within the Smarter platform.
 
     **Notes**
 
@@ -1201,7 +1201,7 @@ class ChatBotRequests(TimestampedModel):
     the platform can support features such as:
 
     - Request analytics and reporting for chatbot performance and user engagement.
-    - Debugging and troubleshooting of chatbot behavior by reviewing historical requests.
+    - Debugging and trouble shooting of chatbot behavior by reviewing historical requests.
     - Session management, allowing grouping and correlation of requests within a user session.
     - Aggregation of requests for batch processing or summarization.
 

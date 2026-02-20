@@ -1,4 +1,4 @@
-# Smarter Api Manifest Handler
+# Smarter API Manifest Handler
 
 These are the base classes for loading, validating, and parsing yaml manifests
 into dict represetions, and then using these results to initialize the Pydantic
