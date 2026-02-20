@@ -1,7 +1,7 @@
 Smarter API Manifests (SAM)
 =============================
 
-Smarter Api Manifests (SAM) are fundamental to the Smarter Framework. Manifests are inspired by `Kubernetes <https://kubernetes.io/>`__
+Smarter API Manifests (SAM) are fundamental to the Smarter Framework. Manifests are inspired by `Kubernetes <https://kubernetes.io/>`__
 manifests and are used to define configurations for various components within the Smarter ecosystem. They are
 written in YAML format and provide a structured way to declare resources, settings, and behaviors.
 Smarter Manifests enable developers to easily manage and deploy configurations in a consistent manner across different
@@ -17,7 +17,7 @@ based on the declarations found in Smarter Manifests. SAM manifests provide you 
 layer of abstraction that enables you to focus on achieving the desired state of your AI resources rather than
 on the low-level implementation details of how to get there.
 
-The basic stsructure of a Smarter Api Manifest (SAM) YAML document includes the following key sections:
+The basic stsructure of a Smarter API Manifest (SAM) YAML document includes the following key sections:
 
 - **apiVersion**: Specifies the version of the API schema that the manifest adheres to.
 - **kind**: Indicates the type of resource being defined (e.g., Account, Plugin, Chatbot).

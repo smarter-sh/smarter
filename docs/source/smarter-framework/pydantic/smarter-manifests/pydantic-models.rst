@@ -1,7 +1,7 @@
 SAM Pydantic Base Classes
 ============================
 
-These are the base Pydantic models used as the foundations for all Smarter Api Manifest (SAM) models.
+These are the base Pydantic models used as the foundations for all Smarter API Manifest (SAM) models.
 
 
 .. automodule:: smarter.lib.manifest.models

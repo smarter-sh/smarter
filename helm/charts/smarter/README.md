@@ -1,9 +1,10 @@
-# Smarter Helm Chart
+# The Smarter Project Helm Chart
 
-A Helm chart for deploying Smarter, a no-code, cloud-native AI orchestration platform, to Kubernetes.
+A Helm chart for deploying The Smarter Project, a no-code, cloud-native
+AI resource management and orchestration platform.
 
 - **Website:** [https://smarter.sh](https://smarter.sh)
-- **Docs:** [https://platform.smarter.sh/docs/](https://platform.smarter.sh/docs/)
+- **Docs:** [https://docs.smarter.sh/](https://docs.smarter.sh/)
 - **Chart:** [https://artifacthub.io/packages/helm/project-smarter/smarter](https://artifacthub.io/packages/helm/project-smarter/smarter)
 - **Dockerhub** [https://hub.docker.com/r/mcdaniel0073/smarter](https://hub.docker.com/r/mcdaniel0073/smarter)
 
@@ -23,10 +24,11 @@ helm upgrade --install --force smarter oci://ghcr.io/smarter-sh/charts/smarter \
   --values values.yaml
 ```
 
-See [values.yaml](https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml) for all available configuration options.
+See [values.yaml](https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml)
+for all available configuration options.
 
-**Note:** For production, use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) to manage sensitive values like passwords and API keys.
-
+**Note:** For production, use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
+to manage sensitive values like passwords and API keys.
 
 ## Prerequisites
 
@@ -47,7 +49,8 @@ helm install smarter oci://ghcr.io/smarter-sh/charts/smarter \
   --values values.yaml
 ```
 
-Replace `<chart-version>` with the desired chart version (see [Artifact Hub: project-smarter/smarter](https://artifacthub.io/packages/helm/project-smarter/smarter) for available versions).
+Replace `<chart-version>` with the desired chart version (see [Artifact Hub: project-smarter/smarter](https://artifacthub.io/packages/helm/project-smarter/smarter)
+for available versions).
 
 ## Upgrading
 
@@ -66,28 +69,9 @@ helm uninstall smarter --namespace your-namespace
 
 ## Configuration
 
-See [values.yaml](./values.yaml) for all available configuration options.
-
-### Required Configuration
-
-```yaml
-env:
-  # Django settings
-  DJANGO_SETTINGS_MODULE: "smarter.settings.prod"
-  ENVIRONMENT: "prod"
-
-  # Database (required)
-  MYSQL_HOST: "your-mysql-host"
-  MYSQL_DATABASE: "smarter"
-  MYSQL_USER: "smarter"
-  MYSQL_PASSWORD: "your-password"
-
-  # Redis (required)
-  CACHES_LOCATION: "redis://your-redis:6379/0"
-  CELERY_BROKER_URL: "redis://your-redis:6379/0"
-
-  # API Keys (required)
-  OPENAI_API_KEY: "your-key"
-  SECRET_KEY: "your-django-secret"
-  FERNET_ENCRYPTION_KEY: "your-fernet-key"
-```
+This chart is designed to support automated CI-CD through the use of environment
+variables for all application configuration options. See the top of [values.yaml](./values.yaml)
+for all configuration options that are available as environment variables.
+Any of these that are are set in the environment session will be
+consumed automatically during helm deployment. All other defined Helm chart
+options are set normally, via helm.

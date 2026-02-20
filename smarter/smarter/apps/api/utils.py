@@ -73,7 +73,7 @@ def apply_manifest(
 
     The command provides clear error messages for common failure scenarios,
     such as missing user profiles, invalid manifest input, or unsuccessful
-      responses. All failures are reported with context to aid troubleshooting.
+      responses. All failures are reported with context to aid trouble shooting.
 
     **Intended Audience:**
 
