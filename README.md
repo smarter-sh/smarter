@@ -12,20 +12,20 @@
 [![Pydantic](https://img.shields.io/badge/Pydantic-2.12-blue?logo=pydantic)](https://docs.pydantic.dev/)
 [![Django Rest Framework](https://img.shields.io/badge/Django%20Rest%20Framework-3.16-3a3a3a?logo=django)](https://www.django-rest-framework.org/)<br>[![hack.d Lawrence McDaniel](https://img.shields.io/badge/Author-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
-This repo contains source code for the Smarter REST Api and the web based
+This repo contains source code for the Smarter REST API and the web based
 authoring platform.
 
 Smarter is a declarative extensible AI authoring and resource management system.
 It is used as an instructional tool at [University of British Columbia](https://www.ubc.ca/)
 for teaching cloud computing at scale, and generative AI prompt engineering
 techniques including advanced use of LLM tool calling involving secure
-integrations to remote data sources like Sql databases and remote Apis.
+integrations to remote data sources like Sql databases and remote APIs.
 
 ## At a Glance
 
 - [1-click Quickstart](https://github.com/smarter-sh/smarter-deploy) deployment with Docker.
 - declarative manifest based resource management
-- no-code LLM tool call extensibility that facilitates integrations to remote data sources like Sql databases and remote Apis
+- no-code LLM tool call extensibility that facilitates integrations to remote data sources like Sql databases and remote APIs
 - [command-line interface](https://smarter.sh/cli) for Windows, macOS, Linux and Docker
 - [rest api](https://platform.smarter.sh/docs/swagger/)
 - web console / prompt engineer workbench
@@ -68,7 +68,7 @@ See these onboarding videos:
 
 **Smarter** implements a yaml manifest-based approach to managing AI resources that is inspired by the [Kubernetes](https://kubernetes.io/) project.
 
-It provides a unified, declarative way to define, configure, and orchestrate the disparate resources that are required for creating and managing AI resources that integrate to other enterprise resources like REST Api's and Sql databases. And it gives prompt engineering teams an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful AI resources for common corporate use cases including agentic workflows, customer facing chat solutions, and more. It includes a separately managed [React-based chat UI](https://github.com/smarter-sh/smarter-chat) that is compatible with a wide variety of front end ecosystems including NPM, Wordpress, Squarespace, Drupal, Office 365, Sharepoint, .Net, Netsuite, salesforce.com, and SAP. There is a [Golang command-line interface](https://github.com/smarter-sh/smarter-cli), and a [PyPi package](https://github.com/smarter-sh/smarter-python) for integrating the Api functions into your own Python projects. It is developed to support prompt engineering teams working in large organizations. Accordingly, **Smarter** provides common enterprise features such as credentials management, team workgroup management, role-based security, accounting cost codes, and logging and audit capabilities.
+It provides a unified, declarative way to define, configure, and orchestrate the disparate resources that are required for creating and managing AI resources that integrate to other enterprise resources like REST API's and Sql databases. And it gives prompt engineering teams an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful AI resources for common corporate use cases including agentic workflows, customer facing chat solutions, and more. It includes a separately managed [React-based chat UI](https://github.com/smarter-sh/smarter-chat) that is compatible with a wide variety of front end ecosystems including NPM, Wordpress, Squarespace, Drupal, Office 365, Sharepoint, .Net, Netsuite, salesforce.com, and SAP. There is a [Golang command-line interface](https://github.com/smarter-sh/smarter-cli), and a [PyPi package](https://github.com/smarter-sh/smarter-python) for integrating the API functions into your own Python projects. It is developed to support prompt engineering teams working in large organizations. Accordingly, **Smarter** provides common enterprise features such as credentials management, team workgroup management, role-based security, accounting cost codes, and logging and audit capabilities.
 
 **Smarter** provides seamless integration and interoperation between LLMs from DeepSeek, Google AI, Meta AI and OpenAI. It is LLM provider-agnostic, and provides seamless integrations to a continuously evolving list of value added services for security management, prompt content moderation, audit, cost accounting, and workflow management. **Smarter** is cloud native and runs on Kubernetes, on-site in your data center or in the cloud.
 

@@ -108,7 +108,7 @@ Tool calling is a multi-step conversation between your application and a model v
 5. Receive a final response from the model (or more tool calls)
 
 .. figure:: https://cdn.smarter.sh/images/function-calling-diagram-steps.png
-   :alt: OpenAI Api Documentation - Function Calling Diagram Steps
+   :alt: OpenAI API Documentation - Function Calling Diagram Steps
    :width: 100%
 
    Function Calling Diagram: The five-step tool calling flow.

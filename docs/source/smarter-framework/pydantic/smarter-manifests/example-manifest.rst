@@ -13,7 +13,7 @@ was able to solve similar
 problems in the DevOps space by defining a systematic way to describe infrastructure resources
 using YAML manifest files, and then building a robust ecosystem of tools around those manifests
 to validate, deploy, and manage those resources. Inspired by this success, the authors designed
-the Smarter Api Manifest (SAM) specification to bring similar benefits to the AI development space.
+the Smarter API Manifest (SAM) specification to bring similar benefits to the AI development space.
 
 
 .. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml

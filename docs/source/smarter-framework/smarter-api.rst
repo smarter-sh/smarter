@@ -1,4 +1,4 @@
-Smarter Api
+Smarter API
 ================================
 
 The Smarter API provides support for :doc:`AI text prompts <../smarter-resources/smarter-prompt>`,

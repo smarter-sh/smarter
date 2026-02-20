@@ -1,10 +1,10 @@
 # Smarter Architecture at a glance
 
-- Docker-based Api and web console application that is designed to run both locally as well as natively on Kubernetes.
+- Docker-based API and web console application that is designed to run both locally as well as natively on Kubernetes.
 - YAML-first interface for managing AI resources that leverages a separately managed command-line interface that is similar in design to Kubernetes' kubectl.
-- Robust LLM tool call / function call extensibility mobile that facilitates no-code integrations to remote data sources like Sql databases and remote Api's.
+- Robust LLM tool call / function call extensibility mobile that facilitates no-code integrations to remote data sources like Sql databases and remote API's.
 - Independent drop-in Chat UI written in React that works on any html web page via a simple 2-step DOM manipulation.
-- Proprietary chat/agent REST Api to manage sessions between the Smarter Api backend and the Smarter Chat UI.
+- Proprietary chat/agent REST API to manage sessions between the Smarter API backend and the Smarter Chat UI.
 - A robust "batteries included" backend, with industrial strength security countermeasures for common Internet and web intrusion strategies including SQL injection, LLM prompt injection, cross-site request forgeries, brute force password attacks, distributed denial of service, cross-site scripting, clickjacking, host header corruptions.
 - [Python-Django](https://www.djangoproject.com/) web console **Prompt Engineer's Workbench** for developing advanced LLM tool call-based extensions that leverage remote data sources and can be deployed to independent, custom domains.
 - Sophsticated logging, content moderation.
@@ -80,7 +80,7 @@ Be aware that there are many considerations for getting React to work inside a D
 
 ## Smarter REST API
 
-Api document is located here, [Smarter Docs - Api](https://platform.smarter.sh/docs/api/) and source code is located here, [smarter/apps/api/](../smarter/smarter/apps/api/)
+API document is located here, [Smarter Docs - API](https://platform.smarter.sh/docs/api/) and source code is located here, [smarter/apps/api/](../smarter/smarter/apps/api/)
 
 Not to be confused with Smarter's flagship product, customer-implemented custom REST API's, Smarter additionally has its own REST API, which is a Python Django project implementing it's proprietary Plugin model, along with additional models for commercializing the service.
 

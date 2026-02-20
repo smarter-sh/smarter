@@ -48,7 +48,7 @@ class Command(SmarterCommand):
 
     **Error Handling:**
 
-    The command provides clear error messages for common failure scenarios, such as missing user profiles, invalid manifest input, or unsuccessful API responses. All failures are reported with context to aid troubleshooting.
+    The command provides clear error messages for common failure scenarios, such as missing user profiles, invalid manifest input, or unsuccessful API responses. All failures are reported with context to aid trouble shooting.
 
     **Intended Audience:**
 
