@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.134](https://github.com/smarter-sh/smarter/compare/v0.13.133...v0.13.134) (2026-02-20)
+
+### Bug Fixes
+
+* recursion error in ChatBotHelper.is_chatbothelper_ready() ([cf3dd9d](https://github.com/smarter-sh/smarter/commit/cf3dd9d61998c63771009b23212a29462442ded1))
+
 ## [0.13.133](https://github.com/smarter-sh/smarter/compare/v0.13.132...v0.13.133) (2026-02-17)
 
 ### Bug Fixes
