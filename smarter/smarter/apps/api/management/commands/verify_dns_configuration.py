@@ -24,7 +24,7 @@ class Command(SmarterCommand):
 
     **Usage:**
 
-    This command is intended to be run during environment setup, deployment, or DNS troubleshooting. It is especially useful for administrators and DevOps engineers who need to validate or repair DNS infrastructure in AWS Route53 for the Smarter platform.
+    This command is intended to be run during environment setup, deployment, or DNS trouble shooting. It is especially useful for administrators and DevOps engineers who need to validate or repair DNS infrastructure in AWS Route53 for the Smarter platform.
 
     **Error Handling and Output:**
 

@@ -24,7 +24,8 @@
 # ==============================================================================
 
 # -----------------------------------------------------------------------------
-## @param env Environment variables for the Smarter application
+## @param env Environment variables for the Smarter application. If set, these
+## are consumed and set automatically in the Smarter app deployment templates.
 # -----------------------------------------------------------------------------
 env:
   AUTHENTICATION_BACKENDS: "social_core.backends.google.GoogleOAuth2,social_core.backends.github.GithubOAuth2,django.contrib.auth.backends.ModelBackend"

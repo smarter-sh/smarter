@@ -177,8 +177,8 @@ Scaling
 If you use Kubernetes Smarter Chatbots will scale seamlessly with demand.
 See `https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/ <https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/>`__ for more information.
 
-Troubleshooting
----------------
+Trouble Shooting
+-----------------
 
 Beyond the Django models listed above, you should also check the smarter pod logs
 for any errors. Use the following command to view the logs:

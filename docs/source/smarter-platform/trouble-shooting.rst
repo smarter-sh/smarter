@@ -1,5 +1,5 @@
-Troubleshooting & FAQ
-=====================
+Trouble Shooting & FAQ
+=======================
 
 .. rubric:: Frequently Asked Questions
 

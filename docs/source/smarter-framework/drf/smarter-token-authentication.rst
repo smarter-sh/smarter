@@ -2,7 +2,7 @@ Smarter Token Authentication
 =============================
 
 Smarter extends Django Rest Framework's token authentication mechanism to implement
-a more robust and feature-rich Api key based authentication system tailored to the needs of the Smarter platform.
+a more robust and feature-rich API key based authentication system tailored to the needs of the Smarter platform.
 The following components are designed to facilitate secure and efficient token-based authentication.
 These components primarily focus on adding and enhancing authentication mechanisms and
 providing specialized views for authenticated users.

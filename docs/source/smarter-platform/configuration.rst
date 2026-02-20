@@ -232,7 +232,7 @@ resides inside the running Kubernetes pod at `/var/log/???????????` (FIX NOTE: w
 See `Django Logging Documentation <https://docs.djangoproject.com/en/5.2/topics/logging/>`_ for more details on how logging is configured in Smarter.
 
 Smarter additionally provides more granular control over logging levels for specific application components via waffle switches. These are useful for real-time, in-flight
-debugging and troubleshooting without requiring application restarts or code changes.
+debugging and trouble shooting without requiring application restarts or code changes.
 
 .. raw:: html
 
