@@ -46,7 +46,7 @@ class Command(SmarterCommand):
 
         self.handle_begin()
 
-        foreground = options["foreground"] if "foreground" in options else False
+        foreground = options["foreground"]
         account_number = options.get("account_number") or SMARTER_ACCOUNT_NUMBER
 
         log_prefix = "manage.py deploy_example_chatbot:"
@@ -81,21 +81,15 @@ class Command(SmarterCommand):
         chatbot.app_logo_url = "https://cdn.platform.smarter.sh/images/logo/smarter-crop.png"
         chatbot.save()
 
-        if chatbot.deployed and chatbot.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
-            self.handle_completed_success(msg=f"The Smarter demo API is already deployed.")
-            return
-
         for plugin_meta in PluginMeta.objects.filter(user_profile=user_profile):
             if plugin_meta.name in ["everlasting_gobstopper", "example_configuration"]:
                 if not ChatBotPlugin.objects.filter(chatbot=chatbot, plugin_meta=plugin_meta).exists():
                     ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin_meta)
 
+        chatbot.deployed = True
         if foreground:
-            deploy_default_api(chatbot_id=chatbot.id)
+            chatbot.save()
         else:
-            self.stdout.write(self.style.NOTICE(log_prefix + "Deploying example api as a Celery task."))
-            deploy_default_api.delay(chatbot_id=chatbot.id)
-            self.handle_completed_success(msg=f"Deployment of the Smarter demo API has been initiated.")
-            return
+            chatbot.save(asynchronous=True)
 
         self.handle_completed_success()

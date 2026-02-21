@@ -56,7 +56,7 @@ class Command(SmarterCommand):
         account_number = options["account_number"]
         company_name = options["company_name"]
         name = options["name"]
-        foreground = options["foreground"] if "foreground" in options else False
+        foreground = options["foreground"]
 
         account: Optional[Account] = None
         chatbot: Optional[ChatBot] = None
@@ -85,20 +85,9 @@ class Command(SmarterCommand):
             )
             return
 
-        if chatbot.deployed and chatbot.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
-            self.handle_completed_success(msg=f"You're all set! {chatbot.hostname} is already deployed.")
-            return
-
-        self.stdout.write(
-            f"Deploying chatbot '{chatbot.name}' for account '{chatbot.user_profile.account}' {'' if foreground else 'as a Celery task'}..."
-        )
-
+        chatbot.deployed = True
         if foreground:
-            self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname}"))
-            print()
-            deploy_default_api(chatbot_id=chatbot.id)
+            chatbot.save()
         else:
-            self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname} as a Celery task."))
-            deploy_default_api.delay(chatbot_id=chatbot.id)
-
-        self.handle_completed_success(msg=f"Deployment of {chatbot.hostname} has been initiated.")
+            chatbot.save(asynchronous=True)
+        self.handle_completed_success()
