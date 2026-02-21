@@ -5,3 +5,4 @@ Asynchronous Tasks
     :members:
     :undoc-members:
     :show-inheritance:
+    :no-index:

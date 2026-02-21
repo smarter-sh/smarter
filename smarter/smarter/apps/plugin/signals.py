@@ -92,6 +92,7 @@ Arguments:
     inquiry_type: The type of inquiry made to the plugin.
     response: The response returned by the plugin.
 
+
 Example::
     plugin_responded.send(
         sender=self.tool_call_fetch_plugin_response,
@@ -99,6 +100,7 @@ Example::
         inquiry_type=inquiry_type,
         response=retval,
     )
+
 """
 
 plugin_ready = Signal()

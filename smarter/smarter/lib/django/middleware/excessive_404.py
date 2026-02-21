@@ -91,6 +91,8 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         :returns: The original response, or a 403 Forbidden response if the client has exceeded the allowed number of 404 responses.
         :rtype: django.http.HttpResponse
         """
+        if not waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_EXCESSIVE_404):
+            return response
         if response.status_code == HTTPStatus.NOT_FOUND:
             # skip this for authenticated users
             if is_authenticated_request(request):
