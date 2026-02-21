@@ -817,17 +817,45 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     # Prerequisites.
     # ensure that the root API domain has an A record that we can use to create the chatbot's A record
     # our expected case is that the record already exists and that this step is benign.
-    aws_helper.route53.create_domain_a_record(
+    # This is expected to be a no-op.
+    _, created = aws_helper.route53.create_domain_a_record(
         hostname=smarter_settings.environment_api_domain, api_host_domain=smarter_settings.root_api_domain
     )
+    if created:
+        logger.warning(
+            "%s created A record for environment API domain %s in root API domain hosted zone. This is unexpected and may indicate a configuration issue. task_id: %s",
+            fn_name,
+            smarter_settings.environment_api_domain,
+            task_id,
+        )
 
     domain_name = chatbot.default_host
     if smarter_settings.chatbot_tasks_create_dns_record:
-        aws_helper.route53.create_domain_a_record(
+        _, created = aws_helper.route53.create_domain_a_record(
             hostname=domain_name, api_host_domain=smarter_settings.environment_api_domain
         )
+        if created:
+            logger.info(
+                "%s created A record for chatbot %s at domain %s task_id: %s",
+                fn_name,
+                chatbot.name,
+                domain_name,
+                task_id,
+            )
+        else:
+            logger.info(
+                "%s verified the A record for chatbot %s at domain %s. task_id: %s",
+                fn_name,
+                chatbot.name,
+                domain_name,
+                task_id,
+            )
 
-    if smarter_settings.chatbot_tasks_create_dns_record and with_domain_verification:
+    if (
+        created
+        and with_domain_verification
+        and chatbot.dns_verification_status != chatbot.DnsVerificationStatusChoices.VERIFIED
+    ):
         chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
         chatbot.save(asynchronous=True)
         activate = verify_domain(domain_name, record_type="A", chatbot=chatbot, activate_chatbot=True, task_id=task_id)
