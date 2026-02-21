@@ -26,9 +26,7 @@ from smarter.apps.chatbot.serializers import (
     ChatBotPluginSerializer,
     ChatBotSerializer,
 )
-from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -185,7 +183,8 @@ class ChatBotDeployView(ViewBase):
     def post(self, request, chatbot_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         try:
-            deploy_default_api.delay(chatbot_id=chatbot.id)  # type: ignore[arg-type]
+            chatbot.deployed = True
+            chatbot.save()
         except Exception as e:
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return JsonResponse({}, status=HTTPStatus.OK)

@@ -49,7 +49,7 @@ class Command(SmarterCommand):
         account_number = options["account_number"]
         company_name = options["company_name"]
         name = options["name"]
-        foreground = options["foreground"] if "foreground" in options else False
+        foreground = options["foreground"]
 
         account: Optional[Account] = None
         chatbot: Optional[ChatBot] = None

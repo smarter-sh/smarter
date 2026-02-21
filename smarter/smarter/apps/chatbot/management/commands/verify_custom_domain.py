@@ -37,7 +37,7 @@ class Command(SmarterCommand):
         self.handle_begin()
 
         domain = options["domain"]
-        foreground = options["foreground"] if "foreground" in options else False
+        foreground = options["foreground"]
 
         try:
             custom_domain = ChatBotCustomDomain.objects.get(domain_name=domain)
