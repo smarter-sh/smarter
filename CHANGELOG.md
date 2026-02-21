@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.138](https://github.com/smarter-sh/smarter/compare/v0.13.137...v0.13.138) (2026-02-21)
+
+### Bug Fixes
+
+* deployment workflow ([24ac124](https://github.com/smarter-sh/smarter/commit/24ac124abbc4227519ef3e48c1a0f8783c70ade0))
+
 ## [0.13.137](https://github.com/smarter-sh/smarter/compare/v0.13.136...v0.13.137) (2026-02-21)
 
 ### Bug Fixes
