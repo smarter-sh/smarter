@@ -191,6 +191,8 @@ class SmarterWaffleSwitches:
             self.JOURNAL,
             self.MANIFEST_LOGGING,
             self.MIDDLEWARE_LOGGING,
+            self.MIDDLEWARE_SENSITIVE_FILES,
+            self.MIDDLEWARE_EXCESSIVE_404,
             self.PLUGIN_LOGGING,
             self.PROVIDER_LOGGING,
             self.REACTAPP_DEBUG_MODE,
