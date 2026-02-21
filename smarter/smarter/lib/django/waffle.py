@@ -145,6 +145,12 @@ class SmarterWaffleSwitches:
     MIDDLEWARE_LOGGING = "log_middleware"
     """Enables detailed diagnostic logging for all middleware operations."""
 
+    MIDDLEWARE_SENSITIVE_FILES = "middleware_log_sensitive_files"
+    """Enables SmarterBlockSensitiveFilesMiddleware"""
+
+    MIDDLEWARE_EXCESSIVE_404 = "middleware_block_excessive_404"
+    """Enables SmarterBlockExcessive404Middleware"""
+
     PLUGIN_LOGGING = "log_plugin"
     """Enables logging throughout the smarter.app.plugin namespace."""
 

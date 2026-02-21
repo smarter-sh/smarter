@@ -448,21 +448,17 @@ class SettingsDefaults:
     CHATBOT_TASKS_CELERY_TASK_QUEUE: str = get_env("CHATBOT_TASKS_CELERY_TASK_QUEUE", "default_celery_task_queue")
     PLUGIN_MAX_DATA_RESULTS: int = int(get_env("PLUGIN_MAX_DATA_RESULTS", 50))
 
-    SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = get_env(
-        "SENSITIVE_FILES_AMNESTY_PATTERNS",
-        [
-            re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
-            re.compile(r"^/api(/.*)?$"),
-            re.compile(r"^/login(/.*)?$"),
-            re.compile(r"^/logout(/.*)?$"),
-            re.compile(r"^/admin(/.*)?$"),
-            re.compile(r"^/plugin(/.*)?$"),
-            re.compile(r"^/docs/manifest(/.*)?$"),
-            re.compile(r"^/docs/json-schema(/.*)?$"),
-            re.compile(r".*stackademy.*"),
-            re.compile(r"^/\.well-known/acme-challenge(/.*)?$"),
-        ],
-    )
+    SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
+        re.compile(r"^/$"),
+        re.compile(r"^/config/?$"),
+        re.compile(r"^/login/?$"),
+        re.compile(r"^/logout/?$"),
+        re.compile(r"^/admin/?$"),
+        re.compile(r"^/api/v\d+(\.\d+)?/.+"),
+        re.compile(r"^/dashboard(/.*)?$"),
+        re.compile(r"^/docs/manifest(/.*)?$"),
+        re.compile(r"^/docs/json-schema(/.*)?$"),
+    ]
 
     DEBUG_MODE: bool = bool_environment_variable("DEBUG_MODE", False)
     DEVELOPER_MODE: bool = bool_environment_variable("DEVELOPER_MODE", False)
