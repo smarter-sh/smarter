@@ -15,7 +15,6 @@ from smarter.apps.account.utils import (
 )
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.chatbot.models import ChatBot
-from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
@@ -134,11 +133,8 @@ class Command(SmarterCommand):
         try:
             sam_chatbot = SAMChatbot(**manifest.pydantic_model_dump())
             chatbot = ChatBot.objects.get(user_profile=self.user_profile, name=sam_chatbot.metadata.name)
-
-            # deploy the chatbot as a Celery task because this could take a while.
-            self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.name} as a Celery task."))
-            deploy_default_api.delay(chatbot_id=chatbot.id)  # type: ignore[arg-type]
-            return True
+            chatbot.deployed = True
+            chatbot.save()
         # pylint: disable=W0718
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Error occurred while deploying chatbot: {e}"))

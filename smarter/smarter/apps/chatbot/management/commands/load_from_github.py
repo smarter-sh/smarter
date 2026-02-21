@@ -245,7 +245,8 @@ class Command(SmarterCommand):
                                     )
                                     raise e
 
-                    deploy_default_api.delay(chatbot_id=chatbot.id, with_domain_verification=False)  # type: ignore
+                    chatbot.deployed = True
+                    chatbot.save(asynchronous=True)
 
     def add_arguments(self, parser):
         """Add arguments to the command."""

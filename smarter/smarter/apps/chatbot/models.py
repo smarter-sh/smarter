@@ -1826,10 +1826,7 @@ class ChatBotHelper(SmarterRequestMixin):
                 self.account,
             )
         if not isinstance(self.name, str):
-            chatbot_helper_logger.warning(
-                "%s did not find a name for the chatbot. args: %s, kwargs: %s",
-                logger_prefix,
-            )
+            chatbot_helper_logger.warning("%s did not find a name for the chatbot.", logger_prefix)
             return False
         else:
             chatbot_helper_logger.debug(
