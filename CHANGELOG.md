@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.136](https://github.com/smarter-sh/smarter/compare/v0.13.135...v0.13.136) (2026-02-21)
+
+### Bug Fixes
+
+* add waffle switches to toggle middleware ([b946a78](https://github.com/smarter-sh/smarter/commit/b946a785ab5877b2a68963e3983bc35fc2716962))
+* broken links ([11c5dc7](https://github.com/smarter-sh/smarter/commit/11c5dc7bd6833df706a43d87e505f1c8c4c97506))
+* dns verification logic where api.platform.example.com resides inside of platform.example.com ([2208653](https://github.com/smarter-sh/smarter/commit/2208653919f3f0dc86e50127adec2c307e323a8a))
+* refactor manage.py verify_dns_configuration ([09720a8](https://github.com/smarter-sh/smarter/commit/09720a81ed707a8adc7d3285399d81896c0524fd))
+
 ## [0.13.135](https://github.com/smarter-sh/smarter/compare/v0.13.134...v0.13.135) (2026-02-20)
 
 ### Bug Fixes
