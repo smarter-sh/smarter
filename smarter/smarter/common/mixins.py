@@ -202,7 +202,7 @@ class SmarterHelperMixin:
         :rtype: str
         """
         return util_mask_string(
-            string=string, mask_char=mask_char, mask_length=mask_length, string_length=string_length
+            string=string, mask_char=mask_char, mask_length=mask_length, string_length=string_length  # type: ignore
         )
 
     def data_to_dict(self, data: Union[dict, str]) -> dict:

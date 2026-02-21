@@ -450,14 +450,15 @@ class SettingsDefaults:
 
     SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
         re.compile(r"^/$"),
-        re.compile(r"^/config/?$"),
-        re.compile(r"^/login/?$"),
-        re.compile(r"^/logout/?$"),
-        re.compile(r"^/admin/?$"),
+        re.compile(r"^/static(/.*)?$"),
         re.compile(r"^/api/v\d+(\.\d+)?/.+"),
         re.compile(r"^/dashboard(/.*)?$"),
         re.compile(r"^/docs/manifest(/.*)?$"),
         re.compile(r"^/docs/json-schema(/.*)?$"),
+        re.compile(r"^/config/?$"),
+        re.compile(r"^/login/?$"),
+        re.compile(r"^/logout/?$"),
+        re.compile(r"^/admin/?$"),
     ]
 
     DEBUG_MODE: bool = bool_environment_variable("DEBUG_MODE", False)
