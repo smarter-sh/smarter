@@ -138,7 +138,7 @@ class AWSRoute53(AWSBase):
         self.client.create_hosted_zone(
             Name=domain_name,
             CallerReference=str(time.time()),  # Unique string used to identify the request
-            HostedZoneConfig={"Comment": "Managed by Smarter manage.py verify_dns_configuration", "PrivateZone": False},
+            HostedZoneConfig={"Comment": "Managed by Smarter", "PrivateZone": False},
         )
         hosted_zone = self.get_hosted_zone(domain_name)
         if not isinstance(hosted_zone, dict):

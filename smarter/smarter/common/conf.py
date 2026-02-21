@@ -453,6 +453,8 @@ class SettingsDefaults:
         [
             re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
             re.compile(r"^/api(/.*)?$"),
+            re.compile(r"^/login(/.*)?$"),
+            re.compile(r"^/logout(/.*)?$"),
             re.compile(r"^/admin(/.*)?$"),
             re.compile(r"^/plugin(/.*)?$"),
             re.compile(r"^/docs/manifest(/.*)?$"),
@@ -4267,7 +4269,7 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return f"{self.environment}.{self.root_api_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
-            return f"{SMARTER_API_SUBDOMAIN}.localhost:9357"
+            return f"{self.api_subdomain}.localhost:9357"
         # default domain format
         return f"{self.environment}.{self.root_api_domain}"
 
