@@ -40,7 +40,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-module_prefix = "smarter.apps.account.receivers"
+module_prefix = f"{__name__}"
 
 
 @receiver(user_logged_in)

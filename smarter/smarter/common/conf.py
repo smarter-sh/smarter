@@ -4034,6 +4034,20 @@ class Settings(BaseSettings):
         return f"{self.platform_subdomain}.{self.root_domain}"
 
     @cached_property
+    def root_proxy_domain(self) -> str:
+        """
+        Return the proxy domain name for the root domain.
+        Used for proxying local requests inside of AWS Kubernetes environments
+        during unit testing.
+
+        Example:
+            >>> print(smarter_settings.root_proxy_domain)
+            'local.example.com'
+
+        """
+        return f"{SmarterEnvironments.LOCAL}.{self.root_domain}"
+
+    @cached_property
     def platform_url(self) -> str:
         """
         Return the platform URL for the root platform domain and environment.
@@ -4240,6 +4254,20 @@ class Settings(BaseSettings):
             - smarter_settings.api_subdomain
         """
         return f"{self.api_subdomain}.{self.platform_subdomain}.{self.root_domain}"
+
+    @cached_property
+    def proxy_api_domain(self) -> str:
+        """
+        Return the proxy API domain name for the root domain.
+        Used for proxying local requests inside of AWS Kubernetes environments
+        during unit testing.
+
+        Example:
+            >>> print(smarter_settings.proxy_api_domain)
+            'api.local.example.com'
+
+        """
+        return f"{self.api_subdomain}.{self.root_proxy_domain}"
 
     @cached_property
     def environment_api_domain(self) -> str:
