@@ -17,6 +17,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
+# pylint: disable=unused-argument
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)

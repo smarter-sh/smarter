@@ -630,7 +630,7 @@ class AWSRoute53(AWSBase):
         logger.error("Domain %s does not exist or no DNS answer after multiple attempts", domain_name)
         return False
 
-    def create_domain_a_record(self, hostname: str, api_host_domain: str) -> dict:  # type: ignore[no-untyped-def]
+    def create_domain_a_record(self, hostname: str, api_host_domain: str) -> Tuple[dict, bool]:  # type: ignore[no-untyped-def]
         """
         Creates an A record inside an AWS Route53 hosted zone.
 
@@ -638,8 +638,8 @@ class AWSRoute53(AWSBase):
         :type hostname: str
         :param api_host_domain: The parent domain where the hosted zone exists (e.g., "example.com").
         :type api_host_domain: str
-        :return: The created DNS record dictionary.
-        :rtype: dict
+        :return: The created DNS record dictionary and a boolean indicating if it was created.
+        :rtype: Tuple[dict, bool]
         :raises AWSHostedZoneNotFound: If the hosted zone or deployment record cannot be found
         """
         fn_name = formatted_text(module_prefix + "create_domain_a_record()")
@@ -690,7 +690,7 @@ class AWSRoute53(AWSBase):
                 raise AWSHostedZoneNotFound(
                     f"Deployment record not found for {hostname} in hosted zone {hosted_zone_id}"
                 )
-            return deployment_record
+            return (deployment_record, created)
 
         except botocore.exceptions.ClientError as e:
             # If the domain already exists, we can ignore the error

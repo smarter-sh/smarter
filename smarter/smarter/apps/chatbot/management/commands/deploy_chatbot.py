@@ -89,6 +89,10 @@ class Command(SmarterCommand):
             self.handle_completed_success(msg=f"You're all set! {chatbot.hostname} is already deployed.")
             return
 
+        self.stdout.write(
+            f"Deploying chatbot '{chatbot.name}' for account '{chatbot.user_profile.account}' {'' if foreground else 'as a Celery task'}..."
+        )
+
         if foreground:
             self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname}"))
             print()
