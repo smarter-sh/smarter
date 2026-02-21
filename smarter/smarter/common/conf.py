@@ -4218,7 +4218,9 @@ class Settings(BaseSettings):
             - smarter_settings.platform_name
             - smarter_settings.environment
         """
-        return f"{self.platform_name}-{self.platform_subdomain}-{self.environment}"
+        if self.environment in SmarterEnvironments.aws_environments:
+            return f"{self.platform_name}-{self.platform_subdomain}-{self.environment}"
+        return f"{self.platform_name}-{self.platform_subdomain}-{SmarterEnvironments.ALPHA}"
 
     @property
     def api_subdomain(self) -> str:
