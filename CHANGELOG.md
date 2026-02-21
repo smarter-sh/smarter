@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.139](https://github.com/smarter-sh/smarter/compare/v0.13.138...v0.13.139) (2026-02-21)
+
+### Bug Fixes
+
+* work on dns ([ac617b8](https://github.com/smarter-sh/smarter/commit/ac617b8867734c1869052461aa2654a85f5c1aaa))
+
+## [0.13.138](https://github.com/smarter-sh/smarter/compare/v0.13.137...v0.13.138) (2026-02-21)
+
+### Bug Fixes
+
+* deployment workflow ([24ac124](https://github.com/smarter-sh/smarter/commit/24ac124abbc4227519ef3e48c1a0f8783c70ade0))
+
+## [0.13.137](https://github.com/smarter-sh/smarter/compare/v0.13.136...v0.13.137) (2026-02-21)
+
+### Bug Fixes
+
+* deploy local to proxy api domain ([c2d248a](https://github.com/smarter-sh/smarter/commit/c2d248ac3f9738dd1f00af494d8263dcb47b19dd))
+
+## [0.13.136](https://github.com/smarter-sh/smarter/compare/v0.13.135...v0.13.136) (2026-02-21)
+
+### Bug Fixes
+
+* add waffle switches to toggle middleware ([b946a78](https://github.com/smarter-sh/smarter/commit/b946a785ab5877b2a68963e3983bc35fc2716962))
+* broken links ([11c5dc7](https://github.com/smarter-sh/smarter/commit/11c5dc7bd6833df706a43d87e505f1c8c4c97506))
+* dns verification logic where api.platform.example.com resides inside of platform.example.com ([2208653](https://github.com/smarter-sh/smarter/commit/2208653919f3f0dc86e50127adec2c307e323a8a))
+* refactor manage.py verify_dns_configuration ([09720a8](https://github.com/smarter-sh/smarter/commit/09720a81ed707a8adc7d3285399d81896c0524fd))
+
+## [0.13.135](https://github.com/smarter-sh/smarter/compare/v0.13.134...v0.13.135) (2026-02-20)
+
+### Bug Fixes
+
+* convert api ingress to traefik ([58b2bb6](https://github.com/smarter-sh/smarter/commit/58b2bb6eff4099875f36cd08aac9fa0a4082b46a))
+
 ## [0.13.134](https://github.com/smarter-sh/smarter/compare/v0.13.133...v0.13.134) (2026-02-20)
 
 ### Bug Fixes
