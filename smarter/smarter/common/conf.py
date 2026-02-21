@@ -448,19 +448,17 @@ class SettingsDefaults:
     CHATBOT_TASKS_CELERY_TASK_QUEUE: str = get_env("CHATBOT_TASKS_CELERY_TASK_QUEUE", "default_celery_task_queue")
     PLUGIN_MAX_DATA_RESULTS: int = int(get_env("PLUGIN_MAX_DATA_RESULTS", 50))
 
-    SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = get_env(
-        "SENSITIVE_FILES_AMNESTY_PATTERNS",
-        [
-            re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
-            re.compile(r"^/api(/.*)?$"),
-            re.compile(r"^/admin(/.*)?$"),
-            re.compile(r"^/plugin(/.*)?$"),
-            re.compile(r"^/docs/manifest(/.*)?$"),
-            re.compile(r"^/docs/json-schema(/.*)?$"),
-            re.compile(r".*stackademy.*"),
-            re.compile(r"^/\.well-known/acme-challenge(/.*)?$"),
-        ],
-    )
+    SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
+        re.compile(r"^/$"),
+        re.compile(r"^/config/?$"),
+        re.compile(r"^/login/?$"),
+        re.compile(r"^/logout/?$"),
+        re.compile(r"^/admin/?$"),
+        re.compile(r"^/api/v\d+(\.\d+)?/.+"),
+        re.compile(r"^/dashboard(/.*)?$"),
+        re.compile(r"^/docs/manifest(/.*)?$"),
+        re.compile(r"^/docs/json-schema(/.*)?$"),
+    ]
 
     DEBUG_MODE: bool = bool_environment_variable("DEBUG_MODE", False)
     DEVELOPER_MODE: bool = bool_environment_variable("DEVELOPER_MODE", False)
@@ -3336,7 +3334,7 @@ class Settings(BaseSettings):
     It is required for enabling users to log in using their Google accounts.
 
     :type: SecretStr
-    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET``
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 
@@ -4032,6 +4030,20 @@ class Settings(BaseSettings):
         return f"{self.platform_subdomain}.{self.root_domain}"
 
     @cached_property
+    def root_proxy_domain(self) -> str:
+        """
+        Return the proxy domain name for the root domain.
+        Used for proxying local requests inside of AWS Kubernetes environments
+        during unit testing.
+
+        Example:
+            >>> print(smarter_settings.root_proxy_domain)
+            'local.example.com'
+
+        """
+        return f"{SmarterEnvironments.LOCAL}.{self.root_domain}"
+
+    @cached_property
     def platform_url(self) -> str:
         """
         Return the platform URL for the root platform domain and environment.
@@ -4240,6 +4252,20 @@ class Settings(BaseSettings):
         return f"{self.api_subdomain}.{self.platform_subdomain}.{self.root_domain}"
 
     @cached_property
+    def proxy_api_domain(self) -> str:
+        """
+        Return the proxy API domain name for the root domain.
+        Used for proxying local requests inside of AWS Kubernetes environments
+        during unit testing.
+
+        Example:
+            >>> print(smarter_settings.proxy_api_domain)
+            'api.local.example.com'
+
+        """
+        return f"{self.api_subdomain}.{self.root_proxy_domain}"
+
+    @cached_property
     def environment_api_domain(self) -> str:
         """
         Return the API domain name for the current environment.
@@ -4267,7 +4293,7 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return f"{self.environment}.{self.root_api_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
-            return f"{SMARTER_API_SUBDOMAIN}.localhost:9357"
+            return f"{self.api_subdomain}.localhost:9357"
         # default domain format
         return f"{self.environment}.{self.root_api_domain}"
 

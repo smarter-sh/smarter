@@ -13,13 +13,13 @@ from smarter.lib.manifest.models import AbstractSAMBase
 
 class AbstractController(abc.ABC, AccountMixin):
     """
-    Abstract base class for mapping a manifest model's `metadata.kindClass` to the correct Python object instance.
+    Abstract base class for mapping a manifest model's ``metadata.kindClass`` to the correct Python object instance.
 
     This controller is designed to facilitate the instantiation and management of objects based on manifest metadata,
     ensuring that the correct subclass is used for each manifest type. It also provides account and user context
-    through the `AccountMixin`.
 
-    Parameters
+    through the ``AccountMixin``.
+    Parameters:
 
         account (Account): The account associated with the controller instance. Must be a saved model.
         user (User): The user associated with the controller instance. Must be a saved model.
@@ -27,7 +27,7 @@ class AbstractController(abc.ABC, AccountMixin):
         request (optional): The request object, if available.
         *args, **kwargs: Additional arguments passed to the mixin and controller.
 
-    Usage Example
+    Usage Example:
 
         .. code-block:: python
 
@@ -42,13 +42,13 @@ class AbstractController(abc.ABC, AccountMixin):
 
     .. note::
 
-        - Both `account` and `user` must be saved instances (i.e., have a primary key).
-        - This class is abstract and must be subclassed with concrete implementations of the `manifest`, `map`, and `obj` properties.
+        - Both ``account`` and ``user`` must be saved instances (i.e., have a primary key).
+        - This class is abstract and must be subclassed with concrete implementations of the ``manifest``, ``map``, and ``obj`` properties.
 
     .. warning::
 
-        - Attempting to instantiate this controller with unsaved `account` or `user` objects will raise a `ValueError`.
-        - Subclasses must implement all abstract properties, or a `NotImplementedError` will be raised.
+        - Attempting to instantiate this controller with unsaved ``account`` or ``user`` objects will raise a ``ValueError``.
+        - Subclasses must implement all abstract properties, or a ``NotImplementedError`` will be raised.
 
     """
 

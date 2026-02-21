@@ -1,30 +1,55 @@
-"""This module is used to initialize the environment."""
+"""This module verifies AWS Route53 DNS resources required by the Smarter platform."""
 
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.aws.route53 import AWSRoute53
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.management.base import SmarterCommand
 
 
-# pylint: disable=E1101
 class Command(SmarterCommand):
     """
-    Management command for verifying AWS Route53 DNS resources required by the Smarter platform.
+    Management command for verifying AWS Route53 DNS resources required by the
+    Smarter platform. The general structure of DNS in AWS Route53 for a Smarter
+    installation is as follows:
 
-    This command checks the existence and correctness of DNS records and hosted zones for the root domain, API domain, and platform domain, as well as environment-specific domains (such as ``alpha.api.example.com`` or ``beta.platform.example.com``). It ensures that all necessary DNS infrastructure is present and properly configured for both production and non-production environments.
-
-    **Key Features and Workflow:**
-
-    - Verifies that AWS Route53 hosted zones exist for the root, API, and platform domains.
-    - Ensures that each hosted zone contains the required A record alias to the AWS Classic Load Balancer.
-    - Checks for the presence of NS records in the root domain hosted zone for both API and platform domains.
-    - For non-production environments, verifies and creates hosted zones and DNS records for environment-specific domains.
-    - Provides detailed, formatted output for each verification step, including success and error messages.
+    - example.com
+      The root domain with hosted zone in AWS Route53 in the AWS account. This
+      should have been created independently of this code base. This command
+      will only verify that the Hosted Zone for the root domain exists. If
+      it is missing then the command will fail.
+    - [platform].example.com
+      The platform domain with hosted zone in AWS Route53 in the AWS account
+      and NS records in the root domain hosted zone delegating to it.
+      This should have been created as part of the Terraform infrastructure
+      provisioning for the platform. But if not, this command will create it
+      and add the necessary NS records to the root domain hosted zone.
+    - api.[platform].example.com
+      The API domain for the platform with hosted zone in AWS Route53 in the
+      AWS account and NS records in the platform domain hosted zone delegating to it.
+      This should have been created as part of the Terraform infrastructure
+      provisioning for the platform. But if not, this command will create it and
+      add the necessary NS records to the platform domain hosted zone.
+    - local.example.com
+      The local proxy domain with hosted zone in AWS Route53 in the AWS account
+      and NS records in the root domain hosted zone delegating to it.
+    - api.local.example.com
+      The local API proxy domain with hosted zone in AWS Route53 in the AWS account
+      and NS records in the local proxy domain hosted zone delegating to it.
+    - [alpha].[platform].example.com
+      A non-production platform domain with hosted zone in AWS Route53 in the AWS account
+      and NS records in the root domain hosted zone delegating to it.
+    - [alpha].api.[platform].example.com
+      A non-production API domain with hosted zone in AWS Route53 in the AWS
+      account and NS records in the platform domain hosted zone delegating to it.
 
     **Usage:**
 
-    This command is intended to be run during environment setup, deployment, or DNS trouble shooting. It is especially useful for administrators and DevOps engineers who need to validate or repair DNS infrastructure in AWS Route53 for the Smarter platform.
+    This command is intended to be run during deployment, or in running installations as part of DNS trouble shooting.
+    It is useful for administrators and DevOps engineers as an automated tool to validate and/or
+    repair DNS infrastructure in AWS Route53 for the Smarter platform.
 
     **Error Handling and Output:**
 
@@ -32,17 +57,13 @@ class Command(SmarterCommand):
     - Fails gracefully if AWS is not configured, or if the Route53 helper is not initialized.
     - Reports the status of each verification and creation step, making it easy to identify and resolve issues.
 
-    **Intended Audience:**
-
-    System administrators, DevOps engineers, and cloud architects responsible for managing DNS infrastructure for Smarter environments. This command is also useful for onboarding new environments and ensuring DNS consistency across deployments.
-
     .. seealso::
 
         :py:class:`smarter.common.helpers.aws.route53.AWSRoute53` - AWS Route53 helper class used for DNS operations.
         :py:data:`smarter.common.helpers.aws_helpers.aws_helper` - AWS helper module for initializing AWS services.
     """
 
-    log_prefix = "smarter.apps.chatbot.management.commands.verify_dns_configuration"
+    log_prefix = formatted_text(f"{__name__}.Command()")
 
     def get_any_A_record(self) -> dict:
         """
@@ -50,8 +71,9 @@ class Command(SmarterCommand):
         This is a simple traversal method to look for and retrieve an A record
         from the AWS Route53 hosted zone for any of the existing domains.
         """
+        log_prefix = self.log_prefix + ".get_any_A_record()"
         if not isinstance(aws_helper.route53, AWSRoute53):
-            raise SmarterConfigurationError(f"{self.log_prefix} AWS Route53 helper is not initialized. Cannot proceed.")
+            raise SmarterConfigurationError(f"{log_prefix} AWS Route53 helper is not initialized. Cannot proceed.")
 
         for some_domain in smarter_settings.all_domains:
             self.stdout.write(self.style.NOTICE(f"looking for an A record in {some_domain}..."))
@@ -59,41 +81,108 @@ class Command(SmarterCommand):
             if a_record:
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"get_any_A_record() found an A record in the hosted zone for domain: {a_record['Name']}"
+                        f"{log_prefix} found an A record in the hosted zone for domain: {a_record['Name']}"
                     )
                 )
                 return a_record
 
         raise SmarterConfigurationError(
-            f"get_any_A_record() Checked the following domains: {smarter_settings.all_domains} but couldn't find an A record to propagate. Cannot proceed."
+            f"{log_prefix} Checked the following domains: {smarter_settings.all_domains} but couldn't find an A record to propagate. Cannot proceed."
         )
 
-    # pylint: disable=R0912,R0915
-    def verify_base_dns_config(self):
+    def verify_domain_delegated_from_parent(self, child_domain: str, parent_domain: str, a_record: dict):
         """
-        Verify the AWS Route53 hosted zones for the root domain, api domain and platform domain.
-        """
-        if not isinstance(aws_helper.route53, AWSRoute53):
-            raise SmarterConfigurationError(f"{self.log_prefix} AWS Route53 helper is not initialized. Cannot proceed.")
+        Verify the AWS Route53 hosted zone for the child domain.
+        example: api.example.com
 
-        log_prefix = self.log_prefix + " - " + "verify_base_dns_config()"
+        - hosted zone for child_domain should exist.
+        - hosted zone should contain A record alias to the AWS Classic Load Balancer.
+        - NS records for the child_domain hosted zone should exist in the parent_domain hosted zone.
+
+        :param child_domain: the child domain to verify. example: api.example.com
+        :type child_domain: str
+        :param parent_domain: the parent domain that should have NS records delegating to the child domain. example: example.com
+        :type parent_domain: str
+        :param a_record: an A record to use for verification and creation if needed. This should be an A record alias to the AWS Classic Load Balancer that is serving traffic for the Sm
+        :type a_record: dict
+
+        :return: None
+        """
+
+        log_prefix = self.log_prefix + ".verify_domain_delegated_from_parent()"
+        self.stdout.write(f"{log_prefix} - {child_domain} delegated from parent domain: {parent_domain}")
+
+        parent_domain_hosted_zone_id, _ = aws_helper.route53.get_or_create_hosted_zone(domain_name=parent_domain)
+        parent_domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=parent_domain_hosted_zone_id)
+
         self.stdout.write(self.style.NOTICE("-" * 80))
+        self.stdout.write(self.style.NOTICE(f"{log_prefix} {child_domain} DNS verification"))
+
+        root_api_domain_hosted_zone, created = aws_helper.route53.get_or_create_hosted_zone(domain_name=child_domain)
+        if created:
+            self.stdout.write(
+                self.style.SUCCESS(f"{log_prefix} created AWS Route53 hosted zone for child domain: {child_domain}")
+            )
+        else:
+            self.stdout.write(
+                self.style.SUCCESS(f"{log_prefix} verified AWS Route53 hosted zone for child domain: {child_domain}")
+            )
+
+        self.stdout.write(
+            self.style.NOTICE(f"{log_prefix} verify that an A record exists in child hosted zone {child_domain}")
+        )
+        child_domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=root_api_domain_hosted_zone)
+        _, created = aws_helper.route53.get_or_create_dns_record(
+            hosted_zone_id=child_domain_hosted_zone_id,
+            record_name=child_domain,
+            record_type="A",
+            record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
+            record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
+            record_ttl=600,
+        )
+        if created:
+            self.stdout.write(self.style.SUCCESS(f"{log_prefix} created A record for api base domain {child_domain}."))
+        else:
+            self.stdout.write(self.style.SUCCESS(f"{log_prefix} verified A record for api base domain {child_domain}."))
+
         self.stdout.write(
             self.style.NOTICE(
-                f"{log_prefix} verifying DNS configuration for {smarter_settings.root_domain}, {smarter_settings.root_platform_domain} and {smarter_settings.root_api_domain}"
+                f"{log_prefix} verify that NS records for {child_domain} exist in {parent_domain} hosted zone."
             )
         )
-        self.stdout.write(self.style.NOTICE("-" * 80))
+        child_domain_ns_records = aws_helper.route53.get_ns_records_for_domain(domain=child_domain)
+        self.stdout.write(
+            self.style.NOTICE(
+                f"{log_prefix} {child_domain} NS records that should exist in {parent_domain} hosted zone: {child_domain_ns_records}"
+            )
+        )
 
-        # 1. Root domain hosted zone verification, ie example.com. This needs to exist in AWS Route53
-        #    independent of this code base.
-        #
-        #    Verify the AWS Route53 hosted zone for the root domain. ie example.com
-        #     - hosted zone for root domain should exist.
-        #     - hosted zone should contain A record alias to the AWS Classic Load Balancer.
-        #     - hosted zone should contain NS records for the root domain (as is expected for any Hosted Zone).
-        # ---------------------------------------------------------------------
+        _, created = aws_helper.route53.get_or_create_dns_record(
+            hosted_zone_id=parent_domain_hosted_zone_id,
+            record_name=child_domain,
+            record_type="NS",
+            record_value=child_domain_ns_records["ResourceRecords"],
+            record_ttl=600,
+        )
+        if created:
+            self.stdout.write(
+                self.style.SUCCESS(f"{log_prefix} created NS record for {child_domain} in {parent_domain}.")
+            )
+        else:
+            self.stdout.write(
+                self.style.SUCCESS(f"{log_prefix} verified NS record for {child_domain} in {parent_domain}.")
+            )
 
+    def verify_root_domain_dns_config(self):
+        """
+        Verify the AWS Route53 hosted zone for the root domain. ie example.com
+        - hosted zone for root domain should exist.
+        - hosted zone should contain A record alias to the AWS Classic Load Balancer.
+        - hosted zone should contain NS records for the root domain (as is expected for any Hosted Zone).
+
+        :return: None
+        """
+        log_prefix = self.log_prefix + ".verify_root_domain_dns_config()"
         # Look for an A record in the root domain hosted zone
         self.stdout.write(
             self.style.NOTICE(f"{log_prefix} (1) root domain DNS verification: {smarter_settings.root_domain}")
@@ -157,317 +246,132 @@ class Command(SmarterCommand):
             )
         )
 
-        # 2. Api domain hosted zone verification. ie api.example.com
-        #    Verify the AWS Route53 hosted zone for the root api domain. example: api.example.com
-        #     - hosted zone for 'api.example.com' should exist.
-        #     - hosted zone should contain A record alias to the AWS Classic Load Balancer.
-        #     - NS records for this hosted zone should exist in the root domain hosted zone.
-        # ---------------------------------------------------------------------
-        self.stdout.write(self.style.NOTICE("-" * 80))
-        self.stdout.write(
-            self.style.NOTICE(f"{log_prefix} (2) api domain DNS verification: {smarter_settings.root_api_domain}")
-        )
-        self.stdout.write(self.style.NOTICE(f"{log_prefix} verify DNS config for {smarter_settings.root_api_domain}"))
-        root_api_domain_hosted_zone, created = aws_helper.route53.get_or_create_hosted_zone(
-            domain_name=smarter_settings.root_api_domain
-        )
-        if created:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} created AWS Route53 hosted zone for root api domain: {smarter_settings.root_api_domain}"
-                )
-            )
-        else:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} verified AWS Route53 hosted zone for root api domain: {smarter_settings.root_api_domain}"
-                )
-            )
-        self.stdout.write(self.style.NOTICE("-" * 80))
-
-        self.stdout.write(
-            self.style.NOTICE(
-                f"{log_prefix} verify that an A record exists in root api hosted zone {smarter_settings.root_api_domain}"
-            )
-        )
-        root_api_domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=root_api_domain_hosted_zone)
-        _, created = aws_helper.route53.get_or_create_dns_record(
-            hosted_zone_id=root_api_domain_hosted_zone_id,
-            record_name=smarter_settings.root_api_domain,
-            record_type="A",
-            record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
-            record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
-            record_ttl=600,
-        )
-        if created:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} created A record for api base domain {smarter_settings.root_api_domain}."
-                )
-            )
-        else:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} verified A record for api base domain {smarter_settings.root_api_domain}."
-                )
-            )
-        self.stdout.write(self.style.NOTICE("-" * 80))
-
-        # verify that the NS records for the root api domain are in the root domain hosted zone
-        self.stdout.write(
-            self.style.NOTICE(
-                f"{log_prefix} verify that NS records for {smarter_settings.root_api_domain} exist in {smarter_settings.root_domain} hosted zone."
-            )
-        )
-        customer_api_domain_ns_records = aws_helper.route53.get_ns_records_for_domain(
-            domain=smarter_settings.root_api_domain
-        )
-        self.stdout.write(
-            self.style.NOTICE(
-                f"{log_prefix} NS records that should exist in {smarter_settings.root_domain} hosted zone for {smarter_settings.root_api_domain}: {customer_api_domain_ns_records}"
-            )
-        )
-
-        _, created = aws_helper.route53.get_or_create_dns_record(
-            hosted_zone_id=root_domain_hosted_zone_id,
-            record_name=smarter_settings.root_api_domain,
-            record_type="NS",
-            record_value=customer_api_domain_ns_records["ResourceRecords"],
-            record_ttl=600,
-        )
-        if created:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} created NS record for {smarter_settings.root_api_domain} in the root domain hosted zone."
-                )
-            )
-        else:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} verified NS record for {smarter_settings.root_api_domain} in the root domain hosted zone."
-                )
-            )
-
-        # 3. root platform domain hosted zone verification. ie platform.example.com
-        #    Verify the AWS Route53 hosted zone for the root platform domain. ie platform.example.com
-        #     - hosted zone for the root platform domain should exist.
-        #     - hosted zone should contain A record alias to the AWS Classic Load Balancer.
-        #     - NS records for this hosted zone should exist in the root domain hosted zone.
-        # ---------------------------------------------------------------------
-        self.stdout.write(self.style.NOTICE("-" * 80))
-        self.stdout.write(
-            self.style.NOTICE(
-                f"{log_prefix} (3) root platform domain DNS verification: {smarter_settings.root_platform_domain}"
-            )
-        )
-        self.stdout.write(
-            self.style.NOTICE(f"{log_prefix} verify DNS config for {smarter_settings.root_platform_domain}")
-        )
-        root_platform_domain_hosted_zone, created = aws_helper.route53.get_or_create_hosted_zone(
-            domain_name=smarter_settings.root_platform_domain
-        )
-        if created:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} created AWS Route53 hosted zone for root platform domain: {smarter_settings.root_platform_domain}"
-                )
-            )
-        else:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} verified AWS Route53 hosted zone for root platform domain: {smarter_settings.root_platform_domain}"
-                )
-            )
-        self.stdout.write(self.style.NOTICE("-" * 80))
-
-        self.stdout.write(
-            self.style.NOTICE(
-                f"{log_prefix} verify that an A record exists in hosted zone for {smarter_settings.root_platform_domain}"
-            )
-        )
-        root_platform_domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id(
-            hosted_zone=root_platform_domain_hosted_zone
-        )
-        _, created = aws_helper.route53.get_or_create_dns_record(
-            hosted_zone_id=root_platform_domain_hosted_zone_id,
-            record_name=smarter_settings.root_platform_domain,
-            record_type="A",
-            record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
-            record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
-            record_ttl=600,
-        )
-        if created:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} created A record for root platform domain {smarter_settings.root_platform_domain}."
-                )
-            )
-        else:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} verified A record for root platform domain {smarter_settings.root_platform_domain}."
-                )
-            )
-        self.stdout.write(self.style.NOTICE("-" * 80))
-
-        # verify that the NS records for the platform domain are in the root domain hosted zone
-        self.stdout.write(
-            self.style.NOTICE(
-                f"{log_prefix} verify that NS records for {smarter_settings.root_platform_domain} exist in {smarter_settings.root_domain} hosted zone."
-            )
-        )
-        root_platform_domain_ns_records = aws_helper.route53.get_ns_records_for_domain(
-            domain=smarter_settings.root_platform_domain
-        )
-        self.stdout.write(
-            self.style.NOTICE(
-                f"{log_prefix} NS records that should exist in {smarter_settings.root_domain} hosted zone for {smarter_settings.root_platform_domain}: {root_platform_domain_ns_records}"
-            )
-        )
-
-        _, created = aws_helper.route53.get_or_create_dns_record(
-            hosted_zone_id=root_platform_domain_hosted_zone_id,
-            record_name=smarter_settings.root_platform_domain,
-            record_type="NS",
-            record_value=customer_api_domain_ns_records["ResourceRecords"],
-            record_ttl=600,
-        )
-        if created:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} created NS record for {smarter_settings.root_platform_domain} in the root domain hosted zone {smarter_settings.root_domain}."
-                )
-            )
-        else:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} verified NS record for {smarter_settings.root_platform_domain} in the root domain hosted zone {smarter_settings.root_domain}."
-                )
-            )
-
-        self.stdout.write(self.style.NOTICE("-" * 80))
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"{log_prefix} verified platform level DNS infrastructure for {smarter_settings.root_domain}, {smarter_settings.root_platform_domain} and {smarter_settings.root_api_domain}"
-            )
-        )
-        self.stdout.write(self.style.NOTICE("-" * 80))
-
-    def verify(self, domain: str):
+    def verify_base_dns_config(self) -> list[str]:
         """
-        Verify the AWS Route53 hosted zone for the environment platform domain
-        ie alpha.platform.example.com, beta.platform.example.com, etc.
-        1. hosted zone for 'domain' should exist. if not, create it.
-        2. NS records for 'domain' should exist in hosted zone of parent_domain. if not, create them
-        3. environment hosted zone should contain A record alias to the AWS Classic Load Balancer. If not, create it.
+        Verify the AWS Route53 hosted zones for domains associated with the
+        Smarter platform. This includes any of the following domains depending
+        on the configuration and the environment in which this command is
+        being run:
+
+        - example.com (root domain)
+        - platform.example.com (platform domain)
+        - api.platform.example.com (api domain)
+        - local.example.com (local proxy domain)
+        - api.local.example.com (local api proxy domain)
+        - alpha.platform.example.com (non-production platform domain)
+        - alpha.api.platform.example.com (non-production api domain)
+
+        :return: list of verified domains
+        :rtype: list[str]
         """
-
-        def get_parent_domain(domain: str) -> str:
-            """
-            Given a domain like 'alpha.platform.example.com', return its parent domain 'platform.example.com'.
-            """
-            domain_no_port = domain.split(":")[0].strip(".")
-            parts = domain_no_port.split(".")
-            if len(parts) < 3:
-                # For localhost or similar, just return the domain without port
-                return domain_no_port
-            parent_domain = ".".join(parts[1:])
-            return aws_helper.aws.domain_resolver(parent_domain)
-
         if not isinstance(aws_helper.route53, AWSRoute53):
             raise SmarterConfigurationError(f"{self.log_prefix} AWS Route53 helper is not initialized. Cannot proceed.")
 
-        resolved_domain = aws_helper.aws.domain_resolver(domain)
-        parent_domain = get_parent_domain(resolved_domain)
-
-        log_prefix = (
-            self.log_prefix
-            + " - "
-            + f"verify() - domain: {domain}, resolved domain: {resolved_domain}, parent_domain: {parent_domain}"
-        )
+        log_prefix = self.log_prefix + ".verify_base_dns_config()"
+        verified_domains = []
         self.stdout.write(self.style.NOTICE("-" * 80))
-        self.stdout.write(
-            self.style.NOTICE(f"{log_prefix} verifying AWS Route53 DNS infrastructure for domain: {resolved_domain}")
-        )
-        self.stdout.write(self.style.NOTICE("-" * 80))
-
-        # 1. Verify that the AWS Route53 hosted zone exists for the environment platform
-        #    example: alpha.platform.example.com, beta.platform.example.com, etc.
-        # ---------------------------------------------------------------------
-        _, created = aws_helper.route53.get_or_create_hosted_zone(domain_name=resolved_domain)
-        if created:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} created AWS Route53 hosted zone for resolved_domain: {resolved_domain}"
-                )
-            )
-        else:
-            self.stdout.write(
-                self.style.SUCCESS(f"{log_prefix} verified hosted zone for resolved_domain: {resolved_domain}")
-            )
-
-        domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=resolved_domain)
-
-        self.stdout.write(self.style.NOTICE("-" * 80))
-
-        # 2. Verify that the NS records for the resolved_domain exist in the parent resolved_domain's hosted zone
-        # ---------------------------------------------------------------------
-        domain_ns_records = aws_helper.route53.get_ns_records_for_domain(domain=resolved_domain)
         self.stdout.write(
             self.style.NOTICE(
-                f"{log_prefix} NS records for {resolved_domain} exist in the hosted zone for {parent_domain}. HostedZoneID: {domain_hosted_zone_id} NS records: {domain_ns_records}"
+                f"{log_prefix} verifying DNS configuration for {smarter_settings.root_domain}, {smarter_settings.root_platform_domain} and {smarter_settings.root_api_domain}"
             )
         )
+        self.stdout.write(self.style.NOTICE("-" * 80))
 
-        parent_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=parent_domain)
-        ns_record, created = aws_helper.route53.get_or_create_dns_record(
-            hosted_zone_id=parent_hosted_zone_id,
-            record_name=resolved_domain,
-            record_type="NS",
-            record_value=domain_ns_records["ResourceRecords"],
-            record_ttl=300,
-        )
-        if created:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} added NS Records for {resolved_domain} to hosted zone for {parent_domain}: {ns_record}"
-                )
-            )
-        else:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} verified NS Records for {resolved_domain} in hosted zone for {parent_domain}: {ns_record}"
-                )
-            )
-
-        # 3. Verify that an A record exists for the resolved_domain in its environment hosted zone
+        # 1. Root domain hosted zone verification, ie example.com. This needs to exist in AWS Route53
+        #    independent of this code base.
         # ---------------------------------------------------------------------
-        a_record = self.get_any_A_record()
-
-        domain_a_record, create = aws_helper.route53.get_or_create_dns_record(
-            hosted_zone_id=domain_hosted_zone_id,
-            record_name=resolved_domain,
-            record_type="A",
-            record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
-            record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
-            record_ttl=600,
-        )
-        if create:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} created A record for domain {resolved_domain} hosted zone.: {domain_a_record}"
-                )
+        self.verify_root_domain_dns_config()
+        verified_domains.append(smarter_settings.root_domain)
+        a_record = aws_helper.route53.get_environment_A_record(domain=smarter_settings.root_domain)
+        if not a_record:
+            raise SmarterConfigurationError(
+                f"{log_prefix} Couldn't find an A record in the root domain: "
+                f"{smarter_settings.root_domain}. Expected to find an 'A' record alias to an AWS Route53 "
+                "classic balancer. Cannot proceed."
             )
+
+        # ---------------------------------------------------------------------
+        # 2. platform domain hosted zone verification. ie platform.example.com
+        # ---------------------------------------------------------------------
+        if smarter_settings.environment != SmarterEnvironments.LOCAL:
+            self.verify_domain_delegated_from_parent(
+                child_domain=smarter_settings.root_platform_domain,
+                parent_domain=smarter_settings.root_domain,
+                a_record=a_record,
+            )
+            verified_domains.append(smarter_settings.root_platform_domain)
         else:
             self.stdout.write(
-                self.style.SUCCESS(f"{log_prefix} verified A record for domain {resolved_domain} in hosted zone.")
+                self.style.NOTICE(
+                    f"{log_prefix} skipping hosted zone verification for {smarter_settings.root_platform_domain} because environment is {SmarterEnvironments.LOCAL}."
+                )
             )
 
-        self.stdout.write(self.style.NOTICE("-" * 80))
-        self.stdout.write(
-            self.style.SUCCESS(f"{log_prefix} verified AWS Route53 DNS infrastructure for domain: {resolved_domain}")
+        # ---------------------------------------------------------------------
+        # 3. Local proxy domain hosted zone verification. ie local.example.com
+        # ---------------------------------------------------------------------
+        self.verify_domain_delegated_from_parent(
+            child_domain=smarter_settings.root_proxy_domain,
+            parent_domain=smarter_settings.root_domain,
+            a_record=a_record,
         )
-        self.stdout.write(self.style.NOTICE("-" * 80))
+        verified_domains.append(smarter_settings.root_proxy_domain)
+
+        # ---------------------------------------------------------------------
+        # 4. Local api proxy domain hosted zone verification. ie api.local.example.com
+        # ---------------------------------------------------------------------
+        self.verify_domain_delegated_from_parent(
+            child_domain=smarter_settings.proxy_api_domain,
+            parent_domain=smarter_settings.root_proxy_domain,
+            a_record=a_record,
+        )
+        verified_domains.append(smarter_settings.proxy_api_domain)
+
+        if smarter_settings.environment == SmarterEnvironments.LOCAL:
+            return verified_domains
+
+        # ---------------------------------------------------------------------
+        # 5. Api domain hosted zone verification. ie api.example.com
+        # ---------------------------------------------------------------------
+        if smarter_settings.environment != SmarterEnvironments.LOCAL:
+            self.verify_domain_delegated_from_parent(
+                child_domain=smarter_settings.root_api_domain,
+                parent_domain=smarter_settings.root_platform_domain,
+                a_record=a_record,
+            )
+            verified_domains.append(smarter_settings.root_api_domain)
+        else:
+            self.stdout.write(
+                self.style.NOTICE(
+                    f"{log_prefix} skipping hosted zone verification for {smarter_settings.root_api_domain} because environment is {SmarterEnvironments.LOCAL}."
+                )
+            )
+
+        # ---------------------------------------------------------------------
+        # 6. non-production platform domain hosted zone verification.
+        # ie alpha.platform.example.com
+        # ---------------------------------------------------------------------
+        if smarter_settings.environment_api_domain != smarter_settings.root_api_domain:
+            self.verify_domain_delegated_from_parent(
+                child_domain=smarter_settings.environment_platform_domain,
+                parent_domain=smarter_settings.root_platform_domain,
+                a_record=a_record,
+            )
+            verified_domains.append(smarter_settings.environment_platform_domain)
+
+        # ---------------------------------------------------------------------
+        # 7. Environment specific domain hosted zone verification.
+        # ie alpha.api.platform.example.com
+        # ---------------------------------------------------------------------
+        if smarter_settings.environment_api_domain != smarter_settings.root_api_domain:
+            self.verify_domain_delegated_from_parent(
+                child_domain=smarter_settings.environment_api_domain,
+                parent_domain=smarter_settings.root_api_domain,
+                a_record=a_record,
+            )
+            verified_domains.append(smarter_settings.environment_api_domain)
+
+        return verified_domains
 
     def handle(self, *args, **options):
         """Verify DNS configuration."""
@@ -479,25 +383,16 @@ class Command(SmarterCommand):
             return
 
         try:
-            self.verify_base_dns_config()
+            verified_domains = self.verify_base_dns_config()
         except SmarterConfigurationError as exc:
             self.handle_completed_failure(exc)
             return
 
-        # for non-production environments, we need to verify the environment specific domains
-        if smarter_settings.environment_api_domain != smarter_settings.root_api_domain:
-            # example: domain=alpha.api.example.com
-            try:
-                self.verify(domain=smarter_settings.environment_api_domain)
-            except SmarterConfigurationError as exc:
-                self.handle_completed_failure(exc)
-                return
-        if smarter_settings.environment_platform_domain != smarter_settings.root_platform_domain:
-            # example: domain=alpha.platform.example.com
-            try:
-                self.verify(domain=smarter_settings.environment_platform_domain)
-            except SmarterConfigurationError as exc:
-                self.handle_completed_failure(exc)
-                return
+        if len(verified_domains) > 0:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"{self.log_prefix} verified platform level DNS infrastructure for the following domains: {', '.join(verified_domains)}"
+                )
+            )
 
         self.handle_completed_success()
