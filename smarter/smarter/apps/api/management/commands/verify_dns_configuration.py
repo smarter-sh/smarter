@@ -325,7 +325,7 @@ class Command(SmarterCommand):
         # ---------------------------------------------------------------------
         self.verify_domain_delegated_from_parent(
             child_domain=smarter_settings.proxy_api_domain,
-            parent_domain=smarter_settings.root_proxy_domain,
+            parent_domain=smarter_settings.root_domain,
             a_record=a_record,
         )
         verified_domains.append(smarter_settings.proxy_api_domain)
@@ -339,7 +339,7 @@ class Command(SmarterCommand):
         if smarter_settings.environment != SmarterEnvironments.LOCAL:
             self.verify_domain_delegated_from_parent(
                 child_domain=smarter_settings.root_api_domain,
-                parent_domain=smarter_settings.root_platform_domain,
+                parent_domain=smarter_settings.root_domain,
                 a_record=a_record,
             )
             verified_domains.append(smarter_settings.root_api_domain)
@@ -357,7 +357,7 @@ class Command(SmarterCommand):
         if smarter_settings.environment_api_domain != smarter_settings.root_api_domain:
             self.verify_domain_delegated_from_parent(
                 child_domain=smarter_settings.environment_platform_domain,
-                parent_domain=smarter_settings.root_platform_domain,
+                parent_domain=smarter_settings.root_domain,
                 a_record=a_record,
             )
             verified_domains.append(smarter_settings.environment_platform_domain)
@@ -369,7 +369,7 @@ class Command(SmarterCommand):
         if smarter_settings.environment_api_domain != smarter_settings.root_api_domain:
             self.verify_domain_delegated_from_parent(
                 child_domain=smarter_settings.environment_api_domain,
-                parent_domain=smarter_settings.root_api_domain,
+                parent_domain=smarter_settings.root_domain,
                 a_record=a_record,
             )
             verified_domains.append(smarter_settings.environment_api_domain)
