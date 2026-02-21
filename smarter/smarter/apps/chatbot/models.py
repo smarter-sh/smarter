@@ -29,6 +29,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
     formatted_text,
@@ -547,20 +548,59 @@ class ChatBot(MetaDataWithOwnershipModel):
         return f"{get_date_time_string()}{self.default_system_role}"
 
     @property
+    def base_api_domain(self):
+        """
+        The base API domain for the ChatBot. This is the domain that is used in the default hostname for the ChatBot.
+
+        Examples:
+
+            example 1. given:
+
+            - environment is "alpha"
+            - environment API domain "alpha.api.example.com"
+
+            the resulting base API domain would be: 'alpha.api.example.com'
+
+            example 2. given:
+
+            - environment is "local"
+            - environment API domain "api.localhost:9357"
+
+            the resulting base API domain would be: 'api.local.example.com'
+
+        """
+        if smarter_settings.environment in SmarterEnvironments.aws_environments:
+            return smarter_settings.environment_api_domain
+        return smarter_settings.proxy_api_domain
+
+    @property
     def base_default_host(self):
         """
         The base default hostname for the ChatBot. This is the part of the hostname
         that comes after the RFC 1034 compliant name. It includes the account number
         and the environment API domain.
 
-        Example:
-            For a ChatBot associated with an account number "1234-5678-9012"
-            and environment API domain "alpha.api.example.com", the resulting
-            base default host would be:
-            .1234-5678-9012.alpha.api.example.com
+        Examples:
+
+            example 1. given:
+
+            - a ChatBot associated with an account number "1234-5678-9012"
+            - environment is "alpha"
+            - environment API domain "alpha.api.example.com"
+
+            the resulting base default host would be: '.1234-5678-9012.alpha.api.example.com'
+
+            example 2. given:
+
+            - a ChatBot associated with an account number "1234-5678-9012"
+            - environment is "local"
+            - environment API domain "api.localhost:9357"
+
+            the resulting base default host would be: '.1234-5678-9012.api.local.example.com'
+
         """
         user_profile: UserProfile = self.user_profile
-        return f"{user_profile.account.account_number}.{smarter_settings.environment_api_domain}"
+        return f"{user_profile.account.account_number}.{self.base_api_domain}"
 
     @property
     def default_host(self):
@@ -568,11 +608,23 @@ class ChatBot(MetaDataWithOwnershipModel):
         The default hostname for the ChatBot.
         Examples:
 
+        example 1. given:
+
         - self.name: 'example'
         - self.account.account_number: '1234-5678-9012'
+        - smarter_settings.environment = "alpha"
         - smarter_settings.environment_api_domain: 'alpha.api.example.com'
 
-        example 'example.1234-5678-9012.alpha.api.example.com'
+        The domain would be: 'example.1234-5678-9012.alpha.api.example.com'
+
+        example 2. given:
+
+        - self.name: 'example'
+        - self.account.account_number: '1234-5678-9012'
+        - smarter_settings.environment = "local"
+        - smarter_settings.environment_api_domain: 'api.localhost:9357'
+
+        The domain would be: 'example.1234-5678-9012.api.local.example.com'
 
         :returns: default hostname
         :rtype: str

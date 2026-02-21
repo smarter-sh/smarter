@@ -116,7 +116,8 @@ class Command(SmarterCommand):
         parent_domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=parent_domain_hosted_zone_id)
 
         self.stdout.write(self.style.NOTICE("-" * 80))
-        self.stdout.write(self.style.NOTICE(f"{log_prefix} {child_domain} DNS verification"))
+        self.stdout.write(self.style.NOTICE(f"{log_prefix} verifying DNS configuration for {child_domain}"))
+        self.stdout.write(self.style.NOTICE("-" * 80))
 
         root_api_domain_hosted_zone, created = aws_helper.route53.get_or_create_hosted_zone(domain_name=child_domain)
         if created:
@@ -151,12 +152,6 @@ class Command(SmarterCommand):
             )
         )
         child_domain_ns_records = aws_helper.route53.get_ns_records_for_domain(domain=child_domain)
-        self.stdout.write(
-            self.style.NOTICE(
-                f"{log_prefix} {child_domain} NS records that should exist in {parent_domain} hosted zone: {child_domain_ns_records}"
-            )
-        )
-
         _, created = aws_helper.route53.get_or_create_dns_record(
             hosted_zone_id=parent_domain_hosted_zone_id,
             record_name=child_domain,
@@ -172,6 +167,12 @@ class Command(SmarterCommand):
             self.stdout.write(
                 self.style.SUCCESS(f"{log_prefix} verified NS record for {child_domain} in {parent_domain}.")
             )
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"{log_prefix} verified that {child_domain} is properly delegated from parent domain: {parent_domain}"
+            )
+        )
 
     def verify_root_domain_dns_config(self):
         """
@@ -246,6 +247,10 @@ class Command(SmarterCommand):
             )
         )
 
+        self.stdout.write(
+            self.style.SUCCESS(f"{log_prefix} verified root domain {smarter_settings.root_domain} DNS configuration.")
+        )
+
     def verify_base_dns_config(self) -> list[str]:
         """
         Verify the AWS Route53 hosted zones for domains associated with the
@@ -269,13 +274,11 @@ class Command(SmarterCommand):
 
         log_prefix = self.log_prefix + ".verify_base_dns_config()"
         verified_domains = []
-        self.stdout.write(self.style.NOTICE("-" * 80))
         self.stdout.write(
             self.style.NOTICE(
                 f"{log_prefix} verifying DNS configuration for {smarter_settings.root_domain}, {smarter_settings.root_platform_domain} and {smarter_settings.root_api_domain}"
             )
         )
-        self.stdout.write(self.style.NOTICE("-" * 80))
 
         # 1. Root domain hosted zone verification, ie example.com. This needs to exist in AWS Route53
         #    independent of this code base.
