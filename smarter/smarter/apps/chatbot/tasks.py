@@ -814,25 +814,10 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         )
         return None
 
-    # Prerequisites.
-    # ensure that the root API domain has an A record that we can use to create the chatbot's A record
-    # our expected case is that the record already exists and that this step is benign.
-    # This is expected to be a no-op.
-    _, created = aws_helper.route53.create_domain_a_record(
-        hostname=smarter_settings.environment_api_domain, api_host_domain=smarter_settings.root_api_domain
-    )
-    if created:
-        logger.warning(
-            "%s created A record for environment API domain %s in root API domain hosted zone. This is unexpected and may indicate a configuration issue. task_id: %s",
-            fn_name,
-            smarter_settings.environment_api_domain,
-            task_id,
-        )
-
     domain_name = chatbot.default_host
     if smarter_settings.chatbot_tasks_create_dns_record:
         _, created = aws_helper.route53.create_domain_a_record(
-            hostname=domain_name, api_host_domain=smarter_settings.environment_api_domain
+            hostname=domain_name, api_host_domain=chatbot.base_api_domain
         )
         if created:
             logger.info(
@@ -931,7 +916,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     ):
         logger.debug("%s verifying/creating ingress manifest for %s task_id: %s", fn_name, domain_name, task_id)
         ingress_values = {
-            "cluster_issuer": smarter_settings.environment_api_domain,
+            "cluster_issuer": smarter_settings.root_api_domain,
             "environment_namespace": smarter_settings.environment_namespace,
             "domain": domain_name,
             "service_name": "smarter",
