@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.137](https://github.com/smarter-sh/smarter/compare/v0.13.136...v0.13.137) (2026-02-21)
+
+### Bug Fixes
+
+* deploy local to proxy api domain ([c2d248a](https://github.com/smarter-sh/smarter/commit/c2d248ac3f9738dd1f00af494d8263dcb47b19dd))
+
 ## [0.13.136](https://github.com/smarter-sh/smarter/compare/v0.13.135...v0.13.136) (2026-02-21)
 
 ### Bug Fixes
