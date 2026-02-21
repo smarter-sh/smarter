@@ -24,8 +24,8 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
-    SmarterEnvironments,
 )
+from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.aws.acm import AWSCertificateManager
 from smarter.common.helpers.aws.exceptions import (
     AWSACMCertificateNotFound,
@@ -836,69 +836,13 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
                 task_id,
             )
 
-    if (
-        created
-        and with_domain_verification
-        and chatbot.dns_verification_status != chatbot.DnsVerificationStatusChoices.VERIFIED
-    ):
-        chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
-        chatbot.save(asynchronous=True)
-        activate = verify_domain(domain_name, record_type="A", chatbot=chatbot, activate_chatbot=True, task_id=task_id)
-        if not activate:
-            logger.error(
-                "%s unable to verify domain %s. Chatbot %s will not be deployed. task_id: %s",
-                fn_name,
-                domain_name,
-                chatbot.name,
-                task_id,
-            )
-            chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.FAILED
-            chatbot.save(asynchronous=True)
-            chatbot_deploy_failed.send(
-                sender=deploy_default_api,
-                chatbot_id=chatbot_id,
-                with_domain_verification=with_domain_verification,
-                task_id=task_id,
-            )
-            post_deploy_default_api.send(
-                sender=deploy_default_api,
-                chatbot_id=chatbot_id,
-                with_domain_verification=with_domain_verification,
-                task_id=task_id,
-            )
-            return
-    else:
-        activate = True
-
-    if activate:
-        chatbot.deployed = True
-        chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFIED
-        chatbot.save(asynchronous=True)
-        chatbot_deployed.send(sender=deploy_default_api, chatbot=chatbot)
-        logger.info("%s Chatbot %s has been deployed to %s task_id: %s", fn_name, chatbot.name, domain_name, task_id)
-
-        # send an email to the account owner to notify them that the chatbot has been deployed
-        subject = f"Your Smarter chatbot {chatbot.url} has been deployed"
-        body = (
-            f"Your chatbot, {chatbot.name}, has been deployed to {chatbot.url}. "
-            f"It is now activated and able to respond to prompts.\n\n"
-            f"If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified. "
-            f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
-        )
-        AccountContact.send_email_to_primary_contact(account=chatbot.user_profile.account, subject=subject, body=body)
-    else:
-        logger.error(
-            "%s unable to verify domain %s. Chatbot %s will not be deployed. task_id: %s",
+    if chatbot.deployed and chatbot.dns_verification_status == chatbot.DnsVerificationStatusChoices.VERIFIED:
+        logger.info(
+            "%s Chatbot %s is already deployed and verified at domain %s. Nothing to do. task_id: %s",
             fn_name,
-            domain_name,
             chatbot.name,
+            domain_name,
             task_id,
-        )
-        chatbot_deploy_failed.send(
-            sender=deploy_default_api,
-            chatbot_id=chatbot_id,
-            with_domain_verification=with_domain_verification,
-            task_id=task_id,
         )
         post_deploy_default_api.send(
             sender=deploy_default_api,
@@ -932,13 +876,39 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         with open(template_path, encoding="utf-8") as ingress_template:
             template = Template(ingress_template.read())
             manifest = template.substitute(ingress_values)
-        kubernetes_helper.apply_manifest(manifest)
+
+        try:
+            kubernetes_helper.apply_manifest(manifest)
+        except SmarterException as e:
+            logger.error(
+                "%s failed to apply ingress manifest for chatbot %s at domain %s task_id: %s. Error: %s",
+                fn_name,
+                chatbot.name,
+                domain_name,
+                task_id,
+                str(e),
+            )
+            chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.FAILED
+            chatbot.save(asynchronous=True)
+            chatbot_deploy_failed.send(
+                sender=deploy_default_api,
+                chatbot_id=chatbot_id,
+                with_domain_verification=with_domain_verification,
+                task_id=task_id,
+            )
+            post_deploy_default_api.send(
+                sender=deploy_default_api,
+                chatbot_id=chatbot_id,
+                with_domain_verification=with_domain_verification,
+                task_id=task_id,
+            )
+            return
 
         if chatbot.tls_certificate_issuance_status != chatbot.TlsCertificateIssuanceStatusChoices.ISSUED:
             # move ourselves back to the first step in the process.
             chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.REQUESTED
             chatbot.save(asynchronous=True)
-            wait_time = 300
+            wait_time = 600
             logger.info(
                 "%s waiting %s seconds for ingress resources to be created and for certificate to be issued",
                 fn_name,
@@ -991,6 +961,51 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
             task_id=task_id,
         )
         chatbot_deployed.send(sender=deploy_default_api, chatbot=chatbot, task_id=task_id)
+
+    if with_domain_verification:
+        chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
+        chatbot.save(asynchronous=True)
+        verified_domain = verify_domain(
+            domain_name, record_type="A", chatbot=chatbot, activate_chatbot=True, task_id=task_id
+        )
+        if not verified_domain:
+            logger.error(
+                "%s unable to verify domain %s. Chatbot %s will not be deployed. task_id: %s",
+                fn_name,
+                domain_name,
+                chatbot.name,
+                task_id,
+            )
+            chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.FAILED
+            chatbot.save(asynchronous=True)
+            chatbot_deploy_failed.send(
+                sender=deploy_default_api,
+                chatbot_id=chatbot_id,
+                with_domain_verification=with_domain_verification,
+                task_id=task_id,
+            )
+            post_deploy_default_api.send(
+                sender=deploy_default_api,
+                chatbot_id=chatbot_id,
+                with_domain_verification=with_domain_verification,
+                task_id=task_id,
+            )
+            return
+
+    chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFIED
+    chatbot.save(asynchronous=True)
+    chatbot_deployed.send(sender=deploy_default_api, chatbot=chatbot)
+    logger.info("%s Chatbot %s has been deployed to %s task_id: %s", fn_name, chatbot.name, domain_name, task_id)
+
+    # send an email to the account owner to notify them that the chatbot has been deployed
+    subject = f"Your Smarter chatbot {chatbot.url} has been deployed"
+    body = (
+        f"Your chatbot, {chatbot.name}, has been deployed to {chatbot.url}. "
+        f"It is now activated and able to respond to prompts.\n\n"
+        f"If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified. "
+        f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
+    )
+    AccountContact.send_email_to_primary_contact(account=chatbot.user_profile.account, subject=subject, body=body)
 
 
 @app.task(
