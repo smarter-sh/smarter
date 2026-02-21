@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.139](https://github.com/smarter-sh/smarter/compare/v0.13.138...v0.13.139) (2026-02-21)
+
+### Bug Fixes
+
+* work on dns ([ac617b8](https://github.com/smarter-sh/smarter/commit/ac617b8867734c1869052461aa2654a85f5c1aaa))
+
 ## [0.13.138](https://github.com/smarter-sh/smarter/compare/v0.13.137...v0.13.138) (2026-02-21)
 
 ### Bug Fixes
