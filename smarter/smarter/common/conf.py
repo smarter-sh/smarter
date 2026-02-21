@@ -3338,7 +3338,7 @@ class Settings(BaseSettings):
     It is required for enabling users to log in using their Google accounts.
 
     :type: SecretStr
-    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET``
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 

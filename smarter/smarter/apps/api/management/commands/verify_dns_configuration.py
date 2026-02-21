@@ -9,7 +9,6 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.management.base import SmarterCommand
 
 
-# pylint: disable=E1101
 class Command(SmarterCommand):
     """
     Management command for verifying AWS Route53 DNS resources required by the
@@ -17,7 +16,10 @@ class Command(SmarterCommand):
     installation is as follows:
 
     - example.com
-      The root domain with hosted zone in AWS Route53 in the AWS account.
+      The root domain with hosted zone in AWS Route53 in the AWS account. This
+      should have been created independently of this code base. This command
+      will only verify that the Hosted Zone for the root domain exists. If
+      it is missing then the command will fail.
     - [platform].example.com
       The platform domain with hosted zone in AWS Route53 in the AWS account
       and NS records in the root domain hosted zone delegating to it.
@@ -108,6 +110,15 @@ class Command(SmarterCommand):
         - hosted zone for child_domain should exist.
         - hosted zone should contain A record alias to the AWS Classic Load Balancer.
         - NS records for the child_domain hosted zone should exist in the parent_domain hosted zone.
+
+        :param child_domain: the child domain to verify. example: api.example.com
+        :type child_domain: str
+        :param parent_domain: the parent domain that should have NS records delegating to the child domain. example: example.com
+        :type parent_domain: str
+        :param a_record: an A record to use for verification and creation if needed. This should be an A record alias to the AWS Classic Load Balancer that is serving traffic for the Sm
+        :type a_record: dict
+
+        :return: None
         """
 
         log_prefix = self.log_prefix + ".verify_domain_delegated_from_parent()"
