@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.140](https://github.com/smarter-sh/smarter/compare/v0.13.139...v0.13.140) (2026-02-21)
+
+### Bug Fixes
+
+* only block sensitive file if we actually have an IP address to block ([6d44b66](https://github.com/smarter-sh/smarter/commit/6d44b6690a5422863fa36a69a2be5c58aecd0d50))
+
 ## [0.13.139](https://github.com/smarter-sh/smarter/compare/v0.13.138...v0.13.139) (2026-02-21)
 
 ### Bug Fixes
