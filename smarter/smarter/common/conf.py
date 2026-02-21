@@ -3554,75 +3554,6 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"smtp_sender of type {type(v)} is not a str: {v}")
         return v
 
-    smtp_from_email: Optional[EmailStr] = Field(
-        SettingsDefaults.SMTP_FROM_EMAIL,
-        description="The from email address for SMTP emails.",
-        examples=["from@example.com"],
-        title="SMTP From Email Address",
-    )
-    """
-    The from email address for SMTP emails.
-    This setting specifies the email address that will appear in the "From"
-    field of outgoing SMTP emails sent by the platform.
-
-    :type: Optional[EmailStr]
-    :default: Value from ``SettingsDefaults.SMTP_FROM_EMAIL``
-    :raises SmarterConfigurationError: If the value is not a valid email address.
-    """
-
-    @before_field_validator("smtp_from_email")
-    def validate_smtp_from_email(cls, v: Optional[EmailStr]) -> Optional[EmailStr]:
-        """Validates the `smtp_from_email` field.
-
-        Args:
-            v (Optional[EmailStr]): The SMTP from email address to validate.
-
-        Returns:
-            Optional[EmailStr]: The validated SMTP from email address.
-        """
-        if v in [None, ""]:
-            return SettingsDefaults.SMTP_FROM_EMAIL
-
-        if isinstance(v, str):
-            SmarterValidator.validate_email(v)
-            return v
-
-        raise SmarterConfigurationError(f"could not validate smtp_from_email: {v}")
-
-    smtp_host: Optional[str] = Field(
-        SettingsDefaults.SMTP_HOST,
-        description="The SMTP host address for sending emails.",
-        examples=["smtp.example.com"],
-        title="SMTP Host Address",
-    )
-    """
-    The SMTP host address for sending emails.
-    This setting specifies the hostname or IP address of the SMTP server
-    used for sending outgoing emails from the platform.
-
-    :type: Optional[str]
-    :default: Value from ``SettingsDefaults.SMTP_HOST``
-    :raises SmarterConfigurationError: If the value is not a valid hostname or IP address
-    """
-
-    @before_field_validator("smtp_host")
-    def validate_smtp_host(cls, v: Optional[str]) -> Optional[str]:
-        """Validates the `smtp_host` field.
-
-        Args:
-            v (Optional[str]): The SMTP host to validate.
-
-        Returns:
-            Optional[str]: The validated SMTP host.
-        """
-        if v in [None, ""]:
-            v = SettingsDefaults.SMTP_HOST
-            SmarterValidator.validate_domain(v)
-
-        if not isinstance(v, str):
-            raise SmarterConfigurationError(f"smtp_host of type {type(v)} is not a str: {v}")
-        return v
-
     smtp_password: Optional[SecretStr] = Field(
         SettingsDefaults.SMTP_PASSWORD,
         description="The SMTP password for authentication. Assumed to be an AWS SES-generated IAM keypair secret.",
@@ -4350,6 +4281,28 @@ class Settings(BaseSettings):
         if self.environment == SmarterEnvironments.LOCAL:
             return f"{SmarterEnvironments.ALPHA}.{self.root_platform_domain}"
         return self.environment_platform_domain
+
+    @property
+    def smtp_from_email(self) -> str:
+        """
+        Return the email address that will appear in the "From" field of outgoing SMTP emails.
+
+        Example:
+            >>> print(smarter_settings.smtp_from_email)
+            'no-reply@platform.example.com'
+        """
+        return f"no-reply@{self.platform_subdomain}.{self.root_domain}"
+
+    @property
+    def smtp_host(self) -> str:
+        """
+        Return the SMTP host address for sending emails.
+
+        Example:
+            >>> print(smarter_settings.smtp_host)
+            'email-smtp.us-east-1.amazonaws.com'
+        """
+        return f"email-smtp.{self.aws_region}.amazonaws.com"
 
     @property
     def is_using_dotenv_file(self) -> bool:
