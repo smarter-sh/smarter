@@ -35,6 +35,7 @@ This module does not document individual function signatures or arguments, as th
 import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
+from urllib.parse import urljoin
 
 from django.urls import reverse
 
@@ -365,6 +366,38 @@ def branding(request: "HttpRequest") -> dict:
             "url_linkedin": smarter_settings.branding_url_linkedin,
             "smarter_marketing_site_url": smarter_settings.marketing_site_url,
             "smarter_home_url": "/",
+        }
+    }
+    return context
+
+
+def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
+    """
+    Provides organization-specific legal context for dashboard templates.
+
+    This context processor injects legal and compliance-related variables into the template context for all pages inheriting from ``base.html``. These variables ensure that consistent legal information, such as terms of service, privacy policy, and cookie policy URLs, are available throughout the dashboard user interface.
+
+    The context includes:
+
+    - URLs for the terms of service, privacy policy, and cookie policy documents.
+    - A dynamically generated copyright notice that includes the current year and corporate name.
+
+    All values are sourced from Django settings, allowing for easy customization and environment-specific overrides.
+
+    Example usage in a Django template::
+
+        {{ footer.legal_url }}
+        {{ footer.plans_url }}
+        {{ footer.contact_url }}
+    """
+
+    context = {
+        "footer": {
+            "about_url": smarter_settings.marketing_site_url,
+            "support_url": smarter_settings.marketing_site_url,
+            "legal_url": urljoin(smarter_settings.marketing_site_url, "legal"),  # type: ignore[union-attr]
+            "plans_url": smarter_settings.marketing_site_url,
+            "contact_url": "https://lawrencemcdaniel.com/contact/",
         }
     }
     return context
