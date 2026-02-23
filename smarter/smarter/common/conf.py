@@ -86,6 +86,7 @@ from .const import (
     SMARTER_API_KEY_MAX_LIFETIME_DAYS,
     SMARTER_API_SUBDOMAIN,
     SMARTER_DEFAULT_APP_LOADER_PATH,
+    SMARTER_DEFAULT_REACTJS_APP_LOADER_URL,
     SMARTER_PLATFORM_DEFAULT_SUBDOMAIN,
     VERSION,
     SmarterEnvironments,
@@ -4437,7 +4438,7 @@ class Settings(BaseSettings):
                 return False
 
         intended_url = urljoin(self.environment_cdn_url, self.smarter_reactjs_app_loader_path)
-        fallback_url = "https://cdn.platform.smarter.sh/ui-chat/app-loader.js"
+        fallback_url = SMARTER_DEFAULT_REACTJS_APP_LOADER_URL
         if check_smarter_reactjs_app_loader_url(intended_url):
             logger.debug(
                 "%s Successfully retrieved the ReactJS app loader from %s. See https://github.com/smarter-sh/web-integration-example for details on configuring Smarter Chat.",

@@ -23,6 +23,7 @@ SMARTER_CUSTOMER_SUPPORT_EMAIL = "support@smarter.sh"
 SMARTER_CONTACT_EMAIL = "contact@smarter.sh"
 SMARTER_CUSTOMER_SUPPORT_PHONE = "+1 (512) 833-6955"
 SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
+SMARTER_DEFAULT_REACTJS_APP_LOADER_URL = "https://cdn.smarter.sh/ui-chat/app-loader.js"
 
 # The following are used in the React app
 # to store the chatbot chat session key and debug mode settings
