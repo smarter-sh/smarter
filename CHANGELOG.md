@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.143](https://github.com/smarter-sh/smarter/compare/v0.13.142...v0.13.143) (2026-02-24)
+
+### Bug Fixes
+
+* add annotations to ChatConfig ([4bafaca](https://github.com/smarter-sh/smarter/commit/4bafacafd9e06d6eaa03796898531bef5880438c))
+* refactor forgot password email workflow ([2738c58](https://github.com/smarter-sh/smarter/commit/2738c587f5591c21c55e7343d2eb1375d031c89a))
+* refactor welcome email ([4da7001](https://github.com/smarter-sh/smarter/commit/4da7001560c51e9767725b41c738e95650f8ed87))
+
 ## [0.13.142](https://github.com/smarter-sh/smarter/compare/v0.13.141...v0.13.142) (2026-02-24)
 
 ### Bug Fixes
