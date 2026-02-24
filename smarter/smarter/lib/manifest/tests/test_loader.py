@@ -22,7 +22,7 @@ class TestManifestLoader(SmarterTestBase):
         self.path = os.path.join(HERE, "data")
         self.good_manifest_path = os.path.join(self.path, "good-plugin-manifest.yaml")
         self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
-        self.url = "https://cdn.platform.smarter.sh/cli/example-manifests/plugin.yaml"
+        self.url = "https://cdn.smarter.sh/cli/example-manifests/plugin.yaml"
 
     def test_valid_manifest(self):
         """Test that we can load a valid manifest"""
