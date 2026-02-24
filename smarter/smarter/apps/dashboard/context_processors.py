@@ -395,7 +395,7 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
         "footer": {
             "about_url": smarter_settings.marketing_site_url,
             "support_url": smarter_settings.marketing_site_url,
-            "legal_url": urljoin(str(smarter_settings.marketing_site_url), "legal"),  # type: ignore[union-attr]
+            "legal_url": urljoin(str(smarter_settings.marketing_site_url), "legal"),
             "plans_url": smarter_settings.marketing_site_url,
             "contact_url": "https://lawrencemcdaniel.com/contact/",
         }

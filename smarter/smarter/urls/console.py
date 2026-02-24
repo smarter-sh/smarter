@@ -125,7 +125,9 @@ urlpatterns = [
     # -----------------------------------
     path("chat/", DefaultChatbotApiView.as_view(), name=f"{name_prefix}_chat"),
     path("config/", ChatConfigView.as_view(), name=f"{name_prefix}_config"),
+    # -----------------------------------
     # password management
+    # -----------------------------------
     path(
         "password-reset-request/",
         PasswordResetRequestView.as_view(),

@@ -1,10 +1,11 @@
 # pylint: disable=wrong-import-position
 """Test STMPT Email Helper."""
 
+from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
+from smarter.common.helpers.email_helpers import email_helper
+
 # our stuff
 from smarter.lib.unittest.base_classes import SmarterTestBase
-
-from ..helpers.email_helpers import email_helper
 
 
 class TestSMTPEmail(SmarterTestBase):
@@ -18,8 +19,8 @@ class TestSMTPEmail(SmarterTestBase):
             "https://github.com/smarter-sh/smarter. These tests run within "
             "CI/(CD) pipelines that are automatically invoked for various reasons. "
             "If you received this email, it means that the email helper is working as expected. "
-            "If you have any questions, please contact us at support@smarter.sh."
+            f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
         )
         email_helper.send_email(
-            subject="CI/CD unit test: email helper", body=body, to="querium.co@gmail.com", html=False, from_email=None
+            subject="CI/CD unit test: email helper", body=body, to="lpm0073@gmail.com", html=False, from_email=None
         )

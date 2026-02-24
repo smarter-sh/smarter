@@ -8,6 +8,7 @@ import urllib.parse
 from django.http import HttpResponseForbidden
 
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterMiddlewareMixin
 from smarter.lib.cache import cache_results
@@ -213,7 +214,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
                 "%s Throttled client %s after %d blocked requests", self.formatted_class_name, client_ip, blocked_count
             )
             return HttpResponseForbidden(
-                "You have been blocked due to too many suspicious requests from your IP. Try again later or contact support@smarter.sh."
+                f"You have been blocked due to too many suspicious requests from your IP. Try again later or contact {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
             )
 
         @cache_results(timeout=60 * 60 * 24)
@@ -266,5 +267,5 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         else:
             cache.set(throttle_key, blocked_count, timeout=self.THROTTLE_TIMEOUT)
         return HttpResponseForbidden(
-            "Your request has been blocked by Smarter. Contact support@smarter.sh for assistance."
+            f"Your request has been blocked by Smarter. Contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} for assistance."
         )
