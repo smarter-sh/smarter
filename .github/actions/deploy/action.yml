@@ -341,6 +341,7 @@ runs:
             "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER": ${{ env.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER && format('"{0}"', env.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER) || 'null' }},
             "SMARTER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
+            "SMARTER_AWS_EKS_CLUSTER_NAME": ${{ inputs.eks-cluster-name && format('"{0}"', inputs.eks-cluster-name) || 'null' }},
             "SMARTER_EMAIL_ADMIN": ${{ env.SMARTER_EMAIL_ADMIN && format('"{0}"', env.SMARTER_EMAIL_ADMIN) || 'null' }},
             "SMARTER_FERNET_ENCRYPTION_KEY": $(jq -Rn --arg v "${{ inputs.fernet-encryption-key }}" '$v'),
             "SMARTER_FIREWORKS_API_KEY": ${{ inputs.fireworks-api-key && format('"{0}"', inputs.fireworks-api-key) || 'null' }},

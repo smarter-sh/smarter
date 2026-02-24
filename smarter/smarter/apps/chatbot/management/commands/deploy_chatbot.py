@@ -4,7 +4,6 @@ from typing import Optional
 
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot
-from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.management.base import SmarterCommand
 
