@@ -772,7 +772,6 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     task_id = deploy_default_api.request.id
     logger.info("%s - chatbot %s task_id: %s", fn_name, chatbot_id, task_id)
     chatbot: ChatBot
-    activate = False
 
     pre_deploy_default_api.send(
         sender=deploy_default_api,
