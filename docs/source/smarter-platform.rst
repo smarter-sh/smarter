@@ -43,3 +43,4 @@ The Smarter platform's fundamental building blocks to this extent are:
    smarter-platform/backup-and-restore
    smarter-platform/updates
    smarter-platform/troubleshooting
+   smarter-platform/security-faq

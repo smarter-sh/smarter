@@ -1,5 +1,4 @@
 {
-  "claude.defaultModel": "claude-haiku-4-5-20251001",
   "cornflakes.linter.executablePath": "../venv/bin/flake8",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
