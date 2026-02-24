@@ -13,16 +13,19 @@ Production Deployment
   your production AWS cloud infrastructure using the `Smarter Official Terraform Modules <https://github.com/smarter-sh/smarter-infrastructure>`__.
 
 
-(Smarter runs natively on Kubernetes using `spot-priced <https://aws.amazon.com/ec2/spot/pricing/>`__ compute instances. This is a cost-effective, resilient, and
-scalable architecture that requires minimal maintenance once deployed. It natively handles multiple environments
-(alpha, beta, next, prod) for the same installation, maintaining clean separation of resources and
-data between environments. It also natively handles multiple deployments of Smarter within the same AWS account.
+Smarter runs natively on Kubernetes using `spot-priced <https://aws.amazon.com/ec2/spot/pricing/>`__
+compute instances. This is a cost-effective, resilient, and
+scalable architecture that requires minimal maintenance once deployed. It
+natively handles multiple environments (alpha, beta, next, prod)
+for the same installation, maintaining clean separation of resources and
+data between environments. It also natively handles multiple installations of
+Smarter (ie multiple EKS clusters) within the same AWS account.
 
 
 Production deployment involves the following steps:
 
 1. Build AWS Infrastructure using the `Smarter Official Terraform Modules <https://github.com/smarter-sh/smarter-infrastructure>`__.
-2. Build and deploy the Smarter Chat ReactJS component to the CDN using `Smarter Chat <https://github.com/smarter-sh/smarter-chat>`__.
+2. Build and deploy the Smarter Chat ReactJS component to the CDN using `Smarter Chat <https://github.com/smarter-sh/smarter-chat>`__ and `Smarter Web Integration Example <https://github.com/smarter-sh/smarter-web-integration-example>`__.
 3. Deploy the Smarter Platform to your Kubernetes cluster using the `Official Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__.
 
 
