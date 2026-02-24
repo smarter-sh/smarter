@@ -26,7 +26,10 @@ from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.docs.views.base import DocsError
 from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.apps.prompt.views import SmarterChatappViewError
-from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
+from smarter.common.const import (
+    SMARTER_CUSTOMER_SUPPORT_EMAIL,
+    SMARTER_IS_INTERNAL_API_REQUEST,
+)
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
@@ -708,8 +711,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     )
                 else:
                     logger.error(
-                        "%s.initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact support@smarter.sh %s",
+                        "%s.initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact %s %s",
                         self.logger_prefix,
+                        SMARTER_CUSTOMER_SUPPORT_EMAIL,
                         e,
                     )
                 raise SmarterAPIV1CLIViewErrorNotAuthenticated(
