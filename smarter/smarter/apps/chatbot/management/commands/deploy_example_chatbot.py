@@ -78,7 +78,7 @@ class Command(SmarterCommand):
         chatbot.app_placeholder = "Ask me anything..."
         chatbot.app_info_url = "https://smarter.sh"
         chatbot.app_background_image_url = None
-        chatbot.app_logo_url = "https://cdn.platform.smarter.sh/images/logo/smarter-crop.png"
+        chatbot.app_logo_url = "https://cdn.smarter.sh/images/logo/smarter-crop.png"
         chatbot.save()
 
         for plugin_meta in PluginMeta.objects.filter(user_profile=user_profile):

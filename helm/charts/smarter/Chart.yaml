@@ -48,7 +48,7 @@ dependencies:
     version: 25.2.0
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
-icon: https://cdn.platform.smarter.sh/images/logo/smarter-crop.png
+icon: https://cdn.smarter.sh/images/logo/smarter-crop.png
 keywords:
   - ai
   - llm
@@ -106,13 +106,13 @@ annotations:
     - url: https://artifacthub.io/packages/helm/bitnami/mariadb
     - url: https://artifacthub.io/packages/helm/bitnami/prometheus
   artifacthub.io/screenshots: |
-    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-1.png
+    - url: https://cdn.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-1.png
       caption: Smarter's YAML-first configuration simplifies AI Workflow orchestration
-    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-2.png
+    - url: https://cdn.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-2.png
       caption: Smarter’s Prompt Engineer Workbench gives you a live, transparent view into every part of a conversation
-    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-3.png
+    - url: https://cdn.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-3.png
       caption: Smarter is LLM Provider agnostic
-    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-4.png
+    - url: https://cdn.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-4.png
       caption: Smarter Plugins let any model call SQL, APIs, static data, or secure Python
   artifacthub.io.signKey: |
       fingerprint: FC3130197AED484D9B5FA847440711F032A1DCBB1B813D458CF71FB90CC2345D

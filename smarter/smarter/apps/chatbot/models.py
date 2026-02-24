@@ -458,11 +458,11 @@ class ChatBot(MetaDataWithOwnershipModel):
     app_info_url = models.URLField(default="https://smarter.sh", blank=True, null=True)
 
     #: The ChatBot UI configuration fields. URL to the app background image in the Smarter React ChatBot component.
-    #: Example: "https://cdn.platform.smarter.sh/chat-ui/background.png"
+    #: Example: "https://cdn.smarter.sh/chat-ui/background.png"
     app_background_image_url = models.URLField(blank=True, null=True)
 
     #: The ChatBot UI configuration fields. URL to the app logo image in the Smarter React ChatBot component.
-    #: Example: "https://cdn.platform.smarter.sh/chat-ui/logo.png"
+    #: Example: "https://cdn.smarter.sh/chat-ui/logo.png"
     app_logo_url = models.URLField(blank=True, null=True)
 
     #: The ChatBot UI configuration fields. Enables or disables file attachment feature in the Smarter React ChatBot component.
