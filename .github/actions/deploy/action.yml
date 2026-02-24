@@ -288,7 +288,7 @@ runs:
         echo "SMARTER_BRANDING_ADDRESS=851 Burlway Road, Suite 101, Burlingame, CA 94010" >> $GITHUB_ENV
         echo "SMARTER_BRANDING_CONTACT_URL=https://lawrencemcdaniel.com/contact/" >> $GITHUB_ENV
         echo "SMARTER_BRANDING_CORPORATE_NAME=Lawrence P. McDaniel, The Smarter Project" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_SUPPORT_EMAIL=support@example.com" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_SUPPORT_EMAIL=lpm0073@gmail.com" >> $GITHUB_ENV
         echo "SMARTER_BRANDING_SUPPORT_HOURS=MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)" >> $GITHUB_ENV
         echo "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER=+1 (617) 555-6172" >> $GITHUB_ENV
         echo "SMARTER_EMAIL_ADMIN=lpm0073@gmail.com" >> $GITHUB_ENV
