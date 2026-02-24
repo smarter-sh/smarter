@@ -125,7 +125,7 @@ code {}
 #smarter-landing-page {
   font-family: Inter;
   background: white;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/techdots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/techdots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -169,7 +169,7 @@ code {}
   row-gap: 20px !important;
   column-gap: 20px;
   background-color: #ffffff;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -226,7 +226,7 @@ code {}
   row-gap: 20px !important;
   column-gap: 20px !important;
   background-color: #ffffff;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -361,7 +361,7 @@ code {}
   row-gap: 20px !important;
   column-gap: 20px;
   background-color: #ffffff;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -415,7 +415,7 @@ code {}
   row-gap: 20px !important;
   column-gap: 20px;
   background-color: #ffffff;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -471,7 +471,7 @@ code {}
   justify-content: space-between;
   align-items: center;
   background: white;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -540,7 +540,7 @@ code {}
   row-gap: 20px !important;
   column-gap: 20px;
   background-color: #ffffff;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -594,7 +594,7 @@ code {}
   row-gap: 20px !important;
   column-gap: 20px;
   background-color: #ffffff;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -650,7 +650,7 @@ code {}
   justify-content: center;
   align-self: center;
   background: white;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -964,7 +964,7 @@ Plugins Page
 }
 
 #text-presentation {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1019,7 +1019,7 @@ Plugins Page
   justify-content: space-between;
   flex-wrap: nowrap !important;
   width: auto;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1058,7 +1058,7 @@ Manifests Page
 }
 
 #manifest-row {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1100,7 +1100,7 @@ Manifests Page
   justify-content: space-between;
   flex-wrap: nowrap !important;
   width: auto;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1125,7 +1125,7 @@ Manifests Page
 }
 
 #heading-3 {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1444,7 +1444,7 @@ Manifests Page
   justify-content: space-between;
   flex-wrap: nowrap !important;
   width: auto;
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1500,7 +1500,7 @@ Manifests Page
 }
 
 #heading {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1533,7 +1533,7 @@ Manifests Page
 }
 
 #cli-configuration {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1555,7 +1555,7 @@ Manifests Page
 }
 
 #cli-commands {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1577,7 +1577,7 @@ Manifests Page
 }
 
 #cli-apply {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1599,7 +1599,7 @@ Manifests Page
 }
 
 #cli-chat {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1621,7 +1621,7 @@ Manifests Page
 }
 
 #cli-completion {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1643,7 +1643,7 @@ Manifests Page
 }
 
 #cli-configure {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1666,7 +1666,7 @@ Manifests Page
 }
 
 #cli-delete {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1689,7 +1689,7 @@ Manifests Page
 }
 
 #cli-deploy {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1712,7 +1712,7 @@ Manifests Page
 }
 
 #cli-describe {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1735,7 +1735,7 @@ Manifests Page
 }
 
 #cli-get {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1758,7 +1758,7 @@ Manifests Page
 }
 
 #cli-help {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1781,7 +1781,7 @@ Manifests Page
 }
 
 #cli-manifest {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1804,7 +1804,7 @@ Manifests Page
 }
 
 #cli-status {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1827,7 +1827,7 @@ Manifests Page
 }
 
 #cli-undeploy {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1850,7 +1850,7 @@ Manifests Page
 }
 
 #cli-version {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
@@ -1873,7 +1873,7 @@ Manifests Page
 }
 
 #cli-whoami {
-  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-image: url('https://cdn.smarter.sh/cms/img/graydots.png');
   background-size: contain;
   background-position: bottom right;
   background-repeat: no-repeat;
