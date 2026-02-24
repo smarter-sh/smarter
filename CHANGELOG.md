@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.142](https://github.com/smarter-sh/smarter/compare/v0.13.141...v0.13.142) (2026-02-24)
+
+### Bug Fixes
+
+* repoint cdn.platform.smarter.sh to cdn.smarter.sh ([50e495f](https://github.com/smarter-sh/smarter/commit/50e495f3deabd985f8e5af803658183e1863c946))
+
 ## [0.13.141](https://github.com/smarter-sh/smarter/compare/v0.13.140...v0.13.141) (2026-02-24)
 
 ### Bug Fixes
