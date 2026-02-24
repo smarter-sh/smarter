@@ -7,7 +7,9 @@ Following are commonly asked questions about Smarter security.
 
   Many of these questions are in response to preliminary security due
   diligence projects performed with the assistance of coding LLMs such as
-  Claude Code. Take note that, while these LLMs are capable of doing some
+  Claude Code as opposed to more purpose designed tools like for example,
+  `Agentic QE <https://agentic-qe.dev/>`__. Take note that, while these
+  LLMs are capable of doing some
   pretty impressive things, they are not effective tools for analyzing large
   code bases like Smarter's, and they are prone to generating false positives.
   The following answers are based on multiple careful manual reviews of

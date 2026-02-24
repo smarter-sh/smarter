@@ -19,11 +19,6 @@ from .views.authentication import (
 )
 from .views.dashboard.api_keys import APIKeyListView
 from .views.dashboard.users import UsersView, UserView
-from .views.password_management import (
-    PasswordConfirmView,
-    PasswordResetRequestView,
-    PasswordResetView,
-)
 
 
 class AccountNamedUrls:
@@ -82,16 +77,6 @@ urlpatterns = [
     path("activation/", AccountActivationEmailView.as_view(), name=AccountNamedUrls.ACCOUNT_ACTIVATION),
     path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name=AccountNamedUrls.ACCOUNT_ACTIVATE),
     path("deactivate/", AccountDeactivateView.as_view(), name=AccountNamedUrls.ACCOUNT_DEACTIVATE),
-    # password management
-    path(
-        "password-reset-request/",
-        PasswordResetRequestView.as_view(),
-        name=AccountNamedUrls.ACCOUNT_PASSWORD_RESET_REQUEST,
-    ),
-    path("password-confirm/", PasswordConfirmView.as_view(), name=AccountNamedUrls.ACCOUNT_PASSWORD_CONFIRM),
-    path(
-        "password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name=AccountNamedUrls.PASSWORD_RESET_LINK
-    ),
     path("users/", UsersView.as_view(), name=AccountNamedUrls.ACCOUNT_USERS),
     path("user/<int:user_id>/", UserView.as_view(), name=AccountNamedUrls.ACCOUNT_USER),
 ]

@@ -342,7 +342,7 @@ def branding(request: "HttpRequest") -> dict:
 
         {{ branding.corporate_name }}
         {{ branding.support_email }}
-        {{ branding.copy_right }}
+        {{ branding.copyright }}
 
     This processor is intended to be added to the ``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings, making the ``branding`` context variable available in all templates rendered by Django that inherit from ``base.html``.
     """
@@ -395,7 +395,7 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
         "footer": {
             "about_url": smarter_settings.marketing_site_url,
             "support_url": smarter_settings.marketing_site_url,
-            "legal_url": urljoin(smarter_settings.marketing_site_url, "legal"),  # type: ignore[union-attr]
+            "legal_url": urljoin(str(smarter_settings.marketing_site_url), "legal"),
             "plans_url": smarter_settings.marketing_site_url,
             "contact_url": "https://lawrencemcdaniel.com/contact/",
         }

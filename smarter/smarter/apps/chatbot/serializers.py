@@ -47,6 +47,7 @@ class ChatBotConfigSerializer(serializers.ModelSerializer):
     url_chatbot = serializers.ReadOnlyField()
     user_profile = UserProfileSerializer()
     default_system_role = serializers.SerializerMethodField()
+    annotations = serializers.JSONField()
 
     class Meta:
         model = ChatBot

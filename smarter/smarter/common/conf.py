@@ -424,13 +424,15 @@ class SettingsDefaults:
 
     BRANDING_CORPORATE_NAME: str = get_env("BRANDING_CORPORATE_NAME", "The Smarter Project")
     BRANDING_SUPPORT_PHONE_NUMBER: str = get_env("BRANDING_SUPPORT_PHONE_NUMBER", "(###) 555-1212")
-    BRANDING_SUPPORT_EMAIL: EmailStr = get_env("BRANDING_SUPPORT_EMAIL", "support@example.com")
+    BRANDING_SUPPORT_EMAIL: EmailStr = get_env("BRANDING_SUPPORT_EMAIL", "lpm0073@gmail.com")
     BRANDING_ADDRESS: str = get_env("BRANDING_ADDRESS", "123 Main St, Anytown, USA")
-    BRANDING_CONTACT_URL: Optional[HttpUrl] = get_env("BRANDING_CONTACT_URL", "https://example.com/contact/")
+    BRANDING_CONTACT_URL: Optional[HttpUrl] = get_env("BRANDING_CONTACT_URL", "https://lawrencemcdaniel.com/")
     BRANDING_SUPPORT_HOURS: str = get_env("BRANDING_SUPPORT_HOURS", "MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)")
-    BRANDING_URL_FACEBOOK: Optional[HttpUrl] = get_env("BRANDING_URL_FACEBOOK", "https://facebook.com/example")
-    BRANDING_URL_TWITTER: Optional[HttpUrl] = get_env("BRANDING_URL_TWITTER", "https://twitter.com/example")
-    BRANDING_URL_LINKEDIN: Optional[HttpUrl] = get_env("BRANDING_URL_LINKEDIN", "https://linkedin.com/company/example")
+    BRANDING_URL_FACEBOOK: Optional[HttpUrl] = get_env("BRANDING_URL_FACEBOOK", "https://facebook.com")
+    BRANDING_URL_TWITTER: Optional[HttpUrl] = get_env("BRANDING_URL_TWITTER", "https://x.com/fullstackwlarry")
+    BRANDING_URL_LINKEDIN: Optional[HttpUrl] = get_env(
+        "BRANDING_URL_LINKEDIN", "https://www.linkedin.com/in/lawrencemcdaniel/"
+    )
 
     CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
     CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
