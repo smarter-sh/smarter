@@ -154,7 +154,7 @@ during the normal page load.
     -->
     <link rel="stylesheet"
       crossorigin=""
-      href="https://cdn.platform.smarter.sh/ui-chat/assets/main-C2E4fudP.css"
+      href="https://cdn.smarter.sh/ui-chat/assets/main-C2E4fudP.css"
       class="smarter-chat">
   </head>
   <body>
@@ -179,14 +179,14 @@ during the normal page load.
   <script async=""
       class="smarter-chat"
       onerror="console.error('Failed to load:', this.src)"
-      src="https://cdn.platform.smarter.sh/ui-chat/app-loader.js"></script>
+      src="https://cdn.smarter.sh/ui-chat/app-loader.js"></script>
   <!--
   the React app loader script created by `make build`
   in https://github.com/smarter-sh/web-integration-example, deployed to AWS Cloudfront,
   and injected by app-loader.js
   -->
   <script class="smarter-chat"
-      src="https://cdn.platform.smarter.sh/ui-chat/assets/main-C4x7rKYv.js"></script>
+      src="https://cdn.smarter.sh/ui-chat/assets/main-C4x7rKYv.js"></script>
 
 1. See the Chat Component in Action
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
