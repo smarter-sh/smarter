@@ -3,7 +3,9 @@
 import logging
 
 from django.conf import settings
+from django.urls import reverse
 
+from smarter.apps.account.urls import AccountNamedUrls
 from smarter.common.utils import is_authenticated_request
 
 from .models import UserProfile
@@ -25,7 +27,7 @@ def base(request):
         "account_authentication": {
             "login_url": settings.LOGIN_URL,
             "logout_url": "/logout/",
-            "forgot_password_url": "/dashboard/account/password-reset-request/",
+            "forgot_password_url": reverse(AccountNamedUrls.ACCOUNT_PASSWORD_RESET_REQUEST),
         }
     }
     if is_authenticated_request(request):

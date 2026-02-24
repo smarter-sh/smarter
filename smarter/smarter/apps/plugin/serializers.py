@@ -74,17 +74,19 @@ class PluginMetaSerializer(MetaDataWithOwnershipModelSerializer):
         #   "pluginClass": "...",
         #   "version": "...",
         #   "userProfile": {...},
+        #   "annotations": {...},
         #   "tags": ["tag1", "tag2"]
         # }
 
     """
 
     user_profile = UserProfileSerializer(read_only=True)
+    annotations = serializers.JSONField()
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginMeta
-        fields = ["name", "user_profile", "description", "plugin_class", "version", "tags"]
+        fields = ["name", "user_profile", "description", "plugin_class", "version", "annotations", "tags"]
         read_only_fields = ["user_profile"]
 
 

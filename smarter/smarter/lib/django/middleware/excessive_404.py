@@ -11,6 +11,7 @@ from django.http import HttpResponseForbidden
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseBase
 
+from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterMiddlewareMixin
 from smarter.common.utils import is_authenticated_request
@@ -109,7 +110,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
                     "%s Throttled client %s after %d 404s", self.formatted_class_name, client_ip, blocked_count
                 )
                 return HttpResponseForbidden(
-                    "You have been blocked due to too many invalid requests from your IP. Try again later or contact support@smarter.sh."
+                    f"You have been blocked due to too many invalid requests from your IP. Try again later or contact {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
                 )
             try:
                 blocked_count = cache.incr(throttle_key)

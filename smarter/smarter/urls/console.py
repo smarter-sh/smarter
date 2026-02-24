@@ -13,10 +13,16 @@ from django.views.generic.base import RedirectView
 from waffle import get_waffle_switch_model
 
 from smarter.apps.account.const import namespace as account_namespace
+from smarter.apps.account.urls import AccountNamedUrls
 from smarter.apps.account.views.authentication import (
     AccountRegisterView,
     LoginView,
     LogoutView,
+)
+from smarter.apps.account.views.password_management import (
+    PasswordConfirmView,
+    PasswordResetRequestView,
+    PasswordResetView,
 )
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
@@ -119,6 +125,18 @@ urlpatterns = [
     # -----------------------------------
     path("chat/", DefaultChatbotApiView.as_view(), name=f"{name_prefix}_chat"),
     path("config/", ChatConfigView.as_view(), name=f"{name_prefix}_config"),
+    # -----------------------------------
+    # password management
+    # -----------------------------------
+    path(
+        "password-reset-request/",
+        PasswordResetRequestView.as_view(),
+        name=AccountNamedUrls.ACCOUNT_PASSWORD_RESET_REQUEST,
+    ),
+    path("password-confirm/", PasswordConfirmView.as_view(), name=AccountNamedUrls.ACCOUNT_PASSWORD_CONFIRM),
+    path(
+        "password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name=AccountNamedUrls.PASSWORD_RESET_LINK
+    ),
     # -----------------------------------
     # static routes
     # -----------------------------------
