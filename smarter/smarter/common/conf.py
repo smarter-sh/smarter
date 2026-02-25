@@ -58,6 +58,7 @@ import requests
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
 from dotenv import load_dotenv
 from pydantic import (
+    AnyUrl,
     EmailStr,
     Field,
     HttpUrl,
@@ -88,6 +89,8 @@ from .const import (
     SMARTER_DEFAULT_APP_LOADER_PATH,
     SMARTER_DEFAULT_REACTJS_APP_LOADER_URL,
     SMARTER_PLATFORM_DEFAULT_SUBDOMAIN,
+    SMARTER_PROJECT_CDN_URL,
+    SMARTER_PROJECT_DOCS_URL,
     SMARTER_PROJECT_WEBSITE_URL,
     VERSION,
     SmarterEnvironments,
@@ -534,7 +537,7 @@ class SettingsDefaults:
 
     LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
 
-    LOGO: HttpUrl = get_env("LOGO", "https://cdn.example.com/images/logo/logo.png", is_required=True)
+    LOGO: HttpUrl = get_env("LOGO", urljoin(SMARTER_PROJECT_CDN_URL, "/images/logo/smarter-crop.png"))
     MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY", is_secret=True))
     MAILCHIMP_LIST_ID = get_env("MAILCHIMP_LIST_ID")
 
@@ -2754,7 +2757,7 @@ class Settings(BaseSettings):
         except (TypeError, ValueError) as e:
             raise SmarterConfigurationError(f"llm_default_max_tokens of type {type(v)} is not an int: {v}") from e
 
-    logo: Optional[HttpUrl] = Field(
+    logo: Optional[AnyUrl] = Field(
         SettingsDefaults.LOGO,
         description="The URL to the platform's logo image.",
         examples=["https://cdn.example.com/logo.png"],
@@ -2771,11 +2774,11 @@ class Settings(BaseSettings):
     """
 
     @before_field_validator("logo")
-    def validate_logo(cls, v: Optional[HttpUrl]) -> HttpUrl:
+    def validate_logo(cls, v: Optional[AnyUrl]) -> AnyUrl:
         """Validates the `logo` field.
 
         Args:
-            v (Optional[HttpUrl]): The logo value to validate.
+            v (Optional[AnyUrl]): The logo value to validate.
 
         Returns:
             HttpUrl: The validated logo.
@@ -3816,6 +3819,28 @@ class Settings(BaseSettings):
             https://www.smarter.sh
         """
         return SMARTER_PROJECT_WEBSITE_URL
+
+    @cached_property
+    def smarter_project_cdn_url(self) -> str:
+        """
+        Return the URL for the Smarter project CDN.
+
+        Example:
+            >>> print(smarter_settings.smarter_project_cdn_url)
+            https://cdn.smarter.sh
+        """
+        return SMARTER_PROJECT_CDN_URL
+
+    @cached_property
+    def smarter_project_docs_url(self) -> str:
+        """
+        Return the URL for the Smarter project documentation.
+
+        Example:
+            >>> print(smarter_settings.smarter_project_docs_url)
+            https://docs.smarter.sh
+        """
+        return SMARTER_PROJECT_DOCS_URL
 
     @cached_property
     def smtp_is_configured(self) -> bool:
