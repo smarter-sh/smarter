@@ -7,7 +7,6 @@ import logging
 import os
 import random
 from typing import TYPE_CHECKING, Optional, Union
-from urllib.parse import urljoin
 
 # 3rd party stuff
 from cryptography.fernet import Fernet
@@ -18,16 +17,13 @@ from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django.db import models
 from django.template.loader import render_to_string
+from django.test.client import RequestFactory
 from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
 
 # our stuff
 from smarter.common.conf import smarter_settings
-from smarter.common.const import (
-    SMARTER_ADMIN_USERNAME,
-    SMARTER_PRODUCT_DESCRIPTION,
-    SMARTER_PRODUCT_NAME,
-)
+from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
@@ -91,26 +87,14 @@ def welcome_email_context(first_name: str) -> dict:
     Return the context for the welcome email template.
     templates/account/email/welcome.html
     """
+    from smarter.apps.dashboard.context_processors import branding
 
     first_name = first_name.capitalize()
-    return {
-        "base_url": smarter_settings.environment_url,
-        "first_name": first_name,
-        "corporate_name": smarter_settings.branding_corporate_name,
-        "support_phone": smarter_settings.branding_support_phone_number,
-        "support_email": smarter_settings.branding_support_email,
-        "contact_address": smarter_settings.branding_address,
-        "contact_url": smarter_settings.branding_contact_url,
-        "office_hours": smarter_settings.branding_support_hours,
-        "facebook_url": smarter_settings.branding_url_facebook,
-        "twitter_url": smarter_settings.branding_url_twitter,
-        "linkedin_url": smarter_settings.branding_url_linkedin,
-        "login_url": urljoin(smarter_settings.environment_url, "/login/"),
-        "learn_url": smarter_settings.marketing_site_url,
-        "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
-        "smarter_product_name": SMARTER_PRODUCT_NAME,
-        "smarter_product_description": SMARTER_PRODUCT_DESCRIPTION,
-    }
+    request = RequestFactory().get("/", HTTP_HOST=smarter_settings.environment_platform_domain)
+    retval = branding(request=request)
+    retval["first_name"] = first_name
+    retval["environment_platform_domain"] = smarter_settings.environment_url.rstrip("/")
+    return retval
 
 
 def get_resolved_user(
@@ -455,6 +439,12 @@ class AccountContact(TimestampedModel):
         """
         context = welcome_email_context(first_name=self.first_name)
         html_template = render_to_string("account/email/welcome.html", context)
+        logger.debug(
+            "%s.send_welcome_email() Sending welcome email to %s with content: %s",
+            formatted_text(__name__ + ".AccountContact.send_welcome_email()"),
+            self.email,
+            html_template,
+        )
 
         subject = "Welcome to Smarter!"
         body = html_template
