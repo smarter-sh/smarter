@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.144](https://github.com/smarter-sh/smarter/compare/v0.13.143...v0.13.144) (2026-02-25)
+
+### Bug Fixes
+
+* parameterize sign-in page features with waffle switches ([3b6a2b3](https://github.com/smarter-sh/smarter/commit/3b6a2b39b13b5c41d7f08303875b3f449a1b83eb))
+
 ## [0.13.143](https://github.com/smarter-sh/smarter/compare/v0.13.142...v0.13.143) (2026-02-24)
 
 ### Bug Fixes
