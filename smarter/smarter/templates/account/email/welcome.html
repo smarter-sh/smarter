@@ -1,13 +1,14 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <!--begin::Head-->
 
 <head>
-  <base href="{{ base_url }}" />
+  <base href="{{ branding.smarter_project_website_url }}" />
   <title>{{ branding.smarter_product_name }}</title>
   <meta charset="utf-8" />
-  <meta content="{{ branding.company_name }}" name="author"/>
-  <meta content="{{ branding.company_url }}" name="author-url"/>
+  <meta content="{{ branding.corporate_name }}" name="author"/>
+  <meta content="{{ branding.smarter_marketing_site_url }}" name="author-url"/>
   <meta content="Python, Django, Django Rest Framework" name="generator"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
@@ -18,7 +19,7 @@
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Smarter" />
+  <meta property="og:image:alt" content="{{ branding.smarter_product_name }}" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:type" content="article" />
   <meta property="og:title" content="{{ branding.smarter_product_name }}" />
@@ -79,7 +80,7 @@
                       <!--begin:Logo-->
                       <div style="margin:-10px 60px 54px 60px; text-align:center;">
                         <a href="{{ branding.smarter_project_website_url }}" rel="noopener" target="_blank">
-                          <img alt="Logo" src="/static/images/logo/smarter-crop.png"
+                          <img alt="Smarter Branding Image" src="{{ environment_platform_domain }}{% static 'images/logo/smarter-crop.png' %}"
                             style="height: 75px" />
                         </a>
                       </div>
@@ -87,40 +88,40 @@
                       <!--begin:Text-->
                       <div
                         style="font-size: 14px; text-align:center; font-weight: 500; margin:0 60px 38px 60px; font-family:Arial,Helvetica,sans-serif">
-                        <p style="color:#181C32; font-size: 30px; font-weight:700; line-height:1.4; margin-bottom:6px">Welcome to {{ smarter_product_name }}!</p>
-                        <p style="margin-bottom:2px; color:#3F4254; line-height:1.6">{{ smarter_product_description }}</p>
+                        <p style="color:#181C32; font-size: 30px; font-weight:700; line-height:1.4; margin-bottom:6px">Welcome to {{ branding.smarter_product_name }}!</p>
+                        <p style="margin-bottom:2px; color:#3F4254; line-height:1.6">{{ branding.smarter_product_description }}</p>
                       </div>
                       <!--end:Text-->
                       <!--begin:Media-->
                       <div style="margin:0 60px 38px 60px">
-                        <img alt="" style="width:100%" src="/static/assets/media/email/img-2.png" />
+                        <img alt="" style="width:100%" src="{{ environment_platform_domain }}{% static 'assets/media/email/img-2.png' %}" />
                       </div>
                       <!--end:Media-->
                       <!--begin:Text-->
                       <div
                         style="font-size:14px; text-align:left; font-weight:500; margin:0 60px 33px 60px; font-family:Arial,Helvetica,sans-serif">
                         <p style="color:#181C32; font-size: 18px; font-weight:600; margin-bottom:27px">Howdy,</p>
-                        <p style="color:#3F4254; line-height:1.6">We just created a Smarter account for you. To get started
+                        <p style="color:#3F4254; line-height:1.6">We just created a new account for you. To get started
                           please sign in. You can do this by clicking the button below. You can use this email address
                           as your username. If you have any questions, please contact us at <a
-                            href="mailto:{{ support_email }}" style="font-weight:600">{{ support_email }}</a>.</p>
+                            href="mailto:{{ branding.support_email }}" style="font-weight:600">{{ branding.support_email }}</a>.</p>
                       </div>
                       <!--end:Text-->
                       <!--begin:Action-->
-                      <a href="{{ login_url }}" target="_blank" rel="noopener"
+                      <a href="{{ branding.login_url }}" target="_blank" rel="noopener"
                         style="background-color:rgba(255, 87, 51, .75); border-radius:6px; display:inline-block; margin-bottom:30px; margin-left:60px; padding:11px 19px; color: #FFFFFF; font-size: 14px; font-weight:500; font-family:Arial,Helvetica,sans-serif">Sign
                         In</a>
                       <!--end:Action-->
                       <!--begin:Text-->
                       <div
                         style="font-size:14px; text-align:left; font-weight:500; margin:0 60px 33px 60px; font-family:Arial,Helvetica,sans-serif">
-                        <p style="color:#3F4254; line-height:1.6">Smarter provides unified access to a broad range of
+                        <p style="color:#3F4254; line-height:1.6">{{ branding.smarter_product_name }} provides unified access to a broad range of
                           large language models from the idustry's best providers including OpenAI, Google AI, Meta AI,
-                          Azure Cognitive Services, Amazon and others. Smarter's <a href="https://docs.smarter.sh/en/latest/smarter-resources/smarter-plugin.html" rel="noopener"
+                          Azure Cognitive Services, Amazon and others. {{ branding.smarter_product_name }}'s <a href="https://docs.smarter.sh/en/latest/smarter-resources/smarter-plugin.html" rel="noopener"
                             target="_blank">plugin architecture</a> allows you to easily leverage advanced tool-calling
-                            functionality from the industry's best LLM providers, while also keeping your data completely private. And Smarter's <a href="https://docs.smarter.sh/en/latest/smarter-framework/pydantic/smarter-manifests.html" rel="noopener"
+                            functionality from the industry's best LLM providers, while also keeping your data completely private. And {{ branding.smarter_product_name }}'s <a href="https://docs.smarter.sh/en/latest/smarter-framework/pydantic/smarter-manifests.html" rel="noopener"
                             target="_blank">manifest approach</a> to resource management simplifies the process of
-                          working with AI resources in the cloud. Smarter's <a href="https://smarter.sh/cli/" rel="noopener"
+                          working with AI resources in the cloud. {{ branding.smarter_product_name }}'s <a href="https://smarter.sh/cli/" rel="noopener"
                             target="_blank">command-line interface (CLI)</a>, available for Windows, macOS and Linux,
                           allows you to easily interact with the platform from the command line, as well as from a
                           growing ecosystem of OEM tools.</p>
@@ -149,7 +150,7 @@
                         <!--begin::Media-->
                         <div
                           style="display: flex; justify-content: center; align-items: center; width:40px; height:40px; margin-right:13px">
-                          <img alt="Logo" src="/static/assets/media/email/icon-polygon.svg" />
+                          <img alt="Logo" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-polygon.svg' %}" />
                           <span style="position: absolute">
                             <i class="ki-duotone ki-element-11 fs-3">
                               <span class="path1"></span>
@@ -165,14 +166,14 @@
                           <!--begin::Content-->
                           <div>
                             <!--begin::Title-->
-                            <a href="{{ learn_url }}" target="_blank" rel="noopener"
+                            <a href="{{ branding.learn_url }}" target="_blank" rel="noopener"
                               style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">Quick
                               Start Tutorial</a>
                             <!--end::Title-->
                             <!--begin::Desc-->
                             <p
                               style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">
-                              This page will give you an introduction to the 80% of Smarter concepts that you will use
+                              This page will give you an introduction to the 80% of {{ branding.smarter_product_name }} concepts that you will use
                               on a daily basis.</p>
                             <!--end::Desc-->
                           </div>
@@ -189,7 +190,7 @@
                         <!--begin::Media-->
                         <div
                           style="display: flex; justify-content: center; align-items: center; width:40px; height:40px; margin-right:13px">
-                          <img alt="Logo" src="/static/assets/media/email/icon-polygon.svg" />
+                          <img alt="Logo" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-polygon.svg' %}" />
                           <span style="position: absolute">
                             <i class="ki-duotone ki-message-text-2 fs-3">
                               <span class="path1"></span>
@@ -204,7 +205,7 @@
                           <!--begin::Content-->
                           <div>
                             <!--begin::Title-->
-                            <a href="{{ workbench_exmample_url}}" target="_blank" rel="noopener"
+                            <a href="{{ branding.workbench_exmample_url}}" target="_blank" rel="noopener"
                               style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">Hyperintelligent
                               Chatbots</a>
                             <!--end::Title-->
@@ -227,7 +228,7 @@
                         <!--begin::Media-->
                         <div
                           style="display: flex; justify-content: center; align-items: center; width:40px; height:40px; margin-right:13px">
-                          <img alt="Logo" src="/static/assets/media/email/icon-polygon.svg" />
+                          <img alt="Logo" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-polygon.svg' %}" />
                           <span style="position: absolute">
                             <i class="ki-duotone ki-book fs-3">
                               <span class="path1"></span>
@@ -251,7 +252,7 @@
                             <!--begin::Desc-->
                             <p
                               style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">
-                              Learn more about Smarter manifests, plugins, functions, the command-line interface, and
+                              Learn more about {{ branding.smarter_product_name }} manifests, plugins, functions, the command-line interface, and
                               the Api.</p>
                             <!--end::Desc-->
                           </div>
@@ -267,29 +268,28 @@
                 <tr>
                   <td align="center" valign="center"
                     style="font-size: 13px; text-align:center; padding: 0 10px 10px 10px; font-weight: 500; color: #A1A5B7; font-family:Arial,Helvetica,sans-serif">
-                    <p style="color:#181C32; font-size: 16px; font-weight: 600; margin-bottom:9px">Brought to you by the
-                      Smarter community.</p>
-                    <p style="margin-bottom:2px">Call our customer care number: {{ support_phone }} or <a href="{{ contact_url }}" rel="noopener" target="_blank" style="font-weight: 600">contact us</a>.</p>
-                    <p>Office hours {{ office_hours }}</p>
+                    <p style="color:#181C32; font-size: 16px; font-weight: 600; margin-bottom:9px">Brought to you by {{ branding.smarter_product_name }}.</p>
+                    <p style="margin-bottom:2px">Call our customer support: {{ branding.support_phone }} or <a href="{{ branding.contact_url }}" rel="noopener" target="_blank" style="font-weight: 600">contact us</a>.</p>
+                    <p>Office hours {{ branding.office_hours }}</p>
                   </td>
                 </tr>
                 <tr>
                   <td align="center" valign="center" style="text-align:center; padding-bottom: 20px;">
-                    <a href="{{ linkedin_url }}" target="_blank" rel="noopener" style="margin-right:10px">
-                      <img alt="Logo" src="/static/assets/media/email/icon-linkedin.svg" />
+                    <a href="{{ branding.linkedin_url }}" target="_blank" rel="noopener" style="margin-right:10px">
+                      <img alt="Logo" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-linkedin.svg' %}" />
                     </a>
-                    <a href="{{ facebook_url }}" target="_blank" rel="noopener" style="margin-right:10px">
-                      <img alt="Logo" src="/static/assets/media/email/icon-facebook.svg" />
+                    <a href="{{ branding.facebook_url }}" target="_blank" rel="noopener" style="margin-right:10px">
+                      <img alt="Logo" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-facebook.svg' %}" />
                     </a>
-                    <a href="{{ twitter_url }}" target="_blank" rel="noopener" style="margin-right:10px">
-                      <img alt="Logo" src="/static/assets/media/email/icon-twitter.svg" />
+                    <a href="{{ branding.twitter_url }}" target="_blank" rel="noopener" style="margin-right:10px">
+                      <img alt="Logo" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-twitter.svg' %}" />
                     </a>
                   </td>
                 </tr>
                 <tr>
                   <td align="center" valign="center"
                     style="font-size: 13px; padding:0 15px; text-align:center; font-weight: 500; color: #A1A5B7;font-family:Arial,Helvetica,sans-serif">
-                    <p>&copy; Copyright {{ corporate_name }}, {{ contact_address }}.</p>
+                    <p>&copy; Copyright {{ branding.corporate_name }}, {{ branding.corporate_address }}.</p>
                   </td>
                 </tr>
               </tbody>
@@ -306,8 +306,8 @@
   <!--begin::Javascript-->
   <script>var hostUrl = "assets/";</script>
   <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-  <script src="/static/assets/plugins/global/plugins.bundle.js"></script>
-  <script src="/static/assets/js/scripts.bundle.js"></script>
+  <script src="{{ environment_platform_domain }}{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
+  <script src="{{ environment_platform_domain }}{% static 'assets/js/scripts.bundle.js' %}"></script>
   <!--end::Global Javascript Bundle-->
   <!--end::Javascript-->
 </body>
