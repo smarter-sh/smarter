@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.148](https://github.com/smarter-sh/smarter/compare/v0.13.147...v0.13.148) (2026-02-25)
+
+### Bug Fixes
+
+* work on password reset email ([c5d9465](https://github.com/smarter-sh/smarter/commit/c5d9465e9d6938e33db7d5bdd33732e47c8be4bd))
+
 ## [0.13.147](https://github.com/smarter-sh/smarter/compare/v0.13.146...v0.13.147) (2026-02-25)
 
 ### Bug Fixes
