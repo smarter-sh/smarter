@@ -92,6 +92,13 @@ class LoginView(SmarterNeverCachedWebView):
         :return: True if Google OAuth is enabled, False otherwise.
         :rtype: bool
         """
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_OAUTH2):
+            logger.debug(
+                "%s.is_google_oauth_enabled() waffle switch %s is not active. Returning False",
+                self.formatted_class_name,
+                SmarterWaffleSwitches.ENABLE_OAUTH2,
+            )
+            return False
         if smarter_settings.social_auth_google_oauth2_key.get_secret_value() in (
             "",
             None,
@@ -142,6 +149,13 @@ class LoginView(SmarterNeverCachedWebView):
         :return: True if GitHub OAuth is enabled, False otherwise.
         :rtype: bool
         """
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_OAUTH2):
+            logger.debug(
+                "%s.is_github_oauth_enabled() waffle switch %s is not active. Returning False",
+                self.formatted_class_name,
+                SmarterWaffleSwitches.ENABLE_OAUTH2,
+            )
+            return False
         if smarter_settings.social_auth_github_key.get_secret_value() in (
             "",
             None,
@@ -192,6 +206,7 @@ class LoginView(SmarterNeverCachedWebView):
             "form": form,
             "is_google_oauth_enabled": self.is_google_oauth_enabled,
             "is_github_oauth_enabled": self.is_github_oauth_enabled,
+            "is_signup_enabled": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION),
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 

@@ -383,7 +383,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
             "data": {
                 SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
                 "sandbox_mode": self.chatbot_helper.is_chatbot_sandbox_url,
-                "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE),
+                "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "chatbot": chatbot_serializer.data if chatbot_serializer else None,
                 "history": history,
                 "meta_data": self.chatbot_helper.to_json(),
@@ -761,7 +761,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter chat session, not the Django session.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE),
+                "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
             }
         }
         logger.debug(
