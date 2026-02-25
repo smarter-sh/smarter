@@ -45,9 +45,9 @@
         href="https://lawrencemcdaniel.com"
         target="_blank"
         rel="noopener noreferrer"
-        >Lawrence P. McDaniel</a
-      >, The Smarter Project.{% endtrans %} {%- endif %} {%- endif %} {%- if
-      build_id and build_url %}
+        >{{ branding.company_name }}</a
+      >, {{ branding.product_name }}.{% endtrans %} {%- endif %} {%- endif %}
+      {%- if build_id and build_url %}
       <span class="build">
         {#- Translators: Build is a noun, not a verb -#} {%- trans %}Build{%
         endtrans -%}
