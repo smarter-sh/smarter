@@ -117,7 +117,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 )
                 return {}
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.JOURNAL):
+        if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_JOURNAL):
             # WSGIRequest can be finicky depending on the kind of response we're dealing with.
             # in general, we only want the user object if it's authenticated, which happens
             # when the user is logged in to the web console, and also when the request is made

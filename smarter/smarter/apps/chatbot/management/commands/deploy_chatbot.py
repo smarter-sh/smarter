@@ -20,7 +20,6 @@ class Command(SmarterCommand):
         parser.add_argument("--account_number", type=str, help="The Smarter account number to which the user belongs")
         parser.add_argument("--company_name", type=str, help="The company name to which the user belongs")
         parser.add_argument("--name", type=str, help="The name/subdomain for the new ChatBot")
-        parser.add_argument("--foreground", action="store_true", help="Run the task in the foreground")
 
     def handle(self, *args, **options):
         """
@@ -55,7 +54,6 @@ class Command(SmarterCommand):
         account_number = options["account_number"]
         company_name = options["company_name"]
         name = options["name"]
-        foreground = options["foreground"]
 
         account: Optional[Account] = None
         chatbot: Optional[ChatBot] = None
@@ -85,8 +83,5 @@ class Command(SmarterCommand):
             return
 
         chatbot.deployed = True
-        if foreground:
-            chatbot.save()
-        else:
-            chatbot.save(asynchronous=True)
+        chatbot.save()
         self.handle_completed_success()

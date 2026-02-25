@@ -164,7 +164,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     DEPLOY = "deploy"
     DESCRIBE = "describe"
     GET = "get"
-    JOURNAL = "journal"  # FIXNOTE: THIS IS AMBIGUOUS
+    ENABLE_JOURNAL = "journal"  # FIXNOTE: THIS IS AMBIGUOUS
     LOGS = "logs"  # FIXNOTE: THIS IS AMBIGUOUS
     MANIFEST_EXAMPLE = "example_manifest"
     STATUS = "status"
@@ -184,7 +184,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             (cls.DEPLOY.value, cls.DEPLOY.value),
             (cls.DESCRIBE.value, cls.DESCRIBE.value),
             (cls.GET.value, cls.GET.value),
-            (cls.JOURNAL.value, cls.JOURNAL.value),
+            (cls.ENABLE_JOURNAL.value, cls.ENABLE_JOURNAL.value),
             (cls.LOGS.value, cls.LOGS.value),
             (cls.MANIFEST_EXAMPLE.value, cls.MANIFEST_EXAMPLE.value),
             (cls.STATUS.value, cls.STATUS.value),
@@ -205,7 +205,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             cls.DEPLOY.value: "deployed",
             cls.DESCRIBE.value: "described",
             cls.GET.value: "got",
-            cls.JOURNAL.value: "journaled",
+            cls.ENABLE_JOURNAL.value: "journaled",
             cls.LOGS.value: "logged",
             cls.MANIFEST_EXAMPLE.value: "fetched example manifest",
             cls.STATUS.value: "fetched status",
