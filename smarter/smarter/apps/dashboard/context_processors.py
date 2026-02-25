@@ -368,6 +368,8 @@ def branding(request: "HttpRequest") -> dict:
             "smarter_marketing_site_url": smarter_settings.marketing_site_url,
             "smarter_home_url": "/",
             "smarter_project_website_url": smarter_settings.smarter_project_website_url,
+            "smarter_project_cdn_url": smarter_settings.smarter_project_cdn_url,
+            "smarter_project_docs_url": smarter_settings.smarter_project_docs_url,
         }
     }
     return context
