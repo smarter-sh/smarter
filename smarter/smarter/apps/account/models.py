@@ -87,6 +87,7 @@ def welcome_email_context(first_name: str) -> dict:
     Return the context for the welcome email template.
     templates/account/email/welcome.html
     """
+    # pylint: disable=import-outside-toplevel
     from smarter.apps.dashboard.context_processors import branding
 
     first_name = first_name.capitalize()
