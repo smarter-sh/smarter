@@ -142,6 +142,9 @@ class SmarterWaffleSwitches:
     ENABLE_ACCOUNT_REGISTRATION = "enable_account_registration"
     """Enables account registration link."""
 
+    ENABLE_LOGIN_FOOTER_LINKS = "enable_login_footer_links"
+    """Enables additional links in the login page footer, such as 'Legal' and 'Contact'."""
+
     ENABLE_MULTITENANT_AUTHENTICATION = "enable_multitenant_authentication"
     """Enables multi-tenant authentication support for hosted Smarter platforms."""
 
@@ -190,6 +193,7 @@ class SmarterWaffleSwitches:
             self.CACHE_LOGGING,
             self.ENABLE_OAUTH2,
             self.ENABLE_ACCOUNT_REGISTRATION,
+            self.ENABLE_LOGIN_FOOTER_LINKS,
             self.ENABLE_MULTITENANT_AUTHENTICATION,
             self.ENABLE_MIDDLEWARE_SENSITIVE_FILES,
             self.ENABLE_MIDDLEWARE_EXCESSIVE_404,

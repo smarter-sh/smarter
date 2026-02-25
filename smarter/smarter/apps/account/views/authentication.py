@@ -207,6 +207,7 @@ class LoginView(SmarterNeverCachedWebView):
             "is_google_oauth_enabled": self.is_google_oauth_enabled,
             "is_github_oauth_enabled": self.is_github_oauth_enabled,
             "is_signup_enabled": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION),
+            "are_login_footer_links_enabled": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_LOGIN_FOOTER_LINKS),
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
