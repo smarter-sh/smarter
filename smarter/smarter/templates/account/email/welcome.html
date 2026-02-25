@@ -4,14 +4,14 @@
 
 <head>
   <base href="{{ base_url }}" />
-  <title>The Smarter Project</title>
+  <title>{{ branding.product_name }}</title>
   <meta charset="utf-8" />
-  <meta content="Lawrence McDaniel" name="author"/>
-  <meta content="https://lawrencemcdaniel.com" name="author-url"/>
+  <meta content="{{ branding.company_name }}" name="author"/>
+  <meta content="{{ branding.company_url }}" name="author-url"/>
   <meta content="Python, Django, Django Rest Framework" name="generator"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
-    content="Smarter is a plugin-based, no-code platform for securely managing AI resources and private data in the cloud, at scale." />
+    content="{{ branding.product_description }}" />
   <meta name="keywords"
     content="Smarter, generative AI, Chatbots, prompt engineering, documentation, chatGPT" />
   <meta property="og:image" content="https://cdn.smarter.sh/cms/img/smarter_og_image.png" />
@@ -21,8 +21,8 @@
   <meta property="og:image:alt" content="Smarter" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Smarter" />
-  <meta property="og:site_name" content="Smarter" />
+  <meta property="og:title" content="{{ branding.product_name }}" />
+  <meta property="og:site_name" content="{{ branding.product_name }}" />
 
   <link rel="canonical" href="{% url 'root_home' %}" />
   <link rel="shortcut icon" href="/static/images/logo/favicon.ico"

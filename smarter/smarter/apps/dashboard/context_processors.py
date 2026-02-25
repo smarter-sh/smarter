@@ -56,7 +56,7 @@ from smarter.apps.plugin.models import (
 )
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_COMPANY_NAME
+from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.cache import cache_results
 
@@ -298,11 +298,10 @@ def base(request: "HttpRequest") -> dict:
                 "profile_image_url": user_profile.profile_image_url if user_profile else "",
                 "first_name": user_profile.user.first_name if user_profile else "",
                 "last_name": user_profile.user.last_name if user_profile else "",
-                "product_name": SMARTER_COMPANY_NAME,
+                "product_name": SMARTER_PRODUCT_NAME,
                 "company_name": smarter_settings.root_domain,
                 "smarter_version": "v" + __version__,
                 "current_year": current_year,
-                "product_description": "Smarter is an enterprise class plugin-based chat solution.",
                 "my_resources_pending_deployments": (
                     get_pending_deployments(user_profile=user_profile) if user_profile else 0
                 ),
@@ -353,6 +352,8 @@ def branding(request: "HttpRequest") -> dict:
             "canonical": request.path,
             "root_url": root_url,
             "smarter_logo": smarter_settings.logo,
+            "product_name": SMARTER_PRODUCT_NAME,
+            "product_description": SMARTER_PRODUCT_DESCRIPTION,
             "support_phone_number": smarter_settings.branding_support_phone_number,
             "corporate_name": smarter_settings.branding_corporate_name,
             "support_email": smarter_settings.branding_support_email,
