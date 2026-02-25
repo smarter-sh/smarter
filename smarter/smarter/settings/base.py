@@ -347,8 +347,7 @@ See:
 
 SESSION_COOKIE_AGE = 1209600 * 2
 """
-The age of the session cookie, in seconds. Default is 1209600 (2 weeks). Here it is set to match
-the CSRF cookie age. This is a placeholder.
+The age of the session cookie, in seconds. Default is 1209600 (2 weeks).
 """
 
 SESSION_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
