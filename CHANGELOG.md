@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.145](https://github.com/smarter-sh/smarter/compare/v0.13.144...v0.13.145) (2026-02-25)
+
+### Bug Fixes
+
+* sign-in page ([1f04182](https://github.com/smarter-sh/smarter/commit/1f04182f4475ce1a4111ba1c8cc64c303f251ee4))
+
+## [0.13.144](https://github.com/smarter-sh/smarter/compare/v0.13.143...v0.13.144) (2026-02-25)
+
+### Bug Fixes
+
+* parameterize sign-in page features with waffle switches ([3b6a2b3](https://github.com/smarter-sh/smarter/commit/3b6a2b39b13b5c41d7f08303875b3f449a1b83eb))
+
+## [0.13.143](https://github.com/smarter-sh/smarter/compare/v0.13.142...v0.13.143) (2026-02-24)
+
+### Bug Fixes
+
+* add annotations to ChatConfig ([4bafaca](https://github.com/smarter-sh/smarter/commit/4bafacafd9e06d6eaa03796898531bef5880438c))
+* refactor forgot password email workflow ([2738c58](https://github.com/smarter-sh/smarter/commit/2738c587f5591c21c55e7343d2eb1375d031c89a))
+* refactor welcome email ([4da7001](https://github.com/smarter-sh/smarter/commit/4da7001560c51e9767725b41c738e95650f8ed87))
+
+## [0.13.142](https://github.com/smarter-sh/smarter/compare/v0.13.141...v0.13.142) (2026-02-24)
+
+### Bug Fixes
+
+* repoint cdn.platform.smarter.sh to cdn.smarter.sh ([50e495f](https://github.com/smarter-sh/smarter/commit/50e495f3deabd985f8e5af803658183e1863c946))
+
 ## [0.13.141](https://github.com/smarter-sh/smarter/compare/v0.13.140...v0.13.141) (2026-02-24)
 
 ### Bug Fixes

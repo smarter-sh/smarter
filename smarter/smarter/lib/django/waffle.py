@@ -112,9 +112,6 @@ class SmarterWaffleSwitches:
     ACCOUNT_LOGGING = "log_account"
     """Enables logging throughout the smarter.app.account namespace."""
 
-    MULTITENANT_AUTHENTICATION = "enable_multitenant_authentication"
-    """Enables multi-tenant authentication support for hosted Smarter platforms."""
-
     API_LOGGING = "log_api"
     """Enables logging throughout the smarter.api namespace."""
 
@@ -136,8 +133,29 @@ class SmarterWaffleSwitches:
     CSRF_SUPPRESS_FOR_CHATBOTS = "disable_csrf_middleware_for_chatbots"
     """Disables CSRF middleware checks for chat completion endpoints."""
 
-    JOURNAL = "enable_journal"
+    ENABLE_JOURNAL = "enable_journal"
     """Enables the Smarter Journal feature."""
+
+    ENABLE_OAUTH2 = "enable_oauth2"
+    """Enables OAuth2 authentication support."""
+
+    ENABLE_ACCOUNT_REGISTRATION = "enable_account_registration"
+    """Enables account registration link."""
+
+    ENABLE_LOGIN_FOOTER_LINKS = "enable_login_footer_links"
+    """Enables additional links in the login page footer, such as 'Legal' and 'Contact'."""
+
+    ENABLE_MULTITENANT_AUTHENTICATION = "enable_multitenant_authentication"
+    """Enables multi-tenant authentication support for hosted Smarter platforms."""
+
+    ENABLE_MIDDLEWARE_SENSITIVE_FILES = "enable_middleware_block_sensitive_files"
+    """Enables SmarterBlockSensitiveFilesMiddleware"""
+
+    ENABLE_MIDDLEWARE_EXCESSIVE_404 = "enable_middleware_block_excessive_404"
+    """Enables SmarterBlockExcessive404Middleware"""
+
+    ENABLE_REACTAPP_DEBUG_MODE = "enable_reactapp_debug_mode"
+    """Enables React app debug mode within the Smarter React Chat component."""
 
     MANIFEST_LOGGING = "log_manifest_brokers"
     """Enables detailed diagnostic logging for manifest initialization, validation and brokered operations."""
@@ -145,20 +163,11 @@ class SmarterWaffleSwitches:
     MIDDLEWARE_LOGGING = "log_middleware"
     """Enables detailed diagnostic logging for all middleware operations."""
 
-    MIDDLEWARE_SENSITIVE_FILES = "middleware_block_sensitive_files"
-    """Enables SmarterBlockSensitiveFilesMiddleware"""
-
-    MIDDLEWARE_EXCESSIVE_404 = "middleware_block_excessive_404"
-    """Enables SmarterBlockExcessive404Middleware"""
-
     PLUGIN_LOGGING = "log_plugin"
     """Enables logging throughout the smarter.app.plugin namespace."""
 
     PROVIDER_LOGGING = "log_provider"
     """Enables logging throughout the smarter.app.provider namespace."""
-
-    REACTAPP_DEBUG_MODE = "enable_reactapp_debug_mode"
-    """Enables React app debug mode within the Smarter React Chat component."""
 
     REQUEST_MIXIN_LOGGING = "log_request_mixin"
     """Enables detailed diagnostic logging for the SmarterRequestMixin class."""
@@ -180,22 +189,25 @@ class SmarterWaffleSwitches:
         """Return all switches."""
         return [
             self.ACCOUNT_LOGGING,
-            self.MULTITENANT_AUTHENTICATION,
             self.API_LOGGING,
             self.CACHE_LOGGING,
+            self.ENABLE_OAUTH2,
+            self.ENABLE_ACCOUNT_REGISTRATION,
+            self.ENABLE_LOGIN_FOOTER_LINKS,
+            self.ENABLE_MULTITENANT_AUTHENTICATION,
+            self.ENABLE_MIDDLEWARE_SENSITIVE_FILES,
+            self.ENABLE_MIDDLEWARE_EXCESSIVE_404,
+            self.ENABLE_JOURNAL,
+            self.ENABLE_REACTAPP_DEBUG_MODE,
             self.PROMPT_LOGGING,
             self.CHATAPP_LOGGING,
             self.CHATBOT_LOGGING,
             self.CHATBOT_HELPER_LOGGING,
             self.CSRF_SUPPRESS_FOR_CHATBOTS,
-            self.JOURNAL,
             self.MANIFEST_LOGGING,
             self.MIDDLEWARE_LOGGING,
-            self.MIDDLEWARE_SENSITIVE_FILES,
-            self.MIDDLEWARE_EXCESSIVE_404,
             self.PLUGIN_LOGGING,
             self.PROVIDER_LOGGING,
-            self.REACTAPP_DEBUG_MODE,
             self.REQUEST_MIXIN_LOGGING,
             self.RECEIVER_LOGGING,
             self.TASK_LOGGING,

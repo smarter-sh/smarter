@@ -180,7 +180,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         self.sensitive_files = SENSITIVE_FILES
 
     def __call__(self, request):
-        if not waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_SENSITIVE_FILES):
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
             return self.get_response(request)
 
         request_path = request.path.lower()

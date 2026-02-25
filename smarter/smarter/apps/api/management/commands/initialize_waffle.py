@@ -21,7 +21,7 @@ class Command(SmarterCommand):
     - Iterates through the list of expected switches and creates any that are missing, defaulting them to the "off" state.
     - Verifies the existence of each switch, providing feedback for each verification or creation.
     - Identifies and deletes orphaned switches that are present in the database but not defined in the current application configuration.
-    - In local development environments, enables the ``REACTAPP_DEBUG_MODE`` switch for enhanced debugging capabilities.
+    - In local development environments, enables the ``ENABLE_REACTAPP_DEBUG_MODE`` switch for enhanced debugging capabilities.
 
     **Usage:**
 
@@ -68,6 +68,6 @@ class Command(SmarterCommand):
                 switch.delete()
 
         if smarter_settings.environment == SmarterEnvironments.LOCAL:
-            call_command("waffle_switch", SmarterWaffleSwitches.REACTAPP_DEBUG_MODE, "on")
+            call_command("waffle_switch", SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE, "on")
 
         self.handle_completed_success()

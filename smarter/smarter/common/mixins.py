@@ -277,6 +277,8 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
         """
 
         # First check X-Forwarded-For (most reliable for CLB)
+        # set by Nginx ingress controller and Traefik.
+        # Contains the original client IP and any proxy IPs.
         forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if forwarded_for:
             # X-Forwarded-For format: "client_ip, proxy1_ip, proxy2_ip"
@@ -291,7 +293,7 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
                 )
                 return client_ip
 
-        # Check X-Real-IP (set by Nginx ingress controller)
+        # Check X-Real-IP (set by Nginx ingress controller and Traefik)
         real_ip = request.META.get("HTTP_X_REAL_IP")
         if real_ip and not self._is_private_ip(real_ip.strip()):
             logger.debug(
