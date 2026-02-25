@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.147](https://github.com/smarter-sh/smarter/compare/v0.13.146...v0.13.147) (2026-02-25)
+
+### Bug Fixes
+
+* work on html template parameters and defaults ([d5de3d5](https://github.com/smarter-sh/smarter/commit/d5de3d5d52cf8c753870bc912f6edea95024225b))
+
 ## [0.13.146](https://github.com/smarter-sh/smarter/compare/v0.13.145...v0.13.146) (2026-02-25)
 
 ### Bug Fixes
