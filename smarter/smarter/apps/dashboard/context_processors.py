@@ -371,6 +371,9 @@ def branding(request: "HttpRequest") -> dict:
             "smarter_project_cdn_url": smarter_settings.smarter_project_cdn_url,
             "smarter_project_docs_url": smarter_settings.smarter_project_docs_url,
             "cdn_logo_url": urljoin(smarter_settings.smarter_project_cdn_url, "images/logo/smarter-crop.png"),
+            "login_url": urljoin(smarter_settings.environment_url, "/login/"),
+            "learn_url": smarter_settings.smarter_project_docs_url,
+            "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
         }
     }
     return context

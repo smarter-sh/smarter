@@ -88,6 +88,7 @@ from .const import (
     SMARTER_API_SUBDOMAIN,
     SMARTER_DEFAULT_APP_LOADER_PATH,
     SMARTER_DEFAULT_REACTJS_APP_LOADER_URL,
+    SMARTER_LOCAL_PORT,
     SMARTER_PLATFORM_DEFAULT_SUBDOMAIN,
     SMARTER_PROJECT_CDN_URL,
     SMARTER_PROJECT_DOCS_URL,
@@ -532,7 +533,7 @@ class SettingsDefaults:
     LLM_DEFAULT_MAX_TOKENS = 2048
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]
-    LOCAL_HOSTS += [host + ":9357" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS += [host + f":{SMARTER_LOCAL_PORT}" for host in LOCAL_HOSTS]
     LOCAL_HOSTS.append("testserver")
 
     LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
@@ -4267,7 +4268,7 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return f"{self.environment}.{self.root_api_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
-            return f"{self.api_subdomain}.localhost:9357"
+            return f"{self.api_subdomain}.localhost:{SMARTER_LOCAL_PORT}"
         # default domain format
         return f"{self.environment}.{self.root_api_domain}"
 
