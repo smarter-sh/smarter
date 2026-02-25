@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.151](https://github.com/smarter-sh/smarter/compare/v0.13.150...v0.13.151) (2026-02-25)
+
+### Bug Fixes
+
+* welcome email context parameters ([990034d](https://github.com/smarter-sh/smarter/commit/990034dfdef4ffd1baecd06e6eb2d3107cc8e5a4))
+
 ## [0.13.150](https://github.com/smarter-sh/smarter/compare/v0.13.149...v0.13.150) (2026-02-25)
 
 ### Bug Fixes
