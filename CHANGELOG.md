@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.146](https://github.com/smarter-sh/smarter/compare/v0.13.145...v0.13.146) (2026-02-25)
+
+### Bug Fixes
+
+* parameterize product name, description ([3bb1c32](https://github.com/smarter-sh/smarter/commit/3bb1c32b715d9db60f0f1b3174f1933f173946b9))
+
 ## [0.13.145](https://github.com/smarter-sh/smarter/compare/v0.13.144...v0.13.145) (2026-02-25)
 
 ### Bug Fixes
