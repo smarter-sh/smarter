@@ -88,6 +88,7 @@ from .const import (
     SMARTER_DEFAULT_APP_LOADER_PATH,
     SMARTER_DEFAULT_REACTJS_APP_LOADER_URL,
     SMARTER_PLATFORM_DEFAULT_SUBDOMAIN,
+    SMARTER_PROJECT_WEBSITE_URL,
     VERSION,
     SmarterEnvironments,
 )
@@ -3804,6 +3805,17 @@ class Settings(BaseSettings):
     ###########################################################################
     # Properties
     ###########################################################################
+
+    @cached_property
+    def smarter_project_website_url(self) -> str:
+        """
+        Return the URL for the Smarter project website.
+
+        Example:
+            >>> print(smarter_settings.smarter_project_website_url)
+            https://www.smarter.sh
+        """
+        return SMARTER_PROJECT_WEBSITE_URL
 
     @cached_property
     def smtp_is_configured(self) -> bool:

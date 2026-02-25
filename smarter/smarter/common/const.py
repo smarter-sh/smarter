@@ -22,6 +22,7 @@ SMARTER_EXAMPLE_CHATBOT_NAME = "example"
 SMARTER_CUSTOMER_SUPPORT_EMAIL = "lpm0073@gmail.com"
 SMARTER_CONTACT_EMAIL = "lpm0073@gmail.com"
 SMARTER_CUSTOMER_SUPPORT_PHONE = "+1 (617) 834-6172"
+SMARTER_PROJECT_WEBSITE_URL = "https://smarter.sh"
 SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
 SMARTER_DEFAULT_REACTJS_APP_LOADER_URL = "https://cdn.smarter.sh/ui-chat/app-loader.js"
 
