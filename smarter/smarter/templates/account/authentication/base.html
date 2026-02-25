@@ -25,11 +25,11 @@
                   <img class="d-none d-lg-block mx-auto w-300px w-lg-75 w-xl-500px mb-10 mb-lg-20" src="{% static 'assets/media/misc/auth-screens.png' %}" alt="" />
                   <!--end::Image-->
                   <!--begin::Title-->
-                  <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">The Smarter Project</h1>
+                  <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">{{ branding.product_name }}</h1>
                   <!--end::Title-->
                   <!--begin::Text-->
                   <div class="d-none d-lg-block text-white fs-base text-center">
-                    An open source, no-code AI authoring platform designed for instructional use. <a href="{{ branding.smarter_project_website_url }}" style="color: #ffffff; text-decoration: underline;" target="_blank">Learn more</a>
+                    {{ branding.product_description }} <a href="{{ branding.smarter_project_website_url }}" style="color: #ffffff; text-decoration: underline;" target="_blank">Learn more</a>
                   </div>
                   <!--end::Text-->
                 </div>
