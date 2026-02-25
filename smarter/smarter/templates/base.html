@@ -5,7 +5,7 @@
 <head>
   {% block head %}
   <link rel="shortcut icon" type="image/png" href="{% static 'images/logo/favicon256x256.png' %}" />
-  <title>{{ branding.product_name }}</title>
+  <title>{{ branding.smarter_product_name }}</title>
   <meta charset="utf-8" />
   <meta name="robots" content="index, follow" />
   <meta name="revisit-after" content="10 days">
@@ -14,7 +14,7 @@
   <meta name="generator" content="Python, Django, Django Rest Framework" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
-    content="{{ branding.product_description }}" />
+    content="{{ branding.smarter_product_description }}" />
   <meta name="keywords"
     content="Smarter, generative AI, Chatbots, prompt engineering, documentation, chatGPT" />
   {% block head_meta_og_image %}
@@ -22,18 +22,18 @@
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="{{ branding.product_name }}" />
+  <meta property="og:image:alt" content="{{ branding.smarter_product_name }}" />
   {% endblock %}
   <meta property="og:locale" content="en_US" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="{{ branding.product_name }}" />
-  <meta property="og:site_name" content="{{ branding.product_name }}" />
+  <meta property="og:title" content="{{ branding.smarter_product_name }}" />
+  <meta property="og:site_name" content="{{ branding.smarter_product_name }}" />
   <!-- Twitter Card Tags -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@smarter" />
-  <meta name="twitter:title" content="{{ branding.product_name }}" />
+  <meta name="twitter:title" content="{{ branding.smarter_product_name }}" />
   <meta name="twitter:description"
-    content="{{ branding.product_description }}" />
+    content="{{ branding.smarter_product_description }}" />
   <meta name="twitter:image" content="https://cdn.smarter.sh/cms/img/smarter_og_image.png" />
 
   {% block canonical %}
