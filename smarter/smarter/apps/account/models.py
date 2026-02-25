@@ -23,7 +23,11 @@ from django.utils.functional import SimpleLazyObject
 
 # our stuff
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_ADMIN_USERNAME
+from smarter.common.const import (
+    SMARTER_ADMIN_USERNAME,
+    SMARTER_PRODUCT_DESCRIPTION,
+    SMARTER_PRODUCT_NAME,
+)
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
@@ -104,6 +108,8 @@ def welcome_email_context(first_name: str) -> dict:
         "login_url": urljoin(smarter_settings.environment_url, "/login/"),
         "learn_url": smarter_settings.marketing_site_url,
         "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
+        "smarter_product_name": SMARTER_PRODUCT_NAME,
+        "smarter_product_description": SMARTER_PRODUCT_DESCRIPTION,
     }
 
 
