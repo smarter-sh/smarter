@@ -38,7 +38,7 @@ project = "Smarter Documentation"
 
 # pylint: disable=redefined-builtin
 copyright = f"{datetime.now().year}"
-author = "Lawrence McDaniel"
+author = "Lawrence P. McDaniel - https://lawrencemcdaniel.com"
 release = __version__
 
 try:
