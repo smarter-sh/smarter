@@ -40,7 +40,7 @@ ApiTokenType = Optional[bytes]
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -158,7 +158,7 @@ class AccountMixin(SmarterHelperMixin):
             if not api_token and hasattr(request, "user") and not isinstance(request.user, AnonymousUser):
                 user = request.user  # type: ignore[union-attr]
                 if not isinstance(user, User):
-                    logger.warning(
+                    logger.debug(
                         "%s.__init__(): could not resolve user from the request object %s",
                         self.account_mixin_logger_prefix,
                         request.build_absolute_uri(),
@@ -363,7 +363,7 @@ class AccountMixin(SmarterHelperMixin):
                     self._user,
                 )
             return self._account
-        logger.warning(
+        logger.debug(
             "%s.account() could not initialize _account for user: %s, user_profile: %s",
             self.account_mixin_logger_prefix,
             self._user,

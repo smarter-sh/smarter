@@ -6,8 +6,7 @@ import logging
 import os
 import subprocess
 import time
-from functools import cached_property
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterException
@@ -56,14 +55,21 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
 
     _kubeconfig: Optional[dict] = None
     _configured: bool = False
+    _namespace_verified: bool = False
 
     def __init__(self, kubeconfig: Optional[dict] = None, configured: bool = False, **kwargs):
         super().__init__()
         default_kubeconfig = {"apiVersion": "v1"}
         self._configured = configured
         self._kubeconfig = kubeconfig or default_kubeconfig
+        logger.debug(
+            "%s initialized with kubeconfig: %s, configured: %s",
+            module_prefix,
+            self._kubeconfig,
+            self._configured,
+        )
 
-    @cached_property
+    @property
     def ready(self) -> bool:
         """
         Return whether the Kubernetes helper is ready for use. Returns True
@@ -84,21 +90,36 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             logger.warning(msg)
             return False
 
-        namespace_verified = self.verify_namespace(smarter_settings.environment_namespace)
-        if not namespace_verified:
+        if not self.namespace_verified:
             msg = f"{module_prefix}.ready() {formatted_text_red(f'KubernetesHelper namespace {smarter_settings.environment_namespace} does not exist')}"
             logger.warning(msg)
             return False
 
-        is_ready = self.configured and namespace_verified
+        is_ready = self.configured and self.namespace_verified
 
         if is_ready:
-            msg = f"{module_prefix}.ready() {formatted_text_green('KubernetesHelper is ready.')}"
-            logger.debug(msg)
-        else:
-            msg = f"{module_prefix}.ready() {formatted_text_red('KubernetesHelper is not ready.')}"
-            logger.error(msg)
-        return True
+            msg = f"{module_prefix}.ready() - {self.formatted_state_ready}."
+            logger.info(msg)
+            return True
+
+        msg = f"{module_prefix}.ready() - {self.formatted_state_not_ready}"
+        logger.error(msg)
+        return False
+
+    @property
+    def namespace_verified(self) -> bool:
+        """
+        Return whether the Kubernetes namespace has been verified.
+
+        :return: True if the namespace has been verified, False otherwise.
+        :rtype: bool
+        """
+        if self._namespace_verified:
+            return True
+
+        self._namespace_verified = self.verify_namespace(smarter_settings.environment_namespace)
+
+        return self._namespace_verified
 
     @property
     def configured(self) -> bool:
@@ -108,6 +129,11 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         :return: True if configured, False otherwise.
         :rtype: bool
         """
+        if self._configured:
+            return True
+
+        self._configured = self.update_kubeconfig()
+
         return self._configured
 
     @property
@@ -131,9 +157,10 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         if self._kubeconfig:
             return self._kubeconfig
         self._kubeconfig = get_readonly_yaml_file(self.kubeconfig_path)
+        logger.info("%s loaded kubeconfig from path %s", module_prefix, self.kubeconfig_path)
         return self._kubeconfig
 
-    def update_kubeconfig(self):
+    def update_kubeconfig(self) -> bool:
         """
         Generate a fresh kubeconfig file for the EKS cluster.
 
@@ -141,13 +168,10 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
 
         :raises KubernetesHelperException: If the kubeconfig update fails.
 
-        :return: None
-        :rtype: None
+        :return: True if the kubeconfig was updated successfully, False otherwise.
+        :rtype: bool
         """
-        if self.configured:
-            return
-
-        logger.debug(
+        logger.info(
             "%s.update_kubeconfig() updating kubeconfig for Kubernetes cluster %s",
             module_prefix,
             smarter_settings.aws_eks_cluster_name,
@@ -161,8 +185,16 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             "--name",
             smarter_settings.aws_eks_cluster_name,
         ]
-        subprocess.check_call(command)
-        self._configured = True
+        try:
+            subprocess.check_call(command)
+            self._configured = True
+            logger.info("%s.update_kubeconfig() kubeconfig updated successfully", module_prefix)
+            return True
+        except subprocess.CalledProcessError as e:
+            self._configured = False
+            msg = f"{module_prefix}.update_kubeconfig() {formatted_text_red('Failed to update kubeconfig')}: {e}"
+            logger.error(msg)
+            return False
 
     def apply_manifest(self, manifest: str):
         """
@@ -175,19 +207,22 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         :rtype: None
         """
 
-        logger.debug(
+        logger.info(
             "%s.apply_manifest() applying Kubernetes manifest to cluster %s:\n%s",
             module_prefix,
             smarter_settings.aws_eks_cluster_name,
             manifest,
         )
-        self.update_kubeconfig()
+        if not self.ready:
+            return None
+
         with subprocess.Popen(
             ["kubectl", "apply", "-f", "-"], stdin=subprocess.PIPE, stderr=subprocess.PIPE
         ) as process:
             _, stderr = process.communicate(input=manifest.encode())
             if process.returncode != 0:
-                # pylint: disable=W0719
+                msg = f"{module_prefix}.apply_manifest() {formatted_text_red('Failed to apply manifest')}: {stderr.decode()}"
+                logger.error(msg)
                 raise KubernetesHelperException(f"Failed to apply manifest: {stderr.decode()}")
 
     def verify_namespace(self, namespace: str) -> bool:
@@ -199,18 +234,19 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         :return: True if the namespace exists, False otherwise.
         :rtype: bool
         """
-        logger.debug(
+        logger.info(
             "%s.verify_namespace() verifying namespace in cluster %s, name %s",
             module_prefix,
             smarter_settings.aws_eks_cluster_name,
             namespace,
         )
+        if not self.configured:
+            return False
         command = ["kubectl", "get", "namespace", namespace, "-o", "json"]
         try:
-            self.update_kubeconfig()
             output = subprocess.check_output(command)
             json.loads(output)
-            logger.debug("%s found namespace resource %s", module_prefix, namespace)
+            logger.info("%s found namespace resource %s", module_prefix, namespace)
         except subprocess.CalledProcessError:
             logger.warning("%s did not find namespace resource %s", module_prefix, namespace)
             return False
@@ -297,9 +333,10 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             name,
             namespace,
         )
+        if not self.ready:
+            return False
         command = ["kubectl", "get", "ingress", name, "-n", namespace, "-o", "json"]
         try:
-            self.update_kubeconfig()
             output = subprocess.check_output(command)
             json.loads(output)
             logger.debug("%s found ingress resource %s %s", module_prefix, name, namespace)
@@ -336,10 +373,11 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             name,
             namespace,
         )
+        if not self.ready:
+            return False
         command = ["kubectl", "get", "certificate", name, "-n", namespace, "-o", "json"]
         # if the certificate is found, the output will be the certificate data in json format.
         try:
-            self.update_kubeconfig()
             output = subprocess.check_output(command, text=True)
             logger.debug("%s found certificate resource for %s %s", module_prefix, name, namespace)
             certificate_info: dict
@@ -408,10 +446,11 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             name,
             namespace,
         )
+        if not self.ready:
+            return False
         command = ["kubectl", "get", "secret", name, "-n", namespace, "-o", "json"]
         # if the secret is found, the output will be the secret data in json format.
         try:
-            self.update_kubeconfig()
             output = subprocess.check_output(command)
             json.loads(output)
             logger.debug("%s secret %s in namespace %s is ready", module_prefix, name, namespace)
@@ -478,7 +517,8 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             ingress_name,
             namespace,
         )
-        self.update_kubeconfig()
+        if not self.ready:
+            return False
         command = ["kubectl", "delete", "ingress", ingress_name, "-n", namespace]
         try:
             subprocess.check_call(command)
@@ -507,7 +547,8 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             certificate_name,
             namespace,
         )
-        self.update_kubeconfig()
+        if not self.ready:
+            return False
         command = ["kubectl", "delete", "certificate", certificate_name, "-n", namespace]
         try:
             subprocess.check_call(command)
@@ -536,7 +577,8 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             secret_name,
             namespace,
         )
-        self.update_kubeconfig()
+        if not self.ready:
+            return False
         command = ["kubectl", "delete", "secret", secret_name, "-n", namespace]
         try:
             subprocess.check_call(command)
@@ -545,7 +587,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             return False
         return True
 
-    def get_namespaces(self) -> dict:
+    def get_namespaces(self) -> Union[dict, None]:
         """
         Get all namespaces in the Kubernetes cluster.
 
@@ -553,7 +595,8 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         :rtype: dict
         """
         logger.debug("retrieving namespaces from Kubernetes cluster %s", smarter_settings.aws_eks_cluster_name)
-        self.update_kubeconfig()
+        if not self.ready:
+            return None
         output = subprocess.check_output(["kubectl", "get", "pods", "-n", "kube-system", "-o", "json"])
         output_dict = json.loads(output)
         return output_dict

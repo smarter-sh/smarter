@@ -1,4 +1,4 @@
-# pylint: disable=W0613,C0115,R0913
+# pylint: disable=W0613,C0115,R0913,C0302
 """
 Celery tasks for chatbot app.
 
