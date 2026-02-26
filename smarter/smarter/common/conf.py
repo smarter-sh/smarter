@@ -896,7 +896,7 @@ class Settings(BaseSettings):
         :raises SmarterConfigurationError: If the value is not 'http' or 'https'.
         :examples: ["http", "https"],
         """
-        if self.environment == SmarterEnvironments.LOCAL:
+        if self.environment_is_local:
             return "http"
         else:
             return SettingsDefaults.API_SCHEMA
@@ -3946,8 +3946,9 @@ class Settings(BaseSettings):
             - smarter_settings.environment
             - SmarterEnvironments()
         """
-        if self.environment == SmarterEnvironments.LOCAL:
-            return f"cdn.{SmarterEnvironments.ALPHA}.{self.platform_subdomain}.{self.root_domain}"
+        if self.environment_is_local:
+            # returns cdn.local.example.com
+            return f"cdn.{SmarterEnvironments.LOCAL}.{self.root_domain}"
         return f"cdn.{self.environment_platform_domain}"
 
     @cached_property
@@ -3976,10 +3977,7 @@ class Settings(BaseSettings):
             - smarter_settings.environment_cdn_domain
             - smarter_settings.environment
         """
-        if self.environment == SmarterEnvironments.LOCAL:
-            retval = SmarterValidator.urlify(self.environment_cdn_domain, environment=SmarterEnvironments.ALPHA)
-        else:
-            retval = SmarterValidator.urlify(self.environment_cdn_domain, environment=self.environment)
+        retval = SmarterValidator.urlify(self.environment_cdn_domain, environment=self.environment)
         if retval is None:
             raise SmarterConfigurationError(
                 f"Invalid environment_cdn_domain: {self.environment_cdn_domain}. "
@@ -4064,8 +4062,8 @@ class Settings(BaseSettings):
             return self.root_platform_domain
         if self.environment in SmarterEnvironments.aws_environments:
             return f"{self.environment}.{self.root_platform_domain}"
-        if self.environment == SmarterEnvironments.LOCAL:
-            return "localhost:9357"
+        if self.environment_is_local:
+            return f"localhost:{SMARTER_LOCAL_PORT}"
         # default domain format
         return f"{self.environment}.{self.root_platform_domain}"
 
@@ -4191,9 +4189,13 @@ class Settings(BaseSettings):
             - smarter_settings.platform_name
             - smarter_settings.environment
         """
+        if self.environment_is_local:
+            return f"{self.platform_name}-{SmarterEnvironments.LOCAL}"
         if self.environment in SmarterEnvironments.aws_environments:
             return f"{self.platform_name}-{self.platform_subdomain}-{self.environment}"
-        return f"{self.platform_name}-{self.platform_subdomain}-{SmarterEnvironments.ALPHA}"
+        raise SmarterConfigurationError(
+            f"Invalid environment: {self.environment}. Please check your environment settings."
+        )
 
     @property
     def api_subdomain(self) -> str:
@@ -4267,7 +4269,7 @@ class Settings(BaseSettings):
             return self.root_api_domain
         if self.environment in SmarterEnvironments.aws_environments:
             return f"{self.environment}.{self.root_api_domain}"
-        if self.environment == SmarterEnvironments.LOCAL:
+        if self.environment_is_local:
             return f"{self.api_subdomain}.localhost:{SMARTER_LOCAL_PORT}"
         # default domain format
         return f"{self.environment}.{self.root_api_domain}"
@@ -4320,8 +4322,8 @@ class Settings(BaseSettings):
             - SmarterEnvironments()
             - smarter_settings.environment_platform_domain
         """
-        if self.environment == SmarterEnvironments.LOCAL:
-            return f"{SmarterEnvironments.ALPHA}.{self.root_platform_domain}"
+        if self.environment_is_local:
+            return self.root_proxy_domain
         return self.environment_platform_domain
 
     @property
