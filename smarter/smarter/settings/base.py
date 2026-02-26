@@ -1306,6 +1306,7 @@ LOGGING = {
         },
     },
 }
+print("LOGGING CONFIGURATION: %s", LOGGING)
 logging.config.dictConfig(LOGGING)
 
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
