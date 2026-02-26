@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.151](https://github.com/smarter-sh/smarter/compare/v0.13.150...v0.13.151) (2026-02-25)
+
+### Bug Fixes
+
+* welcome email context parameters ([990034d](https://github.com/smarter-sh/smarter/commit/990034dfdef4ffd1baecd06e6eb2d3107cc8e5a4))
+
+## [0.13.150](https://github.com/smarter-sh/smarter/compare/v0.13.149...v0.13.150) (2026-02-25)
+
+### Bug Fixes
+
+* work on welcome email ([8400e27](https://github.com/smarter-sh/smarter/commit/8400e2721ec2702f835a26cd145419038672d51a))
+
+## [0.13.149](https://github.com/smarter-sh/smarter/compare/v0.13.148...v0.13.149) (2026-02-25)
+
+### Bug Fixes
+
+* work on welcome email ([128b0dd](https://github.com/smarter-sh/smarter/commit/128b0dd2b70ceda290d847e5e4a74d7c35e1e351))
+
+## [0.13.148](https://github.com/smarter-sh/smarter/compare/v0.13.147...v0.13.148) (2026-02-25)
+
+### Bug Fixes
+
+* work on password reset email ([c5d9465](https://github.com/smarter-sh/smarter/commit/c5d9465e9d6938e33db7d5bdd33732e47c8be4bd))
+
 ## [0.13.147](https://github.com/smarter-sh/smarter/compare/v0.13.146...v0.13.147) (2026-02-25)
 
 ### Bug Fixes
