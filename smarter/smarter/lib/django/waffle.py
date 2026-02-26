@@ -112,6 +112,9 @@ class SmarterWaffleSwitches:
     ACCOUNT_LOGGING = "log_account"
     """Enables logging throughout the smarter.app.account namespace."""
 
+    ACCOUNT_MIXIN_LOGGING = "log_account_mixin"
+    """Enables logging within the smarter.apps.account.mixins.AccountMixin class."""
+
     API_LOGGING = "log_api"
     """Enables logging throughout the smarter.api namespace."""
 
@@ -190,6 +193,7 @@ class SmarterWaffleSwitches:
         return [
             self.ACCOUNT_LOGGING,
             self.API_LOGGING,
+            self.ACCOUNT_MIXIN_LOGGING,
             self.CACHE_LOGGING,
             self.ENABLE_OAUTH2,
             self.ENABLE_ACCOUNT_REGISTRATION,

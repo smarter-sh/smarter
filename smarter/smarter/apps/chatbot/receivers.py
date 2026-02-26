@@ -76,7 +76,7 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-module_prefix = "smarter.apps.chatbot.receivers"
+module_prefix = __name__
 
 
 @receiver(plugin_deleting, dispatch_uid=module_prefix + ".plugin_deleting")
@@ -84,17 +84,7 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
     """Handle plugin deleting signal."""
     logger.info(
         "%s %s is being deleted. Pruning its usage records.",
-        formatted_text("smarter.apps.chatbot.receivers.plugin_deleting"),
-        plugin_meta.name,
-    )
-    logger.info(
-        "%s %s ChatBotPlugin records deleted.",
-        formatted_text("smarter.apps.chatbot.receivers.plugin_deleting"),
-        plugin_meta.name,
-    )
-    logger.info(
-        "%s %s has been pruned from all chatbot usage records.",
-        formatted_text("smarter.apps.chatbot.receivers.plugin_deleting"),
+        formatted_text(f"{module_prefix}.plugin_deleting"),
         plugin_meta.name,
     )
 

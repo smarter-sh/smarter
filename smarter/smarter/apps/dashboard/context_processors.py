@@ -359,6 +359,7 @@ def branding(request: "HttpRequest") -> dict:
             "support_phone_number": smarter_settings.branding_support_phone_number,
             "copyright": f"© {current_year} {smarter_settings.branding_corporate_name}. All rights reserved.",
             "og_url": smarter_build_absolute_uri(request),
+            "og_image": "https://cdn.smarter.sh/cms/img/smarter_og_image.png",
             "url_facebook": smarter_settings.branding_url_facebook,
             "url_twitter": smarter_settings.branding_url_twitter,
             "url_linkedin": smarter_settings.branding_url_linkedin,
