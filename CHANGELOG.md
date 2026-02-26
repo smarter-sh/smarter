@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.152](https://github.com/smarter-sh/smarter/compare/v0.13.151...v0.13.152) (2026-02-26)
+
+### Bug Fixes
+
+* aws and k8s naming for local ([4f4a6ab](https://github.com/smarter-sh/smarter/commit/4f4a6ab6eb264e5573f346df389f067ae04824fb))
+* refactor KubernetesHelper ([a506a50](https://github.com/smarter-sh/smarter/commit/a506a509f93caa36d48748fbd9e6c74d2db86dc7))
+
 ## [0.13.151](https://github.com/smarter-sh/smarter/compare/v0.13.150...v0.13.151) (2026-02-25)
 
 ### Bug Fixes
