@@ -86,7 +86,7 @@ class ApiConnection(SmarterBasePydanticModel):
 
     @field_validator("authMethod")
     def validate_auth_method(cls, v):
-        valid_methods = AuthMethods.all_values()
+        valid_methods = AuthMethods.all()
         if v not in valid_methods:
             raise SAMValidationError(f"Invalid authentication method: {v}. Must be one of {valid_methods}.")
         return v

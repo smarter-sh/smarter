@@ -599,9 +599,9 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             return
         if not isinstance(value, str):
             raise SmarterValueError(f"kind must be a string. Got: {type(value)} {value}")
-        if not value in SmarterJournalThings.all_values():
+        if not value in SmarterJournalThings.all():
             raise SmarterValueError(
-                f"kind '{value}' is not a valid SmarterJournalThings value. Expected one of: {SmarterJournalThings.all_values()}"
+                f"kind '{value}' is not a valid SmarterJournalThings value. Expected one of: {SmarterJournalThings.all()}"
             )
 
         self._kind = value

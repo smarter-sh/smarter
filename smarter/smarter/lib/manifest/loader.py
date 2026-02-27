@@ -596,7 +596,7 @@ class SAMLoader(SmarterHelperMixin):
         :return: A list of metadata key strings.
         :rtype: list[str]
         """
-        return SAMMetadataKeys.all_values()
+        return SAMMetadataKeys.all()
 
     @property
     def manifest_spec_keys(self) -> list[str]:

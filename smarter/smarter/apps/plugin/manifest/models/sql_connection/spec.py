@@ -23,7 +23,7 @@ class Connection(SmarterBasePydanticModel):
 
     dbEngine: str = Field(
         ...,
-        description=f"A valid SQL database engine. Common db_engines: {DbEngines.all_values()}",
+        description=f"A valid SQL database engine. Common db_engines: {DbEngines.all()}",
     )
     hostname: str = Field(
         ...,
@@ -85,9 +85,9 @@ class Connection(SmarterBasePydanticModel):
 
     @field_validator("dbEngine")
     def validate_db_engine(cls, v) -> str:
-        if v in DbEngines.all_values():
+        if v in DbEngines.all():
             return v
-        raise SAMValidationError(f"Invalid SQL connection engine: {v}. Must be one of {DbEngines.all_values()}")
+        raise SAMValidationError(f"Invalid SQL connection engine: {v}. Must be one of {DbEngines.all()}")
 
     @field_validator("hostname")
     def validate_host(cls, v) -> str:
@@ -166,10 +166,10 @@ class Connection(SmarterBasePydanticModel):
 
     @field_validator("authenticationMethod")
     def validate_authentication_method(cls, v) -> str:
-        if v in DBMSAuthenticationMethods.all_values():
+        if v in DBMSAuthenticationMethods.all():
             return v
         raise SAMValidationError(
-            f"Invalid authentication method: {v}. Must be one of {DBMSAuthenticationMethods.all_values()}"
+            f"Invalid authentication method: {v}. Must be one of {DBMSAuthenticationMethods.all()}"
         )
 
     @field_validator("useSsl")

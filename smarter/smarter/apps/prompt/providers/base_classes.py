@@ -29,6 +29,10 @@ from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
+from smarter.apps.prompt.functions.date_calculator import (
+    date_calculator,
+    date_calculator_tool_factory,
+)
 from smarter.apps.prompt.functions.function_weather import (
     get_current_weather,
     weather_tool_factory,
@@ -320,10 +324,12 @@ class ChatProviderBase(ProviderDbMixin):
         self._valid_chat_completion_models = valid_chat_completion_models
 
         weather_tool = weather_tool_factory()
-        self.tools = [weather_tool] if add_built_in_tools else None
+        date_calculator_tool = date_calculator_tool_factory()
+        self.tools = [weather_tool, date_calculator_tool] if add_built_in_tools else None
         self.available_functions = (
             {
                 get_current_weather.__name__: get_current_weather,
+                date_calculator.__name__: date_calculator,
             }
             if add_built_in_tools
             else {}
@@ -1092,6 +1098,10 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             )
             self.handle_tool_called(function_name=function_name, function_args=function_args)
 
+        elif function_name == "date_calculator":
+            function_response = function_to_call(tool_call=tool_call)
+            self.handle_tool_called(function_name=function_name, function_args=function_args)
+
         elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
             plugin_id = int(function_name[-4:])
             try:
@@ -1189,8 +1199,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
     def handle_function_provided(self, function: str) -> None:
         """
-        Handle a function being provided. At the moment there is only
-        one built-in function: get_current_weather()
+        Handle a function being provided.
 
         :param function: The name of the function that was provided.
         :type function: str
@@ -1209,6 +1218,11 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.tools.append(weather_tool)
             self.available_functions[get_current_weather.__name__] = get_current_weather
             llm_tool_presented.send(sender=self.handle_function_provided, tool=weather_tool, plugin=None)
+        elif function == date_calculator.__name__:
+            date_calculator_tool = date_calculator_tool_factory()
+            self.tools.append(date_calculator_tool)
+            self.available_functions[date_calculator.__name__] = date_calculator
+            llm_tool_presented.send(sender=self.handle_function_provided, tool=date_calculator_tool, plugin=None)
 
     def handle_success(self) -> dict:
         """

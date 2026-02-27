@@ -111,6 +111,16 @@ jobs:
           social-auth-linkedin-oauth2-secret: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}
           togetherai-api-key: ${{ secrets.TOGETHERAI_API_KEY }}
 
+      - name: Set deployment domain
+        id: set-deployment-domain
+        shell: bash
+        run: |
+          if [ "${{ env.ENVIRONMENT }}" = "prod" ]; then
+            echo "DEPLOYMENT_DOMAIN=${{ env.PLATFORM_SUBDOMAIN }}.smarter.sh" >> "$GITHUB_ENV"
+          else
+            echo "DEPLOYMENT_DOMAIN=${{ env.ENVIRONMENT }}.${{ env.PLATFORM_SUBDOMAIN }}.smarter.sh" >> "$GITHUB_ENV"
+          fi
+
       - name: Send Email
         uses: ./.github/actions/send-mail
         with:
@@ -119,7 +129,9 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-          subject: "GHA - Deployed ${{ env.ENVIRONMENT }}.${{ env.PLATFORM_SUBDOMAIN }}.smarter.sh"
-          body: "${{ env.ENVIRONMENT }}.${{ env.PLATFORM_SUBDOMAIN }}.smarter.sh version ${{ env.VERSION }} was deployed successfully."
+          deployment-domain: ${{ env.DEPLOYMENT_DOMAIN }}
+          subject: "GHA - Deployed ${{ env.DEPLOYMENT_DOMAIN }} v${{ env.VERSION }}"
+          body: "${{ env.DEPLOYMENT_DOMAIN }} version ${{ env.VERSION }} was deployed successfully."
         env:
           VERSION: ${{ env.VERSION }}
+          DEPLOYMENT_DOMAIN: ${{ env.DEPLOYMENT_DOMAIN }}

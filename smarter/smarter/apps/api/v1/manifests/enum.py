@@ -162,11 +162,11 @@ class SAMKinds(SmarterEnumAbstract):
 
     @classmethod
     def singular_slugs(cls):
-        return [slug.lower() for slug in cls.all_values()]
+        return [slug.lower() for slug in cls.all()]
 
     @classmethod
     def plural_slugs(cls):
-        return [f"{slug.lower()}s" for slug in cls.all_values()]
+        return [f"{slug.lower()}s" for slug in cls.all()]
 
     @classmethod
     def from_url(cls, url) -> Optional[str]:

@@ -1,0 +1,44 @@
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  description: "An example chatbot with tool calling and Smarter Plugins."
+  name: date_calculator
+  version: 0.1.0
+  tags:
+    - dates
+    - capstone-project
+  annotations:
+    - smarter.sh/tests/focus-level: high
+    - smarter.sh/tests/owner: Lawrence McDaniel
+spec:
+  apiKey: null
+  config:
+    appAssistant: Daisy Date
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - I was born on December 31, 1966. How many days old am I?
+    - Which is more recent a.) December 31, 1966 or b.) 1st of Jan of the year Two Thousand?
+    - Convert the date December 31, 1966 to ISO format.
+    - Subtract 100 days from December 31, 1966.
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+    appName: Smarter Demo
+    appPlaceholder: Ask me anything...
+    appWelcomeMessage: Welcome to the Smarter demo!
+    customDomain: null
+    defaultMaxTokens: 256
+    defaultModel: gpt-4o-mini
+    defaultSystemRole: You are a helpful date calculator. You perform all of your
+      date operations using the date_calculator tool call function that is provided to you
+      on all prompts. You always use the date_calculator function to perform
+      calculations. You NEVER perform date calculations yourself. If you are
+      unable to provide the necessary date_calculator parameters, then ask
+      the user for clarification.
+    defaultTemperature: 0.5
+    deployed: true
+    dnsVerificationStatus: Verified
+    provider: openai
+    subdomain: null
+  functions:
+    - date_calculator

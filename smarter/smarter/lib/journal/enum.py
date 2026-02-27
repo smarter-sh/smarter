@@ -229,6 +229,6 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
                 return None
             for slug in slugs:
                 this_slug = str(slug).lower()
-                if this_slug in cls.all_values():
+                if this_slug in cls.all():
                     return this_slug
         logger.warning("SmarterJournalCliCommands.from_url() could not extract manifest kind from URL: %s", url)
