@@ -63,7 +63,7 @@ spec:
       appropriate contact or to the Smarter website. But be patient and try to engage the user in a conversation first.
 
     defaultTemperature: 0.0
-    deployed: true
+    deployed: false
     dnsVerificationStatus: Verified
     provider: openai
     subdomain: null

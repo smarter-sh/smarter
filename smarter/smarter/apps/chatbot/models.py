@@ -1200,6 +1200,7 @@ class ChatBotFunctions(TimestampedModel):
     CHOICES = [
         ("get_current_weather", "get_current_weather"),
         ("date_calculator", "date_calculator"),
+        ("calculator", "calculator"),
     ]
     """
     The set of available function names that can be assigned to a ChatBot.
@@ -1207,6 +1208,8 @@ class ChatBotFunctions(TimestampedModel):
     See Also:
 
     - :func:`smarter.apps.prompt.functions.function_weather.get_current_weather`
+    - :func:`smarter.apps.prompt.functions.function_date_calculator.date_calculator`
+    - :func:`smarter.apps.prompt.functions.function_calculator.calculator`
     """
 
     #: The ChatBot instance associated with this function.

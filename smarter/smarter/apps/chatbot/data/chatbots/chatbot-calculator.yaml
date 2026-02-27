@@ -1,0 +1,44 @@
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  description: "An example chatbot with tool calling and Smarter Plugins."
+  name: calculator
+  version: 0.1.0
+  tags:
+    - calculator
+    - capstone-project
+  annotations:
+    - smarter.sh/tests/focus-level: high
+    - smarter.sh/tests/owner: Lawrence McDaniel
+spec:
+  apiKey: null
+  config:
+    appAssistant: Cleo The Calculator
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - What is (3 + 5) * 2?
+    - Calculate 7.5 / (2.5 - 0.5) + 4.
+    - What is sin(pi / 2) + cos(0)?
+    - Evaluate 2 * (3 + 4) - sqrt(49) + tan(pi / 4).
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+    appName: Calculator Bot
+    appPlaceholder: Give me something to calculate...
+    appWelcomeMessage: Welcome to the Calculator Bot! How can I help you today?
+    customDomain: null
+    defaultMaxTokens: 256
+    defaultModel: gpt-4o-mini
+    defaultSystemRole: You are a helpful calculator. You perform all of your
+       operations using the calculator tool call function that is provided to you
+      on all prompts. You always use the calculator function to perform
+      calculations. You NEVER perform  calculations yourself. If you are
+      unable to provide the necessary calculator parameters, then ask
+      the user for clarification.
+    defaultTemperature: 0.5
+    deployed: false
+    dnsVerificationStatus: Verified
+    provider: openai
+    subdomain: null
+  functions:
+    - calculator

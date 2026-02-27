@@ -200,20 +200,20 @@ def date_calculator(tool_call: ChatCompletionMessageToolCall) -> list:
             }
         ]
 
-    llm_tool_requested.send(
-        sender=date_calculator,
-        tool_call=tool_call.model_dump(),
-        dates=dates,
-        operation=operation,
-        date_format=date_format,
-    )
-
     try:
         parsed_dates: list[datetime.datetime] = [parser.parse(d) for d in dates]
         logger.debug(f"{logger_prefix} Parsed dates: {parsed_dates}")
     except Exception as e:
         logger.error(f"{logger_prefix} Error parsing dates: {e}")
         return [{"error": f"Invalid date format: {e}"}]
+
+    llm_tool_requested.send(
+        sender=date_calculator,
+        tool_call=tool_call.model_dump(),
+        dates=parsed_dates,
+        operation=operation,
+        date_format=date_format,
+    )
 
     result = None
     if operation == DateCalculatorOperations.DIFFERENCE:

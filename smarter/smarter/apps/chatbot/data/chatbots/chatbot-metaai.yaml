@@ -34,7 +34,7 @@ spec:
     defaultModel: llama3.1-70b
     defaultSystemRole: You are a helpful chatbot.
     defaultTemperature: 0.5
-    deployed: true
+    deployed: false
     dnsVerificationStatus: Verified
     provider: metaai
     subdomain: null
