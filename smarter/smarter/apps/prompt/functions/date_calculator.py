@@ -42,16 +42,19 @@ from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
 
-import smarter.lib.json as json
+from smarter.apps.prompt.signals import (
+    llm_tool_requested,
+    llm_tool_responded,
+)
 from smarter.common.enum import SmarterEnum
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from ..signals import llm_tool_presented, llm_tool_requested, llm_tool_responded
 
-
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
@@ -128,8 +131,6 @@ def date_calculator(tool_call: ChatCompletionMessageToolCall) -> list:
         A JSON-compatible list containing the result or error message.
     """
 
-    # List of date strings to process.
-
     # Unescape and parse arguments if needed
     arguments = None
     if tool_call and tool_call.function and tool_call.function.arguments:
@@ -199,20 +200,20 @@ def date_calculator(tool_call: ChatCompletionMessageToolCall) -> list:
             }
         ]
 
-    llm_tool_requested.send(
-        sender=date_calculator,
-        tool_call=tool_call.model_dump(),
-        dates=dates,
-        operation=operation,
-        date_format=date_format,
-    )
-
     try:
         parsed_dates: list[datetime.datetime] = [parser.parse(d) for d in dates]
         logger.debug(f"{logger_prefix} Parsed dates: {parsed_dates}")
     except Exception as e:
         logger.error(f"{logger_prefix} Error parsing dates: {e}")
         return [{"error": f"Invalid date format: {e}"}]
+
+    llm_tool_requested.send(
+        sender=date_calculator,
+        tool_call=tool_call.model_dump(),
+        dates=parsed_dates,
+        operation=operation,
+        date_format=date_format,
+    )
 
     result = None
     if operation == DateCalculatorOperations.DIFFERENCE:
@@ -329,5 +330,4 @@ def date_calculator_tool_factory() -> dict:
             },
         },
     }
-    llm_tool_presented.send(sender=date_calculator_tool_factory, tool=tool)
     return tool
