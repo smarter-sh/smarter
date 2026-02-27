@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.153](https://github.com/smarter-sh/smarter/compare/v0.13.152...v0.13.153) (2026-02-27)
+
+### Bug Fixes
+
+* add date_calculator LLM tool call function ([442b543](https://github.com/smarter-sh/smarter/commit/442b5430c74aaf897e017b28a298f83b0262bc6a))
+
 ## [0.13.152](https://github.com/smarter-sh/smarter/compare/v0.13.151...v0.13.152) (2026-02-26)
 
 ### Bug Fixes
