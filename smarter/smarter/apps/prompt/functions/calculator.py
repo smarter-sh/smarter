@@ -90,6 +90,7 @@ def safe_eval(expr: str) -> float:
     Only allows numbers, math functions, and operators.
     """
     allowed_names = {k: getattr(math, k) for k in dir(math) if not k.startswith("_")}
+    # add additional Python built-in functions that are safe to use
     allowed_names.update(
         {
             "abs": abs,
