@@ -129,6 +129,18 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit
     ----------
     tool_call : ChatCompletionMessageToolCall
         The OpenAI tool call object containing metadata about the request.
+
+        .. code-block:: json
+
+            {
+                "id": "call_sLmdUN05FLjEEH8pPmzrJjdt",
+                "function": {
+                    "arguments": "{\"location\":\"San Francisco, CA\"}",
+                    "name": "get_current_weather"
+                },
+                "type": "function"
+            }
+
     location : str
         The location for which to retrieve weather data (e.g., "San Francisco, CA").
     unit : str, optional

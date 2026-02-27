@@ -303,7 +303,6 @@ class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
     status: Optional[AbstractSAMStatusBase] = Field(
         default=None,
         description="status[obj]: Optional. Read-only. The run-time state of the resource described by the manifest.",
-        exclude=True,
     )
 
     @field_validator("apiVersion")
@@ -323,8 +322,8 @@ class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
         """
         if v in [None, ""]:
             raise SAMValidationError("Missing required manifest key: apiVersion")
-        if v not in SmarterApiVersions.all_values():
-            raise SAMValidationError(f"Invalid version. Must be one of {SmarterApiVersions.all_values()} but got {v}")
+        if v not in SmarterApiVersions.all():
+            raise SAMValidationError(f"Invalid version. Must be one of {SmarterApiVersions.all()} but got {v}")
         return v
 
     @field_validator("metadata")

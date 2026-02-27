@@ -759,7 +759,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     thing=self.manifest_kind,
                     command=self.command,
                     e=SAMBadRequestError(
-                        f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
+                        f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all()}"
                     ),
                     status=HTTPStatus.BAD_REQUEST.value,
                     stack_trace=traceback.format_exc(),

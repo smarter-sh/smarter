@@ -5,6 +5,7 @@
 # - push to AWS ECR
 #------------------------------------------------------------------------------
 name: Test
+description: "Run unit tests"
 branding:
   icon: "check-circle"
   color: "green"

@@ -42,6 +42,6 @@ class SAMPluginStaticSpec(SAMPluginCommonSpec):
         ...,
         description=(
             f"{class_identifier}.data[obj]: the json data returned by the {MANIFEST_KIND}. "
-            f"This should be one of the following kinds: {SAMPluginCommonMetadataClassValues.all_values()}"
+            f"This should be one of the following kinds: {SAMPluginCommonMetadataClassValues.all()}"
         ),
     )

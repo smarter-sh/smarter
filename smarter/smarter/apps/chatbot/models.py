@@ -1199,9 +1199,7 @@ class ChatBotFunctions(TimestampedModel):
 
     CHOICES = [
         ("get_current_weather", "get_current_weather"),
-        ("news", "news"),
-        ("prices", "prices"),
-        ("math", "math"),
+        ("date_calculator", "date_calculator"),
     ]
     """
     The set of available function names that can be assigned to a ChatBot.

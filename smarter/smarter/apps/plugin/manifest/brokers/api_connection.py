@@ -675,7 +675,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         metadata = SAMConnectionCommonMetadata(
             name="example_connection",
-            description=f"Example {self.kind} using any of the following authentication methods: {AuthMethods.all_values()}",
+            description=f"Example {self.kind} using any of the following authentication methods: {AuthMethods.all()}",
             version="0.1.0",
             tags=["example", "api", "connection"],
             annotations=[

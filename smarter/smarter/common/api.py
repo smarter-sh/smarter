@@ -10,5 +10,5 @@ class SmarterApiVersions:
     V1 = f"{VERSION_PREFIX}/v1"
 
     @classmethod
-    def all_values(cls):
+    def all(cls):
         return [value for name, value in vars(SmarterApiVersions).items() if not name.startswith("__")]

@@ -20,6 +20,7 @@ from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.chatbot.models import (
     ChatBot,
+    ChatBotFunctions,
     ChatBotHelper,
     ChatBotPlugin,
     ChatBotRequests,
@@ -28,6 +29,7 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.apps.chatbot.serializers import (
     ChatBotConfigSerializer,
+    ChatBotFunctionsSerializer,
     ChatBotPluginSerializer,
 )
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
@@ -367,6 +369,11 @@ class ChatConfigView(SmarterNeverCachedWebView):
         chatbot_plugins_count = ChatBotPlugin.objects.filter(chatbot=self.chatbot).count()
         chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot).order_by("-pk")[:MAX_RETURNED_PLUGINS]
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
+
+        chatbot_functions_count = ChatBotFunctions.objects.filter(chatbot=self.chatbot).count()
+        chatbot_functions = ChatBotFunctions.objects.filter(chatbot=self.chatbot).order_by("-pk")[:MAX_RETURNED_PLUGINS]
+        chatbot_functions_serializer = ChatBotFunctionsSerializer(chatbot_functions, many=True)
+
         history = self.session.chat_helper.history if self.session.chat_helper else {}
 
         chatbot_requests_queryset = ChatBotRequests.objects.filter(session_key=self.session.session_key).order_by("-id")
@@ -393,6 +400,13 @@ class ChatConfigView(SmarterNeverCachedWebView):
                         "plugins_returned": len(chatbot_plugins),
                     },
                     "plugins": chatbot_plugin_serializer.data,
+                },
+                "functions": {
+                    "meta_data": {
+                        "total_functions": chatbot_functions_count,
+                        "functions_returned": len(chatbot_functions),
+                    },
+                    "functions": chatbot_functions_serializer.data,
                 },
             },
         }

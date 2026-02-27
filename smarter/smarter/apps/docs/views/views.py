@@ -23,7 +23,7 @@ class ManifestsView(SmarterWebHtmlView):
                 "path": "/docs/" + manifest_path(kind),
             }
 
-        manifests = [manifest(kind) for kind in SAMKinds.all_values()]
+        manifests = [manifest(kind) for kind in SAMKinds.all()]
         context = {"manifests": manifests}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
@@ -41,6 +41,6 @@ class JsonSchemasView(SmarterWebHtmlView):
                 "path": "/docs/" + json_schema_path(kind),
             }
 
-        schemas = [json_schema(kind) for kind in SAMKinds.all_values()]
+        schemas = [json_schema(kind) for kind in SAMKinds.all()]
         context = {"schemas": schemas}
         return self.clean_http_response(request, template_path=self.template_path, context=context)

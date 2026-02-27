@@ -29,5 +29,5 @@ class DBMSAuthenticationMethods(Enum):
         return [(method.value, method.name.replace("_", " ").title()) for method in cls]
 
     @classmethod
-    def all_values(cls):
+    def all(cls):
         return [method.value for method in cls]

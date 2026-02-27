@@ -33,7 +33,7 @@ class SAMPluginCommonSpecSelector(SmarterBasePydanticModel):
         ...,
         description=(
             f"{class_identifier}.directive[str]: Required. the kind of selector directive to use for the {MANIFEST_KIND}. "
-            f"Must be one of: {SAMPluginCommonSpecSelectorKeyDirectiveValues.all_values()}"
+            f"Must be one of: {SAMPluginCommonSpecSelectorKeyDirectiveValues.all()}"
         ),
     )
     searchTerms: Optional[List[str]] = Field(
@@ -48,10 +48,10 @@ class SAMPluginCommonSpecSelector(SmarterBasePydanticModel):
 
     @field_validator("directive")
     def validate_directive(cls, v) -> str:
-        if v not in SAMPluginCommonSpecSelectorKeyDirectiveValues.all_values():
+        if v not in SAMPluginCommonSpecSelectorKeyDirectiveValues.all():
             raise SAMValidationError(
                 f"Invalid value found in {cls.class_identifier}.{SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value}: '{v}'. "
-                f"Must be one of {SAMPluginCommonSpecSelectorKeyDirectiveValues.all_values()}. "
+                f"Must be one of {SAMPluginCommonSpecSelectorKeyDirectiveValues.all()}. "
                 "These values are case-sensitive and camelCase."
             )
         return v
