@@ -1,7 +1,7 @@
 apiVersion: smarter.sh/v1
 kind: Chatbot
 metadata:
-  description: "An example chatbot with tool calling and Smarter Plugins."
+  description: "An example chatbot with tool calling."
   name: date_calculator
   version: 0.1.0
   tags:
@@ -23,9 +23,9 @@ spec:
     appFileAttachment: false
     appInfoUrl: https://smarter.sh
     appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
-    appName: Smarter Demo
-    appPlaceholder: Ask me anything...
-    appWelcomeMessage: Welcome to the Smarter demo!
+    appName: Date Calculator Bot
+    appPlaceholder: Give me a date calculation...
+    appWelcomeMessage: Welcome to the Date Calculator Bot! How can I help you today?
     customDomain: null
     defaultMaxTokens: 256
     defaultModel: gpt-4o-mini
@@ -36,7 +36,7 @@ spec:
       unable to provide the necessary date_calculator parameters, then ask
       the user for clarification.
     defaultTemperature: 0.5
-    deployed: true
+    deployed: false
     dnsVerificationStatus: Verified
     provider: openai
     subdomain: null

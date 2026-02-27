@@ -34,7 +34,7 @@ spec:
     defaultModel: gemini-2.5-flash-lite
     defaultSystemRole: You are a helpful chatbot.
     defaultTemperature: 0.5
-    deployed: true
+    deployed: false
     dnsVerificationStatus: Verified
     provider: googleai
     subdomain: null
