@@ -16,7 +16,7 @@ metadata:
     - smarter.sh/chatbot/test-chatbot/backward-compatibility: true
 spec:
   config:
-    deployed: true
+    deployed: false
     provider: openai
     defaultModel: gpt-4o-mini
     defaultTemperature: 0.5

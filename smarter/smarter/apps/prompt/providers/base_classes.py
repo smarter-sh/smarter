@@ -29,6 +29,10 @@ from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
+from smarter.apps.prompt.functions.calculator import (
+    calculator,
+    calculator_tool_factory,
+)
 from smarter.apps.prompt.functions.date_calculator import (
     date_calculator,
     date_calculator_tool_factory,
@@ -330,6 +334,7 @@ class ChatProviderBase(ProviderDbMixin):
             {
                 get_current_weather.__name__: get_current_weather,
                 date_calculator.__name__: date_calculator,
+                calculator.__name__: calculator,
             }
             if add_built_in_tools
             else {}
@@ -1090,15 +1095,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self.append_message_tool_called(tool_call=tool_call)
 
         function_response = None
-        if function_name == "get_current_weather":
-            function_response = function_to_call(
-                tool_call=tool_call,
-                location=function_args.get("location"),
-                unit=function_args.get("unit"),
-            )
-            self.handle_tool_called(function_name=function_name, function_args=function_args)
-
-        elif function_name == "date_calculator":
+        if function_name in [get_current_weather.__name__, date_calculator.__name__, calculator.__name__]:
             function_response = function_to_call(tool_call=tool_call)
             self.handle_tool_called(function_name=function_name, function_args=function_args)
 
@@ -1214,7 +1211,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.available_functions = {}
 
         if function == get_current_weather.__name__:
-            weather_tool = weather_tool_factory()
+            weather_tool = weather_tool_factory()  # FIX NOTE: seems like this should be weather_tool_factory
             self.tools.append(weather_tool)
             self.available_functions[get_current_weather.__name__] = get_current_weather
             llm_tool_presented.send(sender=self.handle_function_provided, tool=weather_tool, plugin=None)
@@ -1223,6 +1220,11 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.tools.append(date_calculator_tool)
             self.available_functions[date_calculator.__name__] = date_calculator
             llm_tool_presented.send(sender=self.handle_function_provided, tool=date_calculator_tool, plugin=None)
+        elif function == calculator.__name__:
+            calculator_tool = calculator_tool_factory()
+            self.tools.append(calculator_tool)
+            self.available_functions[calculator.__name__] = calculator
+            llm_tool_presented.send(sender=self.handle_function_provided, tool=calculator_tool, plugin=None)
 
     def handle_success(self) -> dict:
         """

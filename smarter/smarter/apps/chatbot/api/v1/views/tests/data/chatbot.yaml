@@ -17,7 +17,7 @@ metadata:
     - smarter.sh/tests/documentation: https://docs.tests.edu/example-function-calling
 spec:
   config:
-    deployed: true
+    deployed: false
     provider: openai
     defaultModel: gpt-4o-mini
     defaultSystemRole: >
