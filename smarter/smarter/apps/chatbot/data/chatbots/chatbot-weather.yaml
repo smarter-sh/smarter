@@ -1,0 +1,52 @@
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  description: "A chatbot that predicts the weather."
+  name: weather_chatbot
+  version: 0.1.0
+  tags:
+    - weather
+    - forecast
+    - talk-talk-talk
+  annotations:
+    - smarter.sh/tests/focus-level: low
+    - smarter.sh/tests/purpose: Provide an example configuration for OpenAI API Function Calling.
+    - smarter.sh/tests/last-updated: 2025-12-31
+    - smarter.sh/tests/documentation: https://docs.tests.edu/example-function-calling
+    - smarter.sh/tests/owner: Lawrence McDaniel
+spec:
+  apiKey: null
+  config:
+    appAssistant: Lawrence
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - What is the weather in San Francisco?
+    - I was born December 31, 1966. How many days old am I?
+    - What courses does Stackademy offer about web development?
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+    appName: Weather Chatbot
+    appPlaceholder: Ask me about the weather...
+    appWelcomeMessage: Welcome to the Weather Chatbot! How can I help you today?
+    customDomain: null
+    defaultMaxTokens: 256
+    defaultModel: gpt-4o-mini
+    defaultSystemRole: You are a helpful weather forecaster. You respond
+      only to questions about the weather. You answer all weather questions
+      using the get_current_weather function provided to you. You NEVER
+      attempt to provide weather information yourself. If you are
+      unable to provide the necessary parameters to the get_current_weather function,
+      then you ask the user for clarification. If you are still unable to provide
+      the necessary parameters, you inform the user that you are unable to help them
+      at this time.
+    defaultTemperature: 0.5
+    deployed: false
+    dnsVerificationStatus: Verified
+    provider: openai
+    subdomain: null
+  functions:
+    - get_current_weather
+  plugins:
+    - everlasting_gobstopper
+    - example_configuration
