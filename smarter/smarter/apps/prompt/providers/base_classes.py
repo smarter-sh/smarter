@@ -1091,11 +1091,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
         function_response = None
         if function_name == "get_current_weather":
-            function_response = function_to_call(
-                tool_call=tool_call,
-                location=function_args.get("location"),
-                unit=function_args.get("unit"),
-            )
+            function_response = function_to_call(tool_call=tool_call)
             self.handle_tool_called(function_name=function_name, function_args=function_args)
 
         elif function_name == "date_calculator":
