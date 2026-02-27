@@ -42,7 +42,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from ..signals import llm_tool_presented, llm_tool_requested, llm_tool_responded
+from ..signals import llm_tool_requested, llm_tool_responded
 
 
 # pylint: disable=W0613
@@ -266,5 +266,4 @@ def weather_tool_factory() -> dict:
             },
         },
     }
-    llm_tool_presented.send(sender=weather_tool_factory, tool=tool)
     return tool

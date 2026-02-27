@@ -43,7 +43,6 @@ from openai.types.chat.chat_completion_message_tool_call import (
 )
 
 from smarter.apps.prompt.signals import (
-    llm_tool_presented,
     llm_tool_requested,
     llm_tool_responded,
 )
@@ -331,5 +330,4 @@ def date_calculator_tool_factory() -> dict:
             },
         },
     }
-    llm_tool_presented.send(sender=date_calculator_tool_factory, tool=tool)
     return tool
