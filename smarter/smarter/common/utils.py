@@ -183,7 +183,6 @@ def hash_factory(length: int = 16) -> str:
         print(long_token)  # e.g., 'a3f9c1e2b4d5f6a7c8e9d0b1a2c3d4e5'
 
     """
-    logger.debug("%s.hash_factory()", logger_prefix)
     return hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:length]
 
 

@@ -32,7 +32,6 @@ from smarter.apps.account.signals import (
 )
 from smarter.apps.account.utils import (
     get_cached_secret,
-    get_cached_secret_by_pk,
     get_user_profiles_for_account,
 )
 from smarter.common.api import SmarterApiVersions
@@ -47,6 +46,7 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
@@ -194,11 +194,11 @@ class SecretTransformer(SmarterHelperMixin):
 
     def __str__(self) -> str:
         """Return the name of the secret."""
-        return str(self.name)
+        return f"{SecretTransformer.__name__}[{id(self)}](name={self.name}, user_profile={self.user_profile})"
 
     def __repr__(self) -> str:
         """Return the name of the secret."""
-        return json.dumps(SecretTransformer.to_json(self), indent=4)  # type: ignore[return-value]
+        return self.__str__()
 
     ###########################################################################
     # class methods
@@ -331,7 +331,7 @@ class SecretTransformer(SmarterHelperMixin):
         return set()
 
     @property
-    def annotations(self) -> list[dict[str, str]]:
+    def annotations(self) -> list[dict[str, Any]]:
         """Return the secret annotations."""
         if self._manifest and self._manifest.metadata and self._manifest.metadata.annotations:
             return self._manifest.metadata.annotations
