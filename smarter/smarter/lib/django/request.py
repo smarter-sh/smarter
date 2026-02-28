@@ -280,7 +280,7 @@ class SmarterRequestMixin(AccountMixin):
         :return: A string representation suitable for debugging.
         :rtype: str
         """
-        return json.dumps(self.to_json(), indent=4)
+        return f"{formatted_text(SmarterRequestMixin.__name__)}[{id(self)}](url={self.url}, user_profile={self.user_profile})"
 
     def __bool__(self) -> bool:
         """

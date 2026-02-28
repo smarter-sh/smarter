@@ -31,7 +31,7 @@ spec:
     appWelcomeMessage: Welcome to the Weather Chatbot! How can I help you today?
     customDomain: null
     defaultMaxTokens: 256
-    defaultModel: gpt-4o-mini
+    defaultModel: gpt-5-nano
     defaultSystemRole: You are a helpful weather forecaster. You respond
       only to questions about the weather. You answer all weather questions
       using the get_current_weather function provided to you. You NEVER
@@ -47,6 +47,3 @@ spec:
     subdomain: null
   functions:
     - get_current_weather
-  plugins:
-    - everlasting_gobstopper
-    - example_configuration

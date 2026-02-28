@@ -93,13 +93,13 @@ class Command(SmarterCommand):
             username="admin",
             company_name="The Smarter Project",
         )
-        if smarter_settings.configure_beta_account:
-            call_command(
-                "initialize_account",
-                account_number=SMARTER_BETA_ACCOUNT_NUMBER,
-                username="admin_beta",
-                company_name="Smarter Beta Users",
-            )
+        # if smarter_settings.configure_beta_account:
+        #     call_command(
+        #         "initialize_account",
+        #         account_number=SMARTER_BETA_ACCOUNT_NUMBER,
+        #         username="admin_beta",
+        #         company_name="Smarter Beta Users",
+        #     )
         if smarter_settings.configure_ubc_account:
             call_command(
                 "initialize_account",
