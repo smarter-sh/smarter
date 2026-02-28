@@ -4483,22 +4483,23 @@ class Settings(BaseSettings):
         fallback_url = SMARTER_DEFAULT_REACTJS_APP_LOADER_URL
         if check_smarter_reactjs_app_loader_url(intended_url):
             logger.debug(
-                "%s Successfully retrieved the ReactJS app loader from %s. See https://github.com/smarter-sh/web-integration-example for details on configuring Smarter Chat.",
+                "%s.smarter_reactjs_app_loader_url() is %s.",
                 logger_prefix,
-                intended_url,
+                formatted_text_green("READY"),
             )
             return intended_url
         elif check_smarter_reactjs_app_loader_url(fallback_url):
             logger.debug(
-                "%s Successfully retrieved the ReactJS app loader from the fallback url %s. See https://github.com/smarter-sh/web-integration-example for details on configuring Smarter Chat.",
+                "%s.smarter_reactjs_app_loader_url() is %s. ",
                 logger_prefix,
-                fallback_url,
+                formatted_text_green("READY"),
             )
             return fallback_url
         else:
             logger.error(
-                "%s Could not retrieve the ReactJS app loader from either %s or %s. Please check your CDN configuration and internet connectivity.",
+                "%s.smarter_reactjs_app_loader_url() is %s. Could not retrieve the ReactJS app loader from either %s or %s. Please check your CDN configuration and internet connectivity. See https://github.com/smarter-sh/web-integration-example for details on configuring Smarter Chat.",
                 logger_prefix,
+                formatted_text_red("NOT_READY"),
                 intended_url,
                 fallback_url,
             )

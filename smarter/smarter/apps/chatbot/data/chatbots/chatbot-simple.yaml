@@ -27,7 +27,7 @@ spec:
     appWelcomeMessage: Welcome to the Simple Chatbot! How can I help you today?
     customDomain: null
     defaultMaxTokens: 2048
-    defaultModel: gpt-4o
+    defaultModel: gpt-5-nano
     defaultSystemRole: You are a helpful assistant.
     defaultTemperature: 0.5
     deployed: false

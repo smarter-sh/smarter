@@ -25,6 +25,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import SettingsDefaults
+from smarter.common.utils import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -115,6 +116,7 @@ class SAMChatbotBroker(AbstractBroker):
     _plugins: Optional[List[str]] = None
     _chatbot_api_key: Optional[ChatBotAPIKey] = None
     _name: Optional[str] = None
+    _ready: bool = False
 
     def __init__(self, *args, **kwargs):
         """
@@ -222,6 +224,8 @@ class SAMChatbotBroker(AbstractBroker):
         :returns: ``True`` if the broker is ready, ``False`` otherwise.
         :rtype: bool
         """
+        if self._ready:
+            return self._ready
         retval = super().ready
         if not retval:
             logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
@@ -234,8 +238,9 @@ class SAMChatbotBroker(AbstractBroker):
             self.kind,
         )
         if retval:
+            self._ready = True
             broker_ready.send(sender=self.__class__, broker=self)
-        return retval
+        return self._ready
 
     @property
     def chatbot(self) -> Optional[ChatBot]:
@@ -509,8 +514,7 @@ class SAMChatbotBroker(AbstractBroker):
         :returns: A string containing the formatted class name, suitable for use in log output.
         :rtype: str
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.{SAMChatbotBroker.__name__}[{id(self)}]"
+        return formatted_text(f"{SAMChatbotBroker.__name__}[{id(self)}]")
 
     @property
     def kind(self) -> str:
@@ -563,20 +567,22 @@ class SAMChatbotBroker(AbstractBroker):
         """
         if self._manifest:
             if not isinstance(self._manifest, SAMChatbot):
-                logger.error(
-                    "%s.manifest() cached manifest is not a SAMChatbot instance for %s",
-                    self.formatted_class_name,
-                    self.kind,
-                )
-                return None
+                raise SAMChatbotBrokerError("Cached manifest is not a SAMChatbot instance", thing=self.kind)
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
+            logger.debug(
+                "%s.manifest() initializing %s from SAMLoader with name %s",
+                self.formatted_class_name,
+                self.kind,
+                self.loader.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown"),
+            )
             self._manifest = SAMChatbot(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=SAMChatbotMetadata(**self.loader.manifest_metadata),
                 spec=SAMChatbotSpec(**self.loader.manifest_spec),
             )
+            return self._manifest
         if self._chatbot:
             self._manifest = self.django_orm_to_manifest_dict()
             if self._manifest:
@@ -586,6 +592,7 @@ class SAMChatbotBroker(AbstractBroker):
                     self._chatbot,
                     self._chatbot.name,
                 )
+                return self._manifest
         else:
             logger.warning(
                 "%s.manifest() could not initialize",
@@ -746,6 +753,10 @@ class SAMChatbotBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         if not self.manifest:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        if not self.manifest.spec:
+            raise SAMBrokerErrorNotReady(
+                f"{self.kind} {self.name} manifest spec not found", thing=self.kind, command=command
+            )
         if not isinstance(self.chatbot, ChatBot):
             raise SAMChatbotBrokerError(f"ChatBot {self.name} not found", thing=self.kind, command=command)
         with transaction.atomic():
@@ -809,7 +820,9 @@ class SAMChatbotBroker(AbstractBroker):
             # ChatBotPlugin: add what's missing, remove what is in the model but is not in the manifest
             # -------------
             for plugin in ChatBotPlugin.objects.filter(chatbot=self.chatbot):
-                if self.manifest and plugin.plugin_meta.name not in self.manifest.spec.plugins:
+                if not self.manifest.spec.plugins or (
+                    self.manifest.spec.plugins and plugin.plugin_meta.name not in self.manifest.spec.plugins
+                ):
                     plugin.delete()
                     logger.debug(
                         "%s.apply() Detached Plugin %s from ChatBot %s",
