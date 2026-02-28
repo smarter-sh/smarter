@@ -296,10 +296,10 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: The string representation of the broker.
         :rtype: str
         """
-        account = self.account.name or "Anonymous"
+        user_profile = self.user_profile or "Anonymous"
         name = self.name or "Unknown"
 
-        return f"{formatted_text(self.__class__.__name__)}(version={self.api_version}, account={account}, name={name})"
+        return f"{formatted_text(self.__class__.__name__)}[id={id(self)}](name={name}, user_profile={user_profile})"
 
     def __repr__(self) -> str:
         """
@@ -308,7 +308,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: The JSON representation of the broker.
         :rtype: str
         """
-        return json.dumps(self.to_json(), indent=4)
+        return self.__str__()
 
     def __bool__(self) -> bool:
         """

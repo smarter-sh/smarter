@@ -11,7 +11,6 @@ from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import mask_string
-from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.token_authentication import (
@@ -215,7 +214,7 @@ class AccountMixin(SmarterHelperMixin):
         :return: String representation of the class.
         :rtype: str
         """
-        return f"{formatted_text(AccountMixin.__name__)}[{id(self)}](user={self.user_profile})"
+        return f"{formatted_text(AccountMixin.__name__)}[{id(self)}](user_profile={self.user_profile})"
 
     def __repr__(self) -> str:
         """
@@ -224,7 +223,7 @@ class AccountMixin(SmarterHelperMixin):
         :return: JSON representation of the class.
         :rtype: str
         """
-        return json.dumps(AccountMixin.to_json(self), indent=4)
+        return self.__str__()
 
     def __bool__(self) -> bool:
         """
