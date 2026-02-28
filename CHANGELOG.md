@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.155](https://github.com/smarter-sh/smarter/compare/v0.13.154...v0.13.155) (2026-02-28)
+
+### Bug Fixes
+
+* add weather and simple chatbot examples ([b45c9d0](https://github.com/smarter-sh/smarter/commit/b45c9d0d104ac1b8e35bdcd253ab0aff4e9a5139))
+
 ## [0.13.154](https://github.com/smarter-sh/smarter/compare/v0.13.153...v0.13.154) (2026-02-27)
 
 ### Bug Fixes
