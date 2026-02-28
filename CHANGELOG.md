@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.157](https://github.com/smarter-sh/smarter/compare/v0.13.156...v0.13.157) (2026-02-28)
+
+### Bug Fixes
+
+* cleanup ChatBotHelper initialization ([24d4243](https://github.com/smarter-sh/smarter/commit/24d4243b05b92334f55c5f1c29e52f1debb9f6ca))
+
 ## [0.13.156](https://github.com/smarter-sh/smarter/compare/v0.13.155...v0.13.156) (2026-02-28)
 
 ### Bug Fixes
