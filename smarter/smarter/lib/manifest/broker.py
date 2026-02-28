@@ -174,6 +174,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
     _thing: Optional[SmarterJournalThings] = None
     _created: bool = False
     _orm_instance: Optional[MetaDataWithOwnershipModel] = None
+    _ready: bool = False
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -226,6 +227,14 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         SmarterRequestMixin.__init__(
             self, request=request, *args, user=user, account=account, user_profile=user_profile, **kwargs
         )
+        logger.debug(
+            "%s.__init__() after SmarterRequestMixin init - request=%s, user=%s, account=%s, user_profile=%s",
+            self.formatted_class_name,
+            request,
+            user,
+            account,
+            user_profile,
+        )
 
         # ----------------------------------------------------------------------
         # Set API version, name, and kind.
@@ -274,6 +283,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         # log initialization state.
         # ----------------------------------------------------------------------
         self.log_abstract_broker_state()
+        logger.debug("%s.__init__() is complete.", self.formatted_class_name)
 
     def __str__(self):
         """
@@ -471,6 +481,8 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: True if the broker is ready for operations.
         :rtype: bool
         """
+        if self._ready:
+            return self._ready
         retval = super().ready
         if not retval:
             logger.warning(
@@ -479,7 +491,8 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.kind,
             )
             return False
-        return retval and self.is_ready_abstract_broker
+        self._ready = retval and self.is_ready_abstract_broker
+        return self._ready
 
     @property
     def ready_state(self) -> str:
@@ -630,6 +643,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         """
         if self._name:
             return self._name
+        logger.debug("%s.name() name is not cached. Attempting to retrieve name.", self.formatted_class_name)
         if self._manifest:
             self._name = self.manifest.metadata.name
             logger.debug("%s.name() set name to %s from manifest metadata", self.formatted_class_name, self._name)
@@ -682,7 +696,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         self._name = value
         # Delete cached_property value if present
         try:
-            del self.__dict__["name"]
+            del self.__dict__["name"]  # type: ignore
             logger.debug("%s.name() setter cleared cached_property", self.formatted_class_name)
         except KeyError:
             pass
