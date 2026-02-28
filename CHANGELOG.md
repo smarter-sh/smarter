@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.156](https://github.com/smarter-sh/smarter/compare/v0.13.155...v0.13.156) (2026-02-28)
+
+### Bug Fixes
+
+* cleanup  AbstractBroker().__init__() ([acaa7c6](https://github.com/smarter-sh/smarter/commit/acaa7c62fa3e5ad3606f4560ea4bb0e05fa1dd8d))
+* cleanup manifest().setter ([787bef8](https://github.com/smarter-sh/smarter/commit/787bef8315cad0c83a1675f0e1ae92da87a916c0))
+* SAMChatbotBroker.apply() logic for pruning plugins ([57713ba](https://github.com/smarter-sh/smarter/commit/57713ba9e9f0dbb722adb668b7f056d3b581849b))
+
 ## [0.13.155](https://github.com/smarter-sh/smarter/compare/v0.13.154...v0.13.155) (2026-02-28)
 
 ### Bug Fixes
