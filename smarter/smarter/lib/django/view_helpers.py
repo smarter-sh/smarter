@@ -176,7 +176,7 @@ class SmarterView(View, SmarterRequestMixin):
                 request or kwargs["request"] or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
             )
             if self.smarter_request:
-                logger.info(
+                logger.debug(
                     "%s.setup() - SmarterRequestMixin.smarter_request initialized successfully.",
                     self.logger_prefix,
                 )

@@ -265,13 +265,7 @@ class SmarterRequestMixin(AccountMixin):
         :return: A string describing the instance.
         :rtype: str
         """
-        return (
-            f"{formatted_text(SmarterRequestMixin.__name__)}[{id(self)}]"
-            f"("
-            f"request={self.smarter_request}, "
-            f"user={self.user_profile}"
-            f")"
-        )
+        return f"{formatted_text(SmarterRequestMixin.__name__)}[{id(self)}](request={self.smarter_request}, user_profile={self.user_profile})"
 
     def __repr__(self) -> str:
         """
@@ -280,7 +274,7 @@ class SmarterRequestMixin(AccountMixin):
         :return: A string representation suitable for debugging.
         :rtype: str
         """
-        return f"{formatted_text(SmarterRequestMixin.__name__)}[{id(self)}](url={self.url}, user_profile={self.user_profile})"
+        return self.__str__()
 
     def __bool__(self) -> bool:
         """
@@ -1923,7 +1917,7 @@ class SmarterRequestMixin(AccountMixin):
             )
             return False
         if not isinstance(self.smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
-            logger.warning(
+            logger.debug(
                 "%s.is_requestmixin_ready() - request is not a HttpRequest. Received %s. Cannot process request.",
                 self.request_mixin_logger_prefix,
                 type(self._smarter_request).__name__,
