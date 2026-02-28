@@ -494,8 +494,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             DRF documentation on view methods and the dispatch process.
         """
         logger.debug("%s.dispatch() called with args %s and kwargs %s", self.logger_prefix, args, kwargs)
-        if not isinstance(request, Request):
-            logger.warning("%s.dispatch() - request is not an instance of DRF Request: %s", self.logger_prefix, request)
         self.smarter_request = request
         response = None
         msg = f"{self.logger_prefix}.dispatch() - is {self.is_cli_base_api_view_ready_state} - {self.smarter_request} - {self.user_profile if self.user_profile else "Anonymous"}"
