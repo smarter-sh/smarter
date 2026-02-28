@@ -115,6 +115,7 @@ class SAMChatbotBroker(AbstractBroker):
     _plugins: Optional[List[str]] = None
     _chatbot_api_key: Optional[ChatBotAPIKey] = None
     _name: Optional[str] = None
+    _ready: bool = False
 
     def __init__(self, *args, **kwargs):
         """
@@ -222,6 +223,8 @@ class SAMChatbotBroker(AbstractBroker):
         :returns: ``True`` if the broker is ready, ``False`` otherwise.
         :rtype: bool
         """
+        if self._ready:
+            return self._ready
         retval = super().ready
         if not retval:
             logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
@@ -234,8 +237,9 @@ class SAMChatbotBroker(AbstractBroker):
             self.kind,
         )
         if retval:
+            self._ready = True
             broker_ready.send(sender=self.__class__, broker=self)
-        return retval
+        return self._ready
 
     @property
     def chatbot(self) -> Optional[ChatBot]:
@@ -509,8 +513,7 @@ class SAMChatbotBroker(AbstractBroker):
         :returns: A string containing the formatted class name, suitable for use in log output.
         :rtype: str
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.{SAMChatbotBroker.__name__}[{id(self)}]"
+        return f"{SAMChatbotBroker.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:
