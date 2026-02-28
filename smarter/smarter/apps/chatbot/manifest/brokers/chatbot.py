@@ -753,6 +753,10 @@ class SAMChatbotBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         if not self.manifest:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        if not self.manifest.spec:
+            raise SAMBrokerErrorNotReady(
+                f"{self.kind} {self.name} manifest spec not found", thing=self.kind, command=command
+            )
         if not isinstance(self.chatbot, ChatBot):
             raise SAMChatbotBrokerError(f"ChatBot {self.name} not found", thing=self.kind, command=command)
         with transaction.atomic():
@@ -816,7 +820,9 @@ class SAMChatbotBroker(AbstractBroker):
             # ChatBotPlugin: add what's missing, remove what is in the model but is not in the manifest
             # -------------
             for plugin in ChatBotPlugin.objects.filter(chatbot=self.chatbot):
-                if self.manifest and plugin.plugin_meta.name not in self.manifest.spec.plugins:
+                if not self.manifest.spec.plugins or (
+                    self.manifest.spec.plugins and plugin.plugin_meta.name not in self.manifest.spec.plugins
+                ):
                     plugin.delete()
                     logger.debug(
                         "%s.apply() Detached Plugin %s from ChatBot %s",
