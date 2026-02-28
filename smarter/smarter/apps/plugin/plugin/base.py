@@ -67,6 +67,7 @@ from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.openai.enum import OpenAIToolCall, OpenAIToolTypes
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -314,7 +315,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         :return: String representation of the class.
         :rtype: str
         """
-        return f"{formatted_text(PluginBase.__name__)}[{id(self)}](name={self.name}, kind={self.kind})"
+        return f"{formatted_text(PluginBase.__name__)}[{id(self)}](name={self.name}, kind={self.kind}, user_profile={self.user_profile})"
 
     def __repr__(self) -> str:
         """
@@ -323,7 +324,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         :return: JSON representation of the class.
         :rtype: str
         """
-        return json.dumps(self.to_json(), indent=4)
+        return self.__str__()
 
     def __bool__(self) -> bool:
         """
@@ -1712,4 +1713,3 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                 )
             return json.loads(json.dumps(retval))
         raise SmarterPluginError(f"Invalid version: {version}")
-        return None

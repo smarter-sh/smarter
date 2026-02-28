@@ -375,10 +375,10 @@ class SAMLoader(SmarterHelperMixin):
         self.log_loader_state()
 
     def __str__(self):
-        return f"{self.formatted_class_name}(version={self.api_version}, kind={self.kind}, name={self.name}, source={self.source})"
+        return f"{self.formatted_class_name}[{id(self)}](kind={self.kind}, name={self.name}, source={self.source})"
 
     def __repr__(self):
-        return json.dumps(self.to_json(), indent=4)
+        return self.__str__()
 
     # -------------------------------------------------------------------------
     # data setters and getters. Sort out whether we received JSON or YAML data

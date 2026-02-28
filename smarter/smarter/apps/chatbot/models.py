@@ -1479,7 +1479,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
     The following are examples of valid URLs that this helper can process:
 
-    - **Authentication Optional URLs:**
+    º- **Authentication Optional URLs:**
         - ``https://example-username.3141-5926-5359.alpha.api.example.com/``
         - ``https://example-username.3141-5926-5359.alpha.api.example.com/config/``
 
@@ -1536,6 +1536,7 @@ class ChatBotHelper(SmarterRequestMixin):
         "_chatbot_requests",
         "_chatbot_id",
         "_name",
+        "_is_chatbothelper_ready",
     )
 
     def __init__(self, request: HttpRequest, *args, **kwargs):
@@ -1547,6 +1548,13 @@ class ChatBotHelper(SmarterRequestMixin):
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         """
+        self._chatbot = None
+        self._chatbot_custom_domain = None
+        self._chatbot_requests = None
+        self._chatbot_id = None
+        self._name = None
+        self._is_chatbothelper_ready: bool = False
+
         chatbot_helper_logger.debug(
             "%s.__init__() called with url: %s args: %s, kwargs: %s",
             self.formatted_class_name,
@@ -1785,13 +1793,24 @@ class ChatBotHelper(SmarterRequestMixin):
         :returns: ``True`` if the helper is initialized and has a valid ChatBot, otherwise ``False``.
         :rtype: bool
         """
+        if self._is_chatbothelper_ready:
+            return True
         logger_prefix = f"{self.formatted_class_name}.is_chatbothelper_ready()"
+
+        if isinstance(self._chatbot, ChatBot):
+            chatbot_helper_logger.debug(
+                "%s returning true because chatbot is initialized: %s",
+                logger_prefix,
+                self._chatbot,
+            )
+            self._is_chatbothelper_ready = True
+            return self._is_chatbothelper_ready
+
         if self.chatbot_custom_domain:
             chatbot_helper_logger.debug(
-                "%s returning true because chatbot_custom_domain is set",
+                "%s chatbot_custom_domain is set but ChatBotHelpler is not confirmed to be ready.",
                 logger_prefix,
             )
-            return True
 
         if not self.is_chatbot:
             chatbot_helper_logger.debug(
@@ -1807,7 +1826,7 @@ class ChatBotHelper(SmarterRequestMixin):
             )
         if not self.user or not self.user.is_authenticated:
             chatbot_helper_logger.warning(
-                "%s called with unauthenticated request",
+                "%s returning false because called with unauthenticated request",
                 logger_prefix,
             )
             return False
@@ -1818,7 +1837,7 @@ class ChatBotHelper(SmarterRequestMixin):
                 self.user.username,
             )
         if not self.account:
-            chatbot_helper_logger.warning("%s called with no account", logger_prefix)
+            chatbot_helper_logger.warning("%s returning false because called with no account", logger_prefix)
             return False
         else:
             chatbot_helper_logger.debug(
@@ -1827,7 +1846,9 @@ class ChatBotHelper(SmarterRequestMixin):
                 self.account,
             )
         if not isinstance(self.name, str):
-            chatbot_helper_logger.warning("%s did not find a name for the chatbot.", logger_prefix)
+            chatbot_helper_logger.warning(
+                "%s returning false because did not find a name for the chatbot.", logger_prefix
+            )
             return False
         else:
             chatbot_helper_logger.debug(
@@ -1837,7 +1858,7 @@ class ChatBotHelper(SmarterRequestMixin):
             )
         if not isinstance(self._chatbot, ChatBot):
             chatbot_helper_logger.debug(
-                "%s confirmed ChatBot is not initialized.",
+                "%s returning false because ChatBot is not initialized.",
                 logger_prefix,
             )
             return False
@@ -1847,7 +1868,8 @@ class ChatBotHelper(SmarterRequestMixin):
                 logger_prefix,
                 self._chatbot,
             )
-        return True
+            self._is_chatbothelper_ready = True
+            return self._is_chatbothelper_ready
 
     @property
     def chatbothelper_ready_state(self) -> str:
@@ -1868,6 +1890,13 @@ class ChatBotHelper(SmarterRequestMixin):
         :returns: ``True`` if both the helper and ChatBot are ready, otherwise ``False``.
         :rtype: bool
         """
+        # there is a scenario where the SmarterRequestMixin is not ready but the ChatBotHelper is.
+        if self.is_chatbothelper_ready and self.user_profile and not super().ready:
+            chatbot_helper_logger.debug(
+                "%s.ready() returning true because ChatBotHelper is ready even though SmarterRequestMixin is not ready",
+                self.formatted_class_name,
+            )
+            return True
         if not super().ready:
             chatbot_helper_logger.debug(
                 "%s.ready() returning false because SmarterRequestMixin is not ready", self.formatted_class_name
