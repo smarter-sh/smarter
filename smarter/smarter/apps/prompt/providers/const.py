@@ -41,19 +41,22 @@ class OpenAIEndPoint:
 class OpenAIMessageKeys:
     """A class representing the keys for a message in the OpenAI API."""
 
+    # valid openai api message keys
     MESSAGE_ROLE_KEY = "role"
     MESSAGE_CONTENT_KEY = "content"
     MESSAGE_NAME_KEY = "name"
-
     SYSTEM_MESSAGE_KEY = "system"
     ASSISTANT_MESSAGE_KEY = "assistant"
     USER_MESSAGE_KEY = "user"
     TOOL_MESSAGE_KEY = "tool"
     TOOL_CALL_ID = "tool_call_id"
 
+    # proprietary smarter message keys that are not sent to openai but are used
+    # internally to track messages in prompt engineer workbench conversations.
     SMARTER_MESSAGE_KEY = "smarter"
+    SMARTER_ERROR_KEY = "smarter_error"
 
-    # the valid openai api message keys
+    # valid openai api message keys
     all = [
         SYSTEM_MESSAGE_KEY,
         ASSISTANT_MESSAGE_KEY,
@@ -66,8 +69,19 @@ class OpenAIMessageKeys:
         ASSISTANT_MESSAGE_KEY,
         USER_MESSAGE_KEY,
     ]
+    # valid keys to include in api prompt requests to openai
     all_openai_roles = [SYSTEM_MESSAGE_KEY, ASSISTANT_MESSAGE_KEY, USER_MESSAGE_KEY, TOOL_MESSAGE_KEY]
-    all_roles = [SYSTEM_MESSAGE_KEY, ASSISTANT_MESSAGE_KEY, USER_MESSAGE_KEY, TOOL_MESSAGE_KEY, SMARTER_MESSAGE_KEY]
+
+    # all valid keys that can be used in messages in prompt engineer workbench
+    # conversations, including proprietary smarter keys.
+    all_roles = [
+        SYSTEM_MESSAGE_KEY,
+        ASSISTANT_MESSAGE_KEY,
+        USER_MESSAGE_KEY,
+        TOOL_MESSAGE_KEY,
+        SMARTER_MESSAGE_KEY,
+        SMARTER_ERROR_KEY,
+    ]
 
 
 class OpenAIRequestKeys:
