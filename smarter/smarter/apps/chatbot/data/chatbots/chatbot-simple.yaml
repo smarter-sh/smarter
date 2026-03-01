@@ -29,7 +29,7 @@ spec:
     defaultMaxTokens: 2048
     defaultModel: gpt-5-nano
     defaultSystemRole: You are a helpful assistant.
-    defaultTemperature: 0.5
+    defaultTemperature: 1.0
     deployed: false
     dnsVerificationStatus: Verified
     provider: openai
