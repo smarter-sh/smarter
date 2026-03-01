@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.158](https://github.com/smarter-sh/smarter/compare/v0.13.157...v0.13.158) (2026-03-01)
+
+### Bug Fixes
+
+* gpt-5-nano doesn't support tool calls. ([c8c3752](https://github.com/smarter-sh/smarter/commit/c8c3752ed623913f2ed89b55f719511a725bda80))
+* LLM prompt error responses. pass these in the message list instead of raising a modal dialogue ([5952d8d](https://github.com/smarter-sh/smarter/commit/5952d8de379aeab9daad201d3b273faa189617c1))
+
 ## [0.13.157](https://github.com/smarter-sh/smarter/compare/v0.13.156...v0.13.157) (2026-02-28)
 
 ### Bug Fixes
