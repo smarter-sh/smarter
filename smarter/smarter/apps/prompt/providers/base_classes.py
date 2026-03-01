@@ -3,7 +3,10 @@
 Base class for chat providers.
 """
 
+import ast
 import logging
+import re
+import time
 import traceback
 from functools import cached_property
 from http import HTTPStatus
@@ -12,12 +15,13 @@ from typing import Any, Dict, List, Optional, Protocol, Union
 import openai
 
 # 3rd party stuff
-from openai.types.chat.chat_completion import ChatCompletion
+from openai.types.chat.chat_completion import ChatCompletion, Choice
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
     ChatCompletionMessageToolCallUnion,
 )
+from openai.types.completion_usage import CompletionUsage
 
 from smarter.apps.account.models import (
     CHARGE_TYPE_PLUGIN,
@@ -46,7 +50,6 @@ from smarter.apps.prompt.models import Chat
 # smarter chat provider stuff
 from smarter.apps.prompt.providers.utils import (
     ensure_system_role_present,
-    exception_response_factory,
     get_request_body,
     http_response_factory,
     parse_request,
@@ -439,7 +442,7 @@ class ChatProviderBase(ProviderDbMixin):
         :returns: The formatted class name.
         :rtype: str
         """
-        return f"{__name__}.{ChatProviderBase.__name__}[{id(self)}]"
+        return formatted_text(f"{__name__}.{ChatProviderBase.__name__}[{id(self)}]")
 
     @property
     def provider(self) -> Optional[str]:
@@ -681,6 +684,18 @@ class ChatProviderBase(ProviderDbMixin):
         content = content + f"\n\nTool call:\n--------------------\n{json.dumps(tool_call_to_json, indent=4)}"
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
+    def append_error_response(self, error_message: str) -> None:
+        """
+        Append a message indicating that an error occurred.
+
+        :param error_message: The error message to append.
+        :type error_message: str
+        :returns: None
+        :rtype: None
+        """
+        content = f"LLM responded with the following error: {error_message}"
+        self.append_message(role=OpenAIMessageKeys.SMARTER_ERROR_KEY, content=content)
+
     def _insert_charge_by_type(self, charge_type: str) -> None:
         """
         Insert a charge record based on the charge type. This method
@@ -821,7 +836,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s %s", self.formatted_class_name, formatted_text("prep_first_request()"))
+        logger.debug("%s.prep_first_request()", self.formatted_class_name)
         # ensure that all message history is marked as not new
         if isinstance(self.messages, list):
             self.messages = self.messages_set_is_new(self.messages, is_new=False)
@@ -939,9 +954,78 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         message_json = json.loads(response_message.model_dump_json())
         if not isinstance(response_message, ChatCompletionMessage):
             raise SmarterConfigurationError(
-                f"{self.formatted_class_name}: response_message or response_message.content is empty. Response: {response.model_dump_json()}"
+                f"{self.formatted_class_name}: response_message is not of the expected type ChatCompletionMessage. Received response of type {type(response_message)}. Response: {response.model_dump_json()}"
             )
         self.append_message(role=response_message.role, content=response_message.content, message=message_json)  # type: ignore[call-arg]
+
+    def append_openai_error_response(self, response: ChatCompletion, e: Optional[Exception] = None) -> None:
+        """
+        Append an error message to the internal message list based on the OpenAI response.
+
+        :param response: The OpenAI chat completion response containing the error.
+        :type response: ChatCompletion
+
+        :returns: None
+        :rtype: None
+        """
+
+        def extract_json_objects(text) -> Optional[dict[str, Any]]:
+            """
+            Evaluate the text to attempt to extract any JSON objects that
+            may be present. This is useful for extracting json error
+            information that might exist inside of the error messages.
+
+            Find all curly-brace blocks (non-greedy) and attempt to parse
+            them as JSON objects.
+
+            example: a string like this:
+
+                'Error code: 404 - {
+                    'error': {
+                        'message': 'The model `gpt-not-a-valid-model` does not exist or you do not have access to it.',
+                        'type': 'invalid_request_error',
+                        'param': None,
+                        'code': 'model_not_found'
+                    }
+                }'
+            """
+
+            candidates = re.findall(r"{.*}", text, re.DOTALL)
+            for candidate in candidates:
+                try:
+                    logger.debug(
+                        "%s.extract_json_objects() trying ast to parse candidate: %s",
+                        self.formatted_class_name,
+                        candidate,
+                    )
+                    obj = ast.literal_eval(candidate)
+                    json.dumps(obj)  # validate the json
+                    return obj
+                # pylint: disable=broad-except
+                except Exception:
+                    logger.debug(
+                        "%s.extract_json_objects() ast failed to parse candidate: %s",
+                        self.formatted_class_name,
+                        candidate,
+                    )
+                    continue
+
+        logger.debug("%s.append_openai_error_response() called.", self.formatted_class_name)
+        response_message = response.choices[0].message
+        if not isinstance(response_message, ChatCompletionMessage):
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}: response_message is not of the expected type ChatCompletionMessage. Received response of type {type(response_message)}. Response: {response.model_dump_json()}"
+            )
+        content = str(response_message.content)
+        json_objects = extract_json_objects(content)
+        if json_objects:
+            # create a more nicely formatted message.
+            content = f"{self.base_url} raised the following {e.__class__.__name__} exception: {json.dumps(json_objects, indent=4)}"
+
+        stack_trace = traceback.format_exc()
+        content = content + f"\n\nPython Stack trace:\n--------------------\n{stack_trace}"
+
+        self.append_message(role=OpenAIMessageKeys.SMARTER_ERROR_KEY, content=content)
 
     def handle_response(self) -> None:
         """
@@ -950,18 +1034,16 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug(
-            "%s %s", self.formatted_class_name, formatted_text(f"handle_response() iteration: {self.iteration}")
-        )
+        logger.debug("%s.handle_response() iteration: %s", self.formatted_class_name, self.iteration)
 
         response = self.second_response if self.iteration == 2 else self.first_response
         if not response:
             raise SmarterValueError(
-                f"{self.formatted_class_name}: response is required for iteration {self.iteration}, but was not set."
+                f"{self.formatted_class_name}.handle_response(): response is required for iteration {self.iteration}, but was not set."
             )
         if not response.usage:
             raise SmarterValueError(
-                f"{self.formatted_class_name}: response.usage is required for iteration {self.iteration}, but was not set."
+                f"{self.formatted_class_name}.handle_response(): response.usage is required for iteration {self.iteration}, but was not set."
             )
         self.prompt_tokens = response.usage.prompt_tokens
         self.completion_tokens = response.usage.completion_tokens
@@ -977,17 +1059,17 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         if self.iteration == 1:
             if not self.first_response:
                 raise SmarterIlligalInvocationError(
-                    f"{self.formatted_class_name}: first_response is required for iteration 1, but was not set."
+                    f"{self.formatted_class_name}.handle_response(): first_response is required for iteration 1, but was not set."
                 )
             self.first_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.first_response.model_dump_json())
         if self.iteration == 2:
             if not self.second_response:
                 raise SmarterIlligalInvocationError(
-                    f"{self.formatted_class_name}: second_response is required for iteration 2, but was not set."
+                    f"{self.formatted_class_name}.handle_response(): second_response is required for iteration 2, but was not set."
                 )
             if not isinstance(self.second_iteration, dict):
                 raise SmarterValueError(
-                    f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
+                    f"{self.formatted_class_name}.handle_response(): second_iteration must be a dictionary, got {type(self.second_iteration)}"
                 )
             self.second_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.second_response.model_dump_json())
 
@@ -1023,7 +1105,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s %s - %s", self.formatted_class_name, formatted_text("handle_tool_called()"), function_name)
+        logger.debug("%s.handle_tool_called() - %s", self.formatted_class_name, function_name)
         request = (self.first_iteration[InternalKeys.REQUEST_KEY],)
         response = (self.first_iteration[InternalKeys.RESPONSE_KEY],)
         chat_completion_tool_called.send(
@@ -1050,7 +1132,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s %s - %s", self.formatted_class_name, formatted_text("handle_plugin_called()"), plugin.name)
+        logger.debug("%s.handle_plugin_called() - %s", self.formatted_class_name, plugin.name)
         chat_completion_plugin_called.send(
             sender=self.handler,
             chat=self.chat,
@@ -1226,15 +1308,15 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.available_functions[calculator.__name__] = calculator
             llm_tool_presented.send(sender=self.handle_function_provided, tool=calculator_tool, plugin=None)
 
-    def handle_success(self) -> dict:
+    def handle_completion(self) -> dict:
         """
-        Handle a successful chat completion response. This method
+        Handle chat completion response. This method
         formats the final response to be returned to the client.
 
         :returns: A dictionary representing the final chat completion response.
         :rtype: dict
         """
-        logger.debug("%s.handle_success() called", self.formatted_class_name)
+        logger.debug("%s.handle_completion() called", self.formatted_class_name)
         if not isinstance(self.second_iteration, dict):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
@@ -1406,7 +1488,6 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                         self.handle_plugin_selected(plugin=plugin)
 
             # add all functions that are included in the chatbot definition
-            # LAWRENCE
             if self.functions:
                 for function in self.functions:
                     self.handle_function_provided(function)
@@ -1506,18 +1587,29 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             status_code, _message = EXCEPTION_MAP.get(
                 type(e), (HTTPStatus.INTERNAL_SERVER_ERROR.value, "Internal server error")
             )
-            retval = http_response_factory(
-                status_code=status_code,
-                body=exception_response_factory(exception=e, request_meta_data=self.request_meta_data),
+            created_time = int(time.time())
+            self.first_response = ChatCompletion(
+                id="error_response",
+                model=self.model or "unknown",
+                choices=[
+                    Choice(
+                        message=ChatCompletionMessage(role=OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY, content=str(e)),
+                        finish_reason="stop",
+                        index=0,
+                    )
+                ],
+                usage=CompletionUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
+                system_fingerprint="error_response_" + str(created_time),
+                created=created_time,
+                object="chat.completion",
             )
-            if not isinstance(retval, dict) and not isinstance(retval, list):
-                raise SmarterValueError(
-                    f"{self.formatted_class_name}: retval must be an HttpResponse, got {type(retval)}"
-                ) from e
-            return retval
+            self.handle_response()
+            self.append_openai_error_response(self.first_response, e)
 
-        # success!! return the response
-        response = self.handle_success()
+        # done! for better or worse. We process and return LLM errors as a 200
+        # response with the error message in the body, so that the client can
+        # display the error message in the prompt engineers workbench.
+        response = self.handle_completion()
 
         chat_finished.send(
             sender=self.handler,
