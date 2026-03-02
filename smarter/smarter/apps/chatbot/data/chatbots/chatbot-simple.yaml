@@ -1,8 +1,8 @@
 apiVersion: smarter.sh/v1
 kind: Chatbot
 metadata:
-  description: "An example chatbot with with no additional features."
-  name: simple_chatbot
+  description: "A minimally functional chatbot with with no additional features."
+  name: simple
   version: 0.1.0
   tags:
     - simple-chatbot

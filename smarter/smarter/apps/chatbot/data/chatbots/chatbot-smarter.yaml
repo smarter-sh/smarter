@@ -1,7 +1,7 @@
 apiVersion: smarter.sh/v1
 kind: Chatbot
 metadata:
-  description: "A Smarter Plugin PR Agent"
+  description: "A Smarter Platform public relations agent"
   name: smarter
   version: 1.0.0
   tags:
