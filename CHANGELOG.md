@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.163](https://github.com/smarter-sh/smarter/compare/v0.13.162...v0.13.163) (2026-03-02)
+
+### Bug Fixes
+
+* welcome email - add deployment options bullet ([caf2958](https://github.com/smarter-sh/smarter/commit/caf295873ef78aa93168a51e208de8d269b69cf3))
+
 ## [0.13.162](https://github.com/smarter-sh/smarter/compare/v0.13.161...v0.13.162) (2026-03-02)
 
 ### Bug Fixes
