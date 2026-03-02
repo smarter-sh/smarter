@@ -38,6 +38,5 @@ spec:
     dnsVerificationStatus: Verified
     provider: openai
     subdomain: null
-  functions:
-    - get_current_weather
+  functions: []
   plugins: []

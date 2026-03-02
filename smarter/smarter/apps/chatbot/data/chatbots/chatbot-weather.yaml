@@ -2,7 +2,7 @@ apiVersion: smarter.sh/v1
 kind: Chatbot
 metadata:
   description: "A chatbot that predicts the weather."
-  name: weather_chatbot
+  name: weather
   version: 0.1.0
   tags:
     - weather
