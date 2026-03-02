@@ -1,7 +1,7 @@
 apiVersion: smarter.sh/v1
 kind: Chatbot
 metadata:
-  description: "An example chatbot with tool calling and Smarter Plugins."
+  description: "An chatbot that scientific calculator functions."
   name: calculator
   version: 0.1.0
   tags:

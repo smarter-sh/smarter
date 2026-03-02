@@ -33,7 +33,7 @@ the Kubernetes API vis a vis `kubectl <https://kubernetes.io/docs/reference/kube
 Helm Chart
 ----------
 
-The Smarter Framework includes a Helm chart for deploying Smarter on Kubernetes. The chart is located in ``helm/charts/smarter``.
+The Smarter Framework includes a Helm chart for deploying Smarter on Kubernetes. The chart is published at `ArtifactHUB - Smarter <https://artifacthub.io/packages/helm/project-smarter/smarter>`__.
 
 Installation
 ~~~~~~~~~~~~~~~
