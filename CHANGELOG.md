@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.160](https://github.com/smarter-sh/smarter/compare/v0.13.159...v0.13.160) (2026-03-02)
+
+### Bug Fixes
+
+* convert all email svg images to png ([77e627e](https://github.com/smarter-sh/smarter/commit/77e627e3c448f2a4ea077e0cbacaafcd881eca5c))
+
 ## [0.13.159](https://github.com/smarter-sh/smarter/compare/v0.13.158...v0.13.159) (2026-03-02)
 
 ### Bug Fixes
