@@ -36,6 +36,38 @@
   <link href="/static/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
   <!--end::Global Stylesheets Bundle-->
   <script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
+  <style>
+    a {
+      text-decoration: underline;
+      text-decoration-color: rgba(255, 87, 51, .90);
+      color: rgba(255, 87, 51, .75);
+    }
+
+  .body-text {
+    font-size:14px;
+    text-align:left;
+    font-weight:500;
+    margin:0 60px 33px 60px;
+    font-family:Arial,Helvetica,sans-serif;
+  }
+
+  .title-text {
+    color:#181C32;
+    font-size: 18px;
+    font-weight:600;
+    margin-bottom:27px;
+  }
+
+  .enterprise-ready-list ul {
+    list-style-type: disc;   /* normal bullet */
+    margin-left: 1.5em;      /* standard indent */
+    padding-left: 0;         /* remove extra padding */
+  }
+  .enterprise-ready-list ul li {
+    margin-bottom: 0.5em;    /* space between items */
+    font-size: 1em;          /* normal text size */
+  }
+  </style>
 </head>
 <!--end::Head-->
 <!--begin::Body-->
@@ -98,12 +130,13 @@
                       </div>
                       <!--end:Media-->
                       <!--begin:Text-->
-                      <div
-                        style="font-size:14px; text-align:left; font-weight:500; margin:0 60px 33px 60px; font-family:Arial,Helvetica,sans-serif">
-                        <p style="color:#181C32; font-size: 18px; font-weight:600; margin-bottom:27px">Howdy,</p>
+                      <div class="body-text">
+                        <p class="title-text">Howdy,</p>
                         <p style="color:#3F4254; line-height:1.6">We just created a new account for you. To get started
                           please sign in. You can do this by clicking the button below. You can use this email address
-                          as your username. If you have any questions, please contact us at <a
+                          as your username. You should receive your password in a separate text-only email.
+                          If you like, you can use the 'Forgot Password' link on the sign-in page to change your password.
+                          If you have any questions, please contact us at <a
                             href="mailto:{{ branding.support_email }}" style="font-weight:600">{{ branding.support_email }}</a>.</p>
                       </div>
                       <!--end:Text-->
@@ -113,23 +146,71 @@
                         In</a>
                       <!--end:Action-->
                       <!--begin:Text-->
-                      <div
-                        style="font-size:14px; text-align:left; font-weight:500; margin:0 60px 33px 60px; font-family:Arial,Helvetica,sans-serif">
-                        <p style="color:#3F4254; line-height:1.6">{{ branding.smarter_product_name }} provides unified access to a broad range of
-                          large language models from the idustry's best providers including OpenAI, Google AI, Meta AI,
-                          Azure Cognitive Services, Amazon and others. {{ branding.smarter_product_name }}'s <a href="https://docs.smarter.sh/en/latest/smarter-resources/smarter-plugin.html" rel="noopener"
-                            target="_blank">plugin architecture</a> allows you to easily leverage advanced tool-calling
-                            functionality from the industry's best LLM providers, while also keeping your data completely private. And {{ branding.smarter_product_name }}'s <a href="https://docs.smarter.sh/en/latest/smarter-framework/pydantic/smarter-manifests.html" rel="noopener"
-                            target="_blank">manifest approach</a> to resource management simplifies the process of
-                          working with AI resources in the cloud. {{ branding.smarter_product_name }}'s <a href="https://smarter.sh/cli/" rel="noopener"
-                            target="_blank">command-line interface (CLI)</a>, available for Windows, macOS and Linux,
-                          allows you to easily interact with the platform from the command line, as well as from a
-                          growing ecosystem of OEM tools.</p>
+                      <div class="body-text">
+                        <p class="title-text">What's included:</p>
+                        <p style="color:#3F4254; line-height:1.6">
+                          <ul>
+                            <li>
+                              <strong>Unlimited usage</strong> of {{ branding.smarter_product_name }}
+                              <a href="{{ branding.login_url }}" target="_blank" rel="noopener" >cloud platform</a>
+                              while you are attending this course.
+                            </li>
+                            <li>
+                              <strong>Unlimited AI resource authoring capabilities.</strong> You are free to
+                              create your own projects, and you are encouraged to experiment with the platform
+                              while you are attending this course.
+                            </li>
+                            <li>
+                              <strong>More than a hundred frontier AI models</strong> from the industry's best
+                              large language models (LLMs) including OpenAI, Google AI, Meta AI, Azure Cognitive Services,
+                              Amazon and others. This is a unique opportunity for you to get hands-on
+                              experience with the latest AI technologies.
+                            </li>
+                            <li>
+                              <strong>Advanced <a href="https://docs.smarter.sh/en/latest/smarter-resources/smarter-plugin.html" rel="noopener" target="_blank">plugin</a>
+                              tool-calling capability</strong> that allows you to easily connect LLMs to private
+                              data sources like Sql databases, remote REST API's and custom Python functions;
+                              all while keeping your data completely private.
+                            </li>
+                            <li>
+                              <strong>A no-code approach to authoring AI resources.</strong> {{ branding.smarter_product_name }}'s
+                              <a href="https://docs.smarter.sh/en/latest/smarter-framework/pydantic/smarter-manifests.html" rel="noopener" target="_blank">Yaml manifest-based</a>
+                              approach to authoring AI resources is proven to be an effective way for
+                              smart non-programmers to build and manage sophisticated AI applications in minutes.
+                            </li>
+                            <li>
+                              <strong>Web Prompt Engineering Workbench</strong> that provides an interactive
+                              experience for designing and debugging sophisticated prompts for your AI applications.
+                            </li>
+                          </ul>
+                        </p>
+                        <div class="enterprise-ready-list">
+                          <p class="title-text">Enterprise Ready</p>
+                          <p>
+                            <strong>{{ branding.smarter_product_name }} is not simply an instructional tool.</strong>
+                            It is designed from the ground up for the needs of large organizations. You are encouraged during and
+                            after this course to explore the project in more depth to better understand how
+                            {{ branding.smarter_product_name }} addresses enterprise challenges like running at scale,
+                            security, compliance, cost management, and operational complexity. Though these
+                            may be out of scope for this course, they are nonetheless critical enterprise requirements
+                            that you will face out in the wild, once you complete this course and earn your certificate.
+                          </p>
+                          <p>
+                            Some links to help you get started
+                            on your journey to mastering {{ branding.smarter_product_name }}:
+                            <ul>
+                              <li><strong>Comprehensive online documentation</strong> - <a href="https://docs.smarter.sh/" rel="noopener" target="_blank">https://docs.smarter.sh/</a></li>
+                              <li><strong>Project & team-based cost tracking</strong> - <a href="https://docs.smarter.sh/en/latest/smarter-platform/cost-accounting.html#cost-accounting" rel="noopener" target="_blank">[learn more]</a></li>
+                              <li><strong>Runs at scale</strong>, on-premise or in the cloud <a href="https://docs.smarter.sh/en/latest/smarter-framework/kubernetes.html" rel="noopener" target="_blank">[learn more]</a></li>
+                              <li>Full suite of <strong>developer tools</strong> for extending the platform <a href="https://smarter.sh/" rel="noopener" target="_blank">[learn more]</a></li>
+                              <li>{{ branding.smarter_product_name }} is completely <strong>Open source</strong>. Contributors are welcome <a href="https://github.com/smarter-sh/" rel="noopener" target="_blank">[learn more]</a></li>
+                            </ul>
+                          </p>
+                        </div>
                       </div>
                       <!--end:Text-->
                       <!--begin:Text-->
-                      <div
-                        style="font-size:14px; text-align:left; font-weight:500; margin:0 60px 33px 60px; font-family:Arial,Helvetica,sans-serif">
+                      <div class="body-text">
                         <video playsinline="true" width="100%" style="object-fit: cover;" preload="auto" controls="1">
                           <source src="https://cdn.smarter.sh/videos/about.mp4" type="video/mp4">Sorry, your browser
                           doesn't support embedded videos.

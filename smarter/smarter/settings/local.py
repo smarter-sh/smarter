@@ -45,12 +45,11 @@ ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
 MIDDLEWARE += [
     "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
 ]
-CORS_ALLOWED_ORIGINS += [
-    "http://127.0.0.1:5173",  # Django
-    "http://127.0.0.1:9357",  # Django
-    "http://localhost:5173",
-    "http://localhost:9357",
-]
+cors_ports = ["3000", "5173", "9357"]
+for port in cors_ports:
+    CORS_ALLOWED_ORIGINS.append(f"http://127.0.0.1:{port}")
+    CORS_ALLOWED_ORIGINS.append(f"http://localhost:{port}")
+
 CORS_ALLOWED_ORIGINS.append(f"http://{smarter_settings.environment_cdn_domain}")
 CORS_ALLOWED_ORIGINS.append(f"https://{smarter_settings.environment_cdn_domain}")
 
