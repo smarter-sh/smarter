@@ -6,6 +6,51 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.159](https://github.com/smarter-sh/smarter/compare/v0.13.158...v0.13.159) (2026-03-02)
+
+### Bug Fixes
+
+* welcome email ([6b53b86](https://github.com/smarter-sh/smarter/commit/6b53b8670b3c0bd64d49650e898bb57861b47a82))
+
+## [0.13.158](https://github.com/smarter-sh/smarter/compare/v0.13.157...v0.13.158) (2026-03-01)
+
+### Bug Fixes
+
+* gpt-5-nano doesn't support tool calls. ([c8c3752](https://github.com/smarter-sh/smarter/commit/c8c3752ed623913f2ed89b55f719511a725bda80))
+* LLM prompt error responses. pass these in the message list instead of raising a modal dialogue ([5952d8d](https://github.com/smarter-sh/smarter/commit/5952d8de379aeab9daad201d3b273faa189617c1))
+
+## [0.13.157](https://github.com/smarter-sh/smarter/compare/v0.13.156...v0.13.157) (2026-02-28)
+
+### Bug Fixes
+
+* cleanup ChatBotHelper initialization ([24d4243](https://github.com/smarter-sh/smarter/commit/24d4243b05b92334f55c5f1c29e52f1debb9f6ca))
+
+## [0.13.156](https://github.com/smarter-sh/smarter/compare/v0.13.155...v0.13.156) (2026-02-28)
+
+### Bug Fixes
+
+* cleanup  AbstractBroker().__init__() ([acaa7c6](https://github.com/smarter-sh/smarter/commit/acaa7c62fa3e5ad3606f4560ea4bb0e05fa1dd8d))
+* cleanup manifest().setter ([787bef8](https://github.com/smarter-sh/smarter/commit/787bef8315cad0c83a1675f0e1ae92da87a916c0))
+* SAMChatbotBroker.apply() logic for pruning plugins ([57713ba](https://github.com/smarter-sh/smarter/commit/57713ba9e9f0dbb722adb668b7f056d3b581849b))
+
+## [0.13.155](https://github.com/smarter-sh/smarter/compare/v0.13.154...v0.13.155) (2026-02-28)
+
+### Bug Fixes
+
+* add weather and simple chatbot examples ([b45c9d0](https://github.com/smarter-sh/smarter/commit/b45c9d0d104ac1b8e35bdcd253ab0aff4e9a5139))
+
+## [0.13.154](https://github.com/smarter-sh/smarter/compare/v0.13.153...v0.13.154) (2026-02-27)
+
+### Bug Fixes
+
+* create calculator() LLM tool call function ([02b3716](https://github.com/smarter-sh/smarter/commit/02b371670f4aff85d9faef73de6c3e9424313f5c))
+
+## [0.13.153](https://github.com/smarter-sh/smarter/compare/v0.13.152...v0.13.153) (2026-02-27)
+
+### Bug Fixes
+
+* add date_calculator LLM tool call function ([442b543](https://github.com/smarter-sh/smarter/commit/442b5430c74aaf897e017b28a298f83b0262bc6a))
+
 ## [0.13.152](https://github.com/smarter-sh/smarter/compare/v0.13.151...v0.13.152) (2026-02-26)
 
 ### Bug Fixes
