@@ -177,7 +177,7 @@ class EmailHelper(metaclass=Singleton):
                     smarter_settings.smtp_username.get_secret_value(), smarter_settings.smtp_password.get_secret_value()
                 )
                 server.sendmail(msg["From"], [msg["To"]], msg.as_string())
-                logger.debug("%s smtp email sent to %s: %s", EmailHelper.logger_prefix, to, subject)
+                logger.info("%s smtp email sent to %s: %s", EmailHelper.logger_prefix, to, subject)
         except (
             smtplib.SMTPDataError,
             smtplib.SMTPAuthenticationError,
