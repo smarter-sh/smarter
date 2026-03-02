@@ -81,17 +81,17 @@ class SmarterCommand(BaseCommand):
         super().__init__(*args, **kwargs)
 
     def handle_begin(self):
-        logger.debug("%s manage.py %s", "-" * 35, "-" * 34)
-        logger.debug("%s started.", self.__module__)
-        logger.debug("-" * 80)
+        logger.info("%s manage.py %s", "-" * 35, "-" * 34)
+        logger.info("%s started.", self.__module__)
+        logger.info("-" * 80)
 
     def handle_completed_success(self, msg: Optional[str] = None):
-        logger.debug("-" * 80)
+        logger.info("-" * 80)
         if msg:
-            logger.debug("%s", msg)
+            logger.info("%s", msg)
         else:
-            logger.debug("%s completed successfully.", self.__module__)
-        logger.debug("-" * 80)
+            logger.info("%s completed successfully.", self.__module__)
+        logger.info("-" * 80)
 
     def handle_completed_failure(
         self,
@@ -99,17 +99,14 @@ class SmarterCommand(BaseCommand):
         msg: Optional[str] = None,
     ):
         logger.error("-" * 80)
-        logger.debug("-" * 80)
         if msg:
             logger.error("%s", msg)
-            logger.debug("%s", msg)
         msg = f"{self.__module__} failed" + f" with error: {err}" if err else "."
         logger.error("%s", msg)
-        logger.debug("%s", msg)
         if err:
             tb = traceback.format_exc()
             logger.error("%s", tb)
-        logger.debug("-" * 80)
+        logger.error("-" * 80)
         if err:
             sys.exit(1)
 
