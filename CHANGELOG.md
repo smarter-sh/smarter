@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.166](https://github.com/smarter-sh/smarter/compare/v0.13.165...v0.13.166) (2026-03-03)
+
+### Bug Fixes
+
+* update permission and layout of User ([f3e781a](https://github.com/smarter-sh/smarter/commit/f3e781a5032f9960412b639ed99157230b18865b))
+* update the <video> configuration ([fe1ff72](https://github.com/smarter-sh/smarter/commit/fe1ff72ffaf358d2d45c74eddbaf6aa29759b677))
+
 ## [0.13.165](https://github.com/smarter-sh/smarter/compare/v0.13.164...v0.13.165) (2026-03-03)
 
 ### Bug Fixes
