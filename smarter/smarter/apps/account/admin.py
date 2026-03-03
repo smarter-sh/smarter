@@ -1,6 +1,9 @@
 # pylint: disable=C0115,W0212
 """Account admin."""
 
+import logging
+from typing import Optional
+
 from django import forms
 from django.contrib.auth.admin import UserAdmin
 
@@ -25,6 +28,8 @@ from .models import (
     Secret,
     UserProfile,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # @admin.register(Account)
@@ -257,32 +262,64 @@ class UserChangeForm(forms.ModelForm):
 class RestrictedUserAdmin(UserAdmin):
     """Custom User admin that restricts access to users based on their account."""
 
+    list_display = (
+        "profile_account",
+        "username",
+        "email",
+        "first_name",
+        "last_name",
+        "is_superuser",
+        "is_staff",
+        "is_active",
+        "date_joined",
+        "last_login",
+    )
     form = UserChangeForm
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request) -> bool:
         return False
 
+    def profile_account(self, obj) -> Optional[Account]:
+        """Custom method to display the account associated with the user's profile."""
+        userprofile = get_cached_user_profile(user=obj)
+        if userprofile:
+            return userprofile.account
+        return None
+
+    profile_account.short_description = "Account"
+
     def get_queryset(self, request):
+        """
+        Customize the queryset based on whether the user is_staff or is_superuser.
+        """
         qs = super().get_queryset(request)
         user = get_resolved_user(request.user)
         if not user:
             return qs.none()
         if user and user.is_superuser:
             return qs
-        try:
-            if user.is_authenticated:
-                user_profile = get_cached_user_profile(user=user)  # type: ignore
-                return qs.filter(account=user_profile.account)  # type: ignore
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        if user and user.is_staff:
+            try:
+                user_profile = get_cached_user_profile(user)  # type: ignore
+                return qs.filter(
+                    id__in=UserProfile.objects.filter(account=user_profile.account).values_list("user_id", flat=True)
+                )
+            except UserProfile.DoesNotExist as e:
+                logger.error("UserProfile does not exist for user %s, %s", user.username, e)
+                return qs.none()
+        # For non-staff users, return an empty queryset to prevent access to any user records.
+        return qs.none()
 
     def get_readonly_fields(self, request, obj=None):
         user = get_resolved_user(request.user)
         if not user:
-            return ["username", "email", "first_name", "last_name", "is_staff", "is_active", "date_joined"]
+            return [field.name for field in self.model._meta.fields]
         if user.is_superuser:
             return ("username", "last_login", "date_joined")
-        return super().get_readonly_fields(request, obj)
+        if user.is_staff:
+            return ("username", "last_login", "date_joined", "is_superuser", "is_staff")
+        # For non-staff users, make all fields read-only to prevent any modifications.
+        return [field.name for field in self.model._meta.fields]
 
 
 smarter_restricted_admin_site.register(Account, AccountAdmin)
@@ -293,3 +330,4 @@ smarter_restricted_admin_site.register(PaymentMethod, PaymentMethodModelAdmin)
 smarter_restricted_admin_site.register(Secret, SecretAdmin)
 
 smarter_restricted_admin_site.register(UserProfile, RestrictedModelAdmin)
+smarter_restricted_admin_site.register(User, RestrictedUserAdmin)
