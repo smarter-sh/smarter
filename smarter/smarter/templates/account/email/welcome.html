@@ -146,7 +146,10 @@
                         <p class="title-text">Howdy,</p>
                         <p style="color:#3F4254; line-height:1.6">We just created a new account for you. To get started
                           please sign in. You can do this by clicking the button below. You can use this email address
-                          as your username. You should receive your password in a separate text-only email.
+                          as your username.
+                          {% if send_password_email %}
+                            You should receive your password in a separate text-only email.
+                          {% endif %}
                           If you like, you can use the 'Forgot Password' link on the sign-in page to change your password.
                           If you have any questions, please contact us at <a
                             href="mailto:{{ branding.support_email }}" style="font-weight:600">{{ branding.support_email }}</a>.</p>
