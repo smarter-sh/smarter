@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.164](https://github.com/smarter-sh/smarter/compare/v0.13.163...v0.13.164) (2026-03-03)
+
+### Bug Fixes
+
+* add a waffle switch to toggle new user password email ([d2e1b55](https://github.com/smarter-sh/smarter/commit/d2e1b5593b27823b3bc0abf3095765dc2424ee31))
+
 ## [0.13.163](https://github.com/smarter-sh/smarter/compare/v0.13.162...v0.13.163) (2026-03-02)
 
 ### Bug Fixes
