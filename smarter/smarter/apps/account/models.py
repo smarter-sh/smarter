@@ -95,6 +95,7 @@ def welcome_email_context(first_name: str) -> dict:
     retval = branding(request=request)
     retval["first_name"] = first_name
     retval["environment_platform_domain"] = smarter_settings.environment_url.rstrip("/")
+    retval["send_password_email"] = waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_NEW_USER_PASSWORD_EMAIL)
     return retval
 
 
