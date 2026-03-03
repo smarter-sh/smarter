@@ -7,6 +7,7 @@ from urllib.parse import urljoin
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib.django import waffle
 from smarter.lib.django.management.base import SmarterCommand
 
 
@@ -65,7 +66,7 @@ class Command(SmarterCommand):
         user.save()
         self.handle_completed_success(msg=f"User {username} {email} has been created.")
 
-        if created:
+        if created and waffle.switch_is_active(waffle.SmarterWaffleSwitches.ENABLE_NEW_USER_PASSWORD_EMAIL):
             # Send email to user
             login_url = urljoin(smarter_settings.environment_url, "login")
             body = f"""Your Smarter user account has been created. Do not share your account credentials with anyone.
@@ -77,6 +78,12 @@ class Command(SmarterCommand):
             """
             email_helper.send_email(
                 subject="Your Smarter user account has been created", to=email, body=body, html=False, quiet=False
+            )
+        else:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Skipping sending password email to user {username} as the Waffle switch ENABLE_NEW_USER_PASSWORD_EMAIL is not active."
+                )
             )
 
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)

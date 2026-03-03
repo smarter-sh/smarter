@@ -160,6 +160,9 @@ class SmarterWaffleSwitches:
     ENABLE_REACTAPP_DEBUG_MODE = "enable_reactapp_debug_mode"
     """Enables React app debug mode within the Smarter React Chat component."""
 
+    ENABLE_NEW_USER_PASSWORD_EMAIL = "enable_new_user_password_email"
+    """Enables sending textemail with password to new users."""
+
     MANIFEST_LOGGING = "log_manifest_brokers"
     """Enables detailed diagnostic logging for manifest initialization, validation and brokered operations."""
 
@@ -203,6 +206,7 @@ class SmarterWaffleSwitches:
             self.ENABLE_MIDDLEWARE_EXCESSIVE_404,
             self.ENABLE_JOURNAL,
             self.ENABLE_REACTAPP_DEBUG_MODE,
+            self.ENABLE_NEW_USER_PASSWORD_EMAIL,
             self.PROMPT_LOGGING,
             self.CHATAPP_LOGGING,
             self.CHATBOT_LOGGING,
