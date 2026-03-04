@@ -1,10 +1,10 @@
 # pylint: disable=W0212
 """Admin configuration for the chatbot app."""
 
-from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import get_cached_user_profile, get_resolved_user
+from smarter.apps.account.utils import get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
+    smarter_filter_queryset_for_user,
     smarter_restricted_admin_site,
 )
 
@@ -20,7 +20,13 @@ from .models import (
 
 
 class ChatBotAdmin(SmarterCustomerModelAdmin):
-    """ChatBot model admin."""
+    """
+    ChatBot model admin. This is a primary
+    Smarter resource, that descends directly from MetaDataWithOwnershipModel.
+    Visibility of ChatBots is determined by ownership and role.
+    """
+
+    model = ChatBot
 
     readonly_fields = (
         "created_at",
@@ -46,21 +52,19 @@ class ChatBotAdmin(SmarterCustomerModelAdmin):
         return obj.mode(obj.url)
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user = get_resolved_user(request.user)  # type: ignore
-            user_profile = get_cached_user_profile(user=user)  # type: ignore
-            return qs.filter(user_profile__account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+
+        return smarter_filter_queryset_for_user(user=user, qs=qs)
 
 
 class ChatBotRequestsAdmin(SmarterCustomerModelAdmin):
     """
-    ChatBotRequests model admin.
+    ChatBotRequests model admin. Descends from ChatBot, so visibility is
+    determined by the parent ChatBot ownership and role.
     """
+
+    model = ChatBotRequests
 
     readonly_fields = (
         "created_at",
@@ -69,18 +73,25 @@ class ChatBotRequestsAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in ChatBotRequests._meta.fields]
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(chatbot__account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="chatbot__user_profile__account",
+            user_profile_filter="chatbot__user_profile",
+        )
 
 
 class ChatBotCustomDomainAdmin(SmarterCustomerModelAdmin):
-    """ChatBotCustomDomain model admin."""
+    """
+    ChatBotCustomDomain model admin. This is a resource that is managed at the
+    platform level and doesn't contain sensitive information,
+    so we allow all users to see it regardless of ownership.
+    """
+
+    model = ChatBotCustomDomain
 
     readonly_fields = (
         "created_at",
@@ -89,18 +100,21 @@ class ChatBotCustomDomainAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in ChatBotCustomDomain._meta.fields]
 
     def get_queryset(self, request):
+        """
+        visible to any authenticated user.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
+        if user.is_authenticated:
             return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(user_profile__account=user_profile.account)
-        except UserProfile.DoesNotExist:
+        else:
             return qs.none()
 
 
 class ChatBotCustomDomainDNSAdmin(SmarterCustomerModelAdmin):
     """ChatBotCustomDomainDNS model admin."""
+
+    model = ChatBotCustomDomainDNS
 
     readonly_fields = (
         "created_at",
@@ -109,18 +123,21 @@ class ChatBotCustomDomainDNSAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in ChatBotCustomDomainDNS._meta.fields]
 
     def get_queryset(self, request):
+        """
+        visible to any authenticated user.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
+        if user.is_authenticated:
             return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(custom_domain__account=user_profile.account)
-        except UserProfile.DoesNotExist:
+        else:
             return qs.none()
 
 
 class ChatBotAPIKeyAdmin(SmarterCustomerModelAdmin):
     """ChatBotAPIKey model admin."""
+
+    model = ChatBotAPIKey
 
     readonly_fields = (
         "created_at",
@@ -129,37 +146,50 @@ class ChatBotAPIKeyAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in ChatBotAPIKey._meta.fields]
 
     def get_queryset(self, request):
+        """
+        visible to any authenticated user.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
+        if user.is_authenticated:
             return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(chatbot__user_profile__account=user_profile.account)
-        except UserProfile.DoesNotExist:
+        else:
             return qs.none()
 
 
 class ChatBotPluginAdmin(SmarterCustomerModelAdmin):
-    """ChatBotPlugin model admin."""
+    """
+    ChatBotPlugin model admin. Descends from ChatBot, so visibility is
+    determined by the parent ChatBot and role.
+    """
+
+    model = ChatBotPlugin
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
+    list_display = [field.name for field in ChatBotPlugin._meta.fields]
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(chatbot__user_profile__account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="chatbot__user_profile__account",
+            user_profile_filter="chatbot__user_profile",
+        )
 
 
 class ChatBotFunctionsAdmin(SmarterCustomerModelAdmin):
-    """ChatBotFunctions model admin."""
+    """
+    ChatBotFunctions model admin. Descends from ChatBotPlugin, so visibility is
+    determined by the parent ChatBotPlugin and role.
+    """
+
+    model = ChatBotFunctions
 
     readonly_fields = (
         "created_at",
@@ -168,17 +198,17 @@ class ChatBotFunctionsAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in ChatBotFunctions._meta.fields]
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(chatbot__user_profile__account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="chatbot__user_profile__account",
+            user_profile_filter="chatbot__user_profile",
+        )
 
 
-# ChatBot
 smarter_restricted_admin_site.register(ChatBot, ChatBotAdmin)
 smarter_restricted_admin_site.register(ChatBotCustomDomain, ChatBotCustomDomainAdmin)
 smarter_restricted_admin_site.register(ChatBotCustomDomainDNS, ChatBotCustomDomainDNSAdmin)
