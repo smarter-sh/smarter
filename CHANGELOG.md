@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.167](https://github.com/smarter-sh/smarter/compare/v0.13.166...v0.13.167) (2026-03-04)
+
+### Bug Fixes
+
+* work on customer access to models in admin page ([5c53e0b](https://github.com/smarter-sh/smarter/commit/5c53e0bf0b9a365860cd9a213a580e1ee948d6cf))
+
 ## [0.13.166](https://github.com/smarter-sh/smarter/compare/v0.13.165...v0.13.166) (2026-03-03)
 
 ### Bug Fixes
