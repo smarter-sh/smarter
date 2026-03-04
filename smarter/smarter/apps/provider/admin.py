@@ -6,7 +6,7 @@ from django.contrib import admin
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.dashboard.admin import (
-    RestrictedModelAdmin,
+    SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,
 )
 
@@ -60,7 +60,7 @@ class ProviderVerificationAdmin(admin.StackedInline):
             return qs.none()
 
 
-class ProviderAdmin(RestrictedModelAdmin):
+class ProviderAdmin(SmarterCustomerModelAdmin):
     """Provider admin."""
 
     inlines = [ProviderVerificationAdmin]
@@ -84,7 +84,7 @@ class ProviderAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class ProviderModelAdmin(RestrictedModelAdmin):
+class ProviderModelAdmin(SmarterCustomerModelAdmin):
     """Provider model admin."""
 
     inlines = [ProviderModelVerificationAdmin]
@@ -93,18 +93,12 @@ class ProviderModelAdmin(RestrictedModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_display = ["created_at", "provider", "name", "is_active"]
+    list_display = ["provider", "name", "created_at", "is_active"]
     model = ProviderModel
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)  # type: ignore
-            return qs.filter(provider_model__provider__user_profile__account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return qs
 
 
 # Provider Models
