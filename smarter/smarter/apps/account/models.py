@@ -50,6 +50,7 @@ if TYPE_CHECKING:
         _AnyUser = Union[object]  # fallback for Sphinx/type checkers
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+ResolvedUserType = Optional[Union["User", "AbstractUser", "AnonymousUser"]]
 
 
 def should_log(level):
@@ -101,7 +102,7 @@ def welcome_email_context(first_name: str) -> dict:
 
 def get_resolved_user(
     user: Union[User, "AbstractUser", "AnonymousUser", SimpleLazyObject, "_AnyUser"],
-) -> Optional[Union[User, "AbstractUser", "AnonymousUser"]]:
+) -> ResolvedUserType:
     """
     Resolve and return a Django user object from a user-like instance.
 
