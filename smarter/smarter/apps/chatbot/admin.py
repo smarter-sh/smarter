@@ -2,9 +2,9 @@
 """Admin configuration for the chatbot app."""
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.utils import get_cached_user_profile, get_resolved_user
 from smarter.apps.dashboard.admin import (
-    RestrictedModelAdmin,
+    SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,
 )
 
@@ -19,7 +19,7 @@ from .models import (
 )
 
 
-class ChatBotAdmin(RestrictedModelAdmin):
+class ChatBotAdmin(SmarterCustomerModelAdmin):
     """ChatBot model admin."""
 
     readonly_fields = (
@@ -50,13 +50,14 @@ class ChatBotAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(user=request.user)
+            user = get_resolved_user(request.user)  # type: ignore
+            user_profile = get_cached_user_profile(user=user)  # type: ignore
             return qs.filter(user_profile__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
 
-class ChatBotRequestsAdmin(RestrictedModelAdmin):
+class ChatBotRequestsAdmin(SmarterCustomerModelAdmin):
     """
     ChatBotRequests model admin.
     """
@@ -72,13 +73,13 @@ class ChatBotRequestsAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
             return qs.filter(chatbot__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
 
-class ChatBotCustomDomainAdmin(RestrictedModelAdmin):
+class ChatBotCustomDomainAdmin(SmarterCustomerModelAdmin):
     """ChatBotCustomDomain model admin."""
 
     readonly_fields = (
@@ -92,13 +93,13 @@ class ChatBotCustomDomainAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
             return qs.filter(user_profile__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
 
-class ChatBotCustomDomainDNSAdmin(RestrictedModelAdmin):
+class ChatBotCustomDomainDNSAdmin(SmarterCustomerModelAdmin):
     """ChatBotCustomDomainDNS model admin."""
 
     readonly_fields = (
@@ -118,7 +119,7 @@ class ChatBotCustomDomainDNSAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class ChatBotAPIKeyAdmin(RestrictedModelAdmin):
+class ChatBotAPIKeyAdmin(SmarterCustomerModelAdmin):
     """ChatBotAPIKey model admin."""
 
     readonly_fields = (
@@ -138,7 +139,7 @@ class ChatBotAPIKeyAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class ChatBotPluginAdmin(RestrictedModelAdmin):
+class ChatBotPluginAdmin(SmarterCustomerModelAdmin):
     """ChatBotPlugin model admin."""
 
     readonly_fields = (
@@ -157,7 +158,7 @@ class ChatBotPluginAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class ChatBotFunctionsAdmin(RestrictedModelAdmin):
+class ChatBotFunctionsAdmin(SmarterCustomerModelAdmin):
     """ChatBotFunctions model admin."""
 
     readonly_fields = (

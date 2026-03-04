@@ -4,14 +4,14 @@
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.dashboard.admin import (
-    RestrictedModelAdmin,
+    SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,
 )
 
 from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 
 
-class ChatAdmin(RestrictedModelAdmin):
+class ChatAdmin(SmarterCustomerModelAdmin):
     """chat history model admin."""
 
     readonly_fields = (
@@ -31,7 +31,7 @@ class ChatAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class ChatHistoryAdmin(RestrictedModelAdmin):
+class ChatHistoryAdmin(SmarterCustomerModelAdmin):
     """chat history model admin."""
 
     readonly_fields = (
@@ -52,7 +52,7 @@ class ChatHistoryAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class ChatPluginUsageAdmin(RestrictedModelAdmin):
+class ChatPluginUsageAdmin(SmarterCustomerModelAdmin):
     """plugin selection history model admin."""
 
     readonly_fields = (
@@ -72,7 +72,7 @@ class ChatPluginUsageAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class ChatToolCallHistoryAdmin(RestrictedModelAdmin):
+class ChatToolCallHistoryAdmin(SmarterCustomerModelAdmin):
     """chat tool call history model admin."""
 
     readonly_fields = (
