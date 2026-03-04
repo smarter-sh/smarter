@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.168](https://github.com/smarter-sh/smarter/compare/v0.13.167...v0.13.168) (2026-03-04)
+
+### Bug Fixes
+
+* model visibiity in admin console ([c9f80c5](https://github.com/smarter-sh/smarter/commit/c9f80c522d0f194a01dc930d128fa574197d4841))
+* role-base access to models in admin console ([b6219b8](https://github.com/smarter-sh/smarter/commit/b6219b8c1760ddded48b65094cda2fb5de03f2f2))
+* role-based access to models in admin console ([d5c8446](https://github.com/smarter-sh/smarter/commit/d5c8446bad8fb8d091ee17146ab66f2e4fc77d9c))
+* setup role-based access to admin console models ([f6c7100](https://github.com/smarter-sh/smarter/commit/f6c7100fd9831f94bcc2333593c284ef6643894f))
+
 ## [0.13.167](https://github.com/smarter-sh/smarter/compare/v0.13.166...v0.13.167) (2026-03-04)
 
 ### Bug Fixes
