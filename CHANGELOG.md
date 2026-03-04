@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.169](https://github.com/smarter-sh/smarter/compare/v0.13.168...v0.13.169) (2026-03-04)
+
+### Bug Fixes
+
+* refactor permission logic in SecretAdmin.display_value() ([61591fc](https://github.com/smarter-sh/smarter/commit/61591fcf99f3488668392ef85da13ffc72b288cd))
+
 ## [0.13.168](https://github.com/smarter-sh/smarter/compare/v0.13.167...v0.13.168) (2026-03-04)
 
 ### Bug Fixes

@@ -12,7 +12,7 @@ AI resource management and orchestration platform.
 
 ```bash
 helm upgrade --install --force smarter oci://ghcr.io/smarter-sh/charts/smarter \
-  --version 0.13.168 \
+  --version 0.13.169 \
   --timeout 900s \
   --namespace smarter-prod \
   --create-namespace \
