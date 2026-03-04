@@ -5,10 +5,10 @@ import re
 
 from django.contrib import admin
 
-from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.account.utils import get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
+    smarter_filter_queryset_for_user,
     smarter_restricted_admin_site,
 )
 
@@ -94,7 +94,11 @@ class PluginDataSqlInline(admin.StackedInline):
 
 
 class PluginStaticAdmin(SmarterCustomerModelAdmin):
-    """Plugin model admin."""
+    """
+    Plugin model admin. This is a primary Smarter resource, that descends
+    directly from MetaDataWithOwnershipModel. Visibility of Plugins is
+    determined by ownership and role.
+    """
 
     model = PluginMeta
 
@@ -112,18 +116,20 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
 
     def get_queryset(self, request):
+        """
+        Visibility is determined by ownership and role.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs.filter(plugin_class="static").distinct()
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(user_profile__account=account, plugin_class="static").distinct()
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return smarter_filter_queryset_for_user(user=user, qs=qs)
 
 
 class PluginApiAdmin(SmarterCustomerModelAdmin):
-    """Plugin model admin."""
+    """
+    Plugin model admin. This is a primary Smarter resource, that descends
+    directly from MetaDataWithOwnershipModel. Visibility of Plugins is
+    determined by ownership and role.
+    """
 
     model = PluginMeta
 
@@ -141,18 +147,20 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
 
     def get_queryset(self, request):
+        """
+        Visibility is determined by ownership and role.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs.filter(plugin_class="api").distinct()
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(user_profile__account=account, plugin_class="api").distinct()
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return smarter_filter_queryset_for_user(user=user, qs=qs)
 
 
 class PluginSqlAdmin(SmarterCustomerModelAdmin):
-    """Plugin model admin."""
+    """
+    Plugin model admin. This is a primary Smarter resource, that descends
+    directly from MetaDataWithOwnershipModel. Visibility of Plugins is
+    determined by ownership and role.
+    """
 
     model = PluginMeta
 
@@ -170,19 +178,18 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
 
     def get_queryset(self, request):
+        """
+        Visibility is determined by ownership and role.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs.filter(plugin_class="sql").distinct()
-        try:
-            account = get_cached_account_for_user(user=request.user)  # type: ignore
-            return qs.filter(user_profile__account=account, plugin_class="sql").distinct()
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return smarter_filter_queryset_for_user(user=user, qs=qs)
 
 
 class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
     """
-    Plugin Selection History model admin.
+    Plugin Selection History model admin. This descends from
+    PluginSelector, so visibility is determined by the parent Plugin and role.
     """
 
     model = PluginSelectorHistory
@@ -202,19 +209,25 @@ class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
     )
 
     def get_queryset(self, request):
+        """
+        Visibility is determined by ownership of the parent Plugin and role.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            plugins = PluginSelector.objects.filter(plugin__user_profile__account=account)
-            return qs.filter(plugin_selector__in=plugins)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="plugin_selector__plugin__user_profile__account",
+            user_profile_filter="plugin_selector__plugin__user_profile",
+        )
 
 
 class SqlConnectionAdmin(SmarterCustomerModelAdmin):
-    """PluginDataSql Connection model admin."""
+    """
+    PluginDataSql Connection model admin. This is a primary Smarter resource,
+    that descends directly from MetaDataWithOwnershipModel. Visibility
+    is determined by ownership and role.
+    """
 
     model = SqlConnection
 
@@ -235,18 +248,21 @@ class SqlConnectionAdmin(SmarterCustomerModelAdmin):
     )
 
     def get_queryset(self, request):
+        """
+        Visibility is determined by ownership and role.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(user_profile__account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+
+        return smarter_filter_queryset_for_user(user=user, qs=qs)
 
 
 class ApiConnectionAdmin(SmarterCustomerModelAdmin):
-    """PluginDataApi Connection model admin."""
+    """
+    PluginDataApi Connection model admin. This is a primary Smarter resource,
+    that descends directly from MetaDataWithOwnershipModel. Visibility
+    is determined by ownership and role.
+    """
 
     model = ApiConnection
 
@@ -265,14 +281,13 @@ class ApiConnectionAdmin(SmarterCustomerModelAdmin):
     )
 
     def get_queryset(self, request):
+        """
+        Visibility is determined by ownership and role.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(user_profile__account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+
+        return smarter_filter_queryset_for_user(user=user, qs=qs)
 
 
 # Plugin Models
