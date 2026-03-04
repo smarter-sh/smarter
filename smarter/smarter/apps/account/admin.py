@@ -15,11 +15,14 @@ from django.utils.translation import gettext_lazy as _
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.dashboard.admin import (
+    SmarterCustomerModelAdmin,
     SmarterStaffOnlyModelAdmin,
     SmarterSuperUserOnlyModelAdmin,
+    smarter_filter_queryset_for_user,
     smarter_is_staff,
     smarter_restricted_admin_site,
 )
+from smarter.common.helpers.console_helpers import formatted_text
 
 from .models import (
     Account,
@@ -38,8 +41,7 @@ logger = logging.getLogger(__name__)
 class AccountAdmin(SmarterStaffOnlyModelAdmin):
     """Account model admin."""
 
-    class Meta:
-        model = Account
+    model = Account
 
     readonly_fields = (
         "created_at",
@@ -48,23 +50,21 @@ class AccountAdmin(SmarterStaffOnlyModelAdmin):
     list_display = ("company_name", "account_number", "created_at", "updated_at")
 
     def get_queryset(self, request: HttpRequest):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(request.user)  # type: ignore
-            return qs.filter(id=user_profile.account.id)
-        except UserProfile.DoesNotExist:
-            logger.error("UserProfile does not exist for user %s", request.user.username)
-            return qs.none()
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="id",
+            user_profile_filter=None,
+        )
 
 
 # @admin.register(AccountContact)
 class AccountContactAdmin(SmarterStaffOnlyModelAdmin):
     """AccountContact model admin."""
 
-    class Meta:
-        model = AccountContact
+    model = AccountContact
 
     readonly_fields = (
         "created_at",
@@ -73,23 +73,21 @@ class AccountContactAdmin(SmarterStaffOnlyModelAdmin):
     list_display = ("account", "first_name", "last_name", "email", "phone", "is_primary")
 
     def get_queryset(self, request: HttpRequest):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(request.user)  # type: ignore
-            return qs.filter(account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            logger.error("UserProfile does not exist for user %s", request.user.username)
-            return qs.none()
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="account",
+            user_profile_filter=None,
+        )
 
 
 # @admin.register(Charge)
-class ChargeAdmin(SmarterStaffOnlyModelAdmin):
+class ChargeAdmin(SmarterCustomerModelAdmin):
     """Charge model admin."""
 
-    class Meta:
-        model = Charge
+    model = Charge
 
     def get_readonly_fields(self, request, obj=None):
         # pylint: disable=protected-access
@@ -106,21 +104,21 @@ class ChargeAdmin(SmarterStaffOnlyModelAdmin):
     )
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if request.user.is_staff:
-            user_profile = get_cached_user_profile(request.user)  # type: ignore
-            return qs.filter(account=user_profile.account)
-        return qs.none()
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="account",
+            user_profile_filter=None,
+        )
 
 
 # @admin.register(DailyBillingRecord)
-class DailyBillingRecordAdmin(SmarterStaffOnlyModelAdmin):
+class DailyBillingRecordAdmin(SmarterCustomerModelAdmin):
     """DailyBillingRecord model admin."""
 
-    class Meta:
-        model = DailyBillingRecord
+    model = DailyBillingRecord
 
     def get_readonly_fields(self, request: HttpRequest, obj=None):
         return [field.name for field in self.model._meta.fields]
@@ -136,21 +134,21 @@ class DailyBillingRecordAdmin(SmarterStaffOnlyModelAdmin):
     )
 
     def get_queryset(self, request: HttpRequest):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if request.user.is_staff:
-            user_profile = get_cached_user_profile(request.user)  # type: ignore
-            return qs.filter(account=user_profile.account)
-        return qs.none()
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="account",
+            user_profile_filter=None,
+        )
 
 
 # @admin.register(PaymentMethod)
 class PaymentMethodModelAdmin(SmarterStaffOnlyModelAdmin):
     """Payment method model admin."""
 
-    class Meta:
-        model = PaymentMethod
+    model = PaymentMethod
 
     readonly_fields = (
         "created_at",
@@ -159,14 +157,14 @@ class PaymentMethodModelAdmin(SmarterStaffOnlyModelAdmin):
     list_display = ("name", "created_at", "updated_at")
 
     def get_queryset(self, request: HttpRequest):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(request.user)  # type: ignore
-            return qs.filter(account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="account",
+            user_profile_filter=None,
+        )
 
 
 class SecretAdminForm(forms.ModelForm):
@@ -178,18 +176,47 @@ class SecretAdminForm(forms.ModelForm):
         help_text="Put your secret here...",
     )
 
-    class Meta:
-        model = Secret
-        fields = ("name", "user_profile", "description", "expires_at", "value")
+    model = Secret
+    list_display = ["name", "user_profile", "description", "expires_at", "value"]
+    logger_prefix = formatted_text(f"{__name__}.SecretAdminForm()")
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)  # Expecting the user to be passed in via kwargs
+        logger.debug("%s Initializing SecretAdminForm with args: %s and kwargs: %s", self.logger_prefix, args, kwargs)
         super().__init__(*args, **kwargs)
+        if not self.user or not isinstance(self.user, User) or not self.user.is_authenticated:
+            logger.error(
+                "%s SecretAdminForm initialized without an authenticated user. All fields will be read-only.",
+                self.logger_prefix,
+            )
+            for field in self.fields.values():
+                field.disabled = True
+            return
+
+        def has_permission():
+            return False
+
         if self.instance and self.instance.pk:
+            logger.debug("%s Initializing SecretAdminForm for existing Secret: %s", self.logger_prefix, self.instance)
             try:
-                instance: Secret = self.instance
-                self.fields["value"].initial = instance.get_secret(update_last_accessed=False)
+                if has_permission():
+                    instance: Secret = self.instance
+                    self.fields["value"].initial = instance.get_secret(update_last_accessed=False)
+                else:
+                    logger.debug(
+                        "%s User %s does not have permission to view the Secret value. Setting 'value' field to '********'.",
+                        self.logger_prefix,
+                        self.user,
+                    )
+                    self.fields["value"].initial = "********"
             # pylint: disable=broad-except
-            except Exception:
+            except Exception as e:
+                logger.exception(
+                    "%s Failed to initialize 'value' field for Secret with id %s. Got the following error: %s",
+                    self.logger_prefix,
+                    self.instance.pk,
+                    e,
+                )
                 self.fields["value"].initial = None
 
     def clean(self):
@@ -199,12 +226,6 @@ class SecretAdminForm(forms.ModelForm):
             raise forms.ValidationError("The 'value' field is required.")
         return cleaned_data
 
-    def get_initial_for_field(self, field, field_name):
-        if field_name == "value":
-            instance: Secret = self.instance
-            return instance.get_secret(update_last_accessed=False) if self.instance and self.instance.pk else ""
-        return super().get_initial_for_field(field, field_name)
-
     def clean_value(self):
         value = self.cleaned_data.get("value")
         if value and not isinstance(value, str):
@@ -212,28 +233,76 @@ class SecretAdminForm(forms.ModelForm):
         return value
 
 
-# @admin.register(Secret)
-class SecretAdmin(SmarterStaffOnlyModelAdmin):
-    """Secret model admin."""
+from smarter.common.mixins import SmarterHelperMixin
 
-    class Meta:
-        model = Secret
+
+# @admin.register(Secret)
+class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
+    """
+    Secret model admin. This is a primary Smarter resource, that descends
+    directly from MetaDataWithOwnershipModel. Visibility of Secrets is
+    determined by ownership and role.
+    """
+
+    model = Secret
 
     form = SecretAdminForm
     readonly_fields = (
         "created_at",
         "updated_at",
         "last_accessed",
-        "encrypted_value",
+        "display_value",
     )
     fields = (
         "name",
         "user_profile",
         "description",
         "expires_at",
-        "value",
+        "display_value",
     )
     list_display = ("user_profile", "name", "description", "created_at", "updated_at", "last_accessed", "expires_at")
+
+    def display_value(self, obj):
+        """
+        Display the secret value as '********' for users who do not have
+        permission to view it.
+        """
+
+        def has_permission() -> bool:
+            if (
+                isinstance(obj, Secret)
+                and isinstance(user, User)
+                and user.is_authenticated
+                and (user.is_superuser or (isinstance(user_profile, UserProfile) and user_profile.user == user))
+            ):
+                return True
+            return False
+
+        request = getattr(self, "request", None)
+        user = getattr(request, "user", None) if request else None
+        user_profile = get_cached_user_profile(user) if user else None
+        if isinstance(obj, Secret):
+            retval = obj.get_secret(update_last_accessed=False)
+        else:
+            retval = "********"
+        if has_permission():
+            return retval
+        return self.mask_string(retval)
+
+    display_value.short_description = "Value"
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        # Get the base form class
+        form = super().get_form(request, obj, change=change, **kwargs)
+
+        # Create a dynamic subclass to inject the request/user at initialization
+        class CustomForm(form):
+            def __init__(self, *args, **kwargs):
+                # Inject custom kwargs here
+                kwargs["user"] = request.user
+                super().__init__(*args, **kwargs)
+
+        return CustomForm
 
     def save_model(self, request: HttpRequest, obj: Secret, form: SecretAdminForm, change):
         value = form.cleaned_data.get("value")
@@ -242,14 +311,12 @@ class SecretAdmin(SmarterStaffOnlyModelAdmin):
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request: HttpRequest):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(request.user)  # type: ignore
-            return qs.filter(account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+        )
 
 
 class CustomPasswordWidget(forms.Widget):
@@ -350,19 +417,17 @@ class RestrictedUserAdmin(UserAdmin):
         """
         qs = super().get_queryset(request)
         user = get_resolved_user(request.user)
+        if not smarter_is_staff(request):
+            return qs.none()
         if not user:
             return qs.none()
         if user and user.is_superuser:
             return qs
-        if user and user.is_staff:
-            try:
-                user_profile = get_cached_user_profile(user)  # type: ignore
-                return qs.filter(
-                    id__in=UserProfile.objects.filter(account=user_profile.account).values_list("user_id", flat=True)
-                )
-            except UserProfile.DoesNotExist as e:
-                logger.error("UserProfile does not exist for user %s, %s", user.username, e)
-                return qs.none()
+        if user.is_staff:
+            user_profile = get_cached_user_profile(user)  # type: ignore
+            return qs.filter(
+                id__in=UserProfile.objects.filter(account=user_profile.account).values_list("user_id", flat=True)
+            )
         # For non-staff users, return an empty queryset to prevent access to any user records.
         return qs.none()
 
@@ -386,8 +451,7 @@ class RestrictedUserProfileAdmin(SmarterSuperUserOnlyModelAdmin):
     - Anyone else cannot see or edit any user_profiles.
     """
 
-    class Meta:
-        model = UserProfile
+    model = UserProfile
 
     list_display = ("user", "account", "created_at", "updated_at")
 
