@@ -17,8 +17,8 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.dashboard.admin import (
     SmarterStaffOnlyModelAdmin,
     SmarterSuperUserOnlyModelAdmin,
+    smarter_is_staff,
     smarter_restricted_admin_site,
-    smarter_staff_only_module_permission,
 )
 
 from .models import (
@@ -333,7 +333,7 @@ class RestrictedUserAdmin(UserAdmin):
         return False
 
     def has_module_permission(self, request: HttpRequest) -> bool:
-        return smarter_staff_only_module_permission(request)
+        return smarter_is_staff(request)
 
     def profile_account(self, obj) -> Optional[Account]:
         """Custom method to display the account associated with the user's profile."""

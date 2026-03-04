@@ -5,6 +5,7 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_user_profile, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
+    smarter_filter_queryset_for_user,
     smarter_restricted_admin_site,
 )
 
@@ -46,15 +47,10 @@ class ChatBotAdmin(SmarterCustomerModelAdmin):
         return obj.mode(obj.url)
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user = get_resolved_user(request.user)  # type: ignore
-            user_profile = get_cached_user_profile(user=user)  # type: ignore
-            return qs.filter(user_profile__account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+
+        return smarter_filter_queryset_for_user(user=user, qs=qs)
 
 
 class ChatBotRequestsAdmin(SmarterCustomerModelAdmin):
@@ -69,14 +65,15 @@ class ChatBotRequestsAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in ChatBotRequests._meta.fields]
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(chatbot__account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="chatbot__user_profile__account",
+            user_profile_filter="chatbot__user_profile",
+        )
 
 
 class ChatBotCustomDomainAdmin(SmarterCustomerModelAdmin):
@@ -89,14 +86,12 @@ class ChatBotCustomDomainAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in ChatBotCustomDomain._meta.fields]
 
     def get_queryset(self, request):
+        """
+        anyone can see the custom domains since they're controlled at the
+        platform level and don't contain sensitive information.
+        """
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(user_profile__account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return qs
 
 
 class ChatBotCustomDomainDNSAdmin(SmarterCustomerModelAdmin):
@@ -109,14 +104,12 @@ class ChatBotCustomDomainDNSAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in ChatBotCustomDomainDNS._meta.fields]
 
     def get_queryset(self, request):
+        """
+        anyone can see the custom domains since they're controlled at the
+        platform level and don't contain sensitive information.
+        """
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(custom_domain__account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return qs
 
 
 class ChatBotAPIKeyAdmin(SmarterCustomerModelAdmin):
@@ -129,14 +122,12 @@ class ChatBotAPIKeyAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in ChatBotAPIKey._meta.fields]
 
     def get_queryset(self, request):
+        """
+        anyone can see the custom domains since they're controlled at the
+        platform level and don't contain sensitive information.
+        """
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(chatbot__user_profile__account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return qs
 
 
 class ChatBotPluginAdmin(SmarterCustomerModelAdmin):
@@ -146,16 +137,18 @@ class ChatBotPluginAdmin(SmarterCustomerModelAdmin):
         "created_at",
         "updated_at",
     )
+    list_display = [field.name for field in ChatBotPlugin._meta.fields]
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(chatbot__user_profile__account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="chatbot__user_profile__account",
+            user_profile_filter="chatbot__user_profile",
+        )
 
 
 class ChatBotFunctionsAdmin(SmarterCustomerModelAdmin):
@@ -168,14 +161,15 @@ class ChatBotFunctionsAdmin(SmarterCustomerModelAdmin):
     list_display = [field.name for field in ChatBotFunctions._meta.fields]
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
-            return qs.filter(chatbot__user_profile__account=user_profile.account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+
+        return smarter_filter_queryset_for_user(
+            user=user,
+            qs=qs,
+            account_filter="chatbot__user_profile__account",
+            user_profile_filter="chatbot__user_profile",
+        )
 
 
 # ChatBot
