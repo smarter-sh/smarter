@@ -2,6 +2,7 @@
 """Rebuild the admin site to restrict access to certain apps and models."""
 
 import logging
+from typing import Optional
 
 from django.contrib import admin
 from django.contrib.auth.models import AnonymousUser
@@ -26,7 +27,7 @@ def smarter_filter_queryset_for_user(
     user: ResolvedUserType,
     qs: QuerySet,
     account_filter: str = "user_profile__account",
-    user_profile_filter: str = "user_profile",
+    user_profile_filter: Optional[str] = "user_profile",
 ) -> QuerySet:
     """
     Helper method to filter a queryset based on the user's role and ownership
@@ -70,19 +71,27 @@ def smarter_filter_queryset_for_user(
     logger.debug("%s: User %s is customer, filtering queryset for owned and shared objects", logger_prefix, user)
     admin_user = get_cached_admin_user_for_account(user_profile.account)  # type: ignore
     admin_profile = get_cached_user_profile(user=admin_user)  # type: ignore
-    try:
-        qs_owned = qs.filter(**{user_profile_filter: user_profile})
-        logger.debug("%s: User %s owns %d objects in the queryset", logger_prefix, user, qs_owned.count())
-    except FieldError as e:
-        logger.error("Error filtering queryset for owned objects for user %s: %s", user, e)
-        qs_owned = qs.none()
+    if user_profile_filter:
+        try:
+            qs_owned = qs.filter(**{user_profile_filter: user_profile})
+            logger.debug("%s: User %s owns %d objects in the queryset", logger_prefix, user, qs_owned.count())
+        except FieldError as e:
+            logger.error("Error filtering queryset for owned objects for user %s: %s", user, e)
+            qs_owned = qs.none()
 
-    try:
-        qs_shared = qs.filter(**{user_profile_filter: admin_profile})
-        logger.debug("%s: User %s has %d shared objects in the queryset", logger_prefix, user, qs_shared.count())
-    except FieldError as e:
-        logger.error("Error filtering queryset for shared objects for user %s: %s", user, e)
-        qs_shared = qs.none()
+        try:
+            qs_shared = qs.filter(**{user_profile_filter: admin_profile})
+            logger.debug("%s: User %s has %d shared objects in the queryset", logger_prefix, user, qs_shared.count())
+        except FieldError as e:
+            logger.error("Error filtering queryset for shared objects for user %s: %s", user, e)
+            qs_shared = qs.none()
+    else:
+        logger.debug(
+            "%s: No user_profile_filter provided, filtering queryset based on account affiliation for user %s",
+            logger_prefix,
+            user,
+        )
+        return qs.filter(**{account_filter: user_profile.account})
 
     logger.debug(
         "%s: Returning combined queryset with %d owned and %d shared objects for user %s",

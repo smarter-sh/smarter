@@ -3,8 +3,7 @@
 
 from django.contrib import admin
 
-from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.account.utils import get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,
@@ -19,50 +18,54 @@ from .models import (
 
 
 class ProviderModelVerificationAdmin(admin.StackedInline):
-    """provider model verification admin."""
+    """
+    provider model verification admin.
+    """
+
+    model = ProviderModelVerification
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
     list_display = ["created_at", "provider_model", "verification_type", "is_successful", "is_valid"]
-    model = ProviderModelVerification
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
+        if user.is_authenticated:
             return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)  # type: ignore
-            return qs.filter(chat__user_profile__account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return qs.none()
 
 
 class ProviderVerificationAdmin(admin.StackedInline):
     """provider verification admin."""
+
+    model = ProviderVerification
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
     list_display = ["created_at", "provider", "verification_type", "is_successful", "is_valid"]
-    model = ProviderVerification
 
     def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
+
+        if user.is_authenticated:
             return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)  # type: ignore
-            return qs.filter(provider__user_profile__account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return qs.none()
 
 
 class ProviderAdmin(SmarterCustomerModelAdmin):
-    """Provider admin."""
+    """
+    Provider admin. This is a primary Smarter resource, that descends directly from
+    MetaDataWithOwnershipModel. Visibility of Providers is granted to any
+    authenticated user.
+    """
 
+    model = Provider
     inlines = [ProviderVerificationAdmin]
 
     readonly_fields = (
@@ -71,22 +74,26 @@ class ProviderAdmin(SmarterCustomerModelAdmin):
     )
 
     list_display = ["created_at", "user_profile", "name", "status", "is_active"]
-    model = Provider
 
     def get_queryset(self, request):
+        """
+        Visibility is granted to authenticated users.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
+        if user.is_authenticated:
             return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)  # type: ignore
-            return qs.filter(user_profile__account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
+        return qs.none()
 
 
 class ProviderModelAdmin(SmarterCustomerModelAdmin):
-    """Provider model admin."""
+    """
+    ProviderModel admin. This descends from Provider, so visibility
+    is determined by the parent Provider. Provider visibility is granted to any
+    authenticated user.
+    """
 
+    model = ProviderModel
     inlines = [ProviderModelVerificationAdmin]
 
     readonly_fields = (
@@ -94,11 +101,16 @@ class ProviderModelAdmin(SmarterCustomerModelAdmin):
         "updated_at",
     )
     list_display = ["provider", "name", "created_at", "is_active"]
-    model = ProviderModel
 
     def get_queryset(self, request):
+        """
+        Visibility is granted to authenticated users.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return qs
+        if user.is_authenticated:
+            return qs
+        return qs.none()
 
 
 # Provider Models
