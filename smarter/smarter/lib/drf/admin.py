@@ -1,7 +1,7 @@
 """SmarterAuthToken admin."""
 
 from smarter.apps.dashboard.admin import (
-    RestrictedModelAdmin,
+    SmarterStaffOnlyModelAdmin,
     smarter_restricted_admin_site,
 )
 
@@ -9,7 +9,7 @@ from .models import SmarterAuthToken
 
 
 # Register your models here.
-class SmarterAuthTokenAdmin(RestrictedModelAdmin):
+class SmarterAuthTokenAdmin(SmarterStaffOnlyModelAdmin):
     """SmarterAuthToken model admin."""
 
     # pylint: disable=C0115

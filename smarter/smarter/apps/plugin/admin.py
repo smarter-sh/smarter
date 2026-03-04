@@ -8,7 +8,7 @@ from django.contrib import admin
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.dashboard.admin import (
-    RestrictedModelAdmin,
+    SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,
 )
 
@@ -93,7 +93,7 @@ class PluginDataSqlInline(admin.StackedInline):
         return [f.name for f in self.model._meta.fields]
 
 
-class PluginStaticAdmin(RestrictedModelAdmin):
+class PluginStaticAdmin(SmarterCustomerModelAdmin):
     """Plugin model admin."""
 
     model = PluginMeta
@@ -122,7 +122,7 @@ class PluginStaticAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class PluginApiAdmin(RestrictedModelAdmin):
+class PluginApiAdmin(SmarterCustomerModelAdmin):
     """Plugin model admin."""
 
     model = PluginMeta
@@ -151,7 +151,7 @@ class PluginApiAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class PluginSqlAdmin(RestrictedModelAdmin):
+class PluginSqlAdmin(SmarterCustomerModelAdmin):
     """Plugin model admin."""
 
     model = PluginMeta
@@ -180,7 +180,7 @@ class PluginSqlAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
+class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
     """
     Plugin Selection History model admin.
     """
@@ -213,7 +213,7 @@ class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class SqlConnectionAdmin(RestrictedModelAdmin):
+class SqlConnectionAdmin(SmarterCustomerModelAdmin):
     """PluginDataSql Connection model admin."""
 
     model = SqlConnection
@@ -245,7 +245,7 @@ class SqlConnectionAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class ApiConnectionAdmin(RestrictedModelAdmin):
+class ApiConnectionAdmin(SmarterCustomerModelAdmin):
     """PluginDataApi Connection model admin."""
 
     model = ApiConnection

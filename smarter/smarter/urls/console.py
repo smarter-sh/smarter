@@ -27,7 +27,7 @@ from smarter.apps.account.views.password_management import (
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.dashboard.admin import (
-    SuperUserOnlyModelAdmin,
+    SmarterSuperUserOnlyModelAdmin,
     smarter_restricted_admin_site,
 )
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
@@ -81,6 +81,21 @@ superuser-only models to exclude from registration with
 smarter_restricted_admin_site, which is accessible to staff users.
 """
 
+SMARTER_APP_LABELS = [
+    "account",
+    "api",
+    "chatbot",
+    "plugin",
+    "prompt",
+    "provider",
+]
+"""
+app labels that are independently registered at the app level
+using the admin module. These are granuarly registered with the
+appropriate permission configuration at the app level, so we can skip them here
+when we loop through all models for registration with smarter_restricted_admin_site.
+"""
+
 # -----------------------------------------------------------------------------
 # Register all ORM models with the custom Django admin site. Where necessaary,
 # we limit access to superusers only.
@@ -88,12 +103,23 @@ smarter_restricted_admin_site, which is accessible to staff users.
 models = apps.get_models()
 for model in models:
     # pylint: disable=protected-access
-    model_label = f"{model._meta.app_label}.{model._meta.object_name}"
+    app_label = model._meta.app_label
+    model_label = f"{app_label}.{model._meta.object_name}"
+
+    # Smarter apps that are registered in their respective
+    # admin modules.
+    if app_label in SMARTER_APP_LABELS:
+        continue
+
+    # any other apps that require special handling (see above).
     if model_label in EXCLUDED_MODELS:
         continue
 
     try:
-        smarter_restricted_admin_site.register(model, SuperUserOnlyModelAdmin)
+        # for anything that didn't pass muster, we register with
+        # our own "superuser only" model configuration that will
+        # limit visibility of the model to superusers only.
+        smarter_restricted_admin_site.register(model, SmarterSuperUserOnlyModelAdmin)
     except AlreadyRegistered:
         pass
 

@@ -8,15 +8,17 @@ from django import forms
 from django.contrib.auth.admin import UserAdmin
 
 # from django.contrib import admin
-from django.core.handlers.wsgi import WSGIRequest
+from django.http.request import HttpRequest
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.dashboard.admin import (
-    RestrictedModelAdmin,
+    SmarterStaffOnlyModelAdmin,
+    SmarterSuperUserOnlyModelAdmin,
     smarter_restricted_admin_site,
+    smarter_staff_only_module_permission,
 )
 
 from .models import (
@@ -33,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 # @admin.register(Account)
-class AccountAdmin(RestrictedModelAdmin):
+class AccountAdmin(SmarterStaffOnlyModelAdmin):
     """Account model admin."""
 
     class Meta:
@@ -45,19 +47,20 @@ class AccountAdmin(RestrictedModelAdmin):
     )
     list_display = ("company_name", "account_number", "created_at", "updated_at")
 
-    def get_queryset(self, request: WSGIRequest):
+    def get_queryset(self, request: HttpRequest):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(request.user)
+            user_profile = get_cached_user_profile(request.user)  # type: ignore
             return qs.filter(id=user_profile.account.id)
         except UserProfile.DoesNotExist:
+            logger.error("UserProfile does not exist for user %s", request.user.username)
             return qs.none()
 
 
 # @admin.register(AccountContact)
-class AccountContactAdmin(RestrictedModelAdmin):
+class AccountContactAdmin(SmarterStaffOnlyModelAdmin):
     """AccountContact model admin."""
 
     class Meta:
@@ -69,19 +72,20 @@ class AccountContactAdmin(RestrictedModelAdmin):
     )
     list_display = ("account", "first_name", "last_name", "email", "phone", "is_primary")
 
-    def get_queryset(self, request: WSGIRequest):
+    def get_queryset(self, request: HttpRequest):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(request.user)
+            user_profile = get_cached_user_profile(request.user)  # type: ignore
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
+            logger.error("UserProfile does not exist for user %s", request.user.username)
             return qs.none()
 
 
 # @admin.register(Charge)
-class ChargeAdmin(RestrictedModelAdmin):
+class ChargeAdmin(SmarterStaffOnlyModelAdmin):
     """Charge model admin."""
 
     class Meta:
@@ -105,17 +109,20 @@ class ChargeAdmin(RestrictedModelAdmin):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
+        if request.user.is_staff:
+            user_profile = get_cached_user_profile(request.user)  # type: ignore
+            return qs.filter(account=user_profile.account)
         return qs.none()
 
 
 # @admin.register(DailyBillingRecord)
-class DailyBillingRecordAdmin(RestrictedModelAdmin):
+class DailyBillingRecordAdmin(SmarterStaffOnlyModelAdmin):
     """DailyBillingRecord model admin."""
 
     class Meta:
         model = DailyBillingRecord
 
-    def get_readonly_fields(self, request: WSGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         return [field.name for field in self.model._meta.fields]
 
     list_display = (
@@ -128,15 +135,18 @@ class DailyBillingRecordAdmin(RestrictedModelAdmin):
         "total_tokens",
     )
 
-    def get_queryset(self, request: WSGIRequest):
+    def get_queryset(self, request: HttpRequest):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
+        if request.user.is_staff:
+            user_profile = get_cached_user_profile(request.user)  # type: ignore
+            return qs.filter(account=user_profile.account)
         return qs.none()
 
 
 # @admin.register(PaymentMethod)
-class PaymentMethodModelAdmin(RestrictedModelAdmin):
+class PaymentMethodModelAdmin(SmarterStaffOnlyModelAdmin):
     """Payment method model admin."""
 
     class Meta:
@@ -148,12 +158,12 @@ class PaymentMethodModelAdmin(RestrictedModelAdmin):
     )
     list_display = ("name", "created_at", "updated_at")
 
-    def get_queryset(self, request: WSGIRequest):
+    def get_queryset(self, request: HttpRequest):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(request.user)
+            user_profile = get_cached_user_profile(request.user)  # type: ignore
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -185,7 +195,7 @@ class SecretAdminForm(forms.ModelForm):
     def clean(self):
         """Ensure the transient 'value' field is included in cleaned_data."""
         cleaned_data = super().clean()
-        if "value" not in cleaned_data:
+        if not cleaned_data or "value" not in cleaned_data:
             raise forms.ValidationError("The 'value' field is required.")
         return cleaned_data
 
@@ -203,7 +213,7 @@ class SecretAdminForm(forms.ModelForm):
 
 
 # @admin.register(Secret)
-class SecretAdmin(RestrictedModelAdmin):
+class SecretAdmin(SmarterStaffOnlyModelAdmin):
     """Secret model admin."""
 
     class Meta:
@@ -225,18 +235,18 @@ class SecretAdmin(RestrictedModelAdmin):
     )
     list_display = ("user_profile", "name", "description", "created_at", "updated_at", "last_accessed", "expires_at")
 
-    def save_model(self, request: WSGIRequest, obj: Secret, form: SecretAdminForm, change):
+    def save_model(self, request: HttpRequest, obj: Secret, form: SecretAdminForm, change):
         value = form.cleaned_data.get("value")
         if value:
             obj.encrypted_value = Secret.encrypt(value=value)
         super().save_model(request, obj, form, change)
 
-    def get_queryset(self, request: WSGIRequest):
+    def get_queryset(self, request: HttpRequest):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(request.user)
+            user_profile = get_cached_user_profile(request.user)  # type: ignore
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -246,7 +256,12 @@ class CustomPasswordWidget(forms.Widget):
     """Custom widget for the password field in the UserChangeForm."""
 
     def render(self, name, value, attrs=None, renderer=None):
-        return mark_safe('<a href="password/" style="color: blue;">CHANGE PASSWORD</a>')  # nosec
+        """
+        use a placeholder and let the admin render the anchor correctly
+        This works because the admin will replace __pk__ with the actual user id
+        """
+        url = "../password/"  # relative to the change page, works in Django admin
+        return mark_safe(f'<a href="{url}" style="color: blue;">CHANGE PASSWORD</a>')  # nosec
 
 
 class UserChangeForm(forms.ModelForm):
@@ -260,7 +275,13 @@ class UserChangeForm(forms.ModelForm):
 
 
 class RestrictedUserAdmin(UserAdmin):
-    """Custom User admin that restricts access to users based on their account."""
+    """
+    Custom User admin that restricts access to users based on their account.
+
+    - Superusers can see and edit all users
+    - Staff users can see and edit users within their own account.
+    - Non-staff users cannot see or edit any users.
+    """
 
     list_display = (
         "profile_account",
@@ -277,7 +298,42 @@ class RestrictedUserAdmin(UserAdmin):
     form = UserChangeForm
 
     def has_add_permission(self, request) -> bool:
+        """
+        force all adds to the manage.py command, because
+        this adds UserProfile and sends the welcome email.
+        """
         return False
+
+    def has_delete_permission(self, request, obj=None) -> bool:
+        """
+        Prevent deletion for non-superusers.
+        """
+        if request.user.is_superuser:
+            return True
+        return False
+
+    def has_change_permission(self, request, obj=None) -> bool:
+        """
+        Allow change permissions for superusers and to
+        staff users if they are changing a user within their own account.
+        """
+        if request.user.is_superuser:
+            return True
+        if request.user.is_staff:
+            try:
+                if not obj:
+                    return False
+                user_profile = get_cached_user_profile(request.user)  # type: ignore
+                obj_user_profile = get_cached_user_profile(obj)  # type: ignore
+                if user_profile.account == obj_user_profile.account:
+                    return True
+                return False
+            except UserProfile.DoesNotExist:
+                return False
+        return False
+
+    def has_module_permission(self, request: HttpRequest) -> bool:
+        return smarter_staff_only_module_permission(request)
 
     def profile_account(self, obj) -> Optional[Account]:
         """Custom method to display the account associated with the user's profile."""
@@ -322,12 +378,33 @@ class RestrictedUserAdmin(UserAdmin):
         return [field.name for field in self.model._meta.fields]
 
 
+class RestrictedUserProfileAdmin(SmarterSuperUserOnlyModelAdmin):
+    """
+    Custom UserProfile admin that restricts access to users based on their account.
+
+    - Superusers can see and edit all user_profiles
+    - Anyone else cannot see or edit any user_profiles.
+    """
+
+    class Meta:
+        model = UserProfile
+
+    list_display = ("user", "account", "created_at", "updated_at")
+
+    # this probably is not necessary since the module
+    # permission is limited to superusers.
+    def get_queryset(self, request: HttpRequest):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.none()
+
+
 smarter_restricted_admin_site.register(Account, AccountAdmin)
 smarter_restricted_admin_site.register(AccountContact, AccountContactAdmin)
 smarter_restricted_admin_site.register(Charge, ChargeAdmin)
 smarter_restricted_admin_site.register(DailyBillingRecord, DailyBillingRecordAdmin)
 smarter_restricted_admin_site.register(PaymentMethod, PaymentMethodModelAdmin)
 smarter_restricted_admin_site.register(Secret, SecretAdmin)
-
-smarter_restricted_admin_site.register(UserProfile, RestrictedModelAdmin)
+smarter_restricted_admin_site.register(UserProfile, RestrictedUserProfileAdmin)
 smarter_restricted_admin_site.register(User, RestrictedUserAdmin)
