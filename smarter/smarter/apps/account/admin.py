@@ -23,6 +23,7 @@ from smarter.apps.dashboard.admin import (
     smarter_restricted_admin_site,
 )
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins import SmarterHelperMixin
 
 from .models import (
     Account,
@@ -233,9 +234,6 @@ class SecretAdminForm(forms.ModelForm):
         return value
 
 
-from smarter.common.mixins import SmarterHelperMixin
-
-
 # @admin.register(Secret)
 class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
     """
@@ -243,6 +241,11 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
     directly from MetaDataWithOwnershipModel. Visibility of Secrets is
     determined by ownership and role.
     """
+
+    logger_prefix = formatted_text(f"{__name__}.SecretAdmin()")
+    request: HttpRequest
+    user: User
+    user_profile: UserProfile
 
     model = Secret
 
@@ -262,31 +265,110 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
     )
     list_display = ("user_profile", "name", "description", "created_at", "updated_at", "last_accessed", "expires_at")
 
-    def display_value(self, obj):
+    def changelist_view(self, request, extra_context=None):
+        self.request = request
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        self.request = request
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
+
+    def display_value(self, obj: Secret):
         """
         Display the secret value as '********' for users who do not have
         permission to view it.
         """
 
         def has_permission() -> bool:
-            if (
-                isinstance(obj, Secret)
-                and isinstance(user, User)
-                and user.is_authenticated
-                and (user.is_superuser or (isinstance(user_profile, UserProfile) and user_profile.user == user))
-            ):
+            """
+            Determine if the current user has permission to view the Secret value.
+             - Superusers can view all secrets.
+             - The owner of the secret can view it.
+             - All other users cannot view the secret value.
+            """
+            logger.debug(
+                "%s.has_permission() Checking permissions for user %s to view Secret %s",
+                self.logger_prefix,
+                self.user,
+                str(obj),
+            )
+            if not isinstance(obj, Secret):
+                logger.error(
+                    "%s.has_permission() called with an object that is not a Secret instance: %s",
+                    self.logger_prefix,
+                    obj,
+                )
+                return False
+            if not self.user.is_authenticated:
+                logger.debug(
+                    "%s.has_permission() User %s is not authenticated and does not have permission to view the Secret value.",
+                    self.logger_prefix,
+                    self.user,
+                )
+                return False
+            obj_user_profile: UserProfile = obj.user_profile
+            if self.user.is_superuser:
+                logger.debug(
+                    "%s.has_permission() User %s is a superuser and has permission to view the Secret value.",
+                    self.logger_prefix,
+                    self.user,
+                )
                 return True
+            if obj_user_profile.user == self.user:
+                logger.debug(
+                    "%s.has_permission() User %s is the owner of the Secret and has permission to view the Secret value.",
+                    self.logger_prefix,
+                    self.user,
+                )
+                return True
+            logger.debug(
+                "%s.has_permission() User %s does not have permission to view the Secret value.",
+                self.logger_prefix,
+                self.user,
+            )
             return False
 
-        request = getattr(self, "request", None)
-        user = getattr(request, "user", None) if request else None
-        user_profile = get_cached_user_profile(user) if user else None
-        if isinstance(obj, Secret):
-            retval = obj.get_secret(update_last_accessed=False)
-        else:
-            retval = "********"
+        logger.debug("%s.display_value() called for Secret: %s", self.logger_prefix, str(obj))
+        if not isinstance(obj, Secret):
+            logger.error(
+                "%s.display_value() called with an object that is not a Secret instance: %s",
+                self.logger_prefix,
+                obj,
+            )
+            return "********"
+
+        if not hasattr(self.request, "user"):
+            logger.error(
+                "%s.display_value() called without a request user. Cannot determine permissions to display Secret value.",
+                self.logger_prefix,
+            )
+            return "********"
+
+        self.user = self.request.user
+        self.user_profile = get_cached_user_profile(self.user)  # type: ignore
+        retval = obj.get_secret(update_last_accessed=False)
+        logger.debug(
+            "%s.display_value() Retrieved secret value for Secret %s. Checking permissions for user %s. Actual value: %s",
+            self.logger_prefix,
+            str(obj),
+            self.user,
+            self.mask_string(retval),
+        )
+
         if has_permission():
+            logger.debug(
+                "%s.display_value() User %s has permission to view the Secret value. Displaying actual value.",
+                self.logger_prefix,
+                self.user,
+            )
             return retval
+
+        logger.debug(
+            "%s.display_value() User %s does not have permission to view the Secret value. Displaying masked value.",
+            self.logger_prefix,
+            self.user,
+        )
+
         return self.mask_string(retval)
 
     display_value.short_description = "Value"
