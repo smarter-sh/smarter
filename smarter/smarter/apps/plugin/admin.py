@@ -1,6 +1,7 @@
 # pylint: disable=C0114,C0115
 """Plugin admin."""
 
+import logging
 import re
 
 from django.contrib import admin
@@ -12,6 +13,9 @@ from smarter.apps.dashboard.admin import (
     smarter_restricted_admin_site,
 )
 
+from .manifest.enum import (
+    SAMPluginCommonMetadataClassValues,
+)
 from .models import (
     ApiConnection,
     PluginDataApi,
@@ -23,6 +27,8 @@ from .models import (
     PluginSelectorHistory,
     SqlConnection,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # Register your models here.
@@ -121,7 +127,10 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(user=user, qs=qs)
+        qs = smarter_filter_queryset_for_user(user=user, qs=qs)
+        if qs.count() > 0:
+            qs = qs.filter(plugin_class=SAMPluginCommonMetadataClassValues.STATIC.value)
+        return qs
 
 
 class PluginApiAdmin(SmarterCustomerModelAdmin):
@@ -152,7 +161,10 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(user=user, qs=qs)
+        qs = smarter_filter_queryset_for_user(user=user, qs=qs)
+        if qs.count() > 0:
+            qs = qs.filter(plugin_class=SAMPluginCommonMetadataClassValues.API.value)
+        return qs
 
 
 class PluginSqlAdmin(SmarterCustomerModelAdmin):
@@ -183,7 +195,10 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(user=user, qs=qs)
+        qs = smarter_filter_queryset_for_user(user=user, qs=qs)
+        if qs.count() > 0:
+            qs = qs.filter(plugin_class=SAMPluginCommonMetadataClassValues.SQL.value)
+        return qs
 
 
 class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
