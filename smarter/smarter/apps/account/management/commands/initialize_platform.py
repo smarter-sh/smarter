@@ -3,12 +3,7 @@
 from django.core.management import call_command
 
 from smarter.common.conf import smarter_settings
-from smarter.common.const import (
-    SMARTER_ACCOUNT_NUMBER,
-    SMARTER_BETA_ACCOUNT_NUMBER,
-    SMARTER_UBC_ACCOUNT_NUMBER,
-    SmarterEnvironments,
-)
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.lib.django.management.base import SmarterCommand
 
 
@@ -75,40 +70,6 @@ class Command(SmarterCommand):
         # create Smarter Account and admin User.
         # ---------------------------------------------------------------------
         call_command("create_smarter_admin", username=username, password=password, email=email)
-
-        # Initialize Smarter platform components.
-        # ---------------------------------------------------------------------
-        call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
-        call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
-        call_command(
-            "verify_dns_configuration"
-        )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records
-
-        # Initialize Accounts. Creates a collection of example AI resources
-        # for the Account.
-        # ---------------------------------------------------------------------
-        call_command(
-            "initialize_account",
-            account_number=SMARTER_ACCOUNT_NUMBER,
-            username="admin",
-            company_name="The Smarter Project",
-        )
-        # if smarter_settings.configure_beta_account:
-        #     call_command(
-        #         "initialize_account",
-        #         account_number=SMARTER_BETA_ACCOUNT_NUMBER,
-        #         username="admin_beta",
-        #         company_name="Smarter Beta Users",
-        #     )
-        if smarter_settings.configure_ubc_account:
-            call_command(
-                "initialize_account",
-                account_number=SMARTER_UBC_ACCOUNT_NUMBER,
-                username="admin_ubc",
-                company_name="University of British Columbia",
-            )
-
-        # Create a Smarter staff and customer user for testing purposes.
         call_command(
             "create_user",
             account_number=SMARTER_ACCOUNT_NUMBER,
@@ -128,5 +89,13 @@ class Command(SmarterCommand):
             first_name="Customer",
             last_name="User",
         )
+
+        # Initialize Smarter platform components.
+        # ---------------------------------------------------------------------
+        call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
+        call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
+        call_command(
+            "verify_dns_configuration"
+        )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records
 
         self.handle_completed_success()
