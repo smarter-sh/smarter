@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+spec:
+  schedule: "0 2 * * *" # Every day at 2am UTC
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mysql-backup
+            image: ubuntu:latest
+            command:
+              - /bin/bash
+              - -c
+              - |
+                set -e
+                apt-get update && \
+                DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-client awscli && \
+                chmod +x /backup/backup-to-s3.sh && \
+                /backup/backup-to-s3.sh
+            env:
+{{- range $key, $value := .Values.env }}
+              - name: {{ $key }}
+                value: {{ $value | quote }}
+{{- end }}
+            volumeMounts:
+              - name: backup-script
+                mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+            - name: backup-script
+              configMap:
+                name: mysql-backup-script

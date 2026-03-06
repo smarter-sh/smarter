@@ -98,6 +98,7 @@ env:
   SMARTER_PLUGIN_MAX_DATA_RESULTS: "50"
   SMARTER_REACTJS_APP_LOADER_PATH: "/ui-chat/app-loader.js"
   SMARTER_ROOT_DOMAIN: "example.com"
+  SMARTER_S3_BUCKET: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS: "^/dashboard/account/password-reset-link/[^/]+/[^/]+/$,^/api(/.*)?$,^/admin(/.*)?$,^/plugin(/.*)?$,^/docs/manifest(/.*)?$,^/docs/json-schema(/.*)?$,.*stackademy.*,^/\\.well-known/acme-challenge(/.*)?$"
   SMARTER_SETTINGS_OUTPUT: "true"
   SMARTER_SMTP_FROM_EMAIL: "SET-ME-IN-helm/charts/smarter/values.yaml"
