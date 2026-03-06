@@ -8,7 +8,6 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_ACCOUNT_NUMBER,
     SMARTER_ADMIN_USERNAME,
-    SMARTER_COMPANY_NAME,
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
     SMARTER_CUSTOMER_SUPPORT_PHONE,
 )
@@ -37,17 +36,17 @@ class Command(SmarterCommand):
         account, created = Account.objects.get_or_create(
             account_number=SMARTER_ACCOUNT_NUMBER,
         )
-        account.company_name = SMARTER_COMPANY_NAME
+        account.company_name = smarter_settings.branding_corporate_name
         account.is_default_account = True
-        account.phone_number = "+1 (617) 834-6172"
-        account.address1 = "851 Burlway Road"
-        account.address2 = "Suite 101"
-        account.city = "Burlingame"
-        account.state = "CA"
-        account.postal_code = "94010"
-        account.country = "USA"
-        account.timezone = "America/Los_Angeles"
-        account.currency = "USD"
+        account.phone_number = smarter_settings.branding_support_phone_number
+        account.address1 = smarter_settings.branding_address1
+        account.address2 = smarter_settings.branding_address2
+        account.city = smarter_settings.branding_city
+        account.state = smarter_settings.branding_state
+        account.postal_code = smarter_settings.branding_postal_code
+        account.country = smarter_settings.branding_country
+        account.timezone = smarter_settings.branding_timezone
+        account.currency = smarter_settings.branding_currency
         account.save()
 
         if created:

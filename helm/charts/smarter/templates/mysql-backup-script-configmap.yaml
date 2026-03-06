@@ -13,7 +13,7 @@ data:
     mysqldump -h "$SMARTER_MYSQL_HOST" -u "$SMARTER_MYSQL_USER" -p"$SMARTER_MYSQL_PASSWORD" "$SMARTER_MYSQL_DATABASE" > "$BACKUP_FILE"
 
     echo "Uploading to S3..."
-    aws s3 cp "$BACKUP_FILE" "s3://$SMARTER_S3_BUCKET/"
+    aws s3 cp "$BACKUP_FILE" "s3://$SMARTER_S3_BUCKET/backups/sql/"
 
-    echo "Backup complete: $BACKUP_FILE -> s3://$SMARTER_S3_BUCKET/"
+    echo "Backup complete: $BACKUP_FILE -> s3://$SMARTER_S3_BUCKET/backups/sql/"
     rm "$BACKUP_FILE"
