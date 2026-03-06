@@ -33,7 +33,7 @@ inputs:
     description: "The DockerHub personal access token"
     required: false
   environment:
-    description: "The environment to deploy"
+    description: "The environment to deploy: alpha, beta, next, prod"
     required: true
   eks-cluster-name:
     description: "The name of the EKS cluster to deploy to"
@@ -78,7 +78,7 @@ inputs:
     description: "The Pinecone environment"
     required: true
   root-domain:
-    description: "The root domain for the deployment"
+    description: "The root domain for the deployment: e.g. smarter.sh"
     required: true
   smarter-logo:
     description: "The URL to the Smarter logo image"
@@ -293,6 +293,18 @@ runs:
         echo "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER=+1 (617) 555-6172" >> $GITHUB_ENV
         echo "SMARTER_EMAIL_ADMIN=lpm0073@gmail.com" >> $GITHUB_ENV
 
+    - name: Create AWS S3 Bucket name
+      id: create-s3-bucket-name
+      shell: bash
+      run: |-
+        # create S3 bucket name based on environment
+        if [ "${{ inputs.environment }}" = "prod" ]; then
+          S3_BUCKET="${{ inputs.platform-subdomain }}.${{ inputs.root-domain }}"
+        else
+          S3_BUCKET="${{ inputs.environment }}.${{ inputs.platform-subdomain }}.${{ inputs.root-domain }}"
+        fi
+        echo "SMARTER_S3_BUCKET=${S3_BUCKET}" >> $GITHUB_ENV
+
     # Dump all of our environment variables to the run log
     - name: Dump environment variables
       id: dump-env
@@ -368,6 +380,7 @@ runs:
             "SMARTER_PLATFORM_SUBDOMAIN": ${{ inputs.platform-subdomain && format('"{0}"', inputs.platform-subdomain) || 'null' }},
             "SMARTER_PINECONE_API_KEY": ${{ inputs.pinecone-api-key && format('"{0}"', inputs.pinecone-api-key) || 'null' }},
             "SMARTER_PINECONE_ENVIRONMENT": ${{ inputs.pinecone-environment && format('"{0}"', inputs.pinecone-environment) || 'null' }},
+            "SMARTER_S3_BUCKET": ${{ env.SMARTER_S3_BUCKET && format('"{0}"', env.SMARTER_S3_BUCKET) || 'null' }},
             "SMARTER_ROOT_DOMAIN": ${{ inputs.root-domain && format('"{0}"', inputs.root-domain) || 'null' }},
             "SMARTER_SMTP_FROM_EMAIL": "no-reply@platform.smarter.sh",
             "SMARTER_SMTP_PASSWORD": ${{ env.SMTP_PASSWORD && format('"{0}"', env.SMTP_PASSWORD) || 'null' }},
