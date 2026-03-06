@@ -1,6 +1,7 @@
-"""This module is used to create a new account."""
+"""manage.py create_account command."""
 
 from smarter.apps.account.models import Account
+from smarter.common.utils import snake_case
 from smarter.lib.django.management.base import SmarterCommand
 
 
@@ -14,7 +15,7 @@ class Command(SmarterCommand):
         parser.add_argument("--account_number", type=str, help="The account number for the new account")
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Create the Account."""
         self.handle_begin()
 
         account_number = options["account_number"]
@@ -23,6 +24,9 @@ class Command(SmarterCommand):
         if account_number:
             account, created = Account.objects.get_or_create(account_number=account_number)
             account.company_name = company_name
+            if created:
+                account.name = snake_case(company_name)
+                account.description = f"Account for {company_name}"
             account.save()
         else:
             account, created = Account.objects.get_or_create(company_name=company_name)

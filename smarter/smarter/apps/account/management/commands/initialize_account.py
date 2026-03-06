@@ -1,4 +1,4 @@
-"""Django manage.py initialize_platform command."""
+"""Django manage.py initialize_account command."""
 
 import logging
 from typing import Optional
@@ -19,17 +19,30 @@ class Command(SmarterCommand):
     Django manage.py initialize_platform command. Initialize the Smarter
     platform. Creates the minimal resources necessary to start using Smarter.
 
-    1. Create the Account.
-    2. Create an admin user for the Account.
-    3. Apply example manifests from GitHub.
-    4. Add plugin examples.
-    5. Deploy builtin example chatbots.
-    6. Create StackAcademy AI resources.
     """
 
     def initialize_account(
         self, account_number: str, username: str, email: str, password: Optional[str], company_name: str
     ) -> bool:
+        """
+        Initialize a single account with the provided information. Optionally
+        creates or updates an account admin user with the provided username, email, and password.
+        Creates a collection of shared AI resources that are owned by the account admin user.
+
+        1. Create the Account.
+        2. Create an admin user for the Account.
+        3. Apply example manifests from GitHub.
+        4. Add plugin examples.
+        5. Deploy builtin example chatbots.
+        6. Create StackAcademy AI resources.
+
+        .. note::
+
+            The typical use case is to pass the Smarter admin username (and no password) such
+            that the shared AI resources are owned by the Smarter admin user. This
+            removes some of the AI resource dependencies on the account, such as
+            Connections and Secrets for some of the shared AI resources.
+        """
         msg = f"Initializing account {account_number} {company_name} with admin user {username}..."
         self.stdout.write(self.style.NOTICE(msg))
         logger.info(msg)
