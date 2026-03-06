@@ -112,7 +112,7 @@ class TestSettings(SmarterTestBase):
         self.assertIsNotNone(smarter_settings.branding_support_email)
 
     def test_branding_address(self):
-        self.assertIsNotNone(smarter_settings.branding_address)
+        self.assertIsNotNone(smarter_settings.branding_address1)
 
     def test_branding_contact_url(self):
         self.assertIsNotNone(smarter_settings.branding_contact_url)
