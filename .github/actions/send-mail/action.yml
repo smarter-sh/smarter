@@ -54,6 +54,6 @@ runs:
       run: |
         aws ses send-email \
           --from "no-reply@${{ inputs.deployment-domain }}" \
-          --destination "ToAddresses=lpm0073@gmail.com,kent@querium.com" \
+          --destination "ToAddresses=lpm0073@gmail.com,kent@querium.com,shoesaphone@gmail.com" \
           --message "Subject={Data=${{ inputs.subject }},Charset=utf8},Body={Text={Data=${{ inputs.body }},Charset=utf8}}" \
           --reply-to-addresses "no-reply@${{ inputs.deployment-domain }}"

@@ -352,7 +352,21 @@ def branding(request: "HttpRequest") -> dict:
             "canonical": request.path,
             "root_url": root_url,
             "corporate_name": smarter_settings.branding_corporate_name,
-            "corporate_address": smarter_settings.branding_address,
+            "corporate_address": ", ".join(
+                filter(
+                    None,
+                    [
+                        smarter_settings.branding_address1,
+                        smarter_settings.branding_address2,
+                        smarter_settings.branding_city,
+                        smarter_settings.branding_state,
+                        smarter_settings.branding_postal_code,
+                        smarter_settings.branding_country,
+                    ],
+                )
+            ),
+            "corporate_currency": smarter_settings.branding_currency,
+            "corporate_timezone": smarter_settings.branding_timezone,
             "support_email": smarter_settings.branding_support_email,
             "contact_url": smarter_settings.branding_contact_url,
             "support_hours": smarter_settings.branding_support_hours,

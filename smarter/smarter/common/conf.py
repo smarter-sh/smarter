@@ -430,7 +430,14 @@ class SettingsDefaults:
     BRANDING_CORPORATE_NAME: str = get_env("BRANDING_CORPORATE_NAME", "The Smarter Project")
     BRANDING_SUPPORT_PHONE_NUMBER: str = get_env("BRANDING_SUPPORT_PHONE_NUMBER", "(###) 555-1212")
     BRANDING_SUPPORT_EMAIL: EmailStr = get_env("BRANDING_SUPPORT_EMAIL", "lpm0073@gmail.com")
-    BRANDING_ADDRESS: str = get_env("BRANDING_ADDRESS", "123 Main St, Anytown, USA")
+    BRANDING_ADDRESS1: str = get_env("BRANDING_ADDRESS1", "123 Main St, Anytown, USA")
+    BRANDING_ADDRESS2: str = get_env("BRANDING_ADDRESS2", "Suite 100")
+    BRANDING_CITY: str = get_env("BRANDING_CITY", "Anytown")
+    BRANDING_STATE: str = get_env("BRANDING_STATE", "CA")
+    BRANDING_POSTAL_CODE: str = get_env("BRANDING_POSTAL_CODE", "12345")
+    BRANDING_COUNTRY: str = get_env("BRANDING_COUNTRY", "USA")
+    BRANDING_CURRENCY: str = get_env("BRANDING_CURRENCY", "USD")
+    BRANDING_TIMEZONE: str = get_env("BRANDING_TIMEZONE", "America/Denver")
     BRANDING_CONTACT_URL: Optional[HttpUrl] = get_env("BRANDING_CONTACT_URL", "https://lawrencemcdaniel.com/")
     BRANDING_SUPPORT_HOURS: str = get_env("BRANDING_SUPPORT_HOURS", "MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)")
     BRANDING_URL_FACEBOOK: Optional[HttpUrl] = get_env("BRANDING_URL_FACEBOOK", "https://facebook.com")
@@ -1363,8 +1370,8 @@ class Settings(BaseSettings):
 
         return v
 
-    branding_address: str = Field(
-        SettingsDefaults.BRANDING_ADDRESS,
+    branding_address1: str = Field(
+        SettingsDefaults.BRANDING_ADDRESS1,
         description="The corporate address used for branding purposes throughout the platform.",
         examples=["123 Main St, Anytown, USA"],
         title="Branding Address",
@@ -1375,13 +1382,13 @@ class Settings(BaseSettings):
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: str
-    :default: Value from ``SettingsDefaults.BRANDING_ADDRESS``
+    :default: Value from ``SettingsDefaults.BRANDING_ADDRESS1``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_address")
+    @before_field_validator("branding_address1")
     def validate_branding_address(cls, v: Optional[str]) -> str:
-        """Validates the `branding_address` field.
+        """Validates the `branding_address1` field.
 
         Args:
             v (Optional[str]): The branding address value to validate.
@@ -1390,10 +1397,251 @@ class Settings(BaseSettings):
             str: The validated branding address.
         """
         if v in [None, ""]:
-            return SettingsDefaults.BRANDING_ADDRESS
+            return SettingsDefaults.BRANDING_ADDRESS1
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError(f"branding_address of type {type(v)} is not a str.")
+            raise SmarterConfigurationError(f"branding_address1 of type {type(v)} is not a str.")
+
+        return v
+
+    branding_address2: Optional[str] = Field(
+        SettingsDefaults.BRANDING_ADDRESS2,
+        description="The second line of the corporate address used for branding purposes throughout the platform.",
+        examples=["Suite 100"],
+        title="Branding Address Line 2",
+    )
+    """
+    The second line of the corporate address used for branding purposes throughout the platform.
+    This setting specifies the second line of the physical address of the organization or company that owns
+    or operates the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.BRANDING_ADDRESS2``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("branding_address2")
+    def validate_branding_address2(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `branding_address2` field.
+
+        Args:
+            v (Optional[str]): The branding address line 2 value to validate.
+
+        Returns:
+            Optional[str]: The validated branding address line 2.
+        """
+        if v in [None, ""]:
+            if SettingsDefaults.BRANDING_ADDRESS2 == DEFAULT_MISSING_VALUE:
+                return None
+            return SettingsDefaults.BRANDING_ADDRESS2 if SettingsDefaults.BRANDING_ADDRESS2 != "" else None
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"branding_address2 of type {type(v)} is not a str.")
+
+        return v
+
+    branding_city: str = Field(
+        SettingsDefaults.BRANDING_CITY,
+        description="The corporate city used for branding purposes throughout the platform.",
+        examples=["Anytown"],
+        title="Branding City",
+    )
+    """
+    The corporate city used for branding purposes throughout the platform.
+    This setting specifies the city of the physical address of the organization or company that owns
+    or operates the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_CITY``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("branding_city")
+    def validate_branding_city(cls, v: Optional[str]) -> str:
+        """Validates the `branding_city` field.
+
+        Args:
+            v (Optional[str]): The branding city value to validate.
+
+        Returns:
+            str: The validated branding city.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.BRANDING_CITY
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"branding_city of type {type(v)} is not a str.")
+
+        return v
+
+    branding_state: str = Field(
+        SettingsDefaults.BRANDING_STATE,
+        description="The corporate state used for branding purposes throughout the platform.",
+        examples=["CA"],
+        title="Branding State",
+    )
+    """
+    The corporate state used for branding purposes throughout the platform.
+    This setting specifies the state of the physical address of the organization or company that owns
+    or operates the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_STATE``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("branding_state")
+    def validate_branding_state(cls, v: Optional[str]) -> str:
+        """Validates the `branding_state` field.
+
+        Args:
+            v (Optional[str]): The branding state value to validate.
+
+        Returns:
+            str: The validated branding state.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.BRANDING_STATE
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"branding_state of type {type(v)} is not a str.")
+
+        return v
+
+    branding_postal_code: str = Field(
+        SettingsDefaults.BRANDING_POSTAL_CODE,
+        description="The corporate postal code used for branding purposes throughout the platform.",
+        examples=["12345"],
+        title="Branding Postal Code",
+    )
+    """
+    The corporate postal code used for branding purposes throughout the platform.
+    This setting specifies the postal code of the physical address of the organization or company that owns
+    or operates the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_POSTAL_CODE``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("branding_postal_code")
+    def validate_branding_postal_code(cls, v: Optional[str]) -> str:
+        """Validates the `branding_postal_code` field.
+
+        Args:
+            v (Optional[str]): The branding postal code value to validate.
+
+        Returns:
+            str: The validated branding postal code.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.BRANDING_POSTAL_CODE
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"branding_postal_code of type {type(v)} is not a str.")
+
+        return v
+
+    branding_country: str = Field(
+        SettingsDefaults.BRANDING_COUNTRY,
+        description="The corporate country used for branding purposes throughout the platform.",
+        examples=["USA"],
+        title="Branding Country",
+    )
+    """
+    The corporate country used for branding purposes throughout the platform.
+    This setting specifies the country of the physical address of the organization or company that owns
+    or operates the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_COUNTRY``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("branding_country")
+    def validate_branding_country(cls, v: Optional[str]) -> str:
+        """Validates the `branding_country` field.
+
+        Args:
+            v (Optional[str]): The branding country value to validate.
+
+        Returns:
+            str: The validated branding country.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.BRANDING_COUNTRY
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"branding_country of type {type(v)} is not a str.")
+
+        return v
+
+    branding_currency: str = Field(
+        SettingsDefaults.BRANDING_CURRENCY,
+        description="The currency used for branding purposes throughout the platform.",
+        examples=["USD"],
+        title="Branding Currency",
+    )
+    """
+    The currency used for branding purposes throughout the platform.
+    This setting specifies the currency that is used in various branding contexts,
+    such as email templates, user interfaces, and documentation. It can be used to
+    indicate the currency in which prices, billing, or financial information
+    is presented to users.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_CURRENCY``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("branding_currency")
+    def validate_branding_currency(cls, v: Optional[str]) -> str:
+        """Validates the `branding_currency` field.
+
+        Args:
+            v (Optional[str]): The branding currency value to validate.
+
+        Returns:
+            str: The validated branding currency.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.BRANDING_CURRENCY
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"branding_currency of type {type(v)} is not a str.")
+
+        return v
+
+    branding_timezone: str = Field(
+        SettingsDefaults.BRANDING_TIMEZONE,
+        description="The timezone used for branding purposes throughout the platform.",
+        examples=["America/New_York"],
+        title="Branding Timezone",
+    )
+    """
+    The timezone used for branding purposes throughout the platform.
+    This setting specifies the timezone that is used in various branding contexts,
+    such as email templates, user interfaces, and documentation. It can be used to
+    indicate the timezone in which dates and times are presented to users.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_TIMEZONE``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("branding_timezone")
+    def validate_branding_timezone(cls, v: Optional[str]) -> str:
+        """Validates the `branding_timezone` field.
+
+        Args:
+            v (Optional[str]): The branding timezone value to validate.
+
+        Returns:
+            str: The validated branding timezone.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.BRANDING_TIMEZONE
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"branding_timezone of type {type(v)} is not a str.")
 
         return v
 
