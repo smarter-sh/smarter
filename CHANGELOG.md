@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.171](https://github.com/smarter-sh/smarter/compare/v0.13.170...v0.13.171) (2026-03-06)
+
+### Bug Fixes
+
+* move branding inputs to github secrets ([9662011](https://github.com/smarter-sh/smarter/commit/9662011f93dd684a6432c13872cec1fd9bba2cd7))
+
 ## [0.13.170](https://github.com/smarter-sh/smarter/compare/v0.13.169...v0.13.170) (2026-03-06)
 
 ### Bug Fixes
