@@ -814,6 +814,36 @@ def snake_to_camel(data: Union[str, dict, list], convert_values: bool = False) -
     return retval
 
 
+def snake_case(name: str) -> str:
+    """
+    Converts a string to snake_case format.
+
+    :param name: The string to convert.
+    :type name: str
+
+    :return: The converted string in snake_case format.
+    :rtype: str
+
+    .. note::
+        - Spaces in the input string are replaced with underscores.
+        - Multiple consecutive underscores are collapsed into a single underscore.
+
+    **Example usage:**
+
+    .. code-block:: python
+
+        from smarter.common.utils import snake_case
+
+        print(snake_case("UserProfile"))  # Output: user_profile
+        print(snake_case("FirstName LastName"))  # Output: first_name_last_name
+
+    """
+    logger.debug("%s.snake_case()", logger_prefix)
+    name = name.replace(" ", "_")
+    name = re.sub("_+", "_", name)
+    return name.lower()
+
+
 def pascal_to_snake(name: str) -> str:
     """
     Converts a PascalCase string to pascal_case snake_case format.
