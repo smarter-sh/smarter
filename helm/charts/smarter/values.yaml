@@ -125,7 +125,7 @@ global:
   image:
     pullPolicy: IfNotPresent
     repository: lpm0073/smarter
-    tag: v0.13.169
+    tag: v0.13.170
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:

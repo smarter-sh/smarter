@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.170](https://github.com/smarter-sh/smarter/compare/v0.13.169...v0.13.170) (2026-03-06)
+
+### Bug Fixes
+
+* create daily MariaDb backup ([33feddb](https://github.com/smarter-sh/smarter/commit/33feddb36ce832b748929a592c9d8cac3a7ef544))
+* refactor account initialization and add an --all option ([bb73435](https://github.com/smarter-sh/smarter/commit/bb73435d9c9e68ca57ed64be7ec72e7fa79d9bc5))
+* remove account initialization from deployment job ([b479b38](https://github.com/smarter-sh/smarter/commit/b479b38a6a592796bf38b9ac6db70ef290a04e91))
+* work on account initialization ([cdc3180](https://github.com/smarter-sh/smarter/commit/cdc3180eb7171209f8929c5df9e3e39b817d3bee))
+
 ## [0.13.169](https://github.com/smarter-sh/smarter/compare/v0.13.168...v0.13.169) (2026-03-04)
 
 ### Bug Fixes
