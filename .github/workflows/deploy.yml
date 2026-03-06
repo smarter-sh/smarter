@@ -6,31 +6,6 @@
 # AWS infrastructure using the [Smarter Infrastructure repository](https://github.com/smarter-sh/smarter-infrastructure).
 # Additionally, make sure the following secrets are configured in your
 # [GitHub repository settings](https://github.com/smarter-sh/smarter/settings/secrets/actions):
-#
-# AWS_ACCESS_KEY_ID
-# AWS_REGION
-# AWS_SECRET_ACCESS_KEY
-# FERNET_ENCRYPTION_KEY
-# GEMINI_API_KEY
-# GOOGLE_AI_STUDIO_KEY
-# GOOGLE_MAPS_API_KEY
-# GOOGLE_SERVICE_ACCOUNT_B64
-# LLAMA_API_KEY
-# MAILCHIMP_API_KEY
-# MAILCHIMP_LIST_ID
-# OPENAI_API_KEY
-# PAT
-# PINECONE_API_KEY
-# PINECONE_ENVIRONMENT
-# SMARTER_MYSQL_TEST_DATABASE_PASSWORD
-# SMTP_PASSWORD
-# SMTP_USERNAME
-# SOCIAL_AUTH_GITHUB_KEY
-# SOCIAL_AUTH_GITHUB_SECRET
-# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
-# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
-# SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
-# SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
 #------------------------------------------------------------------------------
 name: Deploy
 
@@ -101,6 +76,20 @@ jobs:
           pinecone-api-key: ${{ secrets.PINECONE_API_KEY }}
           pinecone-environment: ${{ secrets.PINECONE_ENVIRONMENT }}
           root-domain: ${{ env.ROOT_DOMAIN }}
+          smarter-branding-address1: ${{ secrets.SMARTER_BRANDING_ADDRESS1 }}
+          smarter-branding-address2: ${{ secrets.SMARTER_BRANDING_ADDRESS2 }}
+          smarter-branding-city: ${{ secrets.SMARTER_BRANDING_CITY }}
+          smarter-branding-state: ${{ secrets.SMARTER_BRANDING_STATE }}
+          smarter-branding-postal-code: ${{ secrets.SMARTER_BRANDING_POSTAL_CODE }}
+          smarter-branding-country: ${{ secrets.SMARTER_BRANDING_COUNTRY }}
+          smarter-branding-currency: ${{ secrets.SMARTER_BRANDING_CURRENCY }}
+          smarter-branding-timezone: ${{ secrets.SMARTER_BRANDING_TIMEZONE }}
+          smarter-branding-contact-url: ${{ secrets.SMARTER_BRANDING_CONTACT_URL }}
+          smarter-branding-corporate-name: ${{ secrets.SMARTER_BRANDING_CORPORATE_NAME }}
+          smarter-branding-support-email: ${{ secrets.SMARTER_BRANDING_SUPPORT_EMAIL }}
+          smarter-branding-support-hours: ${{ secrets.SMARTER_BRANDING_SUPPORT_HOURS }}
+          smarter-branding-support-phone-number: ${{ secrets.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER }}
+          smarter-email-admin: ${{ secrets.SMARTER_EMAIL_ADMIN }}
           smarter-logo: ${{ secrets.SMARTER_LOGO }}
           smarter-mysql-test_database_password: ${{ secrets.SMARTER_MYSQL_TEST_DATABASE_PASSWORD}}
           social-auth-google-oauth2-key: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}

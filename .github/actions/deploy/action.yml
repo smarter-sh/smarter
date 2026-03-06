@@ -80,6 +80,48 @@ inputs:
   root-domain:
     description: "The root domain for the deployment: e.g. smarter.sh"
     required: true
+  smarter-branding-address1:
+    description: "The first line of the address to use in the branding info"
+    required: false
+  smarter-branding-address2:
+    description: "The second line of the address to use in the branding info"
+    required: false
+  smarter-branding-city:
+    description: "The city to use in the branding info"
+    required: false
+  smarter-branding-state:
+    description: "The state to use in the branding info"
+    required: false
+  smarter-branding-postal-code:
+    description: "The postal code to use in the branding info"
+    required: false
+  smarter-branding-country:
+    description: "The country to use in the branding info"
+    required: false
+  smarter-branding-currency:
+    description: "The currency to use in the branding info"
+    required: false
+  smarter-branding-timezone:
+    description: "The timezone to use in the branding info"
+    required: false
+  smarter-branding-contact-url:
+    description: "The contact URL to use in the branding info"
+    required: false
+  smarter-branding-corporate-name:
+    description: "The corporate name to use in the branding info"
+    required: false
+  smarter-branding-support-email:
+    description: "The support email to use in the branding info"
+    required: false
+  smarter-branding-support-hours:
+    description: "The support hours to use in the branding info"
+    required: false
+  smarter-branding-support-phone-number:
+    description: "The support phone number to use in the branding info"
+    required: false
+  smarter-email-admin:
+    description: "The admin email to use in the branding info"
+    required: false
   smarter-logo:
     description: "The URL to the Smarter logo image"
     required: true
@@ -285,9 +327,16 @@ runs:
       id: set-branding-env
       shell: bash
       run: |-
-        echo "SMARTER_BRANDING_ADDRESS=851 Burlway Road, Suite 101, Burlingame, CA 94010" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_ADDRESS1=21 Remedios Road" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_ADDRESS2=null" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_CITY=Lamy" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_STATE=NM" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_POSTAL_CODE=87540" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_COUNTRY=USA" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_CURRENCY=USD" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_TIMEZONE=America/Denver" >> $GITHUB_ENV
         echo "SMARTER_BRANDING_CONTACT_URL=https://lawrencemcdaniel.com/contact/" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_CORPORATE_NAME=Lawrence P. McDaniel, The Smarter Project" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_CORPORATE_NAME="OpenCogent, LLC" >> $GITHUB_ENV
         echo "SMARTER_BRANDING_SUPPORT_EMAIL=lpm0073@gmail.com" >> $GITHUB_ENV
         echo "SMARTER_BRANDING_SUPPORT_HOURS=MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)" >> $GITHUB_ENV
         echo "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER=+1 (617) 555-6172" >> $GITHUB_ENV
@@ -345,12 +394,13 @@ runs:
             "SMARTER_ADMIN_PASSWORD": ${{ env.SMARTER_ADMIN_PASSWORD && format('"{0}"', env.SMARTER_ADMIN_PASSWORD) || 'null' }},
             "SMARTER_ADMIN_USERNAME": ${{ env.SMARTER_ADMIN_USERNAME && format('"{0}"', env.SMARTER_ADMIN_USERNAME) || 'null' }},
             "SMARTER_ANTHROPIC_API_KEY": ${{ inputs.anthropic-api-key && format('"{0}"', inputs.anthropic-api-key) || 'null' }},
-            "SMARTER_BRANDING_ADDRESS": ${{ env.SMARTER_BRANDING_ADDRESS && format('"{0}"', env.SMARTER_BRANDING_ADDRESS) || 'null' }},
-            "SMARTER_BRANDING_CONTACT_URL": ${{ env.SMARTER_BRANDING_CONTACT_URL && format('"{0}"', env.SMARTER_BRANDING_CONTACT_URL) || 'null' }},
-            "SMARTER_BRANDING_CORPORATE_NAME": ${{ env.SMARTER_BRANDING_CORPORATE_NAME && format('"{0}"', env.SMARTER_BRANDING_CORPORATE_NAME) || 'null' }},
-            "SMARTER_BRANDING_SUPPORT_EMAIL": ${{ env.SMARTER_BRANDING_SUPPORT_EMAIL && format('"{0}"', env.SMARTER_BRANDING_SUPPORT_EMAIL) || 'null' }},
-            "SMARTER_BRANDING_SUPPORT_HOURS": ${{ env.SMARTER_BRANDING_SUPPORT_HOURS && format('"{0}"', env.SMARTER_BRANDING_SUPPORT_HOURS) || 'null' }},
-            "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER": ${{ env.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER && format('"{0}"', env.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER) || 'null' }},
+            "SMARTER_BRANDING_ADDRESS1": ${{ inputs.smarter-branding-address1 && format('"{0}"', inputs.smarter-branding-address1) || 'null' }},
+            "SMARTER_BRANDING_ADDRESS2": ${{ inputs.smarter-branding-address2 && format('"{0}"', inputs.smarter-branding-address2) || 'null' }},
+            "SMARTER_BRANDING_CONTACT_URL": ${{ inputs.smarter-branding-contact-url && format('"{0}"', inputs.smarter-branding-contact-url) || 'null' }},
+            "SMARTER_BRANDING_CORPORATE_NAME": ${{ inputs.smarter-branding-corporate-name && format('"{0}"', inputs.smarter-branding-corporate-name) || 'null' }},
+            "SMARTER_BRANDING_SUPPORT_EMAIL": ${{ inputs.smarter-branding-support-email && format('"{0}"', inputs.smarter-branding-support-email) || 'null' }},
+            "SMARTER_BRANDING_SUPPORT_HOURS": ${{ inputs.smarter-branding-support-hours && format('"{0}"', inputs.smarter-branding-support-hours) || 'null' }},
+            "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER": ${{ inputs.smarter-branding-support-phone-number && format('"{0}"', inputs.smarter-branding-support-phone-number) || 'null' }},
             "SMARTER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
             "SMARTER_AWS_EKS_CLUSTER_NAME": ${{ inputs.eks-cluster-name && format('"{0}"', inputs.eks-cluster-name) || 'null' }},
