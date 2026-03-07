@@ -4756,41 +4756,16 @@ class Settings(BaseSettings):
 
         self._dump = {
             "environment": {
-                "is_using_dotenv_file": self.is_using_dotenv_file,
                 "os": os.name,
                 "system": platform.system(),
                 "release": platform.release(),
-                "shared_resource_identifier": self.shared_resource_identifier,
-                "debug_mode": self.debug_mode,
-                "dump_defaults": self.dump_defaults,
-                "version": self.version,
                 "python_version": platform.python_version(),
                 "python_implementation": platform.python_implementation(),
                 "python_compiler": platform.python_compiler(),
                 "python_build": platform.python_build(),
                 "python_installed_packages": packages_dict,
             },
-            "anthropic": {
-                "anthropic_api_key": self.anthropic_api_key,
-            },
-            "google": {
-                "google_maps_api_key": self.google_maps_api_key,
-                "gemini_api_key": self.gemini_api_key,
-                "google_service_account": self.google_service_account,
-            },
-            "metaai": {
-                "llama_api_key": self.llama_api_key,
-            },
-            "opeanai": {
-                "openai_api_organization": self.openai_api_organization,
-                "openai_api_key": self.openai_api_key,
-            },
-            "openai_passthrough": {
-                "aws_s3_bucket_name": self.aws_s3_bucket_name,
-                "langchain_memory_key": self.langchain_memory_key,
-                "openai_endpoint_image_n": self.openai_endpoint_image_n,
-                "openai_endpoint_image_size": self.openai_endpoint_image_size,
-            },
+            **self.model_dump(),
         }
         if self.dump_defaults:
             settings_defaults = SettingsDefaults.to_dict()
