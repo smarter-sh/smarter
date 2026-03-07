@@ -101,6 +101,7 @@ from .utils import bool_environment_variable
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__ + "Settings()")
+THE_EMPTY_SET = [None, "", "NULL", "None", "none", "null"]
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
 DEFAULT_ROOT_DOMAIN = "example.com"
 DOT_ENV_LOADED = load_dotenv()
@@ -646,14 +647,14 @@ if Services.enabled(Services.AWS_EC2):
 
 def empty_str_to_bool_default(v: str, default: bool) -> bool:
     """Convert empty string to default boolean value"""
-    if v in [None, ""]:
+    if v in THE_EMPTY_SET:
         return default
     return v.lower() in ["true", "1", "t", "y", "yes"]
 
 
 def empty_str_to_int_default(v: str, default: int) -> int:
     """Convert empty string to default integer value"""
-    if v in [None, ""]:
+    if v in THE_EMPTY_SET:
         return default
     try:
         return int(v)
@@ -935,7 +936,7 @@ class Settings(BaseSettings):
         Returns:
             Optional[str]: The validated AWS profile.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             if SettingsDefaults.AWS_PROFILE == DEFAULT_MISSING_VALUE:
                 return None
             return SettingsDefaults.AWS_PROFILE
@@ -1087,7 +1088,7 @@ class Settings(BaseSettings):
         """
 
         valid_regions = values.data.get("aws_regions", ["us-east-1"])
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             if SettingsDefaults.AWS_REGION == DEFAULT_MISSING_VALUE:
                 return None
             return SettingsDefaults.AWS_REGION
@@ -1226,7 +1227,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated AWS EKS cluster name.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.AWS_EKS_CLUSTER_NAME
 
         if not isinstance(v, str):
@@ -1261,7 +1262,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated AWS RDS DB instance identifier.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER
 
         if not isinstance(v, str):
@@ -1295,7 +1296,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated branding corporate name.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.BRANDING_CORPORATE_NAME
 
         if not isinstance(v, str):
@@ -1329,7 +1330,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated branding support phone number.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.BRANDING_SUPPORT_PHONE_NUMBER
 
         if not isinstance(v, str):
@@ -1361,7 +1362,7 @@ class Settings(BaseSettings):
         Returns:
             EmailStr: The validated branding support email.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.BRANDING_SUPPORT_EMAIL
 
         if not isinstance(v, str):
@@ -1396,7 +1397,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated branding address.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.BRANDING_ADDRESS1
 
         if not isinstance(v, str):
@@ -1430,7 +1431,7 @@ class Settings(BaseSettings):
         Returns:
             Optional[str]: The validated branding address line 2.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             if SettingsDefaults.BRANDING_ADDRESS2 == DEFAULT_MISSING_VALUE:
                 return None
             return SettingsDefaults.BRANDING_ADDRESS2 if SettingsDefaults.BRANDING_ADDRESS2 != "" else None
@@ -1466,7 +1467,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated branding city.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.BRANDING_CITY
 
         if not isinstance(v, str):
@@ -1500,7 +1501,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated branding state.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.BRANDING_STATE
 
         if not isinstance(v, str):
@@ -1534,7 +1535,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated branding postal code.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.BRANDING_POSTAL_CODE
 
         if not isinstance(v, str):
@@ -1568,7 +1569,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated branding country.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.BRANDING_COUNTRY
 
         if not isinstance(v, str):
@@ -1603,7 +1604,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated branding currency.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.BRANDING_CURRENCY
 
         if not isinstance(v, str):
@@ -1637,7 +1638,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated branding timezone.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.BRANDING_TIMEZONE
 
         if not isinstance(v, str):
@@ -1702,7 +1703,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated branding support hours.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.BRANDING_SUPPORT_HOURS
 
         if not isinstance(v, str):
@@ -1825,7 +1826,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.CACHE_EXPIRATION
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
@@ -1865,7 +1866,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.CHAT_CACHE_EXPIRATION
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
@@ -1903,7 +1904,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.CHATBOT_CACHE_EXPIRATION
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
@@ -1939,7 +1940,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.CHATBOT_MAX_RETURNED_HISTORY
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
@@ -1976,7 +1977,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, bool):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.CHATBOT_TASKS_CREATE_DNS_RECORD
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
@@ -2006,7 +2007,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, bool):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.CHATBOT_TASKS_CREATE_INGRESS_MANIFEST
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
@@ -2036,7 +2037,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.CHATBOT_TASKS_DEFAULT_TTL
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
@@ -2071,7 +2072,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.CHATBOT_TASKS_CELERY_MAX_RETRIES
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
@@ -2101,7 +2102,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, bool):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.CHATBOT_TASKS_CELERY_RETRY_BACKOFF
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
@@ -2128,7 +2129,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated chatbot tasks celery task queue.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.CHATBOT_TASKS_CELERY_TASK_QUEUE
 
         if not isinstance(v, str):
@@ -2162,7 +2163,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.PLUGIN_MAX_DATA_RESULTS
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
@@ -2226,7 +2227,7 @@ class Settings(BaseSettings):
                         "sensitive_files_amnesty_patterns must be a list of strings or compiled regex patterns."
                     )
             return patterns
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.SENSITIVE_FILES_AMNESTY_PATTERNS
         if isinstance(v, str):
             try:
@@ -2265,7 +2266,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, bool):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.DEBUG_MODE
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
@@ -2301,7 +2302,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, bool):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.DUMP_DEFAULTS
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
@@ -2355,7 +2356,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, bool):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.DEVELOPER_MODE
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
@@ -2405,7 +2406,7 @@ class Settings(BaseSettings):
         Returns:
             EmailStr: The validated administrator email address.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.EMAIL_ADMIN
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"email_admin is not a valid EmailStr: {v}")
@@ -2438,7 +2439,7 @@ class Settings(BaseSettings):
         Returns:
             Optional[str]: The validated environment.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.ENVIRONMENT
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"environment of type {type(v)} is not a str: {v}")
@@ -2530,7 +2531,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Gemini API key.
         """
-        if str(v) in [None, ""]:
+        if str(v) in THE_EMPTY_SET:
             return SettingsDefaults.GEMINI_API_KEY
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"gemini_api_key of type {type(v)} is not a SecretStr.")
@@ -2564,7 +2565,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Google Maps API key.
         """
-        if str(v) in [None, ""]:
+        if str(v) in THE_EMPTY_SET:
             return SettingsDefaults.GOOGLE_MAPS_API_KEY
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"google_maps_api_key of type {type(v)} is not a SecretStr.")
@@ -2636,7 +2637,7 @@ class Settings(BaseSettings):
         Returns:
             List[str]: The validated internal IP prefixes.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.INTERNAL_IP_PREFIXES
 
         if not isinstance(v, list):
@@ -2678,7 +2679,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Llama API key.
         """
-        if str(v) in [None, ""]:
+        if str(v) in THE_EMPTY_SET:
             return SettingsDefaults.LLAMA_API_KEY
 
         if not isinstance(v, SecretStr):
@@ -2712,7 +2713,7 @@ class Settings(BaseSettings):
         Returns:
             List[str]: The validated local hosts.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.LOCAL_HOSTS
 
         if not isinstance(v, list):
@@ -2749,7 +2750,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated Langchain memory key.
         """
-        if str(v) in [None, ""] and SettingsDefaults.LANGCHAIN_MEMORY_KEY is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.LANGCHAIN_MEMORY_KEY is not None:
             return SettingsDefaults.LANGCHAIN_MEMORY_KEY
         return str(v)
 
@@ -2780,7 +2781,7 @@ class Settings(BaseSettings):
         Returns:
             Optional[str]: The validated LLM default provider.
         """
-        if str(v) in [None, ""] and SettingsDefaults.LLM_DEFAULT_PROVIDER is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.LLM_DEFAULT_PROVIDER is not None:
             return SettingsDefaults.LLM_DEFAULT_PROVIDER
 
         if not isinstance(v, str):
@@ -2814,7 +2815,7 @@ class Settings(BaseSettings):
         Returns:
             Optional[str]: The validated LLM default model.
         """
-        if str(v) in [None, ""] and SettingsDefaults.LLM_DEFAULT_MODEL is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.LLM_DEFAULT_MODEL is not None:
             return SettingsDefaults.LLM_DEFAULT_MODEL
 
         if not isinstance(v, str):
@@ -2848,7 +2849,7 @@ class Settings(BaseSettings):
         Returns:
             Optional[str]: The validated LLM default system role.
         """
-        if str(v) in [None, ""] and SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE is not None:
             return SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE
 
         if not isinstance(v, str):
@@ -2884,7 +2885,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, float):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.LLM_DEFAULT_TEMPERATURE
         try:
             retval = float(v)  # type: ignore
@@ -2922,7 +2923,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
 
         try:
@@ -2987,7 +2988,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Mailchimp API key.
         """
-        if str(v) in [None, ""] and SettingsDefaults.MAILCHIMP_API_KEY is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.MAILCHIMP_API_KEY is not None:
             return SettingsDefaults.MAILCHIMP_API_KEY
 
         if not isinstance(v, SecretStr):
@@ -3021,7 +3022,7 @@ class Settings(BaseSettings):
         Returns:
             Optional[str]: The validated Mailchimp list ID.
         """
-        if str(v) in [None, ""] and SettingsDefaults.MAILCHIMP_LIST_ID is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.MAILCHIMP_LIST_ID is not None:
             return SettingsDefaults.MAILCHIMP_LIST_ID
         return v
 
@@ -3050,7 +3051,7 @@ class Settings(BaseSettings):
         Returns:
             HttpUrl: The validated marketing site URL.
         """
-        if str(v) in [None, ""] and SettingsDefaults.MARKETING_SITE_URL is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.MARKETING_SITE_URL is not None:
             return SettingsDefaults.MARKETING_SITE_URL
         return v  # type: ignore
 
@@ -3080,7 +3081,7 @@ class Settings(BaseSettings):
         Returns:
             Optional[str]: The validated OpenAI API organization.
         """
-        if str(v) in [None, ""] and SettingsDefaults.OPENAI_API_ORGANIZATION is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.OPENAI_API_ORGANIZATION is not None:
             return SettingsDefaults.OPENAI_API_ORGANIZATION
 
         if not isinstance(v, str):
@@ -3112,7 +3113,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated OpenAI API key.
         """
-        if str(v) in [None, ""] and SettingsDefaults.OPENAI_API_KEY is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.OPENAI_API_KEY is not None:
             return SettingsDefaults.OPENAI_API_KEY
 
         if not isinstance(v, SecretStr):
@@ -3147,7 +3148,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if str(v) in [None, ""] and SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N is not None:
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N
         if isinstance(v, str):
             try:
@@ -3193,7 +3194,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated OpenAI endpoint image size.
         """
-        if str(v) in [None, ""] and SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE is not None:
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE
 
         if not isinstance(v, str):
@@ -3227,7 +3228,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Pinecone API key.
         """
-        if str(v) in [None, ""] and SettingsDefaults.PINECONE_API_KEY is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.PINECONE_API_KEY is not None:
             return SettingsDefaults.PINECONE_API_KEY
 
         if not isinstance(v, SecretStr):
@@ -3265,7 +3266,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated root domain.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.ROOT_DOMAIN
 
         if not isinstance(v, str):
@@ -3391,7 +3392,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated shared resource identifier.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.SHARED_RESOURCE_IDENTIFIER
 
         if not isinstance(v, str):
@@ -3460,7 +3461,7 @@ class Settings(BaseSettings):
         Returns:
             str: The validated Smarter ReactJS app loader path.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.REACTJS_APP_LOADER_PATH
 
         if not isinstance(v, str):
@@ -3497,7 +3498,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Google OAuth2 key.
         """
-        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY:
             return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
 
         if not isinstance(v, SecretStr):
@@ -3530,7 +3531,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Google OAuth2 secret.
         """
-        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET is not None:
             return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
 
         if not isinstance(v, SecretStr):
@@ -3562,7 +3563,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated GitHub OAuth2 key.
         """
-        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY is not None:
             return SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY
 
         if not isinstance(v, SecretStr):
@@ -3595,7 +3596,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated GitHub OAuth2 secret.
         """
-        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET is not None:
             return SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET
 
         if not isinstance(v, SecretStr):
@@ -3630,7 +3631,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated LinkedIn OAuth2 key.
         """
-        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY is not None:
             return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"social_auth_linkedin_oauth2_key of type {type(v)} is not a SecretStr.")
@@ -3665,7 +3666,7 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated LinkedIn OAuth2 secret.
         """
-        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET is not None:
+        if str(v) in THE_EMPTY_SET and SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET is not None:
             return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"social_auth_linkedin_oauth2_secret of type {type(v)} is not a SecretStr.")
@@ -3728,7 +3729,7 @@ class Settings(BaseSettings):
         Returns:
             Optional[str]: The validated SMTP sender email address.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             v = SettingsDefaults.SMTP_SENDER
             SmarterValidator.validate_domain(v)
 
@@ -3761,7 +3762,7 @@ class Settings(BaseSettings):
         Returns:
             Optional[SecretStr]: The validated SMTP password.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.SMTP_PASSWORD
 
         if not isinstance(v, SecretStr):
@@ -3794,7 +3795,7 @@ class Settings(BaseSettings):
         Returns:
             int: The validated SMTP port.
         """
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             v = SettingsDefaults.SMTP_PORT
         try:
             retval = int(v)  # type: ignore
@@ -3834,7 +3835,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, bool):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.SMTP_USE_SSL
         return str(v).lower() in ["true", "1", "yes", "on"]
 
@@ -3865,7 +3866,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, bool):
             return v
-        if v in [None, ""]:
+        if v in THE_EMPTY_SET:
             return SettingsDefaults.SMTP_USE_TLS
         return str(v).lower() in ["true", "1", "yes", "on"]
 
