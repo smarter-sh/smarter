@@ -727,10 +727,12 @@ class Settings(BaseSettings):
     """
 
     _dump: dict
-    _ready: bool = False
+    _ready: bool
 
     def __init__(self, **data: Any):
         super().__init__(**data)
+        self._dump = None
+        self._ready = False
         # need to be mindful that __init__ is called before Django startup has begun.
         # one consequence is that logging is not yet configured, so have have to
         # use janky logging levels in order to ensure that these log messages are seen.
@@ -1432,9 +1434,7 @@ class Settings(BaseSettings):
             Optional[str]: The validated branding address line 2.
         """
         if v in THE_EMPTY_SET:
-            if SettingsDefaults.BRANDING_ADDRESS2 == DEFAULT_MISSING_VALUE:
-                return None
-            return SettingsDefaults.BRANDING_ADDRESS2 if SettingsDefaults.BRANDING_ADDRESS2 != "" else None
+            return None
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_address2 of type {type(v)} is not a str.")
