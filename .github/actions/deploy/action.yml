@@ -320,28 +320,6 @@ runs:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: smarter-django-secret-key
 
-    # set env variable for branding info
-    # TODO: map this to --- something???? --- could be Kubernetes secret, or
-    # GitHub secret, or Helm values file...? TBD.
-    - name: Set branding environment variables
-      id: set-branding-env
-      shell: bash
-      run: |-
-        echo "SMARTER_BRANDING_ADDRESS1=21 Remedios Road" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_ADDRESS2=null" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_CITY=Lamy" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_STATE=NM" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_POSTAL_CODE=87540" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_COUNTRY=USA" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_CURRENCY=USD" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_TIMEZONE=America/Denver" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_CONTACT_URL=https://lawrencemcdaniel.com/contact/" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_CORPORATE_NAME="OpenCogent, LLC" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_SUPPORT_EMAIL=lpm0073@gmail.com" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_SUPPORT_HOURS=MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)" >> $GITHUB_ENV
-        echo "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER=+1 (617) 555-6172" >> $GITHUB_ENV
-        echo "SMARTER_EMAIL_ADMIN=lpm0073@gmail.com" >> $GITHUB_ENV
-
     - name: Create AWS S3 Bucket name
       id: create-s3-bucket-name
       shell: bash
