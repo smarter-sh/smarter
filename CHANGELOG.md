@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.173](https://github.com/smarter-sh/smarter/compare/v0.13.172...v0.13.173) (2026-03-07)
+
+### Bug Fixes
+
+* expand possible values of THE_EMPTY_SET ([6e31343](https://github.com/smarter-sh/smarter/commit/6e31343e59a9145a9c9ab3f0d37b326cdf6317f3))
+
 ## [0.13.172](https://github.com/smarter-sh/smarter/compare/v0.13.171...v0.13.172) (2026-03-07)
 
 ### Bug Fixes
