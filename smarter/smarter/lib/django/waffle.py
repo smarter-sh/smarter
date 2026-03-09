@@ -207,6 +207,7 @@ class SmarterWaffleSwitches:
             self.ENABLE_MULTITENANT_AUTHENTICATION,
             self.ENABLE_MIDDLEWARE_SENSITIVE_FILES,
             self.ENABLE_MIDDLEWARE_EXCESSIVE_404,
+            self.ENABLE_MIDDLEWARE_SECURITY,
             self.ENABLE_JOURNAL,
             self.ENABLE_REACTAPP_DEBUG_MODE,
             self.ENABLE_NEW_USER_PASSWORD_EMAIL,
