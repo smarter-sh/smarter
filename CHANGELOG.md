@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.178](https://github.com/smarter-sh/smarter/compare/v0.13.177...v0.13.178) (2026-03-09)
+
+### Bug Fixes
+
+* add a waffle debug model toggle ([4e31931](https://github.com/smarter-sh/smarter/commit/4e31931016c3809d5b2b570ac8c568b016c65d0d))
+
 ## [0.13.177](https://github.com/smarter-sh/smarter/compare/v0.13.176...v0.13.177) (2026-03-09)
 
 ### Bug Fixes
