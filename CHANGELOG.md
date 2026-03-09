@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.177](https://github.com/smarter-sh/smarter/compare/v0.13.176...v0.13.177) (2026-03-09)
+
+### Bug Fixes
+
+* missing waffle switch - ENABLE_MIDDLEWARE_SECURITY ([5a606c5](https://github.com/smarter-sh/smarter/commit/5a606c56741e452a112100b000da85cc5b5da908))
+
 ## [0.13.176](https://github.com/smarter-sh/smarter/compare/v0.13.175...v0.13.176) (2026-03-09)
 
 ### Bug Fixes
