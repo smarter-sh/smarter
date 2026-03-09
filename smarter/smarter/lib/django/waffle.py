@@ -136,6 +136,9 @@ class SmarterWaffleSwitches:
     CSRF_SUPPRESS_FOR_CHATBOTS = "disable_csrf_middleware_for_chatbots"
     """Disables CSRF middleware checks for chat completion endpoints."""
 
+    ENABLE_DEBUG_MODE = "enable_debug_mode"
+    """Enables debug mode for the entire Smarter application, which may include additional logging and diagnostic information."""
+
     ENABLE_JOURNAL = "enable_journal"
     """Enables the Smarter Journal feature."""
 
@@ -201,6 +204,7 @@ class SmarterWaffleSwitches:
             self.API_LOGGING,
             self.ACCOUNT_MIXIN_LOGGING,
             self.CACHE_LOGGING,
+            self.ENABLE_DEBUG_MODE,
             self.ENABLE_OAUTH2,
             self.ENABLE_ACCOUNT_REGISTRATION,
             self.ENABLE_LOGIN_FOOTER_LINKS,
