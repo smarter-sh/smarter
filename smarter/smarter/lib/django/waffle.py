@@ -157,6 +157,9 @@ class SmarterWaffleSwitches:
     ENABLE_MIDDLEWARE_EXCESSIVE_404 = "enable_middleware_block_excessive_404"
     """Enables SmarterBlockExcessive404Middleware"""
 
+    ENABLE_MIDDLEWARE_SECURITY = "enable_middleware_security"
+    """Enables SmarterSecurityMiddleware"""
+
     ENABLE_REACTAPP_DEBUG_MODE = "enable_reactapp_debug_mode"
     """Enables React app debug mode within the Smarter React Chat component."""
 

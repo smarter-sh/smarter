@@ -91,6 +91,9 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
     def process_request(self, request: WSGIRequest):
 
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SECURITY):
+            return None
+
         logger.debug(
             "%s.process_request() called for %s",
             self.formatted_class_name,
