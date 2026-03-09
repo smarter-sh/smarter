@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.175](https://github.com/smarter-sh/smarter/compare/v0.13.174...v0.13.175) (2026-03-09)
+
+### Bug Fixes
+
+* api ingress cluster issuer should be environment api domain ([7cce6d0](https://github.com/smarter-sh/smarter/commit/7cce6d08264ccd2859a1761dfb39109827fa5744))
+
 ## [0.13.174](https://github.com/smarter-sh/smarter/compare/v0.13.173...v0.13.174) (2026-03-07)
 
 ### Bug Fixes
