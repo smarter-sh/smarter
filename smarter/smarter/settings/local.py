@@ -30,15 +30,6 @@ if smarter_settings.developer_mode:
 
     INSTALLED_APPS += ["django_extensions"]
 
-    if smarter_settings.debug_mode and not "test" in sys.argv:
-        INSTALLED_APPS += [
-            "debug_toolbar",
-        ]
-
-        MIDDLEWARE += [
-            "debug_toolbar.middleware.DebugToolbarMiddleware",
-        ]
-
 ENVIRONMENT_DOMAIN = smarter_settings.environment_platform_domain
 ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
 

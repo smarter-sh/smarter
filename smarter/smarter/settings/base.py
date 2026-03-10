@@ -713,6 +713,16 @@ MIDDLEWARE = [
     #
 ]
 
+if smarter_settings.debug_mode and not "test" in sys.argv:
+    INSTALLED_APPS += [
+        "debug_toolbar",
+    ]
+
+    MIDDLEWARE += [
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+    ]
+
+
 ROOT_HOSTCONF = "smarter.hosts"
 """
 The root host configuration module for django-hosts. Smarter hosts multiple subdomains
