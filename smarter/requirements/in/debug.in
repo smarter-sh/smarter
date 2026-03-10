@@ -1,0 +1,17 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage: developer support packages for performing debug activities
+#        in any environment
+#
+#       pip-compile smarter/requirements/in/debug.in --upgrade -o smarter/requirements/debug.txt
+# -----------------------------------------------------------------------------
+
+-r constraints.in
+-r base.in
+
+# Django dev tools
+# ------------
+django-extensions==4.1                  # a collection of custom extensions for the Django Framework.
+django-debug-toolbar==6.2.0             # a configurable set of panels that display various debug information about the current request/response.

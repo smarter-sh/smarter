@@ -40,8 +40,9 @@ LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
 ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG ENVIRONMENT=local
+ARG DEBUG_MODE=false
 ENV ENVIRONMENT=$ENVIRONMENT
-RUN echo "ENVIRONMENT: $ENVIRONMENT"
+ENV DEBUG_MODE=$DEBUG_MODE
 
 ############################## install system packages #################################
 # build-essential           needed to build some python packages, but not included in 3.13-slim-trixie
@@ -170,6 +171,7 @@ RUN pip install --upgrade pip && \
 # Install Python dependencies for the local environment for cases where
 # we're going to run python unit tests in the Docker container.
 RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
+RUN if [ "$DEBUG_MODE" = "true" ] ; then pip install -r requirements/debug.txt ; fi
 
 ############################## application ##################################
 FROM venv AS application
