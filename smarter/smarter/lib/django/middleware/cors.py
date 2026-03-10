@@ -17,6 +17,7 @@ from django.http.response import HttpResponseBase
 
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_LOCAL_PORT, SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib.django import waffle
@@ -94,6 +95,13 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
 
     def __call__(self, request: HttpRequest) -> Union[HttpResponseBase, Awaitable[HttpResponseBase]]:
 
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
+            logger.debug(
+                "%s.__call__() - CORS middleware is disabled via waffle switch, skipping processing.",
+                self.formatted_class_name,
+            )
+            return super().__call__(request)
+
         host = request.get_host()
         if not host:
             return SmarterHttpResponseServerError(
@@ -168,18 +176,42 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     def CORS_ALLOWED_ORIGINS(self) -> list[str] | tuple[str]:
         """
         Returns the list of allowed origins for the application. If the request
-        is from a chatbot, the chatbot url is added to the list.
+        is from a chatbot, the chatbot url is added to the list. If the host is
+        an api.local.smarter.sh domain, allow localhost for development.
         """
         retval = (
             conf.CORS_ALLOWED_ORIGINS.copy()
             if isinstance(conf.CORS_ALLOWED_ORIGINS, list)
             else list(conf.CORS_ALLOWED_ORIGINS)
         )
+        # Add chatbot url if present
         if self.chatbot is not None:
             url = self.url.geturl() if isinstance(self.url, SplitResult) else None
             if url is not None and url not in retval:
                 retval.append(url)
             logger.debug("%s.CORS_ALLOWED_ORIGINS() added origin: %s", self.formatted_class_name, url)
+
+        # Allow localhost if host is api.local.smarter.sh (for dev pairing)
+        request = getattr(self, "request", None)
+        if request is not None:
+            host = request.get_host()
+            if (
+                host
+                and f"{smarter_settings.api_subdomain}.{SmarterEnvironments.LOCAL}.{smarter_settings.root_domain}"
+                in host
+            ):
+                localhost_origins = [
+                    f"http://localhost:{SMARTER_LOCAL_PORT}",
+                    f"http://127.0.0.1:{SMARTER_LOCAL_PORT}",
+                ]
+                for origin in localhost_origins:
+                    if origin not in retval:
+                        retval.append(origin)
+                logger.debug(
+                    "%s.CORS_ALLOWED_ORIGINS() added localhost origins for dev: %s",
+                    self.formatted_class_name,
+                    localhost_origins,
+                )
         return retval
 
     @cached_property

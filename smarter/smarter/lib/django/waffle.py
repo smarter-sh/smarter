@@ -160,6 +160,9 @@ class SmarterWaffleSwitches:
     ENABLE_MIDDLEWARE_EXCESSIVE_404 = "enable_middleware_block_excessive_404"
     """Enables SmarterBlockExcessive404Middleware"""
 
+    ENABLE_MIDDLEWARE_CORS = "enable_middleware_cors"
+    """Enables SmarterCorsMiddleware"""
+
     ENABLE_MIDDLEWARE_SECURITY = "enable_middleware_security"
     """Enables SmarterSecurityMiddleware"""
 
@@ -209,8 +212,9 @@ class SmarterWaffleSwitches:
             self.ENABLE_ACCOUNT_REGISTRATION,
             self.ENABLE_LOGIN_FOOTER_LINKS,
             self.ENABLE_MULTITENANT_AUTHENTICATION,
-            self.ENABLE_MIDDLEWARE_SENSITIVE_FILES,
+            self.ENABLE_MIDDLEWARE_CORS,
             self.ENABLE_MIDDLEWARE_EXCESSIVE_404,
+            self.ENABLE_MIDDLEWARE_SENSITIVE_FILES,
             self.ENABLE_MIDDLEWARE_SECURITY,
             self.ENABLE_JOURNAL,
             self.ENABLE_REACTAPP_DEBUG_MODE,
