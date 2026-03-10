@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.182](https://github.com/smarter-sh/smarter/compare/v0.13.181...v0.13.182) (2026-03-10)
+
+### Bug Fixes
+
+* debug_toolbar ([d05a131](https://github.com/smarter-sh/smarter/commit/d05a13168f16260c51b2159aa61ac3eeaf2259ec))
+
 ## [0.13.181](https://github.com/smarter-sh/smarter/compare/v0.13.180...v0.13.181) (2026-03-10)
 
 ### Bug Fixes
