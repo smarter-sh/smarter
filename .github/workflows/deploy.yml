@@ -59,6 +59,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
           cohere-api-key: ${{ secrets.COHERE_API_KEY }}
+          debug-mode: ${{ secrets.DEBUG_MODE }}
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-pat: ${{ secrets.DOCKERHUB_PAT }}
           fernet-encryption-key: ${{ secrets.FERNET_ENCRYPTION_KEY }}
