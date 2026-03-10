@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.179](https://github.com/smarter-sh/smarter/compare/v0.13.178...v0.13.179) (2026-03-10)
+
+### Bug Fixes
+
+* add cors waffle switch with means of enabling localhost api ([9bffacb](https://github.com/smarter-sh/smarter/commit/9bffacb0689e47c71014bc3f797606b64f1ed24c))
+
 ## [0.13.178](https://github.com/smarter-sh/smarter/compare/v0.13.177...v0.13.178) (2026-03-09)
 
 ### Bug Fixes
