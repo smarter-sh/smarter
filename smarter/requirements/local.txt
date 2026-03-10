@@ -25,7 +25,7 @@ asgiref==3.11.1
     # via
     #   django
     #   django-cors-headers
-astroid==4.0.3
+astroid==4.0.4
     # via pylint
 attrs==25.4.0
     # via
@@ -48,20 +48,20 @@ billiard==4.2.4
     # via celery
 black==26.1.0
     # via -r smarter/requirements/in/local.in
-boto3==1.42.41
+boto3==1.42.64
     # via -r smarter/requirements/in/base.in
-botocore==1.42.41
+botocore==1.42.64
     # via
     #   -r smarter/requirements/in/base.in
     #   boto3
     #   s3transfer
 build==1.4.0
     # via pip-tools
-cachetools==7.0.0
+cachetools==7.0.5
     # via
     #   -r smarter/requirements/in/base.in
     #   tox
-cattrs==25.3.0
+cattrs==26.1.0
     # via requests-cache
 celery==5.6.2
     # via
@@ -70,7 +70,7 @@ celery==5.6.2
     #   django-celery-beat
 celery-redbeat==2.3.3
     # via -r smarter/requirements/in/base.in
-certifi==2026.1.4
+certifi==2026.2.25
     # via
     #   httpcore
     #   httpx
@@ -82,9 +82,7 @@ cffi==2.0.0
     #   pynacl
 cfgv==3.5.0
     # via pre-commit
-chardet==5.2.0
-    # via tox
-charset-normalizer==3.4.4
+charset-normalizer==3.4.5
     # via requests
 click==8.3.1
     # via
@@ -109,7 +107,7 @@ coverage==7.10.5
     # via -r smarter/requirements/in/local.in
 cron-descriptor==2.0.6
     # via django-celery-beat
-cryptography==46.0.4
+cryptography==46.0.5
     # via
     #   google-auth
     #   paramiko
@@ -134,7 +132,6 @@ django==5.2.10
     #   -r smarter/requirements/in/base.in
     #   django-celery-beat
     #   django-cors-headers
-    #   django-debug-toolbar
     #   django-extensions
     #   django-filter
     #   django-redis
@@ -153,8 +150,6 @@ django-celery-beat==2.8.1
     # via -r smarter/requirements/in/base.in
 django-cors-headers==4.9.0
     # via -r smarter/requirements/in/base.in
-django-debug-toolbar==6.2.0
-    # via -r smarter/requirements/in/local.in
 django-extensions==4.1
     # via -r smarter/requirements/in/local.in
 django-filter==25.2
@@ -199,8 +194,9 @@ drf-yasg==1.21.10
     # via -r smarter/requirements/in/base.in
 email-validator==2.3.0
     # via -r smarter/requirements/in/base.in
-filelock==3.20.3
+filelock==3.25.1
     # via
+    #   python-discovery
     #   tldextract
     #   tox
     #   virtualenv
@@ -216,9 +212,9 @@ frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-google-auth[requests]==2.49.0.dev0
+google-auth[requests]==2.49.0
     # via google-genai
-google-genai==1.62.0
+google-genai==1.66.0
     # via -r smarter/requirements/in/base.in
 googlemaps==4.10.0
     # via -r smarter/requirements/in/base.in
@@ -230,7 +226,7 @@ httpx==0.28.1
     # via
     #   google-genai
     #   openai
-identify==2.6.16
+identify==2.6.17
     # via pre-commit
 idna==3.11
     # via
@@ -241,7 +237,7 @@ idna==3.11
     #   tldextract
     #   url-normalize
     #   yarl
-imagesize==1.4.1
+imagesize==2.0.0
     # via sphinx
 inflect==7.4.0
     # via -r smarter/requirements/in/base.in
@@ -251,7 +247,7 @@ iniconfig==2.3.0
     # via pytest
 invoke==2.2.1
     # via paramiko
-isort==7.0.0
+isort==8.0.1
     # via pylint
 jinja2==3.1.6
     # via sphinx
@@ -310,7 +306,7 @@ nltk==3.9.1
     #   textblob
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.4.2
+numpy==2.4.3
     # via
     #   pandas
     #   pandas-stubs
@@ -347,10 +343,11 @@ pillow==11.3.0
     # via -r smarter/requirements/in/base.in
 pip-tools==7.5.2
     # via -r smarter/requirements/in/local.in
-platformdirs==4.5.1
+platformdirs==4.9.4
     # via
     #   black
     #   pylint
+    #   python-discovery
     #   requests-cache
     #   tox
     #   virtualenv
@@ -369,7 +366,9 @@ propcache==0.4.1
     #   aiohttp
     #   yarl
 pyasn1==0.6.2
-    # via pyasn1-modules
+    # via
+    #   pyasn1-modules
+    #   rsa
 pyasn1-modules==0.4.2
     # via google-auth
 pycodestyle==2.14.0
@@ -404,7 +403,7 @@ pyjwt[crypto]==2.11.0
     # via
     #   pyjwt
     #   social-auth-core
-pylint==4.0.4
+pylint==4.0.5
     # via
     #   -r smarter/requirements/in/local.in
     #   pylint-django
@@ -436,6 +435,8 @@ python-dateutil==2.9.0.post0
     #   celery-redbeat
     #   mailchimp-marketing
     #   pandas
+python-discovery==1.1.2
+    # via virtualenv
 python-dotenv==1.1.1
     # via
     #   -r smarter/requirements/in/base.in
@@ -448,7 +449,7 @@ python3-openid==3.2.0
     # via social-auth-core
 pytokens==0.4.1
     # via black
-pytz==2025.2
+pytz==2026.1.post1
     # via
     #   drf-yasg
     #   pandas
@@ -460,11 +461,11 @@ pyyaml==6.0.2
     #   pre-commit
 rapidfuzz==3.14.3
     # via levenshtein
-redis==7.1.0
+redis==7.3.0
     # via
     #   celery-redbeat
     #   django-redis
-regex==2026.1.15
+regex==2026.2.28
     # via
     #   nltk
     #   python-hcl2
@@ -493,12 +494,14 @@ requests-oauthlib==2.0.0
     # via social-auth-core
 retry-requests==2.0.0
     # via -r smarter/requirements/in/base.in
-rich==14.3.2
+rich==14.3.3
     # via bandit
 roman-numerals==4.1.0
     # via roman-numerals-py
 roman-numerals-py==4.1.0
     # via sphinx
+rsa==4.9.1
+    # via google-auth
 s3transfer==0.16.0
     # via boto3
 six==1.17.0
@@ -513,7 +516,7 @@ snowballstemmer==3.0.1
     # via sphinx
 social-auth-app-django==5.7.0
     # via -r smarter/requirements/in/base.in
-social-auth-core==4.8.3
+social-auth-core==4.8.5
     # via social-auth-app-django
 soupsieve==2.8.3
     # via beautifulsoup4
@@ -552,12 +555,10 @@ sphinxcontrib-qthelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 sqlparse==0.5.5
-    # via
-    #   django
-    #   django-debug-toolbar
-stevedore==5.6.0
+    # via django
+stevedore==5.7.0
     # via bandit
-tenacity==9.1.2
+tenacity==9.1.4
     # via
     #   celery-redbeat
     #   google-genai
@@ -565,15 +566,17 @@ textblob==0.19.0
     # via -r smarter/requirements/in/base.in
 tldextract==5.3.1
     # via -r smarter/requirements/in/base.in
+tomli-w==1.2.0
+    # via tox
 tomlkit==0.14.0
     # via pylint
-tox==4.34.1
+tox==4.49.1
     # via -r smarter/requirements/in/local.in
 tqdm==4.67.3
     # via
     #   nltk
     #   openai
-typeguard==4.4.4
+typeguard==4.5.1
     # via inflect
 types-cachetools==6.2.0.20250827
     # via -r smarter/requirements/in/local.in
@@ -585,7 +588,7 @@ types-markdown==3.9.0.20250906
     # via -r smarter/requirements/in/local.in
 types-paramiko==4.0.0.20250822
     # via -r smarter/requirements/in/local.in
-types-pytz==2025.2.0.20251108
+types-pytz==2026.1.1.20260304
     # via pandas-stubs
 types-pyyaml==6.0.12.20250822
     # via
@@ -643,21 +646,21 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.36.1
+virtualenv==21.2.0
     # via
     #   pre-commit
     #   tox
 watchdog==6.0.0
     # via -r smarter/requirements/in/local.in
-wcwidth==0.5.3
+wcwidth==0.6.0
     # via prompt-toolkit
-websockets==15.0.1
+websockets==16.0
     # via google-genai
 wheel==0.46.3
     # via pip-tools
 whitenoise==6.9.0
     # via -r smarter/requirements/in/base.in
-yarl==1.22.0
+yarl==1.23.0
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:

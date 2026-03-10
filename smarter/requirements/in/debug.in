@@ -9,9 +9,7 @@
 # -----------------------------------------------------------------------------
 
 -r constraints.in
--r base.in
 
 # Django dev tools
 # ------------
-django-extensions==4.1                  # a collection of custom extensions for the Django Framework.
 django-debug-toolbar==6.2.0             # a configurable set of panels that display various debug information about the current request/response.
