@@ -1299,6 +1299,11 @@ LOGGING = {
             "level": smarter_settings.log_level_name,
             "propagate": False,
         },
+        "django.template": {
+            "handlers": ["default"],
+            "level": "ERROR",
+            "propagate": False,
+        },
         "celery": {
             "handlers": ["default"],
             "level": smarter_settings.log_level_name,
@@ -1316,7 +1321,6 @@ LOGGING = {
         },
     },
 }
-print("LOGGING CONFIGURATION: %s", LOGGING)
 logging.config.dictConfig(LOGGING)
 
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
