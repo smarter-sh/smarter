@@ -45,6 +45,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
         COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
+        DEBUG_MODE: ${DEBUG_MODE}
     image: smarter
     command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:9357 --timeout 120
     volumes:
@@ -76,6 +77,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
         COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
+        DEBUG_MODE: ${DEBUG_MODE}
     image: smarter
     command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
     depends_on:
@@ -112,6 +114,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
         COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
+        DEBUG_MODE: ${DEBUG_MODE}
     image: smarter
     command: celery -A smarter.workers.celerybeat.app beat --loglevel=info
     depends_on:
