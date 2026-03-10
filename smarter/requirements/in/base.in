@@ -32,6 +32,8 @@ pycountry==24.6.1                       # ISO country, subdivision, language, cu
 # Django
 # ------------
 Django==5.2.10
+django-debug-toolbar==6.2.0             # a configurable set of panels that display various debug information about the current request/response.
+                                        # We need this in base so that we can toggle DEBUG_MODE.
 django-redis==6.0.0                     # object caching
 django-celery-beat==2.8.1               # scheduled asynchronous tasks
 djangorestframework==3.16.1             # for creating REST APIs on top of Django
