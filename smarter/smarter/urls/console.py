@@ -185,10 +185,15 @@ urlpatterns += list(static(settings.STATIC_URL, document_root=settings.STATIC_RO
 
 # question: should this be limited to localhost only?
 if smarter_settings.debug_mode:
-    import debug_toolbar
+    # debug_model == True does not not guarantee that the debug toolbar is actually installed
+    try:
+        import debug_toolbar
 
-    urlpatterns += [
-        path("__debug__/", include(debug_toolbar.urls)),
-    ]
+        urlpatterns += [
+            path("__debug__/", include(debug_toolbar.urls)),
+        ]
+    except ImportError:
+        pass
+
 
 __all__ = ["urlpatterns"]
