@@ -51,7 +51,7 @@ spec:
             {{- toYaml .Values.app.extraVolumeMounts | nindent 12 }}
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: /healthz/
               port: {{ .Values.deployment.containerPort }}
               httpHeaders:
               - name: Host
@@ -75,7 +75,7 @@ spec:
             successThreshold: 1
           startupProbe:
             httpGet:
-              path: /healthz
+              path: /healthz/
               port: {{ .Values.deployment.containerPort }}
               httpHeaders:
               - name: Host
