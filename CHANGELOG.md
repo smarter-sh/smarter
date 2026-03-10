@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.184](https://github.com/smarter-sh/smarter/compare/v0.13.183...v0.13.184) (2026-03-10)
+
+### Bug Fixes
+
+* django template render errors django.template.base.VariableDoesNotExist: Failed lookup for key [name] in URLResolver ([d94aa49](https://github.com/smarter-sh/smarter/commit/d94aa495dbca3eec27ab06d34cddeaf79ab28d90))
+
 ## [0.13.183](https://github.com/smarter-sh/smarter/compare/v0.13.182...v0.13.183) (2026-03-10)
 
 ### Bug Fixes
