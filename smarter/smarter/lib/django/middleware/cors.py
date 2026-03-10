@@ -34,8 +34,6 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-logger.debug("Loading %s", formatted_text(__name__ + ".SmarterCorsMiddleware"))
-
 
 class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     """
@@ -189,7 +187,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             url = self.url.geturl() if isinstance(self.url, SplitResult) else None
             if url is not None and url not in retval:
                 retval.append(url)
-            logger.debug("%s.CORS_ALLOWED_ORIGINS() added origin: %s", self.formatted_class_name, url)
+            logger.info("%s.CORS_ALLOWED_ORIGINS() added origin: %s", self.formatted_class_name, url)
 
         # Allow localhost if host is api.local.smarter.sh (for dev pairing)
         request = getattr(self, "request", None)
@@ -207,7 +205,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
                 for origin in localhost_origins:
                     if origin not in retval:
                         retval.append(origin)
-                logger.debug(
+                logger.info(
                     "%s.CORS_ALLOWED_ORIGINS() added localhost origins for dev: %s",
                     self.formatted_class_name,
                     localhost_origins,

@@ -56,13 +56,28 @@ class Command(SmarterCommand):
     def handle(self, *args, **options):
         """ensure that switches exist. If not, then create them"""
 
+        def set_logging_level(level):
+            """
+            Set the logging level for the root logger and all its handlers.
+            """
+
+            logging.getLogger().setLevel(level)
+            for handler in logging.getLogger().handlers:
+                handler.setLevel(level)
+
+            for _, logger in logging.Logger.manager.loggerDict.items():
+                if isinstance(logger, logging.Logger):
+                    logger.setLevel(level)
+                    for handler in getattr(logger, "handlers", []):
+                        handler.setLevel(level)
+
         self.handle_begin()
 
         if options["enable"]:
             call_command("waffle_switch", SmarterWaffleSwitches.ENABLE_DEBUG_MODE, "on")
-            logging.getLogger().setLevel(logging.DEBUG)
+            set_logging_level(logging.DEBUG)
         elif options["disable"]:
             call_command("waffle_switch", SmarterWaffleSwitches.ENABLE_DEBUG_MODE, "off")
-            logging.getLogger().setLevel(logging.INFO)
+            set_logging_level(logging.INFO)
 
         self.handle_completed_success()

@@ -26,6 +26,10 @@ inputs:
   aws-region:
     description: "The AWS region to deploy to"
     required: true
+  debug-mode:
+    description: "Whether to enable debug mode (true/false)"
+    required: false
+    default: "false"
   dockerhub-username:
     description: "The DockerHub username"
     required: true
@@ -362,6 +366,7 @@ runs:
             "CACHES_LOCATION": ${{ env.CACHES_LOCATION && format('"{0}"', env.CACHES_LOCATION) || 'null' }},
             "CELERY_BROKER_URL": ${{ env.CELERY_BROKER_URL && format('"{0}"', env.CELERY_BROKER_URL) || 'null' }},
             "CELERY_RESULT_BACKEND": ${{ env.CELERY_RESULT_BACKEND && format('"{0}"', env.CELERY_RESULT_BACKEND) || 'null' }},
+            "DEBUG_MODE": ${{ inputs.debug-mode && format('"{0}"', inputs.debug-mode) || 'null' }},
             "DJANGO_SETTINGS_MODULE": ${{ env.DJANGO_SETTINGS_MODULE && format('"{0}"', env.DJANGO_SETTINGS_MODULE) || 'null' }},
             "DOCKERHUB_PAT": ${{ inputs.dockerhub-pat && format('"{0}"', inputs.dockerhub-pat) || 'null' }},
             "DOCKERHUB_USERNAME": ${{ inputs.dockerhub-username && format('"{0}"', inputs.dockerhub-username) || 'null' }},
