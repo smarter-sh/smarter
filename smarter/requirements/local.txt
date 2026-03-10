@@ -132,6 +132,7 @@ django==5.2.10
     #   -r smarter/requirements/in/base.in
     #   django-celery-beat
     #   django-cors-headers
+    #   django-debug-toolbar
     #   django-extensions
     #   django-filter
     #   django-redis
@@ -149,6 +150,8 @@ django==5.2.10
 django-celery-beat==2.8.1
     # via -r smarter/requirements/in/base.in
 django-cors-headers==4.9.0
+    # via -r smarter/requirements/in/base.in
+django-debug-toolbar==6.2.0
     # via -r smarter/requirements/in/base.in
 django-extensions==4.1
     # via -r smarter/requirements/in/local.in
@@ -555,7 +558,9 @@ sphinxcontrib-qthelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 sqlparse==0.5.5
-    # via django
+    # via
+    #   django
+    #   django-debug-toolbar
 stevedore==5.7.0
     # via bandit
 tenacity==9.1.4
