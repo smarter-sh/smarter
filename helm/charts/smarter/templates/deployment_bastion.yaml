@@ -15,12 +15,12 @@ spec:
     spec:
       containers:
       - name: "{{ .Values.app.name }}-bastion"
-        image: ubuntu:latest
-        command: ["/bin/bash", "-c", "while true; do sleep 3600; done"]
+        image: debian:bullseye-slim
+        command: ["/bin/bash", "-c", "apt-get update && apt-get install -y mariadb-client && while true; do sleep 3600; done"]
         resources:
           requests:
-            cpu: 10m
-            memory: 128Mi
+            cpu: 5m
+            memory: 64Mi
           limits:
             cpu: 100m
             memory: 256Mi
