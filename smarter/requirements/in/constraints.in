@@ -1,0 +1,8 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage:      additional global version constraints.
+#             -r constraints.in
+#
+# -----------------------------------------------------------------------------
