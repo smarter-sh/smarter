@@ -46,7 +46,7 @@ beautifulsoup4==4.13.3
     #   types-lxml
 billiard==4.2.4
     # via celery
-black==26.1.0
+black==26.3.1
     # via -r smarter/requirements/in/local.in
 boto3==1.42.64
     # via -r smarter/requirements/in/base.in
