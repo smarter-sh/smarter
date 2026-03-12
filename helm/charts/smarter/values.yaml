@@ -207,6 +207,30 @@ deployment:
   containerPort: 8000
 
 # -----------------------------------------------------------------------------
+# Horizontal Pod Autoscaler Configuration
+# ----------------------------------------------------------------------------
+hpa:
+  minReplicas: 2
+  maxReplicas: 25
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      selectPolicy: Max
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      selectPolicy: Min
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+
+# -----------------------------------------------------------------------------
 # Backing Services Configuration
 # ----------------------------------------------------------------------------
 externalDatabase:
