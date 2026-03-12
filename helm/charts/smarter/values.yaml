@@ -210,7 +210,7 @@ deployment:
 # Horizontal Pod Autoscaler Configuration
 # ----------------------------------------------------------------------------
 hpa:
-  minReplicas: 2
+  minReplicas: 3
   maxReplicas: 25
   targetCPUUtilizationPercentage: 75
   targetMemoryUtilizationPercentage: 80
