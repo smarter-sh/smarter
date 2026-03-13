@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.185](https://github.com/smarter-sh/smarter/compare/v0.13.184...v0.13.185) (2026-03-13)
+
+### Bug Fixes
+
+* use django slugify() to ensure that name is url friendly ([f7d69c7](https://github.com/smarter-sh/smarter/commit/f7d69c7f0e32478ba0b8f0d6c7eb77c65d157560))
+
 ## [0.13.184](https://github.com/smarter-sh/smarter/compare/v0.13.183...v0.13.184) (2026-03-10)
 
 ### Bug Fixes
