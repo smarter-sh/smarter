@@ -274,7 +274,7 @@ lxml==6.0.0
     # via -r smarter/requirements/in/base.in
 mailchimp-marketing==3.0.80
     # via -r smarter/requirements/in/base.in
-markdown==3.8
+markdown==3.8.1
     # via -r smarter/requirements/in/base.in
 markdown-it-py==4.0.0
     # via rich
