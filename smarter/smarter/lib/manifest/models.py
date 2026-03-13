@@ -8,6 +8,7 @@ import uuid
 from logging import getLogger
 from typing import List, Optional, Union
 
+from django.utils.text import slugify
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from smarter.common.api import SmarterApiVersions
@@ -118,6 +119,15 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
             raise SAMValidationError(
                 f"Invalid name: {v}. Ensure that you do not include characters that are not URL friendly."
             )
+        slugified = str(slugify(v, allow_unicode=False)).replace("-", "_")
+        if slugified != v:
+            logger.warning(
+                "%s.name '%s' is not URL-friendly. Converting to URL-friendly format: %s. Please use URL-friendly characters for names.",
+                cls.__name__,
+                v,
+                slugified,
+            )
+            v = slugified
         if not SmarterValidator.is_valid_snake_case(v):
             snake_case_name = camel_to_snake(v)
             logger.warning(
