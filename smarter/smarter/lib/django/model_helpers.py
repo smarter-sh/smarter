@@ -237,9 +237,16 @@ class MetaDataModel(TimestampedModel):
     description = models.TextField(
         help_text="A brief description of this resource. Be verbose, but not too verbose.",
         blank=True,
+        null=True,
         default="",
     )
-    version = models.CharField(max_length=255, default="1.0.0")
+    version = models.CharField(
+        max_length=255,
+        default="1.0.0",
+        help_text="Semantic version in the format MAJOR.MINOR.PATCH, e.g., '1.0.0'.",
+        blank=True,
+        null=True,
+    )
     tags = TaggableManager(
         blank=True,
         help_text="Tags for categorizing and organizing this resource.",
@@ -247,6 +254,7 @@ class MetaDataModel(TimestampedModel):
     annotations = models.JSONField(
         default=list,
         blank=True,
+        null=True,
         help_text="Key-value pairs for annotating this resource.",
         encoder=SmarterJSONEncoder,
     )

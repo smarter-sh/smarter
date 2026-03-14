@@ -41,7 +41,7 @@ pytest_mock
 # Code linters, formatters, and security scanners
 # ------------
 bandit                              # security linter
-black~                              # code formatter
+black                               # code formatter
 codespell                           # typo checker
 coverage                            # test coverage
 flake8                              # code linter

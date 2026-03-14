@@ -155,10 +155,9 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         :return: The validated ``description`` string.
         :rtype: str
         """
-        pass
 
     @field_validator("version")
-    def validate_version(cls, v) -> str:
+    def validate_version(cls, v) -> Optional[str]:
         """
         Validates the ``version`` field for a manifest.
         This method ensures that the ``version`` attribute is present and follows semantic versioning
@@ -171,7 +170,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         :rtype: str
         """
         if v in [None, ""]:
-            raise SAMValidationError("Missing required key version")
+            return None
         if not re.match(SmarterValidator.VALID_SEMANTIC_VERSION, v):
             raise SAMValidationError(
                 f"Invalid semantic version. Expected semantic version (ie '1.0.0-alpha') but got {v}"
@@ -209,6 +208,8 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         This ensures that if the input is a string (e.g., '[{"key": "value"}]'),
         it is parsed as a list before type validation.
         """
+        if v is None:
+            return v
         if isinstance(v, str):
             try:
                 v = json.loads(v)
