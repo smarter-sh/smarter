@@ -230,7 +230,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         This property provides the class object used for persistent storage and manipulation of API connection data in the database. It is useful for type checking, introspection, and for creating or querying ApiConnection instances.
 
         :return: The Django ORM model class for API connections.
-        :rtype: Type[ApiConnection]
+        :rtype: Type[smarter.apps.plugin.models.ApiConnection]
 
         .. seealso::
 
@@ -547,7 +547,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         This property retrieves the current `ApiConnection` object from the database using the account and name. If the connection does not exist, it attempts to create one from the manifest data. The returned object represents the persistent state of the API connection.
 
         :return: The `ApiConnection` ORM instance, or `None` if not found or not created.
-        :rtype: Optional[ApiConnection]
+        :rtype: Optional[smarter.apps.plugin.models.ApiConnection]
 
 
         .. attention::

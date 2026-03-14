@@ -129,7 +129,7 @@ Following are commonly asked questions about Smarter security.
 
   .. code-block:: python
 
-    CSRF_COOKIE_SAMESITE = “Lax”
+    CSRF_COOKIE_SAMESITE = "Lax"
 
   Note that Smarter uses this cookie to locally persist the chat session_id on the device.
   This is not sensitive data in that using it requires login authentication by
