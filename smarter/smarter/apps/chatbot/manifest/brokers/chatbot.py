@@ -1,6 +1,7 @@
 # pylint: disable=W0718
 """Smarter API Chatbot Manifest handler"""
 
+import datetime
 import logging
 from typing import List, Optional, Type
 
@@ -9,12 +10,18 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
-from smarter.apps.account.utils import valid_resource_owners_for_user
-from smarter.apps.chatbot.manifest.enum import SAMChatbotSpecKeys
+from smarter.apps.account.utils import (
+    smarter_cached_objects,
+    valid_resource_owners_for_user,
+)
 from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.apps.chatbot.manifest.models.chatbot.metadata import SAMChatbotMetadata
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
-from smarter.apps.chatbot.manifest.models.chatbot.spec import SAMChatbotSpec
+from smarter.apps.chatbot.manifest.models.chatbot.spec import (
+    SAMChatbotSpec,
+    SAMChatbotSpecConfig,
+)
+from smarter.apps.chatbot.manifest.models.chatbot.status import SAMChatbotStatus
 from smarter.apps.chatbot.models import (
     ChatBot,
     ChatBotAPIKey,
@@ -436,8 +443,10 @@ class SAMChatbotBroker(AbstractBroker):
         See also:
 
         - :py:meth:`smarter.apps.chatbot.manifest.brokers.chatbot.SAMChatbotBroker.manifest_to_django_orm`
-        - :py:class:`smarter.lib.manifest.enumSAMKeys`
-        - :py:class:`smarter.apps.chatbot.manifest.enum.SAMMetadataKeys`
+        - :py:class:`smarter.apps.chatbot.manifest.models.chatbot.SAMChatbot`
+        - :py:class:`smarter.apps.chatbot.manifest.models.chatbot.metadata.SAMChatbotMetadata`
+        - :py:class:`smarter.apps.chatbot.manifest.models.chatbot.spec.SAMChatbotSpec`
+        - :py:class:`smarter.apps.chatbot.manifest.models.chatbot.status.SAMChatbotStatus`
         """
         if not self.chatbot:
             logger.warning(
@@ -462,38 +471,48 @@ class SAMChatbotBroker(AbstractBroker):
 
         api_key = self.chatbot_api_key.api_key if self.chatbot_api_key else None
 
-        data = {
-            SAMKeys.APIVERSION.value: self.api_version,
-            SAMKeys.KIND.value: self.kind,
-            SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: self.chatbot.name,
-                SAMMetadataKeys.DESCRIPTION.value: self.chatbot.description,
-                SAMMetadataKeys.VERSION.value: self.chatbot.version,
-            },
-            SAMKeys.SPEC.value: {
-                SAMChatbotSpecKeys.CONFIG.value: chatbot_dict,
-                SAMChatbotSpecKeys.PLUGINS.value: plugin_names,
-                SAMChatbotSpecKeys.FUNCTIONS.value: function_names,
-                SAMChatbotSpecKeys.AUTH_TOKEN.value: api_key.name if api_key else None,
-            },
-            SAMKeys.STATUS.value: {
-                "created": self.chatbot.created_at.isoformat(),
-                "modified": self.chatbot.updated_at.isoformat(),
-                "deployed": self.chatbot.deployed,
-                "defaultHost": self.chatbot.default_host,
-                "defaultUrl": self.chatbot.default_url,
-                "customUrl": self.chatbot.custom_url,
-                "sandboxHost": self.chatbot.sandbox_host,
-                "sandboxUrl": self.chatbot.sandbox_url,
-                "hostname": self.chatbot.hostname,
-                "url": self.chatbot.url,
-                "urlChatbot": self.chatbot.url_chatbot,
-                "urlChatapp": self.chatbot.url_chatapp,
-                "urlChatConfig": self.chatbot.url_chat_config,
-                "dnsVerificationStatus": self.chatbot.dns_verification_status,
-            },
-        }
-        return data
+        meta = SAMChatbotMetadata(
+            name=self.chatbot.name,
+            description=self.chatbot.description,
+            version=self.chatbot.version,
+            tags=self.chatbot.tags.names() if self.chatbot.tags else [],
+            annotations=self.chatbot.annotations if isinstance(self.chatbot.annotations, list) else [],
+        )
+        spec_config = SAMChatbotSpecConfig(**chatbot_dict)
+        spec = SAMChatbotSpec(config=spec_config, plugins=plugin_names, functions=function_names, apiKey=api_key)
+        status = SAMChatbotStatus(
+            accountNumber=self.account.account_number,
+            username=self.user_profile.user.username,
+            created=self.chatbot.created_at,
+            modified=self.chatbot.updated_at,
+            deployed=self.chatbot.deployed,
+            defaultHost=self.chatbot.default_host,
+            defaultUrl=self.chatbot.default_url,
+            customUrl=self.chatbot.custom_url,
+            sandboxHost=self.chatbot.sandbox_host,
+            sandboxUrl=self.chatbot.sandbox_url,
+            hostname=self.chatbot.hostname,
+            url=self.chatbot.url,
+            urlChatbot=self.chatbot.url_chatbot,
+            urlChatapp=self.chatbot.url_chatapp,
+            urlChatConfig=self.chatbot.url_chat_config,
+            dnsVerificationStatus=self.chatbot.dns_verification_status,
+        )
+        model = SAMChatbot(
+            apiVersion=self.api_version,
+            kind=self.kind,
+            metadata=meta,
+            spec=spec,
+            status=status,
+        )
+
+        logger.debug(
+            "%s.django_orm_to_manifest_dict() converted ChatBot %s to manifest dict: %s",
+            self.formatted_class_name,
+            self.chatbot.name,
+            model.model_dump(),
+        )
+        return model.model_dump()
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -631,55 +650,90 @@ class SAMChatbotBroker(AbstractBroker):
         - :py:class:`from smarter.common.conf.SettingsDefaults`
 
         """
+
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        data = {
-            SAMKeys.APIVERSION.value: self.api_version,
-            SAMKeys.KIND.value: self.kind,
-            SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "example_chatbot",
-                SAMMetadataKeys.DESCRIPTION.value: "To create and deploy an example Smarter chatbot. Prompt with 'example function calling' to trigger the example Static Plugin",
-                SAMMetadataKeys.VERSION.value: "0.1.0",
-            },
-            SAMKeys.SPEC.value: {
-                SAMChatbotSpecKeys.CONFIG.value: {
-                    "deployed": True,
-                    "provider": SettingsDefaults.LLM_DEFAULT_PROVIDER,
-                    "defaultModel": SettingsDefaults.LLM_DEFAULT_MODEL,
-                    "defaultSystemRole": (
-                        "You are a helpful chatbot. When given the opportunity to utilize "
-                        "function calling, you should always do so. This will allow you to "
-                        "provide the best possible responses to the user. If you are unable to "
-                        "provide a response, you should prompt the user for more information. If "
-                        "you are still unable to provide a response, you should inform the user "
-                        "that you are unable to help them at this time."
-                    ),
-                    "defaultTemperature": SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-                    "defaultMaxTokens": SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
-                    "appName": "Example Chatbot",
-                    "appAssistant": "Elle",
-                    "appWelcomeMessage": "Welcome to the Example Chatbot! How can I help you today?",
-                    "appExamplePrompts": [
-                        "What is the weather in New York?",
-                        "Tell me a joke",
-                        "what's the current price of Apple stock?",
-                        "How many days ago was 29-Feb-1972?",
-                    ],
-                    "appPlaceholder": "Ask me anything...",
-                    "appInfoUrl": "https://example.com",
-                    "appBackgroundImageUrl": "https://example.com/background-image.jpg",
-                    "appLogoUrl": "https://example.com/logo.png",
-                    "appFileAttachment": False,
-                    "subdomain": "example-chatbot",
-                    "customDomain": None,
-                    "dnsVerificationStatus": "Not Verified",
-                },
-                SAMChatbotSpecKeys.PLUGINS.value: get_plugin_examples_by_name(),
-                SAMChatbotSpecKeys.FUNCTIONS.value: ["weather", "datemath", "stockprice"],
-                SAMChatbotSpecKeys.AUTH_TOKEN.value: "snake_case_api_key_name",
-            },
-        }
-        return self.json_response_ok(command=command, data=data)
+
+        example_chatbot = ChatBot.objects.filter(name="Example Chatbot").first()
+        if not example_chatbot:
+            example_chatbot = ChatBot(
+                subdomain=None,
+                custom_domain=None,
+                deployed=False,
+                provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+                default_model=SettingsDefaults.LLM_DEFAULT_MODEL,
+                default_system_role="You are a helpful assistant.",
+                default_temperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+                default_max_tokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+                app_name="Example Chatbot",
+                app_assistant="Example Assistant",
+                app_welcome_message="Welcome to the Example Chatbot! How can I assist you today?",
+                app_example_prompts=[
+                    "What is the weather like today?",
+                    "Can you tell me a joke?",
+                    "How do I reset my password?",
+                ],
+                app_placeholder="Type your message here...",
+                app_info_url="https://example.com/info",
+                app_background_image_url="https://cdn.smarter.sh/chat-ui/background.png",
+                app_logo_url="https://cdn.smarter.sh/chat-ui/logo.png",
+                app_file_attachment=False,
+            )
+
+        meta_data = SAMChatbotMetadata(
+            name=example_chatbot.name,
+            description=example_chatbot.description,
+            version=example_chatbot.version,
+            tags=example_chatbot.tags.names() if example_chatbot.tags else [],
+            annotations=example_chatbot.annotations if isinstance(example_chatbot.annotations, list) else [],
+        )
+        config = SAMChatbotSpecConfig(
+            subdomain=example_chatbot.subdomain.name if example_chatbot.subdomain else None,
+            customDomain=example_chatbot.custom_domain.name if example_chatbot.custom_domain else None,
+            deployed=example_chatbot.deployed,
+            provider=example_chatbot.provider,
+            defaultModel=example_chatbot.default_model,
+            defaultSystemRole=example_chatbot.default_system_role,
+            defaultTemperature=example_chatbot.default_temperature,
+            defaultMaxTokens=example_chatbot.default_max_tokens,
+            appName=example_chatbot.app_name,
+            appAssistant=example_chatbot.app_assistant,
+            appWelcomeMessage=example_chatbot.app_welcome_message,
+            appExamplePrompts=example_chatbot.app_example_prompts,
+            appPlaceholder=example_chatbot.app_placeholder,
+            appInfoUrl=example_chatbot.app_info_url,
+            appBackgroundImageUrl=example_chatbot.app_background_image_url,
+            appLogoUrl=example_chatbot.app_logo_url,
+            appFileAttachment=example_chatbot.app_file_attachment,
+        )
+
+        spec = SAMChatbotSpec(
+            config=config,
+            plugins=get_plugin_examples_by_name(),
+            functions=["date_calculator", "get_current_weather"],
+            apiKey="snake_case_api_key_name",
+        )
+        status = SAMChatbotStatus(
+            accountNumber=smarter_cached_objects.smarter_account.account_number,
+            username=smarter_cached_objects.smarter_user.username,
+            created=datetime.datetime.now(),
+            modified=datetime.datetime.now(),
+            deployed=False,
+            defaultHost="example-chatbot.smarterapi.com",
+            defaultUrl="https://example-chatbot.smarterapi.com",
+            customUrl=None,
+            sandboxHost="https://example.com",
+            sandboxUrl="https://example.com/api/v1/chatbots/1/",
+            hostname="example-chatbot.smarterapi.com",
+            url="https://example.com/api/v1/chatbots/1/",
+            urlChatbot="https://example-chatbot.smarterapi.com/chatbot",
+            urlChatapp="https://example-chatbot.smarterapi.com/chatapp",
+            urlChatConfig="https://example-chatbot.smarterapi.com/chatconfig",
+            dnsVerificationStatus="verified",
+        )
+        model = SAMChatbot(apiVersion=self.api_version, kind=self.kind, metadata=meta_data, spec=spec, status=status)
+
+        return self.json_response_ok(command=command, data=model.model_dump())
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
