@@ -29,7 +29,7 @@ self-onboard their models to your Smarter installation.
 .. seealso::
 
     - :doc:`Smarter Installation Guide <../smarter-platform/installation>`
-    - :doc:`OpenAI Getting Started Guild <../smarter-framework/guides/openai-api-getting-started-guide>`
+    - :doc:`OpenAI Getting Started Guide <../smarter-framework/guides/openai-api-getting-started-guide>`
 
 Technical Reference
 -------------------

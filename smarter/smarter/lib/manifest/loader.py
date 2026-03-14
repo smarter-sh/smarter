@@ -1,6 +1,7 @@
 """Smarter API Manifest Loader base class."""
 
 import logging
+import warnings
 from enum import Enum
 from typing import Any, Optional, Union
 
@@ -556,6 +557,12 @@ class SAMLoader(SmarterHelperMixin):
         """
 
         def recursive_validator(recursed_data: Optional[dict] = None, recursed_spec: Optional[dict] = None):
+            warnings.warn(
+                "recursive_validator() is deprecated and will be removed in a future release.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
             this_overall_spec = recursed_spec or self.specification
             this_data = recursed_data or self.json_data
             if not this_data:
@@ -582,8 +589,10 @@ class SAMLoader(SmarterHelperMixin):
             return None
         if not self.data_format in [SAMDataFormats.JSON, SAMDataFormats.YAML]:
             raise SAMLoaderError("Invalid data format. Supported formats: json, yaml")
+
+        # mcdaniel 2026-03-14: this has outlived its usefulness. Deprecating.
         # recursively validate the json representation of the manifest data
-        recursive_validator()
+        # recursive_validator()
 
     # -------------------------------------------------------------------------
     # manifest properties
