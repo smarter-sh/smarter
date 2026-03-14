@@ -90,8 +90,8 @@
 
   <!-- Chatbot List View  -->
   <div class="list-view">
-    <div id="kt_app_content" class="app-content flex-column-fluid">
-      <div id="kt_app_content_container" class="app-container container-xxl">
+    <div id="kt_app_content_list_view" class="app-content flex-column-fluid">
+      <div id="kt_app_content_list_view_container" class="app-container container-xxl">
         <div class="row g-5 g-xl-10">
           <div class="col-xl-12 mb-5 mb-xl-10">
             {% if prompt_list.user_chatbots_count > 0 %}
@@ -117,7 +117,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for chatbot_helper in prompt_list.user_chatbots|default:"" %}
+                  {% for chatbot_helper in prompt_list.user_chatbots %}
                   <tr>
                     <td class="name-col p-3">
                       <a href="{% url 'prompt_workbench:chat_by_name' chatbot_helper.rfc1034_compliant_name %}">
@@ -182,7 +182,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for chatbot_helper in prompt_list.shared_chatbots|default:"" %}
+                  {% for chatbot_helper in prompt_list.shared_chatbots %}
                   <tr>
                     <td class="name-col p-3">
                       <a href="{% url 'prompt_workbench:chat_by_name' chatbot_helper.rfc1034_compliant_name %}">
@@ -231,9 +231,9 @@
 
   <!-- Chatbot Card View  -->
   <div class="card-view">
-    <div id="kt_app_content" class="app-content flex-column-fluid">
+    <div id="kt_app_content_card_view" class="app-content flex-column-fluid">
       <!--begin::Content container-->
-      <div id="kt_app_content_container" class="app-container container-xxl">
+      <div id="kt_app_content_card_view_container" class="app-container container-xxl">
         <!--begin::Row-->
         <div class="row g-5 g-xl-10">
           <!--begin::Col-->
@@ -246,7 +246,7 @@
                 <h3 class="text-center">Your Chatbots</h3>
               </div>
               {% endif %}
-              {% for chatbot_helper in prompt_list.user_chatbots|default:"" %}
+              {% for chatbot_helper in prompt_list.user_chatbots %}
               <!--begin::Col User Chatbot Card-->
               <article class="col-12 mt-1 p-2">
                 <!--begin::Chatbot card-->
@@ -348,7 +348,7 @@
               <div class="{% if prompt_list.user_chatbots_count > 0 %}mt-5{% else %}mt-15{% endif %}">
                 <h3 class="text-center">Shared Chatbots</h3>
               </div>
-              {% for chatbot_helper in prompt_list.shared_chatbots|default:"" %}
+              {% for chatbot_helper in prompt_list.shared_chatbots %}
               <!--begin::Col Shared Chatbot Card-->
               <article class="col-12 mt-1 p-2">
                 <!--begin::Chatbot card-->

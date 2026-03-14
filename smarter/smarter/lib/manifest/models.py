@@ -83,10 +83,10 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     """
 
     name: str = Field(..., description="The camelCase name of the manifest resource")
-    description: str = Field(
+    description: Optional[str] = Field(
         ..., description="The description for this resource. Be brief. Keep it under 255 characters."
     )
-    version: str = Field(..., description="The semantic version of the manifest. Example: 0.1.0")
+    version: Optional[str] = Field(..., description="The semantic version of the manifest. Example: 0.1.0")
     tags: Optional[List[str]] = Field(
         default_factory=list,
         description="The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
@@ -143,7 +143,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         return v
 
     @field_validator("description")
-    def validate_description(cls, v) -> str:
+    def validate_description(cls, v) -> Optional[str]:
         """
         Validates the ``description`` field for a manifest.
         This method ensures that the ``description`` attribute is present. If the value is missing,
@@ -155,9 +155,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         :return: The validated ``description`` string.
         :rtype: str
         """
-        if v in [None, ""]:
-            raise SAMValidationError("Missing required key description")
-        return v
+        pass
 
     @field_validator("version")
     def validate_version(cls, v) -> str:
@@ -240,29 +238,33 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
             try:
                 v = json.loads(v)
             except Exception as e:
-                raise SAMValidationError(f"Annotations field could not be parsed as JSON: {e}") from e
+                raise SAMValidationError(f"Annotations {v} could not be parsed as JSON: {e}") from e
         if not isinstance(v, list):
-            raise SAMValidationError("Annotations must be a list of dictionaries.")
+            raise SAMValidationError(f"Annotations {v} must be a list of dictionaries.")
         for annotation in v:
             if not isinstance(annotation, dict):
-                raise SAMValidationError(f"Each annotation must be a dictionary, got {type(annotation)}: {annotation}")
+                raise SAMValidationError(
+                    f"Each annotation must be a dictionary, got {type(annotation)}: {annotation} in {v}"
+                )
             for key, value in annotation.items():
                 # Key must be URL-friendly
                 if not re.match(SmarterValidator.VALID_URL_FRIENDLY_STRING, str(key)):
                     raise SAMValidationError(
-                        f"Invalid annotation key: {key}. Ensure that you do not include characters that are not URL friendly."
+                        f"Invalid annotation key: {key} found in {v}. Ensure that you do not include characters that are not URL friendly."
                     )
                 # Accept string, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict, or None as value
                 allowed_types = VALID_ANNOTATION_VALUE_TYPES_SET
                 if not isinstance(value, allowed_types) and value is not None:
                     raise SAMValidationError(
-                        f"Invalid annotation value type for key '{key}': {type(value)}. Must be a string, int, float, bool, date, datetime, Decimal, UUID, bytes, list, dict, or None."
+                        f"Invalid annotation value type for key '{key}': {type(value)} found in {v}. Must be a string, int, float, bool, date, datetime, Decimal, UUID, bytes, list, dict, or None."
                     )
                 # If string, allow multi-line (YAML block scalar) and comma-separated values
                 if isinstance(value, str):
                     # Allow any string, but optionally check for length or forbidden characters
                     if len(value) > 2048:
-                        raise SAMValidationError(f"Annotation value for key '{key}' is too long (max 2048 chars).")
+                        raise SAMValidationError(
+                            f"Annotation value for key '{key}' is too long (max 2048 chars) found in {v}."
+                        )
         return v
 
 
