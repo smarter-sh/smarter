@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.187](https://github.com/smarter-sh/smarter/compare/v0.13.186...v0.13.187) (2026-03-14)
+
+### Bug Fixes
+
+* add sane defaults for defaultTemperature and defaultMaxTokens ([c27546a](https://github.com/smarter-sh/smarter/commit/c27546abac75b03b6f104453bffa5dcbb876360f))
+* loosen null and blank restrictions on manifest metadata ([c4224fc](https://github.com/smarter-sh/smarter/commit/c4224fc1612cb9acd0d379e170e02c8de3aeea77))
+
 ## [0.13.186](https://github.com/smarter-sh/smarter/compare/v0.13.185...v0.13.186) (2026-03-14)
 
 ### Bug Fixes
