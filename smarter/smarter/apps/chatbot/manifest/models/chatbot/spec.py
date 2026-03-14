@@ -68,10 +68,13 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
     )
     defaultTemperature: Optional[float] = Field(
         None,
+        ge=0.0,
+        le=1.0,
         description=f"{class_identifier}.default_temperature[float]. Optional. The default temperature to use for the chatbot. This defaults to {SettingsDefaults.LLM_DEFAULT_TEMPERATURE}.\nThe temperature is a floating point value between 0 and 1 that controls the randomness of the chatbot's responses. A value of 0 means that the chatbot will always choose the most likely response, while a value of 1 means that the chatbot will choose a random response. Low values work better for information retrieval tasks, while high values work better for creative tasks.",
     )
     defaultMaxTokens: Optional[int] = Field(
         None,
+        gt=0,
         description=f"{class_identifier}.default_max_tokens[int]. Optional. The default max tokens to use for the chatbot. This defaults to {SettingsDefaults.LLM_DEFAULT_MAX_TOKENS}.\nThe max tokens is an integer value that controls the maximum number of tokens in the chatbot's response. The maximum number of tokens is the sum of the tokens in the prompt and the tokens in the response. The maximum number of tokens varies by provider. Refer to vendor documentation as this value routinely changes as new models are released.",
     )
 
@@ -108,7 +111,7 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
         description=f"{class_identifier}.app_logo_url[str]. Optional. The URL for the chatbot logo. This is future use and is anticipated to be used for meta presentation of this chatbot in UI collections.",
     )
     appFileAttachment: Optional[bool] = Field(
-        None,
+        False,
         description=f"{class_identifier}.app_file_attachment[bool]. Optional. Whether the chatbot supports file attachments. Defaults to False. When set to True, a file attachment button will be displayed in the chat input box of the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-chat.",
     )
 
