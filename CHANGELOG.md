@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.186](https://github.com/smarter-sh/smarter/compare/v0.13.185...v0.13.186) (2026-03-14)
+
+### Bug Fixes
+
+* refactor chatbot broker to use SAM model for rendering json ([1b76d68](https://github.com/smarter-sh/smarter/commit/1b76d68a1626d987ab5043c5f815b577aa207574))
+
 ## [0.13.185](https://github.com/smarter-sh/smarter/compare/v0.13.184...v0.13.185) (2026-03-13)
 
 ### Bug Fixes
