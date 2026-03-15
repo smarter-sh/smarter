@@ -642,6 +642,16 @@ class SAMUserBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
+    def ORMMetaModelClass(self) -> Type[User]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[User]
+        """
+        return User
+
+    @property
     def ORMModelClass(self) -> Type[User]:
         """
         Return the model class associated with the Smarter API User.

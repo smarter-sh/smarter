@@ -93,7 +93,7 @@ class SmarterValidator:
     VALID_SEMANTIC_VERSION = r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$"
     """Pattern for validating semantic version strings."""
 
-    VALID_URL_FRIENDLY_STRING = r"^[a-zA-Z0-9_-]+$"
+    VALID_URL_FRIENDLY_STRING = r"^[a-zA-Z0-9._/-]+$"
     """Pattern for validating URL slugs (alphanumeric, hyphens, underscores)."""
 
     VALID_CLEAN_STRING = r"^(?!-)[A-Za-z0-9_-]{1,63}(?<!-)(\.[A-Za-z0-9_-]{1,63})*$"

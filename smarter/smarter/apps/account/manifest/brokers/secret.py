@@ -558,6 +558,16 @@ class SAMSecretBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
+    def ORMMetaModelClass(self) -> Type[Secret]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[Secret]
+        """
+        return Secret
+
+    @property
     def ORMModelClass(self) -> Type[Secret]:
         """
         Return the Django ORM model class for Smarter API Secret.

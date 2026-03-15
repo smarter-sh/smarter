@@ -210,12 +210,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             kwargs,
         )
         # ----------------------------------------------------------------------
-        # Set API version, name, and kind.
-        # These will presumably be overridden once a manifest or loader
-        # is provided.
+        # Attempt to preset the API version, name, and kind.
+        #
+        # we need this in cases where neither a manifest nor loader is provided.
+        # if we have a user_profile and name then we'll be able to attempt
+        # to initialize the loader from the ORM, which will in turn allow us to
+        # load the manifest.
         # ----------------------------------------------------------------------
         logger.debug(
-            "%s.__init__() attempting to preset api_version, name, and kind from args and kwargs. This logic seems to be 'belt & suspenders' andcan potentially be removed in future.",
+            "%s.__init__() attempting to preset api_version, name, and kind from args and kwargs.",
             self.abstract_broker_logger_prefix,
         )
         self.api_version = api_version or SmarterApiVersions.V1
@@ -224,8 +227,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         self.kind_setter(kind or kwargs.pop("kind", None))
 
         # ----------------------------------------------------------------------
-        # Initial resolution of parameters, taking into consideration that
-        # they may be passed in via args or kwargs.
+        # Resolve all initialization parameters to pass to the mixins.
         # ----------------------------------------------------------------------
         request = (
             request
@@ -282,21 +284,38 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         name = self._loader.manifest_metadata.get("name")
                         self.name_cached_property_setter(name)  # type: ignore
 
+        # ----------------------------------------------------------------------
+        # Fallback logic to initialize from the ORM, if we have a name and
+        # user_profile, and we don't already have a manifest or loader.
+        # ----------------------------------------------------------------------
         if not self._manifest and not self._loader:
             if self.name and self.user_profile:
                 logger.debug(
-                    "%s.__init__() - Attempting to initialize loader from %s name and user_profile.",
+                    "%s.__init__() - Attempting to initialize loader from %s using name %s and user_profile %s.",
                     self.abstract_broker_logger_prefix,
                     self.ORMModelClass.__name__,
+                    self.name,
+                    self.user_profile,
                 )
                 try:
-                    self._orm_instance = self.ORMModelClass.objects.get(name=self.name, user_profile=self.user_profile)
+                    self._orm_instance = self.ORMMetaModelClass.objects.get(
+                        name=self.name, user_profile=self.user_profile
+                    )
                     logger.debug(
                         "%s.__init__() - Successfully initialized ORM instance from name and user_profile: %s",
                         self.abstract_broker_logger_prefix,
                         self.orm_instance,
                     )
-                except self.ORMModelClass.DoesNotExist:
+                except self.ORMMetaModelClass.DoesNotExist:
+                    self._orm_instance = None
+                # pylint: disable=broad-except
+                except Exception as e:
+                    logger.error(
+                        "%s.__init__() - unexpected error initializing ORM instance from name and user_profile: %s. Error: %s",
+                        self.abstract_broker_logger_prefix,
+                        self.name,
+                        e,
+                    )
                     self._orm_instance = None
 
         self._validated = bool(self._manifest) or bool(self._loader and self.loader.ready) or bool(self._orm_instance)
@@ -464,7 +483,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.abstract_broker_logger_prefix,
             )
             return True
-        if bool(self.orm_instance):
+        if bool(self._orm_instance):
             logger.debug(
                 "%s.is_ready_abstract_broker() returning true because ORM instance is available.",
                 self.abstract_broker_logger_prefix,
@@ -854,6 +873,19 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :rtype: Type[ModelSerializer]
         """
         raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
+
+    @property
+    @abstractmethod
+    def ORMMetaModelClass(self) -> Type[MetaDataWithOwnershipModel]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[MetaDataWithOwnershipModel]
+        """
+        raise SAMBrokerErrorNotImplemented(
+            message="Subclasses must implement the MetaModelClass", thing=self.thing, command=None
+        )
 
     @property
     @abstractmethod
