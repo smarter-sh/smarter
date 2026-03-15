@@ -1733,7 +1733,18 @@ class SmarterRequestMixin(AccountMixin):
             )
             return True
 
-        logger.warning(
+        # ---------------------------------------------------------------------
+        # workbench urls: http://localhost:9357/workbench/chatbots/<int:id>/
+        # ---------------------------------------------------------------------
+        if path_parts[0] == "workbench" and path_parts[1] == "chatbots" and path_parts[2].isnumeric():
+            logger.debug(
+                "%s.is_chatbot_sandbox_url() - url %s is a Chatbot listview or detail view.",
+                self.request_mixin_logger_prefix,
+                self.url,
+            )
+            return False
+
+        logger.debug(
             "%s.is_chatbot_sandbox_url() - could not verify whether url is a chatbot sandbox url: %s",
             self.request_mixin_logger_prefix,
             path_parts,
