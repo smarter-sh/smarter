@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and waffle.switch_is_active(
@@ -400,6 +401,7 @@ class SAMAccountBroker(AbstractBroker):
         """
         Transform the Smarter API Account manifest into a Django ORM model.
         """
+        metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
@@ -422,11 +424,8 @@ class SAMAccountBroker(AbstractBroker):
             )
         # Convert tags (list[str]) to set for TaggableManager compatibility
         return {
+            **metadata,
             "account": self.brokered_account,
-            "name": self.manifest.metadata.name,
-            "description": self.manifest.metadata.description,
-            "version": self.manifest.metadata.version,
-            "annotations": json.loads(json.dumps(self.manifest.metadata.annotations)),
             **config_dump,
         }
 
@@ -643,6 +642,11 @@ class SAMAccountBroker(AbstractBroker):
         """
         Applies the manifest by copying its data to the Django ORM `Account` model and saving the model to the database.
 
+        .. note::
+
+            tags are handled separately because they are of type TaggableManager and
+            require a different method to set them.
+
         :param request: The HTTP request object.
         :type request: "HttpRequest"
         :param args: Additional positional arguments.
@@ -685,7 +689,7 @@ class SAMAccountBroker(AbstractBroker):
                 command=command,
             )
 
-        readonly_fields = ["id", "created_at", "updated_at", "account_number"]
+        readonly_fields = ["id", "created_at", "updated_at", "account_number", "tags"]
 
         if not self.manifest:
             raise SAMBrokerErrorNotReady(
@@ -697,6 +701,7 @@ class SAMAccountBroker(AbstractBroker):
             self.brokered_account = Account()
         try:
             data = self.manifest_to_django_orm()
+            tags = data.get("tags", [])
             for field in readonly_fields:
                 logger.debug(
                     "%s.apply() Removing readonly field %s from data for %s",
@@ -715,6 +720,7 @@ class SAMAccountBroker(AbstractBroker):
                 serializers.serialize("json", [self.brokered_account]),
             )
             self.brokered_account.save()
+            self.brokered_account.tags.set(tags)
             tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
             self.brokered_account.tags.set(tags)
             self.brokered_account.refresh_from_db()
