@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.190](https://github.com/smarter-sh/smarter/compare/v0.13.189...v0.13.190) (2026-03-15)
+
+### Bug Fixes
+
+* re-order the chatbot listview by modification date desc ([c118cfe](https://github.com/smarter-sh/smarter/commit/c118cfe88f4e200a2ebdafd1847d788a45719a90))
+
 ## [0.13.189](https://github.com/smarter-sh/smarter/compare/v0.13.188...v0.13.189) (2026-03-15)
 
 ### Bug Fixes
