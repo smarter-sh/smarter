@@ -12,7 +12,6 @@ from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import User
 from smarter.apps.account.utils import cache_invalidate
-from smarter.lib import json
 from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
 from smarter.lib.drf.manifest.models.auth_token.const import MANIFEST_KIND
 from smarter.lib.drf.manifest.models.auth_token.metadata import (
@@ -167,6 +166,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         Transform the Smarter API SAMSmarterAuthToken manifest into a Django ORM model.
         """
         logger.debug("%s.manifest_to_django_orm() called", self.formatted_class_name)
+        metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
@@ -189,11 +189,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             )
 
         return {
-            "account": self.account,
-            "name": self.manifest.metadata.name,
-            "description": self.manifest.metadata.description,
-            "version": self.manifest.metadata.version,
-            "annotations": json.loads(json.dumps(self.manifest.metadata.annotations)),
+            **metadata,
             **config_dump,
         }
 
@@ -454,6 +450,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             "username",
             "digest",
             "token_key",
+            "tags",
         ]
 
         if not self.user.is_staff:
@@ -476,6 +473,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             )
         try:
             data = self.manifest_to_django_orm()
+            tags = data.get("tags", [])
             for field in readonly_fields:
                 logger.debug(
                     "%s.apply() Removing readonly field %s from data for %s",
@@ -528,15 +526,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 serializers.serialize("json", [self.smarter_auth_token]),
             )
             self.smarter_auth_token.save()
-            tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
-            logger.debug(
-                "%s.apply() Setting tags for %s to %s",
-                self.formatted_class_name,
-                self.smarter_auth_token,
-                tags,
-            )
-            self.smarter_auth_token.tags = list(tags)
-            self.smarter_auth_token.save()
+            self.smarter_auth_token.tags.set(tags)
             self.smarter_auth_token.refresh_from_db()
             cache_invalidate(user=self.user, account=self.smarter_auth_token)  # type: ignore
             logger.debug(

@@ -39,6 +39,7 @@ from smarter.lib.manifest.enum import (
 )
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) and waffle.switch_is_active(
@@ -158,9 +159,14 @@ class SAMProviderBroker(AbstractBroker):
            - :class:`smarter.apps.account.models.Provider`
 
         """
+        metadata = super().manifest_to_django_orm()
         dump = self.manifest.spec.provider.model_dump()  # type: ignore[return-value]
         dump = self.camel_to_snake(dump)
-        return dump  # type: ignore[return-value]
+        if not isinstance(dump, dict):
+            raise SAMProviderBrokerError(
+                f"Failed to convert {self.kind} {self.manifest.metadata.name} provider spec to dict", thing=self.kind
+            )
+        return {**metadata, **dump}
 
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
@@ -406,7 +412,6 @@ class SAMProviderBroker(AbstractBroker):
         )
         spec = SAMProviderSpec(provider=spec_provider)
         status = SAMProviderStatus(
-            owner="CEO Acme",
             created=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
             modified=datetime.datetime(2024, 1, 15, 12, 0, 0, tzinfo=datetime.timezone.utc),
             is_active=True,
@@ -508,6 +513,12 @@ class SAMProviderBroker(AbstractBroker):
         """
         Apply the manifest data to the Django ORM `Provider` model and persist changes to the database.
 
+
+        .. note::
+
+            tags are handled separately because they are of type TaggableManager and
+            require a different method to set them.
+
         :param request: The Django `HttpRequest` object.
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
@@ -564,9 +575,11 @@ class SAMProviderBroker(AbstractBroker):
             SAMProviderSpecKeys.IS_SUSPENDED.value,
             SAMProviderSpecKeys.TOS_ACCEPTED_AT.value,
             SAMProviderSpecKeys.TOS_ACCEPTED_BY.value,
+            "tags",
         ]
         try:
             data = self.manifest_to_django_orm()
+            tags = data.get("tags", [])
             for field in readonly_fields:
                 data.pop(field, None)
             for key, value in data.items():
@@ -574,6 +587,7 @@ class SAMProviderBroker(AbstractBroker):
             if not isinstance(self.provider, Provider):
                 raise SAMProviderBrokerError("Provider is not set", thing=self.kind, command=command)
             self.provider.save()
+            self.provider.tags.set(tags)
         except Exception as e:
             raise SAMProviderBrokerError(
                 f"Failed to apply {self.kind} {self.provider if isinstance(self.provider, Provider) else None}",

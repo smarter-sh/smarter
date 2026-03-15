@@ -105,11 +105,14 @@ class SAMChatBroker(AbstractBroker):
         """
         Transform the Smarter API SAMChat manifest into a Django ORM model.
         """
-        if self.manifest:
-            config_dump = self.manifest.spec.config.model_dump()
-            config_dump = self.camel_to_snake(config_dump)
-            return config_dump
-        return None
+        metadata = super().manifest_to_django_orm()
+        config_dump = self.manifest.spec.config.model_dump()
+        config_dump = self.camel_to_snake(config_dump)
+        if not isinstance(config_dump, dict):
+            raise SAMChatBrokerError(
+                f"Failed to convert {self.kind} {self.manifest.metadata.name} config to dict", thing=self.kind
+            )
+        return {**metadata, **config_dump}
 
     def django_orm_to_manifest_dict(self) -> dict:
         """
