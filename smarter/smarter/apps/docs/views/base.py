@@ -61,7 +61,8 @@ class DocsBaseView(SmarterAuthenticatedWebView):
             )
 
         logger.debug(
-            "Getting brokered JSON response for reverse_name=%s, kind=%s, request.user=%s, args=%s, kwargs=%s",
+            "%s.get_brokered_json_response() reverse_name=%s, kind=%s, request.user=%s, args=%s, kwargs=%s",
+            self.formatted_class_name,
             reverse_name,
             self.kind,
             request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr],
@@ -77,7 +78,13 @@ class DocsBaseView(SmarterAuthenticatedWebView):
         parsed_url = urlparse(smarter_settings.environment_url)
 
         factory = RequestFactory(SERVER_NAME=parsed_url.netloc, wsgi_url_scheme=scheme)
-        path = reverse(reverse_name, kwargs={"kind": self.kind})
+        path = str(reverse(reverse_name, kwargs={"kind": self.kind})).lower()
+        logger.debug(
+            "%s.get_brokered_json_response() resolved path for reverse_name=%s: %s",
+            self.formatted_class_name,
+            reverse_name,
+            path,
+        )
         cli_request = factory.get(path)
         cli_request.user = request.user if hasattr(request, "user") else get_cached_smarter_admin_user_profile().user
         if hasattr(request, SMARTER_IS_INTERNAL_API_REQUEST):
@@ -86,8 +93,9 @@ class DocsBaseView(SmarterAuthenticatedWebView):
             setattr(cli_request, SMARTER_IS_INTERNAL_API_REQUEST, False)
 
         logger.debug(
-            "Creating brokered request for reverse_name=%s, kind=%s, request.user=%s, args=%s, kwargs=%s",
-            reverse_name,
+            "%s.get_brokered_json_response() creating brokered request for path=%s, kind=%s, request.user=%s, args=%s, kwargs=%s",
+            self.formatted_class_name,
+            path,
             self.kind,
             cli_request.user.username if cli_request.user.is_authenticated else "Anonymous",  # type: ignore[union-attr]
             args,
@@ -104,7 +112,8 @@ class DocsBaseView(SmarterAuthenticatedWebView):
             json_response = json_response[SmarterJournalApiResponseKeys.ERROR]
 
         logger.debug(
-            "Brokered JSON response for reverse_name=%s, kind=%s, request.user=%s: %s",
+            "%s.get_brokered_json_response() brokered JSON response for reverse_name=%s, kind=%s, request.user=%s: %s",
+            self.formatted_class_name,
             reverse_name,
             self.kind,
             request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr]
