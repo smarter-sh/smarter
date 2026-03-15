@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.192](https://github.com/smarter-sh/smarter/compare/v0.13.191...v0.13.192) (2026-03-15)
+
+### Bug Fixes
+
+* add ORMMetaModelClass for querying ORM models by name and user_profile ([2e08b66](https://github.com/smarter-sh/smarter/commit/2e08b664dfe0441cf5f302afcdde575cf993cf97))
+
 ## [0.13.191](https://github.com/smarter-sh/smarter/compare/v0.13.190...v0.13.191) (2026-03-15)
 
 ### Bug Fixes
