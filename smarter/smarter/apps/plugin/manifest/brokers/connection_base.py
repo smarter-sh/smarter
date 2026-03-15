@@ -117,7 +117,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
         if not retval:
             logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
             return False
-        retval = self.manifest is not None or self.plugin is not None
+        retval = self.manifest is not None or self.connection is not None
         logger.debug(
             "%s.ready() manifest presence indicates ready=%s for %s",
             self.formatted_class_name,

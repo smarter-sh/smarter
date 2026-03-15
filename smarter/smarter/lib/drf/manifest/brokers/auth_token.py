@@ -319,6 +319,16 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return SmarterAuthTokenSerializer
 
     @property
+    def ORMMetaModelClass(self) -> Type[SmarterAuthToken]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[SmarterAuthToken]
+        """
+        return SmarterAuthToken
+
+    @property
     def ORMModelClass(self) -> Type[SmarterAuthToken]:
         return SmarterAuthToken
 
