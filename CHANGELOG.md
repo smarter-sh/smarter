@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.191](https://github.com/smarter-sh/smarter/compare/v0.13.190...v0.13.191) (2026-03-15)
+
+### Bug Fixes
+
+* try to initialize broker from the orm instance when no manifest is provided ([e9e930c](https://github.com/smarter-sh/smarter/commit/e9e930c66007420e2c9748bd9f01225623b74d40))
+
 ## [0.13.190](https://github.com/smarter-sh/smarter/compare/v0.13.189...v0.13.190) (2026-03-15)
 
 ### Bug Fixes
