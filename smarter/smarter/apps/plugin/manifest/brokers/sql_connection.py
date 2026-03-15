@@ -1,4 +1,4 @@
-# pylint: disable=W0718
+# pylint: disable=W0718,C0302
 """Smarter Api SqlConnection Manifest handler"""
 
 import logging
@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
@@ -438,12 +439,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             self.name,
             self.user_profile,
         )
-        if self.user_profile is None:
-            raise SAMBrokerErrorNotReady(
-                message="No user profile set for the broker",
-                thing=self.kind,
-                command=SmarterJournalCliCommands.APPLY,
-            )
+        metadata = super().manifest_to_django_orm()
         if self.manifest is None or self.manifest.spec.connection is None:
             raise SAMBrokerErrorNotReady(
                 message="Manifest or connection spec is not set",
@@ -469,7 +465,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         password = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
         try:
             connection[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.get_or_create_secret(
-                user_profile=self.user_profile, name=connection[password]
+                user_profile=self.user_profile, name=connection[password]  # type: ignore
             )
         except SAMBrokerError as e:
             raise SAMConnectionBrokerError(
@@ -486,11 +482,11 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         proxy_password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
         if connection.get(proxy_password_name):
             connection[proxy_password_name] = self.get_or_create_secret(
-                user_profile=self.user_profile,
+                user_profile=self.user_profile,  # type: ignore
                 name=connection[proxy_password_name],
             )
 
-        return connection
+        return {**metadata, **connection}
 
     @property
     def password_secret(self) -> Optional[Secret]:
@@ -957,6 +953,11 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         (such as ``id``, ``created_at``, ``updated_at``) are excluded from updates. Calls the base class
         ``apply()`` to ensure manifest validation before proceeding.
 
+        .. note::
+
+            tags are handled separately because they are of type TaggableManager and
+            require a different method to set them.
+
         :param request: The Django HTTP request object.
         :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
@@ -998,7 +999,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         super().apply(request, args, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
-        readonly_fields = ["id", "created_at", "updated_at"]
+        readonly_fields = ["id", "created_at", "updated_at", "tags"]
 
         if self.connection is None:
             raise SAMBrokerErrorNotReady(
@@ -1010,6 +1011,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
             proxy_password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
             data = self.manifest_to_django_orm()
+            tags = data.get("tags", [])
 
             for field in readonly_fields:
                 data.pop(field, None)
@@ -1021,6 +1023,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 else:
                     setattr(self.connection, key, value)
             self.connection.save()
+            self.connection.tags.set(tags)
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data=self.to_json())

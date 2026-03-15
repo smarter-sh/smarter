@@ -1,4 +1,4 @@
-# pylint: disable=W0718
+# pylint: disable=W0718,C0302
 """Smarter API User Manifest handler"""
 
 import logging
@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and waffle.switch_is_active(
@@ -465,11 +466,12 @@ class SAMUserBroker(AbstractBroker):
            - :class:`smarter.apps.account.models.User`
 
         """
+        metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
             config_dump = json.loads(json.dumps(config_dump))
-        return config_dump
+        return {**metadata, **config_dump}
 
     def django_orm_to_manifest_dict(self) -> Optional[dict[str, Any]]:
         """
@@ -807,6 +809,11 @@ class SAMUserBroker(AbstractBroker):
         """
         Apply the manifest data to the Django ORM `User` model and persist changes to the database.
 
+        .. note::
+
+            tags are handled separately because they are of type TaggableManager and
+            require a different method to set them.
+
         :param request: The Django `HttpRequest` object.
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
@@ -843,7 +850,7 @@ class SAMUserBroker(AbstractBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.apply() called", self.formatted_class_name)
-        readonly_fields = ["id", "date_joined", "last_login", "username", "is_superuser"]
+        readonly_fields = ["id", "date_joined", "last_login", "username", "is_superuser", "tags"]
 
         if not self.user.is_staff:
             raise SAMUserBrokerError(
@@ -879,6 +886,7 @@ class SAMUserBroker(AbstractBroker):
 
                 # User model
                 data = self.manifest_to_django_orm()
+                tags = data.get("tags", [])
                 for field in readonly_fields:
                     logger.debug(
                         "%s.apply() Removing readonly field %s from data for %s",
@@ -900,6 +908,7 @@ class SAMUserBroker(AbstractBroker):
                 self.brokered_user_profile.annotations = self.manifest.metadata.annotations
 
                 self.brokered_user.save()
+                self.brokered_user.tags.set(tags)
                 self.brokered_user.refresh_from_db()
                 self.brokered_user_profile.save()
                 self.brokered_user_profile.refresh_from_db()

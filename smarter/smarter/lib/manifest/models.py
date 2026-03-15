@@ -155,6 +155,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         :return: The validated ``description`` string.
         :rtype: str
         """
+        return v.strip() if isinstance(v, str) and v.strip() != "" else None
 
     @field_validator("version")
     def validate_version(cls, v) -> Optional[str]:

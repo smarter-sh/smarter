@@ -1,4 +1,4 @@
-# pylint: disable=W0718
+# pylint: disable=W0718,C0302
 """Smarter Api ApiConnection Manifest handler"""
 
 import logging
@@ -52,6 +52,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
@@ -382,6 +383,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             connection.save()
 
         """
+        metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.connection.model_dump() if self.manifest and self.manifest.spec else None
         if not isinstance(config_dump, dict):
             raise SAMConnectionBrokerError(
@@ -437,7 +439,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     self.user_profile.user.username,
                 )
 
-        return config_dump
+        return {**metadata, **config_dump}
 
     @property
     def api_key_secret(self) -> Optional[Secret]:
@@ -808,6 +810,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         and are therefore removed from the Django ORM model dict prior to attempting
         the ``save()`` command. These fields are defined in the ``readonly_fields`` list.
 
+        .. note::
+
+            tags are handled separately because they are of type TaggableManager and
+            require a different method to set them.
+
         Example manifest structure::
 
             {
@@ -860,7 +867,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         updated = False
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
-        readonly_fields = ["id", "created_at", "updated_at"]
+        readonly_fields = ["id", "created_at", "updated_at", "tags"]
 
         if not self.user.is_staff:
             raise SAMConnectionBrokerError(
@@ -873,6 +880,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         api_key_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value)
         proxy_password_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
         data = self.manifest_to_django_orm()
+        tags = data.get("tags", [])
         for field in readonly_fields:
             data.pop(field, None)
 
@@ -900,6 +908,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
             if updated and isinstance(self.connection, ApiConnection):
                 self.connection.save()
+                self.connection.tags.set(tags)
                 logger.info(
                     "%s.apply() updated ApiConnection %s",
                     self.formatted_class_name,
