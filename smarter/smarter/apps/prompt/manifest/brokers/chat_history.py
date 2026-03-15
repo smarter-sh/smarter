@@ -165,6 +165,16 @@ class SAMChatHistoryBroker(AbstractBroker):
         return f"{parent_class}.SAMChatHistoryBroker[{id(self)}]"
 
     @property
+    def ORMMetaModelClass(self) -> Type[ChatHistory]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[ChatHistory]
+        """
+        return ChatHistory
+
+    @property
     def ORMModelClass(self) -> Type[ChatHistory]:
         return ChatHistory
 

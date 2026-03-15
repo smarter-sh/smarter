@@ -219,6 +219,16 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         return f"{__name__}.{SAMSqlConnectionBroker.__name__}[{id(self)}]"
 
     @property
+    def ORMMetaModelClass(self) -> Type[SqlConnection]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[SqlConnection]
+        """
+        return SqlConnection
+
+    @property
     def ORMModelClass(self) -> Type[SqlConnection]:
         """
         Returns the Django ORM model class associated with this broker.

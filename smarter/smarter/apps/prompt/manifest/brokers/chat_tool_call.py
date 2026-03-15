@@ -166,6 +166,16 @@ class SAMChatToolCallBroker(AbstractBroker):
         return f"{parent_class}.{SAMChatToolCallBroker.__name__}[{id(self)}]"
 
     @property
+    def ORMMetaModelClass(self) -> typing.Type[ChatToolCall]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[ChatToolCall]
+        """
+        return ChatToolCall
+
+    @property
     def ORMModelClass(self) -> typing.Type[ChatToolCall]:
         return ChatToolCall
 
