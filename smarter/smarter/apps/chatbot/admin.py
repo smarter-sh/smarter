@@ -33,17 +33,18 @@ class ChatBotAdmin(SmarterCustomerModelAdmin):
         "updated_at",
     )
     list_display = [
-        "created_at",
-        "updated_at",
-        "url",
-        "user_profile",
         "name",
+        "user_profile",
+        "url",
         "deployed",
         "mode",
         "ready",
         "dns_verification_status",
         "tls_certificate_issuance_status",
+        "created_at",
+        "updated_at",
     ]
+    ordering = ["-updated_at"]
 
     def ready(self, obj: ChatBot) -> bool:
         return obj.ready()
