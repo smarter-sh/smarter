@@ -110,7 +110,9 @@ class SmarterJSONEncoder(json.JSONEncoder):
         elif isinstance(o, (decimal.Decimal, uuid.UUID, Promise)):
             return str(o)
         else:
-            # Handle GenericRelatedObjectManager by type name and module (avoids import timing issues)
+            # Handle Django's GenericRelatedObjectManager and Django's
+            # TaggableManager without importing them directly in order to avoid
+            # import timing issues during startup.
             if (
                 type(o).__name__ == "GenericRelatedObjectManager"
                 and getattr(type(o), "__module__", None) == "django.contrib.contenttypes.fields"
@@ -118,40 +120,19 @@ class SmarterJSONEncoder(json.JSONEncoder):
                 return list(o.all())
 
             # Handle TaggedItem
-            try:
-                # pylint: disable=C0415
-                from taggit.models import TaggedItem
-
-                if TaggedItem is not None and isinstance(o, TaggedItem):
-                    retval = o.tag.name
-                    logger.debug("%s.default() Serializing TaggedItem with tag: %s", formatted_logger_prefix, retval)
-                    return retval
-            except ImportError:
-                # Define a dummy TaggedItem if taggit is not installed to avoid import errors
-                TaggedItem = None
-            # pylint: disable=broad-except
-            except Exception as e:
-                logger.error("%s.default() Error checking for TaggedItem: %s", formatted_logger_prefix, e)
+            if type(o).__name__ == "TaggedItem" and getattr(type(o), "__module__", None) == "taggit.models":
+                retval = o.tag.name
+                logger.debug("%s.default() Serializing TaggedItem with tag: %s", formatted_logger_prefix, retval)
+                return retval
 
             # Handle TaggableManager
-            try:
-                # pylint: disable=C0415
-                from taggit.managers import TaggableManager
-
-                _TaggableManager = getattr(
-                    __import__("taggit.managers", fromlist=["_TaggableManager"]), "_TaggableManager", None
-                )
-                taggable_types = (TaggableManager,)
-                if _TaggableManager:
-                    taggable_types += (_TaggableManager,)
-                if isinstance(o, taggable_types):
-                    retval = list(o.all().values_list("name", flat=True))
-                    logger.debug(
-                        "%s.default() Serializing TaggableManager with tags: %s", formatted_logger_prefix, retval
-                    )
-                    return retval
-            except ImportError:
-                pass
+            if (
+                type(o).__name__ in ("TaggableManager", "_TaggableManager")
+                and getattr(type(o), "__module__", None) == "taggit.managers"
+            ):
+                retval = list(o.all().values_list("name", flat=True))
+                logger.debug("%s.default() Serializing TaggableManager with tags: %s", formatted_logger_prefix, retval)
+                return retval
 
             return super().default(o)
 

@@ -265,9 +265,15 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     user_profile=self.user_profile,
                 )
                 if not self._broker:
-                    raise APIV1CLIViewError(
-                        f"Could not initialize broker {BrokerClass.__name__} {self.manifest_kind} {self.manifest_name} {self.loader}."
+                    logger.warning(
+                        "%s.broker() - failed to initialize broker: %s kind: %s name: %s loader: %s",
+                        self.logger_prefix,
+                        BrokerClass.__name__,
+                        self.manifest_kind,
+                        self.manifest_name,
+                        self.loader,
                     )
+                    return None
                 logger.debug(
                     "%s.broker() - instantiated broker for manifest: %s %s",
                     self.logger_prefix,
