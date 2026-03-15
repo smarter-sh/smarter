@@ -210,12 +210,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             kwargs,
         )
         # ----------------------------------------------------------------------
-        # Set API version, name, and kind.
-        # These will presumably be overridden once a manifest or loader
-        # is provided.
+        # Attempt to preset the API version, name, and kind.
+        #
+        # we need this in cases where neither a manifest nor loader is provided.
+        # if we have a user_profile and name then we'll be able to attempt
+        # to initialize the loader from the ORM, which will in turn allow us to
+        # load the manifest.
         # ----------------------------------------------------------------------
         logger.debug(
-            "%s.__init__() attempting to preset api_version, name, and kind from args and kwargs. This logic seems to be 'belt & suspenders' andcan potentially be removed in future.",
+            "%s.__init__() attempting to preset api_version, name, and kind from args and kwargs.",
             self.abstract_broker_logger_prefix,
         )
         self.api_version = api_version or SmarterApiVersions.V1
@@ -224,8 +227,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         self.kind_setter(kind or kwargs.pop("kind", None))
 
         # ----------------------------------------------------------------------
-        # Initial resolution of parameters, taking into consideration that
-        # they may be passed in via args or kwargs.
+        # Resolve all initialization parameters to pass to the mixins.
         # ----------------------------------------------------------------------
         request = (
             request
@@ -282,6 +284,10 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         name = self._loader.manifest_metadata.get("name")
                         self.name_cached_property_setter(name)  # type: ignore
 
+        # ----------------------------------------------------------------------
+        # Fallback logic to initialize from the ORM, if we have a name and
+        # user_profile, and we don't already have a manifest or loader.
+        # ----------------------------------------------------------------------
         if not self._manifest and not self._loader:
             if self.name and self.user_profile:
                 logger.debug(
