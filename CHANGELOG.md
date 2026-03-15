@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.188](https://github.com/smarter-sh/smarter/compare/v0.13.187...v0.13.188) (2026-03-15)
+
+### Bug Fixes
+
+* move manifest_to_django_orm() metadata logic to AbstractBroker. add TaggableManager handling to all apply() ([2b87d2d](https://github.com/smarter-sh/smarter/commit/2b87d2d0878cabf100e82e66aed39543f962b8b4))
+
 ## [0.13.187](https://github.com/smarter-sh/smarter/compare/v0.13.186...v0.13.187) (2026-03-14)
 
 ### Bug Fixes
