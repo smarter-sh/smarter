@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.189](https://github.com/smarter-sh/smarter/compare/v0.13.188...v0.13.189) (2026-03-15)
+
+### Bug Fixes
+
+* add handler for TaggedItem ([4466479](https://github.com/smarter-sh/smarter/commit/44664791a9dac8425340034bf993ae499f9671d4))
+
 ## [0.13.188](https://github.com/smarter-sh/smarter/compare/v0.13.187...v0.13.188) (2026-03-15)
 
 ### Bug Fixes
