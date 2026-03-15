@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.189](https://github.com/smarter-sh/smarter/compare/v0.13.188...v0.13.189) (2026-03-15)
+
+### Bug Fixes
+
+* add handler for TaggedItem ([4466479](https://github.com/smarter-sh/smarter/commit/44664791a9dac8425340034bf993ae499f9671d4))
+
+## [0.13.188](https://github.com/smarter-sh/smarter/compare/v0.13.187...v0.13.188) (2026-03-15)
+
+### Bug Fixes
+
+* move manifest_to_django_orm() metadata logic to AbstractBroker. add TaggableManager handling to all apply() ([2b87d2d](https://github.com/smarter-sh/smarter/commit/2b87d2d0878cabf100e82e66aed39543f962b8b4))
+
+## [0.13.187](https://github.com/smarter-sh/smarter/compare/v0.13.186...v0.13.187) (2026-03-14)
+
+### Bug Fixes
+
+* add sane defaults for defaultTemperature and defaultMaxTokens ([c27546a](https://github.com/smarter-sh/smarter/commit/c27546abac75b03b6f104453bffa5dcbb876360f))
+* loosen null and blank restrictions on manifest metadata ([c4224fc](https://github.com/smarter-sh/smarter/commit/c4224fc1612cb9acd0d379e170e02c8de3aeea77))
+
 ## [0.13.186](https://github.com/smarter-sh/smarter/compare/v0.13.185...v0.13.186) (2026-03-14)
 
 ### Bug Fixes
