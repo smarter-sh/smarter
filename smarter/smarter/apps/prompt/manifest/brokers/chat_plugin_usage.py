@@ -167,6 +167,16 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         return f"{parent_class}.SAMPluginUsageBroker[{id(self)}]"
 
     @property
+    def ORMMetaModelClass(self) -> typing.Type[ChatPluginUsage]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[ChatPluginUsage]
+        """
+        return ChatPluginUsage
+
+    @property
     def ORMModelClass(self) -> typing.Type[ChatPluginUsage]:
         return ChatPluginUsage
 

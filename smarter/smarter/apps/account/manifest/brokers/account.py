@@ -476,6 +476,16 @@ class SAMAccountBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
+    def ORMMetaModelClass(self) -> Type[Account]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[Account]
+        """
+        return Account
+
+    @property
     def ORMModelClass(self) -> Type[Account]:
         """
         Get the Django ORM model class for the Smarter API Account.

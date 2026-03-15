@@ -25,7 +25,7 @@ from smarter.apps.plugin.manifest.models.common.connection.metadata import (
 from smarter.apps.plugin.manifest.models.common.connection.status import (
     SAMConnectionCommonStatus,
 )
-from smarter.apps.plugin.models import ApiConnection
+from smarter.apps.plugin.models import ApiConnection, ConnectionBase
 from smarter.apps.plugin.serializers import ApiConnectionSerializer
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
@@ -222,6 +222,16 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         """
         return f"{__name__}.{SAMApiConnectionBroker.__name__}[{id(self)}]"
+
+    @property
+    def ORMMetaModelClass(self) -> Type[ApiConnection]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[ApiConnection]
+        """
+        return ApiConnection
 
     @property
     def ORMModelClass(self) -> Type[ApiConnection]:
