@@ -82,6 +82,16 @@ class SAMPluginBaseBroker(AbstractBroker):
         self._manifest = None
 
     @property
+    def ORMMetaModelClass(self) -> Type[PluginMeta]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[PluginMeta]
+        """
+        return PluginMeta
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Return the formatted class name for logging purposes.
