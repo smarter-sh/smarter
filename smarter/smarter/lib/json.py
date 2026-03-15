@@ -13,6 +13,7 @@ Overridden JSON utilities. The effective modifications are
 import datetime
 import decimal
 import json
+import logging
 import uuid
 
 # pylint: disable=unused-import
@@ -22,6 +23,9 @@ from json import (  # unmodified re-export
     load,
     loads,
 )
+
+logger = logging.getLogger(__name__)
+formatted_logger_prefix = "SmarterJSONEncoder"
 
 
 class Promise:
@@ -113,6 +117,22 @@ class SmarterJSONEncoder(json.JSONEncoder):
             ):
                 return list(o.all())
 
+            # Handle TaggedItem
+            try:
+                # pylint: disable=C0415
+                from taggit.models import TaggedItem
+
+                if TaggedItem is not None and isinstance(o, TaggedItem):
+                    retval = o.tag.name
+                    logger.debug("%s.default() Serializing TaggedItem with tag: %s", formatted_logger_prefix, retval)
+                    return retval
+            except ImportError:
+                # Define a dummy TaggedItem if taggit is not installed to avoid import errors
+                TaggedItem = None
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("%s.default() Error checking for TaggedItem: %s", formatted_logger_prefix, e)
+
             # Handle TaggableManager
             try:
                 # pylint: disable=C0415
@@ -125,7 +145,11 @@ class SmarterJSONEncoder(json.JSONEncoder):
                 if _TaggableManager:
                     taggable_types += (_TaggableManager,)
                 if isinstance(o, taggable_types):
-                    return list(o.all().values_list("name", flat=True))
+                    retval = list(o.all().values_list("name", flat=True))
+                    logger.debug(
+                        "%s.default() Serializing TaggableManager with tags: %s", formatted_logger_prefix, retval
+                    )
+                    return retval
             except ImportError:
                 pass
 
