@@ -963,7 +963,7 @@ class PromptDetailView(DocsBaseView):
 
         view = ApiV1CliDescribeApiView.as_view()
         json_response = self.get_brokered_json_response(
-            reverse_name=ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe,
+            reverse_name=str(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe).lower(),
             view=view,
             request=request,
             *args,
