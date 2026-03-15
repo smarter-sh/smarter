@@ -842,7 +842,21 @@ class SAMChatbotBroker(AbstractBroker):
                         command=command,
                     )
                 self.chatbot.save()
-                self.chatbot.tags.set(tags)
+
+                # Fix note: occasionally seeing AttributeError: \'list\' object has no attribute \'set\ in the logs,
+                # which is why this is wrapped in a try/except block.
+                try:
+                    self.chatbot.tags.set(tags)
+                # pylint: disable=broad-except
+                except Exception as e:
+                    logger.error(
+                        "%s.apply() failed to set tags for %s %s %s",
+                        self.formatted_class_name,
+                        self.kind,
+                        self.manifest.metadata.name,
+                        e,
+                        exc_info=True,
+                    )
                 self.chatbot.refresh_from_db()
             except Exception as e:
                 logger.error(

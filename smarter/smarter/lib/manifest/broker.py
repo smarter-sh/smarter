@@ -210,6 +210,20 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             kwargs,
         )
         # ----------------------------------------------------------------------
+        # Set API version, name, and kind.
+        # These will presumably be overridden once a manifest or loader
+        # is provided.
+        # ----------------------------------------------------------------------
+        logger.debug(
+            "%s.__init__() attempting to preset api_version, name, and kind from args and kwargs. This logic seems to be 'belt & suspenders' andcan potentially be removed in future.",
+            self.abstract_broker_logger_prefix,
+        )
+        self.api_version = api_version or SmarterApiVersions.V1
+        name = name or kwargs.pop("name", None)
+        self.name_cached_property_setter(name)
+        self.kind_setter(kind or kwargs.pop("kind", None))
+
+        # ----------------------------------------------------------------------
         # Initial resolution of parameters, taking into consideration that
         # they may be passed in via args or kwargs.
         # ----------------------------------------------------------------------
@@ -236,20 +250,6 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             account,
             user_profile,
         )
-
-        # ----------------------------------------------------------------------
-        # Set API version, name, and kind.
-        # These will presumably be overridden once a manifest or loader
-        # is provided.
-        # ----------------------------------------------------------------------
-        logger.debug(
-            "%s.__init__() attempting to preset api_version, name, and kind from args and kwargs. This logic seems to be 'belt & suspenders' andcan potentially be removed in future.",
-            self.abstract_broker_logger_prefix,
-        )
-        self.api_version = api_version or SmarterApiVersions.V1
-        name = name or kwargs.pop("name", None)
-        self.name_cached_property_setter(name)
-        self.kind_setter(kind or kwargs.pop("kind", None))
 
         # ----------------------------------------------------------------------
         # Manifest and SAMLoader resolution logic. Prioritize the manifest
@@ -282,7 +282,24 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         name = self._loader.manifest_metadata.get("name")
                         self.name_cached_property_setter(name)  # type: ignore
 
-        self._validated = bool(self._manifest) or bool(self._loader and self.loader.ready)
+        if not self._manifest and not self._loader:
+            if self.name and self.user_profile:
+                logger.debug(
+                    "%s.__init__() - Attempting to initialize loader from %s name and user_profile.",
+                    self.abstract_broker_logger_prefix,
+                    self.ORMModelClass.__name__,
+                )
+                try:
+                    self._orm_instance = self.ORMModelClass.objects.get(name=self.name, user_profile=self.user_profile)
+                    logger.debug(
+                        "%s.__init__() - Successfully initialized ORM instance from name and user_profile: %s",
+                        self.abstract_broker_logger_prefix,
+                        self.orm_instance,
+                    )
+                except self.ORMModelClass.DoesNotExist:
+                    self._orm_instance = None
+
+        self._validated = bool(self._manifest) or bool(self._loader and self.loader.ready) or bool(self._orm_instance)
 
         # ----------------------------------------------------------------------
         # log initialization state.
@@ -431,7 +448,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :rtype: bool
         """
         if self._is_ready_abstract_broker and bool(self._manifest):
-            return self._is_ready_abstract_broker
+            return True
         else:
             self._is_ready_abstract_broker = False
         if bool(self._manifest):
@@ -444,6 +461,12 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         if bool(self.loader) and self.loader.ready:
             logger.debug(
                 "%s.is_ready_abstract_broker() returning true because loader is ready.",
+                self.abstract_broker_logger_prefix,
+            )
+            return True
+        if bool(self.orm_instance):
+            logger.debug(
+                "%s.is_ready_abstract_broker() returning true because ORM instance is available.",
                 self.abstract_broker_logger_prefix,
             )
             return True
@@ -1671,6 +1694,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             f"name: {self._name}, "
             f"manifest: {bool(self._manifest)}, "
             f"loader: {bool(self._loader)}, "
+            f"orm_instance: {bool(self.orm_instance)}, "
             f"request: {self.url}, "
             f"user_profile: {self.user_profile} "
         )
