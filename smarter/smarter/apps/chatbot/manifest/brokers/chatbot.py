@@ -1,4 +1,4 @@
-# pylint: disable=W0718
+# pylint: disable=W0718,C0302
 """Smarter API Chatbot Manifest handler"""
 
 import datetime
@@ -403,21 +403,25 @@ class SAMChatbotBroker(AbstractBroker):
         :raises SAMBrokerErrorNotReady: If the manifest is not loaded or cannot be found.
         :raises SAMChatbotBrokerError: If the manifest configuration cannot be converted to a dictionary.
         """
-        if not self.manifest:
-            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind)
+        metadata = super().manifest_to_django_orm()
+
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMChatbotBrokerError(
                 f"Failed to convert {self.kind} {self.manifest.metadata.name} to dict", thing=self.kind
             )
-        return {
-            "user_profile": self.user_profile,
-            "name": self.manifest.metadata.name,
-            "description": self.manifest.metadata.description,
-            "version": self.manifest.metadata.version,
+        retval = {
+            **metadata,
             **config_dump,
         }
+        logger.debug(
+            "%s.manifest_to_django_orm() converted manifest to Django ORM dict: %s",
+            self.formatted_class_name,
+            retval,
+        )
+
+        return retval
 
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
@@ -802,6 +806,12 @@ class SAMChatbotBroker(AbstractBroker):
         Chatbot is a composite model that includes the ChatBot, ChatBotAPIKey,
         ChatBotPlugin and ChatBotFunctions models. All of these are represented
         in the manifest spec and are created or updated as needed.
+
+        .. note::
+
+            tags are handled separately because they are of type TaggableManager and
+            require a different method to set them.
+
         """
         super().apply(request, kwargs)
         command = self.apply.__name__
@@ -817,9 +827,10 @@ class SAMChatbotBroker(AbstractBroker):
         with transaction.atomic():
             # ChatBot
             # -------------
-            readonly_fields = ["id", "created_at", "updated_at"]
+            readonly_fields = ["id", "created_at", "updated_at", "tags"]
             try:
                 data = self.manifest_to_django_orm()
+                tags = data.get("tags", [])
                 for field in readonly_fields:
                     data.pop(field, None)
                 for key, value in data.items():
@@ -831,6 +842,7 @@ class SAMChatbotBroker(AbstractBroker):
                         command=command,
                     )
                 self.chatbot.save()
+                self.chatbot.tags.set(tags)
                 self.chatbot.refresh_from_db()
             except Exception as e:
                 logger.error(

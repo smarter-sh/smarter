@@ -242,6 +242,10 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         # These will presumably be overridden once a manifest or loader
         # is provided.
         # ----------------------------------------------------------------------
+        logger.debug(
+            "%s.__init__() attempting to preset api_version, name, and kind from args and kwargs. This logic seems to be 'belt & suspenders' andcan potentially be removed in future.",
+            self.abstract_broker_logger_prefix,
+        )
         self.api_version = api_version or SmarterApiVersions.V1
         name = name or kwargs.pop("name", None)
         self.name_cached_property_setter(name)
@@ -689,6 +693,47 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         if not self._name:
             logger.warning("%s.name() could not determine name, returning None", self.abstract_broker_logger_prefix)
         return self._name
+
+    def manifest_to_django_orm(self) -> dict:
+        """
+        Convert the Smarter API manifest metadata into a dictionary suitable for creating or updating a Django ORM ChatBot model.
+
+        This method extracts all relevant metadata from the loaded manifest
+        and transforms it into a dictionary format compatible with Django ORM operations. The manifest's configuration
+        is first dumped and converted from camelCase to snake_case to match Django's field naming conventions.
+
+        The resulting dictionary includes the account, name, description, and version fields from the manifest metadata.
+        This dictionary is intended to be used to supplement the model spec when instantiating or updating a ChatBot ORM model instance in the database.
+
+        If the manifest is not loaded or is invalid, an exception is raised to indicate that the broker is not ready
+        to perform the transformation.
+
+        :returns: A dictionary containing all metadata fields required to create or update a Django ORM ChatBot model.
+        :rtype: dict
+
+        :raises SAMBrokerErrorNotReady: If the manifest is not loaded or cannot be found.
+        :raises SAMChatbotBrokerError: If the manifest metadata cannot be converted to a dictionary.
+        """
+        if not self.manifest:
+            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind)
+        if self.user_profile is None:
+            raise SAMBrokerErrorNotReady(
+                message="No user profile set for the broker",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+        metadata = self.manifest.metadata.model_dump()
+        retval = {
+            "user_profile": self.user_profile,
+            **metadata,
+        }
+        logger.debug(
+            "%s.manifest_to_django_orm() converted manifest metadata to Django ORM dict: %s",
+            self.abstract_broker_logger_prefix,
+            retval,
+        )
+
+        return retval
 
     def name_cached_property_setter(self, value: str):
         """

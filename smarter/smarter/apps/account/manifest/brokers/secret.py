@@ -322,14 +322,12 @@ class SAMSecretBroker(AbstractBroker):
            :class:`Secret`
            :meth:`django_orm_to_manifest_dict`
         """
-        if not self.manifest:
-            logger.warning("%s.manifest_to_django_orm() called with no manifest", self.formatted_class_name)
-            return None
+        metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
             config_dump = json.loads(json.dumps(config_dump))
-        return config_dump
+        return {**metadata, **config_dump}
 
     def django_orm_to_manifest_dict(self) -> Optional[dict[str, Any]]:
         """
@@ -719,6 +717,11 @@ class SAMSecretBroker(AbstractBroker):
         Apply the manifest by copying its data to the Django ORM model and saving it to the database.
 
         This method ensures the manifest is loaded and validated before persisting it. Non-editable fields defined in `readonly_fields` are excluded from the ORM model prior to saving.
+
+        .. note::
+
+            tags are handled separately because they are of type TaggableManager and
+            require a different method to set them.
 
         :param request: "HttpRequest"
             The incoming HTTP request.

@@ -108,9 +108,14 @@ class SAMChatHistoryBroker(AbstractBroker):
         """
         Transform the Smarter API SAMChatHistory manifest into a Django ORM model.
         """
+        metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
-        return config_dump
+        if not isinstance(config_dump, dict):
+            raise SAMChatHistoryBrokerError(
+                f"Failed to convert {self.kind} {self.manifest.metadata.name} config to dict", thing=self.kind
+            )
+        return {**metadata, **config_dump}
 
     def django_orm_to_manifest_dict(self) -> dict:
         """

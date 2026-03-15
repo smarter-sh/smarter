@@ -29,6 +29,7 @@ from smarter.lib.manifest.broker import (
 )
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
@@ -198,6 +199,11 @@ class SAMConnectionBaseBroker(AbstractBroker):
 
         This method ensures the manifest is loaded and validated (via `super().apply`) before updating the database. Only editable fields from the manifest metadata are updated; read-only fields are excluded. All changes are logged, and the connection is saved if any updates occur.
 
+        .. note::
+
+            tags are handled separately because they are of type TaggableManager and
+            require a different method to set them.
+
         :param request: Django HTTP request object.
         :type request: HttpRequest
         :param args: Additional positional arguments.
@@ -245,6 +251,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.APPLY,
             )
+        tags = data.pop("tags", None)
 
         if self.connection is None:
             raise SAMBrokerErrorNotReady(
@@ -264,3 +271,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
                     updated = True
         if updated:
             self.connection.save()
+
+        if tags is not None:
+            self.connection.tags.set(tags)

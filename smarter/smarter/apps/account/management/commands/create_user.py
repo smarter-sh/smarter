@@ -62,7 +62,7 @@ class Command(SmarterCommand):
             generated_password = "".join(secrets.choice(alphabet) for _ in range(12))
             user.set_password(generated_password)
             password = generated_password  # Set password to generated password for email
-            self.stdout.write(self.style.SUCCESS(f"Password for user {username} has been set to {password}."))
+            self.stdout.write(self.style.SUCCESS(f"Password for user {username} has been set to {password}"))
         user.save()
         self.handle_completed_success(msg=f"User {username} {email} has been created.")
 
