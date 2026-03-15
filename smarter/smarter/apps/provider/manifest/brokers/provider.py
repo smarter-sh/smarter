@@ -341,6 +341,16 @@ class SAMProviderBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
+    def ORMMetaModelClass(self) -> Type[Provider]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[Provider]
+        """
+        return Provider
+
+    @property
     def ORMModelClass(self) -> Type[Provider]:
         """
         Return the model class associated with the Smarter API Provider.

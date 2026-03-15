@@ -291,18 +291,31 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         if not self._manifest and not self._loader:
             if self.name and self.user_profile:
                 logger.debug(
-                    "%s.__init__() - Attempting to initialize loader from %s name and user_profile.",
+                    "%s.__init__() - Attempting to initialize loader from %s using name %s and user_profile %s.",
                     self.abstract_broker_logger_prefix,
                     self.ORMModelClass.__name__,
+                    self.name,
+                    self.user_profile,
                 )
                 try:
-                    self._orm_instance = self.ORMModelClass.objects.get(name=self.name, user_profile=self.user_profile)
+                    self._orm_instance = self.ORMMetaModelClass.objects.get(
+                        name=self.name, user_profile=self.user_profile
+                    )
                     logger.debug(
                         "%s.__init__() - Successfully initialized ORM instance from name and user_profile: %s",
                         self.abstract_broker_logger_prefix,
                         self.orm_instance,
                     )
-                except self.ORMModelClass.DoesNotExist:
+                except self.ORMMetaModelClass.DoesNotExist:
+                    self._orm_instance = None
+                # pylint: disable=broad-except
+                except Exception as e:
+                    logger.error(
+                        "%s.__init__() - unexpected error initializing ORM instance from name and user_profile: %s. Error: %s",
+                        self.abstract_broker_logger_prefix,
+                        self.name,
+                        e,
+                    )
                     self._orm_instance = None
 
         self._validated = bool(self._manifest) or bool(self._loader and self.loader.ready) or bool(self._orm_instance)
@@ -470,7 +483,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.abstract_broker_logger_prefix,
             )
             return True
-        if bool(self.orm_instance):
+        if bool(self._orm_instance):
             logger.debug(
                 "%s.is_ready_abstract_broker() returning true because ORM instance is available.",
                 self.abstract_broker_logger_prefix,
@@ -860,6 +873,19 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :rtype: Type[ModelSerializer]
         """
         raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
+
+    @property
+    @abstractmethod
+    def ORMMetaModelClass(self) -> Type[MetaDataWithOwnershipModel]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[MetaDataWithOwnershipModel]
+        """
+        raise SAMBrokerErrorNotImplemented(
+            message="Subclasses must implement the MetaModelClass", thing=self.thing, command=None
+        )
 
     @property
     @abstractmethod

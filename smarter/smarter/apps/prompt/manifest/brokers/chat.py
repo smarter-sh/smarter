@@ -164,6 +164,16 @@ class SAMChatBroker(AbstractBroker):
         return f"{parent_class}.{SAMChatBroker.__name__}[{id(self)}]"
 
     @property
+    def ORMMetaModelClass(self) -> typing.Type[Chat]:
+        """
+        Return the Django ORM meta model class for the broker.
+
+        :return: The Django ORM meta model class definition for the broker.
+        :rtype: Type[Chat]
+        """
+        return Chat
+
+    @property
     def ORMModelClass(self) -> typing.Type[Chat]:
         return Chat
 
