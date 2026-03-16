@@ -9,6 +9,7 @@ from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
+from taggit.managers import TaggableManager
 
 from smarter.apps.account.utils import (
     smarter_cached_objects,
@@ -273,7 +274,20 @@ class SAMChatbotBroker(AbstractBroker):
 
             The returned ChatBot object is essential for linking related resources such as API keys,
             plugins, and functions, and for performing updates or queries on the chatbot's state.
+
+        .. admonition:: FIX NOTE
+
+            This should be refactored/removed in favor of orm_instance. There is no logic
+            in this property that merits it overriding the parent orm_instance property.
+
+        .. admonition:: FIX NOTE
+
+            This is breaking an unwritten rule of Smarter resources in that it is
+            lazily **creating** a database record on a property getter.
+            Creating/updating database records should be handled in apply().
+
         """
+
         if not self._chatbot:
             try:
                 self._chatbot = ChatBot.objects.get(user_profile=self.user_profile, name=self.name)
@@ -282,10 +296,17 @@ class SAMChatbotBroker(AbstractBroker):
                     data = self.manifest_to_django_orm()
                     data["user_profile"] = self.user_profile
                     logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
-                    logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
+                    tags = data.pop("tags", [])
                     self._chatbot = ChatBot.objects.create(**data)
-
+                    if tags:
+                        self._chatbot.tags.set(tags)
                     self._created = True
+                    logger.warning(
+                        "%s.chatbot() lazily created new ChatBot instance %s owned by %s. This logic should be handled in apply().",
+                        self.formatted_class_name,
+                        self.name,
+                        self.user_profile,
+                    )
                 else:
                     logger.warning(
                         "%s.chatbot() %s not found for user_profile %s",
@@ -752,7 +773,6 @@ class SAMChatbotBroker(AbstractBroker):
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        # name: str = None, all_objects: bool = False, tags: str = None
         data = []
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
@@ -835,8 +855,6 @@ class SAMChatbotBroker(AbstractBroker):
         if not isinstance(self.chatbot, ChatBot):
             raise SAMChatbotBrokerError(f"ChatBot {self.name} not found", thing=self.kind, command=command)
         with transaction.atomic():
-            # ChatBot
-            # -------------
             readonly_fields = ["id", "created_at", "updated_at", "tags"]
             try:
                 data = self.manifest_to_django_orm()
@@ -856,24 +874,38 @@ class SAMChatbotBroker(AbstractBroker):
                 # Fix note: occasionally seeing AttributeError: \'list\' object has no attribute \'set\ in the logs,
                 # which is why this is wrapped in a try/except block.
                 try:
-                    self.chatbot.tags.set(tags)
+                    if not isinstance(self.chatbot.tags, TaggableManager):
+                        logger.warning(
+                            "%s.apply() chatbot.tags is a list instead of a TaggableManager for %s %s owned by %s. This is unexpected and may indicate an issue with the ChatBot model definition or the database state. Tags=%s",
+                            self.formatted_class_name,
+                            self.kind,
+                            self.manifest.metadata.name,
+                            self.user_profile,
+                            tags,
+                        )
+                    else:
+                        self.chatbot.tags.set(tags)
                 # pylint: disable=broad-except
                 except Exception as e:
                     logger.error(
-                        "%s.apply() failed to set tags for %s %s %s",
+                        "%s.apply() failed to set tags for %s %s owned by %s. Tags=%s. Error: %s",
                         self.formatted_class_name,
                         self.kind,
                         self.manifest.metadata.name,
+                        self.user_profile,
+                        tags,
                         e,
                         exc_info=True,
                     )
                 self.chatbot.refresh_from_db()
             except Exception as e:
                 logger.error(
-                    "%s.apply() failed to save %s %s",
+                    "%s.apply() failed to save %s %s owned by %s. Error: %s",
                     self.formatted_class_name,
                     self.kind,
                     self.manifest.metadata.name,
+                    self.user_profile,
+                    e,
                     exc_info=True,
                 )
                 raise SAMChatbotBrokerError(

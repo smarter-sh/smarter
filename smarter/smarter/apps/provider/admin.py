@@ -73,7 +73,7 @@ class ProviderAdmin(SmarterCustomerModelAdmin):
         "updated_at",
     )
 
-    list_display = ["created_at", "user_profile", "name", "status", "is_active"]
+    list_display = ["name", "status", "is_active", "user_profile", "created_at", "updated_at"]
 
     def get_queryset(self, request):
         """

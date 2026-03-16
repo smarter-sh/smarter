@@ -486,6 +486,9 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         .. seealso::
 
             - `SqlData`
+            - `smarter.apps.plugin.manifest.models.common.Parameter`
+            - `smarter.apps.plugin.manifest.models.common.UrlParam`
+            - `smarter.apps.plugin.manifest.models.common.TestValue`
         """
         if not self.plugin_meta:
             return None
