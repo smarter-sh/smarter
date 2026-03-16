@@ -413,16 +413,6 @@ class CustomPasswordWidget(forms.Widget):
         return mark_safe(f'<a href="{url}" style="color: blue;">CHANGE PASSWORD</a>')  # nosec
 
 
-class UserChangeForm(forms.ModelForm):
-    """Custom form for the User model that includes a link to change the password."""
-
-    password = forms.CharField(widget=CustomPasswordWidget(), label=_("Password"))
-
-    class Meta:
-        model = User
-        fields = "__all__"
-
-
 class RestrictedUserAdmin(UserAdmin):
     """
     Custom User admin that restricts access to users based on their account.
@@ -444,7 +434,6 @@ class RestrictedUserAdmin(UserAdmin):
         "date_joined",
         "last_login",
     )
-    form = UserChangeForm
 
     def has_add_permission(self, request) -> bool:
         """
