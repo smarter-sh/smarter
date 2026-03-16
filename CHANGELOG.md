@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.194](https://github.com/smarter-sh/smarter/compare/v0.13.193...v0.13.194) (2026-03-16)
+
+### Bug Fixes
+
+* orm initializations for shared ownership ([7a1b5eb](https://github.com/smarter-sh/smarter/commit/7a1b5ebc531f55df94cf2cae33aba0ec91320cda))
+* remaining code for SAMApiPluginBroker().plugin_data_orm2pydantic() ([4ad4546](https://github.com/smarter-sh/smarter/commit/4ad4546194926376b5db4e3b356c369848445044))
+
 ## [0.13.193](https://github.com/smarter-sh/smarter/compare/v0.13.192...v0.13.193) (2026-03-16)
 
 ### Bug Fixes
