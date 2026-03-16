@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.196](https://github.com/smarter-sh/smarter/compare/v0.13.195...v0.13.196) (2026-03-16)
+
+### Bug Fixes
+
+* exit gracefully if we are missing name or user_profile ([5f08fa9](https://github.com/smarter-sh/smarter/commit/5f08fa9ac1949368139cf28412be313c5383ec38))
+* need to consider that self._broker is None/Falsy if its not in a ready state ([3a61531](https://github.com/smarter-sh/smarter/commit/3a6153135b3435d79ddc524b72a60a44a46ae6b2))
+
 ## [0.13.195](https://github.com/smarter-sh/smarter/compare/v0.13.194...v0.13.195) (2026-03-16)
 
 ### Bug Fixes
