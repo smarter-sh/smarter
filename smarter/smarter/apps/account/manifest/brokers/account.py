@@ -505,6 +505,9 @@ class SAMAccountBroker(AbstractBroker):
         """
         if self._orm_instance:
             return self._orm_instance
+        if self.orm_meta_instance:
+            self._orm_instance = self.orm_meta_instance
+            return self._orm_instance
 
         if not self.ready:
             logger.warning(
@@ -520,13 +523,13 @@ class SAMAccountBroker(AbstractBroker):
                 self.user,
                 self.name,
             )
-            instance = Account.objects.get(name=self.name)
+            self._orm_instance = Account.objects.get(name=self.name)
             logger.debug(
                 "%s.orm_instance() - retrieved ORM instance: %s",
                 self.abstract_broker_logger_prefix,
-                serializers.serialize("json", [instance]),
+                serializers.serialize("json", [self._orm_instance]),
             )
-            return instance
+            return self._orm_instance
         except Account.DoesNotExist:
             logger.warning(
                 "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
@@ -535,6 +538,31 @@ class SAMAccountBroker(AbstractBroker):
                 self.name,
             )
             return None
+
+    def initialize_orm_meta(self) -> None:
+        """
+        Override of parent method to initialize the Django ORM meta model
+        instance for the broker.
+        """
+
+        self._orm_meta_instance = None
+        try:
+            self._orm_meta_instance = Account.objects.get(name=self.name)
+        except Account.DoesNotExist:
+            logger.warning(
+                "%s.initialize_orm_meta() - ORM meta instance does not exist for account=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+            )
+        except Exception as e:
+            logger.error(
+                "%s.initialize_orm_meta() - unexpected error retrieving ORM meta instance for account=%s, name=%s: %s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+                e,
+            )
 
     @property
     def SAMModelClass(self) -> Type[SAMAccount]:

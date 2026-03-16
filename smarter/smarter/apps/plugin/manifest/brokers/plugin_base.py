@@ -166,9 +166,9 @@ class SAMPluginBaseBroker(AbstractBroker):
         if not retval:
             logger.warning("%s.ready() AbstractBroker is not ready for %s", logger_prefix, self.kind)
             return False
-        retval = self.manifest is not None or self.plugin is not None
+        retval = bool(self.manifest) or bool(self.plugin) or bool(self.orm_meta_instance)
         logger.debug(
-            "%s.ready() manifest presence indicates ready=%s for %s",
+            "%s.ready() manifest or orm presence indicates ready=%s for %s",
             logger_prefix,
             retval,
             self.kind,
@@ -291,6 +291,9 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         """
         if self._plugin_meta:
+            return self._plugin_meta
+        if self.orm_meta_instance:
+            self._plugin_meta = self.orm_meta_instance
             return self._plugin_meta
         if self.name and self.account:
             try:
