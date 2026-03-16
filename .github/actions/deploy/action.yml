@@ -336,15 +336,6 @@ runs:
         fi
         echo "SMARTER_S3_BUCKET=${S3_BUCKET}" >> $GITHUB_ENV
 
-    # Dump all of our environment variables to the run log
-    - name: Dump environment variables
-      id: dump-env
-      shell: bash
-      run: |-
-        echo "env"
-        echo "-------------------------------"
-        env
-
     - name: Delete failed jobs
       id: delete-failed-jobs
       shell: bash
@@ -373,6 +364,7 @@ runs:
             "ENVIRONMENT": ${{ inputs.environment && format('"{0}"', inputs.environment) || 'null' }},
             "NAMESPACE": ${{ env.NAMESPACE && format('"{0}"', env.NAMESPACE) || 'null' }},
             "SECRET_KEY": ${{ env.SECRET_KEY && format('"{0}"', env.SECRET_KEY) || 'null' }},
+            "ROOT_DOMAIN": ${{ inputs.root-domain && format('"{0}"', inputs.root-domain) || 'null' }},
             "SMARTER_ADMIN_EMAIL": ${{ env.SMARTER_ADMIN_EMAIL && format('"{0}"', env.SMARTER_ADMIN_EMAIL) || 'null' }},
             "SMARTER_ADMIN_PASSWORD": ${{ env.SMARTER_ADMIN_PASSWORD && format('"{0}"', env.SMARTER_ADMIN_PASSWORD) || 'null' }},
             "SMARTER_ADMIN_USERNAME": ${{ env.SMARTER_ADMIN_USERNAME && format('"{0}"', env.SMARTER_ADMIN_USERNAME) || 'null' }},
@@ -440,15 +432,12 @@ runs:
         }
         EOF
 
-    - name: Convert to yaml
+    - name: Convert values file from json to yaml
       id: convert-to-yaml
       shell: bash
       run: |-
         cat /tmp/values.json | jq . > /tmp/values_clean.json && mv /tmp/values_clean.json /tmp/values.json
         cat /tmp/values.json | yq eval -P --input-format=json > /tmp/values.yaml
-        echo "values.yaml"
-        echo "--------------------------------------------------------------------------------"
-        cat /tmp/values.yaml
 
     # see: https://github.com/helm/helm
     #      we're installing directly from the github repo amd64 binary
