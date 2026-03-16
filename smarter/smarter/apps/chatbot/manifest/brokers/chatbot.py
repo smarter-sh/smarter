@@ -237,7 +237,7 @@ class SAMChatbotBroker(AbstractBroker):
             return self._ready
         retval = super().ready
         if not retval:
-            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
+            logger.debug("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
             return False
         retval = self.manifest is not None or self.account is not None
         logger.debug(
@@ -690,7 +690,10 @@ class SAMChatbotBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
 
         example_chatbot = ChatBot.objects.filter(name="Example Chatbot").first()
-        if not example_chatbot:
+        if example_chatbot and isinstance(example_chatbot.tags, TaggableManager):
+            tags = list(example_chatbot.tags.names())
+        else:
+            tags = []
             example_chatbot = ChatBot(
                 subdomain=None,
                 custom_domain=None,
@@ -719,7 +722,7 @@ class SAMChatbotBroker(AbstractBroker):
             name=example_chatbot.name,
             description=example_chatbot.description,
             version=example_chatbot.version,
-            tags=example_chatbot.tags.names() if example_chatbot.tags else [],
+            tags=tags,
             annotations=example_chatbot.annotations if isinstance(example_chatbot.annotations, list) else [],
         )
         config = SAMChatbotSpecConfig(
@@ -846,6 +849,10 @@ class SAMChatbotBroker(AbstractBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+        if not self.ready:
+            raise SAMBrokerErrorNotReady(
+                f"{self.kind} {self.name} broker is not ready", thing=self.kind, command=command
+            )
         if not self.manifest:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         if not self.manifest.spec:
