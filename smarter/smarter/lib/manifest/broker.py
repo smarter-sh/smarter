@@ -173,6 +173,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
     _validated: bool = False
     _thing: Optional[SmarterJournalThings] = None
     _created: bool = False
+    _orm_meta_instance: Optional[MetaDataWithOwnershipModel] = None
     _orm_instance: Optional[MetaDataWithOwnershipModel] = None
     _ready: bool = False
     _is_ready_abstract_broker: bool = False
@@ -289,34 +290,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         # user_profile, and we don't already have a manifest or loader.
         # ----------------------------------------------------------------------
         if not self._manifest and not self._loader:
-            if self.name and self.user_profile:
-                logger.debug(
-                    "%s.__init__() - Attempting to initialize loader from %s using name %s and user_profile %s.",
-                    self.abstract_broker_logger_prefix,
-                    self.ORMModelClass.__name__,
-                    self.name,
-                    self.user_profile,
-                )
-                try:
-                    self._orm_instance = self.ORMMetaModelClass.objects.get(
-                        name=self.name, user_profile=self.user_profile
-                    )
-                    logger.debug(
-                        "%s.__init__() - Successfully initialized ORM instance from name and user_profile: %s",
-                        self.abstract_broker_logger_prefix,
-                        self.orm_instance,
-                    )
-                except self.ORMMetaModelClass.DoesNotExist:
-                    self._orm_instance = None
-                # pylint: disable=broad-except
-                except Exception as e:
-                    logger.error(
-                        "%s.__init__() - unexpected error initializing ORM instance from name and user_profile: %s. Error: %s",
-                        self.abstract_broker_logger_prefix,
-                        self.name,
-                        e,
-                    )
-                    self._orm_instance = None
+            self.initialize_orm_meta()
 
         self._validated = bool(self._manifest) or bool(self._loader and self.loader.ready) or bool(self._orm_instance)
 
@@ -466,7 +440,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: True if the AbstractBroker is ready for operations.
         :rtype: bool
         """
-        if self._is_ready_abstract_broker and bool(self._manifest):
+        if self._is_ready_abstract_broker and (bool(self._manifest) or bool(self.orm_meta_instance)):
             return True
         else:
             self._is_ready_abstract_broker = False
@@ -482,12 +456,14 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 "%s.is_ready_abstract_broker() returning true because loader is ready.",
                 self.abstract_broker_logger_prefix,
             )
+            self._is_ready_abstract_broker = True
             return True
-        if bool(self._orm_instance):
+        if bool(self.orm_meta_instance):
             logger.debug(
                 "%s.is_ready_abstract_broker() returning true because ORM instance is available.",
                 self.abstract_broker_logger_prefix,
             )
+            self._is_ready_abstract_broker = True
             return True
         if not self.is_accountmixin_ready:
             logger.warning(
@@ -901,6 +877,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         )
 
     @property
+    def orm_meta_instance(self) -> Optional[MetaDataWithOwnershipModel]:
+        """
+        Return the Django ORM meta model instance for the broker. This is a cached
+        property that retrieves the ORM meta instance based on the user_profile
+        and kind. The retrieval strategy is as follows:
+        """
+        return self._orm_meta_instance
+
+    @property
     def orm_instance(self) -> Optional[MetaDataWithOwnershipModel]:
         """
         Return the Django ORM model instance for the broker. There are
@@ -918,6 +903,12 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :rtype: Optional[MetaDataWithOwnershipModel]
         """
         if self._orm_instance:
+            return self._orm_instance
+
+        # this should work in any cases where orm_instance() is not overridden
+        # by a subclass.
+        if self.orm_meta_instance:
+            self._orm_instance = self.orm_meta_instance
             return self._orm_instance
 
         if not self.ready:
@@ -1734,6 +1725,71 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             logger.info(msg)
         else:
             logger.warning(msg)
+
+    def initialize_orm_meta(self) -> None:
+        """
+        Initialize the ORM metadata for the broker instance.
+
+        This method attempts to initialize the ORM metadata by querying the
+        ORMMetaModelClass using the broker's name and user_profile. If the
+        ORM metadata is successfully retrieved, it is stored in the orm_meta_instance
+        attribute. If the ORM metadata does not exist or an error occurs,
+        the _orm_instance attribute is set to None.
+        """
+        logger.debug(
+            "%s.initialize_orm_meta() called for %s %s owned by %s",
+            self.abstract_broker_logger_prefix,
+            self.kind,
+            self.name,
+            self.user_profile,
+        )
+        self._orm_meta_instance = None
+        if self.name and self.user_profile:
+            logger.debug(
+                "%s.initialize_orm_meta() - Attempting to initialize %s using name %s and user_profile %s.",
+                self.abstract_broker_logger_prefix,
+                self.ORMModelClass.__name__,
+                self.name,
+                self.user_profile,
+            )
+            try:
+                self._orm_meta_instance = self.ORMMetaModelClass.objects.get(
+                    name=self.name, user_profile=self.user_profile
+                )
+                if self.orm_meta_instance:
+                    logger.debug(
+                        "%s.initialize_orm_meta() - Successfully initialized %s: %s",
+                        self.abstract_broker_logger_prefix,
+                        self.ORMMetaModelClass.__name__,
+                        self.orm_meta_instance,
+                    )
+            except self.ORMMetaModelClass.DoesNotExist:
+                logger.debug(
+                    "%s.initialize_orm_meta() - No %s found for name %s and user_profile %s. This may be expected if the resource has not been created yet.",
+                    self.abstract_broker_logger_prefix,
+                    self.ORMMetaModelClass.__name__,
+                    self.name,
+                    self.user_profile,
+                )
+
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error(
+                    "%s.initialize_orm_meta() - unexpected error initializing %s from name %s and user_profile: %s. Error: %s",
+                    self.abstract_broker_logger_prefix,
+                    self.ORMMetaModelClass.__name__,
+                    self.name,
+                    self.user_profile,
+                    e,
+                )
+        else:
+            logger.debug(
+                "%s.initialize_orm_meta() - cannot initialize %s because name or user_profile is not set. name: %s, user_profile: %s",
+                self.abstract_broker_logger_prefix,
+                self.ORMMetaModelClass.__name__,
+                self.name,
+                self.user_profile,
+            )
 
 
 # pylint: disable=W0246

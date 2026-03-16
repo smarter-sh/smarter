@@ -712,6 +712,36 @@ class SAMUserBroker(AbstractBroker):
             )
             return None
 
+    def initialize_orm_meta(self) -> None:
+        """
+        Override the base method to initialize the ORM meta model instance for
+        the broker.
+        """
+
+        self._orm_meta_instance = None
+        try:
+            self._orm_meta_instance = User.objects.get(username=self.name)
+            logger.debug(
+                "%s.initialize_orm_meta() - initialized ORM meta: %s",
+                self.abstract_broker_logger_prefix,
+                serializers.serialize("json", [self.orm_meta_instance]),  # type: ignore
+            )
+        except User.DoesNotExist:
+            logger.warning(
+                "%s.initialize_orm_meta() - ORM meta instance does not exist for account=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+            )
+        except Exception as e:
+            logger.error(
+                "%s.initialize_orm_meta() - unexpected error retrieving ORM meta instance for account=%s, name=%s: %s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+                str(e),
+            )
+
     @property
     def SAMModelClass(self) -> Type[SAMUser]:
         """
