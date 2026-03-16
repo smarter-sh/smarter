@@ -1,4 +1,4 @@
-# pylint: disable=W0718
+# pylint: disable=W0718,C0302
 """Smarter API SqlPlugin Manifest handler"""
 
 import logging
@@ -123,6 +123,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             return self._orm_instance
 
         try:
+            # first try to get the PluginDataBase instance for the name & authenticated user_profile
             logger.debug(
                 "%s.orm_instance() - attempting to retrieve %s for %s owned by %s",
                 self.formatted_class_name,
@@ -154,7 +155,7 @@ class SAMPluginBaseBroker(AbstractBroker):
 
             return self._orm_instance
         except PluginDataBase.DoesNotExist:
-            # next try with account admin user_profile
+            # next try with account admin
             account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
             account_admin_user_profile = get_cached_user_profile(user=account_admin_user)  # type: ignore
             try:
