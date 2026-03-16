@@ -448,6 +448,26 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         This method constructs a `SqlData` Pydantic model using the data associated with the current
         `plugin_meta`. It retrieves the data using the ORM-to-Pydantic conversion method.
 
+        ORM.parameters:
+
+        .. code-block:: json
+
+            {
+                'type': 'object',
+                'required': [],
+                'properties': {
+                    'max_cost': {
+                        'type': 'string',
+                        'description': 'A ceiling on the maximum cost of the course.'
+                    },
+                    'description': {
+                        'type': 'string',
+                        'description': 'A keyword to search for in the course description.'
+                    }
+                },
+                'additionalProperties': False
+            }
+
         :return: The plugin data as a Pydantic model.
         :rtype: SqlData
 
@@ -470,33 +490,84 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         if not self.plugin_meta:
             return None
 
+        if not self.plugin_data:
+            return None
+
         parameters: list[Parameter] = []
-        orm_parameters = self.plugin_data.parameters if self.plugin_data else []
-        if not isinstance(orm_parameters, list):
+        url_params: list[UrlParam] = []
+        test_values: list[TestValue] = []
+
+        orm_parameters = self.plugin_data.parameters or []
+        # pylint: disable=W0105
+        """
+        """
+        if not isinstance(orm_parameters, dict):
             raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} plugin_data_orm2pydantic() expected parameters to be a list for {self.kind} {self.plugin_meta.name}",
+                f"{self.formatted_class_name}.plugin_data_orm2pydantic() expected parameters to be a dict for {self.kind} {self.plugin_meta.name} but received {type(orm_parameters)}: {orm_parameters}",
                 thing=self.kind,
             )
-        for parameter in orm_parameters:
+        required = orm_parameters.get("required", [])
+        if not isinstance(required, list):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name}.plugin_data_orm2pydantic() expected parameters.required to be a list for {self.kind} {self.plugin_meta.name} but received {type(required)}: {required}",
+                thing=self.kind,
+            )
+
+        parameters_dict = orm_parameters.get("properties", {})
+        if not isinstance(parameters_dict, dict):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name}.plugin_data_orm2pydantic() expected parameters.properties to be a dict for {self.kind} {self.plugin_meta.name} but received {type(parameters_dict)}: {parameters_dict}",
+                thing=self.kind,
+            )
+
+        for name, parameter in parameters_dict.items():
             parameters.append(
                 Parameter(
-                    name=parameter.name,
-                    type=parameter.type,
-                    description=parameter.description,
-                    required=parameter.required,
-                    enum=parameter.enum,
-                    default=parameter.default,
+                    name=name,
+                    type=parameter.get("type", "string"),
+                    description=parameter.get("description", ""),
+                    required=name in required,
+                    enum=parameter.get("enum", []),
+                    default=parameter.get("default"),
                 )
             )
-        test_values: list[TestValue] = []
-        for test_value in self.plugin_data.test_values.all() if self.plugin_data else []:
+
+        test_values_list = self.plugin_data.test_values or []
+        if not isinstance(test_values_list, list):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name}.plugin_data_orm2pydantic() expected test_values to be a list for {self.kind} {self.plugin_meta.name} but received {type(test_values_list)}: {test_values_list}",
+                thing=self.kind,
+            )
+        for test_value in test_values_list:
+            if not isinstance(test_value, dict):
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name}.plugin_data_orm2pydantic() expected each test value to be a dict for {self.kind} {self.plugin_meta.name} but received {type(test_value)}: {test_value}",
+                    thing=self.kind,
+                )
+            if not all(k in test_value for k in ("name", "value")):
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name}.plugin_data_orm2pydantic() expected each test value dict to contain 'name' and 'value' keys for {self.kind} {self.plugin_meta.name} but received: {test_value}",
+                    thing=self.kind,
+                )
             test_values.append(
                 TestValue(
-                    name=test_value.name,
-                    value=test_value.value,
+                    name=test_value["name"],
+                    value=test_value["value"],
                 )
             )
-        url_params: list[UrlParam] = []
+        url_params_dict = self.plugin_data.url_params or {}
+        if not isinstance(url_params_dict, dict):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name}.plugin_data_orm2pydantic() expected url_params to be a dict for {self.kind} {self.plugin_meta.name} but received {type(url_params_dict)}: {url_params_dict}",
+                thing=self.kind,
+            )
+        for key, value in url_params_dict.items():
+            url_params.append(
+                UrlParam(
+                    key=key,
+                    value=value,
+                )
+            )
         headers: list[RequestHeader] = []
         self._api_data = ApiData(
             endpoint=self.plugin_data.endpoint if self.plugin_data else "missing endpoint",
