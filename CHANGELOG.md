@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.193](https://github.com/smarter-sh/smarter/compare/v0.13.192...v0.13.193) (2026-03-16)
+
+### Bug Fixes
+
+* add AbstractBroker().orm_meta_instance ([e80d629](https://github.com/smarter-sh/smarter/commit/e80d629595f2f117d83c62a7fa71cedcdcc74ca0))
+
 ## [0.13.192](https://github.com/smarter-sh/smarter/compare/v0.13.191...v0.13.192) (2026-03-15)
 
 ### Bug Fixes
