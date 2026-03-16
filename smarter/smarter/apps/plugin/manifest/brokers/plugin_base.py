@@ -10,7 +10,11 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.models import User
-from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.account.utils import (
+    get_cached_admin_user_for_account,
+    get_cached_user_profile,
+    smarter_cached_objects,
+)
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
@@ -110,42 +114,127 @@ class SAMPluginBaseBroker(AbstractBroker):
         :rtype: Optional[TimestampedModel]
         """
         logger.debug(
-            "%s.orm_instance() called for kind=%s, name=%s, user=%s",
+            "%s.orm_instance() called for %s %s",
             self.formatted_class_name,
             self.kind,
             self.name,
-            self.user_profile,
         )
         if self._orm_instance:
             return self._orm_instance
 
-        if not self.ready:
-            logger.warning(
-                "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
-                self.formatted_class_name,
-            )
-            return None
         try:
             logger.debug(
-                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
+                "%s.orm_instance() - attempting to retrieve %s for %s owned by %s",
                 self.formatted_class_name,
                 PluginDataBase.__name__,
-                self.user,
                 self.name,
+                self.user_profile,
             )
-            instance = PluginDataBase.objects.get(plugin=self.plugin_meta)
+            self._orm_instance = PluginDataBase.objects.get(plugin=self.plugin_meta)
             logger.debug(
-                "%s.orm_instance() - retrieved ORM instance: %s",
+                "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",
                 self.formatted_class_name,
-                serializers.serialize("json", [instance]),
-            )
-            return instance
-        except PluginDataBase.DoesNotExist:
-            logger.warning(
-                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
-                self.formatted_class_name,
-                self.account,
+                PluginDataBase.__name__,
+                serializers.serialize("json", [self._orm_instance]),
                 self.name,
+                self.user_profile,
+            )
+            self._orm_meta_instance = self._orm_instance.plugin
+            logger.debug(
+                "%s.orm_instance() - retrieved meta instance %s",
+                self.formatted_class_name,
+                self._orm_meta_instance,
+            )
+            self._plugin_meta = self._orm_meta_instance
+            logger.debug(
+                "%s.orm_instance() - set plugin_meta from self._orm_meta_instance %s",
+                self.formatted_class_name,
+                self._plugin_meta,
+            )
+
+            return self._orm_instance
+        except PluginDataBase.DoesNotExist:
+            # next try with account admin user_profile
+            account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
+            account_admin_user_profile = get_cached_user_profile(user=account_admin_user)  # type: ignore
+            try:
+                logger.debug(
+                    "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
+                    self.formatted_class_name,
+                    self.ORMModelClass.__name__,
+                    self.name,
+                    account_admin_user_profile,
+                )
+                self._orm_instance = PluginDataBase.objects.get(user_profile=account_admin_user_profile, name=self.name)
+                logger.debug(
+                    "%s.orm_instance() - retrieved %s for %s owned by %s",
+                    self.formatted_class_name,
+                    PluginDataBase.__name__,
+                    self.name,
+                    account_admin_user_profile,
+                )
+            except PluginDataBase.DoesNotExist:
+                # finally try with Smarter platform admin user_profile
+                smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
+                try:
+                    logger.debug(
+                        "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
+                        self.formatted_class_name,
+                        self.ORMModelClass.__name__,
+                        self.name,
+                        smarter_admin_user_profile,
+                    )
+                    self._orm_instance = PluginDataBase.objects.get(
+                        user_profile=smarter_admin_user_profile, name=self.name
+                    )
+                    logger.debug(
+                        "%s.orm_instance() - retrieved %s for %s owned by %s",
+                        self.formatted_class_name,
+                        PluginDataBase.__name__,
+                        self.name,
+                        smarter_admin_user_profile,
+                    )
+                except PluginDataBase.DoesNotExist:
+                    logger.warning(
+                        "%s.orm_instance() - %s does not exist for %s owned by %s",
+                        self.formatted_class_name,
+                        PluginDataBase.__name__,
+                        self.name,
+                        self.user_profile,
+                    )
+                    return None
+                # pylint: disable=broad-except
+                except Exception as e:
+                    logger.error(
+                        "%s.orm_instance() - unexpected error retrieving %s for %s owned by %s: %s",
+                        self.formatted_class_name,
+                        PluginDataBase.__name__,
+                        self.name,
+                        smarter_admin_user_profile,
+                        e,
+                    )
+                    return None
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error(
+                    "%s.orm_instance() - unexpected error retrieving %s for %s owned by %s: %s",
+                    self.formatted_class_name,
+                    PluginDataBase.__name__,
+                    self.name,
+                    account_admin_user_profile,
+                    e,
+                )
+                return None
+
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.orm_instance() - error retrieving %s for %s owned by %s: %s",
+                self.formatted_class_name,
+                PluginDataBase.__name__,
+                self.name,
+                self.user_profile,
+                str(e),
             )
             return None
 
