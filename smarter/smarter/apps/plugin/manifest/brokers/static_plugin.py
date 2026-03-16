@@ -526,9 +526,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 print("Broker is ready for operations.")
         """
         if not super().ready:
-            logger.debug(
-                "%s.ready retturning False because SAMPluginBaseBroker is not ready", self.formatted_class_name
-            )
+            logger.debug("%s.ready returning False because SAMPluginBaseBroker is not ready", self.formatted_class_name)
             return False
         if self._manifest or self._plugin:
             logger.debug(
