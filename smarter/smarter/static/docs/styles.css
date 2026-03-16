@@ -25,16 +25,6 @@
   right: 10px;
 }
 
-.code-snippet {
-  --bs-code-color: #f1f1f1;
-  /* Text color */
-  --bs-code-border-color: transparent;
-  /* Border color */
-  --bs-code-bg: #333333;
-  /* Background color */
-  --bs-code-shadow: 0px 3px 9px rgba(0, 0, 0, 0.08);
-  /* Box shadow */
-}
 
 code {
   white-space: pre-wrap;

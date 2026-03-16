@@ -648,13 +648,21 @@
       <div class="col-xl-6 mb-xl-10">
         <h5 class="text-center">Example ChatBot Manifest</h5>
         <div class="code-sample-body">
-          <pre class="code-snippet prettyprint">
+          <pre class="code-snippet prettyprint w-100">
             <code>
 apiVersion: smarter.sh/v1
 kind: Chatbot
 metadata:
+  annotations:
+  - smarter.sh/display-name: About Smarter Plugin
+  - smarter.sh/category: Information Plugins
   description: Create and deploy an example Smarter chatbot. Prompt with the phrase, 'example function calling' to trigger the example Static Plugin
   name: example_chatbot
+  tags:
+  - sales
+  - about
+  - smarter
+  - information
   version: 0.1.0
 spec:
   apiKey: snake_case_api_key_name
@@ -695,7 +703,7 @@ spec:
       <div class="col-xl-6 mb-xl-10">
         <h5 class="text-center">Example Plugin Manifest</h5>
         <div class="code-sample-body">
-          <pre class="code-snippet prettyprint">
+          <pre class="code-snippet prettyprint w-100">
             <code>
 apiVersion: smarter.sh/v1
 kind: Plugin
