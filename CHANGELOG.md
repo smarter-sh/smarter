@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.195](https://github.com/smarter-sh/smarter/compare/v0.13.194...v0.13.195) (2026-03-16)
+
+### Bug Fixes
+
+* add ROOT_DOMAIN and prune env console output ([71f4e55](https://github.com/smarter-sh/smarter/commit/71f4e55e8496ba7b521a3635ce49a4327b9042d6))
+* add tag data using set() ([e05f831](https://github.com/smarter-sh/smarter/commit/e05f8318cbb0d76520c04bf67c612a2216d70b74))
+* revert to default Django password form ([b5e49dc](https://github.com/smarter-sh/smarter/commit/b5e49dc690d15719a807a4f474d4e9610cf1fb5e))
+
 ## [0.13.194](https://github.com/smarter-sh/smarter/compare/v0.13.193...v0.13.194) (2026-03-16)
 
 ### Bug Fixes
