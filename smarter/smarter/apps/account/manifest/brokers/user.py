@@ -682,63 +682,68 @@ class SAMUserBroker(AbstractBroker):
         if self._orm_instance:
             return self._orm_instance
 
-        if not self.ready:
-            logger.warning(
-                "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
-                self.abstract_broker_logger_prefix,
-            )
-            return None
         try:
             logger.debug(
-                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
-                self.abstract_broker_logger_prefix,
+                "%s.orm_instance() - attempting to retrieve %s instance for user=%s, name=%s",
+                self.formatted_class_name,
                 User.__name__,
                 self.user,
                 self.name,
             )
-            instance = User.objects.get(username=self.name)
+            self._orm_instance = User.objects.get(username=self.name)
             logger.debug(
-                "%s.orm_instance() - retrieved ORM instance: %s",
-                self.abstract_broker_logger_prefix,
-                serializers.serialize("json", [instance]),
+                "%s.orm_instance() - retrieved %s instance: %s",
+                self.formatted_class_name,
+                User.__name__,
+                serializers.serialize("json", [self._orm_instance]),
             )
-            return instance
+            return self._orm_instance
         except User.DoesNotExist:
             logger.warning(
-                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
-                self.abstract_broker_logger_prefix,
+                "%s.orm_instance() - %s instance does not exist for account=%s, name=%s",
+                self.formatted_class_name,
+                User.__name__,
                 self.account,
                 self.name,
             )
             return None
 
-    def initialize_orm_meta(self) -> None:
+    def orm_meta_instance_setter(self) -> None:
         """
         Override the base method to initialize the ORM meta model instance for
         the broker.
         """
-
+        if self._orm_instance:
+            logger.debug(
+                "%s.orm_meta_instance_setter() ORM instance is already set. Setting ORM meta instance to ORM instance.",
+                self.formatted_class_name,
+            )
+            self._orm_meta_instance = self._orm_instance
+            return
         self._orm_meta_instance = None
         try:
             self._orm_meta_instance = User.objects.get(username=self.name)
             logger.debug(
-                "%s.initialize_orm_meta() - initialized ORM meta: %s",
-                self.abstract_broker_logger_prefix,
+                "%s.orm_meta_instance_setter() - initialized %s meta: %s",
+                self.formatted_class_name,
+                User.__name__,
                 serializers.serialize("json", [self.orm_meta_instance]),  # type: ignore
             )
         except User.DoesNotExist:
             logger.warning(
-                "%s.initialize_orm_meta() - ORM meta instance does not exist for account=%s, name=%s",
-                self.abstract_broker_logger_prefix,
-                self.account,
+                "%s.orm_meta_instance_setter() - %s meta instance does not exist for %s owned by %s",
+                self.formatted_class_name,
+                User.__name__,
                 self.name,
+                self.account,
             )
         except Exception as e:
             logger.error(
-                "%s.initialize_orm_meta() - unexpected error retrieving ORM meta instance for account=%s, name=%s: %s",
-                self.abstract_broker_logger_prefix,
-                self.account,
+                "%s.orm_meta_instance_setter() - unexpected error retrieving %s meta instance for %s owned by %s: %s",
+                self.formatted_class_name,
+                User.__name__,
                 self.name,
+                self.account,
                 str(e),
             )
 
