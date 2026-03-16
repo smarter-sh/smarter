@@ -115,12 +115,6 @@ class SAMTestBroker(AbstractBroker):
         if self._orm_instance:
             return self._orm_instance
 
-        if not self.ready:
-            logger.warning(
-                "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
-                self.abstract_broker_logger_prefix,
-            )
-            return None
         try:
             logger.debug(
                 "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
