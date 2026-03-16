@@ -28,6 +28,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
+    get_cached_user_profile,
     smarter_cached_objects,
 )
 from smarter.common.api import SmarterApiVersions
@@ -290,7 +291,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         # user_profile, and we don't already have a manifest or loader.
         # ----------------------------------------------------------------------
         if not self._manifest and not self._loader:
-            self.initialize_orm_meta()
+            self.orm_meta_instance_setter()
 
         self._validated = bool(self._manifest) or bool(self._loader and self.loader.ready) or bool(self._orm_instance)
 
@@ -440,43 +441,50 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: True if the AbstractBroker is ready for operations.
         :rtype: bool
         """
-        if self._is_ready_abstract_broker and (bool(self._manifest) or bool(self.orm_meta_instance)):
-            return True
-        else:
-            self._is_ready_abstract_broker = False
+        logger.debug(
+            "%s.is_ready_abstract_broker() called. Beginning ready state: %s",
+            self.abstract_broker_logger_prefix,
+            self._is_ready_abstract_broker,
+        )
+        # ---------------------------------------------------------------------
+        # there are three possible ways for us to be ready.
+        # ---------------------------------------------------------------------
         if bool(self._manifest):
             logger.debug(
                 "%s.is_ready_abstract_broker() returning true because manifest is loaded.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
-            return self._is_ready_abstract_broker
         if bool(self.loader) and self.loader.ready:
             logger.debug(
                 "%s.is_ready_abstract_broker() returning true because loader is ready.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
-            return True
         if bool(self.orm_meta_instance):
             logger.debug(
-                "%s.is_ready_abstract_broker() returning true because ORM instance is available.",
+                "%s.is_ready_abstract_broker() returning true because %s instance is available.",
                 self.abstract_broker_logger_prefix,
+                self.ORMMetaModelClass.__name__,
             )
             self._is_ready_abstract_broker = True
-            return True
+
+        if self._is_ready_abstract_broker:
+            return self._is_ready_abstract_broker
+
+        # ---------------------------------------------------------------------
+        # log every reason why we are not ready.
+        # ---------------------------------------------------------------------
         if not self.is_accountmixin_ready:
             logger.warning(
                 "%s.is_ready_abstract_broker() - AccountMixin is not ready. Cannot process broker.",
                 self.abstract_broker_logger_prefix,
             )
-            return False
         if not self.is_requestmixin_ready:
             logger.warning(
                 "%s.is_ready_abstract_broker() - RequestMixin is not ready. Cannot process broker.",
                 self.abstract_broker_logger_prefix,
             )
-            return False
         if not bool(self._manifest):
             logger.warning(
                 "%s.is_ready_abstract_broker() returning false because manifest is not loaded.",
@@ -487,7 +495,13 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 "%s.is_ready_abstract_broker() returning false because loader is not ready.",
                 self.abstract_broker_logger_prefix,
             )
-        return False
+
+        logger.debug(
+            "%s.is_ready_abstract_broker() returning false. Final ready state: %s",
+            self.abstract_broker_logger_prefix,
+            self._is_ready_abstract_broker,
+        )
+        return self._is_ready_abstract_broker
 
     @property
     def abstract_broker_ready_state(self) -> str:
@@ -509,6 +523,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: True if the broker is ready for operations.
         :rtype: bool
         """
+        logger.debug("%s.ready() called. Current ready state: %s", self.abstract_broker_logger_prefix, self._ready)
         if self._ready:
             return self._ready
         retval = super().ready
@@ -881,9 +896,145 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         """
         Return the Django ORM meta model instance for the broker. This is a cached
         property that retrieves the ORM meta instance based on the user_profile
-        and kind. The retrieval strategy is as follows:
+        and kind. For simple relational models, the ORM meta class is the same
+        as the ORM class, and the meta instance is the same as the ORM instance.
+
+        This property is used for resolving more complex ORM relationships where
+        the name and user_profile fields are stored in a parent Django model.
         """
         return self._orm_meta_instance
+
+    def orm_meta_instance_setter(self) -> None:
+        """
+        Initialize the ORM metadata for the broker instance.
+
+        This method attempts to initialize the ORM metadata by querying the
+        ORMMetaModelClass using the broker's name and user_profile. If the
+        ORM metadata is successfully retrieved, it is stored in the orm_meta_instance
+        attribute. If the ORM metadata does not exist or an error occurs,
+        the _orm_instance attribute is set to None.
+
+        :return: None
+        """
+        logger.debug(
+            "%s.orm_meta_instance_setter() called for %s %s owned by %s",
+            self.abstract_broker_logger_prefix,
+            self.kind,
+            self.name,
+            self.user_profile,
+        )
+        if self.ORMMetaModelClass == self.ORMModelClass and self._orm_instance:
+            logger.debug(
+                "%s.orm_meta_instance_setter() ORMMetaModelClass is the same as ORMModelClass and orm_instance is already set. Setting orm_meta_instance to orm_instance.",
+                self.abstract_broker_logger_prefix,
+            )
+            self._orm_meta_instance = self._orm_instance
+            return
+
+        if not self.name:
+            logger.debug(
+                "%s.orm_meta_instance_setter() cannot initialize %s meta instance because name is not set.",
+                self.abstract_broker_logger_prefix,
+                self.ORMMetaModelClass.__name__,
+            )
+        if not self.user_profile:
+            logger.debug(
+                "%s.orm_meta_instance_setter() cannot initialize %s meta instance because user_profile is not set.",
+                self.abstract_broker_logger_prefix,
+                self.ORMMetaModelClass.__name__,
+            )
+
+        self._orm_meta_instance = None
+        ModelClass = self.ORMMetaModelClass
+
+        logger.debug(
+            "%s.orm_meta_instance_setter() - Attempting to initialize %s using %s owned by %s.",
+            self.abstract_broker_logger_prefix,
+            ModelClass.__name__,
+            self.name,
+            self.user_profile,
+        )
+        try:
+            self._orm_meta_instance = ModelClass.objects.get(name=self.name, user_profile=self.user_profile)
+            if self._orm_meta_instance:
+                logger.debug(
+                    "%s.orm_meta_instance_setter() - Successfully initialized %s: %s",
+                    self.abstract_broker_logger_prefix,
+                    ModelClass.__name__,
+                    self._orm_meta_instance,
+                )
+        except ModelClass.DoesNotExist:
+            account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
+            account_admin_user_profile = get_cached_user_profile(user=account_admin_user)  # type: ignore
+            try:
+                logger.debug(
+                    "%s.orm_meta_instance_setter() attempting to retrieve %s for %s owned by %s.",
+                    self.abstract_broker_logger_prefix,
+                    ModelClass.__name__,
+                    self.name,
+                    account_admin_user_profile,
+                )
+                self._orm_meta_instance = ModelClass.objects.get(
+                    user_profile=account_admin_user_profile, name=self.name
+                )
+                logger.debug(
+                    "%s.orm_meta_instance_setter() - retrieved %s for %s owned by %s",
+                    self.abstract_broker_logger_prefix,
+                    ModelClass.__name__,
+                    self.name,
+                    account_admin_user_profile,
+                )
+            except ModelClass.DoesNotExist:
+                # finally try with Smarter platform admin user_profile
+                smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
+                try:
+                    logger.debug(
+                        "%s.orm_meta_instance_setter() attempting to retrieve %s for %s owned by %s.",
+                        self.abstract_broker_logger_prefix,
+                        ModelClass.__name__,
+                        self.name,
+                        smarter_admin_user_profile,
+                    )
+                    self._orm_meta_instance = ModelClass.objects.get(
+                        user_profile=smarter_admin_user_profile, name=self.name
+                    )
+                    logger.debug(
+                        "%s.orm_meta_instance_setter() - retrieved %s for %s owned by %s",
+                        self.abstract_broker_logger_prefix,
+                        ModelClass.__name__,
+                        self.name,
+                        smarter_admin_user_profile,
+                    )
+                except ModelClass.DoesNotExist:
+                    logger.warning(
+                        "%s.orm_meta_instance_setter() - %s does not exist for %s owned by %s",
+                        self.abstract_broker_logger_prefix,
+                        ModelClass.__name__,
+                        self.name,
+                        self.user_profile,
+                    )
+                    return None
+                # pylint: disable=broad-except
+                except Exception as e:
+                    logger.error(
+                        "%s.orm_meta_instance_setter() - unexpected error retrieving %s for %s owned by %s: %s",
+                        self.abstract_broker_logger_prefix,
+                        ModelClass.__name__,
+                        self.name,
+                        smarter_admin_user_profile,
+                        e,
+                    )
+                    return None
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.orm_meta_instance_setter() - unexpected error initializing %s from name %s and user_profile: %s. Error: %s",
+                self.abstract_broker_logger_prefix,
+                self.ORMMetaModelClass.__name__,
+                self.name,
+                self.user_profile,
+                e,
+            )
 
     @property
     def orm_instance(self) -> Optional[MetaDataWithOwnershipModel]:
@@ -911,17 +1062,11 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             self._orm_instance = self.orm_meta_instance
             return self._orm_instance
 
-        if not self.ready:
-            logger.warning(
-                "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
-                self.abstract_broker_logger_prefix,
-            )
-            return None
-
         if not self.name:
             logger.warning(
-                "%s.orm_instance() - name is not set. Cannot retrieve ORM instance.",
+                "%s.orm_instance() - name is not set. Cannot retrieve %s instance.",
                 self.abstract_broker_logger_prefix,
+                self.ORMModelClass.__name__,
             )
             return None
 
@@ -929,51 +1074,120 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
 
         try:
             # first try with the user_profile
-            instance = ModelClass.objects.get(user_profile=self.user_profile, name=self.name)
             logger.debug(
-                "%s.orm_instance() - retrieved ORM instance from cache using %s and %s",
+                "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
                 self.abstract_broker_logger_prefix,
-                self.user_profile,
+                self.ORMModelClass.__name__,
                 self.name,
+                self.user_profile,
+            )
+            self._orm_instance = ModelClass.objects.get(user_profile=self.user_profile, name=self.name)
+            logger.debug(
+                "%s.orm_instance() - retrieved %s for %s owned by %s",
+                self.abstract_broker_logger_prefix,
+                ModelClass.__name__,
+                self.name,
+                self.user_profile,
             )
         except ModelClass.DoesNotExist:
-            admin_user_profile = get_cached_admin_user_for_account(account=self.account)  # type: ignore
+            # next try with account admin user_profile
+            account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
+            account_admin_user_profile = get_cached_user_profile(user=account_admin_user)  # type: ignore
             try:
-                # next try with account admin user_profile
-                instance = ModelClass.objects.get(user_profile=admin_user_profile, name=self.name)
                 logger.debug(
-                    "%s.orm_instance() - retrieved ORM instance from cache using admin %s and %s",
+                    "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
                     self.abstract_broker_logger_prefix,
-                    admin_user_profile,
+                    self.ORMModelClass.__name__,
                     self.name,
+                    account_admin_user_profile,
+                )
+                self._orm_instance = ModelClass.objects.get(user_profile=account_admin_user_profile, name=self.name)
+                logger.debug(
+                    "%s.orm_instance() - retrieved %s for %s owned by %s",
+                    self.abstract_broker_logger_prefix,
+                    ModelClass.__name__,
+                    self.name,
+                    account_admin_user_profile,
                 )
             except ModelClass.DoesNotExist:
+                # finally try with Smarter platform admin user_profile
+                smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
                 try:
-                    # finally try with Smarter platform admin user_profile
-                    instance = ModelClass.objects.get(
-                        user_profile=smarter_cached_objects.smarter_admin_user_profile, name=self.name
-                    )
                     logger.debug(
-                        "%s.orm_instance() - retrieved ORM instance from cache using Smarter platform admin %s and %s",
+                        "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
                         self.abstract_broker_logger_prefix,
-                        smarter_cached_objects.smarter_admin_user_profile,
+                        self.ORMModelClass.__name__,
                         self.name,
+                        smarter_admin_user_profile,
+                    )
+                    self._orm_instance = ModelClass.objects.get(user_profile=smarter_admin_user_profile, name=self.name)
+                    logger.debug(
+                        "%s.orm_instance() - retrieved %s for %s owned by %s",
+                        self.abstract_broker_logger_prefix,
+                        ModelClass.__name__,
+                        self.name,
+                        smarter_admin_user_profile,
                     )
                 except ModelClass.DoesNotExist:
                     logger.warning(
-                        "%s.orm_instance() - ORM instance does not exist for user_profile=%s, name=%s",
+                        "%s.orm_instance() - %s does not exist for %s owned by %s",
                         self.abstract_broker_logger_prefix,
-                        self.user_profile,
+                        ModelClass.__name__,
                         self.name,
+                        self.user_profile,
                     )
                     return None
+                # pylint: disable=broad-except
+                except Exception as e:
+                    logger.error(
+                        "%s.orm_instance() - unexpected error retrieving %s for %s owned by %s: %s",
+                        self.abstract_broker_logger_prefix,
+                        ModelClass.__name__,
+                        self.name,
+                        smarter_admin_user_profile,
+                        e,
+                    )
+                    return None
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error(
+                    "%s.orm_instance() - unexpected error retrieving %s for %s owned by %s: %s",
+                    self.abstract_broker_logger_prefix,
+                    ModelClass.__name__,
+                    self.name,
+                    account_admin_user_profile,
+                    e,
+                )
+                return None
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.orm_instance() - unexpected error retrieving %s for %s owned by %s: %s",
+                self.abstract_broker_logger_prefix,
+                ModelClass.__name__,
+                self.name,
+                self.user_profile,
+                e,
+            )
+            return None
         logger.debug(
-            "%s.orm_instance() - retrieved ORM instance: %s %s",
+            "%s.orm_instance() - retrieved %s: %s",
             self.abstract_broker_logger_prefix,
             ModelClass.__name__,
-            serializers.serialize("json", [instance]),
+            serializers.serialize("json", [self._orm_instance]),
         )
-        return instance
+        if self.ORMModelClass == self.ORMMetaModelClass:
+            self._orm_meta_instance = self._orm_instance
+            logger.debug(
+                "%s.orm_instance() - set orm_meta_instance to %s because ORMModelClass %s is the same as ORMMetaModelClass",
+                self.abstract_broker_logger_prefix,
+                self._orm_meta_instance,
+                self.ORMModelClass.__name__,
+            )
+        else:
+            self.orm_meta_instance_setter()
+
+        return self._orm_instance
 
     @property
     def SAMModelClass(self) -> Type[AbstractSAMBase]:
@@ -1712,8 +1926,9 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: None
         """
         msg = (
-            f"{self.abstract_broker_logger_prefix}[{id(self)}] {self.kind} "
+            f"{self.abstract_broker_logger_prefix} {self.kind} "
             f"broker is {self.abstract_broker_ready_state} with "
+            f"ready: {self.ready}, "
             f"name: {self._name}, "
             f"manifest: {bool(self._manifest)}, "
             f"loader: {bool(self._loader)}, "
@@ -1725,71 +1940,6 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             logger.info(msg)
         else:
             logger.warning(msg)
-
-    def initialize_orm_meta(self) -> None:
-        """
-        Initialize the ORM metadata for the broker instance.
-
-        This method attempts to initialize the ORM metadata by querying the
-        ORMMetaModelClass using the broker's name and user_profile. If the
-        ORM metadata is successfully retrieved, it is stored in the orm_meta_instance
-        attribute. If the ORM metadata does not exist or an error occurs,
-        the _orm_instance attribute is set to None.
-        """
-        logger.debug(
-            "%s.initialize_orm_meta() called for %s %s owned by %s",
-            self.abstract_broker_logger_prefix,
-            self.kind,
-            self.name,
-            self.user_profile,
-        )
-        self._orm_meta_instance = None
-        if self.name and self.user_profile:
-            logger.debug(
-                "%s.initialize_orm_meta() - Attempting to initialize %s using name %s and user_profile %s.",
-                self.abstract_broker_logger_prefix,
-                self.ORMModelClass.__name__,
-                self.name,
-                self.user_profile,
-            )
-            try:
-                self._orm_meta_instance = self.ORMMetaModelClass.objects.get(
-                    name=self.name, user_profile=self.user_profile
-                )
-                if self.orm_meta_instance:
-                    logger.debug(
-                        "%s.initialize_orm_meta() - Successfully initialized %s: %s",
-                        self.abstract_broker_logger_prefix,
-                        self.ORMMetaModelClass.__name__,
-                        self.orm_meta_instance,
-                    )
-            except self.ORMMetaModelClass.DoesNotExist:
-                logger.debug(
-                    "%s.initialize_orm_meta() - No %s found for name %s and user_profile %s. This may be expected if the resource has not been created yet.",
-                    self.abstract_broker_logger_prefix,
-                    self.ORMMetaModelClass.__name__,
-                    self.name,
-                    self.user_profile,
-                )
-
-            # pylint: disable=broad-except
-            except Exception as e:
-                logger.error(
-                    "%s.initialize_orm_meta() - unexpected error initializing %s from name %s and user_profile: %s. Error: %s",
-                    self.abstract_broker_logger_prefix,
-                    self.ORMMetaModelClass.__name__,
-                    self.name,
-                    self.user_profile,
-                    e,
-                )
-        else:
-            logger.debug(
-                "%s.initialize_orm_meta() - cannot initialize %s because name or user_profile is not set. name: %s, user_profile: %s",
-                self.abstract_broker_logger_prefix,
-                self.ORMMetaModelClass.__name__,
-                self.name,
-                self.user_profile,
-            )
 
 
 # pylint: disable=W0246

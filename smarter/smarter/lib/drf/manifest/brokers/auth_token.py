@@ -348,38 +348,52 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
 
         if not self._manifest:
             logger.debug(
-                "%s.orm_instance() - manifest is not set. Cannot retrieve ORM instance.",
-                self.abstract_broker_logger_prefix,
+                "%s.orm_instance() - manifest is not set. Cannot retrieve %s instance.",
+                self.formatted_class_name,
+                SmarterAuthToken.__name__,
             )
             return None
         try:
             logger.debug(
-                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
-                self.abstract_broker_logger_prefix,
+                "%s.orm_instance() - attempting to retrieve %s for %s owned by %s",
+                self.formatted_class_name,
                 SmarterAuthToken.__name__,
-                self.user,
                 self.name,
+                self.user_profile,
             )
-            instance = SmarterAuthToken.objects.get(user__username=self.manifest.spec.config.username, name=self.name)
+            self._orm_instance = SmarterAuthToken.objects.get(
+                user__username=self.manifest.spec.config.username, name=self.name
+            )
             logger.debug(
-                "%s.orm_instance() - retrieved ORM instance: %s",
-                self.abstract_broker_logger_prefix,
-                serializers.serialize("json", [instance]),
+                "%s.orm_instance() - retrieved %s for %s owned by %s: %s",
+                self.formatted_class_name,
+                SmarterAuthToken.__name__,
+                self.name,
+                self.user_profile,
+                serializers.serialize("json", [self._orm_instance]),
             )
-            return instance
+            return self._orm_instance
         except SmarterAuthToken.DoesNotExist:
             logger.warning(
-                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
-                self.abstract_broker_logger_prefix,
-                self.account,
+                "%s.orm_instance() - %s instance does not exist for %s owned by %s",
+                self.formatted_class_name,
+                SmarterAuthToken.__name__,
                 self.name,
+                self.user_profile,
             )
             return None
 
-    def initialize_orm_meta(self) -> None:
+    def orm_meta_instance_setter(self) -> None:
         """
         Override the base method to initialize the ORM meta model for the broker.
         """
+        if self._orm_instance:
+            logger.debug(
+                "%s.orm_meta_instance_setter() ORM instance is already set. Setting ORM meta instance to ORM instance.",
+                self.formatted_class_name,
+            )
+            self._orm_meta_instance = self._orm_instance
+            return
 
         self._orm_meta_instance = None
         try:
@@ -387,21 +401,21 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 user__username=self.manifest.spec.config.username, name=self.name
             )
             logger.debug(
-                "%s.initialize_orm_meta() - initialized ORM meta: %s",
-                self.abstract_broker_logger_prefix,
+                "%s.orm_meta_instance_setter() - initialized ORM meta: %s",
+                self.formatted_class_name,
                 serializers.serialize("json", [self.orm_meta_instance]),  # type: ignore
             )
         except SmarterAuthToken.DoesNotExist:
             logger.warning(
-                "%s.initialize_orm_meta() - ORM meta does not exist for account=%s, name=%s",
-                self.abstract_broker_logger_prefix,
+                "%s.orm_meta_instance_setter() - ORM meta does not exist for account=%s, name=%s",
+                self.formatted_class_name,
                 self.account,
                 self.name,
             )
         except Exception as e:
             logger.error(
-                "%s.initialize_orm_meta() - Error initializing ORM meta for account=%s, name=%s: %s",
-                self.abstract_broker_logger_prefix,
+                "%s.orm_meta_instance_setter() - Error initializing ORM meta for account=%s, name=%s: %s",
+                self.formatted_class_name,
                 self.account,
                 self.name,
                 str(e),
