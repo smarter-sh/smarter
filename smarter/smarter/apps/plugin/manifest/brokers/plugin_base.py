@@ -113,14 +113,23 @@ class SAMPluginBaseBroker(AbstractBroker):
         :return: The Django ORM model instance for the broker.
         :rtype: Optional[TimestampedModel]
         """
-        logger.debug(
-            "%s.orm_instance() called for %s %s",
-            self.formatted_class_name,
-            self.kind,
-            self.name,
-        )
         if self._orm_instance:
             return self._orm_instance
+
+        if not self.name:
+            logger.debug(
+                "%s.orm_instance() - no name provided for %s, cannot retrieve ORM instance",
+                self.formatted_class_name,
+                self.kind,
+            )
+            return None
+        if not self.user_profile:
+            logger.debug(
+                "%s.orm_instance() - no user_profile provided for %s, cannot retrieve ORM instance",
+                self.formatted_class_name,
+                self.kind,
+            )
+            return None
 
         try:
             # first try to get the PluginDataBase instance for the name & authenticated user_profile
