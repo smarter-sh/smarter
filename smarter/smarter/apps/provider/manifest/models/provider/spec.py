@@ -2,13 +2,12 @@
 
 import logging
 import os
+import re
 from typing import ClassVar, Optional
 
-from pydantic import EmailStr, Field, computed_field, field_validator
+from pydantic import EmailStr, Field, field_validator
 
 from smarter.apps.provider.manifest.models.provider.const import MANIFEST_KIND
-from smarter.apps.provider.models import ProviderStatus
-from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -17,6 +16,7 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) and waffle.switch_is_active(
@@ -36,7 +36,7 @@ class SAMProviderSpecProvider(SmarterBasePydanticModel):
 
     name: str = Field(
         ...,
-        description="The name of the Provider. Case sensitive. Must be unique and not empty, with no leading or trailing whitespace and no special characters. example: 'OpenAI', 'GoogleAI', 'MetaAI'.",
+        description="The name of the Provider. Case sensitive. Must be unique and not empty, with no leading or trailing whitespace and no special characters. examples: 'OpenAI', 'GoogleAI', 'MetaAI'.",
     )
     description: Optional[str] = Field(
         None,
@@ -85,11 +85,17 @@ class SAMProviderSpecProvider(SmarterBasePydanticModel):
 
     @field_validator("name")
     def validate_name(cls, v):
-        if SmarterValidator.is_valid_cleanstring(v):
-            return v
-        raise SAMValidationError(
-            f"Invalid name: {v}. Must be a valid clean string. Case sensitive. Must be unique and not empty, with no leading or trailing whitespace and no special characters. example: 'OpenAI', 'GoogleAI', 'MetaAI'."
-        )
+        v = str(v).strip()
+        if not v:
+            raise SAMValidationError("Provider name must not be empty.")
+        if not re.match(SmarterValidator.VALID_ALPHNUMERIC_NO_SPACES_PATTERN, v):
+            raise SAMValidationError(f"""
+                Provider name {v} must contain only letters and numbers, with no
+                special characters or spaces.
+                examples: 'OpenAI', 'GoogleAI', 'MetaAI', 'DeepSeek',
+                'Anthropic', 'HuggingFace'
+                """)
+        return v
 
     @field_validator("base_url")
     def validate_api_url(cls, v):

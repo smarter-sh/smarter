@@ -397,7 +397,7 @@ class SAMProviderBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
 
         metadata = SAMProviderMetadata(
-            name="example_provider",
+            name="acme_llm_company",
             description="an example provider manifest for the Smarter API Provider",
             version="1.0.0",
             tags=["example", "provider", "smarter-api"],
@@ -407,7 +407,7 @@ class SAMProviderBroker(AbstractBroker):
             ],
         )
         spec_provider = SAMProviderSpecProvider(
-            name="Acme Corp.",
+            name="AcmeLLM",
             description="Leading provider of innovative LLM solutions.",
             base_url="https://api.acme-llm.com",
             api_key="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -433,7 +433,7 @@ class SAMProviderBroker(AbstractBroker):
             contact_email_verified=datetime.datetime(2024, 1, 2, 0, 0, 0, tzinfo=datetime.timezone.utc),
             support_email_verified=datetime.datetime(2024, 1, 2, 0, 0, 0, tzinfo=datetime.timezone.utc),
             tos_accepted_at=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
-            tos_accepted_by="CEO Acme",
+            tos_accepted_by="ceo@acme-llm.com",
             can_activate=True,
         )
 
