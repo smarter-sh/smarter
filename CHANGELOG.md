@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.197](https://github.com/smarter-sh/smarter/compare/v0.13.196...v0.13.197) (2026-03-16)
+
+### Bug Fixes
+
+* you can only call example_chatbot.tags.names() if a pk exists ([3f20b01](https://github.com/smarter-sh/smarter/commit/3f20b010f62a12bbf7020567eef3e4636a008fe5))
+
 ## [0.13.196](https://github.com/smarter-sh/smarter/compare/v0.13.195...v0.13.196) (2026-03-16)
 
 ### Bug Fixes
