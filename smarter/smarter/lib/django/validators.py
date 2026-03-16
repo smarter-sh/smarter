@@ -70,6 +70,9 @@ class SmarterValidator:
     LOCAL_URLS = [f"http://{host}" for host in LOCAL_HOSTS] + [f"https://{host}" for host in LOCAL_HOSTS]
     """List of local URLs used for validation purposes."""
 
+    VALID_ALPHNUMERIC_NO_SPACES_PATTERN = r"^[a-zA-Z0-9]+$"
+    """Pattern for validating alphanumeric strings with no spaces."""
+
     VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
     """Pattern for validating Smarter account numbers."""
 
