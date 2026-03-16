@@ -547,6 +547,15 @@ class SAMAccountBroker(AbstractBroker):
             )
             self._orm_meta_instance = self._orm_instance
             return
+
+        if not self.name:
+            logger.debug(
+                "%s.orm_meta_instance_setter() - name is not set. Cannot retrieve ORM meta instance for %s.",
+                self.formatted_class_name,
+                Account.__name__,
+            )
+            return
+
         self._orm_meta_instance = None
         try:
             self._orm_meta_instance = Account.objects.get(name=self.name)
