@@ -342,6 +342,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         """
         if self._orm_instance:
             return self._orm_instance
+        if self.orm_meta_instance:
+            self._orm_instance = self.orm_meta_instance
+            return self._orm_instance
 
         if not self._manifest:
             logger.debug(
@@ -372,6 +375,37 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 self.name,
             )
             return None
+
+    def initialize_orm_meta(self) -> None:
+        """
+        Override the base method to initialize the ORM meta model for the broker.
+        """
+
+        self._orm_meta_instance = None
+        try:
+            self._orm_meta_instance = SmarterAuthToken.objects.get(
+                user__username=self.manifest.spec.config.username, name=self.name
+            )
+            logger.debug(
+                "%s.initialize_orm_meta() - initialized ORM meta: %s",
+                self.abstract_broker_logger_prefix,
+                serializers.serialize("json", [self.orm_meta_instance]),  # type: ignore
+            )
+        except SmarterAuthToken.DoesNotExist:
+            logger.warning(
+                "%s.initialize_orm_meta() - ORM meta does not exist for account=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+            )
+        except Exception as e:
+            logger.error(
+                "%s.initialize_orm_meta() - Error initializing ORM meta for account=%s, name=%s: %s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+                str(e),
+            )
 
     def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug("%s.example_manifest() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
