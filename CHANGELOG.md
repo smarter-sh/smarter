@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.198](https://github.com/smarter-sh/smarter/compare/v0.13.197...v0.13.198) (2026-03-17)
+
+### Bug Fixes
+
+* anonymize workbench urls ([350ec3a](https://github.com/smarter-sh/smarter/commit/350ec3a701f48052e854c08bc307b1947f8f1a24))
+
 ## [0.13.197](https://github.com/smarter-sh/smarter/compare/v0.13.196...v0.13.197) (2026-03-16)
 
 ### Bug Fixes
