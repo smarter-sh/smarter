@@ -53,6 +53,7 @@ from smarter.common.utils import (
 )
 from smarter.lib import json
 from smarter.lib.django import waffle
+from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -385,7 +386,7 @@ class SmarterRequestMixin(AccountMixin):
                 if isinstance(value, cached_property):
                     self.__dict__.pop(name, None)
 
-    @property
+    @cached_property
     def request_mixin_logger_prefix(self) -> str:
         """
         Returns the logger prefix for the class.
@@ -871,14 +872,20 @@ class SmarterRequestMixin(AccountMixin):
         Extract the chatbot id from the URL.
 
         Example:
-            http://localhost:9357/api/v1/workbench/1912/chat/config/
 
-            return 1912
+            http://localhost:9357/workbench/chatbots/rMTAwMDAyNwx/chat/
+
+            returns the pk id that when decoded from the hashed ID format
+            corresponds to the chatbot id.
 
         :return: The chatbot id as an integer, or None if not found.
         """
         if not self.is_chatbot:
             return None
+
+        hashed_id = TimestampedModel.find_hash(self.url) if self.url else None
+        if hashed_id:
+            return TimestampedModel.id_from_hashed_id(hashed_id)
 
         if self.is_chatbot_smarter_api_url:
             path_parts = self.url_path_parts
@@ -1386,7 +1393,7 @@ class SmarterRequestMixin(AccountMixin):
             return False
         return netloc_match and path_match
 
-    @property
+    @cached_property
     def is_chatbot(self) -> bool:
         """
         Returns True if the URL resolves to a chatbot endpoint.
@@ -1397,8 +1404,10 @@ class SmarterRequestMixin(AccountMixin):
             - http://localhost:9357/api/v1/prompt/1/chat/
             - http://localhost:9357/api/v1/cli/chat/example/
             - http://example.3141-5926-5359.api.localhost:9357/
-            - http://localhost:9357/workbench/<str:name>/chat/
             - http://localhost:9357/api/v1/chatbots/1556/chat/
+            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/chat/
+            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/config/
+            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/manifest/
 
         Returns:
             bool: True if the URL is a chatbot endpoint, otherwise False.
@@ -1450,6 +1459,7 @@ class SmarterRequestMixin(AccountMixin):
     def is_chatbot_smarter_api_url(self) -> bool:
         """
         Returns True if the URL is of the form:
+            - http://localhost:9357/api/v1/chatbots/32/config/
 
             - http://localhost:9357/api/v1/workbench/1/chat/
               path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
@@ -1508,10 +1518,10 @@ class SmarterRequestMixin(AccountMixin):
                 self.url_path_parts,
             )
             return False
-        if self.url_path_parts[4] != "chat":
-            # expecting 'chat' at the end of the path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+        if self.url_path_parts[4] not in ["chat", "config"]:
+            # expecting 'chat' or 'config' at the end of the path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
             logger.debug(
-                "%s.is_chatbot_smarter_api_url() - fifth part is not 'chat': %s",
+                "%s.is_chatbot_smarter_api_url() - fifth part is not 'chat' or 'config': %s",
                 self.request_mixin_logger_prefix,
                 self.url_path_parts,
             )
@@ -1642,18 +1652,19 @@ class SmarterRequestMixin(AccountMixin):
         Example URLs for chatbot sandbox endpoints.
 
         Examples:
+            Web console urls:
+            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/chat/
+            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/config/
+            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/manifest/
 
-            https://alpha.platform.smarter.sh/workbench/example/
-            https://<environment_domain>/workbench/<name>
-            path_parts: ['workbench', 'example-username']
+            Api urls:
+            - http://localhost:9357/api/v1/prompt/1/chat/
+            - http://localhost:9357/api/v1/prompt/1/config/
 
-            http://localhost:9357/workbench/<str:name>/chat/
-            https://alpha.platform.smarter.sh/workbench/example/config/
-            https://<environment_domain>/workbench/<name>/config/
-            path_parts: ['workbench', 'example-username', 'config']
-
-            http://localhost:9357/api/v1/prompt/1/chat/
-            http://<environment_domain>/api/v1/prompt/<int:chatbot_id>/chat/
+            Manifest view urls:
+            https://alpha.platform.smarter.sh/workbench/chatbots/hashed_id/
+            https://<environment_domain>/workbench/chatbots/<str:hashed_id>/
+            path_parts: ['workbench', 'chatbots', 'rxy123hashedx']
 
         Returns:
             bool: True if the URL matches a chatbot sandbox endpoint, otherwise False.
@@ -1683,12 +1694,27 @@ class SmarterRequestMixin(AccountMixin):
             return True
 
         # ---------------------------------------------------------------------
-        # workbench urls: http://localhost:9357/workbench/<str:name>/chat/
+        # workbench urls: http://localhost:9357/workbench/chatbots/<str:hashed_id>/chat/
         # ---------------------------------------------------------------------
+        hashed_id = TimestampedModel.find_hash(self.url) if self.url else None
+        if hashed_id is None:
+            logger.debug(
+                "%s.is_chatbot_sandbox_url() - url %s does not contain a valid TimestampedModel hashed_id.",
+                self.request_mixin_logger_prefix,
+                self.url,
+            )
+            return False
+
+        logger.debug(
+            "%s.is_chatbot_sandbox_url() - url %s contains hashed_id: %s",
+            self.request_mixin_logger_prefix,
+            self.url,
+            hashed_id,
+        )
 
         # valid path_parts:
-        #   ['workbench', '<slug>', 'chat']
-        #   ['workbench', '<slug>', 'config']
+        #   ['workbench', 'chatbots', '<str:hashed_id>', 'chat']
+        #   ['workbench', 'chatbots', '<str:hashed_id>', 'config']
         if self.parsed_url.netloc != smarter_settings.environment_platform_domain:
             logger.debug(
                 "%s.is_chatbot_sandbox_url() - url %s netloc does not match environment platform domain: %s",
@@ -1697,9 +1723,9 @@ class SmarterRequestMixin(AccountMixin):
                 smarter_settings.environment_platform_domain,
             )
             return False
-        if len(path_parts) != 3:
+        if len(path_parts) != 4:
             logger.debug(
-                "%s.is_chatbot_sandbox_url() - url %s does not have exactly 3 path parts: %s",
+                "%s.is_chatbot_sandbox_url() - url %s does not have exactly 4 path parts: %s",
                 self.request_mixin_logger_prefix,
                 self.url,
                 path_parts,
@@ -1713,16 +1739,15 @@ class SmarterRequestMixin(AccountMixin):
                 path_parts,
             )
             return False
-        if not SmarterValidator.is_valid_chatbot_slug(path_parts[1]):
-            # expecting <slug> to be alpha: ['workbench', '<slug>', 'config']
+        if path_parts[1] != "chatbots":
             logger.debug(
-                "%s.is_chatbot_sandbox_url() - url %s second path part is not alphabetic slug: %s",
+                "%s.is_chatbot_sandbox_url() - url %s second path part is not 'chatbots': %s",
                 self.request_mixin_logger_prefix,
                 self.url,
                 path_parts,
             )
             return False
-        if path_parts[-1] in ["config", "chat"]:
+        if path_parts[-1] in ["config", "chat", "manifest"]:
             # expecting:
             #   ['workbench', '<slug>', 'chat']
             #   ['workbench', '<slug>', 'config']
@@ -1732,17 +1757,6 @@ class SmarterRequestMixin(AccountMixin):
                 self.url,
             )
             return True
-
-        # ---------------------------------------------------------------------
-        # workbench urls: http://localhost:9357/workbench/chatbots/<int:id>/
-        # ---------------------------------------------------------------------
-        if path_parts[0] == "workbench" and path_parts[1] == "chatbots" and path_parts[2].isnumeric():
-            logger.debug(
-                "%s.is_chatbot_sandbox_url() - url %s is a Chatbot listview or detail view.",
-                self.request_mixin_logger_prefix,
-                self.url,
-            )
-            return False
 
         logger.debug(
             "%s.is_chatbot_sandbox_url() - could not verify whether url is a chatbot sandbox url: %s",
@@ -1967,13 +1981,30 @@ class SmarterRequestMixin(AccountMixin):
         :return: True if the request is ready, False otherwise.
 
         """
-        retval = not self.is_config and super().ready
-        if not retval:
+        super_ready = super().ready
+        if self.is_requestmixin_ready:
+            if super_ready:
+                logger.debug(
+                    "%s.ready() - request mixin and account mixin are ready. Request is ready for processing.",
+                    self.request_mixin_logger_prefix,
+                )
+            else:
+                logger.debug(
+                    "%s.ready() - request mixin is ready and returning True even though AccountMixin is not ready.",
+                    self.request_mixin_logger_prefix,
+                )
+            return True
+        if not super_ready:
             logger.warning(
-                "%s.ready() - returning False because AccountMixin is not ready.",
+                "%s.ready() - returning False because neither AccountMixin nor SmarterRequestMixin are ready.",
                 self.request_mixin_logger_prefix,
             )
-        return retval and self.is_requestmixin_ready
+        else:
+            logger.warning(
+                "%s.ready() - returning False because SmarterRequestMixin is not ready.",
+                self.request_mixin_logger_prefix,
+            )
+        return False
 
     # --------------------------------------------------------------------------
     # instance methods

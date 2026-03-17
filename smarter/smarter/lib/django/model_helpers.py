@@ -1,6 +1,8 @@
 """Django ORM base model"""
 
+import base64
 import datetime
+import re
 from logging import getLogger
 from typing import Optional
 
@@ -10,6 +12,7 @@ from django.utils.timezone import is_aware, make_aware
 from taggit.managers import TaggableManager
 
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
 
@@ -64,8 +67,15 @@ class TimestampedModel(models.Model):
         - If you override ``save()``, ensure you call ``super().save(*args, **kwargs)`` to retain validation and timestamp behavior.
         - The ``elapsed_updated`` property expects ``updated_at`` to be set; if not, it returns ``None``.
         - Passing a non-datetime object to ``elapsed_updated`` will raise a ``TypeError``.
+        - The hashed ID methods provide a way to encode and decode object IDs for use in URLs
+          in cases where you want to avoid exposing raw database IDs.
 
     """
+
+    formatted_class_name = formatted_text("TimestampedModel")
+    HASH_PREFIX = "r"
+    HASH_SUFFIX = "x"
+    HASH_FLOOR = 1000000
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, editable=False, db_index=True)
     """
@@ -136,6 +146,100 @@ class TimestampedModel(models.Model):
                 f"TimestampedModel().save() validation error: {e} | args={args} kwargs={kwargs} | model={self.__class__.__name__} | field_values={self.__dict__}"
             ) from e
         super().save(*args, **kwargs)
+
+    @classmethod
+    def hash_regex(cls) -> re.Pattern:
+        """
+        Returns a regex pattern that matches the hashed ID format for this model anywhere in a string.
+
+        The hashed ID format is defined by the ``HASH_PREFIX`` and ``HASH_SUFFIX`` class attributes,
+        with a base64-encoded string in between. This regex can be used to validate or extract
+        hashed IDs from strings, including when embedded in URLs.
+
+        :returns: A regex pattern for matching hashed IDs.
+        :rtype: re.Pattern
+        """
+        return re.compile(f"{cls.HASH_PREFIX}[A-Za-z0-9_-]+{cls.HASH_SUFFIX}")
+
+    @property
+    def hashed_id(self) -> str:
+        """
+        Returns a URL-friendly hashed version of the object's ID for use in URLs and other
+        contexts where an obscured, non-identifying, non-sequential identifier is preferred.
+
+        :returns: Hashed ID string (URL-safe, no padding)
+        :rtype: str
+        """
+        id_value = int(self.id) + self.HASH_FLOOR
+        encoded = base64.urlsafe_b64encode(str(id_value).encode()).decode().rstrip("=")
+        return self.HASH_PREFIX + encoded + self.HASH_SUFFIX
+
+    @classmethod
+    def id_from_hashed_id(cls, hashed_id: str) -> Optional[int]:
+        """
+        Decodes a hashed ID back to the original object ID.
+
+        :param hashed_id: The hashed ID string to decode (URL-safe, no padding).
+        :returns: The original object ID if decoding is successful, otherwise None.
+        :rtype: Optional[int]
+        """
+        try:
+            logger.debug(
+                "%s.id_from_hashed_id() - Attempting to decode hashed_id: %s",
+                cls.formatted_class_name,
+                hashed_id,
+            )
+            if not hashed_id.startswith(cls.HASH_PREFIX) or not hashed_id.endswith(cls.HASH_SUFFIX):
+                return None
+            encoded_str = hashed_id[len(cls.HASH_PREFIX) : -len(cls.HASH_SUFFIX)]
+            # Add padding if needed
+            padding = "=" * (-len(encoded_str) % 4)
+            encoded_str += padding
+            decoded_bytes = base64.urlsafe_b64decode(encoded_str.encode())
+            decoded_str = decoded_bytes.decode()
+            retval = int(decoded_str) - cls.HASH_FLOOR
+            logger.debug(
+                "%s.id_from_hashed_id() - Successfully decoded hashed_id: %s to id: %d",
+                cls.formatted_class_name,
+                hashed_id,
+                retval,
+            )
+            return retval
+        except (base64.binascii.Error, ValueError) as e:
+            logger.error("Failed to decode hashed_id '%s': %s", hashed_id, e)
+            return None
+
+    @classmethod
+    def find_hash(cls, value: str) -> Optional[str]:
+        """
+        Finds and returns the first substring in the given value that matches
+        the hashed ID format.
+
+        :param value: The string to search for a hashed ID.
+        :returns: The first matching hashed ID if found, otherwise None.
+        :rtype: Optional[str]
+        """
+        logger.debug(
+            "%s.find_hash() - Searching for hashed ID in value: %s",
+            cls.formatted_class_name,
+            value,
+        )
+        pattern = cls.hash_regex()
+        match = pattern.search(value)
+        retval = match.group(0) if match else None
+        if retval:
+            logger.debug(
+                "%s.find_hash() - Found hashed ID: %s",
+                cls.formatted_class_name,
+                retval,
+            )
+        else:
+            logger.debug(
+                "%s.find_hash() - No hashed ID found in value: %s",
+                cls.formatted_class_name,
+                value,
+            )
+        return retval
 
     @property
     def elapsed_updated(self, dt=None) -> Optional[int]:
