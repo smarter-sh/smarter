@@ -14,8 +14,8 @@ from .const import namespace
 from .views import (
     ChatAppWorkbenchView,
     ChatConfigView,
-    PromptDetailView,
     PromptListView,
+    PromptManifestView,
 )
 
 app_name = namespace
@@ -23,7 +23,7 @@ app_name = namespace
 urlpatterns = [
     path("", PromptListView.as_view(), name="listview"),
     path("api/", include("smarter.apps.prompt.api.urls", namespace=api_namespace)),
-    path("chatbots/<int:chatbot_id>/", PromptDetailView.as_view(), name="chatbot_by_id_detailview"),
-    path("<str:name>/chat/", ChatAppWorkbenchView.as_view(), name="chat_by_name"),
-    path("<str:name>/config/", ChatConfigView.as_view(), name="config_by_name"),
+    path("chatbots/<str:hashed_id>/manifest/", PromptManifestView.as_view(), name="prompt_manifest_by_hashed_id"),
+    path("chatbots/<str:hashed_id>/chat/", ChatAppWorkbenchView.as_view(), name="prompt_chat_by_hashed_id"),
+    path("chatbots/<str:hashed_id>/config/", ChatConfigView.as_view(), name="prompt_config_by_hashed_id"),
 ]
