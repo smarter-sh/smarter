@@ -763,7 +763,6 @@ TEMPLATES = [
                 "smarter.apps.dashboard.context_processors.branding",
                 "smarter.apps.dashboard.context_processors.base",
                 "smarter.apps.dashboard.context_processors.footer",
-                "smarter.apps.dashboard.context_processors.prompt_chatapp_workbench_context",
                 "smarter.apps.dashboard.context_processors.file_drop_zone",
                 # "social_django.context_processors.backends",
                 # "social_django.context_processors.login_redirect",

@@ -76,10 +76,6 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         """Return the formatted class name for logging purposes."""
         return formatted_text(f"{__name__}.{SmarterBlockExcessive404Middleware.__name__}")
 
-    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
-        logger.debug("%s.__call__(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
-        return super().__call__(request)
-
     def process_response(self, request: WSGIRequest, response):
         """
         Process the HTTP response and apply excessive 404 blocking logic.
@@ -94,29 +90,35 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         """
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
             return response
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            # skip this for authenticated users
-            if is_authenticated_request(request):
-                return response
 
-            client_ip = self.get_client_ip(request)
-            if not client_ip:
-                return response
+        # skip if the response is anything other than a 404
+        if response.status_code != HTTPStatus.NOT_FOUND:
+            return response
 
-            throttle_key = f"excessive_404_throttle:{client_ip}"
-            blocked_count = cache.get(throttle_key, 0)
-            if blocked_count >= self.THROTTLE_LIMIT:
-                logger.warning(
-                    "%s Throttled client %s after %d 404s", self.formatted_class_name, client_ip, blocked_count
-                )
-                return HttpResponseForbidden(
-                    f"You have been blocked due to too many invalid requests from your IP. Try again later or contact {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
-                )
-            try:
-                blocked_count = cache.incr(throttle_key)
-            except ValueError:
-                cache.set(throttle_key, 1, timeout=self.THROTTLE_TIMEOUT)
-                blocked_count = 1
-            else:
-                cache.set(throttle_key, blocked_count, timeout=self.THROTTLE_TIMEOUT)
+        # skip this for authenticated users
+        if is_authenticated_request(request):
+            return response
+
+        logger.debug("%s.process_response(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
+
+        client_ip = self.get_client_ip(request)
+        if not client_ip:
+            return response
+
+        throttle_key = f"excessive_404_throttle:{client_ip}"
+        blocked_count = cache.get(throttle_key, 0)
+        if blocked_count >= self.THROTTLE_LIMIT:
+            logger.warning("%s Throttled client %s after %d 404s", self.formatted_class_name, client_ip, blocked_count)
+            return HttpResponseForbidden(
+                f"You have been blocked due to too many invalid requests from your IP. Try again later or contact {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
+            )
+
+        try:
+            blocked_count = cache.incr(throttle_key)
+        except ValueError:
+            cache.set(throttle_key, 1, timeout=self.THROTTLE_TIMEOUT)
+            blocked_count = 1
+        else:
+            cache.set(throttle_key, blocked_count, timeout=self.THROTTLE_TIMEOUT)
+
         return response
