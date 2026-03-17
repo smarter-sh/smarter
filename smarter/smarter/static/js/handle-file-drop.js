@@ -179,14 +179,14 @@ document.addEventListener("DOMContentLoaded", function () {
       console.log("Drag over detected");
       showOverlay(overlay);
     }
-  });
+  }, { passive: true });
 
   window.addEventListener("dragleave", function (e) {
     console.log("Drag leave detected");
     e.preventDefault();
     if (e.target === overlay || e.pageX === 0 || e.pageY === 0)
       hideOverlay(overlay);
-  });
+  }, { passive: true });
 
   window.addEventListener("drop", function (e) {
     console.log("File drop detected");
@@ -206,5 +206,5 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Please drop a Smarter YAML manifest file (.yaml or .yml)");
       }
     }
-  });
+  }, { passive: true });
 });
