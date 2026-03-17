@@ -421,10 +421,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :rtype: bool
         """
         if not self.is_accountmixin_ready:
-            logger.warning("%s.ready() - returning False because AccountMixin is not ready", self.logger_prefix)
+            logger.debug("%s.ready() - returning False because AccountMixin is not ready", self.logger_prefix)
             return False
         if not self.is_requestmixin_ready:
-            logger.warning("%s.ready() - returning False because SmarterRequestMixin is not ready", self.logger_prefix)
+            logger.debug("%s.ready() - returning False because SmarterRequestMixin is not ready", self.logger_prefix)
             return False
         return self.is_cli_base_api_view_ready
 

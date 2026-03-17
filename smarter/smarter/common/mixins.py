@@ -46,6 +46,7 @@ if apps.ready:
         pass
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return mixin_logging_is_active
@@ -251,6 +252,14 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
     checking authentication indicators, and other middleware-related helpers.
     Inherits from both Django's :class:`MiddlewareMixin` and :class:`SmarterHelperMixin`.
     """
+
+    def __call__(self, request):
+        logger.debug(
+            "%s.__call__() - processing request: %s",
+            self.formatted_class_name,
+            self.smarter_build_absolute_uri(request),
+        )
+        return super().__call__(request)
 
     def get_client_ip(self, request) -> Optional[str]:
         """
