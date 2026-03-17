@@ -37,7 +37,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_red,
 )
 from smarter.common.helpers.llm import get_date_time_string
-from smarter.common.utils import rfc1034_compliant_str
+from smarter.common.utils import rfc1034_compliant_str, smarter_build_absolute_uri
 from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.cache import lazy_cache as cache
@@ -62,7 +62,6 @@ from .signals import (
 )
 
 CACHE_PREFIX = "ChatBotHelper_"
-API_VI_CHATBOT_NAMESPACE = "api:v1:chatbot"
 
 
 def should_log(level):
@@ -701,12 +700,15 @@ class ChatBot(MetaDataWithOwnershipModel):
         the ChatBot is in sandbox mode. For example, when the ChatBot is
         being used in the Smarter Workbench. maps to "<int:chatbot_id>/"
 
-        example: 'https://alpha.platform.smarter.sh/api/v1/chatbots/1/'
+        example: 'https://alpha.platform.smarter.sh/workbench/chatbots/<str:hashed_id>/'
 
         :returns: sandbox URL
         :rtype: str
         """
-        path = reverse(f"{API_VI_CHATBOT_NAMESPACE}:chatbot_view", kwargs={"chatbot_id": self.id})  # type: ignore[arg-type]
+        # pylint: disable=C0415
+        from smarter.apps.prompt.urls import PromptReverseViews
+
+        path = reverse(f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_landing_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url
@@ -751,7 +753,10 @@ class ChatBot(MetaDataWithOwnershipModel):
         :returns: URL for chatbot API
         :rtype: str
         """
-        path = reverse(f"{API_VI_CHATBOT_NAMESPACE}:default_chatbot_api_view", kwargs={"chatbot_id": self.id})  # type: ignore[arg-type]
+        # pylint: disable=C0415
+        from smarter.apps.chatbot.api.v1.urls import ChatBotApiV1ReverseViews
+
+        path = reverse(f"{ChatBotApiV1ReverseViews.namespace}:{ChatBotApiV1ReverseViews.default_chatbot_api_view}", kwargs={"chatbot_id": self.id})  # type: ignore[arg-type]
 
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
@@ -773,7 +778,10 @@ class ChatBot(MetaDataWithOwnershipModel):
         :returns: URL for chatbot config API
         :rtype: str
         """
-        path = reverse(f"{API_VI_CHATBOT_NAMESPACE}:chat_config_view", kwargs={"chatbot_id": self.id})  # type: ignore[arg-type]
+        # pylint: disable=C0415
+        from smarter.apps.chatbot.api.v1.urls import ChatBotApiV1ReverseViews
+
+        path = reverse(f"{ChatBotApiV1ReverseViews.namespace}:{ChatBotApiV1ReverseViews.chat_config_view}", kwargs={"chatbot_id": self.id})  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url
@@ -791,9 +799,13 @@ class ChatBot(MetaDataWithOwnershipModel):
             DeprecationWarning,
             stacklevel=2,
         )
-        if not isinstance(self.url, str):
-            raise SmarterValueError("ChatBot.url is not a valid string")
-        return urljoin(self.url, "chat/")
+        # pylint: disable=C0415
+        from smarter.apps.prompt.urls import PromptReverseViews
+
+        path = reverse(f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_chat_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        url = urljoin(smarter_settings.environment_url, path)
+        url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
+        return url
 
     def ready(self):
         """
@@ -1354,6 +1366,11 @@ def get_cached_chatbot(
     3. By Platform-wide association. If the Smarter platform admin owns a
        chatbot of the same name then this will be returned.
 
+    .. code-block:: python
+
+        chatbot = get_cached_chatbot(chatbot_id=1)
+        print(chatbot.url)
+
     :param chatbot_id: The ID of the chatbot to retrieve.
     :param name: The name of the chatbot to retrieve.
     :param user_profile: The UserProfile instance of the requesting user.
@@ -1445,6 +1462,16 @@ def get_cached_chatbot_by_request(request: HttpRequest) -> Optional[ChatBot]:
     Returns the chatbot from the cache if it exists, otherwise
     it queries the database with assistance from ChatBotHelper
     and caches the result.
+
+    .. code-block:: python
+
+        chatbot = get_cached_chatbot_by_request(request)
+        print(chatbot.url)
+
+    param request: The Django HttpRequest object containing the URL and user context.
+    type request: django.http.HttpRequest
+    returns: The ChatBot instance associated with the request URL, or None if not found.
+    rtype: Optional[ChatBot]
     """
 
     @cache_results()
@@ -1454,11 +1481,18 @@ def get_cached_chatbot_by_request(request: HttpRequest) -> Optional[ChatBot]:
         parsing and database queries for repeated requests.
         """
         chatbot_helper = ChatBotHelper(request)
+        if chatbot_helper:
+            logger.debug(
+                "%s.get_cached_chatbot_by_request() resolved and cached chatbot '%s' for url: %s",
+                formatted_text(__name__),
+                chatbot_helper.chatbot,
+                url,
+            )
         return chatbot_helper.chatbot
 
     if not request:
         return None
-    url = request.build_absolute_uri()
+    url = smarter_build_absolute_uri(request)
     return get_chatbot_by_url(url)
 
 
