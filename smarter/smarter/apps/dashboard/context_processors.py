@@ -32,6 +32,7 @@ Note
 This module does not document individual function signatures or arguments, as these are automatically included by Sphinx's ``automodule`` directive. For detailed API documentation, refer to the generated documentation for each function.
 """
 
+import logging
 import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
@@ -57,6 +58,7 @@ from smarter.apps.plugin.models import (
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.cache import cache_results
 
@@ -65,6 +67,9 @@ if TYPE_CHECKING:
 
 
 CACHE_TIMEOUT = 60  # 1 minute
+
+logger = logging.getLogger(__name__)
+logger_prefix = formatted_text(__name__)
 
 
 def get_pending_deployments(user_profile: UserProfile) -> int:
@@ -229,7 +234,7 @@ def file_drop_zone(request: "HttpRequest") -> dict:
     :return: A dictionary containing the file drop zone context variable.
     :rtype: dict
     """
-    return {
+    retval = {
         "drop_zone": {
             "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
             "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
@@ -239,6 +244,8 @@ def file_drop_zone(request: "HttpRequest") -> dict:
             "provider_list_path": reverse("provider:provider_listview"),
         }
     }
+    logger.debug("%s.file_drop_zone() File drop zone context: %s", logger_prefix, retval)
+    return retval
 
 
 def base(request: "HttpRequest") -> dict:
@@ -295,9 +302,11 @@ def base(request: "HttpRequest") -> dict:
                 "username": username,
                 "is_superuser": is_superuser,
                 "is_staff": is_staff,
-                "profile_image_url": user_profile.profile_image_url if user_profile else "",
-                "first_name": user_profile.user.first_name if user_profile else "",
-                "last_name": user_profile.user.last_name if user_profile else "",
+                "profile_image_url": (
+                    user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
+                ),
+                "first_name": user_profile.user.first_name if user_profile and user_profile.user.first_name else "",
+                "last_name": user_profile.user.last_name if user_profile and user_profile.user.last_name else "",
                 "product_name": SMARTER_PRODUCT_NAME,
                 "company_name": smarter_settings.root_domain,
                 "smarter_version": "v" + __version__,
@@ -385,6 +394,7 @@ def branding(request: "HttpRequest") -> dict:
             "smarter_project_website_url": smarter_settings.smarter_project_website_url,
             "smarter_project_cdn_url": smarter_settings.smarter_project_cdn_url,
             "smarter_project_docs_url": smarter_settings.smarter_project_docs_url,
+            "logo_url": "images/logo/smarter-crop.png",
             "cdn_logo_url": urljoin(smarter_settings.smarter_project_cdn_url, "images/logo/smarter-crop.png"),
             "login_url": urljoin(smarter_settings.environment_url, "/login/"),
             "learn_url": smarter_settings.smarter_project_docs_url,
