@@ -354,54 +354,59 @@ def branding(request: "HttpRequest") -> dict:
 
     This processor is intended to be added to the ``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings, making the ``branding`` context variable available in all templates rendered by Django that inherit from ``base.html``.
     """
-    current_year = datetime.now().year
-    root_url = request.build_absolute_uri("/").rstrip("/")
-    context = {
-        "branding": {
-            "canonical": request.path,
-            "root_url": root_url,
-            "corporate_name": smarter_settings.branding_corporate_name,
-            "corporate_address": ", ".join(
-                filter(
-                    None,
-                    [
-                        smarter_settings.branding_address1,
-                        smarter_settings.branding_address2,
-                        smarter_settings.branding_city,
-                        smarter_settings.branding_state,
-                        smarter_settings.branding_postal_code,
-                        smarter_settings.branding_country,
-                    ],
-                )
-            ),
-            "corporate_currency": smarter_settings.branding_currency,
-            "corporate_timezone": smarter_settings.branding_timezone,
-            "support_email": smarter_settings.branding_support_email,
-            "contact_url": smarter_settings.branding_contact_url,
-            "support_hours": smarter_settings.branding_support_hours,
-            "support_phone_number": smarter_settings.branding_support_phone_number,
-            "copyright": f"© {current_year} {smarter_settings.branding_corporate_name}. All rights reserved.",
-            "og_url": smarter_build_absolute_uri(request),
-            "og_image": "https://cdn.smarter.sh/cms/img/smarter_og_image.png",
-            "url_facebook": smarter_settings.branding_url_facebook,
-            "url_twitter": smarter_settings.branding_url_twitter,
-            "url_linkedin": smarter_settings.branding_url_linkedin,
-            "smarter_logo": smarter_settings.logo,
-            "smarter_product_name": SMARTER_PRODUCT_NAME,
-            "smarter_product_description": SMARTER_PRODUCT_DESCRIPTION,
-            "smarter_marketing_site_url": smarter_settings.marketing_site_url,
-            "smarter_home_url": "/",
-            "smarter_project_website_url": smarter_settings.smarter_project_website_url,
-            "smarter_project_cdn_url": smarter_settings.smarter_project_cdn_url,
-            "smarter_project_docs_url": smarter_settings.smarter_project_docs_url,
-            "logo_url": "images/logo/smarter-crop.png",
-            "cdn_logo_url": urljoin(smarter_settings.smarter_project_cdn_url, "images/logo/smarter-crop.png"),
-            "login_url": urljoin(smarter_settings.environment_url, "/login/"),
-            "learn_url": smarter_settings.smarter_project_docs_url,
-            "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
+
+    @cache_results(timeout=CACHE_TIMEOUT)
+    def get_cached_context() -> dict:
+        current_year = datetime.now().year
+        root_url = request.build_absolute_uri("/").rstrip("/")
+        context = {
+            "branding": {
+                "canonical": request.path,
+                "root_url": root_url,
+                "corporate_name": smarter_settings.branding_corporate_name,
+                "corporate_address": ", ".join(
+                    filter(
+                        None,
+                        [
+                            smarter_settings.branding_address1,
+                            smarter_settings.branding_address2,
+                            smarter_settings.branding_city,
+                            smarter_settings.branding_state,
+                            smarter_settings.branding_postal_code,
+                            smarter_settings.branding_country,
+                        ],
+                    )
+                ),
+                "corporate_currency": smarter_settings.branding_currency,
+                "corporate_timezone": smarter_settings.branding_timezone,
+                "support_email": smarter_settings.branding_support_email,
+                "contact_url": smarter_settings.branding_contact_url,
+                "support_hours": smarter_settings.branding_support_hours,
+                "support_phone_number": smarter_settings.branding_support_phone_number,
+                "copyright": f"© {current_year} {smarter_settings.branding_corporate_name}. All rights reserved.",
+                "og_url": smarter_build_absolute_uri(request),
+                "og_image": "https://cdn.smarter.sh/cms/img/smarter_og_image.png",
+                "url_facebook": smarter_settings.branding_url_facebook,
+                "url_twitter": smarter_settings.branding_url_twitter,
+                "url_linkedin": smarter_settings.branding_url_linkedin,
+                "smarter_logo": smarter_settings.logo,
+                "smarter_product_name": SMARTER_PRODUCT_NAME,
+                "smarter_product_description": SMARTER_PRODUCT_DESCRIPTION,
+                "smarter_marketing_site_url": smarter_settings.marketing_site_url,
+                "smarter_home_url": "/",
+                "smarter_project_website_url": smarter_settings.smarter_project_website_url,
+                "smarter_project_cdn_url": smarter_settings.smarter_project_cdn_url,
+                "smarter_project_docs_url": smarter_settings.smarter_project_docs_url,
+                "logo_url": "images/logo/smarter-crop.png",
+                "cdn_logo_url": urljoin(smarter_settings.smarter_project_cdn_url, "images/logo/smarter-crop.png"),
+                "login_url": urljoin(smarter_settings.environment_url, "/login/"),
+                "learn_url": smarter_settings.smarter_project_docs_url,
+                "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
+            }
         }
-    }
-    return context
+        return context
+
+    return get_cached_context()
 
 
 def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
