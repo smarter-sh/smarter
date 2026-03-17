@@ -251,7 +251,7 @@ propcache==0.3.2
     # via
     #   aiohttp
     #   yarl
-pyasn1==0.6.1
+pyasn1==0.6.3
     # via
     #   pyasn1-modules
     #   rsa
