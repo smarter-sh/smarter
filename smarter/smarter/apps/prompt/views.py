@@ -11,11 +11,8 @@ from typing import Any, Optional, Union
 import yaml
 from django.conf import settings
 from django.db import models
-from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
-from django.urls import reverse
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, JsonResponse
+from django.shortcuts import render
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -172,7 +169,6 @@ class SmarterChatSession(SmarterHelperMixin):
 
 
 # pylint: disable=R0902
-@method_decorator(csrf_exempt, name="dispatch")
 class ChatConfigView(SmarterNeverCachedWebView):
     """
     Chat configuration view for the Smarter web application.
@@ -591,7 +587,6 @@ class ChatConfigView(SmarterNeverCachedWebView):
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat app view for the Smarter web application.
@@ -694,13 +689,6 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         --------
         ChatConfigView : The endpoint that provides configuration data to the React app.
         """
-        if (
-            not hasattr(request, "user")
-            or not hasattr(request.user, "is_authenticated")
-            or not request.user.is_authenticated
-        ):
-            return redirect(reverse("login"))
-
         retval = super().dispatch(request, *args, **kwargs)
         if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
@@ -784,55 +772,14 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         return render(request=request, template_name=self.template_path, context=context)
 
 
-class PromptListView(SmarterAuthenticatedNeverCachedWebView):
+class PromptLandingView(SmarterAuthenticatedNeverCachedWebView):
     """
-    list view for smarter workbench web console. This view is protected and
-    requires the user to be authenticated. It generates cards for each
-    ChatBots.
+    Base url for the Smarter prompt application. Provides a logical
+    endpoint without actually implementing any functionality.
     """
-
-    template_path = "prompt/listview.html"
-    chatbots: Optional[models.QuerySet[ChatBot]] = None
-    chatbot_helpers: list[ChatBotHelper] = []
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
-
-        logger.debug(
-            "%s.dispatch() called for %s with args %s, kwargs %s", self.formatted_class_name, request, args, kwargs
-        )
-        response = super().dispatch(request, *args, **kwargs)
-        if response.status_code >= 300:
-            return response
-
-        self.chatbot_helpers = get_cached_chatbots_for_user_profile(self.user_profile.id)
-
-        user_chatbots = [
-            chatbot_helper
-            for chatbot_helper in self.chatbot_helpers
-            if chatbot_helper.chatbot.user_profile == self.user_profile
-        ]
-        shared_chatbots = [
-            chatbot_helper
-            for chatbot_helper in self.chatbot_helpers
-            if chatbot_helper.chatbot.user_profile != self.user_profile
-        ]
-
-        smarter_admin = get_cached_smarter_admin_user_profile()
-        context = {
-            "prompt_list": {
-                "smarter_admin": smarter_admin,
-                "user_chatbots": user_chatbots,
-                "user_chatbots_count": len(user_chatbots),
-                "shared_chatbots": shared_chatbots,
-            }
-        }
-        logger.debug(
-            "%s.dispatch() rendering template %s with context: %s",
-            self.formatted_class_name,
-            self.template_path,
-            formatted_json(context),
-        )
-        return render(request, template_name=self.template_path, context=context)
+        return HttpResponseNotFound()
 
 
 class PromptManifestView(DocsBaseView):
@@ -906,13 +853,6 @@ class PromptManifestView(DocsBaseView):
         HttpResponse
             Renders the Django template for the manifest detail page, displaying chatbot manifest details in YAML format.
         """
-        if (
-            not hasattr(request, "user")
-            or not hasattr(request.user, "is_authenticated")
-            or not request.user.is_authenticated
-        ):
-            return redirect("/login/")
-
         retval = super().dispatch(request, *args, **kwargs)
         if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
@@ -976,3 +916,61 @@ class PromptManifestView(DocsBaseView):
         }
         request.user = orginal_user
         return render(request, self.template_path, context=context)  # type: ignore
+
+
+class PromptListView(SmarterAuthenticatedNeverCachedWebView):
+    """
+    list view for smarter workbench web console. This view is protected and
+    requires the user to be authenticated. It generates cards for each
+    ChatBots.
+    """
+
+    template_path = "prompt/listview.html"
+    chatbots: Optional[models.QuerySet[ChatBot]] = None
+    chatbot_helpers: list[ChatBotHelper] = []
+
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
+        # pylint: disable=C0415
+        from smarter.apps.prompt.urls import PromptReverseViews
+
+        logger.debug(
+            "%s.dispatch() called for %s with args %s, kwargs %s", self.formatted_class_name, request, args, kwargs
+        )
+        response = super().dispatch(request, *args, **kwargs)
+        if response.status_code >= 300:
+            return response
+
+        self.chatbot_helpers = get_cached_chatbots_for_user_profile(self.user_profile.id)
+
+        user_chatbots = [
+            chatbot_helper
+            for chatbot_helper in self.chatbot_helpers
+            if chatbot_helper.chatbot.user_profile == self.user_profile
+        ]
+        shared_chatbots = [
+            chatbot_helper
+            for chatbot_helper in self.chatbot_helpers
+            if chatbot_helper.chatbot.user_profile != self.user_profile
+        ]
+
+        smarter_admin = get_cached_smarter_admin_user_profile()
+        context = {
+            "prompt_list": {
+                "smarter_admin": smarter_admin,
+                "user_chatbots": user_chatbots,
+                "user_chatbots_count": len(user_chatbots),
+                "shared_chatbots": shared_chatbots,
+            },
+            "reverse_views": {
+                "manifest": f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_manifest_by_hashed_id}",
+                "chat": f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_chat_by_hashed_id}",
+                "config": f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_config_by_hashed_id}",
+            },
+        }
+        logger.debug(
+            "%s.dispatch() rendering template %s with context: %s",
+            self.formatted_class_name,
+            self.template_path,
+            formatted_json(context),
+        )
+        return render(request, template_name=self.template_path, context=context)

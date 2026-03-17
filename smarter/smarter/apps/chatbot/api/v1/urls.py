@@ -54,7 +54,7 @@ class ChatBotApiV1ReverseViews:
 
     """
 
-    namespace = f"api:{namespace}:"
+    namespace = f"api:{namespace}:chatbot"
 
     @staticmethod
     def camel_case(obj) -> str:

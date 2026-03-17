@@ -34,9 +34,9 @@
 			<!--begin::Mobile logo-->
 			<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
 				<a href="{% url 'root_home' %}" class="d-lg-none">
-					<img alt="Logo" src="{% static 'images/logo/smarter-crop.png' %}"
+					<img alt="Logo" src="{{ branding.cdn_logo_url }}"
 						class="theme-light-show h-60px" />
-					<img alt="Logo" src="{% static 'images/logo/smarter-crop.png' %}"
+					<img alt="Logo" src="{{ branding.cdn_logo_url }}"
 						class="theme-dark-show h-60px" />
                 </a>
 			</div>
@@ -265,7 +265,7 @@
 			<div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
 				<!--begin::Logo image-->
 				<a href="{% url 'root_home' %}">
-					<img alt="Logo" src="{% static 'images/logo/smarter-crop.png' %}"
+					<img alt="Logo" src="{{ branding.cdn_logo_url }}"
 						class="h-75px app-sidebar-logo-default" />
 				</a>
 				<!--end::Logo image-->

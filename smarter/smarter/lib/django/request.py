@@ -1995,12 +1995,12 @@ class SmarterRequestMixin(AccountMixin):
                 )
             return True
         if not super_ready:
-            logger.warning(
+            logger.debug(
                 "%s.ready() - returning False because neither AccountMixin nor SmarterRequestMixin are ready.",
                 self.request_mixin_logger_prefix,
             )
         else:
-            logger.warning(
+            logger.debug(
                 "%s.ready() - returning False because SmarterRequestMixin is not ready.",
                 self.request_mixin_logger_prefix,
             )
