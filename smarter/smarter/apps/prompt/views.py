@@ -13,6 +13,7 @@ from django.conf import settings
 from django.db import models
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
@@ -50,7 +51,7 @@ from smarter.common.exceptions import (
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.common.utils import is_authenticated_request, rfc1034_compliant_to_snake
+from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
@@ -698,39 +699,36 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             or not hasattr(request.user, "is_authenticated")
             or not request.user.is_authenticated
         ):
-            return redirect("/login/")
+            return redirect(reverse("login"))
 
         retval = super().dispatch(request, *args, **kwargs)
         if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
 
-        name = kwargs.pop("name", None)
-        name = rfc1034_compliant_to_snake(name) if name else None
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
         if session_key is not None:
             self._session_key = session_key
             logger.debug(
-                "%s.dispatch() - setting session_key=%s from kwargs, name=%s from kwargs",
+                "%s.dispatch() - setting session_key=%s from kwargs",
                 self.formatted_class_name,
                 self.session_key,
-                name,
             )
 
         try:
             logger.debug(
-                "%s.dispatch() - url=%s, account=%s, user=%s, name=%s",
+                "%s.dispatch() - url=%s, account=%s, user=%s",
                 self.formatted_class_name,
                 self.url,
                 self.account,
                 self.user_profile.user,
-                name,
             )
+            # first try to avoid some quite-expensive steps by looking for the chatbot
+            # in the cache based on the request.
             self.chatbot = get_cached_chatbot_by_request(request=self.smarter_request)
             if not self.chatbot:
                 self.chatbot_helper = ChatBotHelper(
                     request=self.smarter_request,
                     session_key=self.session_key,
-                    name=name,
                     account=self.account,
                     user=self.user,
                     user_profile=self.user_profile,
@@ -750,12 +748,11 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         except Exception as e:
             logger.error(
                 "%s.dispatch() - Exception occurred while getting chatbot: %s. "
-                "Request URL: %s, Session Key: %s, Name: %s\nStack trace: %s",
+                "Request URL: %s, Session Key: %s\nStack trace: %s",
                 self.formatted_class_name,
                 str(e),
                 request.build_absolute_uri(),
                 self.session_key,
-                name,
                 traceback.format_exc(),
             )
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
@@ -838,7 +835,7 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
         return render(request, template_name=self.template_path, context=context)
 
 
-class PromptDetailView(DocsBaseView):
+class PromptManifestView(DocsBaseView):
     """
     Renders the detail view for a Smarter chatbot.
 
@@ -920,7 +917,8 @@ class PromptDetailView(DocsBaseView):
         if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
 
-        chatbot_id = kwargs.pop("chatbot_id", None)
+        hashed_id = kwargs.pop("hashed_id", None)
+        chatbot_id = ChatBot.id_from_hashed_id(hashed_id) if hashed_id else None
         try:
             self.chatbot = ChatBot.objects.get(id=chatbot_id)
             self.chatbot_helper = ChatBotHelper(request=request, chatbot=self.chatbot)

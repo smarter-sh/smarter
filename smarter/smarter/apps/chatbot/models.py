@@ -1601,6 +1601,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
         # initializations that depend on the superclass
         super().__init__(request, *args, **kwargs)
+        chatbot_helper_logger.debug("%s.__init__() completed super().__init__()", self.formatted_class_name)
         self._chatbot_id = self._chatbot_id or self.smarter_request_chatbot_id
         self._name = self._name or self.smarter_request_chatbot_name
 
@@ -1619,7 +1620,7 @@ class ChatBotHelper(SmarterRequestMixin):
                     self.user_profile,
                 )
 
-        msg = f"{self.formatted_class_name}.__init__() is {self.chatbothelper_ready_state} - {self.chatbot.name if self.chatbot else 'ChatBot not initialized'}"
+        msg = f"{self.formatted_class_name}.__init__() is {self.chatbothelper_ready_state} - {self.chatbot if self.chatbot else 'ChatBot not initialized'} - {self.user_profile if self.user_profile else 'UserProfile not initialized'}"
         if self.ready:
             chatbot_helper_logger.debug(msg)
             chatbot_helper_logger.debug(
