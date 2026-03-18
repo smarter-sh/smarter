@@ -11,8 +11,15 @@ from typing import Any, Optional, Union
 import yaml
 from django.conf import settings
 from django.db import models
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, JsonResponse
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponseNotFound,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import render
+from django.urls.base import reverse
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -57,7 +64,6 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedNeverCachedWebView,
-    SmarterNeverCachedWebView,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.view_helpers import UnauthenticatedPermissionClass
@@ -168,8 +174,30 @@ class SmarterChatSession(SmarterHelperMixin):
         return retval
 
 
-# pylint: disable=R0902
-class ChatConfigView(SmarterNeverCachedWebView):
+class ChatConfigRedirector(SmarterAuthenticatedNeverCachedWebView):
+    """
+    Redirects legacy /chat/config/ URLs.
+    """
+
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
+        # pylint: disable=C0415
+        from smarter.apps.chatbot.api.v1.urls import ChatBotApiV1ReverseViews
+
+        hashed_id = kwargs.pop("hashed_id", None)
+        url = reverse(
+            f"{ChatBotApiV1ReverseViews.namespace}:{ChatBotApiV1ReverseViews.chat_config_view_by_hashed_id}",
+            kwargs={"hashed_id": hashed_id},
+        )
+        logger.warning(
+            "%s.dispatch() - redirecting %s. This URL should be updated to use %s.",
+            self.formatted_class_name,
+            request.path,
+            url,
+        )
+        return HttpResponseRedirect(url)
+
+
+class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat configuration view for the Smarter web application.
 
@@ -411,7 +439,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
         return retval
 
     def dispatch(
-        self, request: HttpRequest, *args, chatbot_id: Optional[int] = None, **kwargs
+        self, request: HttpRequest, *args, **kwargs
     ) -> Union[JsonResponse, HttpResponse, SmarterJournaledJsonErrorResponse]:
         """
         Handles incoming HTTP requests for the chat configuration endpoint.
@@ -467,6 +495,12 @@ class ChatConfigView(SmarterNeverCachedWebView):
         ChatBotConfigSerializer, ChatBotPluginSerializer : Serializers for chatbot and plugin data.
         ChatBotHelper : Helper for chatbot-related operations.
         """
+        hashed_id = kwargs.pop("hashed_id", None)
+        if hashed_id:
+            chatbot_id = ChatBot.id_from_hashed_id(hashed_id)
+        else:
+            chatbot_id = kwargs.pop("chatbot_id", None)
+
         logger.debug(
             "%s.dispatch() called with request=%s, chatbot_id=%s, session_key=%s chatbot_name=%s user_profile=%s",
             self.formatted_class_name,
@@ -476,13 +510,6 @@ class ChatConfigView(SmarterNeverCachedWebView):
             self.chatbot_name,
             self.user_profile,
         )
-
-        if self.user_profile is None:
-            logger.warning(
-                "%s.dispatch() - %s user_profile is None. This may cause issues with the chat config view.",
-                self.formatted_class_name,
-                request.build_absolute_uri(),
-            )
 
         if chatbot_id is not None:
             try:
@@ -535,8 +562,6 @@ class ChatConfigView(SmarterNeverCachedWebView):
         # for the device.
         self.session = SmarterChatSession(request, session_key=self.session_key, chatbot=self.chatbot)
 
-        logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
-
         if (
             self.chatbot_helper
             and self.chatbot_helper.is_authentication_required
@@ -582,7 +607,9 @@ class ChatConfigView(SmarterNeverCachedWebView):
         """
         Get the chatbot configuration.
         """
-        logger.debug("%s - get()", self.formatted_class_name)
+        logger.warning(
+            "%s - get() %s should be invoked via POST instead of GET.", self.formatted_class_name, request.path
+        )
         data = self.config()
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 

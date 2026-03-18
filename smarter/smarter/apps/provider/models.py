@@ -25,7 +25,6 @@ from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterValueError,
 )
-from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -125,7 +124,7 @@ class ProviderModelVerificationTypes(models.TextChoices):
     SUMMARIZATION = "summarization", "Summarization"
 
 
-class Provider(MetaDataWithOwnershipModel, SmarterHelperMixin):
+class Provider(MetaDataWithOwnershipModel):
     """Chat model."""
 
     class Meta:
