@@ -313,6 +313,7 @@ def base(request: "HttpRequest") -> dict:
 
         cached_context = {
             "dashboard": {
+                "debug_mode": smarter_settings.debug_mode,
                 "user_email": user_email,
                 "username": username,
                 "is_superuser": is_superuser,
