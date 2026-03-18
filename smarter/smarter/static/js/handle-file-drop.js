@@ -11,6 +11,11 @@
     window.providerListPath = "{{ drop_zone.provider_list_path }}";
 
  -----------------------------------------------------------------------------*/
+function debugLog(...args) {
+  if (window.debugMode) {
+    console.log(...args);
+  }
+}
 
 function showModal(title, message, data, isError = false) {
   if (!document.getElementById("drop-zone-modal")) {
@@ -78,13 +83,13 @@ function getCookie(name) {
 }
 
 function showOverlay(overlay) {
-  console.log("Showing overlay");
+  debugLog("Overlay element:", overlay);
   overlay.style.display = "block";
   overlay.style.pointerEvents = "auto";
   overlay.classList.add("drop-zone--hover");
 }
 function hideOverlay(overlay) {
-  console.log("Hiding overlay");
+  debugLog("Hiding overlay");
   overlay.style.display = "none";
   overlay.style.pointerEvents = "none";
   overlay.classList.remove("drop-zone--hover");
@@ -93,7 +98,7 @@ function hideOverlay(overlay) {
 function applyManifest(overlay, yamlContent) {
   // Post the YAML content to the server:
   // /api/v1/cli/apply/
-  console.log("Applying manifest via API:", apiApplyPath);
+  debugLog("Applying manifest via API:", apiApplyPath);
   overlay.classList.add("drop-zone--dropped");
   setTimeout(() => {
     overlay.classList.remove("drop-zone--dropped");
@@ -113,11 +118,11 @@ function applyManifest(overlay, yamlContent) {
       let text = null;
       try {
         data = await response.json();
-        console.log("Response JSON parsed:", data);
+        debugLog("Response JSON parsed:", data);
       } catch (e) {
         try {
           text = await response.text();
-          console.log("Response text parsed:", text);
+          debugLog("Response text parsed:", text);
         } catch {}
       }
       return { response, data: data || text };
@@ -168,10 +173,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const overlay = document.getElementById("drop-zone-overlay");
 
   if (!dropzoneEnabled) {
-    console.log("File drop zone disabled");
+    debugLog("File drop zone disabled");
     return;
   }
-  console.log("File drop zone enabled:", window.dropzoneEnabled);
+  debugLog("File drop zone enabled:", window.dropzoneEnabled);
 
   document.addEventListener("dragover", (e) => {
     e.preventDefault();
@@ -184,20 +189,20 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("dragover", function (e) {
     e.preventDefault();
     if (!overlay.classList.contains("drop-zone--hover")) {
-      console.log("Drag over detected");
+      debugLog("Drag over detected");
       showOverlay(overlay);
     }
   });
 
   window.addEventListener("dragleave", function (e) {
-    console.log("Drag leave detected");
+    debugLog("Drag leave detected");
     e.preventDefault();
     if (e.target === overlay || e.pageX === 0 || e.pageY === 0)
       hideOverlay(overlay);
   });
 
   window.addEventListener("drop", function (e) {
-    console.log("File drop detected");
+    debugLog("File drop detected");
     e.preventDefault();
     hideOverlay(overlay);
     if (e.dataTransfer && e.dataTransfer.files.length > 0) {
@@ -206,7 +211,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const reader = new FileReader();
         reader.onload = function (evt) {
           const yamlContent = evt.target.result;
-          console.log("YAML file received.");
+          debugLog("YAML file received.");
           try {
             const parsed = jsyaml.load(yamlContent); // throws if invalid
             applyManifest(overlay, yamlContent);
