@@ -4,11 +4,10 @@
 <!--begin::Head-->
 <head>
   {% block head %}
-  <link rel="shortcut icon" type="image/png" href="{% static 'images/logo/favicon256x256.png' %}" />
   <title>{{ branding.smarter_product_name }}</title>
   <meta charset="utf-8" />
   <meta name="robots" content="index, follow" />
-  <meta name="revisit-after" content="10 days">
+  <meta name="application-name" content="{{ branding.smarter_product_name }}" />
   <meta name="author" content="Lawrence McDaniel" />
   <meta name="author-url" content="https://lawrencemcdaniel.com" />
   <meta name="generator" content="Python, Django, Django Rest Framework" />
@@ -17,6 +16,8 @@
     content="{{ branding.smarter_product_description }}" />
   <meta name="keywords"
     content="Smarter, generative AI, Chatbots, prompt engineering, documentation, chatGPT" />
+  <meta name="color-scheme" content="light dark">
+  <meta name="mobile-web-app-capable" content="yes">
   {% block head_meta_og_image %}
   <meta property="og:image" content="{{ branding.og_image }}" />
   <meta property="og:image:type" content="image/png" />
@@ -24,23 +25,49 @@
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="{{ branding.smarter_product_name }}" />
   {% endblock %}
-  <meta property="og:locale" content="en_US" />
-  <meta property="og:type" content="article" />
+  <meta property="og:description" content="{{ branding.smarter_product_description }}" />  <meta property="og:locale" content="en_US" />
+  <meta property="og:type" content="website" />
   <meta property="og:title" content="{{ branding.smarter_product_name }}" />
   <meta property="og:site_name" content="{{ branding.smarter_product_name }}" />
+  <meta property="og:url" content="{{ branding.og_url }}" />
+
   <!-- Twitter Card Tags -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@smarter" />
   <meta name="twitter:title" content="{{ branding.smarter_product_name }}" />
+  <meta name="twitter:creator" content="@LorenzoDePolanco">
   <meta name="twitter:description"
     content="{{ branding.smarter_product_description }}" />
   <meta name="twitter:image" content="{{ branding.og_image }}" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="{{ branding.smarter_product_name }}">
 
   {% block canonical %}
-  <link rel="canonical" href="{% url 'root_home' %}" />
+  <link rel="canonical" href="{{ branding.og_url }}" />
   {% endblock %}
 
+  <!-- Apple -->
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/logo/apple-touch-icon.png' %}">
+  <link rel="apple-touch-icon-precomposed" href="{% static 'images/logo/apple-touch-icon-precomposed.png' %}">
+
+  <!-- Favicons -->
+  <link rel="icon" href="{% static 'images/logo/favicon.ico' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/logo/favicon-16x16.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/logo/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="48x48" href="{% static 'images/logo/favicon-48x48.png' %}">
+  <link rel="icon" type="image/png" sizes="256x256" href="{% static 'images/logo/favicon-256x256.png' %}">
+
+  <!-- Manifest -->
+  <link rel="manifest" href="{% static 'site.webmanifest' %}">
+
+  <!-- Theme -->
+  <meta name="theme-color" content="#ff8c00">
+
+
   <!--begin::Fonts(mandatory for all pages)-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
   <!--end::Fonts-->
   <!--begin::Vendor Stylesheets(used for this page only)-->
@@ -97,6 +124,9 @@
   {% endblock %}
   {% block javascript %}
   <!--begin::Javascript-->
+  <script>
+    window.debugMode = "{{ dashboard.debug_mode|yesno:'true,false' }}";
+  </script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-SK81M5HQYS"></script>
   <script>
