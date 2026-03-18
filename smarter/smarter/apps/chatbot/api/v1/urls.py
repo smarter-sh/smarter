@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from smarter.apps.prompt.views import ChatConfigView
+from smarter.apps.prompt.views import ChatConfigRedirector, ChatConfigView
 from smarter.common.utils import camel_to_snake
 
 from .const import namespace
@@ -21,6 +21,8 @@ from .views.views import (
 )
 
 app_name = namespace
+BY_ID = "by_id"
+BY_HASHED_ID = "by_hashed_id"
 
 
 class ChatBotApiV1ReverseViews:
@@ -67,74 +69,106 @@ class ChatBotApiV1ReverseViews:
         """
         return str(camel_to_snake(obj.__name__))
 
+    # reverse() by hashed_id
+    # --------------------------------------------------------------------------
+    chatbot_view_by_hashed_id = camel_case(ChatbotView) + BY_HASHED_ID
+    chat_config_view_by_hashed_id = camel_case(ChatConfigView) + BY_HASHED_ID
+    default_chatbot_api_view_by_hashed_id = camel_case(DefaultChatbotApiView) + BY_HASHED_ID
+
+    # legacy reverse() references by chatbot_id
+    # --------------------------------------------------------------------------
+    chat_config_view_by_id = camel_case(ChatConfigView)
+    default_chatbot_api_view_by_id = camel_case(DefaultChatbotApiView)
+
+    # currently no reverse() references to these named views.
+    # --------------------------------------------------------------------------
     chatbot_list_view = camel_case(ChatbotListView)
-    chatbot_view = camel_case(ChatbotView)
-    chat_config_view = camel_case(ChatConfigView)
-    default_chatbot_api_view = camel_case(DefaultChatbotApiView)
-    chatbot_plugin_list_view = camel_case(ChatbotPluginListView)
-    chatbot_plugin_view = camel_case(ChatbotPluginView)
-    chatbot_api_key_list_view = camel_case(ChatbotAPIKeyListView)
-    chatbot_api_key_view = camel_case(ChatbotAPIKeyView)
-    chatbot_custom_domain_list_view = camel_case(ChatbotCustomDomainListView)
-    chatbot_custom_domain_view = camel_case(ChatbotCustomDomainView)
-    chatbot_api_functions = camel_case(ChatBotFunctionsListView)
-    chatbot_functions_view = camel_case(ChatbotFunctionsView)
-    chatbot_function_plugin_list_view = camel_case(ChatbotPluginListView)
+    chatbot_view_by_id = camel_case(ChatbotView) + BY_ID
+    chatbot_plugin_list_view_by_id = camel_case(ChatbotPluginListView) + BY_ID
+    chatbot_plugin_view_by_id = camel_case(ChatbotPluginView) + BY_ID
+    chatbot_api_key_list_view_by_id = camel_case(ChatbotAPIKeyListView) + BY_ID
+    chatbot_api_key_view_by_id = camel_case(ChatbotAPIKeyView) + BY_ID
+    chatbot_custom_domain_list_view_by_id = camel_case(ChatbotCustomDomainListView) + BY_ID
+    chatbot_custom_domain_view_by_id = camel_case(ChatbotCustomDomainView) + BY_ID
+    chatbot_api_functions_by_id = camel_case(ChatBotFunctionsListView) + BY_ID
+    chatbot_functions_view_by_id = camel_case(ChatbotFunctionsView) + BY_ID
+    chatbot_function_plugin_list_view_by_id = camel_case(ChatbotPluginListView) + BY_ID
 
 
 urlpatterns = [
     path("", ChatbotListView.as_view(), name=ChatBotApiV1ReverseViews.chatbot_list_view),
-    path("<int:chatbot_id>/", ChatbotView.as_view(), name=ChatBotApiV1ReverseViews.chatbot_view),
-    path("<int:chatbot_id>/config/", ChatConfigView.as_view(), name=ChatBotApiV1ReverseViews.chat_config_view),
+    # --------------------------------------------------------------------------
+    # paths by hashed_id
+    # --------------------------------------------------------------------------
+    path("<str:hashed_id>/", ChatbotView.as_view(), name=ChatBotApiV1ReverseViews.chatbot_view_by_hashed_id),
+    path(
+        "<str:hashed_id>/config/", ChatConfigView.as_view(), name=ChatBotApiV1ReverseViews.chat_config_view_by_hashed_id
+    ),
+    path(
+        "<str:hashed_id>/chat/",
+        DefaultChatbotApiView.as_view(),
+        name=ChatBotApiV1ReverseViews.default_chatbot_api_view_by_hashed_id,
+    ),
+    # mcdaniel: this is a patch to keep the react component working with the new hashed_id urls.
+    path("<str:hashed_id>/chat/config/", ChatConfigRedirector.as_view()),
+    # --------------------------------------------------------------------------
+    # paths by chatbot_id
+    # --------------------------------------------------------------------------
+    path("<int:chatbot_id>/", ChatbotView.as_view(), name=ChatBotApiV1ReverseViews.chatbot_view_by_id),
+    path("<int:chatbot_id>/config/", ChatConfigView.as_view(), name=ChatBotApiV1ReverseViews.chat_config_view_by_id),
     path(
         "<int:chatbot_id>/chat/",
         DefaultChatbotApiView.as_view(),
-        name=ChatBotApiV1ReverseViews.default_chatbot_api_view,
+        name=ChatBotApiV1ReverseViews.default_chatbot_api_view_by_id,
     ),
+    # --------------------------------------------------------------------------
+    # paths by chatbot_id that are not currently referenced by reverse()
+    # in the codebase
+    # --------------------------------------------------------------------------
     path("<int:chatbot_id>/chat/config/", ChatConfigView.as_view(), name="chat_config_view_legacy"),
     path(
         "<int:chatbot_id>/plugins/",
         ChatbotPluginListView.as_view(),
-        name=ChatBotApiV1ReverseViews.chatbot_plugin_list_view,
+        name=ChatBotApiV1ReverseViews.chatbot_plugin_list_view_by_id,
     ),
     path(
         "<int:chatbot_id>/plugins/<int:plugin_id>/",
         ChatbotPluginView.as_view(),
-        name=ChatBotApiV1ReverseViews.chatbot_plugin_view,
+        name=ChatBotApiV1ReverseViews.chatbot_plugin_view_by_id,
     ),
     path(
         "<int:chatbot_id>/apikeys/",
         ChatbotAPIKeyListView.as_view(),
-        name=ChatBotApiV1ReverseViews.chatbot_api_key_list_view,
+        name=ChatBotApiV1ReverseViews.chatbot_api_key_list_view_by_id,
     ),
     path(
         "<int:chatbot_id>/apikeys/<int:apikey_id>/",
         ChatbotAPIKeyView.as_view(),
-        name=ChatBotApiV1ReverseViews.chatbot_api_key_view,
+        name=ChatBotApiV1ReverseViews.chatbot_api_key_view_by_id,
     ),
     path(
         "<int:chatbot_id>/customdomains",
         ChatbotCustomDomainListView.as_view(),
-        name=ChatBotApiV1ReverseViews.chatbot_custom_domain_list_view,
+        name=ChatBotApiV1ReverseViews.chatbot_custom_domain_list_view_by_id,
     ),
     path(
         "<int:chatbot_id>/customdomains/<int:customdomain_id>",
         ChatbotCustomDomainView.as_view(),
-        name=ChatBotApiV1ReverseViews.chatbot_custom_domain_view,
+        name=ChatBotApiV1ReverseViews.chatbot_custom_domain_view_by_id,
     ),
     path(
         "<int:chatbot_id>/functions",
         ChatBotFunctionsListView.as_view(),
-        name=ChatBotApiV1ReverseViews.chatbot_api_functions,
+        name=ChatBotApiV1ReverseViews.chatbot_api_functions_by_id,
     ),
     path(
         "<int:chatbot_id>/functions/<int:function_id>",
         ChatbotFunctionsView.as_view(),
-        name=ChatBotApiV1ReverseViews.chatbot_functions_view,
+        name=ChatBotApiV1ReverseViews.chatbot_functions_view_by_id,
     ),
     path(
         "<int:chatbot_id>/functions/<int:function_id>/plugins",
         ChatbotPluginListView.as_view(),
-        name=ChatBotApiV1ReverseViews.chatbot_function_plugin_list_view,
+        name=ChatBotApiV1ReverseViews.chatbot_function_plugin_list_view_by_id,
     ),
 ]

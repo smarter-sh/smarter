@@ -13,6 +13,7 @@ from taggit.managers import TaggableManager
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
 
@@ -25,7 +26,7 @@ def validate_no_spaces(value) -> None:
         raise SmarterValueError(f"Value must not contain spaces: {value}")
 
 
-class TimestampedModel(models.Model):
+class TimestampedModel(models.Model, SmarterHelperMixin):
     """
     Abstract base model for all Django ORM models in the Smarter project, providing automatic
     timestamp fields and utility methods.
@@ -72,7 +73,6 @@ class TimestampedModel(models.Model):
 
     """
 
-    formatted_class_name = formatted_text("TimestampedModel")
     HASH_PREFIX = "r"
     HASH_SUFFIX = "x"
     HASH_FLOOR = 1000000
@@ -206,7 +206,9 @@ class TimestampedModel(models.Model):
             )
             return retval
         except (base64.binascii.Error, ValueError) as e:
-            logger.error("Failed to decode hashed_id '%s': %s", hashed_id, e)
+            logger.error(
+                "%s.id_from_hashed_id() - Failed to decode hashed_id '%s': %s", cls.formatted_class_name, hashed_id, e
+            )
             return None
 
     @classmethod

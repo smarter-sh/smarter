@@ -10,6 +10,7 @@ from typing import Optional
 
 from django.http import JsonResponse
 
+from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -34,7 +35,7 @@ class DefaultChatbotApiView(ChatBotApiBaseViewSet):
     top-level viewset for customer-deployed Plugin-based Chat APIs.
     """
 
-    def dispatch(self, request, *args, name: Optional[str] = None, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         """
         Smarter API ChatBot dispatch method.
 
@@ -61,8 +62,13 @@ class DefaultChatbotApiView(ChatBotApiBaseViewSet):
                ]
            }
         """
-        logger.info("%s - dispatch()", self.formatted_class_name)
-        self._name = name
+        hashed_id = kwargs.pop("hashed_id", None)
+        if hashed_id:
+            self._chatbot_id = ChatBot.id_from_hashed_id(hashed_id)
+        else:
+            self._chatbot_id = kwargs.pop("chatbot_id", None)
+        self._name = kwargs.pop("name", None)
+        logger.info("%s - dispatch() %s %s ", self.formatted_class_name, self.chatbot, self.user_profile)
 
         try:
             retval = super().dispatch(request, *args, **kwargs)

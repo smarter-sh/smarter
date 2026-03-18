@@ -89,13 +89,16 @@ class ChatbotView(ViewBase):
 
     def dispatch(self, request, *args, **kwargs):
         retval = super().dispatch(request, *args, **kwargs)
-        chatbot_id = kwargs.get("chatbot_id")
+        hashed_id = kwargs.pop("hashed_id", None)
+        if hashed_id:
+            chatbot_id = ChatBot.id_from_hashed_id(hashed_id)
+        else:
+            chatbot_id = kwargs.pop("chatbot_id", None)
+
         if chatbot_id:
-            kwargs.pop("chatbot_id")
             self.chatbot = get_object_or_404(ChatBot, pk=chatbot_id)
             self.user_profile = self.chatbot.user_profile
-            logger.debug("ChatbotView.dispatch() chatbot_id: %s", chatbot_id)
-            logger.debug("ChatbotView.dispatch() account: %s", self.account)
+            logger.debug("ChatbotView.dispatch() - %s %s", self.chatbot, self.user_profile)
         return retval
 
     def get(self, request, chatbot_id: int):

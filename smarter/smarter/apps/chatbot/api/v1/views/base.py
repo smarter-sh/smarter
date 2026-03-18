@@ -40,6 +40,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
+from smarter.lib.json import SmarterJSONEncoder
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
@@ -488,6 +489,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         :return: A JsonResponse indicating that GET is not supported.
         :rtype: JsonResponse
         """
+
         url = self.chatbot_helper.url if self.chatbot_helper else self.smarter_build_absolute_uri(request)
         logger.debug("%s.get(): url=%s", self.formatted_class_name, url)
         logger.debug("%s.get(): headers=%s", self.formatted_class_name, request.META)
@@ -502,7 +504,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             "user": self.user.username if self.user else None,
             "meta": self.chatbot_helper.to_json() if self.chatbot_helper else None,
         }
-        return JsonResponse(data=retval, status=HTTPStatus.OK.value)
+        return JsonResponse(data=retval, status=HTTPStatus.OK.value, encoder=SmarterJSONEncoder)
 
     # pylint: disable=W0613
     def post(self, request, *args, name: Optional[str] = None, **kwargs):

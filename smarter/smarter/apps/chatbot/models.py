@@ -756,7 +756,10 @@ class ChatBot(MetaDataWithOwnershipModel):
         # pylint: disable=C0415
         from smarter.apps.chatbot.api.v1.urls import ChatBotApiV1ReverseViews
 
-        path = reverse(f"{ChatBotApiV1ReverseViews.namespace}:{ChatBotApiV1ReverseViews.default_chatbot_api_view}", kwargs={"chatbot_id": self.id})  # type: ignore[arg-type]
+        path = reverse(
+            f"{ChatBotApiV1ReverseViews.namespace}:{ChatBotApiV1ReverseViews.default_chatbot_api_view_by_hashed_id}",
+            kwargs={"hashed_id": self.hashed_id},
+        )
 
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
@@ -781,7 +784,10 @@ class ChatBot(MetaDataWithOwnershipModel):
         # pylint: disable=C0415
         from smarter.apps.chatbot.api.v1.urls import ChatBotApiV1ReverseViews
 
-        path = reverse(f"{ChatBotApiV1ReverseViews.namespace}:{ChatBotApiV1ReverseViews.chat_config_view}", kwargs={"chatbot_id": self.id})  # type: ignore[arg-type]
+        path = reverse(
+            f"{ChatBotApiV1ReverseViews.namespace}:{ChatBotApiV1ReverseViews.chat_config_view_by_hashed_id}",
+            kwargs={"hashed_id": self.hashed_id},
+        )
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url
