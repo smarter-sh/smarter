@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.202](https://github.com/smarter-sh/smarter/compare/v0.13.201...v0.13.202) (2026-03-18)
+
+### Bug Fixes
+
+* add caching to TimestampedModel ([32679c6](https://github.com/smarter-sh/smarter/commit/32679c6b93c550cc43b1b4d190c2b9d98c758076))
+* add waffle switch ALLOW_API_GET ([b95b4c2](https://github.com/smarter-sh/smarter/commit/b95b4c2c1abb825a72e4f18a16f914133ce604d1))
+* add waffle switch ALLOW_API_GET ([5598e4c](https://github.com/smarter-sh/smarter/commit/5598e4c63bcf335d67ad80b36bead6648691ec96))
+* work on short-lived html page caching for dashboard and workbench ([2f38bc5](https://github.com/smarter-sh/smarter/commit/2f38bc5c4cb8a1e9bdd028bc94f52d18387f1544))
+
 ## [0.13.201](https://github.com/smarter-sh/smarter/compare/v0.13.200...v0.13.201) (2026-03-18)
 
 ### Bug Fixes
