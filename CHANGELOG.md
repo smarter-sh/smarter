@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.203](https://github.com/smarter-sh/smarter/compare/v0.13.202...v0.13.203) (2026-03-18)
+
+### Bug Fixes
+
+* add yaml validation ([4eb3581](https://github.com/smarter-sh/smarter/commit/4eb35819daf38c89727d4c47b77437faa66abdaa))
+
+### Performance Improvements
+
+* minor startup improvements to waffle handling ([07ab3b4](https://github.com/smarter-sh/smarter/commit/07ab3b4ec10f79860a1be4af1edb3d8b413b9ef7))
+
 ## [0.13.202](https://github.com/smarter-sh/smarter/compare/v0.13.201...v0.13.202) (2026-03-18)
 
 ### Bug Fixes
