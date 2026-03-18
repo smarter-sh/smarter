@@ -19,6 +19,8 @@ from django.http import (
     JsonResponse,
 )
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_control, cache_page
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -64,6 +66,7 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedNeverCachedWebView,
+    SmarterAuthenticatedWebView,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.view_helpers import UnauthenticatedPermissionClass
@@ -77,6 +80,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .signals import chat_config_invoked, chat_session_invoked
 
 MAX_RETURNED_PLUGINS = 10
+PROMPT_LIST_CACHE_TIMEOUT = 15
 
 
 def should_log(level):
@@ -931,7 +935,9 @@ class PromptManifestView(DocsBaseView):
         return render(request, self.template_path, context=context)  # type: ignore
 
 
-class PromptListView(SmarterAuthenticatedNeverCachedWebView):
+@method_decorator(cache_control(max_age=PROMPT_LIST_CACHE_TIMEOUT), name="dispatch")
+@method_decorator(cache_page(PROMPT_LIST_CACHE_TIMEOUT), name="dispatch")
+class PromptListView(SmarterAuthenticatedWebView):
     """
     list view for smarter workbench web console. This view is protected and
     requires the user to be authenticated. It generates cards for each
