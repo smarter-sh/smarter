@@ -16,11 +16,12 @@ from taggit.managers import TaggableManager
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.lib.cache import cache_results
+from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
 
 logger = getLogger(__name__)
+cache_prefix = f"{__name__}."
 
 
 def validate_no_spaces(value) -> None:
@@ -194,49 +195,51 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :rtype: Optional[int]
         """
 
-        @cache_results(timeout=24 * 60 * 60)  # Cache results for 1 hour
-        def get_cached_hashed_id(hashed_id: str) -> Optional[int]:
-            try:
-                logger.debug(
-                    "%s.id_from_hashed_id() - Attempting to decode hashed_id: %s",
-                    cls.formatted_class_name,
-                    hashed_id,
-                )
-                if not hashed_id.startswith(cls.HASH_PREFIX) or not hashed_id.endswith(cls.HASH_SUFFIX):
-                    return None
-                encoded_str = hashed_id[len(cls.HASH_PREFIX) : -len(cls.HASH_SUFFIX)]
-                # Add padding if needed
-                padding = "=" * (-len(encoded_str) % 4)
-                encoded_str += padding
-                decoded_bytes = base64.urlsafe_b64decode(encoded_str.encode())
-                decoded_str = decoded_bytes.decode()
-                retval = int(decoded_str) - cls.HASH_FLOOR
-                logger.debug(
-                    "%s.id_from_hashed_id() - Successfully decoded hashed_id: %s to id: %d",
-                    cls.formatted_class_name,
-                    hashed_id,
-                    retval,
-                )
-                return retval
-            except (base64.binascii.Error, ValueError) as e:
-                logger.error(
-                    "%s.id_from_hashed_id() - Failed to decode hashed_id '%s': %s",
-                    cls.formatted_class_name,
-                    hashed_id,
-                    e,
-                )
-                return None
-            # pylint: disable=broad-except
-            except Exception as e:
-                logger.exception(
-                    "%s.id_from_hashed_id() - Unexpected error while decoding hashed_id '%s': %s",
-                    cls.formatted_class_name,
-                    hashed_id,
-                    e,
-                )
-                return None
+        cache_key = f"{cache_prefix}id_from_hashed_id:{hashed_id}"
+        cached_result = cache.get(cache_key)
+        if cached_result is not None:
+            return cached_result
 
-        return get_cached_hashed_id(hashed_id)
+        try:
+            logger.debug(
+                "%s.id_from_hashed_id() - Attempting to decode hashed_id: %s",
+                cls.formatted_class_name,
+                hashed_id,
+            )
+            if not hashed_id.startswith(cls.HASH_PREFIX) or not hashed_id.endswith(cls.HASH_SUFFIX):
+                return None
+            encoded_str = hashed_id[len(cls.HASH_PREFIX) : -len(cls.HASH_SUFFIX)]
+            # Add padding if needed
+            padding = "=" * (-len(encoded_str) % 4)
+            encoded_str += padding
+            decoded_bytes = base64.urlsafe_b64decode(encoded_str.encode())
+            decoded_str = decoded_bytes.decode()
+            retval = int(decoded_str) - cls.HASH_FLOOR
+            logger.debug(
+                "%s.id_from_hashed_id() - Successfully decoded hashed_id: %s to id: %d",
+                cls.formatted_class_name,
+                hashed_id,
+                retval,
+            )
+            cache.set(cache_key, retval)
+            return retval
+        except (base64.binascii.Error, ValueError) as e:
+            logger.error(
+                "%s.id_from_hashed_id() - Failed to decode hashed_id '%s': %s",
+                cls.formatted_class_name,
+                hashed_id,
+                e,
+            )
+            return None
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.exception(
+                "%s.id_from_hashed_id() - Unexpected error while decoding hashed_id '%s': %s",
+                cls.formatted_class_name,
+                hashed_id,
+                e,
+            )
+            return None
 
     @classmethod
     def find_hash(cls, value: str) -> Optional[str]:
