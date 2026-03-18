@@ -14,7 +14,7 @@ from smarter.apps.plugin.manifest.models.common import (
     UrlParam,
 )
 from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
-from smarter.common.conf import smarter_settings
+from smarter.common.const import SmarterHttpMethods
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
@@ -92,7 +92,7 @@ class ApiData(SmarterBasePydanticModel):
 
     @field_validator("method")
     def validate_method(cls, v):
-        valid_methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+        valid_methods = SmarterHttpMethods.all
         if v.upper() not in valid_methods:
             raise SAMValidationError(f"Invalid HTTP method: {v}. Must be one of {valid_methods}.")
         return v.upper()

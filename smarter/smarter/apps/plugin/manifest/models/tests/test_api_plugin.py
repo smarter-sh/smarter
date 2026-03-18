@@ -35,6 +35,7 @@ from smarter.apps.plugin.tests.mixins import (
     ApiConnectionTestMixin,
     AuthenticatedRequestMixin,
 )
+from smarter.common.const import SmarterHttpMethods
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -144,14 +145,14 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
         self.assertEqual(model.spec.apiData.method, "GET")
 
         # Valid method
-        manifest_spec["apiData"]["method"] = "POST"
+        manifest_spec["apiData"]["method"] = SmarterHttpMethods.POST
         model = SAMApiPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
             metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
             spec=SAMApiPluginSpec(**manifest_spec),
         )
-        self.assertEqual(model.spec.apiData.method, "POST")
+        self.assertEqual(model.spec.apiData.method, SmarterHttpMethods.POST)
 
         # Invalid method
         manifest_spec["apiData"]["method"] = "FOO"
