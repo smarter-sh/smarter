@@ -1,6 +1,7 @@
 # pylint: disable=W0718
 """PluginMeta views."""
 
+import logging
 from http import HTTPStatus
 from typing import Optional
 from urllib.parse import urljoin
@@ -29,16 +30,31 @@ from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 from smarter.lib.cache import cache_results
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class PluginView(SmarterAuthenticatedAPIView):
     """Plugin view for smarter api."""
 
     def get(self, request: WSGIRequest, plugin_id):
+
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
+            logger.error(
+                "%s.get() is not allowed because %s switch is inactive.",
+                self.formatted_class_name,
+                SmarterWaffleSwitches.ALLOW_API_GET,
+            )
+            return JsonResponse(
+                {"error": "GET method is not allowed for this endpoint."}, status=HTTPStatus.METHOD_NOT_ALLOWED
+            )
+
         return get_plugin(request, plugin_id)
 
     def put(self, request: WSGIRequest):
@@ -70,7 +86,7 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
         user = get_resolved_user(request.user)
         if not user:
             return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
-        user_profile = get_cached_user_profile(user=user)
+        user_profile = get_cached_user_profile(user=user)  # type: ignore
         plugin_controller = PluginController(
             user_profile=user_profile,
             account=user_profile.account,  # type: ignore[arg-type]
@@ -263,7 +279,7 @@ def update_plugin(request: WSGIRequest):
     if not user:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
     try:
-        user_profile = get_cached_user_profile(user=user)
+        user_profile = get_cached_user_profile(user=user)  # type: ignore
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 

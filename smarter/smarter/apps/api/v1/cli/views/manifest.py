@@ -3,8 +3,13 @@
 
 import logging
 
+from django.http import HttpResponseNotAllowed
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+
+from smarter.common.const import SmarterHttpMethods
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base import CliBaseApiView
 from .swagger import (
@@ -91,5 +96,13 @@ The response from this endpoint is a JSON object containing an example manifest 
         logger.debug(
             "%s.get() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
         )
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
+            logger.error(
+                "%s.get() is not allowed because %s switch is inactive.",
+                self.formatted_class_name,
+                SmarterWaffleSwitches.ALLOW_API_GET,
+            )
+            return HttpResponseNotAllowed(permitted_methods=[SmarterHttpMethods.POST])
+
         response = self.broker.example_manifest(request=request, kwargs=kwargs)
         return response
