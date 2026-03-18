@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.200](https://github.com/smarter-sh/smarter/compare/v0.13.199...v0.13.200) (2026-03-18)
+
+### Bug Fixes
+
+* refactor /chatbot/v1/api urls to use hashed_id slugs ([89a6885](https://github.com/smarter-sh/smarter/commit/89a68859a7cb0d55cd1b8f8378344889eb8ef91a))
+
+## [0.13.199](https://github.com/smarter-sh/smarter/compare/v0.13.198...v0.13.199) (2026-03-17)
+
+### Bug Fixes
+
+* refactor all ChatBot urls to use new hashed_id slug ([94a9017](https://github.com/smarter-sh/smarter/commit/94a9017d16d10c19f34572a03dabe0cb511d91b8))
+* work on middleware caching and logging ([31e58a6](https://github.com/smarter-sh/smarter/commit/31e58a6c2855460892620bc71df686ac6d412794))
+
+## [0.13.198](https://github.com/smarter-sh/smarter/compare/v0.13.197...v0.13.198) (2026-03-17)
+
+### Bug Fixes
+
+* anonymize workbench urls ([350ec3a](https://github.com/smarter-sh/smarter/commit/350ec3a701f48052e854c08bc307b1947f8f1a24))
+
 ## [0.13.197](https://github.com/smarter-sh/smarter/compare/v0.13.196...v0.13.197) (2026-03-16)
 
 ### Bug Fixes
