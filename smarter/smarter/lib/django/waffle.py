@@ -41,6 +41,7 @@ Dependencies:
 """
 
 import logging
+from dataclasses import dataclass
 
 import waffle as waffle_orig
 from django.apps import apps
@@ -84,6 +85,13 @@ class SmarterSwitchAdmin(SwitchAdmin):
         return hasattr(request, "user") and hasattr(request.user, "is_superuser") and request.user.is_superuser  # type: ignore[return-value]
 
 
+@dataclass(frozen=True)
+class SmarterWaffleSwitch:
+    name: str
+    comment: str
+    default: bool
+
+
 class SmarterWaffleSwitches:
     """
     Enumerated data type for predefined, managed Smarter waffle switches.
@@ -108,6 +116,9 @@ class SmarterWaffleSwitches:
                 print("API logging is enabled.")
 
     """
+
+    ALLOW_API_GET = "allow_api_get"
+    """Allows GET requests to the API endpoints, which are normally restricted to POST requests."""
 
     ACCOUNT_LOGGING = "log_account"
     """Enables logging throughout the smarter.app.account namespace."""
@@ -199,41 +210,168 @@ class SmarterWaffleSwitches:
     VIEW_LOGGING = "log_views"
     """Enables logging in all Django views throughout the Smarter codebase."""
 
+    switches = {
+        ALLOW_API_GET: SmarterWaffleSwitch(
+            name=ALLOW_API_GET,
+            comment="Allows GET requests to the API endpoints, which are normally restricted to POST requests.",
+            default=False,
+        ),
+        ACCOUNT_LOGGING: SmarterWaffleSwitch(
+            name=ACCOUNT_LOGGING,
+            comment="Enables logging throughout the smarter.app.account namespace.",
+            default=False,
+        ),
+        ACCOUNT_MIXIN_LOGGING: SmarterWaffleSwitch(
+            name=ACCOUNT_MIXIN_LOGGING,
+            comment="Enables logging within the smarter.apps.account.mixins.AccountMixin class.",
+            default=False,
+        ),
+        API_LOGGING: SmarterWaffleSwitch(
+            name=API_LOGGING,
+            comment="Enables logging throughout the smarter.api namespace.",
+            default=False,
+        ),
+        CACHE_LOGGING: SmarterWaffleSwitch(
+            name=CACHE_LOGGING,
+            comment="Enables detailed logging for caching operations including cache hits, misses, and errors.",
+            default=False,
+        ),
+        PROMPT_LOGGING: SmarterWaffleSwitch(
+            name=PROMPT_LOGGING,
+            comment="Enables logging throughout the smarter.app.prompt namespace.",
+            default=False,
+        ),
+        CHATAPP_LOGGING: SmarterWaffleSwitch(
+            name=CHATAPP_LOGGING,
+            comment="For the React Chat UI component. Enables debug-level javascript console logging inside the browser",
+            default=False,
+        ),
+        CHATBOT_LOGGING: SmarterWaffleSwitch(
+            name=CHATBOT_LOGGING,
+            comment="Enables logging throughout the smarter.app.chatbot namespace.",
+            default=False,
+        ),
+        CHATBOT_HELPER_LOGGING: SmarterWaffleSwitch(
+            name=CHATBOT_HELPER_LOGGING,
+            comment="Enables logging within the smarter.apps.chatbot.model.ChatBotHelper class.",
+            default=False,
+        ),
+        CSRF_SUPPRESS_FOR_CHATBOTS: SmarterWaffleSwitch(
+            name=CSRF_SUPPRESS_FOR_CHATBOTS,
+            comment="Disables CSRF middleware checks for chat completion endpoints.",
+            default=False,
+        ),
+        ENABLE_DEBUG_MODE: SmarterWaffleSwitch(
+            name=ENABLE_DEBUG_MODE,
+            comment="Enables debug mode for the entire Smarter application, which may include additional logging and diagnostic information.",
+            default=False,
+        ),
+        ENABLE_JOURNAL: SmarterWaffleSwitch(
+            name=ENABLE_JOURNAL,
+            comment="Enables the Smarter Journal feature.",
+            default=False,
+        ),
+        ENABLE_OAUTH2: SmarterWaffleSwitch(
+            name=ENABLE_OAUTH2,
+            comment="Enables OAuth2 authentication support.",
+            default=False,
+        ),
+        ENABLE_ACCOUNT_REGISTRATION: SmarterWaffleSwitch(
+            name=ENABLE_ACCOUNT_REGISTRATION,
+            comment="Enables account registration link.",
+            default=False,
+        ),
+        ENABLE_LOGIN_FOOTER_LINKS: SmarterWaffleSwitch(
+            name=ENABLE_LOGIN_FOOTER_LINKS,
+            comment="Enables additional links in the login page footer, such as 'Legal' and 'Contact'.",
+            default=False,
+        ),
+        ENABLE_MULTITENANT_AUTHENTICATION: SmarterWaffleSwitch(
+            name=ENABLE_MULTITENANT_AUTHENTICATION,
+            comment="Enables multi-tenant authentication support for hosted Smarter platforms.",
+            default=False,
+        ),
+        ENABLE_MIDDLEWARE_SENSITIVE_FILES: SmarterWaffleSwitch(
+            name=ENABLE_MIDDLEWARE_SENSITIVE_FILES,
+            comment="Enables SmarterBlockSensitiveFilesMiddleware",
+            default=False,
+        ),
+        ENABLE_MIDDLEWARE_EXCESSIVE_404: SmarterWaffleSwitch(
+            name=ENABLE_MIDDLEWARE_EXCESSIVE_404,
+            comment="Enables SmarterBlockExcessive404Middleware",
+            default=False,
+        ),
+        ENABLE_MIDDLEWARE_CORS: SmarterWaffleSwitch(
+            name=ENABLE_MIDDLEWARE_CORS,
+            comment="Enables SmarterCorsMiddleware",
+            default=False,
+        ),
+        ENABLE_MIDDLEWARE_SECURITY: SmarterWaffleSwitch(
+            name=ENABLE_MIDDLEWARE_SECURITY,
+            comment="Enables SmarterSecurityMiddleware",
+            default=False,
+        ),
+        ENABLE_REACTAPP_DEBUG_MODE: SmarterWaffleSwitch(
+            name=ENABLE_REACTAPP_DEBUG_MODE,
+            comment="Enables React app debug mode within the Smarter React Chat component.",
+            default=False,
+        ),
+        ENABLE_NEW_USER_PASSWORD_EMAIL: SmarterWaffleSwitch(
+            name=ENABLE_NEW_USER_PASSWORD_EMAIL,
+            comment="Enables sending textemail with password to new users.",
+            default=False,
+        ),
+        MANIFEST_LOGGING: SmarterWaffleSwitch(
+            name=MANIFEST_LOGGING,
+            comment="Enables detailed diagnostic logging for manifest initialization, validation and brokered operations.",
+            default=False,
+        ),
+        MIDDLEWARE_LOGGING: SmarterWaffleSwitch(
+            name=MIDDLEWARE_LOGGING,
+            comment="Enables detailed diagnostic logging for all middleware operations.",
+            default=False,
+        ),
+        PLUGIN_LOGGING: SmarterWaffleSwitch(
+            name=PLUGIN_LOGGING,
+            comment="Enables logging throughout the smarter.app.plugin namespace.",
+            default=False,
+        ),
+        PROVIDER_LOGGING: SmarterWaffleSwitch(
+            name=PROVIDER_LOGGING,
+            comment="Enables logging throughout the smarter.app.provider namespace.",
+            default=False,
+        ),
+        REQUEST_MIXIN_LOGGING: SmarterWaffleSwitch(
+            name=REQUEST_MIXIN_LOGGING,
+            comment="Enables detailed diagnostic logging for the SmarterRequestMixin class.",
+            default=False,
+        ),
+        RECEIVER_LOGGING: SmarterWaffleSwitch(
+            name=RECEIVER_LOGGING,
+            comment="Enables logging in all Django signal receivers throughout the Smarter codebase.",
+            default=False,
+        ),
+        TASK_LOGGING: SmarterWaffleSwitch(
+            name=TASK_LOGGING,
+            comment="Enables logging in all Celery tasks throughout the Smarter codebase.",
+            default=False,
+        ),
+        VALIDATOR_LOGGING: SmarterWaffleSwitch(
+            name=VALIDATOR_LOGGING,
+            comment="Enables logging in all Django model field validators throughout the Smarter codebase.",
+            default=False,
+        ),
+        VIEW_LOGGING: SmarterWaffleSwitch(
+            name=VIEW_LOGGING,
+            comment="Enables logging in all Django views throughout the Smarter codebase.",
+            default=False,
+        ),
+    }
+
     @property
     def all(self):
         """Return all switches."""
-        return [
-            self.ACCOUNT_LOGGING,
-            self.API_LOGGING,
-            self.ACCOUNT_MIXIN_LOGGING,
-            self.CACHE_LOGGING,
-            self.ENABLE_DEBUG_MODE,
-            self.ENABLE_OAUTH2,
-            self.ENABLE_ACCOUNT_REGISTRATION,
-            self.ENABLE_LOGIN_FOOTER_LINKS,
-            self.ENABLE_MULTITENANT_AUTHENTICATION,
-            self.ENABLE_MIDDLEWARE_CORS,
-            self.ENABLE_MIDDLEWARE_EXCESSIVE_404,
-            self.ENABLE_MIDDLEWARE_SENSITIVE_FILES,
-            self.ENABLE_MIDDLEWARE_SECURITY,
-            self.ENABLE_JOURNAL,
-            self.ENABLE_REACTAPP_DEBUG_MODE,
-            self.ENABLE_NEW_USER_PASSWORD_EMAIL,
-            self.PROMPT_LOGGING,
-            self.CHATAPP_LOGGING,
-            self.CHATBOT_LOGGING,
-            self.CHATBOT_HELPER_LOGGING,
-            self.CSRF_SUPPRESS_FOR_CHATBOTS,
-            self.MANIFEST_LOGGING,
-            self.MIDDLEWARE_LOGGING,
-            self.PLUGIN_LOGGING,
-            self.PROVIDER_LOGGING,
-            self.REQUEST_MIXIN_LOGGING,
-            self.RECEIVER_LOGGING,
-            self.TASK_LOGGING,
-            self.VALIDATOR_LOGGING,
-            self.VIEW_LOGGING,
-        ]
+        return [getattr(self, attr) for attr in dir(self) if attr.isupper() and isinstance(getattr(self, attr), str)]
 
 
 def is_database_ready(alias="default"):

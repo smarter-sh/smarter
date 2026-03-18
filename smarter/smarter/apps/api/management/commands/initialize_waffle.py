@@ -6,7 +6,7 @@ from waffle.models import Switch
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.lib.django.management.base import SmarterCommand
-from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.django.waffle import SmarterWaffleSwitch, SmarterWaffleSwitches
 
 
 # pylint: disable=E1101
@@ -46,12 +46,26 @@ class Command(SmarterCommand):
 
     def handle(self, *args, **options):
         """ensure that switches exist. If not, then create them"""
+        waffle_switches = SmarterWaffleSwitches()
 
         def verify_switch(switch_name):
             """Initialize a switch."""
             if not Switch.objects.filter(name=switch_name).exists():
-                call_command("waffle_switch", switch_name, "off", "--create")
+                switch_defaults: SmarterWaffleSwitch = waffle_switches.switches[switch_name]
+                if switch_defaults.default:
+                    call_command("waffle_switch", switch_name, "on", "--create")
+                else:
+                    call_command("waffle_switch", switch_name, "off", "--create")
+                switch = Switch.objects.get(name=switch_name)
+                switch.note = switch_defaults.comment
+                switch.save()
+                print(f"Created switch {switch_name}")
             else:
+                switch = Switch.objects.get(name=switch_name)
+                if switch.note != waffle_switches.switches[switch_name].comment:
+                    switch.note = waffle_switches.switches[switch_name].comment
+                    switch.save()
+                    print(f"Updated comment for switch {switch_name}")
                 print(f"Verified switch {switch_name}")
 
         self.handle_begin()

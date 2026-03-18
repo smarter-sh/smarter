@@ -14,12 +14,11 @@ from django.db import models
 from django.http import (
     HttpRequest,
     HttpResponse,
+    HttpResponseNotAllowed,
     HttpResponseNotFound,
-    HttpResponseRedirect,
     JsonResponse,
 )
 from django.shortcuts import render
-from django.urls.base import reverse
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -48,6 +47,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
     SMARTER_IS_INTERNAL_API_REQUEST,
+    SmarterHttpMethods,
 )
 from smarter.common.exceptions import (
     SmarterException,
@@ -580,13 +580,22 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     # pylint: disable=unused-argument
-    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> Union[SmarterJournaledJsonResponse, HttpResponseNotAllowed]:
         """
         Get the chatbot configuration.
         """
         logger.warning(
             "%s - get() %s should be invoked via POST instead of GET.", self.formatted_class_name, request.path
         )
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
+
+            logger.error(
+                "%s.get() %s is not allowed because %s switch is inactive.",
+                self.formatted_class_name,
+                request.path,
+                SmarterWaffleSwitches.ALLOW_API_GET,
+            )
+            return HttpResponseNotAllowed(permitted_methods=[SmarterHttpMethods.POST])
         data = self.config()
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
