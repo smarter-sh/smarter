@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from smarter.apps.prompt.views import ChatConfigRedirector, ChatConfigView
+from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.utils import camel_to_snake
 
 from .const import namespace
@@ -110,7 +110,7 @@ urlpatterns = [
         name=ChatBotApiV1ReverseViews.default_chatbot_api_view_by_hashed_id,
     ),
     # mcdaniel: this is a patch to keep the react component working with the new hashed_id urls.
-    path("<str:hashed_id>/chat/config/", ChatConfigRedirector.as_view()),
+    path("<str:hashed_id>/chat/config/", ChatConfigView.as_view()),
     # --------------------------------------------------------------------------
     # paths by chatbot_id
     # --------------------------------------------------------------------------
