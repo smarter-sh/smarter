@@ -173,20 +173,28 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   console.log("File drop zone enabled:", window.dropzoneEnabled);
 
+  document.addEventListener("dragover", (e) => {
+    e.preventDefault();
+  });
+
+  document.addEventListener("drop", (e) => {
+    e.preventDefault();
+  });
+
   window.addEventListener("dragover", function (e) {
     e.preventDefault();
     if (!overlay.classList.contains("drop-zone--hover")) {
       console.log("Drag over detected");
       showOverlay(overlay);
     }
-  }, { passive: true });
+  });
 
   window.addEventListener("dragleave", function (e) {
     console.log("Drag leave detected");
     e.preventDefault();
     if (e.target === overlay || e.pageX === 0 || e.pageY === 0)
       hideOverlay(overlay);
-  }, { passive: true });
+  });
 
   window.addEventListener("drop", function (e) {
     console.log("File drop detected");
@@ -199,12 +207,18 @@ document.addEventListener("DOMContentLoaded", function () {
         reader.onload = function (evt) {
           const yamlContent = evt.target.result;
           console.log("YAML file received.");
-          applyManifest(overlay, yamlContent);
+          try {
+            const parsed = jsyaml.load(yamlContent); // throws if invalid
+            applyManifest(overlay, yamlContent);
+          } catch (e) {
+            alert("Invalid YAML syntax: " + e.message);
+            return;
+          }
         };
         reader.readAsText(file);
       } else {
         alert("Please drop a Smarter YAML manifest file (.yaml or .yml)");
       }
     }
-  }, { passive: true });
+  });
 });
