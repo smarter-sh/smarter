@@ -91,6 +91,13 @@ class SmarterWaffleSwitch:
     comment: str
     default: bool
 
+    def to_json(self) -> dict[str, str | bool]:
+        return {
+            "name": self.name,
+            "comment": self.comment,
+            "default": self.default,
+        }
+
 
 class SmarterWaffleSwitches:
     """
