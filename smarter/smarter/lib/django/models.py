@@ -2,22 +2,26 @@
 
 import base64
 import datetime
+import json
 import re
+from functools import cached_property
 from logging import getLogger
-from typing import Optional
+from typing import Any, Optional
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.forms.models import model_to_dict
 from django.utils.timezone import is_aware, make_aware
 from taggit.managers import TaggableManager
 
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
 
 logger = getLogger(__name__)
+cache_prefix = f"{__name__}."
 
 
 def validate_no_spaces(value) -> None:
@@ -76,6 +80,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     HASH_PREFIX = "r"
     HASH_SUFFIX = "x"
     HASH_FLOOR = 1000000
+    _hash_regex = None
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, editable=False, db_index=True)
     """
@@ -145,6 +150,10 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             raise SmarterValueError(
                 f"TimestampedModel().save() validation error: {e} | args={args} kwargs={kwargs} | model={self.__class__.__name__} | field_values={self.__dict__}"
             ) from e
+        except Exception as e:
+            raise SmarterValueError(
+                f"TimestampedModel().save() unexpected error during validation: {e} | args={args} kwargs={kwargs} | model={self.__class__.__name__} | field_values={self.__dict__}"
+            ) from e
         super().save(*args, **kwargs)
 
     @classmethod
@@ -159,9 +168,11 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: A regex pattern for matching hashed IDs.
         :rtype: re.Pattern
         """
-        return re.compile(f"{cls.HASH_PREFIX}[A-Za-z0-9_-]+{cls.HASH_SUFFIX}")
+        if cls._hash_regex is None:
+            cls._hash_regex = re.compile(f"{cls.HASH_PREFIX}[A-Za-z0-9_-]+{cls.HASH_SUFFIX}")
+        return cls._hash_regex
 
-    @property
+    @cached_property
     def hashed_id(self) -> str:
         """
         Returns a URL-friendly hashed version of the object's ID for use in URLs and other
@@ -183,6 +194,12 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The original object ID if decoding is successful, otherwise None.
         :rtype: Optional[int]
         """
+
+        cache_key = f"{cache_prefix}id_from_hashed_id:{hashed_id}"
+        cached_result = cache.get(cache_key)
+        if cached_result is not None:
+            return cached_result
+
         try:
             logger.debug(
                 "%s.id_from_hashed_id() - Attempting to decode hashed_id: %s",
@@ -204,10 +221,23 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                 hashed_id,
                 retval,
             )
+            cache.set(cache_key, retval)
             return retval
         except (base64.binascii.Error, ValueError) as e:
             logger.error(
-                "%s.id_from_hashed_id() - Failed to decode hashed_id '%s': %s", cls.formatted_class_name, hashed_id, e
+                "%s.id_from_hashed_id() - Failed to decode hashed_id '%s': %s",
+                cls.formatted_class_name,
+                hashed_id,
+                e,
+            )
+            return None
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.exception(
+                "%s.id_from_hashed_id() - Unexpected error while decoding hashed_id '%s': %s",
+                cls.formatted_class_name,
+                hashed_id,
+                e,
             )
             return None
 
@@ -308,8 +338,26 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         delta = int(abs((updated - dt).total_seconds()))
         return delta
 
+    def to_json(self) -> dict[str, Any]:
+        """
+        Serialize the model instance to a JSON-compatible dictionary.
+
+        This method uses the custom ``SmarterJSONEncoder`` to ensure that all fields,
+        including timestamps and any complex data types, are properly serialized.
+
+        :returns: A dictionary representation of the model instance suitable for JSON serialization.
+        :rtype: dict[str, Any]
+        """
+
+        data = model_to_dict(self)
+        retval = json.loads(json.dumps(data, cls=SmarterJSONEncoder))
+        return retval
+
     def __str__(self):
         return f"{self.__class__.__name__}(id={getattr(self, 'id', None)})"
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={getattr(self, 'id', None)} created_at={self.created_at} updated_at={self.updated_at}>"
 
 
 class MetaDataModel(TimestampedModel):
@@ -373,6 +421,3 @@ class MetaDataModel(TimestampedModel):
         # version should be a semantic version: MAJOR.MINOR.PATCH
         if self.version and not SmarterValidator.is_valid_semantic_version(self.version):
             raise SmarterValueError(f"Version '{self.version}' is not a valid semantic version (MAJOR.MINOR.PATCH).")
-
-    def __str__(self):
-        return f"{self.__class__.__name__}(id={getattr(self, 'id', None)})"

@@ -6,3 +6,5 @@ Smarter Prompt Functions
    :caption: Prompt Functions
 
    functions/get-current-weather
+   functions/calculator
+   functions/date-calculator

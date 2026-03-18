@@ -9,7 +9,7 @@ from urllib.parse import ParseResult, urlparse
 
 from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
-from django.http import JsonResponse
+from django.http import HttpResponseNotAllowed, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
@@ -27,6 +27,7 @@ from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import ChatHelper
 from smarter.apps.prompt.providers.providers import HandlerProtocol, chat_providers
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
@@ -490,21 +491,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         :rtype: JsonResponse
         """
 
-        url = self.chatbot_helper.url if self.chatbot_helper else self.smarter_build_absolute_uri(request)
-        logger.debug("%s.get(): url=%s", self.formatted_class_name, url)
-        logger.debug("%s.get(): headers=%s", self.formatted_class_name, request.META)
-        retval = {
-            "message": "GET is not supported. Please use POST.",
-            "chatbot": self.chatbot.name if self.chatbot else None,
-            "mode": self.chatbot.mode(url=self.chatbot_helper.url) if self.chatbot and self.chatbot_helper else None,  # type: ignore
-            "created": self.chatbot.created_at.isoformat() if self.chatbot else None,
-            "updated": self.chatbot.updated_at.isoformat() if self.chatbot else None,
-            "plugins": ChatBotPlugin.plugins_json(chatbot=self.chatbot) if self.chatbot else None,
-            "account": self.account.account_number if self.account else None,
-            "user": self.user.username if self.user else None,
-            "meta": self.chatbot_helper.to_json() if self.chatbot_helper else None,
-        }
-        return JsonResponse(data=retval, status=HTTPStatus.OK.value, encoder=SmarterJSONEncoder)
+        return HttpResponseNotAllowed(permitted_methods=[SmarterHttpMethods.POST])
 
     # pylint: disable=W0613
     def post(self, request, *args, name: Optional[str] = None, **kwargs):

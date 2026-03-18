@@ -88,6 +88,11 @@ def get_pending_deployments(user_profile: UserProfile) -> int:
 
     @cache_results(timeout=CACHE_TIMEOUT)
     def _get_pending_deployments(user_profile_id: int) -> int:
+        logger.debug(
+            "%s.get_pending_deployments() Fetching pending deployments for user_profile_id=%s",
+            logger_prefix,
+            user_profile_id,
+        )
         return ChatBot.objects.filter(user_profile__id=user_profile_id, deployed=False).count() or 0
 
     return _get_pending_deployments(user_profile.id)
@@ -145,6 +150,7 @@ def get_api_keys(user_profile: UserProfile) -> int:
 
     @cache_results(timeout=CACHE_TIMEOUT)
     def _get_api_keys(user_profile_id: int) -> int:
+        logger.debug("%s.get_api_keys() Fetching API keys for user_profile_id=%s", logger_prefix, user_profile_id)
         return ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
 
     return _get_api_keys(user_profile.id)
@@ -166,6 +172,9 @@ def get_custom_domains(user_profile: UserProfile) -> int:
 
     @cache_results(timeout=CACHE_TIMEOUT)
     def _get_custom_domains(user_profile_id: int) -> int:
+        logger.debug(
+            "%s.get_custom_domains() Fetching custom domains for user_profile_id=%s", logger_prefix, user_profile_id
+        )
         return ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
 
     return _get_custom_domains(user_profile.id)
@@ -202,6 +211,7 @@ def get_secrets(user_profile: UserProfile) -> int:
     :return: The number of secrets belonging to the user profile.
     :rtype: int
     """
+    logger.debug("%s.get_secrets() Fetching secrets for user_profile_id=%s", logger_prefix, user_profile.id)
     return Secret.objects.filter(user_profile=user_profile).count() if user_profile else 0
 
 
@@ -234,18 +244,23 @@ def file_drop_zone(request: "HttpRequest") -> dict:
     :return: A dictionary containing the file drop zone context variable.
     :rtype: dict
     """
-    retval = {
-        "drop_zone": {
-            "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
-            "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
-            "workbench_list_path": reverse("prompt_workbench:listview"),
-            "plugin_list_path": reverse("plugin:plugin_listview"),
-            "connection_list_path": reverse("plugin:connection_listview"),
-            "provider_list_path": reverse("provider:provider_listview"),
+
+    @cache_results(timeout=CACHE_TIMEOUT)
+    def get_cached_file_drop_zone_context() -> dict:
+        retval = {
+            "drop_zone": {
+                "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
+                "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
+                "workbench_list_path": reverse("prompt_workbench:listview"),
+                "plugin_list_path": reverse("plugin:plugin_listview"),
+                "connection_list_path": reverse("plugin:connection_listview"),
+                "provider_list_path": reverse("provider:provider_listview"),
+            }
         }
-    }
-    logger.debug("%s.file_drop_zone() File drop zone context: %s", logger_prefix, retval)
-    return retval
+        logger.debug("%s.file_drop_zone() File drop zone context: %s", logger_prefix, retval)
+        return retval
+
+    return get_cached_file_drop_zone_context()
 
 
 def base(request: "HttpRequest") -> dict:
@@ -323,6 +338,12 @@ def base(request: "HttpRequest") -> dict:
                 "my_resources_providers": get_providers(user_profile=user_profile) if user_profile else 0,
             }
         }
+        logger.debug(
+            "%s.get_cached_context() Dashboard context for user_id=%s: %s",
+            logger_prefix,
+            user_profile.id if user_profile else None,
+            cached_context,
+        )
         return cached_context
 
     context = get_cached_context(user=resolved_user)  # type: ignore[assignment]
@@ -404,6 +425,7 @@ def branding(request: "HttpRequest") -> dict:
                 "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
             }
         }
+        logger.debug("%s.get_cached_context() Branding context: %s", logger_prefix, context)
         return context
 
     return get_cached_context()

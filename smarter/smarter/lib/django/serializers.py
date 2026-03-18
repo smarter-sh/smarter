@@ -6,7 +6,7 @@ from taggit.serializers import TaggitSerializer, TagListSerializerField
 
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
-from .model_helpers import MetaDataModel
+from .models import MetaDataModel
 
 
 class MetaDataModelSerializer(TaggitSerializer, SmarterCamelCaseSerializer):
