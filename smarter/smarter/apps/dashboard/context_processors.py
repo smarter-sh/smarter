@@ -474,31 +474,3 @@ def prompt_list_context(request: "HttpRequest") -> dict:
     the underlying issues with Wagtail integration are resolved.
     """
     return {"prompt_list": {"smarter_admin": smarter_cached_objects.smarter_admin, "chatbot_helpers": []}}
-
-
-def prompt_chatapp_workbench_context(request: "HttpRequest") -> dict:
-    """
-    Provides default placeholder context for chat application workbench views in the dashboard.
-    This mitigates Django template rendering errors presumably caused by Wagtail
-    admin interface interactions.
-
-    Example usage in a Django template::
-
-        <script class="smarter-chat" async="" src="{{ chatapp_workbench.app_loader_url }}"></script>
-
-    DEPRECATED: This context processor is slated for removal in future releases as
-    the underlying issues with Wagtail integration are resolved.
-    """
-    return {
-        "chatapp_workbench": {
-            "div_id": smarter_settings.smarter_reactjs_root_div_id,
-            "app_loader_url": "",
-            "chatbot_api_url": "",
-            "toggle_metadata": True,
-            "csrf_cookie_name": "csrftoken",
-            "smarter_session_cookie_name": "",
-            "django_session_cookie_name": "",
-            "cookie_domain": "",
-            "debug_mode": False,
-        }
-    }
