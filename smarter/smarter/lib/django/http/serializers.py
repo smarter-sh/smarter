@@ -13,6 +13,7 @@ from django.http import HttpRequest
 from rest_framework import serializers
 
 from smarter.apps.account.models import User
+from smarter.common.const import SmarterHttpMethods
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -110,7 +111,9 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
     """
 
     url = serializers.SerializerMethodField()
-    method = serializers.CharField(max_length=10)
+    method = serializers.ChoiceField(
+        choices=[SmarterHttpMethods.GET, SmarterHttpMethods.POST, SmarterHttpMethods.PUT, SmarterHttpMethods.DELETE]
+    )
     GET = serializers.DictField(child=serializers.CharField())
     POST = serializers.DictField(child=serializers.CharField())
     COOKIES = serializers.DictField(child=serializers.CharField())
@@ -125,8 +128,8 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
         extra_kwargs = {
             "url": {"required": False},
             "method": {"required": False},
-            "GET": {"required": False},
-            "POST": {"required": False},
+            SmarterHttpMethods.GET: {"required": False},
+            SmarterHttpMethods.POST: {"required": False},
             "COOKIES": {"required": False},
             "META": {"required": False},
             "path": {"required": False},

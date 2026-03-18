@@ -191,7 +191,7 @@ class LoginView(SmarterNeverCachedWebView):
         return False
 
     def get(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
-        logger.info(
+        logger.debug(
             "%s.LoginView.get() called with request type: %s %s", self.formatted_class_name, type(request), request
         )
         user = (

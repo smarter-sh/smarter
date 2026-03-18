@@ -12,6 +12,7 @@ from rest_framework.test import APIClient
 
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.api.v1.tests.urls import ApiV1TestUrls
+from smarter.common.const import SmarterHttpMethods
 from smarter.lib.drf.middleware import SmarterTokenAuthenticationMiddleware
 
 logger = getLogger(__name__)
@@ -32,21 +33,21 @@ class TestSmarterTokenAuthenticationMiddleware(ApiV1TestBase):
         # Should skip authentication for non-API endpoint
         request = HttpRequest()
         request.path = "/not-api/"
-        request.method = "POST"
+        request.method = SmarterHttpMethods.POST
         response = self.middleware(request)
         self.assertEqual(response, request)
 
     def test_no_authorization_header(self):
         # Should skip if no Authorization header
         request = HttpRequest()
-        request.method = "POST"
+        request.method = SmarterHttpMethods.POST
         response = self.middleware(request)
         self.assertEqual(response, request)
 
     def test_invalid_authorization_prefix(self):
         # Should skip if Authorization header is not Token
         request = HttpRequest()
-        request.method = "POST"
+        request.method = SmarterHttpMethods.POST
         request.META = {"HTTP_AUTHORIZATION": "Bearer something"}
         self.middleware.authorization_header = get_authorization_header(request).decode()
         response = self.middleware(request)
@@ -85,7 +86,7 @@ class TestSmarterTokenAuthenticationMiddleware(ApiV1TestBase):
     def test_already_authenticated(self):
         # Should skip if request.auth is already set
         request = HttpRequest()
-        request.method = "POST"
+        request.method = SmarterHttpMethods.POST
         request.auth = "already_authenticated"
         response = self.middleware(request)
         self.assertEqual(response, request)
