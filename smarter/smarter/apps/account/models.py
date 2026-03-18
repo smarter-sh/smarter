@@ -28,7 +28,7 @@ from smarter.common.exceptions import SmarterConfigurationError, SmarterValueErr
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django import waffle
-from smarter.lib.django.model_helpers import MetaDataModel, TimestampedModel
+from smarter.lib.django.models import MetaDataModel, TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

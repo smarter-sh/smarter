@@ -53,7 +53,7 @@ from smarter.common.utils import (
 )
 from smarter.lib import json
 from smarter.lib.django import waffle
-from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
