@@ -174,29 +174,6 @@ class SmarterChatSession(SmarterHelperMixin):
         return retval
 
 
-class ChatConfigRedirector(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Redirects legacy /chat/config/ URLs.
-    """
-
-    def dispatch(self, request: HttpRequest, *args, **kwargs):
-        # pylint: disable=C0415
-        from smarter.apps.chatbot.api.v1.urls import ChatBotApiV1ReverseViews
-
-        hashed_id = kwargs.pop("hashed_id", None)
-        url = reverse(
-            f"{ChatBotApiV1ReverseViews.namespace}:{ChatBotApiV1ReverseViews.chat_config_view_by_hashed_id}",
-            kwargs={"hashed_id": hashed_id},
-        )
-        logger.warning(
-            "%s.dispatch() - redirecting %s. This URL should be updated to use %s.",
-            self.formatted_class_name,
-            request.path,
-            url,
-        )
-        return HttpResponseRedirect(url)
-
-
 class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat configuration view for the Smarter web application.
