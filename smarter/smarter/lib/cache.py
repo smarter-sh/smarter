@@ -46,7 +46,6 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_green,
     formatted_text_red,
 )
-from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getLogger(__name__)
 logger_prefix_normal = formatted_text(f"{__name__}.@cache_results()")
@@ -217,6 +216,8 @@ class LazyCache:
         :return: True if cache logging is enabled, False otherwise.
         :rtype: bool
         """
+        from smarter.lib.django.waffle import SmarterWaffleSwitches
+
         return self.waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
 
     def get(self, key: Any, default: Optional[Any] = None) -> Any:
