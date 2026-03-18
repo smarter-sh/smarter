@@ -150,20 +150,6 @@ class SmarterHelperMixin:
         """
         return ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml"]
 
-    def to_json(self) -> dict[str, Any]:
-        """
-        Convert the object to a JSON-serializable dictionary.
-
-        This is a placeholder method and should be overridden in subclasses
-        to provide a complete JSON representation of the object.
-
-        :return: Dictionary representation of the object.
-        :rtype: dict[str, Any]
-        """
-        return {
-            "class_name": self.unformatted_class_name,
-        }
-
     def smarter_build_absolute_uri(self, request: "HttpRequest") -> Optional[str]:
         """
         Attempts to get the absolute URI from a request object.

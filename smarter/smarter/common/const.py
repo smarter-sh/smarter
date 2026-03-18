@@ -95,4 +95,15 @@ class SmarterEnvironments:
     aws_environments = [ALPHA, BETA, NEXT, PROD]
 
 
+class SmarterHttpMethods:
+    """A class representing the fixed set of HTTP methods used in the Smarter API."""
+
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    PATCH = "PATCH"
+    DELETE = "DELETE"
+    all = [GET, POST, PUT, PATCH, DELETE]
+
+
 LANGCHAIN_MESSAGE_HISTORY_ROLES = ["user", "assistant"]

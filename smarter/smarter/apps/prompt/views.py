@@ -14,12 +14,13 @@ from django.db import models
 from django.http import (
     HttpRequest,
     HttpResponse,
+    HttpResponseNotAllowed,
     HttpResponseNotFound,
-    HttpResponseRedirect,
     JsonResponse,
 )
 from django.shortcuts import render
-from django.urls.base import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_control, cache_page
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -48,6 +49,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
     SMARTER_IS_INTERNAL_API_REQUEST,
+    SmarterHttpMethods,
 )
 from smarter.common.exceptions import (
     SmarterException,
@@ -64,6 +66,7 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedNeverCachedWebView,
+    SmarterAuthenticatedWebView,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.view_helpers import UnauthenticatedPermissionClass
@@ -77,6 +80,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .signals import chat_config_invoked, chat_session_invoked
 
 MAX_RETURNED_PLUGINS = 10
+PROMPT_LIST_CACHE_TIMEOUT = 15
 
 
 def should_log(level):
@@ -580,13 +584,22 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     # pylint: disable=unused-argument
-    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> Union[SmarterJournaledJsonResponse, HttpResponseNotAllowed]:
         """
         Get the chatbot configuration.
         """
         logger.warning(
             "%s - get() %s should be invoked via POST instead of GET.", self.formatted_class_name, request.path
         )
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
+
+            logger.error(
+                "%s.get() %s is not allowed because %s switch is inactive.",
+                self.formatted_class_name,
+                request.path,
+                SmarterWaffleSwitches.ALLOW_API_GET,
+            )
+            return HttpResponseNotAllowed(permitted_methods=[SmarterHttpMethods.POST])
         data = self.config()
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
@@ -922,7 +935,9 @@ class PromptManifestView(DocsBaseView):
         return render(request, self.template_path, context=context)  # type: ignore
 
 
-class PromptListView(SmarterAuthenticatedNeverCachedWebView):
+@method_decorator(cache_control(max_age=PROMPT_LIST_CACHE_TIMEOUT), name="dispatch")
+@method_decorator(cache_page(PROMPT_LIST_CACHE_TIMEOUT), name="dispatch")
+class PromptListView(SmarterAuthenticatedWebView):
     """
     list view for smarter workbench web console. This view is protected and
     requires the user to be authenticated. It generates cards for each

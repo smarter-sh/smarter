@@ -628,7 +628,6 @@ class AccountMixin(SmarterHelperMixin):
                 "account": AccountMiniSerializer(self.account).data if self.account else None,
                 "user": UserMiniSerializer(self.user).data if self.user else None,
                 "user_profile": UserProfileSerializer(self.user_profile).data if self.user_profile else None,
-                **SmarterHelperMixin(self).to_json(),
             }
         )
 

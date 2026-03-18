@@ -15,6 +15,7 @@ from django.utils.functional import cached_property
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
@@ -23,6 +24,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)
@@ -224,7 +226,8 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         return super().process_request(request)
 
     def process_view(self, request, callback, callback_args, callback_kwargs):
-        if smarter_settings.environment == "local":
+
+        if smarter_settings.environment == SmarterEnvironments.LOCAL:
             logger.debug("%s._accept: environment is local. ignoring csrf checks", self.formatted_class_name)
             return None
         if self.is_chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS):
@@ -236,5 +239,16 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             return None
         response = super().process_view(request, callback, callback_args, callback_kwargs)
         if isinstance(response, HttpResponseForbidden):
-            logger.error("%s CSRF validation failed", self.formatted_class_name)
+            logger.error(
+                "%s.process_view() CSRF validation failed | path=%s | method=%s | user_agent=%s | remote_addr=%s | origin=%s | referer=%s | csrf_cookie=%s | session_key=%s",
+                self.formatted_class_name,
+                request.path,
+                request.method,
+                request.META.get("HTTP_USER_AGENT"),
+                request.META.get("REMOTE_ADDR"),
+                request.META.get("HTTP_ORIGIN"),
+                request.META.get("HTTP_REFERER"),
+                request.COOKIES.get(settings.CSRF_COOKIE_NAME),
+                getattr(request.session, "session_key", None),
+            )
         return response

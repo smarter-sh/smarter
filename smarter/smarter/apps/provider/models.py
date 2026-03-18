@@ -28,7 +28,7 @@ from smarter.common.exceptions import (
 from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
-from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 

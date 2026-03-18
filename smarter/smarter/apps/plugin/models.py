@@ -46,6 +46,7 @@ from smarter.apps.account.utils import (
 # smarter stuff
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import SettingsDefaults, smarter_settings
+from smarter.common.const import SmarterHttpMethods
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
@@ -53,7 +54,7 @@ from smarter.common.utils import camel_to_snake, rfc1034_compliant_str
 from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
-from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -2636,8 +2637,13 @@ class PluginDataApi(PluginDataBase):
     )
     method = models.CharField(
         max_length=10,
-        choices=[("GET", "GET"), ("POST", "POST"), ("PUT", "PUT"), ("DELETE", "DELETE")],
-        default="GET",
+        choices=[
+            (SmarterHttpMethods.GET, SmarterHttpMethods.GET),
+            (SmarterHttpMethods.POST, SmarterHttpMethods.POST),
+            (SmarterHttpMethods.PUT, SmarterHttpMethods.PUT),
+            (SmarterHttpMethods.DELETE, SmarterHttpMethods.DELETE),
+        ],
+        default=SmarterHttpMethods.GET,
         help_text="The HTTP method to use for the API request. Example: 'GET', 'POST'.",
         blank=True,
         null=True,
