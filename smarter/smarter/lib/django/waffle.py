@@ -61,8 +61,8 @@ except ImportError:
 from smarter.common.helpers.console_helpers import formatted_text_green
 
 logger = logging.getLogger(__name__)
-prefix = formatted_text_green("smarter.lib.django.waffle.switch_is_active()")
-logger.debug(formatted_text_green("smarter.lib.django.waffle module loaded"))
+prefix = formatted_text_green(f"{__name__}.switch_is_active()")
+cache_prefix = f"{__name__}"
 
 
 # pylint: disable=C0115
@@ -123,6 +123,8 @@ class SmarterWaffleSwitches:
                 print("API logging is enabled.")
 
     """
+
+    _all: list[str] = []  # Internal list to track all switch names
 
     ALLOW_API_GET = "allow_api_get"
     """Allows GET requests to the API endpoints, which are normally restricted to POST requests."""
@@ -378,7 +380,17 @@ class SmarterWaffleSwitches:
     @property
     def all(self):
         """Return all switches."""
-        return [getattr(self, attr) for attr in dir(self) if attr.isupper() and isinstance(getattr(self, attr), str)]
+        if not self._all:
+            self._all = [
+                getattr(self, attr) for attr in dir(self) if attr.isupper() and isinstance(getattr(self, attr), str)
+            ]
+        return self._all
+
+
+smarter_waffle_switches = SmarterWaffleSwitches()
+"""
+Singleton instance of SmarterWaffleSwitches to be used throughout the codebase.
+"""
 
 
 def is_database_ready(alias="default"):
@@ -444,7 +456,7 @@ def switch_is_active(switch_name: str) -> bool:
     if not isinstance(switch_name, str):
         logger.error("%s switch_name must be a string, got %s", prefix, type(switch_name).__name__)
         return False
-    if switch_name not in SmarterWaffleSwitches().all:
+    if switch_name not in smarter_waffle_switches.all:
         logger.error("%s switch_name '%s' is not a valid SmarterWaffleSwitches attribute", prefix, switch_name)
         return False
     db_exceptions = tuple(
