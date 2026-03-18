@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.201](https://github.com/smarter-sh/smarter/compare/v0.13.200...v0.13.201) (2026-03-18)
+
+### Bug Fixes
+
+* revert /chat/config/ redirect ([3413e98](https://github.com/smarter-sh/smarter/commit/3413e980a8056ccc2a1514a185bd37779e265e65))
+
 ## [0.13.200](https://github.com/smarter-sh/smarter/compare/v0.13.199...v0.13.200) (2026-03-18)
 
 ### Bug Fixes
