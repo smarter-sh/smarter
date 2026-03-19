@@ -45,8 +45,7 @@ spec:
                 set -e
 
                 apt-get update
-                apt-get install -y mariadb-client
-                apt-get install -y --no-install-recommends curl unzip ca-certificates
+                apt-get install -y --no-install-recommends curl unzip ca-certificates less mariadb-client
 
                 update-ca-certificates
                 curl -fL --retry 3 --retry-delay 2 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
@@ -62,12 +61,14 @@ spec:
                   "echo '*                                                                              *'" \
                   "echo '*   Please note the following:                                                 *'" \
                   "echo '*   - mariadb mysql client is pre-installed.                                   *'" \
+                  "echo '*   - aws cli is pre-installed.                                                *'" \
                   "echo '*   - all smarter pod environment variables are available.                     *'" \
                   "echo '*     see https://artifacthub.io/packages/helm/project-smarter/smarter         *'" \
                   "echo '*   - Admin documentation is available at https://docs.smarter.sh/             *'" \
                   "echo '*                                                                              *'" \
-                  "echo '*   Example usage (copy-paste this command into the command prompt):           *'" \
+                  "echo '*   Example usage (copy-paste these commands into the command prompt):         *'" \
                   "echo '*   \$ mysql -h \"\$SMARTER_MYSQL_HOST\" -u \"\$SMARTER_MYSQL_ROOT_USERNAME\" -p\"\$SMARTER_MYSQL_ROOT_PASSWORD\" \"\$SMARTER_MYSQL_DATABASE\"'" \
+                  "echo '*   \$ aws iam get-user                                                        *'" \
                   "echo '********************************************************************************'" \
                   "echo ''" \
                   > /etc/profile.d/welcome.sh
