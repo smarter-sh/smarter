@@ -6,7 +6,7 @@ import taggit.managers
 from django.db import migrations, models
 
 import smarter.apps.chatbot.models
-import smarter.lib.django.model_helpers
+import smarter.lib.django.models
 import smarter.lib.django.validators
 import smarter.lib.json
 
@@ -76,7 +76,7 @@ class Migration(migrations.Migration):
                         max_length=255,
                         validators=[
                             smarter.lib.django.validators.SmarterValidator.validate_snake_case,
-                            smarter.lib.django.model_helpers.validate_no_spaces,
+                            smarter.lib.django.models.validate_no_spaces,
                         ],
                     ),
                 ),
@@ -270,7 +270,7 @@ class Migration(migrations.Migration):
                         max_length=255,
                         validators=[
                             smarter.lib.django.validators.SmarterValidator.validate_snake_case,
-                            smarter.lib.django.model_helpers.validate_no_spaces,
+                            smarter.lib.django.models.validate_no_spaces,
                         ],
                     ),
                 ),

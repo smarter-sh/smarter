@@ -43,7 +43,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
     .. code-block:: python
 
-        from smarter.smarter.lib.django.model_helpers import TimestampedModel
+        from smarter.smarter.lib.django.models import TimestampedModel
 
         class MyModel(TimestampedModel):
             name = models.CharField(max_length=100)
@@ -371,7 +371,7 @@ class MetaDataModel(TimestampedModel):
 
     .. code-block:: python
 
-        from smarter.smarter.lib.django.model_helpers import MetaDataModel
+        from smarter.smarter.lib.django.models import MetaDataModel
         from smarter.apps.account.models import User
 
         class MyModel(MetaDataModel):
