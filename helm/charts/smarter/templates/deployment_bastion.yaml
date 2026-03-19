@@ -46,6 +46,14 @@ spec:
 
                 apt-get update
                 apt-get install -y mariadb-client
+                apt-get install -y --no-install-recommends curl unzip ca-certificates
+
+                update-ca-certificates
+                curl -fL --retry 3 --retry-delay 2 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+                unzip awscliv2.zip
+                ./aws/install
+                rm -rf aws awscliv2.zip
+                rm -rf /var/lib/apt/lists/*
 
                 printf "%s\n" \
                   "echo ''" \
@@ -75,11 +83,11 @@ spec:
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
           resources:
             requests:
-              cpu: 5m
-              memory: 64Mi
+              cpu: 50m
+              memory: 128Mi
             limits:
-              cpu: 100m
-              memory: 256Mi
+              cpu: 250m
+              memory: 512Mi
           env:
             {{- range $key, $value := .Values.env }}
             - name: {{ $key }}
