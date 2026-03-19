@@ -21,10 +21,10 @@ spec:
         - name: "{{ .Values.app.name }}-bastion"
           image: debian:bullseye-slim
           command:
-            [
-              "/bin/bash",
-              "-c",
-              "apt-get update && apt-get install -y mariadb-client && cat << 'EOF' > /etc/profile.d/welcome.sh
+            - /bin/bash
+            - -c
+            - |
+              apt-get update && apt-get install -y mariadb-client && cat << 'EOF' > /etc/profile.d/welcome.sh
               echo ''
               echo '********************************************************************************'
               echo '*   Welcome to Smarter Bastion Shell!                                          *'
@@ -38,8 +38,7 @@ spec:
               echo '********************************************************************************'
               echo ''
               EOF
-              chmod +x /etc/profile.d/welcome.sh && while true; do sleep 3600; done"
-            ]
+              chmod +x /etc/profile.d/welcome.sh && while true; do sleep 3600; done
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
           resources:
             requests:
