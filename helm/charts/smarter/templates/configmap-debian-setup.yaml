@@ -26,7 +26,9 @@ data:
 
     echo "Smarter Bastion Server: Installing required packages: mariadb-client, curl, unzip, ca-certificates"
     apt-get update
-    apt-get install -y --no-install-recommends curl unzip ca-certificates less mariadb-client
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      curl unzip ca-certificates less mariadb-client vim \
+      git openssh-client iputils-ping net-tools dnsutils htop lsof tcpdump wget rsync jq nano zip tar sudo procps traceroute socat
 
     echo "Smarter Bastion Server: Installing AWS CLI"
     update-ca-certificates
