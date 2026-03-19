@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
@@ -34,7 +34,7 @@ jobs:
           git pull origin alpha
 
       - name: Cache NPM dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -42,7 +42,7 @@ jobs:
             ${{ runner.os }}-node
 
       - name: Cache Python dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('./smarter/requirements/**/*.txt') }}
@@ -50,9 +50,9 @@ jobs:
             ${{ runner.os }}-pip
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
       - name: locate site-packages path
         shell: bash
@@ -72,9 +72,7 @@ jobs:
           SITE_PACKAGES_PATH: ${{ env.SITE_PACKAGES_PATH }}
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.10"
+        uses: actions/setup-node@v6
 
       - name: Install npm dependencies
         run: npm install

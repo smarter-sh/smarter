@@ -10,7 +10,10 @@
 # setup:
 # -------------------------------------
 # - installs the MariaDB MySQL client
-# - creates a welcome message with usage instructions and environment variable information
+# - creates a welcome message with usage instructions and environment variable
+#   information
+# - configures the welcome message to be displayed whenever a user connects to
+#   the pod
 # - keeps the pod running indefinitely to allow users to connect and use the shell
 ###############################################################################
 apiVersion: apps/v1
@@ -66,7 +69,7 @@ spec:
 
                 echo "Created the welcome message at /etc/profile.d/welcome.sh"
                 cat /etc/profile.d/welcome.sh
-                echo "The Smarter Bastion is ready to use!"
+                echo "The Smarter Bastion Server is ready to use!"
 
                 while true; do sleep 3600; done
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}

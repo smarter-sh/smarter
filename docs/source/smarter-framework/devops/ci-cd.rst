@@ -46,11 +46,11 @@ Each file specifies the jobs and steps required for that part of the CI/CD proce
      build:
        runs-on: ubuntu-latest
        steps:
-         - uses: actions/checkout@v4
+         - uses: actions/checkout@v6
          - name: Set up Python
-           uses: actions/setup-python@v5
+           uses: actions/setup-python@v6
            with:
-             python-version: '3.11'
+             python-version: '3.13'
          - name: Install dependencies
            run: pip install -r requirements.txt
          - name: Run tests
