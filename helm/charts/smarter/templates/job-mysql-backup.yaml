@@ -1,40 +1,86 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: mysql-backup
+  name: "{{ .Values.app.name }}-mysql-backup"
+  namespace: "{{ .Values.namespace }}"
+  annotations:
+    meta.helm.sh/release-name: {{ .Values.app.name }}
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+    meta.helm.sh/application-version: {{ .Values.version }}
+  labels:
+    App: {{ .Values.app.name }}
 spec:
   schedule: "0 2 * * *" # Every day at 2am UTC
   jobTemplate:
     spec:
-      ttlSecondsAfterFinished: 86400  # Keeps the pod for 1 day (86400 seconds)
+      ttlSecondsAfterFinished: 86400
       template:
         spec:
+          affinity:
+            {{- toYaml .Values.global.affinity | nindent 12 }}
+          tolerations:
+            {{- toYaml .Values.global.tolerations | nindent 12 }}
+
           volumes:
             - name: debian-setup-script
               configMap:
                 name: debian-setup-script
+                defaultMode: 0755
             - name: mysql-backup-script
               configMap:
                 name: mysql-backup-script
-          containers:
-          - name: mysql-backup
-            image: ubuntu:latest
-            command:
-              - /bin/bash
-              - -c
-              - |
-                set -e
+                defaultMode: 0755
 
-                chmod +x /setup/install.sh && /setup/install.sh
-                chmod +x /backup/backup-to-s3.sh && /backup/backup-to-s3.sh
-            env:
-{{- range $key, $value := .Values.env }}
-              - name: {{ $key }}
-                value: {{ $value | quote }}
-{{- end }}
-            volumeMounts:
-              - name: debian-setup-script
-                mountPath: /setup
-              - name: mysql-backup-script
-                mountPath: /backup
+          containers:
+            - name: mysql-backup
+              image: debian:bullseye-slim
+              workingDir: /home/
+              command:
+                - /bin/bash
+                - -c
+                - |
+                    set -e
+
+                    echo "Waiting for configMap mounts..."
+                    for i in $(seq 1 10); do
+                      if [ -f /home/setup/install.sh ]; then break; fi
+                      echo "Still waiting..."
+                      sleep 1
+                    done
+
+                    ls -l /home/setup || true
+                    ls -l /home/backup || true
+
+                    /home/setup/install.sh
+                    /home/backup/backup-to-s3.sh
+
+                    echo "Backup completed successfully!"
+
+              imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
+
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 250m
+                  memory: 512Mi
+              volumeMounts:
+                - name: debian-setup-script
+                  mountPath: /home/setup/install.sh
+                  subPath: install.sh
+                - name: mysql-backup-script
+                  mountPath: /home/backup/backup-to-s3.sh
+                  subPath: backup-to-s3.sh
+
+              env:
+                {{- range $key, $value := .Values.env }}
+                - name: {{ $key }}
+                  value: {{ $value | quote }}
+                {{- end }}
+                {{- range $env := .Values.app.env }}
+                - name: {{ $env.name }}
+                  value: {{ $env.value | quote }}
+                {{- end }}
+
           restartPolicy: OnFailure
