@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: 0.13.205
+appVersion: 0.13.206
 name: smarter
 description: >
   Smarter is a declarative, cloud-native platform for authoring and
@@ -15,7 +15,7 @@ description: >
   Open source with public documentation and rapid self-onboarding.
 license: AGPL-3.0-or-later
 type: application
-version: 0.13.205
+version: 0.13.206
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -71,15 +71,15 @@ keywords:
   - remote-data
   - smarter
 annotations:
-  helm.sh/chart: smarter-0.13.205
+  helm.sh/chart: smarter-0.13.206
   artifacthub.io/changes: |
     - kind: changed
-      description: bump to app version 0.13.205. Refactor and document new cache strategy.
+      description: bump to app version 0.13.206. Refactor and document new cache strategy.
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
     - name: smarter
-      image: mcdaniel0073/smarter:v0.13.205
+      image: mcdaniel0073/smarter:v0.13.206
       platforms:
         - linux/amd64
         - linux/arm64
