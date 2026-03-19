@@ -3,7 +3,13 @@ kind: Service
 metadata:
   name: "{{ .Values.app.name }}"
   namespace: "{{ .Values.env.NAMESPACE }}"
-
+  annotations:
+    meta.helm.sh/release-name: {{ .Values.app.name }}
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+    meta.helm.sh/application-version: {{ .Chart.Version }}
+  labels:
+    App: {{ .Values.app.name }}
+    meta.helm.sh/application-version: {{ .Chart.Version }}
 spec:
   selector:
     app.kubernetes.io/name: "{{ .Values.app.name }}"
