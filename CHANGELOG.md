@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.206](https://github.com/smarter-sh/smarter/compare/v0.13.205...v0.13.206) (2026-03-19)
+
+### Bug Fixes
+
+* missing renamed imports to smarter/smarter/lib/django/models ([e1a6dfa](https://github.com/smarter-sh/smarter/commit/e1a6dfacdfaae1983c0cbf56d13b1d842be55893))
+
 ## [0.13.205](https://github.com/smarter-sh/smarter/compare/v0.13.204...v0.13.205) (2026-03-19)
 
 ### Bug Fixes
