@@ -21,6 +21,12 @@ kind: Deployment
 metadata:
   name: "{{ .Values.app.name }}-bastion"
   namespace: "{{ .Values.namespace }}"
+  annotations:
+    meta.helm.sh/release-name: {{ .Values.app.name }}
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+    meta.helm.sh/application-version: {{ .Values.version }}
+  labels:
+    App: {{ .Values.app.name }}
 spec:
   replicas: 1
   selector:
