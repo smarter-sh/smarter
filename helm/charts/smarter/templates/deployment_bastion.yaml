@@ -44,40 +44,10 @@ spec:
             - |
                 set -e
 
-                apt-get update
-                apt-get install -y --no-install-recommends curl unzip ca-certificates less mariadb-client
+                chmod +x /setup/install.sh && /setup/install.sh
+                chmod +x /welcome/install.sh && /welcome/install.sh
+                chmod +x /backup/backup-to-s3.sh
 
-                update-ca-certificates
-                curl -fL --retry 3 --retry-delay 2 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
-                unzip awscliv2.zip
-                ./aws/install
-                rm -rf aws awscliv2.zip
-                rm -rf /var/lib/apt/lists/*
-
-                printf "%s\n" \
-                  "echo ''" \
-                  "echo '********************************************************************************'" \
-                  "echo '*                            Smarter Bastion Server                            *'" \
-                  "echo '*                                                                              *'" \
-                  "echo '*   Please note the following:                                                 *'" \
-                  "echo '*   - mariadb mysql client is pre-installed.                                   *'" \
-                  "echo '*   - aws cli is pre-installed.                                                *'" \
-                  "echo '*   - all smarter pod environment variables are available.                     *'" \
-                  "echo '*     see https://artifacthub.io/packages/helm/project-smarter/smarter         *'" \
-                  "echo '*   - Admin documentation is available at https://docs.smarter.sh/             *'" \
-                  "echo '*                                                                              *'" \
-                  "echo '*   Example usage (copy-paste these commands into the command prompt):         *'" \
-                  "echo '*   \$ mysql -h \"\$SMARTER_MYSQL_HOST\" -u \"\$SMARTER_MYSQL_ROOT_USERNAME\" -p\"\$SMARTER_MYSQL_ROOT_PASSWORD\" \"\$SMARTER_MYSQL_DATABASE\"'" \
-                  "echo '*   \$ aws iam get-user                                                        *'" \
-                  "echo '********************************************************************************'" \
-                  "echo ''" \
-                  > /etc/profile.d/welcome.sh
-
-                chmod +x /etc/profile.d/welcome.sh
-                grep -qxF 'if [[ $- == *i* ]]; then source /etc/profile.d/welcome.sh; fi' /etc/bash.bashrc || echo 'if [[ $- == *i* ]]; then source /etc/profile.d/welcome.sh; fi' >> /etc/bash.bashrc
-
-                echo "Created the welcome message at /etc/profile.d/welcome.sh"
-                cat /etc/profile.d/welcome.sh
                 echo "The Smarter Bastion Server is ready to use!"
 
                 while true; do sleep 3600; done
@@ -89,6 +59,14 @@ spec:
             limits:
               cpu: 250m
               memory: 512Mi
+            volumeMounts:
+              - name: debian-setup-script
+                mountPath: /setup
+              - name: debian-welcome-banner
+                mountPath: /welcome
+              - name: mysql-backup-script
+                mountPath: /backup
+
           env:
             {{- range $key, $value := .Values.env }}
             - name: {{ $key }}
@@ -98,3 +76,13 @@ spec:
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}
             {{- end }}
+          volumes:
+            - name: debian-setup-script
+              configMap:
+                name: debian-setup-script
+            - name: debian-welcome-banner
+              configMap:
+                name: debian-welcome-banner
+            - name: mysql-backup-script
+              configMap:
+                name: mysql-backup-script

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-backup-script
+data:
+  backup-to-s3.sh: |
+    #!/bin/bash
+    set -e
+
+    BACKUP_FILENAME="${SMARTER_MYSQL_DATABASE}-$(date +%Y%m%dT%H%M%S)"
+
+    echo "Starting MySQL backup for database: $SMARTER_MYSQL_DATABASE"
+    mysqldump -h "$SMARTER_MYSQL_HOST" -u "$SMARTER_MYSQL_ROOT_USERNAME" -p"$SMARTER_MYSQL_ROOT_PASSWORD" --databases  "$SMARTER_MYSQL_DATABASE" --add-drop-database --add-drop-table --routines --events --triggers --single-transaction --quick --lock-tables=false > ${BACKUP_FILENAME}.sql
+
+    echo "Compressing backup file: ${BACKUP_FILENAME}.sql"
+    tar -czvf ${BACKUP_FILENAME}.tar.gz ${BACKUP_FILENAME}.sql
+
+    echo "Uploading backup file to S3: ${BACKUP_FILENAME}.tar.gz"
+    aws s3 cp ${BACKUP_FILENAME}.tar.gz s3://ubc.smarter.sh/backups/sql/${BACKUP_FILENAME}.tar.gz
+    rm ${BACKUP_FILENAME}.sql
+    rm ${BACKUP_FILENAME}.tar.gz
+
+    echo "MySQL backup completed and uploaded to S3: ${BACKUP_FILENAME}.tar.gz"

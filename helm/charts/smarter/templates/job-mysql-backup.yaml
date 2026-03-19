@@ -17,29 +17,24 @@ spec:
               - -c
               - |
                 set -e
-                apt-get update && \
-                DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-client curl unzip && \
-                ARCH=$(uname -m) && \
-                if [ "$ARCH" = "aarch64" ]; then \
-                  curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"; \
-                else \
-                  curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"; \
-                fi && \
-                unzip awscliv2.zip && \
-                ./aws/install && \
-                rm -rf awscliv2.zip aws && \
-                chmod +x /backup/backup-to-s3.sh && \
-                /backup/backup-to-s3.sh
+
+                chmod +x /setup/install.sh && /setup/install.sh
+                chmod +x /backup/backup-to-s3.sh && /backup/backup-to-s3.sh
             env:
 {{- range $key, $value := .Values.env }}
               - name: {{ $key }}
                 value: {{ $value | quote }}
 {{- end }}
             volumeMounts:
-              - name: backup-script
+              - name: debian-setup-script
+                mountPath: /setup
+              - name: mysql-backup-script
                 mountPath: /backup
           restartPolicy: OnFailure
           volumes:
-            - name: backup-script
+            - name: debian-setup-script
+              configMap:
+                name: debian-setup-script
+            - name: mysql-backup-script
               configMap:
                 name: mysql-backup-script
