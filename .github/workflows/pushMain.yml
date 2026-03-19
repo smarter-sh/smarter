@@ -17,15 +17,13 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.PAT }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         id: checkout
         with:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.10"
+        uses: actions/setup-node@v6
 
       - name: Install dependencies
         run: npm install
@@ -76,7 +74,7 @@ jobs:
     steps:
       - name: Checkout code
         id: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
           token: ${{ secrets.PAT }}

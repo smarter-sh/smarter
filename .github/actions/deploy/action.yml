@@ -167,7 +167,7 @@ runs:
     # -------------------------------------------------------------------------
   steps:
     - name: Cache Helm dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/.cache/helm
@@ -193,7 +193,7 @@ runs:
     # Checkout all code referenced by this action
     - name: Checkout code
       id: checkout_code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     # authenticate AWS CLI
     - name: Configure AWS credentials
