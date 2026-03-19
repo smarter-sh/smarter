@@ -44,7 +44,7 @@
   <meta name="apple-mobile-web-app-title" content="{{ branding.smarter_product_name }}">
 
   {% block canonical %}
-  <link rel="canonical" href="{{ branding.og_url }}" />
+  <link rel="canonical" href="{{ branding.canonical_url }}" />
   {% endblock %}
 
   <!-- Apple -->
@@ -152,8 +152,6 @@
   {% endblock %}
   {% block javascript_extra %}
   {% endblock %}
-  <script src="{% static 'js/smarter-base.js' %}"></script>
-  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
 </body>
 <!--end::Body-->
 </html>
