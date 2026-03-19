@@ -1,4 +1,4 @@
 Models
 ========
 
-.. automodule:: smarter.lib.django.model_helpers
+.. automodule:: smarter.lib.django.models
