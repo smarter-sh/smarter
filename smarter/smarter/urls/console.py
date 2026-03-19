@@ -8,8 +8,9 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.admin.exceptions import AlreadyRegistered
 from django.http import JsonResponse
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
+from django.views.static import serve
 from waffle import get_waffle_switch_model
 
 from smarter.apps.account.const import namespace as account_namespace
@@ -170,6 +171,22 @@ urlpatterns = [
     path("sitemap.xml", SitemapXmlView.as_view(), name=f"{name_prefix}_sitemap_xml"),
     path("healthz/", HealthzView.as_view(), name=f"{name_prefix}_healthz"),
     path("readiness/", ReadinessView.as_view(), name=f"{name_prefix}_readiness"),
+    re_path(
+        r"^apple-touch-icon\.png$",
+        serve,
+        {
+            "path": "images/logo/apple-touch-icon.png",
+            "document_root": settings.STATIC_ROOT,
+        },
+    ),
+    re_path(
+        r"^apple-touch-icon-precomposed\.png$",
+        serve,
+        {
+            "path": "images/logo/apple-touch-icon.png",
+            "document_root": settings.STATIC_ROOT,
+        },
+    ),
     # -----------------------------------
     # routes for 3rd party apps
     # -----------------------------------
