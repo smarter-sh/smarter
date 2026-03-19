@@ -12,6 +12,16 @@ metadata:
 data:
   install.sh: |
     #!/bin/bash
+    ################################################################################
+    # The Smarter Project - https://smarter.sh
+    # install.sh
+    #
+    # This script configures a welcome banner message to be displayed on login to
+    # the Smarter Bastion Server. The welcome banner provides important information
+    # about the pre-installed tools and environment variables that are available for
+    # use on the Bastion Server, as well as links to documentation and example
+    # usage commands.
+    ################################################################################
     set -e
 
     printf "%s\n" \

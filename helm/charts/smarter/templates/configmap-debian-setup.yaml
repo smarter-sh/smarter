@@ -12,6 +12,16 @@ metadata:
 data:
   install.sh: |
     #!/bin/bash
+    ################################################################################
+    # The Smarter Project - https://smarter.sh
+    # install.sh
+    #
+    # This script installs the necessary packages and tools for the Smarter Bastion
+    # Server. It is designed to be run on a minimal Debian-based Linux distribution
+    # and will install the required packages and tools to enable basic administration
+    # of the MySQL database and AWS resources that are only accessible from within
+    # the cluster.
+    ################################################################################
     set -e
 
     echo "Smarter Bastion Server: Installing required packages: mariadb-client, curl, unzip, ca-certificates"
