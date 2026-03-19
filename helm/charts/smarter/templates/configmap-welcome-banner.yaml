@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: debian-welcome-banner
+data:
+  install.sh: |
+    #!/bin/bash
+    set -e
+
+    printf "%s\n" \
+      "echo ''" \
+      "echo '********************************************************************************'" \
+      "echo '*                            Smarter Bastion Server                            *'" \
+      "echo '*                                                                              *'" \
+      "echo '*   Please note the following:                                                 *'" \
+      "echo '*   - mariadb mysql client is pre-installed.                                   *'" \
+      "echo '*   - aws cli is pre-installed.                                                *'" \
+      "echo '*   - all smarter pod environment variables are available.                     *'" \
+      "echo '*     see https://artifacthub.io/packages/helm/project-smarter/smarter         *'" \
+      "echo '*   - Admin documentation is available at https://docs.smarter.sh/             *'" \
+      "echo '*                                                                              *'" \
+      "echo '*   Example usage (copy-paste these commands into the command prompt):         *'" \
+      "echo '*   \$ mysql -h \"\$SMARTER_MYSQL_HOST\" -u \"\$SMARTER_MYSQL_ROOT_USERNAME\" -p\"\$SMARTER_MYSQL_ROOT_PASSWORD\" \"\$SMARTER_MYSQL_DATABASE\"'" \
+      "echo '*   \$ aws iam get-user                                                        *'" \
+      "echo '*   \$ ./backup-to-s3.sh                                                       *'" \
+      "echo '********************************************************************************'" \
+      "echo ''" \
+      > /etc/profile.d/welcome.sh
+
+    chmod +x /etc/profile.d/welcome.sh
+    grep -qxF 'if [[ $- == *i* ]]; then source /etc/profile.d/welcome.sh; fi' /etc/bash.bashrc || echo 'if [[ $- == *i* ]]; then source /etc/profile.d/welcome.sh; fi' >> /etc/bash.bashrc
+
+    echo "Smarter Bastion Welcome message configured to be displayed on login"

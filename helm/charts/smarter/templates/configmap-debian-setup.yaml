@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: debian-setup-script
+data:
+  install.sh: |
+    #!/bin/bash
+    set -e
+
+    echo "Smarter Bastion Server: Installing required packages: mariadb-client, curl, unzip, ca-certificates"
+    apt-get update
+    apt-get install -y --no-install-recommends curl unzip ca-certificates less mariadb-client
+
+    echo "Smarter Bastion Server: Installing AWS CLI"
+    update-ca-certificates
+    curl -fL --retry 3 --retry-delay 2 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+    unzip awscliv2.zip
+    ./aws/install
+    rm -rf aws awscliv2.zip
+    rm -rf /var/lib/apt/lists/*
+
+    echo "Smarter Bastion Server: Setup script completed"
