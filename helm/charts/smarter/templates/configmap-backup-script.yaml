@@ -12,6 +12,12 @@ metadata:
 data:
   backup-to-s3.sh: |
     #!/bin/bash
+    ################################################################################
+    # The Smarter Project - https://smarter.sh
+    # backup-to-s3.sh
+    #
+    # This script performs a backup of the MySQL database and uploads it to S3.
+    ################################################################################
     set -e
 
     BACKUP_FILENAME="${SMARTER_MYSQL_DATABASE}-$(date +%Y%m%dT%H%M%S)"
