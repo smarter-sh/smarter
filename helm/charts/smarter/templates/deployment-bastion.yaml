@@ -39,24 +39,38 @@ spec:
         - name: debian-setup-script
           configMap:
             name: debian-setup-script
+            defaultMode: 0755
         - name: debian-welcome-banner
           configMap:
             name: debian-welcome-banner
+            defaultMode: 0755
         - name: mysql-backup-script
           configMap:
             name: mysql-backup-script
+            defaultMode: 0755
       containers:
         - name: "{{ .Values.app.name }}-bastion"
           image: debian:bullseye-slim
+          workingDir: /home/
           command:
             - /bin/bash
             - -c
             - |
                 set -e
 
-                chmod +x /setup/install.sh && /setup/install.sh
-                chmod +x /welcome/install.sh && /welcome/install.sh
-                chmod +x /backup/backup-to-s3.sh
+                echo "Waiting for configMap mounts..."
+                for i in $(seq 1 10); do
+                  if [ -f /home/setup/install.sh ]; then break; fi
+                  echo "Still waiting..."
+                  sleep 1
+                done
+
+                ls -l /home/setup || true
+                ls -l /home/welcome || true
+                ls -l /home/backup || true
+
+                /home/setup/install.sh
+                /home/welcome/install.sh
 
                 echo "The Smarter Bastion Server is ready to use!"
 
@@ -69,13 +83,16 @@ spec:
             limits:
               cpu: 250m
               memory: 512Mi
-            volumeMounts:
-              - name: debian-setup-script
-                mountPath: /setup
-              - name: debian-welcome-banner
-                mountPath: /welcome
-              - name: mysql-backup-script
-                mountPath: /backup
+          volumeMounts:
+            - name: debian-setup-script
+              mountPath: /home/setup/install.sh
+              subPath: install.sh
+            - name: debian-welcome-banner
+              mountPath: /home/welcome/install.sh
+              subPath: install.sh
+            - name: mysql-backup-script
+              mountPath: /home/backup/backup-to-s3.sh
+              subPath: backup-to-s3.sh
 
           env:
             {{- range $key, $value := .Values.env }}

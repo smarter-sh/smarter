@@ -29,7 +29,7 @@ data:
       "echo '*   Example usage (copy-paste these commands into the command prompt):         *'" \
       "echo '*   \$ mysql -h \"\$SMARTER_MYSQL_HOST\" -u \"\$SMARTER_MYSQL_ROOT_USERNAME\" -p\"\$SMARTER_MYSQL_ROOT_PASSWORD\" \"\$SMARTER_MYSQL_DATABASE\"'" \
       "echo '*   \$ aws iam get-user                                                        *'" \
-      "echo '*   \$ ./backup-to-s3.sh                                                       *'" \
+      "echo '*   \$ /home/backup/backup-to-s3.sh                                                *'" \
       "echo '********************************************************************************'" \
       "echo ''" \
       > /etc/profile.d/welcome.sh
