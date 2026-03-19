@@ -56,7 +56,7 @@ spec:
             defaultMode: 0755
       containers:
         - name: "{{ .Values.app.name }}-bastion"
-          image: debian:bullseye-slim
+          image: ubuntu:latest
           workingDir: /home/
           command:
             - /bin/bash
