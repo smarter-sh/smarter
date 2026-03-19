@@ -9,6 +9,13 @@ spec:
       ttlSecondsAfterFinished: 86400  # Keeps the pod for 1 day (86400 seconds)
       template:
         spec:
+          volumes:
+            - name: debian-setup-script
+              configMap:
+                name: debian-setup-script
+            - name: mysql-backup-script
+              configMap:
+                name: mysql-backup-script
           containers:
           - name: mysql-backup
             image: ubuntu:latest
@@ -31,10 +38,3 @@ spec:
               - name: mysql-backup-script
                 mountPath: /backup
           restartPolicy: OnFailure
-          volumes:
-            - name: debian-setup-script
-              configMap:
-                name: debian-setup-script
-            - name: mysql-backup-script
-              configMap:
-                name: mysql-backup-script

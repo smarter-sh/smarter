@@ -35,6 +35,16 @@ spec:
         {{- toYaml .Values.global.affinity | nindent 8 }}
       tolerations:
         {{- toYaml .Values.global.tolerations | nindent 8 }}
+      volumes:
+        - name: debian-setup-script
+          configMap:
+            name: debian-setup-script
+        - name: debian-welcome-banner
+          configMap:
+            name: debian-welcome-banner
+        - name: mysql-backup-script
+          configMap:
+            name: mysql-backup-script
       containers:
         - name: "{{ .Values.app.name }}-bastion"
           image: debian:bullseye-slim
@@ -76,13 +86,3 @@ spec:
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}
             {{- end }}
-          volumes:
-            - name: debian-setup-script
-              configMap:
-                name: debian-setup-script
-            - name: debian-welcome-banner
-              configMap:
-                name: debian-welcome-banner
-            - name: mysql-backup-script
-              configMap:
-                name: mysql-backup-script
