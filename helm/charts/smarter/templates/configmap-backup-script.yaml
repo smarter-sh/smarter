@@ -1,6 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    meta.helm.sh/release-name: {{ .Values.app.name }}
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+    meta.helm.sh/application-version: {{ .Values.version }}
+  labels:
+    App: {{ .Values.app.name }}
+  namespace: {{ .Values.namespace }}
   name: mysql-backup-script
 data:
   backup-to-s3.sh: |
