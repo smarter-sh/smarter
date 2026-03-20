@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.208](https://github.com/smarter-sh/smarter/compare/v0.13.207...v0.13.208) (2026-03-20)
+
+### Bug Fixes
+
+* missing csrf js script ([c7c0e77](https://github.com/smarter-sh/smarter/commit/c7c0e773b833de9416c1eb5094e83cef109b68d9))
+
 ## [0.13.207](https://github.com/smarter-sh/smarter/compare/v0.13.206...v0.13.207) (2026-03-19)
 
 ### Bug Fixes
