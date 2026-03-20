@@ -97,6 +97,7 @@ Usage
    :maxdepth: 1
    :caption: Table of Contents
 
+   getting-started
    smarter-platform
    smarter-resources
    smarter-framework
