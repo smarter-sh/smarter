@@ -1,11 +1,26 @@
+# -----------------------------------------------------------------------------------
+# ConfigMap Manifest for MySQL Init Scripts
+#
+# This file defines a ConfigMap containing MySQL initialization scripts for the Smarter app.
+#
+# - Maintainer: <your team/contact>
+# - Purpose: Provides SQL scripts to initialize the MySQL database on startup.
+# - Usage: Only rendered if mysql.enabled and mysql.initdbScripts are set in values.yaml.
+# - Notes: Update or add scripts in values.yaml as needed for your environment.
+# -----------------------------------------------------------------------------------
 {{- if and .Values.mysql.enabled .Values.mysql.initdbScripts }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Values.app.name | default "smarter" }}-mysql-init-scripts
   namespace: {{ .Values.namespace }}
+  annotations:
+    meta.helm.sh/release-name: {{ .Values.app.name }}
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+    meta.helm.sh/application-version: {{ .Chart.Version }}
   labels:
-    App: {{ .Values.app.name | default "smarter" }}-{{ .Values.names.mysqlName | default "mysql" }}
+    app: {{ .Values.app.name | default "smarter" }}-{{ .Values.names.mysqlName | default "mysql" }}
+    app.kubernetes.io/application-group: {{ .Values.app.name }}
 data:
   {{- toYaml .Values.mysql.initdbScripts | nindent 2 }}
 {{- end }}

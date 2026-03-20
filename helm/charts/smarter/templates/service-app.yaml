@@ -8,8 +8,9 @@ metadata:
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Chart.Version }}
   labels:
-    App: {{ .Values.app.name }}
-    meta.helm.sh/application-version: {{ .Chart.Version }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.app.name }}-worker"
+    app.kubernetes.io/application-group: {{ .Values.app.name }}
 spec:
   selector:
     app.kubernetes.io/name: "{{ .Values.app.name }}"
