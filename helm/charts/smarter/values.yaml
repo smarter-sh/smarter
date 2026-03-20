@@ -107,7 +107,7 @@ env:
   SMARTER_ROOT_DOMAIN: "example.com"
   SMARTER_S3_BUCKET: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS: "^/dashboard/account/password-reset-link/[^/]+/[^/]+/$,^/api(/.*)?$,^/admin(/.*)?$,^/plugin(/.*)?$,^/docs/manifest(/.*)?$,^/docs/json-schema(/.*)?$,.*stackademy.*,^/\\.well-known/acme-challenge(/.*)?$"
-  SMARTER_SETTINGS_OUTPUT: "true"
+  SMARTER_SETTINGS_OUTPUT: "false"
   SMARTER_SMTP_FROM_EMAIL: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SMTP_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_SMTP_SENDER: "SET-ME-IN-helm/charts/smarter/values.yaml"
