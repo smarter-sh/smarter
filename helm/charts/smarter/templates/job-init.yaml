@@ -1,17 +1,29 @@
+# -----------------------------------------------------------------------------------
+# Job Manifest for Smarter Database Initialization
+#
+# This file defines a Kubernetes Job to initialize the MySQL database for the Smarter app.
+#
+# - Maintainer: <your team/contact>
+# - Purpose: Creates the database if it does not exist, typically run as a Helm hook.
+# - Usage: Only rendered if databaseScheduledBackup.enabled is set in values.yaml.
+# - Notes: Update resource requests/limits and SQL logic as needed for your environment.
+# -----------------------------------------------------------------------------------
+{{- if .Values.databaseScheduledBackup.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: "{{ .Release.Name }}-smarter-job-db-init-{{ now | unixEpoch }}"
   namespace: {{ .Values.namespace }}
-  labels:
-    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.app.name }}-job-init"
   annotations:
     meta.helm.sh/release-name: {{ .Values.app.name }}
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Chart.Version }}
     "helm.sh/hook": post-upgrade,post-install
     "helm.sh/hook-delete-policy": hook-succeeded
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.app.name }}-job-init"
+    app.kubernetes.io/application-group: {{ .Values.app.name }}
 spec:
   ttlSecondsAfterFinished: 3600
   template:
@@ -63,3 +75,4 @@ spec:
       schedulerName: default-scheduler
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
+{{- end }}
