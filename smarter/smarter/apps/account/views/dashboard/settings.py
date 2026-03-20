@@ -11,7 +11,7 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.conf import smarter_settings
 from smarter.common.utils import get_readonly_csv_file
 from smarter.lib.django import waffle
-from smarter.lib.django.view_helpers import SmarterAdminWebView
+from smarter.lib.django.views import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 

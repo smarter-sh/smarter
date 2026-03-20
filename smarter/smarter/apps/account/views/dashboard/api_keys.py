@@ -15,7 +15,7 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
 )
-from smarter.lib.django.view_helpers import SmarterAdminWebView
+from smarter.lib.django.views import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

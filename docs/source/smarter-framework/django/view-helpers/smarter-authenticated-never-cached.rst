@@ -1,7 +1,7 @@
 SmarterAuthenticatedNeverCachedWebView
 ========================================
 
-.. autoclass:: smarter.lib.django.view_helpers.SmarterAuthenticatedNeverCachedWebView
+.. autoclass:: smarter.lib.django.views.SmarterAuthenticatedNeverCachedWebView
    :members:
    :undoc-members:
    :inherited-members:
