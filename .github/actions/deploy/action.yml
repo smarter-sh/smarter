@@ -132,6 +132,10 @@ inputs:
   smarter-mysql-test_database_password:
     description: "The MySQL test database password"
     required: true
+  smarter-settings-output:
+    description: "True to enable verbose console output of the settings at startup."
+    required: true
+    default: "false"
   social-auth-google-oauth2-key:
     description: "The Google OAuth2 key"
     required: true
@@ -417,6 +421,7 @@ runs:
             "SMARTER_SMTP_PASSWORD": ${{ env.SMTP_PASSWORD && format('"{0}"', env.SMTP_PASSWORD) || 'null' }},
             "SMARTER_SMTP_SENDER": "no-reply@smarter.sh",
             "SMARTER_SMTP_USERNAME": ${{ env.SMTP_USERNAME && format('"{0}"', env.SMTP_USERNAME) || 'null' }},
+            "SMARTER_SETTINGS_OUTPUT": ${{ inputs.smarter-settings-output && format('"{0}"', inputs.smarter-settings-output) || 'null' }},
             "SMARTER_SOCIAL_AUTH_GITHUB_KEY": ${{ inputs.social-auth-github-key && format('"{0}"', inputs.social-auth-github-key) || 'null' }},
             "SMARTER_SOCIAL_AUTH_GITHUB_SECRET": ${{ inputs.social-auth-github-secret && format('"{0}"', inputs.social-auth-github-secret) || 'null' }},
             "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY": ${{ inputs.social-auth-google-oauth2-key && format('"{0}"', inputs.social-auth-google-oauth2-key) || 'null' }},
