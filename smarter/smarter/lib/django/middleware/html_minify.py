@@ -26,29 +26,58 @@ logger.debug("Loading %s", formatted_text(__name__ + ".HTMLMinifyMiddleware"))
 
 
 class HTMLMinifyMiddleware(MiddlewareMixin):
-    """Middleware to minify HTML using BeautifulSoup"""
+    """
+    Middleware to minify HTML using BeautifulSoup. It removes comments and
+    unnecessary whitespace from the HTML content of the response.
+    It skips minification for certain paths and content types to avoid
+    issues with non-HTML responses.
+    """
 
     def process_response(self, request, response):
+
+        # all the reasons to skip minification.
         if isinstance(response, FileResponse):
             return response
-        if response.get("Content-Disposition") in [
-            "attachment; filename=robots.txt",
-            "attachment; filename=favicon.ico",
-            "attachment; filename=sitemap.xml",
-        ]:
+        if not hasattr(response, "content") or not response.content:
             return response
-        if hasattr(response, "content"):
-            content_str = response.content.decode("utf-8") if isinstance(response.content, bytes) else response.content
-            if content_str in ["robots.txt", "favicon.ico", "sitemap.xml"]:
-                return response.content
+        if hasattr(request, "path"):
+            path = str(request.path)
+            if path in ["/robots.txt", "/favicon.ico", "/sitemap.xml"]:
+                return response
+            if path.startswith("/static/") or path.startswith("/media/"):
+                return response
+            if path.startswith("/api/"):
+                return response
+            if path.endswith(".xml") or path.endswith(".rss") or path.endswith(".feed"):
+                return response
+
+        content = response.content
+        content_str = response.content.decode("utf-8") if isinstance(response.content, bytes) else response.content
         if "text/html" in response["Content-Type"]:
-            soup = BeautifulSoup(response.content, "lxml")
+            try:
+                content_str = (
+                    content.lstrip().decode("utf-8", errors="replace")
+                    if isinstance(content, bytes)
+                    else content.lstrip()
+                )
+                if (
+                    content_str.startswith("<?xml")
+                    or content_str.startswith("<rss")
+                    or content_str.startswith("<feed")
+                    or content_str.startswith("<sitemap")
+                ):
+                    return response
+                else:
+                    soup = BeautifulSoup(content, "lxml")
 
-            # strip comments from the HTML document
-            for comment in soup.findAll(text=lambda text: isinstance(text, Comment)):  # type: ignore
-                comment.extract()
+                # strip comments from the HTML document
+                for comment in soup.findAll(text=lambda text: isinstance(text, Comment)):  # type: ignore
+                    comment.extract()
 
-            soup_string = soup.prettify(formatter="minimal")
-            response.content = soup_string.encode("utf-8") if isinstance(soup_string, str) else soup_string
-            response["Content-Length"] = str(len(response.content))
+                soup_string = soup.prettify(formatter="minimal")
+                response.content = soup_string.encode("utf-8") if isinstance(soup_string, str) else soup_string
+                response["Content-Length"] = str(len(response.content))
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("Error minifying HTML: %s", e)
         return response
