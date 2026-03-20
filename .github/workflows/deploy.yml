@@ -93,6 +93,7 @@ jobs:
           smarter-email-admin: ${{ secrets.SMARTER_EMAIL_ADMIN }}
           smarter-logo: ${{ secrets.SMARTER_LOGO }}
           smarter-mysql-test_database_password: ${{ secrets.SMARTER_MYSQL_TEST_DATABASE_PASSWORD}}
+          smarter-settings-output: ${{ secrets.SMARTER_SETTINGS_OUTPUT }}
           social-auth-google-oauth2-key: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}
           social-auth-google-oauth2-secret: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}
           social-auth-github-key: ${{ secrets.SOCIAL_AUTH_GITHUB_KEY }}
