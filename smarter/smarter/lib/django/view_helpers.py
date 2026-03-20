@@ -33,7 +33,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 register = template.Library()
-cache_prefix = f"{__name__}.cache_page_by_user"
+cache_prefix = f"{__name__}.smarter_cache_page_by_user"
 
 
 def redirect_and_expire_cache(path: str = "/"):
@@ -45,7 +45,7 @@ def redirect_and_expire_cache(path: str = "/"):
     return response
 
 
-def cache_page_by_user(timeout):
+def smarter_cache_page_by_user(timeout):
     """
     Decorator to cache a view's response based on the authenticated user.
     This decorator applies Django's `cache_page` decorator with a cache key
@@ -57,7 +57,7 @@ def cache_page_by_user(timeout):
 
         .. code-block:: python
 
-            @method_decorator(cache_page_by_user(60 * 15), name="dispatch")
+            @method_decorator(smarter_cache_page_by_user(60 * 15), name="dispatch")
             class MyView(SmarterAuthenticatedWebView):
             ...
 
@@ -71,6 +71,8 @@ def cache_page_by_user(timeout):
 
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
+            if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SMARTER_PAGE_CACHING):
+                return view_func(request, *args, **kwargs)
             if hasattr(request, "user") and request.user.is_authenticated:
                 key_prefix = f"{cache_prefix}.user_{request.user.id}"
             else:

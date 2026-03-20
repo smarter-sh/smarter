@@ -66,7 +66,7 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedNeverCachedWebView,
-    cache_page_by_user,
+    smarter_cache_page_by_user,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.view_helpers import UnauthenticatedPermissionClass
@@ -936,7 +936,7 @@ class PromptManifestView(DocsBaseView):
 
 
 @method_decorator(cache_control(max_age=PROMPT_LIST_CACHE_TIMEOUT), name="dispatch")
-@method_decorator(cache_page_by_user(PROMPT_LIST_CACHE_TIMEOUT), name="dispatch")
+@method_decorator(smarter_cache_page_by_user(PROMPT_LIST_CACHE_TIMEOUT), name="dispatch")
 class PromptListView(SmarterAuthenticatedNeverCachedWebView):
     """
     list view for smarter workbench web console. This view is protected and
