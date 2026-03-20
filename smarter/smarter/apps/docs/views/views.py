@@ -2,7 +2,7 @@
 """Django views"""
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.lib.django.view_helpers import SmarterWebHtmlView
+from smarter.lib.django.views import SmarterWebHtmlView
 
 from ..utils import json_schema_path, manifest_path
 

@@ -10,7 +10,7 @@ from django.http import FileResponse, HttpResponse
 from django.views import View
 
 from smarter.common.conf import smarter_settings
-from smarter.lib.django.view_helpers import SmarterWebTxtView, SmarterWebXmlView
+from smarter.lib.django.views import SmarterWebTxtView, SmarterWebXmlView
 
 
 class RobotsTxtView(SmarterWebTxtView):

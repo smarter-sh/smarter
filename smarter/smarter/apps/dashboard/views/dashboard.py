@@ -15,7 +15,7 @@ from smarter.apps.dashboard.models import EmailContactList
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json
-from smarter.lib.django.view_helpers import (
+from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
     SmarterAuthenticatedWebView,
     SmarterWebHtmlView,

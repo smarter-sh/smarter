@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-from ..view_helpers import UnauthenticatedPermissionClass
+from ..views import UnauthenticatedPermissionClass
 
 
 class TestUnauthenticatedPermissionClass(SmarterTestBase):

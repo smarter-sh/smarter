@@ -5,7 +5,7 @@ Email template views.
 # pylint: disable=W0613
 
 from smarter.apps.account.models import welcome_email_context
-from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
+from smarter.lib.django.views import SmarterNeverCachedWebView
 
 
 class EmailWelcomeView(SmarterNeverCachedWebView):

@@ -22,7 +22,7 @@ from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST, SmarterEnviron
 from smarter.common.exceptions import SmarterException
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json
-from smarter.lib.django.view_helpers import SmarterAuthenticatedWebView
+from smarter.lib.django.views import SmarterAuthenticatedWebView
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 if TYPE_CHECKING:

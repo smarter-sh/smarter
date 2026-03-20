@@ -64,7 +64,7 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
-from smarter.lib.django.view_helpers import (
+from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
     smarter_cache_page_by_user,
 )
