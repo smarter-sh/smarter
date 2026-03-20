@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
 
+from smarter.apps.dashboard.models import EmailContactList
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json
@@ -18,10 +19,8 @@ from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedNeverCachedWebView,
     SmarterAuthenticatedWebView,
     SmarterWebHtmlView,
-    cache_page_by_user,
+    smarter_cache_page_by_user,
 )
-
-from ..models import EmailContactList
 
 DASHBOARD_CACHE_TIMEOUT = 60  # seconds
 
@@ -96,7 +95,7 @@ class NotificationsView(SmarterAuthenticatedWebView):
 
 
 @method_decorator(cache_control(max_age=DASHBOARD_CACHE_TIMEOUT), name="dispatch")
-@method_decorator(cache_page_by_user(DASHBOARD_CACHE_TIMEOUT), name="dispatch")
+@method_decorator(smarter_cache_page_by_user(DASHBOARD_CACHE_TIMEOUT), name="dispatch")
 class DashboardView(SmarterAuthenticatedNeverCachedWebView):
     """Public Access Dashboard view"""
 

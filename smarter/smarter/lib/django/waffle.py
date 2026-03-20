@@ -192,6 +192,9 @@ class SmarterWaffleSwitches:
     ENABLE_NEW_USER_PASSWORD_EMAIL = "enable_new_user_password_email"
     """Enables sending textemail with password to new users."""
 
+    ENABLE_SMARTER_PAGE_CACHING = "enable_smarter_page_caching"
+    """Enables the Smarter user-based page caching decorator for user-facing pages to improve performance."""
+
     MANIFEST_LOGGING = "log_manifest_brokers"
     """Enables detailed diagnostic logging for manifest initialization, validation and brokered operations."""
 
@@ -284,6 +287,11 @@ class SmarterWaffleSwitches:
             name=ENABLE_OAUTH2,
             comment="Enables OAuth2 authentication support.",
             default=False,
+        ),
+        ENABLE_SMARTER_PAGE_CACHING: SmarterWaffleSwitch(
+            name="enable_smarter_page_caching",
+            comment="Enables the Smarter user-based page caching decorator for user-facing pages to improve performance.",
+            default=True,
         ),
         ENABLE_ACCOUNT_REGISTRATION: SmarterWaffleSwitch(
             name=ENABLE_ACCOUNT_REGISTRATION,
