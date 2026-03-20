@@ -69,7 +69,7 @@ from smarter.lib.django.views import (
     smarter_cache_page_by_user,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.drf.view_helpers import UnauthenticatedPermissionClass
+from smarter.lib.drf.views.helpers import UnauthenticatedPermissionClass
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,

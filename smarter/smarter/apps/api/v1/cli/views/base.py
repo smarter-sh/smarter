@@ -52,7 +52,7 @@ from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
-from smarter.lib.drf.view_helpers import SmarterAuthenticatedPermissionClass
+from smarter.lib.drf.views.helpers import SmarterAuthenticatedPermissionClass
 from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
     SmarterJournalEnumException,
