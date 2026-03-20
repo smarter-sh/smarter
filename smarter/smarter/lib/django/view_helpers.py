@@ -2,6 +2,7 @@
 
 import logging
 import re
+from functools import wraps
 from http import HTTPStatus
 
 from bs4 import BeautifulSoup
@@ -32,6 +33,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 register = template.Library()
+cache_prefix = f"{__name__}.cache_page_by_user"
 
 
 def redirect_and_expire_cache(path: str = "/"):
@@ -41,6 +43,43 @@ def redirect_and_expire_cache(path: str = "/"):
     response["Pragma"] = "no-cache"
     response["Expires"] = "0"
     return response
+
+
+def cache_page_by_user(timeout):
+    """
+    Decorator to cache a view's response based on the authenticated user.
+    This decorator applies Django's `cache_page` decorator with a cache key
+    that is unique to each user. Authenticated users will have their
+    responses cached separately, while anonymous users will share a single
+    cache entry.
+
+    Example:
+
+        .. code-block:: python
+
+            @method_decorator(cache_page_by_user(60 * 15), name="dispatch")
+            class MyView(SmarterAuthenticatedWebView):
+            ...
+
+    :param timeout: The cache timeout in seconds.
+    :type timeout: int
+    :return: A decorator that can be applied to a Django view function or method.
+    :rtype: function
+    """
+
+    def decorator(view_func):
+
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if hasattr(request, "user") and request.user.is_authenticated:
+                key_prefix = f"{cache_prefix}.user_{request.user.id}"
+            else:
+                key_prefix = f"{cache_prefix}.user_anon"
+            return cache_page(timeout, key_prefix=key_prefix)(view_func)(request, *args, **kwargs)
+
+        return _wrapped_view
+
+    return decorator
 
 
 # ------------------------------------------------------------------------------
