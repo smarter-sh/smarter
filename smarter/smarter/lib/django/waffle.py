@@ -471,8 +471,7 @@ def switch_is_active(switch_name: str) -> bool:
         t for t in (OperationalError, ProgrammingError, MySQLdbOperationalError) if t is not None
     ) or (Exception,)
     try:
-        switch = waffle_orig.get_waffle_switch_model().get(switch_name)
-        return switch.is_active()
+        return waffle_orig.switch_is_active(switch_name)
     except (*db_exceptions, AppRegistryNotReady) as e:
         logger.error(
             "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True
