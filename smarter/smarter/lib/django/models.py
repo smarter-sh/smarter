@@ -16,6 +16,7 @@ from taggit.managers import TaggableManager
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib.cache import cache_results
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
@@ -421,3 +422,35 @@ class MetaDataModel(TimestampedModel):
         # version should be a semantic version: MAJOR.MINOR.PATCH
         if self.version and not SmarterValidator.is_valid_semantic_version(self.version):
             raise SmarterValueError(f"Version '{self.version}' is not a valid semantic version (MAJOR.MINOR.PATCH).")
+
+    @classmethod
+    def get_cached_model(cls, pk: Optional[int] = None, name: Optional[str] = None) -> Optional[models.Model]:
+        """
+        Retrieve a model instance by primary key or name, using caching to optimize performance.
+
+        :param pk: The primary key of the model instance to retrieve.
+        :param name: The name of the model instance to retrieve.
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional[models.Model]
+        """
+
+        @cache_results()
+        def _get_model_by_name(name: str) -> Optional[models.Model]:
+            try:
+                return cls.objects.get(name=name)
+            except cls.DoesNotExist:
+                return None
+
+        @cache_results()
+        def _get_model_by_pk(pk: int) -> Optional[models.Model]:
+            try:
+                return cls.objects.get(pk=pk)
+            except cls.DoesNotExist:
+                return None
+
+        if pk is not None:
+            return _get_model_by_pk(pk)
+
+        if not name:
+            raise SmarterValueError("Name parameter is required to retrieve a model instance.")
+        return _get_model_by_name(name)

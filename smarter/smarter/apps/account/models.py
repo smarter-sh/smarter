@@ -27,6 +27,7 @@ from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.models import MetaDataModel, TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
@@ -813,6 +814,67 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         )
 
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="%(class)ss")
+
+    # pylint: disable=W0221
+    @classmethod
+    def get_cached_model(
+        cls,
+        pk: Optional[int] = None,
+        name: Optional[str] = None,
+        user: Optional[User] = None,
+        user_profile: Optional[UserProfile] = None,
+        account: Optional[Account] = None,
+    ) -> Optional[models.Model]:
+        """
+        Retrieve a model instance using caching to optimize performance.
+
+        :param pk: The primary key of the model instance to retrieve.
+        :param name: The name of the model instance to retrieve.
+        :param user: The user associated with the model instance.
+        :param user_profile: The user profile associated with the model instance.
+        :param account: The account associated with the model instance.
+
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional[models.Model]
+        """
+
+        @cache_results()
+        def _get_model_by_name_and_user_profile(name: str, user_profile: UserProfile) -> Optional[models.Model]:
+            try:
+                return cls.objects.get(name=name, user_profile=user_profile)
+            except cls.DoesNotExist:
+                return None
+
+        @cache_results()
+        def _get_model_by_name_and_account(name: str, account: Account) -> Optional[models.Model]:
+            try:
+                return cls.objects.get(name=name, user_profile__account=account)
+            except cls.DoesNotExist:
+                return None
+
+        if pk is not None:
+            return MetaDataModel.get_cached_model(pk=pk)
+
+        if user:
+            user_profiles = UserProfile.objects.filter(user=user)
+            if user_profiles.count() == 0:
+                return None
+            elif user_profiles.count() == 1:
+                return _get_model_by_name_and_user_profile(name, user_profiles.first())
+            else:
+                logger.warning(
+                    "%s.get_cached_model() Multiple user profiles found for user %s. Defaulting to first profile.",
+                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_model()"),
+                    user.email,
+                )
+                return _get_model_by_name_and_user_profile(name, user_profiles.first())
+
+        if account:
+            return _get_model_by_name_and_account(name, account)
+        if user_profile:
+            return _get_model_by_name_and_user_profile(name, user_profile)
+
+        return MetaDataModel.get_cached_model(name=name)
 
 
 class PaymentMethod(TimestampedModel):

@@ -394,6 +394,13 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         :return: An HttpResponse object.
         :rtype: HttpResponse
         """
+        logger.debug(
+            "%s.dispatch() called with request: %s, args: %s, kwargs: %s",
+            self.logger_prefix,
+            request,
+            args,
+            kwargs,
+        )
         if hasattr(request, "user") and hasattr(request.user, "is_authenticated") and request.user.is_authenticated:
             response = super().dispatch(request, *args, **kwargs)
             patch_vary_headers(response, ["Cookie"])

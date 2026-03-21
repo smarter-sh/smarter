@@ -424,9 +424,6 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         super().save(*args, **kwargs)
         if not isinstance(self.name, str) or not self.name:
             raise SmarterValueError("PluginMeta.save(): name is required after save.")
-        self.get_cached_plugin_by_account_and_name(self.user_profile.account, self.name, invalidate=True)
-        self.get_cached_plugin_by_account_id_and_name(self.user_profile.account.id, self.name, invalidate=True)
-        self.get_cached_plugin_by_pk(self.pk, invalidate=True)
 
     @property
     def kind(self) -> SAMKinds:
@@ -476,6 +473,73 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         if self.kind:
             return rfc1034_compliant_str(self.kind.value)
         return None
+
+    # pylint: disable=W0221
+    @classmethod
+    def get_cached_model(
+        cls,
+        pk: Optional[int] = None,
+        name: Optional[str] = None,
+        user: Optional[User] = None,
+        user_profile: Optional[UserProfile] = None,
+        account: Optional[Account] = None,
+        plugin_class: Optional[str] = None,
+    ) -> Optional["PluginMeta"]:
+        """
+        Return a single instance of PluginMeta by primary key or by name and user.
+
+        This method caches the results to improve performance.
+
+        :param name: The name of the plugin to retrieve.
+        :type name: str
+        :param user: The user who owns the plugin.
+        :type user: User
+        :param account: The account associated with the plugin.
+        :type account: Account
+        :param invalidate: If True, invalidate the cache for this query.
+        :type invalidate: bool
+        :return: A PluginMeta instance if found, otherwise None.
+        :rtype: Optional[PluginMeta]
+        """
+
+        @cache_results()
+        def _get_model_by_pk(pk: int) -> Optional["PluginMeta"]:
+            try:
+                return cls.objects.get(pk=pk)
+            except cls.DoesNotExist:
+                return None
+
+        @cache_results()
+        def _get_model_by_name_and_userprofile(name: str, user_profile_id: int) -> Optional["PluginMeta"]:
+            try:
+                return cls.objects.get(name=name, user_profile_id=user_profile_id)
+            except cls.DoesNotExist:
+                return None
+
+        @cache_results()
+        def _get_model_by_name_and_userprofile_and_plugin_class(
+            name: str, user_profile_id: int, plugin_class: str
+        ) -> Optional["PluginMeta"]:
+            try:
+                return cls.objects.get(name=name, user_profile_id=user_profile_id, plugin_class=plugin_class)
+            except cls.DoesNotExist:
+                return None
+
+        if pk:
+            return _get_model_by_pk(pk)
+
+        if not user_profile:
+            if not user:
+                raise ImproperlyConfigured(
+                    "PluginMeta.get_cached_model() requires either user_profile or user to be provided."
+                )
+            if not account:
+                account = get_cached_account_for_user(user=user)  # type: ignore[arg-type]
+            user_profile = get_cached_user_profile(user=user, account=account)  # type: ignore[arg-type]
+
+        if plugin_class:
+            return _get_model_by_name_and_userprofile_and_plugin_class(name, user_profile.id, plugin_class)
+        return _get_model_by_name_and_userprofile(name, user_profile.id)
 
     @classmethod
     @cache_results()
@@ -538,132 +602,6 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 user_profile,
             )
             return []
-
-    @classmethod
-    def get_cached_plugin_by_account_id_and_name(
-        cls, account_id: int, name: str, invalidate: bool = False
-    ) -> Union["PluginMeta", None]:
-        """
-        Return a single instance of PluginMeta by name for the given account ID.
-        This method caches the results to improve performance.
-
-        :param account_id: The ID of the account whose plugin should be retrieved.
-        :type account_id: int
-        :param name: The name of the plugin to retrieve.
-        :type name: str
-        :return: A PluginMeta instance if found, otherwise None.
-        :rtype: Union[PluginMeta, None]
-        """
-
-        @cache_results()
-        def plugin_by_account_id_and_name(account_id: int, name: str) -> Union["PluginMeta", None]:
-            try:
-                return cls.objects.get(user_profile__account__id=account_id, name=name)
-            except cls.DoesNotExist:
-                logger.warning(
-                    "%s.get_cached_plugin_by_account_id_and_name: Plugin not found for account_id: %s, name: %s",
-                    cls.formatted_class_name,
-                    account_id,
-                    name,
-                )
-                return None
-
-        if invalidate:
-            plugin_by_account_id_and_name.invalidate(account_id, name)
-
-        return plugin_by_account_id_and_name(account_id, name)
-
-    @classmethod
-    def get_cached_plugin_by_user_profile_and_name(cls, user_profile_id: int, name: str) -> Union["PluginMeta", None]:
-        """
-        Return a single instance of PluginMeta by name for the given user profile ID.
-        This method caches the results to improve performance.
-
-        :param user_profile_id: The ID of the user profile whose plugin should be retrieved.
-        :type user_profile_id: int
-        :param name: The name of the plugin to retrieve.
-        :type name: str
-        :return: A PluginMeta instance if found, otherwise None.
-        :rtype: Union[PluginMeta, None]
-        """
-
-        @cache_results()
-        def plugin_by_user_profile_id_and_name(user_profile_id: int, name: str) -> Union["PluginMeta", None]:
-            try:
-                return cls.objects.get(user_profile__id=user_profile_id, name=name)
-            except cls.DoesNotExist:
-                logger.warning(
-                    "%s.get_cached_plugin_by_user_profile_and_name: Plugin not found for user_profile_id: %s, name: %s",
-                    cls.formatted_class_name,
-                    user_profile_id,
-                    name,
-                )
-                return None
-
-        return plugin_by_user_profile_id_and_name(user_profile_id, name)
-
-    @classmethod
-    def get_cached_plugin_by_user_and_name(cls, user: User, name: str) -> Union["PluginMeta", None]:
-        """
-        Return a single instance of PluginMeta by name for the given user.
-        This method caches the results to improve performance.
-
-        :param user: The user whose plugin should be retrieved.
-        :type user: User
-        :param name: The name of the plugin to retrieve.
-        :type name: str
-        :return: A PluginMeta instance if found, otherwise None.
-        :rtype: Union[PluginMeta, None]
-        """
-
-        account = get_cached_account_for_user(user)
-        if not account:
-            return None
-        return cls.get_cached_plugin_by_account_id_and_name(account.id, name)
-
-    @classmethod
-    def get_cached_plugin_by_account_and_name(
-        cls, account: Account, name: str, invalidate: bool = False
-    ) -> Union["PluginMeta", None]:
-        """
-        Return a single instance of PluginMeta by name for the given account.
-        This method caches the results to improve performance.
-
-        :param account: The account whose plugin should be retrieved.
-        :type account: Account
-        :param name: The name of the plugin to retrieve.
-        :type name: str
-        :return: A PluginMeta instance if found, otherwise None.
-        :rtype: Union[PluginMeta, None]
-        """
-
-        return cls.get_cached_plugin_by_account_id_and_name(account.id, name, invalidate=invalidate)
-
-    @classmethod
-    def get_cached_plugin_by_pk(cls, pk: int, invalidate: bool = False) -> Union["PluginMeta", None]:
-        """
-        Return a single instance of PluginMeta by primary key.
-
-        This method caches the results to improve performance.
-
-        :param pk: The primary key of the plugin to retrieve.
-        :type pk: int
-        :return: A PluginMeta instance if found, otherwise None.
-        :rtype: Union[PluginMeta, None]
-        """
-
-        @cache_results()
-        def plugin_by_pk(pk: int) -> Union["PluginMeta", None]:
-            try:
-                return cls.objects.get(pk=pk)
-            except cls.DoesNotExist:
-                logger.warning("%s.get_cached_plugin_by_pk: Plugin not found for pk: %s", cls.formatted_class_name, pk)
-                return None
-
-        if invalidate:
-            plugin_by_pk.invalidate(pk)
-
-        return plugin_by_pk(pk)
 
 
 class PluginSelector(TimestampedModel, SmarterHelperMixin):

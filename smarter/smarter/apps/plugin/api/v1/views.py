@@ -75,14 +75,6 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
 
     def post(self, request: WSGIRequest, plugin_id, new_name):
 
-        @cache_results()
-        def cached_plugin_by_id(plugin_id: int) -> Optional[PluginMeta]:
-            """Retrieve PluginMeta by ID with caching."""
-            try:
-                return PluginMeta.objects.get(id=plugin_id)
-            except PluginMeta.DoesNotExist:
-                return None
-
         user = get_resolved_user(request.user)
         if not user:
             return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
@@ -91,7 +83,7 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
             user_profile=user_profile,
             account=user_profile.account,  # type: ignore[arg-type]
             user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=cached_plugin_by_id(plugin_id),
+            plugin_meta=PluginMeta.get_cached_model(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             return JsonResponse(
@@ -188,14 +180,6 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 def get_plugin(request, plugin_id):
     """Get a plugin json representation by id."""
 
-    @cache_results()
-    def cached_plugin_by_id(plugin_id: int) -> Optional[PluginMeta]:
-        """Retrieve PluginMeta by ID with caching."""
-        try:
-            return PluginMeta.objects.get(id=plugin_id)
-        except PluginMeta.DoesNotExist:
-            return None
-
     plugin: Optional[PluginBase] = None
 
     try:
@@ -208,7 +192,7 @@ def get_plugin(request, plugin_id):
             user_profile=user_profile,
             account=user_profile.account,  # type: ignore[arg-type]
             user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=cached_plugin_by_id(plugin_id),
+            plugin_meta=PluginMeta.get_cached_model(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             raise PluginDataValueError(
@@ -339,7 +323,7 @@ def delete_plugin(request, plugin_id):
             user_profile=user_profile,
             account=user_profile.account,  # type: ignore[arg-type]
             user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=PluginMeta.objects.get(id=plugin_id),
+            plugin_meta=PluginMeta.get_cached_model(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             raise PluginDataValueError(

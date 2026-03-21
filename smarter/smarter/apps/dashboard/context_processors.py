@@ -3,33 +3,52 @@
 smarter.apps.dashboard.context_processors
 =========================================
 
-This module provides custom Django context processors for the Smarter dashboard application. These context processors are designed to inject additional context variables into templates that inherit from ``base.html``, supporting the dynamic rendering of dashboard and branding information throughout the application.
+This module provides custom Django context processors for the Smarter dashboard
+application. These context processors are designed to inject additional context
+variables into templates that inherit from ``base.html``, supporting the dynamic
+rendering of dashboard and branding information throughout the application.
 
 Overview
 --------
 
 The context processors in this module serve the following purposes:
 
-- **Dashboard Context**: Supplies user-specific and application-wide metadata, such as the current user's email, username, role flags, product version, and resource counts (e.g., chatbots, plugins, API keys, custom domains, connections, and secrets). This enables the dashboard to display personalized and up-to-date information for each authenticated user.
+- **Dashboard Context**: Supplies user-specific and application-wide metadata,
+such as the current user's email, username, role flags, product version, and
+resource counts (e.g., chatbots, plugins, API keys, custom domains, connections,
+and secrets). This enables the dashboard to display personalized and up-to-date
+information for each authenticated user.
 
-- **Branding Context**: Provides organization-specific branding details, including support contact information, corporate name, address, social media links, and copyright notices. This ensures consistent branding and support information across all dashboard templates.
+- **Branding Context**: Provides organization-specific branding details, including
+support contact information, corporate name, address, social media links, and
+copyright notices. This ensures consistent branding and support information
+across all dashboard templates.
 
-- **Cache Busting**: Adds a cache-busting query parameter to static asset URLs during local development, preventing browsers from serving outdated static files.
+- **Cache Busting**: Adds a cache-busting query parameter to static asset URLs
+during local development, preventing browsers from serving outdated static
+files.
 
 Caching
 -------
 
-Many of the resource-counting functions in this module are decorated with a caching mechanism to reduce database load and improve performance. The cache timeout is configurable and set to 60 seconds by default.
+Many of the resource-counting functions in this module are decorated with a
+caching mechanism to reduce database load and improve performance. The cache
+timeout is configurable and set to 60 seconds by default.
 
 Usage
 -----
 
-To use these context processors, add their import paths to the ``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings. This will make the provided context variables available in all templates rendered by Django that inherit from ``base.html``.
+To use these context processors, add their import paths to the
+``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings.
+This will make the provided context variables available in all templates
+rendered by Django that inherit from ``base.html``.
 
 Note
 ----
 
-This module does not document individual function signatures or arguments, as these are automatically included by Sphinx's ``automodule`` directive. For detailed API documentation, refer to the generated documentation for each function.
+This module does not document individual function signatures or arguments, as
+these are automatically included by Sphinx's ``automodule`` directive. For
+detailed API documentation, refer to the generated documentation for each function.
 """
 
 import logging
@@ -59,7 +78,6 @@ from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.cache import cache_results
 
 if TYPE_CHECKING:
@@ -76,9 +94,12 @@ def get_pending_deployments(user_profile: UserProfile) -> int:
     """
     Returns the number of chatbot deployments that are pending for the specified user.
 
-    This function queries the database for all chatbot instances associated with the user's account that have not yet been deployed. The result is used to inform users of outstanding deployment actions required on their dashboard.
+    This function queries the database for all chatbot instances associated with the
+    user's account that have not yet been deployed. The result is used to inform users
+    of outstanding deployment actions required on their dashboard.
 
-    The result is cached for a short duration to minimize database load and improve dashboard responsiveness.
+    The result is cached for a short duration to minimize database load and
+    improve dashboard responsiveness.
 
     :param user: The user whose pending deployments are to be counted.
     :type user: User
@@ -102,9 +123,12 @@ def get_chatbots(user_profile: UserProfile) -> int:
     """
     Returns the total number of chatbots associated with the specified user.
 
-    This function queries the database for all chatbot instances linked to the user's account, regardless of deployment status. The resulting count is used to display the user's available chatbots on the dashboard.
+    This function queries the database for all chatbot instances linked to
+    the user's account, regardless of deployment status. The resulting count
+    is used to display the user's available chatbots on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
     :param user: The user whose chatbots are to be counted.
     :type user: User
@@ -120,9 +144,12 @@ def get_plugins(user_profile: UserProfile) -> int:
     """
     Returns the total number of plugins associated with the specified user.
 
-    This function queries the database for all plugin metadata records linked to the user's account. The resulting count is used to display the user's available plugins on the dashboard.
+    This function queries the database for all plugin metadata records linked
+    to the user's account. The resulting count is used to display the user's
+    available plugins on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
     :param user: The user whose plugins are to be counted.
     :type user: User
@@ -138,9 +165,12 @@ def get_api_keys(user_profile: UserProfile) -> int:
     """
     Returns the total number of API keys associated with the specified user.
 
-    This function queries the database for all API key records linked to chatbots owned by the user's account. The resulting count is used to display the user's available API keys on the dashboard.
+    This function queries the database for all API key records linked to
+    chatbots owned by the user's account. The resulting count is used to
+    display the user's available API keys on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
     :param user: The user whose API keys are to be counted.
     :type user: User
@@ -160,9 +190,12 @@ def get_custom_domains(user_profile: UserProfile) -> int:
     """
     Returns the total number of custom domains associated with the specified user.
 
-    This function queries the database for all custom domain records linked to chatbots owned by the user's account. The resulting count is used to display the user's available custom domains on the dashboard.
+    This function queries the database for all custom domain records linked
+    to chatbots owned by the user's account. The resulting count is used to
+    display the user's available custom domains on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
     :param user: The user whose custom domains are to be counted.
     :type user: User
@@ -186,7 +219,8 @@ def get_connections(user_profile: UserProfile) -> int:
 
     This function queries the database for all API and SQL connection records linked to the user's account. The resulting count is used to display the user's available connections on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
     :param user: The user whose connections are to be counted.
     :type user: User
@@ -202,9 +236,11 @@ def get_secrets(user_profile: UserProfile) -> int:
     """
     Returns the total number of secrets associated with the specified user's profile.
 
-    This function queries the database for all secret records linked to the user's profile. The resulting count is used to display the user's available secrets on the dashboard.
+    This function queries the database for all secret records linked to the user's profile.
+    The resulting count is used to display the user's available secrets on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
     :param user_profile: The user profile whose secrets are to be counted.
     :type user_profile: UserProfile
@@ -220,7 +256,8 @@ def get_providers(user_profile: UserProfile) -> int:
     """
     Returns the total number of providers associated with the specified user's account.
 
-    This function queries the database for all provider records linked to the user's account. The resulting count is used to display the user's available providers on the dashboard.
+    This function queries the database for all provider records linked to the user's account.
+    The resulting count is used to display the user's available providers on the dashboard.
 
     The result is cached for a short duration to reduce database queries and improve dashboard performance.
 
@@ -237,7 +274,9 @@ def file_drop_zone(request: "HttpRequest") -> dict:
     """
     Provides context for enabling file drop zone functionality in the dashboard.
 
-    This context processor injects a variable into the template context that can be used to enable or disable file drop zone features in the dashboard interface. This is useful for enhancing user experience by allowing drag-and-drop file uploads.
+    This context processor injects a variable into the template context that can
+    be used to enable or disable file drop zone features in the dashboard interface.
+    This is useful for enhancing user experience by allowing drag-and-drop file uploads.
 
     :param request: The HTTP request object.
     :type request: "HttpRequest"
@@ -265,11 +304,18 @@ def file_drop_zone(request: "HttpRequest") -> dict:
 
 def base(request: "HttpRequest") -> dict:
     """
-    Provides the base context for all templates inheriting from ``base.html`` in the Smarter dashboard.
+    Provides the base context for all templates inheriting from ``base.html``
+    in the Smarter dashboard.
 
-    This context processor injects a comprehensive set of user-specific and application-wide variables into the template context. These variables include user identity, role flags, product metadata, and resource counts (such as chatbots, plugins, API keys, custom domains, connections, and secrets). The context is used to render the dashboard layout and personalize the user experience.
+    This context processor injects a comprehensive set of user-specific and
+    application-wide variables into the template context. These variables
+    include user identity, role flags, product metadata, and resource counts
+    (such as chatbots, plugins, API keys, custom domains, connections, and
+    secrets). The context is used to render the dashboard layout and
+    personalize the user experience.
 
-    The resource counts are cached for performance, and the context is dynamically constructed based on the authenticated user's account and profile.
+    The resource counts are cached for performance, and the context is dynamically
+    constructed based on the authenticated user's account and profile.
 
     :param request: The HTTP request object.
     :type request: "HttpRequest"
@@ -287,9 +333,13 @@ def base(request: "HttpRequest") -> dict:
         """
         Constructs and returns the cached dashboard context for the specified user.
 
-        This helper function assembles a dictionary of dashboard context variables, including user identity, role flags, product metadata, and resource counts. It is decorated with a cache to optimize performance and minimize redundant database queries.
+        This helper function assembles a dictionary of dashboard context variables,
+        including user identity, role flags, product metadata, and resource counts.
+        It is decorated with a cache to optimize performance and minimize redundant
+        database queries.
 
-        The context is tailored to the authenticated user and is used by the main ``base`` context processor to populate the dashboard template.
+        The context is tailored to the authenticated user and is used by the main
+        ``base`` context processor to populate the dashboard template.
 
         :param user: The user for whom the dashboard context is being constructed.
         :type user: Optional[User]
@@ -437,14 +487,19 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
     """
     Provides organization-specific legal context for dashboard templates.
 
-    This context processor injects legal and compliance-related variables into the template context for all pages inheriting from ``base.html``. These variables ensure that consistent legal information, such as terms of service, privacy policy, and cookie policy URLs, are available throughout the dashboard user interface.
+    This context processor injects legal and compliance-related variables into
+    the template context for all pages inheriting from ``base.html``. These
+    variables ensure that consistent legal information, such as terms of service,
+    privacy policy, and cookie policy URLs, are available throughout the dashboard user interface.
 
     The context includes:
 
     - URLs for the terms of service, privacy policy, and cookie policy documents.
-    - A dynamically generated copyright notice that includes the current year and corporate name.
+    - A dynamically generated copyright notice that includes the current year
+    and corporate name.
 
-    All values are sourced from Django settings, allowing for easy customization and environment-specific overrides.
+    All values are sourced from Django settings, allowing for easy
+    customization and environment-specific overrides.
 
     Example usage in a Django template::
 
@@ -469,13 +524,22 @@ def cache_buster(request) -> dict:
     """
     Adds a cache-busting query parameter to static asset URLs during development.
 
-    This context processor is intended for use in local development environments to ensure that browsers do not serve outdated versions of static files (such as JavaScript, CSS, or images) from cache. It injects a ``cache_buster`` variable into the template context, which can be appended as a query parameter to static asset URLs. The value is a version string based on the current timestamp, guaranteeing uniqueness on each page load.
+    This context processor is intended for use in local development environments
+    to ensure that browsers do not serve outdated versions of static files
+    (such as JavaScript, CSS, or images) from cache. It injects a ``cache_buster``
+    variable into the template context, which can be appended as a query parameter
+    to static asset URLs. The value is a version string based on the current
+    timestamp, guaranteeing uniqueness on each page load.
 
     Example usage in a Django template::
 
         <script src="{{ STATIC_URL }}main.js?{{ cache_buster }}"></script>
 
-    This approach is especially useful when making frequent changes to static assets during development, as it forces the browser to fetch the latest version every time the page is reloaded. In production, this processor is typically disabled or omitted to allow for proper static file caching and performance optimization.
+    This approach is especially useful when making frequent changes to static
+    assets during development, as it forces the browser to fetch the latest
+    version every time the page is reloaded. In production, this processor is
+    typically disabled or omitted to allow for proper static file caching and
+    performance optimization.
 
     The ``cache_buster`` variable is a string in the format ``v=<timestamp>``.
     """
