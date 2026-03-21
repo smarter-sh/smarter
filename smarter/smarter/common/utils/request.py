@@ -131,3 +131,6 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
     except Exception as e:
         logger.debug("%s.is_authenticated_request() failed: %s", logger_prefix, formatted_text(str(e)))
         return False
+
+
+__all__ = ["is_authenticated_request"]
