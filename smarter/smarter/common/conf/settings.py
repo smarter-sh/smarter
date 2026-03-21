@@ -4222,3 +4222,5 @@ def get_settings() -> Settings:
 
 
 smarter_settings = get_settings()
+
+__all__ = ["smarter_settings", "Settings"]

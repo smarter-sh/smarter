@@ -37,3 +37,6 @@ def get_semantic_version() -> str:
         return "unknown"
     version = re.sub(r"-next\.\d+", "", version)
     return re.sub(r"-next-major\.\d+", "", version)
+
+
+__all__ = ["get_semantic_version"]

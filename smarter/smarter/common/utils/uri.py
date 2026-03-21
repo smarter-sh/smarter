@@ -182,3 +182,6 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
     # Fallback: synthesize a generic test URL
     logger.debug("%s.smarter_build_absolute_uri() could not determine URL, returning fallback test URL", logger_prefix)
     return "http://testserver/unknown/"
+
+
+__all__ = ["smarter_build_absolute_uri"]

@@ -85,3 +85,6 @@ def get_diagnostics() -> dict[str, Any]:
         },
     }
     return retval
+
+
+__all__ = ["get_diagnostics"]

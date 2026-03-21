@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 
 from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text_red
-from smarter.common.utils import bool_environment_variable
 
 from .env import get_env
 
