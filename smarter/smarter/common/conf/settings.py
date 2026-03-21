@@ -30,12 +30,6 @@ prioritization sequence:
 
 """
 
-# -------------------- WARNING --------------------
-# DO NOT IMPORT DJANGO OR ANY DJANGO MODULES. THIS
-# ENTIRE MODULE SITS UPSTREAM OF DJANGO AND IS
-# INTENDED TO BE USED INDEPENDENTLY OF DJANGO.
-# ------------------------------------------------
-
 # python stuff
 import base64  # library for base64 encoding and decoding
 import logging  # library for logging messages
@@ -93,7 +87,7 @@ from .services import AWS_REGIONS, services
 from .util import before_field_validator
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__ + "Settings()")
+logger_prefix = formatted_text(__name__ + ".Settings()")
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
