@@ -42,6 +42,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 HERE = formatted_text(__name__)
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) or waffle.switch_is_active(
@@ -264,13 +265,19 @@ def get_cached_secret_by_pk(secret_pk: int, invalidate: bool = False) -> Optiona
 
 
 def get_cached_account(
-    account_id: Optional[int] = None, account_number: Optional[str] = None, invalidate: bool = False
+    account_id: Optional[int] = None,
+    account_number: Optional[str] = None,
+    name: Optional[str] = None,
+    company_name: Optional[str] = None,
+    invalidate: bool = False,
 ) -> Optional[Account]:
     """
     Retrieve an Account instance by its ID or account number, using in-memory and Redis-based caching.
 
     :param account_id: Integer, optional. The primary key of the account to retrieve.
     :param account_number: String, optional. The unique account number to retrieve.
+    :param name: String, optional. The name of the account to retrieve.
+    :param company_name: String, optional. The company name of the account to retrieve.
     :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
 
     :returns: Account instance if found, otherwise None.
@@ -321,6 +328,32 @@ def get_cached_account(
             return None
         return account
 
+    @cache_results()
+    def _get_cached_account_by_name(name) -> Optional[Account]:
+        """
+        In-memory cache for account objects by name.
+        """
+        logger.debug("%s.get_cached_account() retrieving and caching account with name %s", HERE, name)
+        try:
+            account = Account.objects.get(name=name)
+        except Account.DoesNotExist:
+            logger.warning("%s.get_cached_account() account with name %s does not exist", HERE, name)
+            return None
+        return account
+
+    @cache_results()
+    def _get_cached_account_by_company_name(company_name) -> Optional[Account]:
+        """
+        In-memory cache for account objects by company name.
+        """
+        logger.debug("%s.get_cached_account() retrieving and caching account with company name %s", HERE, company_name)
+        try:
+            account = Account.objects.get(company_name=company_name)
+        except Account.DoesNotExist:
+            logger.warning("%s.get_cached_account() account with company name %s does not exist", HERE, company_name)
+            return None
+        return account
+
     if account_id:
         return (
             _get_cached_account_by_id(account_id)
@@ -336,6 +369,16 @@ def get_cached_account(
             _get_cached_account_by_account_number(account_number)
             if not invalidate
             else _get_cached_account_by_account_number.invalidate(account_number)
+        )
+
+    if name:
+        return _get_cached_account_by_name(name) if not invalidate else _get_cached_account_by_name.invalidate(name)
+
+    if company_name:
+        return (
+            _get_cached_account_by_company_name(company_name)
+            if not invalidate
+            else _get_cached_account_by_company_name.invalidate(company_name)
         )
 
 

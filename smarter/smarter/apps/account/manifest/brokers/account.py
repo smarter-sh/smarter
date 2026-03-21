@@ -18,7 +18,11 @@ from smarter.apps.account.manifest.models.account.spec import (
 from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
 from smarter.apps.account.models import Account
 from smarter.apps.account.signals import broker_ready
-from smarter.apps.account.utils import cache_invalidate, get_cached_smarter_account
+from smarter.apps.account.utils import (
+    cache_invalidate,
+    get_cached_account,
+    get_cached_smarter_account,
+)
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -219,7 +223,7 @@ class SAMAccountBroker(AbstractBroker):
             return None
 
         try:
-            self._brokered_account = Account.objects.get(name=self.name)
+            self._brokered_account = get_cached_account(name=self.name)
             logger.debug(
                 "%s.brokered_account() initialized existing Account: %s",
                 self.formatted_class_name,
@@ -517,12 +521,12 @@ class SAMAccountBroker(AbstractBroker):
                 self.user,
                 self.name,
             )
-            self._orm_instance = Account.objects.get(name=self.name)
+            self._orm_instance = get_cached_account(name=self.name)
             logger.debug(
                 "%s.orm_instance() - retrieved %s instance: %s",
                 self.formatted_class_name,
                 Account.__name__,
-                serializers.serialize("json", [self._orm_instance]),
+                serializers.serialize("json", [self._orm_instance]),  # type: ignore[list-item]
             )
             return self._orm_instance
         except Account.DoesNotExist:
@@ -558,7 +562,7 @@ class SAMAccountBroker(AbstractBroker):
 
         self._orm_meta_instance = None
         try:
-            self._orm_meta_instance = Account.objects.get(name=self.name)
+            self._orm_meta_instance = get_cached_account(name=self.name)
         except Account.DoesNotExist:
             logger.warning(
                 "%s.orm_meta_instance_setter() - ORM meta instance does not exist for account=%s, name=%s",
