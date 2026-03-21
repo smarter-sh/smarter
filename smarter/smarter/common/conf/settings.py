@@ -36,17 +36,13 @@ prioritization sequence:
 # INTENDED TO BE USED INDEPENDENTLY OF DJANGO.
 # ------------------------------------------------
 
+# python stuff
 import base64  # library for base64 encoding and decoding
 import logging  # library for logging messages
 import os  # library for interacting with the operating system
 import re  # library for regular expressions
-
-# python stuff
 import warnings  # library for issuing warning messages
-from functools import (  # utility for caching function/method results
-    cached_property,
-    lru_cache,
-)
+from functools import cached_property, lru_cache
 from typing import Any, List, Optional, Pattern, Union  # type hint utilities
 from urllib.parse import urljoin, urlparse  # library for URL manipulation
 
@@ -62,15 +58,11 @@ from pydantic import (
     ValidationInfo,
 )
 from pydantic import __version__ as pydantic_version
-from pydantic import (
-    field_validator,
-)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# smarter stuff
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf.const import DEFAULT_ROOT_DOMAIN, DOT_ENV_LOADED, THE_EMPTY_SET
-
-# our stuff
 from smarter.common.const import (
     SMARTER_API_KEY_MAX_LIFETIME_DAYS,
     SMARTER_API_SUBDOMAIN,
@@ -94,20 +86,14 @@ from smarter.common.utils import (
 )
 from smarter.lib.django.validators import SmarterValidator
 
+# smarter.common.conf stuff
 from .defaults import settings_defaults
 from .env import DEFAULT_MISSING_VALUE
 from .services import AWS_REGIONS, services
+from .util import before_field_validator
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__ + "Settings()")
-
-
-def before_field_validator(*args, **kwargs):
-    """
-    Wrapper for pydantic field_validator with mode='before'.
-    """
-    kwargs["mode"] = "before"
-    return field_validator(*args, **kwargs)
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
