@@ -32,8 +32,8 @@ from smarter.apps.chatbot.models import (
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
-from smarter.common.conf import SettingsDefaults
-from smarter.common.utils import formatted_text
+from smarter.common.conf import settings_defaults
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -682,7 +682,7 @@ class SAMChatbotBroker(AbstractBroker):
         - :py:class:`smarter.apps.chatbot.manifest.enum.SAMMetadataKeys`
         - :py:class:`smarter.apps.chatbot.manifest.enum.SCLIResponseGet`
         - :py:class:`smarter.apps.chatbot.manifest.enum.SCLIResponseGetData`
-        - :py:class:`from smarter.common.conf.SettingsDefaults`
+        - :py:class:`from smarter.common.conf.settings_defaults`
 
         """
 
@@ -704,11 +704,11 @@ class SAMChatbotBroker(AbstractBroker):
             subdomain=None,
             customDomain=None,
             deployed=False,
-            provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
-            defaultModel=SettingsDefaults.LLM_DEFAULT_MODEL,
-            defaultSystemRole=SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE,
-            defaultTemperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-            defaultMaxTokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+            provider=settings_defaults.LLM_DEFAULT_PROVIDER,
+            defaultModel=settings_defaults.LLM_DEFAULT_MODEL,
+            defaultSystemRole=settings_defaults.LLM_DEFAULT_SYSTEM_ROLE,
+            defaultTemperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
+            defaultMaxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
             appName="Example Chatbot",
             appAssistant="Example Assistant",
             appWelcomeMessage="Welcome to the Example Chatbot! How can I assist you today?",
