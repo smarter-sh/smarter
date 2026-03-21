@@ -163,6 +163,8 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         :param default: The default value to determine the target type.
         :return: The casted value.
         """
+        if val is None:
+            return default
         if isinstance(default, str):
             return val.strip() if val is not None else default
         if isinstance(default, bool):
@@ -171,7 +173,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
             try:
                 return int(val) if val is not None else default
             except (ValueError, TypeError):
-                logger.error(
+                logger.warning(
                     "%s Environment variable %s value '%s' cannot be converted to int. Using default %s.",
                     logger_prefix,
                     var_name,
@@ -183,7 +185,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
             try:
                 return float(val) if val is not None else default
             except (ValueError, TypeError):
-                logger.error(
+                logger.warning(
                     "%s Environment variable %s value '%s' cannot be converted to float. Using default %s.",
                     logger_prefix,
                     var_name,
@@ -197,7 +199,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
             elif isinstance(val, list):
                 return val if val is not None else default
             else:
-                logger.error(
+                logger.warning(
                     "%s Environment variable %s value '%s' cannot be converted to list. Using default %s.",
                     logger_prefix,
                     var_name,
@@ -212,7 +214,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                 elif isinstance(val, dict):
                     return val if val is not None else default
                 else:
-                    logger.error(
+                    logger.warning(
                         "%s Environment variable %s value '%s' cannot be converted to dict. Using default %s.",
                         logger_prefix,
                         var_name,
@@ -221,7 +223,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                     )
                     return default
             except json.JSONDecodeError:
-                logger.error(
+                logger.warning(
                     "%s Environment variable %s value '%s' is not valid JSON. Using default %s.",
                     logger_prefix,
                     var_name,
