@@ -36,7 +36,7 @@ from smarter.common.helpers.console_helpers import formatted_text, formatted_tex
 from smarter.lib import json
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__ + ".settings.base.py")
+logger_prefix = formatted_text(__name__)
 
 load_dotenv()
 
