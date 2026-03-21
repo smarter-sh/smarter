@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.209](https://github.com/smarter-sh/smarter/compare/v0.13.208...v0.13.209) (2026-03-20)
+
+### Bug Fixes
+
+* cache pages by user ([07c7db6](https://github.com/smarter-sh/smarter/commit/07c7db60ae85cac533fe01b889a6f38ddfacceb4))
+* handle xml pages differently ([61b70cb](https://github.com/smarter-sh/smarter/commit/61b70cb9843a3912b48566ae6883921175691140))
+
+## [0.13.208](https://github.com/smarter-sh/smarter/compare/v0.13.207...v0.13.208) (2026-03-20)
+
+### Bug Fixes
+
+* missing csrf js script ([c7c0e77](https://github.com/smarter-sh/smarter/commit/c7c0e773b833de9416c1eb5094e83cef109b68d9))
+
 ## [0.13.207](https://github.com/smarter-sh/smarter/compare/v0.13.206...v0.13.207) (2026-03-19)
 
 ### Bug Fixes
