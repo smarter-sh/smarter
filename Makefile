@@ -155,6 +155,8 @@ python-clean:
 	rm -rf venv
 	find ./smarter/ -name __pycache__ -type d -exec rm -rf {} +
 
+# FIX NOTE: mcdaniel. the pip version pin temporarily resolves a pip-compile issue.
+#           AttributeError: 'PackageFinder' object has no attribute 'allow_all_prereleases'
 python-requirements:
 	pip install pip==25.3 setuptools wheel pip-tools
 	pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt

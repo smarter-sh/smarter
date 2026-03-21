@@ -368,6 +368,8 @@ propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
+psutil==7.2.2
+    # via -r smarter/requirements/in/base.in
 pyasn1==0.6.2
     # via
     #   pyasn1-modules

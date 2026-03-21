@@ -19,6 +19,7 @@ celery-redbeat                          # scheduled asynchronous tasks
 dnspython                               # DNS toolkit for Python
 mysqlclient                             # MySQL client
 paramiko                                # SSH2 protocol library
+psutil                                  # a cross-platform library for retrieving information on running processes and system utilization
 python-hcl2                             # Terraform hcl parser for reading Terraform tfvars files
 python-dotenv                           # for reading environment variables from .env files
 requests                                # HTTP requests library

@@ -36,12 +36,16 @@ prioritization sequence:
 # INTENDED TO BE USED INDEPENDENTLY OF DJANGO.
 # ------------------------------------------------
 
-# python stuff
 import base64  # library for base64 encoding and decoding
 import logging  # library for logging messages
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
 import re  # library for regular expressions
+
+# python stuff
+import sys
+import threading
+import time
 import warnings  # library for issuing warning messages
 from functools import (  # utilities for caching function/method results
     cache,
@@ -52,8 +56,10 @@ from importlib.metadata import distributions  # library for accessing package me
 from typing import Any, List, Optional, Pattern, Tuple, Union  # type hint utilities
 from urllib.parse import urljoin, urlparse  # library for URL manipulation
 
-# 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
+
+# 3rd party stuff
+import psutil
 import requests
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
 from dotenv import load_dotenv
@@ -728,12 +734,11 @@ class Settings(BaseSettings):
     :type: SettingsConfigDict
     """
 
-    _dump: dict
     _ready: bool
 
     def __init__(self, **data: Any):
         super().__init__(**data)
-        self._dump = None
+        self._to_json = None
         self._ready = False
         # need to be mindful that __init__ is called before Django startup has begun.
         # one consequence is that logging is not yet configured, so have have to
@@ -4726,7 +4731,7 @@ class Settings(BaseSettings):
         """
         return get_semantic_version()
 
-    def dump(self) -> dict:
+    def to_json(self) -> dict[str, Any]:
         """
         Dump all settings. Useful for debugging and logging.
 
@@ -4735,7 +4740,8 @@ class Settings(BaseSettings):
 
         Example:
             >>> from smarter.lib import json
-            >>> print(json.dumps(smarter_settings.dump(), indent=2))
+            >>> from smarter.common.conf import smarter_settings
+            >>> print(json.dumps(smarter_settings.to_json(), indent=2))
             {
               "environment": {
                 "is_using_dotenv_file": true,
@@ -4743,42 +4749,86 @@ class Settings(BaseSettings):
                 ....
                 },
 
-        Note:
+        .. note::
+
             Sensitive values are masked by Pydantic SecretStr and will not be displayed in full.
             The dump is cached after the first call for performance.
+
         """
 
         def get_installed_packages():
             return [(dist.metadata["Name"], dist.version) for dist in distributions()]
 
-        if self._dump:
-            return self._dump
-
         packages = get_installed_packages()
         packages_dict = [{"name": name, "version": version} for name, version in packages]
 
-        self._dump = {
+        retval = {
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             "environment": {
-                "os": os.name,
-                "system": platform.system(),
-                "release": platform.release(),
-                "python_version": platform.python_version(),
-                "python_implementation": platform.python_implementation(),
-                "python_compiler": platform.python_compiler(),
-                "python_build": platform.python_build(),
-                "python_installed_packages": packages_dict,
+                "platform": {
+                    "os": {
+                        "name": os.name,
+                        "cwd": os.getcwd(),
+                        "process_id": os.getpid(),
+                        "parent_process_id": os.getppid(),
+                        "start_time": time.strftime(
+                            "%Y-%m-%d %H:%M:%S", time.localtime(psutil.Process().create_time())
+                        ),
+                        "uptime_seconds": int(time.time() - psutil.Process().create_time()),
+                    },
+                    "system": platform.system(),
+                    "release": platform.release(),
+                },
+                "python": {
+                    "python_version": platform.python_version(),
+                    "python_implementation": platform.python_implementation(),
+                    "python_compiler": platform.python_compiler(),
+                    "python_build": platform.python_build(),
+                    "python_installed_packages": packages_dict,
+                    "loaded_modules": list(sys.modules.keys()),
+                },
+                "resources": {
+                    "memory_info": psutil.Process().memory_info()._asdict(),
+                    "cpu_percent": psutil.Process().cpu_percent(interval=0.1),
+                    "open_files": [f.path for f in psutil.Process().open_files()],
+                    "num_threads": psutil.Process().num_threads(),
+                    "thread_info": [
+                        {
+                            "id": t.ident,
+                            "name": t.name,
+                            "is_alive": t.is_alive(),
+                        }
+                        for t in threading.enumerate()
+                    ],
+                    "disk_usage": psutil.disk_usage(os.getcwd())._asdict(),
+                },
+                "network": {
+                    "connections": [
+                        {
+                            "fd": c.fd,
+                            "family": str(c.family),
+                            "type": str(c.type),
+                            "laddr": c.laddr,
+                            "raddr": c.raddr,
+                            "status": c.status,
+                        }
+                        for c in psutil.Process().net_connections()
+                    ],
+                },
             },
-            **self.model_dump(),
+            "smarter_settings": {
+                **self.model_dump(),
+            },
         }
         if self.dump_defaults:
             settings_defaults = SettingsDefaults.to_dict()
-            self._dump["settings_defaults"] = settings_defaults
+            retval["settings_defaults"] = settings_defaults
 
         if self.is_using_dotenv_file:
-            self._dump["environment"]["dotenv"] = self.environment_variables
+            retval["environment"]["dotenv"] = self.environment_variables
 
-        self._dump = recursive_sort_dict(self._dump)
-        return self._dump
+        retval = recursive_sort_dict(retval)
+        return retval
 
 
 @lru_cache(maxsize=1)
