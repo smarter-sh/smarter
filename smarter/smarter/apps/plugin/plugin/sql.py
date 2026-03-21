@@ -64,7 +64,7 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings_defaults
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
@@ -582,11 +582,11 @@ class SqlPlugin(PluginBase):
             ],
         )
         prompt = SAMPluginCommonSpecPrompt(
-            provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+            provider=settings_defaults.LLM_DEFAULT_PROVIDER,
             systemRole="You are a helpful sales agent for Stackademy. You can provide information about courses available at Stackademy.\n",
-            model=SettingsDefaults.LLM_DEFAULT_MODEL,
-            temperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-            maxTokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+            model=settings_defaults.LLM_DEFAULT_MODEL,
+            temperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
+            maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
         )
         connection = "example_connection"
         sql_data = SqlData(

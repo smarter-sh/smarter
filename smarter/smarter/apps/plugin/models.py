@@ -45,7 +45,7 @@ from smarter.apps.account.utils import (
 
 # smarter stuff
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.common.conf import SettingsDefaults, smarter_settings
+from smarter.common.conf import settings_defaults, smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
@@ -844,7 +844,7 @@ class PluginPrompt(TimestampedModel, SmarterHelperMixin):
         help_text="The name of the LLM provider for the plugin. Example: 'openai'.",
         null=True,
         blank=True,
-        default=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+        default=settings_defaults.LLM_DEFAULT_PROVIDER,
     )
     system_role = models.TextField(
         help_text="The role of the system in the conversation.",
@@ -853,16 +853,16 @@ class PluginPrompt(TimestampedModel, SmarterHelperMixin):
         default="You are a helful assistant.",
     )
     model = models.CharField(
-        help_text="The model to use for the completion.", max_length=255, default=SettingsDefaults.LLM_DEFAULT_MODEL
+        help_text="The model to use for the completion.", max_length=255, default=settings_defaults.LLM_DEFAULT_MODEL
     )
     temperature = models.FloatField(
         help_text="The higher the temperature, the more creative the result.",
-        default=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+        default=settings_defaults.LLM_DEFAULT_TEMPERATURE,
         validators=[MinValueValidator(0.0), MaxValueValidator(1.0)],
     )
     max_completion_tokens = models.IntegerField(
         help_text="The maximum number of tokens for both input and output.",
-        default=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+        default=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
         validators=[MinValueValidator(0), MaxValueValidator(8192)],
     )
 
