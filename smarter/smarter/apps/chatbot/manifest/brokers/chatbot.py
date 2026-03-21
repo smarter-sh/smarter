@@ -941,9 +941,9 @@ class SAMChatbotBroker(AbstractBroker):
                     )
             if self.manifest.spec.plugins:
                 for plugin_name in self.manifest.spec.plugins:
-                    plugin_name = self.camel_to_snake(plugin_name)
+                    plugin_name = str(self.camel_to_snake(plugin_name))
                     try:
-                        plugin = PluginMeta.objects.get(name=plugin_name, user_profile__account=self.account)
+                        plugin = PluginMeta.get_cached_model(name=plugin_name, account=self.account)
                     except PluginMeta.DoesNotExist as e:
                         logger.error(
                             "%s.apply() failed to find PluginMeta %s",

@@ -665,7 +665,8 @@ class SAMAccountBroker(AbstractBroker):
         model_titles = self.get_model_titles(serializer=AccountSerializer())
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
-        accounts = Account.objects.filter(id=self.brokered_account.id)  # type: ignore
+        account = get_cached_account(account_id=self.brokered_account.id)  # type: ignore
+        accounts = [account] if account else []
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for account in accounts:

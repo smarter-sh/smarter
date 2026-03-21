@@ -405,7 +405,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 self._plugin_meta = PluginMeta.objects.get(user_profile__account=self.account, name=self.name)
             except MultipleObjectsReturned:
                 try:
-                    self._plugin_meta = PluginMeta.objects.get(
+                    self._plugin_meta = PluginMeta.get_cached_model(
                         user_profile=self.user_profile,
                         name=self.name,
                     )
