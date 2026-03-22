@@ -525,14 +525,16 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             name: str, user_profile_id: int, plugin_class: str
         ) -> Optional["PluginMeta"]:
             try:
-                return cls.objects.get(name=name, user_profile_id=user_profile_id, plugin_class=plugin_class)
+                return (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(name=name, user_profile_id=user_profile_id, plugin_class=plugin_class)
+                )
             except cls.DoesNotExist:
                 return None
 
         if pk:
-            retval = super().get_cached_object(pk=pk)
-            if isinstance(retval, PluginMeta):
-                return retval
+            return super().get_cached_object(pk=pk)  # type: ignore[return-value]
 
         if not user_profile:
             if not user:
@@ -708,7 +710,7 @@ class PluginSelector(TimestampedModel, SmarterHelperMixin):
         @cache_results()
         def selector_by_plugin_id(plugin_id: int) -> Union["PluginSelector", None]:
             try:
-                return cls.objects.get(plugin_id=plugin_id)
+                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist:
                 logger.warning(
                     "%s.get_cached_selector_by_plugin: Selector not found for plugin_id: %s",
@@ -853,7 +855,7 @@ class PluginPrompt(TimestampedModel, SmarterHelperMixin):
         @cache_results()
         def prompt_by_plugin_id(plugin_id: int) -> Union["PluginPrompt", None]:
             try:
-                return cls.objects.get(plugin_id=plugin_id)
+                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist:
                 logger.warning(
                     "%s.get_cached_prompt_by_plugin: Prompt not found for plugin_id: %s",
@@ -1043,7 +1045,7 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
         @cache_results()
         def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataBase"]:
             try:
-                return cls.objects.get(plugin_id=plugin_id)
+                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist:
                 logger.warning(
                     "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
@@ -1222,7 +1224,7 @@ class PluginDataStatic(PluginDataBase):
         @cache_results()
         def data_by_plugin_id(plugin_id: int) -> Union["PluginDataStatic", None]:
             try:
-                return cls.objects.get(plugin_id=plugin_id)
+                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist:
                 logger.warning(
                     "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
@@ -1395,14 +1397,22 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         @cache_results()
         def cached_sqlconnection_by_id_and_name(account_id: int, name: str) -> Union["SqlConnection", None]:
             try:
-                return SqlConnection.objects.get(user_profile__account__id=account_id, name=name)
+                return (
+                    SqlConnection.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(user_profile__account__id=account_id, name=name)
+                )
             except SqlConnection.DoesNotExist:
                 return None
 
         @cache_results()
         def cached_apiconnection_by_id_and_name(account_id: int, name: str) -> Union["ApiConnection", None]:
             try:
-                return ApiConnection.objects.get(user_profile__account__id=account_id, name=name)
+                return (
+                    ApiConnection.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(user_profile__account__id=account_id, name=name)
+                )
             except ApiConnection.DoesNotExist:
                 return None
 
@@ -2380,7 +2390,7 @@ class PluginDataSql(PluginDataBase):
         @cache_results()
         def data_by_plugin_id(plugin_id: int) -> Union["PluginDataSql", None]:
             try:
-                return cls.objects.get(plugin_id=plugin_id)
+                return cls.objects.select_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist:
                 logger.warning(
                     "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
@@ -2855,7 +2865,7 @@ class PluginDataApi(PluginDataBase):
         @cache_results()
         def data_by_plugin_id(plugin_id: int) -> Union["PluginDataApi", None]:
             try:
-                return cls.objects.get(plugin_id=plugin_id)
+                return cls.objects.prefetch_related("tags").select_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist:
                 logger.warning(
                     "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
@@ -2871,7 +2881,7 @@ class PluginDataApi(PluginDataBase):
 
     def __str__(self) -> str:
         plugin: PluginMeta = self.plugin
-        user_profile = plugin.user_profile if plugin else "No User Profile"
+        user_profile = plugiºn.user_profile if plugin else "No User Profile"
         user_profile = str(user_profile)
         name = str(plugin.name) if plugin else "No Plugin Name"
         return str(user_profile + " - " + name)
