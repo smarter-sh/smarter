@@ -1,4 +1,4 @@
-# pylint: disable=C0114,C0115,C0302
+# pylint: disable=C0114,C0115,C0302,W0613
 """PluginMeta app models."""
 
 # python stuff
@@ -537,9 +537,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             return retval
 
     @classmethod
-    def get_cached_models_for_user_profile(cls, user_profile: UserProfile) -> QuerySet["PluginMeta"]:
+    def get_cached_models(cls, user_profile: UserProfile) -> QuerySet["PluginMeta"]:
 
-        return super().get_cached_models_for_user_profile(user_profile=user_profile)  # type: ignore[return-value]
+        return super().get_cached_models(user_profile=user_profile)  # type: ignore[return-value]
 
     @classmethod
     @cache_results()
@@ -579,9 +579,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 return False
 
             def get_plugins_for_account() -> QuerySet:
-                user_plugins = PluginMeta.get_cached_models_for_user_profile(user_profile=user_profile)
-                admin_plugins = PluginMeta.get_cached_models_for_user_profile(user_profile=admin_user_profile)  # type: ignore[assignment]
-                smarter_plugins = PluginMeta.get_cached_models_for_user_profile(
+                user_plugins = PluginMeta.get_cached_models(user_profile=user_profile)
+                admin_plugins = PluginMeta.get_cached_models(user_profile=admin_user_profile)  # type: ignore[assignment]
+                smarter_plugins = PluginMeta.get_cached_models(
                     user_profile=smarter_cached_objects.smarter_admin_user_profile
                 )
 

@@ -54,6 +54,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 ResolvedUserType = Optional[Union["User", "AbstractUser", "AnonymousUser"]]
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
@@ -890,6 +891,13 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return cls.objects.get(name=name)
             except cls.DoesNotExist:
                 return None
+            except cls.MultipleObjectsReturned:
+                logger.error(
+                    "%s.get_cached_model() Multiple models found with name '%s'. Defaulting to first result.",
+                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_model()"),
+                    name,
+                )
+                return cls.objects.filter(name=name).first()
 
         @cache_results(cls.cache_expiration)
         def _get_model_by_name_and_user_profile(name: str, user_profile: UserProfile) -> Optional[models.Model]:
@@ -897,6 +905,14 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return cls.objects.get(name=name, user_profile=user_profile)
             except cls.DoesNotExist:
                 return None
+            except cls.MultipleObjectsReturned:
+                logger.error(
+                    "%s.get_cached_model() Multiple models found with name '%s' and user profile '%s'. Defaulting to first result.",
+                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_model()"),
+                    name,
+                    user_profile,
+                )
+                return cls.objects.filter(name=name, user_profile=user_profile).first()
 
         @cache_results(cls.cache_expiration)
         def _get_model_by_name_and_account(name: str, account: Account) -> Optional[models.Model]:
@@ -904,6 +920,14 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return cls.objects.get(name=name, user_profile__account=account)
             except cls.DoesNotExist:
                 return None
+            except cls.MultipleObjectsReturned:
+                logger.error(
+                    "%s.get_cached_model() Multiple models found with name '%s' and account '%s'. Defaulting to first result.",
+                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_model()"),
+                    name,
+                    account,
+                )
+                return cls.objects.filter(name=name, user_profile__account=account).first()
 
         if pk is not None:
             return _get_model_by_pk(pk)
@@ -915,7 +939,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             elif user_profiles.count() == 1:
                 return _get_model_by_name_and_user_profile(name, user_profiles.first())
             else:
-                logger.warning(
+                logger.error(
                     "%s.get_cached_model() Multiple user profiles found for user %s. Defaulting to first profile.",
                     formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_model()"),
                     user.email,
@@ -929,9 +953,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         return _get_model_by_name(name)
 
     @classmethod
-    def get_cached_models_for_user_profile(
-        cls, user_profile: UserProfile
-    ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
+    def get_cached_models(cls, user_profile: UserProfile) -> models.QuerySet["MetaDataWithOwnershipModel"]:
         """
         Retrieve a list of MetaDataWithOwnershipModel instances associated with a user profile using caching.
 
@@ -940,7 +962,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         .. code-block:: python
 
             # Retrieve MetaDataWithOwnershipModel instances for a user profile with caching
-            models = MetaDataWithOwnershipModel.get_cached_models_for_user_profile(my_user_profile)
+            models = MetaDataWithOwnershipModel.get_cached_models(my_user_profile)
 
         :param user_profile: The user profile for which to retrieve MetaDataWithOwnershipModel instances.
         :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile.
@@ -1248,7 +1270,7 @@ class Secret(MetaDataWithOwnershipModel):
             raise SmarterValueError(
                 f"Name and encrypted_value are required fields. Got name: {self.name}, encrypted_value: {self.encrypted_value}"
             )
-        self.account = self.user_profile.account
+        self.user_profile = self.user_profile
         super().save(*args, **kwargs)
         if is_new:
             secret_created.send(sender=self.__class__, secret=self)
