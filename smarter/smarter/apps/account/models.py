@@ -1026,6 +1026,15 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_pk(pk: int) -> Optional["MetaDataWithOwnershipModel"]:
+            """
+            Internal method to retrieve a model instance by primary key with caching.
+            Prefetches related tags and selects related user profile, account, and
+            user for optimal access. Handles most common SAM pk retrieval scenarios.
+
+            :param pk: The primary key of the model instance to retrieve.
+            :returns: The model instance if found, otherwise None.
+            :rtype: Optional["MetaDataWithOwnershipModel"]
+            """
             try:
                 return (
                     cls.objects.prefetch_related("tags")
@@ -1039,6 +1048,18 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         def _get_object_by_name_and_user_profile(
             name: str, user_profile: UserProfile
         ) -> Optional["MetaDataWithOwnershipModel"]:
+            """
+            Internal method to retrieve a model instance by name and user
+            profile with caching. Prefetches related tags and selects
+            related user profile, account, and user for optimal access.
+            Handles common SAM retrieval patterns for name/user.
+
+            :param name: The name of the model instance to retrieve.
+            :param user_profile: The user profile associated with the model instance.
+
+            :returns: The model instance if found, otherwise None.
+            :rtype: Optional["MetaDataWithOwnershipModel"]
+            """
             try:
                 return (
                     cls.objects.prefetch_related("tags")
@@ -1058,6 +1079,18 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_account(name: str, account: Account) -> Optional["MetaDataWithOwnershipModel"]:
+            """
+            Internal method to retrieve a model instance by name and account with
+            caching. Prefetches related tags and selects related user profile,
+            account, and user for optimal access. Handles common SAM retrieval
+            patterns for name/account.
+
+            :param name: The name of the model instance to retrieve.
+            :param account: The account associated with the model instance.
+
+            :returns: The model instance if found, otherwise None.
+            :rtype: Optional["MetaDataWithOwnershipModel"]
+            """
             try:
                 return (
                     cls.objects.prefetch_related("tags")
