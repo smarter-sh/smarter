@@ -2881,7 +2881,7 @@ class PluginDataApi(PluginDataBase):
 
     def __str__(self) -> str:
         plugin: PluginMeta = self.plugin
-        user_profile = plugiºn.user_profile if plugin else "No User Profile"
+        user_profile = plugin.user_profile if plugin else "No User Profile"
         user_profile = str(user_profile)
         name = str(plugin.name) if plugin else "No Plugin Name"
         return str(user_profile + " - " + name)
