@@ -502,21 +502,21 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :rtype: Optional[PluginMeta]
         """
 
-        @cache_results()
+        @cache_results(cls.cache_expiration)
         def _get_model_by_pk(pk: int) -> Optional["PluginMeta"]:
             try:
                 return cls.objects.get(pk=pk)
             except cls.DoesNotExist:
                 return None
 
-        @cache_results()
+        @cache_results(cls.cache_expiration)
         def _get_model_by_name_and_userprofile(name: str, user_profile_id: int) -> Optional["PluginMeta"]:
             try:
                 return cls.objects.get(name=name, user_profile_id=user_profile_id)
             except cls.DoesNotExist:
                 return None
 
-        @cache_results()
+        @cache_results(cls.cache_expiration)
         def _get_model_by_name_and_userprofile_and_plugin_class(
             name: str, user_profile_id: int, plugin_class: str
         ) -> Optional["PluginMeta"]:

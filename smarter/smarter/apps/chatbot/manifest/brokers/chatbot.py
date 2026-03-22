@@ -290,7 +290,7 @@ class SAMChatbotBroker(AbstractBroker):
 
         if not self._chatbot:
             try:
-                self._chatbot = ChatBot.objects.get(user_profile=self.user_profile, name=self.name)
+                self._chatbot = ChatBot.get_cached_model(user_profile=self.user_profile, name=self.name)
             except ChatBot.DoesNotExist:
                 if self.manifest:
                     data = self.manifest_to_django_orm()

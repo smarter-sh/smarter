@@ -380,6 +380,8 @@ class MetaDataModel(TimestampedModel):
 
     """
 
+    cache_expiration = 60  # 60 seconds
+
     # pylint: disable=missing-class-docstring
     class Meta:
         abstract = True
@@ -434,15 +436,21 @@ class MetaDataModel(TimestampedModel):
         :rtype: Optional[models.Model]
         """
 
-        @cache_results()
+        if cls._meta.abstract:
+            raise NotImplementedError(
+                "get_cached_model() must be called on a concrete model class, not an abstract base class."
+            )
+
+        @cache_results(timeout=cls.cache_expiration)
         def _get_model_by_name(name: str) -> Optional[models.Model]:
             try:
                 return cls.objects.get(name=name)
             except cls.DoesNotExist:
                 return None
 
-        @cache_results()
+        @cache_results(timeout=cls.cache_expiration)
         def _get_model_by_pk(pk: int) -> Optional[models.Model]:
+
             try:
                 return cls.objects.get(pk=pk)
             except cls.DoesNotExist:
