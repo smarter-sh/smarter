@@ -838,14 +838,28 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :rtype: Optional[models.Model]
         """
 
-        @cache_results()
+        @cache_results(cls.cache_expiration)
+        def _get_model_by_pk(pk: int) -> Optional[models.Model]:
+            try:
+                return cls.objects.get(pk=pk)
+            except cls.DoesNotExist:
+                return None
+
+        @cache_results(cls.cache_expiration)
+        def _get_model_by_name(name: str) -> Optional[models.Model]:
+            try:
+                return cls.objects.get(name=name)
+            except cls.DoesNotExist:
+                return None
+
+        @cache_results(cls.cache_expiration)
         def _get_model_by_name_and_user_profile(name: str, user_profile: UserProfile) -> Optional[models.Model]:
             try:
                 return cls.objects.get(name=name, user_profile=user_profile)
             except cls.DoesNotExist:
                 return None
 
-        @cache_results()
+        @cache_results(cls.cache_expiration)
         def _get_model_by_name_and_account(name: str, account: Account) -> Optional[models.Model]:
             try:
                 return cls.objects.get(name=name, user_profile__account=account)
@@ -853,7 +867,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return None
 
         if pk is not None:
-            return MetaDataModel.get_cached_model(pk=pk)
+            return _get_model_by_pk(pk)
 
         if user:
             user_profiles = UserProfile.objects.filter(user=user)
@@ -868,13 +882,12 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     user.email,
                 )
                 return _get_model_by_name_and_user_profile(name, user_profiles.first())
-
         if account:
             return _get_model_by_name_and_account(name, account)
         if user_profile:
             return _get_model_by_name_and_user_profile(name, user_profile)
 
-        return MetaDataModel.get_cached_model(name=name)
+        return _get_model_by_name(name)
 
 
 class PaymentMethod(TimestampedModel):

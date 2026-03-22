@@ -14,7 +14,12 @@ from django.urls import reverse
 from rest_framework import serializers
 
 # our stuff
-from smarter.apps.account.models import Account, MetaDataWithOwnershipModel, UserProfile
+from smarter.apps.account.models import (
+    Account,
+    MetaDataWithOwnershipModel,
+    User,
+    UserProfile,
+)
 from smarter.apps.account.serializers import UserProfileSerializer
 from smarter.apps.account.utils import (
     account_number_from_url,
@@ -907,6 +912,32 @@ class ChatBot(MetaDataWithOwnershipModel):
         # default to default mode as a safety measure
         return self.Modes.UNKNOWN
 
+    @classmethod
+    def get_cached_model(
+        cls,
+        pk: Optional[int] = None,
+        name: Optional[str] = None,
+        user: Optional[User] = None,
+        user_profile: Optional[UserProfile] = None,
+        account: Optional[Account] = None,
+    ) -> Optional["ChatBot"]:
+        """
+        Retrieve a model instance using caching to optimize performance.
+
+        :param pk: The primary key of the model instance to retrieve.
+        :param name: The name of the model instance to retrieve.
+        :param user: The user associated with the model instance.
+        :param user_profile: The user profile associated with the model instance.
+        :param account: The account associated with the model instance.
+
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional["ChatBot"]
+        """
+        retval = super().get_cached_model(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
+        if isinstance(retval, ChatBot):
+            return retval
+        return None
+
     def save(self, *args, asynchronous=False, **kwargs):
         """
         Override save() to validate domain and send signals on status changes.
@@ -1358,111 +1389,6 @@ class ChatBotCustomDomainSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-def get_cached_chatbot(
-    chatbot_id: Optional[int] = None, name: Optional[str] = None, user_profile: Optional[UserProfile] = None
-) -> Optional[ChatBot]:
-    """
-    Returns a chatbot from the cache if it exists, otherwise
-    it queries the database and caches the result. There are multiple
-    possible ways to look up a chatbot:
-
-    1. By user_profile ownership and chatbot name
-    2. By account association. If the account administrator owns a chatbot of
-       the same name then this will be returned.
-    3. By Platform-wide association. If the Smarter platform admin owns a
-       chatbot of the same name then this will be returned.
-
-    .. code-block:: python
-
-        chatbot = get_cached_chatbot(chatbot_id=1)
-        print(chatbot.url)
-
-    :param chatbot_id: The ID of the chatbot to retrieve.
-    :param name: The name of the chatbot to retrieve.
-    :param user_profile: The UserProfile instance of the requesting user.
-    :returns: The ChatBot instance or None if not found.
-    :rtype: Optional[ChatBot]
-    """
-
-    @cache_results()
-    def get_chatbot_by_id(chatbot_id: int) -> Optional[ChatBot]:
-        """
-        Returns a chatbot by its ID. Creates a lightweight cache key based on
-        the chatbot int ID value.
-        """
-        try:
-            return ChatBot.objects.get(id=chatbot_id)
-        except ChatBot.DoesNotExist:
-            return None
-
-    @cache_results()
-    def get_chatbot_by_name_and_user_profile(name: str, user_profile_id: int) -> Optional[ChatBot]:
-        """
-        Returns a chatbot by name and user_profile_id. Creates a lightweight
-        cache key based on name and the UserProfile int id value.
-        """
-        user_profile = UserProfile.objects.get(id=user_profile_id)
-        try:
-            return ChatBot.objects.get(name=name, user_profile=user_profile)
-        except ChatBot.DoesNotExist:
-            return None
-
-    logger.debug(
-        "%s get_cached_chatbot() called with chatbot_id=%s, name=%s, user_profile=%s",
-        formatted_text(__name__),
-        str(chatbot_id),
-        str(name),
-        str(user_profile),
-    )
-
-    if chatbot_id is not None:
-        return get_chatbot_by_id(chatbot_id)
-
-    # hereon we need a name
-    if name is None:
-        return None
-
-    if user_profile:
-        # 1. Try to get chatbot owned by the user_profile
-        retval = get_chatbot_by_name_and_user_profile(name, user_profile.id)
-        if retval:
-            logger.debug(
-                "%s get_cached_chatbot() found chatbot '%s' owned by user_profile id %d",
-                formatted_text(__name__),
-                name,
-                user_profile.id,
-            )
-            return retval
-
-        # 2. Try to get chatbot owned by the account administrator
-        account_admin = UserProfile.admin_for_account(user_profile.account)
-        account_admin_user_profile = get_cached_user_profile(account_admin)
-        retval = get_chatbot_by_name_and_user_profile(name, account_admin_user_profile.id)
-        if retval:
-            logger.debug(
-                "%s get_cached_chatbot() found chatbot '%s' owned by account admin user_profile id %d",
-                formatted_text(__name__),
-                name,
-                account_admin_user_profile.id,
-            )
-            return retval
-
-    # 3. Try to get chatbot owned by the Smarter platform administrator
-    retval = get_chatbot_by_name_and_user_profile(name, smarter_cached_objects.smarter_admin_user_profile.id)
-    if retval:
-        logger.debug(
-            "%s get_cached_chatbot() found chatbot '%s' owned by smarter platform admin user_profile id %d",
-            formatted_text(__name__),
-            name,
-            smarter_cached_objects.smarter_admin_user_profile.id,
-        )
-        return retval
-    logger.warning(
-        "%s get_cached_chatbot() could not find chatbot '%s' for %s", formatted_text(__name__), name, user_profile
-    )
-    return None
-
-
 def get_cached_chatbot_by_request(request: HttpRequest) -> Optional[ChatBot]:
     """
     Returns the chatbot from the cache if it exists, otherwise
@@ -1648,7 +1574,7 @@ class ChatBotHelper(SmarterRequestMixin):
         if self.is_chatbot:
             if not isinstance(self.chatbot, ChatBot):
                 if self.user_profile and self._name:
-                    self.chatbot = get_cached_chatbot(user_profile=self.user_profile, name=self._name)
+                    self.chatbot = ChatBot.get_cached_model(name=self._name, user_profile=self.user_profile)
 
             if not isinstance(self._chatbot, ChatBot):
                 chatbot_helper_logger.warning(
@@ -1755,7 +1681,7 @@ class ChatBotHelper(SmarterRequestMixin):
             return self._chatbot_id
 
         if self.chatbot_name and self.user_profile:
-            self.chatbot = get_cached_chatbot(name=self.chatbot_name, user_profile=self.user_profile)
+            self.chatbot = ChatBot.get_cached_model(name=self.chatbot_name, user_profile=self.user_profile)
             chatbot_helper_logger.debug(
                 f"chatbot_id() initialized self.chatbot_id={self.chatbot_id} from name={ self.chatbot_name } and account={ self.account }"
             )
@@ -1766,7 +1692,7 @@ class ChatBotHelper(SmarterRequestMixin):
     @chatbot_id.setter
     def chatbot_id(self, chatbot_id: int):
         self._chatbot_id = chatbot_id
-        chatbot = get_cached_chatbot(chatbot_id=self.chatbot_id)
+        chatbot = ChatBot.get_cached_model(pk=chatbot_id)
         if chatbot and chatbot.user_profile.account != self.account:
             raise SmarterValueError("ChatBotHelper.chatbot_id setter: ChatBot's Account does not match self.account")
         self.chatbot = chatbot
@@ -2051,14 +1977,14 @@ class ChatBotHelper(SmarterRequestMixin):
 
         # cheapest possibility
         if self._chatbot_id:
-            self.chatbot = get_cached_chatbot(chatbot_id=self.chatbot_id)
+            self.chatbot = ChatBot.get_cached_model(pk=self._chatbot_id)
             chatbot_helper_logger.debug(f"initialized chatbot {self._chatbot} from chatbot_id {self.chatbot_id}")
             return self._chatbot
 
         # our expected case
         if self.user_profile and self.name:
             try:
-                self.chatbot = get_cached_chatbot(user_profile=self.user_profile, name=self.name)
+                self.chatbot = ChatBot.get_cached_model(name=self.name, user_profile=self.user_profile)
                 chatbot_helper_logger.debug(
                     f"initialized chatbot {self._chatbot} from account {self.account} and name {self.name}"
                 )
