@@ -501,20 +501,11 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :return: A PluginMeta instance if found, otherwise None.
         :rtype: Optional[PluginMeta]
         """
-
-        @cache_results(cls.cache_expiration)
-        def _get_model_by_pk(pk: int) -> Optional["PluginMeta"]:
-            try:
-                return cls.objects.get(pk=pk)
-            except cls.DoesNotExist:
-                return None
-
-        @cache_results(cls.cache_expiration)
-        def _get_model_by_name_and_userprofile(name: str, user_profile_id: int) -> Optional["PluginMeta"]:
-            try:
-                return cls.objects.get(name=name, user_profile_id=user_profile_id)
-            except cls.DoesNotExist:
-                return None
+        if not plugin_class:
+            retval = super().get_cached_model(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
+            if isinstance(retval, PluginMeta):
+                return retval
+            return None
 
         @cache_results(cls.cache_expiration)
         def _get_model_by_name_and_userprofile_and_plugin_class(
@@ -526,7 +517,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 return None
 
         if pk:
-            return _get_model_by_pk(pk)
+            retval = super().get_cached_model(pk=pk)
+            if isinstance(retval, PluginMeta):
+                return retval
 
         if not user_profile:
             if not user:
@@ -539,7 +532,14 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         if plugin_class:
             return _get_model_by_name_and_userprofile_and_plugin_class(name, user_profile.id, plugin_class)
-        return _get_model_by_name_and_userprofile(name, user_profile.id)
+        retval = super().get_cached_model(name=name, user_profile=user_profile)
+        if isinstance(retval, PluginMeta):
+            return retval
+
+    @classmethod
+    def get_cached_models_for_user_profile(cls, user_profile: UserProfile) -> QuerySet["PluginMeta"]:
+
+        return super().get_cached_models_for_user_profile(user_profile=user_profile)  # type: ignore[return-value]
 
     @classmethod
     @cache_results()
@@ -577,11 +577,12 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 return False
 
             def get_plugins_for_account() -> QuerySet:
-                user_plugins = PluginMeta.objects.filter(user_profile=user_profile).order_by("name")
-                admin_plugins = PluginMeta.objects.filter(user_profile=admin_user_profile).order_by("name")
-                smarter_plugins = PluginMeta.objects.filter(
+                user_plugins = PluginMeta.get_cached_models_for_user_profile(user_profile=user_profile)
+                admin_plugins = PluginMeta.get_cached_models_for_user_profile(user_profile=admin_user_profile)  # type: ignore[assignment]
+                smarter_plugins = PluginMeta.get_cached_models_for_user_profile(
                     user_profile=smarter_cached_objects.smarter_admin_user_profile
-                ).order_by("name")
+                )
+
                 combined_plugins = user_plugins | admin_plugins | smarter_plugins
                 combined_plugins = combined_plugins.distinct().order_by("name")
                 return combined_plugins

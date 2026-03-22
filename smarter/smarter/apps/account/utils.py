@@ -21,7 +21,6 @@ Two caching strategies are used:
 import logging
 import re
 import uuid
-from functools import cached_property
 from typing import Optional
 
 from smarter.apps.account.models import (
@@ -111,7 +110,10 @@ class SmarterCachedObjects:
         @cache_results(timeout=600)  # cache for 10 minutes
         def _get_smarter_admin() -> User:
             try:
-                user = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first().user
+                user_profile = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first()
+                if not user_profile:
+                    raise SmarterConfigurationError("No superuser user profile found for smarter account")
+                user = user_profile.user
             except User.DoesNotExist:
                 user = User.objects.create(
                     username=SMARTER_ADMIN_USERNAME, is_superuser=True, is_staff=True, is_active=True
