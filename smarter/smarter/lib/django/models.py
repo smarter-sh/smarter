@@ -428,7 +428,11 @@ class MetaDataModel(TimestampedModel):
     @cached_property
     def tags_list(self) -> list[str]:
         """
-        Return the tags as a list of strings.
+        Return the tags as a list of strings. We assume that @cached_property
+        is more efficient at fetch that @cache_results, all things considered
+        equal, which provides a marginal boost to instances. Meanwhile, the
+        @cache_results is persisted to the Django cache, and thus outlives
+        this instance. Thus, best of both worlds.
 
         :returns: List of tag names.
         :rtype: list[str]
