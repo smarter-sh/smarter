@@ -562,7 +562,7 @@ class MetaDataModel(TimestampedModel):
         @cache_results(timeout=cls.cache_expiration)
         def _get_object_by_name(name: str) -> Optional["MetaDataModel"]:
             try:
-                return cls.objects.get(name=name)
+                return cls.objects.prefetch_related("tags").get(name=name)
             except cls.DoesNotExist:
                 return None
             except cls.MultipleObjectsReturned as e:

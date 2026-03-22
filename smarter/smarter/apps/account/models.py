@@ -918,14 +918,18 @@ class UserProfile(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_object_by_user_and_account(user: User, account: Account) -> Optional["UserProfile"]:
             try:
-                return cls.objects.select_related("user", "account").get(user=user, account=account)
+                return (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user", "account")
+                    .get(user=user, account=account)
+                )
             except cls.DoesNotExist:
                 return None
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_user(user: User) -> Optional["UserProfile"]:
             try:
-                return cls.objects.select_related("user", "account").get(user=user)
+                return cls.objects.prefetch_related("tags").select_related("user", "account").get(user=user)
             except cls.DoesNotExist:
                 return None
             except cls.MultipleObjectsReturned:
@@ -934,7 +938,7 @@ class UserProfile(MetaDataModel):
                     formatted_text(__name__ + ".UserProfile.get_cached_object()"),
                     user.email,
                 )
-                return cls.objects.select_related("user", "account").filter(user=user).first()
+                return cls.objects.prefetch_related("tags").select_related("user", "account").filter(user=user).first()
 
         if user or account:
             if user and account:
@@ -1025,8 +1029,10 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             name: str, user_profile: UserProfile
         ) -> Optional["MetaDataWithOwnershipModel"]:
             try:
-                return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
-                    name=name, user_profile=user_profile
+                return (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(name=name, user_profile=user_profile)
                 )
             except cls.DoesNotExist:
                 return None
@@ -1037,13 +1043,15 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     name,
                     user_profile,
                 )
-                return cls.objects.filter(name=name, user_profile=user_profile).first()
+                return cls.objects.prefetch_related("tags").filter(name=name, user_profile=user_profile).first()
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_account(name: str, account: Account) -> Optional["MetaDataWithOwnershipModel"]:
             try:
-                return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
-                    name=name, user_profile__account=account
+                return (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(name=name, user_profile__account=account)
                 )
             except cls.DoesNotExist:
                 return None
@@ -1054,7 +1062,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     name,
                     account,
                 )
-                return cls.objects.filter(name=name, user_profile__account=account).first()
+                return cls.objects.prefetch_related("tags").filter(name=name, user_profile__account=account).first()
 
         if pk:
             return super().get_cached_object(pk=pk)  # type: ignore[return-value]
@@ -1109,7 +1117,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         @cache_results(cls.cache_expiration)
         def _get_objects_for_user_profile_id(user_profile_id: int) -> models.QuerySet["MetaDataWithOwnershipModel"]:
-            return cls.objects.filter(user_profile_id=user_profile_id)
+            return cls.objects.prefetch_related("tags").filter(user_profile_id=user_profile_id)
 
         if user_profile:
             return _get_objects_for_user_profile_id(user_profile.id)
