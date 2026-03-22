@@ -501,6 +501,19 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :return: A PluginMeta instance if found, otherwise None.
         :rtype: Optional[PluginMeta]
         """
+        # pylint: disable=W0621
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s, plugin_class: %s",
+            logger_prefix,
+            pk,
+            name,
+            user.username if user else None,
+            user_profile.id if user_profile else None,
+            account.id if account else None,
+            plugin_class,
+        )
+
         if not plugin_class:
             retval = super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
             if isinstance(retval, PluginMeta):
@@ -536,8 +549,22 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         if isinstance(retval, PluginMeta):
             return retval
 
+    # pylint: disable=W0222
     @classmethod
     def get_cached_objects(cls, user_profile: UserProfile) -> QuerySet["PluginMeta"]:
+        """
+        Return a QuerySet of all PluginMeta instances for the given user profile.
+        This method caches the results to improve performance.
+
+        :param user_profile: The user profile whose plugins should be retrieved.
+        :type user_profile: UserProfile
+        :return: A QuerySet of PluginMeta instances for the user profile.
+        :rtype: QuerySet[PluginMeta]
+        """
+
+        # pylint: disable=W0621
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_objects()")
+        logger.debug("%s called with user_profile=%s", logger_prefix, user_profile)
 
         return super().get_cached_objects(user_profile=user_profile)  # type: ignore[return-value]
 
@@ -1004,6 +1031,14 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["PluginDataBase"]
         """
+        # pylint: disable=W0621
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, plugin: %s",
+            logger_prefix,
+            pk,
+            plugin,
+        )
 
         @cache_results()
         def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataBase"]:

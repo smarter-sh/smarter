@@ -16,6 +16,7 @@ from django.utils.timezone import is_aware, make_aware
 from taggit.managers import TaggableManager
 
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib.cache import cache_results
 from smarter.lib.cache import lazy_cache as cache
@@ -375,6 +376,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[models.Model]
         """
+        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()")
+        logger.debug("%s.get_cached_object() called with pk: %s", logger_prefix, pk)
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -411,6 +414,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: A queryset of all model instances.
         :rtype: QuerySet
         """
+        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
+        logger.debug("%s.get_cached_objects() called", logger_prefix)
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -543,6 +548,8 @@ class MetaDataModel(TimestampedModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["MetaDataModel"]
         """
+        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()")
+        logger.debug("%s.get_cached_object() called with pk: %s, name: %s", logger_prefix, pk, name)
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -588,6 +595,8 @@ class MetaDataModel(TimestampedModel):
         :returns: A queryset of all model instances.
         :rtype: QuerySet
         """
+        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
+        logger.debug("%s.get_cached_objects() called", logger_prefix)
 
         if cls._meta.abstract:
             raise NotImplementedError(

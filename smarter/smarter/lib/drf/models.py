@@ -192,6 +192,8 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         .. returns:: A queryset of SmarterAuthToken objects matching the criteria.
         .. rtype:: QuerySet[SmarterAuthToken]
         """
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_objects()")
+        logger.debug("%s called with user_profile=%s, user=%s, name=%s", logger_prefix, user_profile, user, name)
 
         # pylint: disable=W0613
         @cache_results(cls.cache_expiration)

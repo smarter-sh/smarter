@@ -31,6 +31,7 @@ from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterValueError,
 )
+from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -484,6 +485,16 @@ class Provider(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["Provider"]
         """
+        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s",
+            logger_prefix,
+            pk,
+            name,
+            user.username if user else None,
+            user_profile.id if user_profile else None,
+            account.id if account else None,
+        )
         retval = super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
         if isinstance(retval, Provider):
             return retval

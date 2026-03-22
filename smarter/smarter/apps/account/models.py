@@ -310,6 +310,46 @@ class Account(MetaDataModel):
         except cls.DoesNotExist:
             return None
 
+    @classmethod
+    def get_cached_object(
+        cls, pk: Optional[int] = None, name: Optional[str] = None, account_number: Optional[str] = None
+    ) -> Optional["Account"]:
+        """
+        Retrieve an Account instance by account number with caching.
+
+        This method uses caching to optimize retrieval of Account instances by their account number.
+        It checks the cache first and falls back to a database query if the cache is missed.
+
+        :param account_number: String. The account number to search for.
+        :returns: Optional[Account]
+            The Account instance if found, otherwise None.
+
+        .. note::
+
+            Caching can significantly improve performance for frequently accessed accounts.
+
+        **Example usage**::
+
+            account = Account.get_cached_object(account_number="1234-5678-9012")
+            if account:
+                print(account.company_name)
+
+        """
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger.debug("%s called with pk=%s, name=%s, account_number=%s", logger_prefix, pk, name, account_number)
+
+        @cache_results(cls.cache_expiration)
+        def _get_account_by_number(account_number: str) -> Optional["Account"]:
+            try:
+                return cls.objects.get(account_number=account_number)
+            except cls.DoesNotExist:
+                return None
+
+        if account_number:
+            return _get_account_by_number(account_number)
+
+        return super().get_cached_object(pk=pk, name=name)  # type: ignore[return-value]
+
     # pylint: disable=missing-class-docstring
     class Meta:
         verbose_name = "Account"
@@ -813,6 +853,15 @@ class UserProfile(MetaDataModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["UserProfile"]
         """
+        logger_prefix = formatted_text(__name__ + ".UserProfile.get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, name: %s, user: %s, account: %s",
+            logger_prefix,
+            pk,
+            name,
+            user,
+            account,
+        )
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_user_and_account(user: User, account: Account) -> Optional["UserProfile"]:
@@ -910,6 +959,16 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[models.Model]
         """
+        logger_prefix = formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s",
+            logger_prefix,
+            pk,
+            name,
+            user,
+            user_profile,
+            account,
+        )
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_pk(pk: int) -> Optional[models.Model]:
@@ -1004,6 +1063,12 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
 
         """
+        logger_prefix = formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_objects()")
+        logger.debug(
+            "%s called with user_profile: %s",
+            logger_prefix,
+            user_profile,
+        )
 
         @cache_results(cls.cache_expiration)
         def _get_objects_for_user_profile_id(user_profile_id: int) -> models.QuerySet["MetaDataWithOwnershipModel"]:
@@ -1517,6 +1582,17 @@ class Secret(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[Secret]
         """
+        logger_prefix = formatted_text(__name__ + ".Secret.get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s",
+            logger_prefix,
+            pk,
+            name,
+            user,
+            user_profile,
+            account,
+        )
+
         retval = super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
         if isinstance(retval, Secret):
             return retval
