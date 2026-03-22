@@ -312,7 +312,11 @@ class Account(MetaDataModel):
 
     @classmethod
     def get_cached_object(
-        cls, pk: Optional[int] = None, name: Optional[str] = None, account_number: Optional[str] = None
+        cls,
+        pk: Optional[int] = None,
+        name: Optional[str] = None,
+        account_number: Optional[str] = None,
+        company_name: Optional[str] = None,
     ) -> Optional["Account"]:
         """
         Retrieve an Account instance by account number with caching.
@@ -345,8 +349,18 @@ class Account(MetaDataModel):
             except cls.DoesNotExist:
                 return None
 
+        @cache_results(cls.cache_expiration)
+        def _get_account_by_company_name(company_name: str) -> Optional["Account"]:
+            try:
+                return cls.objects.get(company_name=company_name)
+            except cls.DoesNotExist:
+                return None
+
         if account_number:
             return _get_account_by_number(account_number)
+
+        if company_name:
+            return _get_account_by_company_name(company_name)
 
         return super().get_cached_object(pk=pk, name=name)  # type: ignore[return-value]
 

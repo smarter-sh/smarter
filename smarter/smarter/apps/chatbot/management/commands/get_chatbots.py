@@ -3,7 +3,6 @@
 from typing import Optional
 
 from smarter.apps.account.models import Account
-from smarter.apps.account.utils import get_cached_account
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.management.base import SmarterCommand
@@ -49,13 +48,13 @@ class Command(SmarterCommand):
 
         if options["account_number"]:
             try:
-                account = get_cached_account(account_number=account_number)
+                account = Account.get_cached_object(account_number=account_number)
             except Account.DoesNotExist:
                 self.handle_completed_failure(msg=f"Account {account_number} not found.")
                 return
         elif options["company_name"]:
             try:
-                account = get_cached_account(company_name=company_name)
+                account = Account.get_cached_object(company_name=company_name)
             except Account.DoesNotExist:
                 self.handle_completed_failure(msg=f"Account {company_name} not found.")
                 return

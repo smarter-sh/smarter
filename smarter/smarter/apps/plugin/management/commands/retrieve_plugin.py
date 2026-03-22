@@ -6,7 +6,6 @@ from django.core.exceptions import MultipleObjectsReturned
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
-    get_cached_account,
     get_cached_user_for_username,
     get_cached_user_profile,
 )
@@ -50,7 +49,7 @@ class Command(SmarterCommand):
             raise
 
         try:
-            account = get_cached_account(account_number=account_number)
+            account = Account.get_cached_object(account_number=account_number)
             if account is None:
                 raise Account.DoesNotExist(f"Account with account number {account_number} does not exist.")
         except Account.DoesNotExist as e:

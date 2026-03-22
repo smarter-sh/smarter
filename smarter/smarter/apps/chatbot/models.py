@@ -23,7 +23,6 @@ from smarter.apps.account.models import (
 from smarter.apps.account.serializers import UserProfileSerializer
 from smarter.apps.account.utils import (
     account_number_from_url,
-    get_cached_account,
     get_cached_admin_user_for_account,
     get_cached_user_profile,
     smarter_cached_objects,
@@ -818,6 +817,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url
 
+    @property
     def ready(self):
         """
         The readiness status of the ChatBot.
@@ -961,7 +961,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return None
 
     @classmethod
-    def get_cached_objects(cls, user_profile: UserProfile) -> models.QuerySet["ChatBot"]:
+    def get_cached_objects(cls, user_profile: Optional[UserProfile] = None) -> models.QuerySet["ChatBot"]:
         """
         Retrieve a list of ChatBot instances associated with a user profile using caching.
 
@@ -987,7 +987,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         if user_profile:
             return _get_chatbots_for_user_profile_id(user_profile.id)
 
-        return super().get_cached_objects()
+        return super().get_cached_objects()  # type: ignore[return-value]
 
     def save(self, *args, asynchronous=False, **kwargs):
         """
@@ -1034,10 +1034,16 @@ class ChatBot(MetaDataWithOwnershipModel):
                 should_undeploy = True
         super().save(*args, **kwargs)
         if should_deploy:
-            logger.debug("%s.ChatBot.save() sending chatbot_deploy signal for ChatBot id: %s", logger_prefix, self.pk)
+            logger.debug(
+                "%s.ChatBot.save() sending chatbot_deploy signal for ChatBot id: %s", self.formatted_class_name, self.pk
+            )
             chatbot_deploy.send(sender=self.__class__, chatbot=self)
         if should_undeploy:
-            logger.debug("%s.ChatBot.save() sending chatbot_undeploy signal for ChatBot id: %s", logger_prefix, self.pk)
+            logger.debug(
+                "%s.ChatBot.save() sending chatbot_undeploy signal for ChatBot id: %s",
+                self.formatted_class_name,
+                self.pk,
+            )
             chatbot_undeploy.send(sender=self.__class__, chatbot=self)
 
 
@@ -1772,7 +1778,7 @@ class ChatBotHelper(SmarterRequestMixin):
         account_number = account_number_from_url(self._url)  # type: ignore[arg-type]
         if account_number:
             chatbot_helper_logger.debug("overriding account with account_number from named url: %s", self.url)
-            return get_cached_account(account_number=account_number)  # type: ignore[return-value]
+            return Account.get_cached_object(account_number=account_number)
 
         # from the super()
         return self._account

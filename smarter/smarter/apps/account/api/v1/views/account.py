@@ -13,7 +13,6 @@ from dotenv import Optional
 from rest_framework.response import Response
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import get_cached_account
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -22,6 +21,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .base import AccountListViewBase, AccountViewBase
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
@@ -59,7 +59,7 @@ class AccountView(AccountViewBase):
 
         try:
             if account_id and self.is_superuser_or_unauthorized():
-                self.account = get_cached_account(account_id=account_id)
+                self.account = Account.get_cached_object(pk=account_id)
         except UserProfile.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
@@ -87,7 +87,7 @@ class AccountView(AccountViewBase):
 
         return HttpResponseRedirect(request.path_info)
 
-    def delete(self, request, account_id: int = None):
+    def delete(self, request, account_id: int):
         if account_id and self.is_superuser_or_unauthorized():
             self.account = get_object_or_404(Account, pk=account_id)
 
