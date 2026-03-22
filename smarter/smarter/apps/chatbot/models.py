@@ -1006,7 +1006,7 @@ class ChatBot(MetaDataWithOwnershipModel):
             if self.deployed:
                 chatbot_deploy.send(sender=self.__class__, chatbot=self)
         else:
-            orig = ChatBot.objects.get(pk=self.pk)
+            orig = ChatBot.get_cached_model(pk=self.pk)
             if orig.dns_verification_status != self.dns_verification_status:
                 chatbot_dns_verification_status_changed.send(sender=self.__class__, chatbot=self)
                 chatbot_deploy_status_changed.send(sender=self.__class__, chatbot=self)
@@ -2068,7 +2068,7 @@ class ChatBotHelper(SmarterRequestMixin):
         if not self.chatbot:
             return None
         try:
-            return Provider.objects.get(name=self.chatbot.provider, user_profile__account=self.account)
+            return Provider.get_cached_model(name=self.chatbot.provider, account=self.account)
         except Provider.DoesNotExist:
             return None
 

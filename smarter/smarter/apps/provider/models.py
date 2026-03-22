@@ -12,7 +12,13 @@ import requests
 from django.conf import settings
 from django.db import models
 
-from smarter.apps.account.models import MetaDataWithOwnershipModel, Secret, User
+from smarter.apps.account.models import (
+    Account,
+    MetaDataWithOwnershipModel,
+    Secret,
+    User,
+    UserProfile,
+)
 from smarter.apps.account.utils import (
     get_cached_account_for_user,
     get_cached_admin_user_for_account,
@@ -443,6 +449,45 @@ class Provider(MetaDataWithOwnershipModel):
         self.is_flagged = False
         self.is_suspended = False
         self.save()
+
+    @classmethod
+    def get_cached_model(
+        cls,
+        pk: Optional[int] = None,
+        name: Optional[str] = None,
+        user: Optional[User] = None,
+        user_profile: Optional[UserProfile] = None,
+        account: Optional[Account] = None,
+    ) -> Optional["Provider"]:
+        """
+        Retrieve a model instance using caching to optimize performance.
+
+        Examples of retrieval patterns:
+
+        .. code-block:: python
+
+            # By primary key
+            instance = MyModel.get_cached_model(pk=123)
+
+            # By name and user profile
+            instance = MyModel.get_cached_model(name="Resource Name", user_profile=user_profile)
+
+            # By name and account
+            instance = MyModel.get_cached_model(name="Resource Name", account=account)
+
+        :param pk: The primary key of the model instance to retrieve.
+        :param name: The name of the model instance to retrieve.
+        :param user: The user associated with the model instance.
+        :param user_profile: The user profile associated with the model instance.
+        :param account: The account associated with the model instance.
+
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional["Provider"]
+        """
+        retval = super().get_cached_model(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
+        if isinstance(retval, Provider):
+            return retval
+        return None
 
     @classmethod
     def get_cached_provider_by_account_id_and_name(

@@ -902,6 +902,36 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         return _get_model_by_name(name)
 
+    @classmethod
+    def get_cached_models_for_user_profile(
+        cls, user_profile: UserProfile
+    ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
+        """
+        Retrieve a list of MetaDataWithOwnershipModel instances associated with a user profile using caching.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve MetaDataWithOwnershipModel instances for a user profile with caching
+            models = MetaDataWithOwnershipModel.get_cached_models_for_user_profile(my_user_profile)
+
+        :param user_profile: The user profile for which to retrieve MetaDataWithOwnershipModel instances.
+        :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile.
+        :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
+
+        """
+        if not user_profile:
+            return cls.objects.none()
+
+        user_profile_id = user_profile.id
+
+        @cache_results(cls.cache_expiration)
+        def _get_models_for_user_profile_id(user_profile_id: int) -> models.QuerySet["MetaDataWithOwnershipModel"]:
+            return cls.objects.filter(user_profile_id=user_profile_id)
+
+        return _get_models_for_user_profile_id(user_profile_id)
+
 
 class PaymentMethod(TimestampedModel):
     """
@@ -1370,3 +1400,42 @@ class Secret(MetaDataWithOwnershipModel):
             )
         fernet = Fernet(encryption_key)
         return fernet
+
+    @classmethod
+    def get_cached_model(
+        cls,
+        pk: Optional[int] = None,
+        name: Optional[str] = None,
+        user: Optional[User] = None,
+        user_profile: Optional[UserProfile] = None,
+        account: Optional[Account] = None,
+    ) -> Optional["Secret"]:
+        """
+        Retrieve a model instance using caching to optimize performance.
+
+        Examples of retrieval patterns:
+
+        .. code-block:: python
+
+            # By primary key
+            instance = MyModel.get_cached_model(pk=123)
+
+            # By name and user profile
+            instance = MyModel.get_cached_model(name="Resource Name", user_profile=user_profile)
+
+            # By name and account
+            instance = MyModel.get_cached_model(name="Resource Name", account=account)
+
+        :param pk: The primary key of the model instance to retrieve.
+        :param name: The name of the model instance to retrieve.
+        :param user: The user associated with the model instance.
+        :param user_profile: The user profile associated with the model instance.
+        :param account: The account associated with the model instance.
+
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional[Secret]
+        """
+        retval = super().get_cached_model(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
+        if isinstance(retval, Secret):
+            return retval
+        return None
