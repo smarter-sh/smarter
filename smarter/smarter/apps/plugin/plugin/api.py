@@ -249,7 +249,7 @@ class ApiPlugin(PluginBase):
         if connection_name:
             # recast the Pydantic model to the PluginDataApi Django ORM model
             try:
-                account = self.user_profile.account if self.user_profile else None
+                account = self.user_profile.cached_account if self.user_profile else None
                 plugin_data_apiconnection = ApiConnection.objects.get(
                     user_profile__account=account,
                     name=connection_name,

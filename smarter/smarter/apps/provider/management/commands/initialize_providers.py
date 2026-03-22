@@ -171,7 +171,7 @@ class Command(SmarterCommand):
                 "privacy_policy_url": "https://openai.com/policies/privacy-policy/",
                 "docs_url": "https://platform.openai.com/docs/api-reference",
                 "tos_accepted_at": timezone.now(),
-                "tos_accepted_by": self.user_profile.user,
+                "tos_accepted_by": self.user_profile.cached_user,
             },
         )
         filename = "OpenAI-white-monoblossom.png"
@@ -253,7 +253,7 @@ class Command(SmarterCommand):
                 "privacy_policy_url": "https://policies.google.com/privacy",
                 "docs_url": "https://developers.generativeai.google/learn/api",
                 "tos_accepted_at": timezone.now(),
-                "tos_accepted_by": self.user_profile.user,
+                "tos_accepted_by": self.user_profile.cached_user,
             },
         )
         filename = "google-ai.png"
@@ -306,7 +306,7 @@ class Command(SmarterCommand):
                 "privacy_policy_url": "https://ai.meta.com/privacy/",
                 "docs_url": "https://ai.meta.com/docs/",
                 "tos_accepted_at": timezone.now(),
-                "tos_accepted_by": self.user_profile.user,
+                "tos_accepted_by": self.user_profile.cached_user,
             },
         )
 

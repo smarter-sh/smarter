@@ -93,7 +93,7 @@ def create_charge(*args, **kwargs):
         if user:
             user_profile = get_cached_user_profile(user=user)
             if user_profile:
-                account = user_profile.account
+                account = user_profile.cached_account
     else:
         account_id = kwargs.get("account_id")
         if account_id:

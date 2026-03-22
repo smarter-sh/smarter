@@ -377,20 +377,22 @@ def get_cached_account_for_user(user, invalidate: bool = False) -> Optional[Acco
         """
         user_profiles = UserProfile.objects.filter(user_id=user_id)
         for user_profile in user_profiles:
-            if user_profile.account.is_default_account and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+            if user_profile.cached_account.is_default_account and waffle.switch_is_active(
+                SmarterWaffleSwitches.CACHE_LOGGING
+            ):
                 logger.debug(
                     "%s.get_cached_account_for_user() retrieving and caching default account %s for user %s",
                     HERE,
-                    user_profile.account,
+                    user_profile.cached_account,
                     user,
                 )
-                return user_profile.account
+                return user_profile.cached_account
         # If no default account is found, return the first account
         user_profile = user_profiles.first()
         if not user_profile:
             logger.warning("%s.get_cached_account_for_user_by_id() no UserProfile found for user ID %s", HERE, user_id)
             return None
-        account = user_profile.account
+        account = user_profile.cached_account
         logger.debug(
             "%s.get_cached_account_for_user_by_id() retrieving and caching default account %s for user ID %s",
             HERE,
@@ -594,7 +596,7 @@ def get_cached_admin_user_for_account(account: Account, invalidate: bool = False
     @cache_results()
     def _admin_user_for_account_number(account_number: str) -> User:
         # reinstantiate the account
-        account = Account.objects.get(account_number=account_number)
+        account = Account.get_cached_object(account_number=account_number)
         if not account:
             raise SmarterConfigurationError(
                 f"Failed to retrieve account with number {account_number}. Please ensure the account exists and is configured correctly."
@@ -605,7 +607,7 @@ def get_cached_admin_user_for_account(account: Account, invalidate: bool = False
             logger.debug(
                 "%s found and cached admin UserProfile %s for account %s", console_prefix, user_profile, account
             )
-            return user_profile.user
+            return user_profile.cached_user
         else:
             # Create a new admin user and UserProfile
             random_email = f"{uuid.uuid4().hex[:8]}@mail.com"
@@ -617,7 +619,7 @@ def get_cached_admin_user_for_account(account: Account, invalidate: bool = False
         if not user_profile:
             logger.debug("%s failed to query nor create admin UserProfile for account %s", console_prefix, account)
             raise SmarterConfigurationError("Failed to create admin UserProfile")
-        return user_profile.user if user_profile else None  # type: ignore[return-value]
+        return user_profile.cached_user if user_profile else None  # type: ignore[return-value]
 
     return (
         _admin_user_for_account_number(account.account_number)
@@ -800,7 +802,7 @@ def cache_invalidate(user: Optional[User] = None, account: Optional[Account] = N
             # this can happen during new platform bootstrap initialization, so just log a warning and return
             logger.warning("%s.cache_invalidate() no UserProfile found for user: %s", HERE, resolved_user)
             return
-        account = user_profile.account
+        account = user_profile.cached_account
 
     logger.debug("%s.cache_invalidate() invalidating cache for user: %s account: %s", HERE, resolved_user, account)
 
@@ -852,7 +854,7 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
     if not user_profile:
         return [smarter_cached_objects.smarter_admin_user_profile]
 
-    account_admin = get_cached_admin_user_for_account(user_profile.account)
+    account_admin = get_cached_admin_user_for_account(user_profile.cached_account)
 
     if not isinstance(account_admin, UserProfile):
         return [user_profile, smarter_cached_objects.smarter_admin_user_profile]

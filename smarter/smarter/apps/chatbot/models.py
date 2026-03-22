@@ -531,12 +531,12 @@ class ChatBot(MetaDataWithOwnershipModel):
         :rtype: str
         """
         user_profile: UserProfile = self.user_profile
-        admin_user = get_cached_admin_user_for_account(user_profile.account)
-        if user_profile.user == admin_user:
+        admin_user = get_cached_admin_user_for_account(user_profile.cached_account)
+        if user_profile.cached_user == admin_user:
             raw_str = self.name
         else:
             # note: rfc1034_compliant_str() filters out the "."
-            raw_str = f"{self.name}-{user_profile.user.username}"
+            raw_str = f"{self.name}-{user_profile.cached_user.username}"
         return rfc1034_compliant_str(raw_str)
 
     @property
@@ -603,7 +603,7 @@ class ChatBot(MetaDataWithOwnershipModel):
 
         """
         user_profile: UserProfile = self.user_profile
-        return f"{user_profile.account.account_number}.{self.base_api_domain}"
+        return f"{user_profile.cached_account.account_number}.{self.base_api_domain}"
 
     @property
     def default_host(self):
@@ -1193,7 +1193,7 @@ class ChatBotPlugin(TimestampedModel):
         """
         if not self.chatbot:
             return None
-        admin_user = UserProfile.admin_for_account(self.chatbot.user_profile.account)
+        admin_user = UserProfile.admin_for_account(self.chatbot.user_profile.cached_account)
         if admin_user is None:
             raise SmarterValueError("ChatBotPlugin.plugin() failed to find admin user for chatbot account")
         user_profile = get_cached_user_profile(admin_user)
@@ -1202,14 +1202,14 @@ class ChatBotPlugin(TimestampedModel):
         def get_cached_plugin_controller(account_id: int, user_id: int, plugin_meta_id: int, user_profile_id: int):
 
             return PluginController(
-                account=self.chatbot.user_profile.account,
+                account=self.chatbot.user_profile.cached_account,
                 user=admin_user,
                 plugin_meta=self.plugin_meta,
                 user_profile=user_profile,
             )
 
         plugin_controller = get_cached_plugin_controller(
-            account_id=self.chatbot.user_profile.account.id,
+            account_id=self.chatbot.user_profile.cached_account.id,
             user_id=admin_user.id,
             plugin_meta_id=self.plugin_meta.id,
             user_profile_id=user_profile.id,
@@ -1234,14 +1234,14 @@ class ChatBotPlugin(TimestampedModel):
         """
         if not chatbot:
             return None
-        admin_user = UserProfile.admin_for_account(chatbot.user_profile.account)
+        admin_user = UserProfile.admin_for_account(chatbot.user_profile.cached_account)
         if admin_user is None:
             raise SmarterValueError("ChatBotPlugin.plugin() failed to find admin user for chatbot account")
         user_profile = get_cached_user_profile(admin_user)
         loader = SAMLoader(manifest=data)
         manifest = SAMPluginCommon(**loader.json_data)  # type: ignore[call-arg]
         plugin_controller = PluginController(
-            account=chatbot.user_profile.account, user=admin_user, user_profile=user_profile, manifest=manifest
+            account=chatbot.user_profile.cached_account, user=admin_user, user_profile=user_profile, manifest=manifest
         )
         plugin = plugin_controller.plugin
         if not plugin or plugin.plugin_meta is None:
@@ -1267,14 +1267,14 @@ class ChatBotPlugin(TimestampedModel):
         if not chatbot:
             return []
         chatbot_plugins = cls.objects.filter(chatbot=chatbot)
-        admin_user = UserProfile.admin_for_account(chatbot.user_profile.account)
+        admin_user = UserProfile.admin_for_account(chatbot.user_profile.cached_account)
         if admin_user is None:
             raise SmarterValueError("ChatBotPlugin.plugin() failed to find admin user for chatbot account")
         user_profile = get_cached_user_profile(admin_user)
         retval = []
         for chatbot_plugin in chatbot_plugins:
             plugin_controller = PluginController(
-                account=chatbot.user_profile.account,
+                account=chatbot.user_profile.cached_account,
                 user=admin_user,
                 plugin_meta=chatbot_plugin.plugin_meta,
                 user_profile=user_profile,
@@ -1825,7 +1825,7 @@ class ChatBotHelper(SmarterRequestMixin):
     def chatbot_id(self, chatbot_id: int):
         self._chatbot_id = chatbot_id
         chatbot = ChatBot.get_cached_object(pk=chatbot_id)
-        if chatbot and chatbot.user_profile.account != self.account:
+        if chatbot and chatbot.user_profile.cached_account != self.account:
             raise SmarterValueError("ChatBotHelper.chatbot_id setter: ChatBot's Account does not match self.account")
         self.chatbot = chatbot
         if self._chatbot:

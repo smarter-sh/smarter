@@ -831,7 +831,7 @@ class SAMUserBroker(AbstractBroker):
             user_profiles = UserProfile.objects.filter(account=self.account, user__username=name)
         else:
             user_profiles = UserProfile.objects.filter(account=self.account)
-        users = [user_profile.user for user_profile in user_profiles]
+        users = [user_profile.cached_user for user_profile in user_profiles]
 
         model_titles = self.get_model_titles(serializer=UserSerializer())
 

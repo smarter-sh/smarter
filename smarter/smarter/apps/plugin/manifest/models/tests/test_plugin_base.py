@@ -366,7 +366,7 @@ class TestPluginBase(TestAccountMixin):
         for plugin in plugins:
             self.assertTrue(
                 PluginController(
-                    account=self.user_profile.account, user=self.user_profile.user, plugin_meta=plugin
+                    account=self.user_profile.cached_account, user=self.user_profile.cached_user, plugin_meta=plugin
                 ).ready
             )
 
@@ -482,7 +482,7 @@ class TestPluginBase(TestAccountMixin):
         plugin_cloned.connect(self.plugin_cloned_signal_handler, dispatch_uid="plugin_cloned_test_clone")
 
         plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
-        # PluginController(account=self.user_profile.account, user=self.user_profile.user, plugin_meta=plugin)
+        # PluginController(account=self.user_profile.cached_account, user=self.user_profile.cached_user, plugin_meta=plugin)
         clone_id = plugin.clone()  # type: ignore
         plugin_clone = self.plugin_class(user_profile=self.user_profile, plugin_id=clone_id)
 

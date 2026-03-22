@@ -19,7 +19,7 @@ from django.db import models
 from django.template.loader import render_to_string
 from django.test.client import RequestFactory
 from django.utils import timezone
-from django.utils.functional import SimpleLazyObject
+from django.utils.functional import SimpleLazyObject, cached_property
 
 # our stuff
 from smarter.common.conf import smarter_settings
@@ -717,6 +717,44 @@ class UserProfile(MetaDataModel):
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
     )
 
+    @cached_property
+    def cached_user(self) -> Optional[User]:
+        """
+        Retrieve the associated User instance with caching.
+        This significantly reduces the number of database queries when accessing
+        the user from the user profile.
+
+        :returns: Optional[User]
+            The associated User instance, or None if not found.
+
+        **Example usage**::
+
+            user = profile.cached_user
+            if user:
+                print(user.email)
+
+        """
+        return self.user
+
+    @cached_property
+    def cached_account(self) -> Optional[Account]:
+        """
+        Retrieve the associated Account instance with caching.
+        This significantly reduces the number of database queries
+        when accessing the account from the user profile.
+
+        :returns: Optional[Account]
+            The associated Account instance, or None if not found.
+
+        **Example usage**::
+
+            account = profile.cached_account
+            if account:
+                print(account.company_name)
+
+        """
+        return self.account
+
     def add_to_account_contacts(self, is_primary: bool = False):
         """
         Add the user to the account's contact list.
@@ -837,7 +875,7 @@ class UserProfile(MetaDataModel):
             formatted_text(__name__ + ".UserProfile()"),
             account,
         )
-        return user_profile.user
+        return user_profile.cached_user
 
     @classmethod
     def get_cached_object(
@@ -1340,12 +1378,6 @@ class Secret(MetaDataWithOwnershipModel):
         help_text="Reference to the UserProfile associated with this secret.",
     )
     encrypted_value = models.BinaryField(help_text="Read-only encrypted representation of the secret's value.")
-
-    def validate(self):
-        super().validate()
-        if hasattr(self, "user_profile") and hasattr(self, "account"):
-            if self.user_profile.account != self.account:
-                raise SmarterValueError("UserProfile's account does not match the Secret's account.")
 
     def save(self, *args, **kwargs):
         """

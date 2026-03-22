@@ -49,7 +49,7 @@ class APIKeyBase(SmarterAdminWebView):
 
     def dispatch(self, request, *args, **kwargs):
         self.user_profile = get_cached_user_profile(user=request.user)  # type: ignore[assignment]
-        self.account = self.user_profile.account
+        self.account = self.user_profile.cached_account
         return super().dispatch(request, *args, **kwargs)
 
 

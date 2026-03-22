@@ -261,7 +261,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     loader=self.loader,
                     manifest=self.loader.json_data if self.loader else None,
                     user=self.user,
-                    account=self.user_profile.account if self.user_profile else None,
+                    account=self.user_profile.cached_account if self.user_profile else None,
                     user_profile=self.user_profile,
                 )
                 if self._broker:

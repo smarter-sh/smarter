@@ -49,7 +49,7 @@ class UsersView(SmarterAdminWebView):
         Get the users for the account, but exclude any superusers.
         """
         user_profile = get_cached_user_profile(user=request.user)
-        user_account = user_profile.account
+        user_account = user_profile.cached_account
         user_ids = (
             UserProfile.objects.filter(account=user_account)
             .exclude(user__is_superuser=True)
@@ -78,7 +78,7 @@ class UserView(SmarterAdminWebView):
         if user_form.is_valid():
             target_user = user_form.save()
             target_user_profile = UserProfile.objects.create(
-                name=target_user.username, user=target_user, account=user_profile.account
+                name=target_user.username, user=target_user, account=user_profile.cached_account
             )
             target_user_profile.save()
             return redirect("account:account_user", user_id=target_user.id)
@@ -94,7 +94,7 @@ class UserView(SmarterAdminWebView):
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"User": "User not found."})
 
         target_user_profile = get_cached_user_profile(user=target_user)
-        if target_user_profile.account != user_profile.account:
+        if target_user_profile.cached_account != user_profile.cached_account:
             return http.JsonResponse(
                 status=HTTPStatus.FORBIDDEN.value, data={"User": "User not associated with your account."}
             )
@@ -146,7 +146,7 @@ class UserView(SmarterAdminWebView):
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"User": "User not found."})
 
         target_user_profile = get_cached_user_profile(user=target_user)
-        if target_user_profile.account != user_profile.account:
+        if target_user_profile.cached_account != user_profile.cached_account:
             return http.JsonResponse(
                 status=HTTPStatus.FORBIDDEN.value, data={"User": "User not associated with your account."}
             )

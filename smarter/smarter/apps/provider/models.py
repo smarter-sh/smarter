@@ -526,7 +526,7 @@ class Provider(MetaDataWithOwnershipModel):
 
         @cache_results()
         def cached_providers_by_account_id(account_id: int) -> Sequence["Provider"]:
-            admin_user = get_cached_admin_user_for_account(user_profile.account)
+            admin_user = get_cached_admin_user_for_account(user_profile.cached_account)
             admin_user_profile = get_cached_user_profile(admin_user)  # type: ignore[arg-type]
 
             account_providers = cls.objects.filter(user_profile=admin_user_profile).order_by("name")
@@ -538,16 +538,16 @@ class Provider(MetaDataWithOwnershipModel):
                 "%s.cached_providers_by_account_id() retrieved %s providers for account %s",
                 cls.formatted_class_name,
                 retval,
-                user_profile.account,
+                user_profile.cached_account,
             )
             return retval
 
         user_profile = get_cached_user_profile(user)
 
         if invalidate:
-            cached_providers_by_account_id.invalidate(user_profile.account.id)
+            cached_providers_by_account_id.invalidate(user_profile.cached_account.id)
 
-        providers = cached_providers_by_account_id(user_profile.account.id)
+        providers = cached_providers_by_account_id(user_profile.cached_account.id)
         return list(providers) or []
 
     @classmethod

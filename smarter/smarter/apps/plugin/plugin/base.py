@@ -270,7 +270,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         elif plugin_meta:
             self.id = plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
         elif name and self.user_profile:
-            self._plugin_meta = PluginMeta.get_cached_object(account=self.user_profile.account, name=name)  # type: ignore[attr-defined]
+            self._plugin_meta = PluginMeta.get_cached_object(account=self.user_profile.cached_account, name=name)  # type: ignore[attr-defined]
 
         #######################################################################
         # Smarter API Manifest based initialization
@@ -778,7 +778,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             return self._plugin_meta
         if self.user_profile and self._manifest:
             self._plugin_meta = PluginMeta.get_cached_object(
-                account=self.user_profile.account, name=self.manifest.metadata.name
+                account=self.user_profile.cached_account, name=self.manifest.metadata.name
             )
 
         return self._plugin_meta
@@ -1151,7 +1151,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                     plugin_selected.send(
                         sender=self.selected,
                         plugin=self,
-                        user=self.user_profile.user if self.user_profile else None,
+                        user=self.user_profile.cached_user if self.user_profile else None,
                         input_text=input_text,
                         search_term=search_term,
                     )
@@ -1362,7 +1362,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
 
         plugin_meta_django_model = self.plugin_meta_django_model
         if not plugin_meta_django_model:
-            account_number = self.user_profile.account.account_number if self.user_profile else "Unknown"
+            account_number = self.user_profile.cached_account.account_number if self.user_profile else "Unknown"
             raise SmarterPluginError(
                 f"Plugin {self.manifest.metadata.name} for account {account_number} does not exist."
             )
@@ -1681,10 +1681,14 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                 SAMKeys.STATUS.value: {
                     "id": self.plugin_meta.id if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
                     "accountNumber": (
-                        self.user_profile.account.account_number if isinstance(self.user_profile, UserProfile) else None
+                        self.user_profile.cached_account.account_number
+                        if isinstance(self.user_profile, UserProfile)
+                        else None
                     ),
                     "username": (
-                        self.user_profile.user.get_username() if isinstance(self.user_profile, UserProfile) else None
+                        self.user_profile.cached_user.get_username()
+                        if isinstance(self.user_profile, UserProfile)
+                        else None
                     ),
                     "created": (
                         self.plugin_meta.created_at.isoformat()

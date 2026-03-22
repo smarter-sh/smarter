@@ -725,7 +725,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 self.formatted_class_name,
                 self.url,
                 self.account,
-                self.user_profile.user,
+                self.user_profile.cached_user,
             )
             # first try to avoid some quite-expensive steps by looking for the chatbot
             # in the cache based on the request.
@@ -887,7 +887,7 @@ class PromptManifestView(DocsBaseView):
             self.formatted_class_name,
             self.url,
             self.account,
-            self.user_profile.user,
+            self.user_profile.cached_user,
             self.chatbot,
         )
 
@@ -901,7 +901,7 @@ class PromptManifestView(DocsBaseView):
         self.kind = SAMKinds.CHATBOT
         kwargs["name"] = self.chatbot.name
         orginal_user = getattr(request, "user", None)
-        request.user = self.chatbot.user_profile.user
+        request.user = self.chatbot.user_profile.cached_user
 
         setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, True)
         logger.debug(
