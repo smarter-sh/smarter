@@ -214,40 +214,40 @@ def get_cached_account(
         account = get_cached_account(account_id=42, invalidate=True)
     """
 
-    @cache_results()
+    @deprecated("use Account.get_cached_object() instead.")
     def _get_cached_account_by_id(account_id) -> Optional[Account]:
         """
         In-memory cache for account objects by ID.
         """
         logger.debug("%s.get_cached_account() retrieving and caching account %s", HERE, account_id)
         try:
-            account = Account.objects.get(id=account_id)
+            account = Account.get_cached_object(pk=account_id)
         except Account.DoesNotExist:
             logger.warning("%s.get_cached_account() account with ID %s does not exist", HERE, account_id)
             return None
         return account
 
-    @cache_results()
+    @deprecated("use Account.get_cached_object() instead.")
     def _get_cached_account_by_account_number(account_number) -> Optional[Account]:
         """
         In-memory cache for account objects by account number.
         """
         logger.debug("%s.get_cached_account() retrieving and caching account %s", HERE, account_number)
         try:
-            account = Account.objects.get(account_number=account_number)
+            account = Account.get_cached_object(account_number=account_number)
         except Account.DoesNotExist:
             logger.warning("%s.get_cached_account() account with number %s does not exist", HERE, account_number)
             return None
         return account
 
-    @cache_results()
+    @deprecated("use Account.get_cached_object() instead.")
     def _get_cached_account_by_name(name) -> Optional[Account]:
         """
         In-memory cache for account objects by name.
         """
         logger.debug("%s.get_cached_account() retrieving and caching account with name %s", HERE, name)
         try:
-            account = Account.objects.get(name=name)
+            account = Account.get_cached_object(name=name)
         except Account.DoesNotExist:
             logger.warning("%s.get_cached_account() account with name %s does not exist", HERE, name)
             return None

@@ -944,6 +944,17 @@ class ChatBot(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["ChatBot"]
         """
+        logger_prefix = formatted_text(__name__ + ".ChatBot.get_cached_object()")
+        logger.debug(
+            "%s called with pk=%s, name=%s, user=%s, user_profile=%s, account=%s",
+            logger_prefix,
+            pk,
+            name,
+            user,
+            user_profile,
+            account,
+        )
+
         retval = super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
         if isinstance(retval, ChatBot):
             return retval
@@ -966,16 +977,17 @@ class ChatBot(MetaDataWithOwnershipModel):
         :rtype: models.QuerySet["ChatBot"]
 
         """
-        if not user_profile:
-            return cls.objects.none()
-
-        user_profile_id = user_profile.id
+        logger_prefix = formatted_text(__name__ + cls.__name__ + ".get_cached_objects()")
+        logger.debug("%s called with user_profile=%s", logger_prefix, user_profile)
 
         @cache_results(60)
         def _get_chatbots_for_user_profile_id(user_profile_id: int) -> models.QuerySet["ChatBot"]:
             return cls.objects.filter(user_profile_id=user_profile_id)
 
-        return _get_chatbots_for_user_profile_id(user_profile_id)
+        if user_profile:
+            return _get_chatbots_for_user_profile_id(user_profile.id)
+
+        return super().get_cached_objects()
 
     def save(self, *args, asynchronous=False, **kwargs):
         """
@@ -988,12 +1000,11 @@ class ChatBot(MetaDataWithOwnershipModel):
         :kwargs: Keyword arguments for the save method.
         :returns: None
         """
-        logger_prefix = formatted_text(__name__ + ".Chatbot()")
-        logger.debug("%s.save() called for ChatBot id: %s %s", logger_prefix, self.pk, self.default_host)
+        logger.debug("%s.save() called for ChatBot id: %s %s", self.formatted_class_name, self.pk, self.default_host)
         if asynchronous:
             logger.debug(
                 "%s.save() running in asynchronous mode for ChatBot id: %s. Skipping signal sending.",
-                logger_prefix,
+                self.formatted_class_name,
                 self.pk,
             )
             super().save(*args, **kwargs)
@@ -1105,6 +1116,8 @@ class ChatBotAPIKey(TimestampedModel):
         :rtype: models.QuerySet["ChatBotAPIKey"]
 
         """
+        logger_prefix = formatted_text(__name__ + cls.__name__ + ".get_cached_objects()")
+        logger.debug("%s called with chatbot=%s", logger_prefix, chatbot)
 
         @cache_results(cls.cache_expiration)
         def _get_api_keys_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotAPIKey"]:
@@ -1278,6 +1291,8 @@ class ChatBotPlugin(TimestampedModel):
         :rtype: models.QuerySet["ChatBotPlugin"]
 
         """
+        logger_prefix = formatted_text(__name__ + cls.__name__ + ".get_cached_objects()")
+        logger.debug("%s called with chatbot=%s", logger_prefix, chatbot)
 
         @cache_results(cls.cache_expiration)
         def _get_plugins_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotPlugin"]:
@@ -1387,6 +1402,8 @@ class ChatBotFunctions(TimestampedModel):
         :rtype: models.QuerySet["ChatBotFunctions"]
 
         """
+        logger_prefix = formatted_text(__name__ + cls.__name__ + ".get_cached_objects()")
+        logger.debug("%s called with chatbot=%s", logger_prefix, chatbot)
 
         @cache_results(cls.cache_expiration)
         def _get_functions_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotFunctions"]:
