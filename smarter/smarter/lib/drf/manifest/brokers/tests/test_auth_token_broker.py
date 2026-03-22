@@ -245,7 +245,7 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
         # django_orm_tags = None
         # if isinstance(self.broker.smarter_auth_token.tags, (list, TaggableManager, _TaggableManager)):
         #     django_orm_tags = (
-        #         set(self.broker.smarter_auth_token.tags.names()) if self.broker.smarter_auth_token.tags else set()
+        #         set(self.broker.smarter_auth_token.tags_list) if self.broker.smarter_auth_token.tags else set()
         #     )
         # elif isinstance(self.broker.smarter_auth_token.tags, set):
         #     django_orm_tags = self.broker.smarter_auth_token.tags

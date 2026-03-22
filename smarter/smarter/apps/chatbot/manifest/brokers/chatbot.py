@@ -500,7 +500,7 @@ class SAMChatbotBroker(AbstractBroker):
             name=self.chatbot.name,
             description=self.chatbot.description,
             version=self.chatbot.version,
-            tags=self.chatbot.tags.names() if self.chatbot.tags else [],
+            tags=self.chatbot.tags_list,
             annotations=self.chatbot.annotations if isinstance(self.chatbot.annotations, list) else [],
         )
         spec_config = SAMChatbotSpecConfig(**chatbot_dict)

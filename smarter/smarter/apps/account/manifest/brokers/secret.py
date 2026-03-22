@@ -386,7 +386,7 @@ class SAMSecretBroker(AbstractBroker):
                 name=self.secret.name,
                 description=self.secret.description,
                 version=self.secret.version,
-                tags=self.secret.tags.names(),
+                tags=self.secret.tags_list,
                 annotations=self.secret.annotations,
             ),
             spec=SAMSecretSpec(
@@ -527,7 +527,7 @@ class SAMSecretBroker(AbstractBroker):
                     name=self.secret.name,
                     description=self.secret.description,
                     version=self.secret.version,
-                    tags=self.secret.tags.names(),
+                    tags=self.secret.tags_list,
                     annotations=self.secret.annotations,
                 ),
                 spec=SAMSecretSpec(

@@ -257,7 +257,7 @@ def secret_saved_receiver(sender, secret: SecretTransformer, user_profile: UserP
         raise ValueError("secret.secret is None in secret_saved_receiver")
 
     json_data = serializers.serialize("json", [secret.secret])
-    tags = list(secret.secret.tags.names()) if secret and hasattr(secret.secret, "tags") else []
+    tags = list(secret.secret.tags_list) if secret and hasattr(secret.secret, "tags") else []
 
     logger.info(
         "%s.%s Secret: %s, id: %s, user_profile: %s, dump: %s, tags: %s",
@@ -278,7 +278,7 @@ def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: Use
         raise ValueError("secret.secret is None in secret_updated_receiver")
 
     json_data = serializers.serialize("json", [secret.secret])
-    tags = list(secret.secret.tags.names()) if secret and hasattr(secret.secret, "tags") else []
+    tags = list(secret.secret.tags_list) if secret and hasattr(secret.secret, "tags") else []
 
     logger.info(
         "%s.%s secret_updated signal received. instance: %s, id: %s, user_profile: %s, dump: %s, tags: %s",

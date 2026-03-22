@@ -262,7 +262,7 @@ class SecretTransformer(SmarterHelperMixin):
                 name=self.secret.name,
                 description=self.secret.description,
                 version=self.secret.version,
-                tags=self.secret.tags.names() if self.secret.tags else [],
+                tags=self.secret.tags_list,
                 annotations=self.secret.annotations if self.secret.annotations else [],
             )
             spec_config = SAMSecretSpecConfig(
@@ -315,7 +315,7 @@ class SecretTransformer(SmarterHelperMixin):
     @property
     def version(self) -> str:
         """Return the secret version."""
-        if self._manifest and self._manifest.metadata:
+        if self._manifest and self._manifest.metadata and self._manifest.metadata.version:
             return self._manifest.metadata.version
         return "1.0.0"
 

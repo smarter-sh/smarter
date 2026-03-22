@@ -614,7 +614,7 @@ class SAMUserBroker(AbstractBroker):
                     description=self.brokered_user_profile.description or "no description",
                     version=self.brokered_user_profile.version,
                     username=self.brokered_user_profile.user.username,
-                    tags=self.brokered_user_profile.tags.names(),
+                    tags=self.brokered_user_profile.tags_list,
                     annotations=self.brokered_user_profile.annotations,
                 ),
                 spec=SAMUserSpec(

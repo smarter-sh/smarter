@@ -168,7 +168,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
                 name=self.connection.name,
                 description=self.connection.description,
                 version=self.connection.version,
-                tags=self.connection.tags.names() if self.connection.tags else None,
+                tags=self.connection.tags_list if self.connection.tags else None,
                 annotations=self.connection.annotations,
             )
         return self._sam_connection_metadata

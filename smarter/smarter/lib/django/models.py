@@ -425,10 +425,47 @@ class MetaDataModel(TimestampedModel):
         if self.version and not SmarterValidator.is_valid_semantic_version(self.version):
             raise SmarterValueError(f"Version '{self.version}' is not a valid semantic version (MAJOR.MINOR.PATCH).")
 
+    @cached_property
+    def tags_list(self) -> list[str]:
+        """
+        Return the tags as a list of strings.
+
+        :returns: List of tag names.
+        :rtype: list[str]
+        """
+
+        # pylint: disable=W0613
+        @cache_results(timeout=self.cache_expiration)
+        def _get_tags_by_class_and_pk(cls_name: str, pk: int) -> list[str]:
+            """
+            Helper to cache tags retrieval.
+            """
+            logger.debug(
+                "%s.tags_list - Retrieving tags for %s with pk=%d from database",
+                self.formatted_class_name,
+                cls_name,
+                pk,
+            )
+            return [tag.name for tag in self.tags.all()]
+
+        return _get_tags_by_class_and_pk(self.__class__.__name__, self.pk)
+
     @classmethod
     def get_cached_model(cls, pk: Optional[int] = None, name: Optional[str] = None) -> Optional[models.Model]:
         """
-        Retrieve a model instance by primary key or name, using caching to optimize performance.
+        Retrieve a model instance by primary key or name, using caching to
+        optimize performance. This method is selectively overridden in
+        models that inherit from MetaDataModel to provide class-specific
+        function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve by primary key
+            instance = MyModel.get_cached_model(pk=1)
+            # Retrieve by name
+            instance = MyModel.get_cached_model(name="exampleName")
 
         :param pk: The primary key of the model instance to retrieve.
         :param name: The name of the model instance to retrieve.

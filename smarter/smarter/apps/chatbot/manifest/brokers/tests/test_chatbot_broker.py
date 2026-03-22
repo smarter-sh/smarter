@@ -229,7 +229,7 @@ class TestSmarterChatBotBroker(TestSAMBrokerBaseClass):
         manifest_tags = set(self.broker.manifest.metadata.tags or [])
         django_orm_tags = None
         if isinstance(self.broker.chatbot.tags, (TaggableManager, _TaggableManager)):
-            django_orm_tags = set(self.broker.chatbot.tags.names()) if self.broker.chatbot.tags else set()
+            django_orm_tags = set(self.broker.chatbot.tags_list) if self.broker.chatbot.tags else set()
         elif isinstance(self.broker.chatbot.tags, set):
             django_orm_tags = self.broker.chatbot.tags
         elif isinstance(self.broker.chatbot.tags, list):
