@@ -950,7 +950,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return None
 
     @classmethod
-    def get_cached_models_for_user_profile(cls, user_profile: UserProfile) -> models.QuerySet["ChatBot"]:
+    def get_cached_models(cls, user_profile: UserProfile) -> models.QuerySet["ChatBot"]:
         """
         Retrieve a list of ChatBot instances associated with a user profile using caching.
 
@@ -959,7 +959,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         .. code-block:: python
 
             # Retrieve ChatBot instances for a user profile with caching
-            chatbots = ChatBot.get_cached_models_for_user_profile(my_user_profile)
+            chatbots = ChatBot.get_cached_models(my_user_profile)
 
         :param user_profile: The user profile for which to retrieve ChatBot instances.
         :returns: A queryset of ChatBot instances associated with the user profile.

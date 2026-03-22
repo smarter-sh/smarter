@@ -53,6 +53,7 @@ from smarter.lib.manifest.enum import (
 from . import PluginSerializer, SAMPluginBrokerError
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(

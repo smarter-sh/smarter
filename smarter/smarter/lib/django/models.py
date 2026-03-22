@@ -360,7 +360,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         """
         Retrieve a model instance by primary key, using caching to
         optimize performance. This method is selectively overridden in
-        models that inherit from MetaDataModel to provide class-specific
+        models that inherit from TimestampedModel to provide class-specific
         function parameters.
 
         Example usage:
@@ -526,16 +526,8 @@ class MetaDataModel(TimestampedModel):
             except cls.DoesNotExist:
                 return None
 
-        @cache_results(timeout=cls.cache_expiration)
-        def _get_model_by_pk(pk: int) -> Optional[models.Model]:
-
-            try:
-                return cls.objects.get(pk=pk)
-            except cls.DoesNotExist:
-                return None
-
         if pk is not None:
-            return _get_model_by_pk(pk)
+            return super().get_cached_model(pk=pk)
 
         if not name:
             raise SmarterValueError("Name parameter is required to retrieve a model instance.")
