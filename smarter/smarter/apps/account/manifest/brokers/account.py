@@ -20,7 +20,6 @@ from smarter.apps.account.models import Account
 from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import (
     cache_invalidate,
-    get_cached_account,
     get_cached_smarter_account,
 )
 from smarter.lib import json
@@ -223,7 +222,7 @@ class SAMAccountBroker(AbstractBroker):
             return None
 
         try:
-            self._brokered_account = get_cached_account(name=self.name)
+            self._brokered_account = Account.get_cached_object(name=self.name)
             logger.debug(
                 "%s.brokered_account() initialized existing Account: %s",
                 self.formatted_class_name,
@@ -521,7 +520,7 @@ class SAMAccountBroker(AbstractBroker):
                 self.user,
                 self.name,
             )
-            self._orm_instance = get_cached_account(name=self.name)
+            self._orm_instance = Account.get_cached_object(name=self.name)
             logger.debug(
                 "%s.orm_instance() - retrieved %s instance: %s",
                 self.formatted_class_name,
@@ -562,7 +561,7 @@ class SAMAccountBroker(AbstractBroker):
 
         self._orm_meta_instance = None
         try:
-            self._orm_meta_instance = get_cached_account(name=self.name)
+            self._orm_meta_instance = Account.get_cached_object(name=self.name)
         except Account.DoesNotExist:
             logger.warning(
                 "%s.orm_meta_instance_setter() - ORM meta instance does not exist for account=%s, name=%s",
@@ -665,7 +664,7 @@ class SAMAccountBroker(AbstractBroker):
         model_titles = self.get_model_titles(serializer=AccountSerializer())
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
-        account = get_cached_account(account_id=self.brokered_account.id)  # type: ignore
+        account = Account.get_cached_object(pk=self.brokered_account.id)
         accounts = [account] if account else []
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin

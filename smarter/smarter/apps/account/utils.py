@@ -27,7 +27,6 @@ from typing_extensions import deprecated
 
 from smarter.apps.account.models import (
     Account,
-    Secret,
     User,
     UserProfile,
     get_resolved_user,
@@ -83,22 +82,12 @@ class SmarterCachedObjects:
         :returns: Account instance representing the smarter account.
         :raises SmarterConfigurationError: If the smarter account cannot be found.
         """
-
-        @cache_results(timeout=600)  # cache for 10 minutes
-        def _get_smarter_account() -> Account:
-            try:
-                smarter_account, created = Account.objects.get_or_create(account_number=SMARTER_ACCOUNT_NUMBER)
-                if created:
-                    logger.info(
-                        "%s.smarter_account created new smarter account with account number %s",
-                        HERE,
-                        SMARTER_ACCOUNT_NUMBER,
-                    )
-                return smarter_account
-            except Account.DoesNotExist as e:
-                raise SmarterConfigurationError("Smarter account does not exist") from e
-
-        return _get_smarter_account()
+        retval = Account.get_cached_object(account_number=SMARTER_ACCOUNT_NUMBER)
+        if not retval:
+            raise SmarterConfigurationError(
+                f"Smarter account with account number {SMARTER_ACCOUNT_NUMBER} does not exist."
+            )
+        return retval
 
     @property
     def smarter_admin(self) -> User:
@@ -108,24 +97,7 @@ class SmarterCachedObjects:
         :returns: User instance representing the smarter admin.
         :raises SmarterConfigurationError: If the smarter admin user cannot be found.
         """
-
-        @cache_results(timeout=600)  # cache for 10 minutes
-        def _get_smarter_admin() -> User:
-            try:
-                user_profile = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first()
-                if not user_profile:
-                    raise SmarterConfigurationError("No superuser user profile found for smarter account")
-                user = user_profile.user
-            except User.DoesNotExist:
-                user = User.objects.create(
-                    username=SMARTER_ADMIN_USERNAME, is_superuser=True, is_staff=True, is_active=True
-                )
-                logger.warning(
-                    "%s.smarter_admin created new smarter admin user with username %s", HERE, SMARTER_ADMIN_USERNAME
-                )
-            return user
-
-        return _get_smarter_admin()
+        return self.smarter_admin_user_profile.user
 
     @property
     def smarter_admin_user_profile(self) -> UserProfile:
@@ -136,7 +108,7 @@ class SmarterCachedObjects:
         :raises SmarterConfigurationError: If the UserProfile cannot be found.
         """
 
-        @cache_results(timeout=600)  # cache for 10 minutes
+        @cache_results()
         def _get_smarter_admin_user_profile() -> UserProfile:
             try:
                 user_profile = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first()
@@ -157,12 +129,12 @@ class SmarterCachedObjects:
         :raises SmarterConfigurationError: If the admin user cannot be found.
         """
 
-        @cache_results(timeout=600)  # cache for 10 minutes
+        @cache_results()
         def _get_admin_user() -> User:
             try:
                 return User.objects.get(username=SMARTER_ADMIN_USERNAME, is_superuser=True)
             except User.DoesNotExist as e:
-                raise SmarterConfigurationError("No staff user found for smarter account") from e
+                raise SmarterConfigurationError("No superuser found for smarter account") from e
 
         return _get_admin_user()
 
@@ -253,14 +225,14 @@ def get_cached_account(
             return None
         return account
 
-    @cache_results()
+    @deprecated("use Account.get_cached_object() instead.")
     def _get_cached_account_by_company_name(company_name) -> Optional[Account]:
         """
         In-memory cache for account objects by company name.
         """
         logger.debug("%s.get_cached_account() retrieving and caching account with company name %s", HERE, company_name)
         try:
-            account = Account.objects.get(company_name=company_name)
+            account = Account.get_cached_object(company_name=company_name)
         except Account.DoesNotExist:
             logger.warning("%s.get_cached_account() account with company name %s does not exist", HERE, company_name)
             return None

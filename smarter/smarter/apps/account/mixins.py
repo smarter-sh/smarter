@@ -27,7 +27,6 @@ from .serializers import (
 )
 from .utils import (
     account_number_from_url,
-    get_cached_account,
     get_cached_account_for_user,
     get_cached_user_profile,
 )
@@ -129,7 +128,7 @@ class AccountMixin(SmarterHelperMixin):
                 self.account_mixin_logger_prefix,
                 account_number,
             )
-            account = get_cached_account(account_number=account_number) if account_number else account
+            account = Account.get_cached_object(account_number=account_number)
 
         # ---------------------------------------------------------------------
         # Process the request object if available. We're looking for any of
@@ -427,7 +426,7 @@ class AccountMixin(SmarterHelperMixin):
             self._user_profile = None
             logger.debug("%s.account_number.setter: unset _user_profile", self.account_mixin_logger_prefix)
             return
-        account = get_cached_account(account_number=account_number)
+        account = Account.get_cached_object(account_number=account_number)
         if isinstance(account, Account):
             self._account = account
             logger.debug(

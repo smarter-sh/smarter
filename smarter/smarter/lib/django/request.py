@@ -33,7 +33,6 @@ from smarter.apps.account.mixins import AccountMixin, UserType
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     account_number_from_url,
-    get_cached_account,
     get_cached_admin_user_for_account,
 )
 from smarter.common.conf import smarter_settings
@@ -1618,7 +1617,7 @@ class SmarterRequestMixin(AccountMixin):
             )
             if self.account is None:
                 # lazy load the account from the account number
-                self.account = get_cached_account(account_number=account_number)
+                self.account = Account.get_cached_object(account_number=account_number)
             return True
 
         # Accept root path or root with trailing slash
@@ -2156,7 +2155,7 @@ class SmarterRequestMixin(AccountMixin):
             if not self.account:
                 account_number = self.url_account_number
                 if account_number:
-                    self.account = get_cached_account(account_number=account_number)  # type: ignore
+                    self.account = Account.get_cached_object(account_number=account_number)  # type: ignore
             if self.account and not self.user:
                 self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
         if self.is_chatbot_smarter_api_url:
