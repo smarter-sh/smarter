@@ -1122,6 +1122,14 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         @cache_results(cls.cache_expiration)
         def _get_objects_for_user_profile_id(user_profile_id: int) -> models.QuerySet["MetaDataWithOwnershipModel"]:
+            """
+            Internal method to retrieve MetaDataWithOwnershipModel instances for
+            a given user profile ID with caching.
+
+            :param user_profile_id: The ID of the user profile for which to retrieve MetaDataWithOwnershipModel instances.
+            :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile ID.
+            :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
+            """
             return (
                 cls.objects.prefetch_related("tags")
                 .select_related("user_profile", "user_profile__account", "user_profile__user")

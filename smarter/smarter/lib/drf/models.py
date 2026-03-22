@@ -209,6 +209,14 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         def _get_cached_objects_for_user_profile_and_name(
             user_profile_id: int, name: str
         ) -> models.QuerySet["SmarterAuthToken"]:
+            """
+            Retrieve API keys for a specific user profile and name with caching.
+
+            .. param user_profile_id: The ID of the user profile for which to retrieve API keys.
+            .. param name: The name of the API key to retrieve.
+            .. returns:: A queryset of SmarterAuthToken objects matching the criteria.
+            .. rtype:: QuerySet[SmarterAuthToken]
+            """
             queryset = (
                 cls.objects.prefetch_related("tags")
                 .select_related("user_profile", "user_profile__account", "user_profile__user")
