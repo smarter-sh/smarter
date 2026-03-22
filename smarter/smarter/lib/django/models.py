@@ -82,6 +82,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     HASH_SUFFIX = "x"
     HASH_FLOOR = 1000000
     _hash_regex = None
+    cache_expiration = 60  # 60 seconds
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, editable=False, db_index=True)
     """
@@ -354,6 +355,44 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         retval = json.loads(json.dumps(data, cls=SmarterJSONEncoder))
         return retval
 
+    @classmethod
+    def get_cached_model(cls, pk: int) -> Optional[models.Model]:
+        """
+        Retrieve a model instance by primary key, using caching to
+        optimize performance. This method is selectively overridden in
+        models that inherit from MetaDataModel to provide class-specific
+        function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve by primary key
+            instance = MyModel.get_cached_model(pk=1)
+
+        :param pk: The primary key of the model instance to retrieve.
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional[models.Model]
+        """
+
+        if cls._meta.abstract:
+            raise NotImplementedError(
+                "get_cached_model() must be called on a concrete model class, not an abstract base class."
+            )
+
+        @cache_results(timeout=cls.cache_expiration)
+        def _get_model_by_pk(pk: int) -> Optional[models.Model]:
+
+            try:
+                return cls.objects.get(pk=pk)
+            except cls.DoesNotExist:
+                return None
+
+        if not pk:
+            raise SmarterValueError("PK parameter is required to retrieve a model instance.")
+
+        return _get_model_by_pk(pk)
+
     def __str__(self):
         return f"{self.__class__.__name__}(id={getattr(self, 'id', None)})"
 
@@ -379,8 +418,6 @@ class MetaDataModel(TimestampedModel):
             name = models.CharField(max_length=100)
 
     """
-
-    cache_expiration = 60  # 60 seconds
 
     # pylint: disable=missing-class-docstring
     class Meta:

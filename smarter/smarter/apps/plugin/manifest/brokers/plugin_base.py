@@ -140,7 +140,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 self.name,
                 self.user_profile,
             )
-            self._orm_instance = PluginDataBase.objects.get(plugin=self.plugin_meta)
+            self._orm_instance = PluginDataBase.get_cached_model(plugin=self.plugin_meta)
             logger.debug(
                 "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",
                 self.formatted_class_name,
@@ -175,7 +175,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.name,
                     account_admin_user_profile,
                 )
-                self._orm_instance = PluginDataBase.objects.get(user_profile=account_admin_user_profile, name=self.name)
+                plugin_meta = PluginMeta.get_cached_model(user_profile=account_admin_user_profile, name=self.name)
+                self._orm_instance = PluginDataBase.get_cached_model(plugin=plugin_meta)
                 logger.debug(
                     "%s.orm_instance() - retrieved %s for %s owned by %s",
                     self.formatted_class_name,
@@ -183,7 +184,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.name,
                     account_admin_user_profile,
                 )
-            except PluginDataBase.DoesNotExist:
+            except (PluginDataBase.DoesNotExist, PluginMeta.DoesNotExist):
                 # finally try with Smarter platform admin user_profile
                 smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
                 try:
@@ -194,9 +195,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                         self.name,
                         smarter_admin_user_profile,
                     )
-                    self._orm_instance = PluginDataBase.objects.get(
-                        user_profile=smarter_admin_user_profile, name=self.name
-                    )
+                    plugin_meta = PluginMeta.get_cached_model(user_profile=smarter_admin_user_profile, name=self.name)
+                    self._orm_instance = PluginDataBase.get_cached_model(plugin=plugin_meta)
                     logger.debug(
                         "%s.orm_instance() - retrieved %s for %s owned by %s",
                         self.formatted_class_name,
@@ -204,7 +204,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                         self.name,
                         smarter_admin_user_profile,
                     )
-                except PluginDataBase.DoesNotExist:
+                except (PluginDataBase.DoesNotExist, PluginMeta.DoesNotExist):
                     logger.warning(
                         "%s.orm_instance() - %s does not exist for %s owned by %s",
                         self.formatted_class_name,
@@ -402,7 +402,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.name,
                     self.account,
                 )
-                self._plugin_meta = PluginMeta.objects.get(user_profile__account=self.account, name=self.name)
+                self._plugin_meta = PluginMeta.get_cached_model(account=self.account, name=self.name)
             except MultipleObjectsReturned:
                 try:
                     self._plugin_meta = PluginMeta.get_cached_model(

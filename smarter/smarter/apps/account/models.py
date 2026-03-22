@@ -784,6 +784,32 @@ class UserProfile(MetaDataModel):
         )
         return user_profile.user
 
+    @classmethod
+    def get_cached_model(cls, pk: Optional[int] = None, name: Optional[str] = None) -> Optional["UserProfile"]:
+        """
+        Retrieve a model instance by primary key or name, using caching to
+        optimize performance. This method is selectively overridden in
+        models that inherit from MetaDataModel to provide class-specific
+        function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve by primary key
+            instance = MyModel.get_cached_model(pk=1)
+            # Retrieve by name
+            instance = MyModel.get_cached_model(name="exampleName")
+
+        :param pk: The primary key of the model instance to retrieve.
+        :param name: The name of the model instance to retrieve.
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional["UserProfile"]
+        """
+        retval = super().get_cached_model(pk=pk, name=name)
+        if isinstance(retval, UserProfile):
+            return retval
+
     def __str__(self):
         return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
 

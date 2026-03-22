@@ -563,7 +563,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         try:
             retval = []
-            user_profile = UserProfile.objects.get(id=user_profile_id)
+            user_profile = UserProfile.get_cached_model(pk=user_profile_id)
+            if not user_profile:
+                raise SmarterValueError(f"UserProfile with id {user_profile_id} not found.")
             admin_user = get_cached_admin_user_for_account(account=user_profile.account)
             admin_user_profile = get_cached_user_profile(user=admin_user, account=user_profile.account)  # type: ignore[arg-type]
 
@@ -979,6 +981,45 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
     def get_cached_data_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginDataBase", None]:
 
         raise NotImplementedError("Subclasses must implement get_cached_data_by_plugin method.")
+
+    # pylint: disable=W0221
+    @classmethod
+    def get_cached_model(cls, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None) -> Optional[models.Model]:
+        """
+        Retrieve a model instance by primary key, using caching to
+        optimize performance. This method is selectively overridden in
+        models that inherit from MetaDataModel to provide class-specific
+        function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve by primary key
+            instance = MyModel.get_cached_model(pk=1)
+
+        :param pk: The primary key of the model instance to retrieve.
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional[models.Model]
+        """
+
+        @cache_results()
+        def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataBase"]:
+            try:
+                return cls.objects.get(plugin_id=plugin_id)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
+                    cls.formatted_class_name,
+                    plugin_id,
+                )
+                return None
+
+        if pk:
+            return super().get_cached_model(pk=pk)
+
+        if plugin:
+            return _get_model_by_plugin_meta(plugin.id)
 
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""
