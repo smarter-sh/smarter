@@ -593,7 +593,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             user_profile = UserProfile.get_cached_object(pk=user_profile_id)
             if not user_profile:
                 raise SmarterValueError(f"UserProfile with id {user_profile_id} not found.")
-            admin_user = get_cached_admin_user_for_account(account=user_profile.cached_account)
+            admin_user = get_cached_admin_user_for_account(account=user_profile.cached_account)  # type: ignore[arg-type]
             admin_user_profile = get_cached_user_profile(user=admin_user, account=user_profile.cached_account)  # type: ignore[arg-type]
 
             def was_already_added(plugin_meta: PluginMeta) -> bool:
@@ -1339,7 +1339,7 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
             logger.warning("%s.get_cached_connections_for_user: user is None", cls.formatted_class_name)
             return []
         user_profile = get_cached_user_profile(user=user, invalidate=invalidate)
-        admin_user = get_cached_admin_user_for_account(user_profile.cached_account, invalidate=invalidate)
+        admin_user = get_cached_admin_user_for_account(user_profile.cached_account, invalidate=invalidate)  # type: ignore
         admin_user_profile = get_cached_user_profile(user=admin_user, invalidate=invalidate)  # type: ignore
         instances = []
         for subclass in ConnectionBase.__subclasses__():

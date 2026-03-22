@@ -531,7 +531,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         :rtype: str
         """
         user_profile: UserProfile = self.user_profile
-        admin_user = get_cached_admin_user_for_account(user_profile.cached_account)
+        admin_user = get_cached_admin_user_for_account(user_profile.cached_account)  # type: ignore[arg-type]
         if user_profile.cached_user == admin_user:
             raw_str = self.name
         else:
@@ -1306,6 +1306,14 @@ class ChatBotPlugin(TimestampedModel):
 
         @cache_results(cls.cache_expiration)
         def _get_plugins_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotPlugin"]:
+            """
+            Caches the plugins for a chatbot by chatbot_id to optimize
+            performance and reduce database queries.
+
+            :param chatbot_id: The ID of the ChatBot for which to retrieve plugins.
+            :returns: A queryset of ChatBotPlugin instances associated with the ChatBot.
+            :rtype: models.QuerySet["ChatBotPlugin"]
+            """
             return cls.objects.filter(chatbot_id=chatbot_id)
 
         if chatbot:
@@ -1417,6 +1425,14 @@ class ChatBotFunctions(TimestampedModel):
 
         @cache_results(cls.cache_expiration)
         def _get_functions_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotFunctions"]:
+            """
+            Caches the functions for a chatbot by chatbot_id to optimize
+            performance and reduce database queries.
+
+            :param chatbot_id: The ID of the ChatBot for which to retrieve functions.
+            :returns: A queryset of ChatBotFunctions instances associated with the ChatBot.
+            :rtype: models.QuerySet["ChatBotFunctions"]
+            """
             return cls.objects.filter(chatbot_id=chatbot_id)
 
         if chatbot:

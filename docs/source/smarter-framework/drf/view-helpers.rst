@@ -1,7 +1,7 @@
 View Helpers
 ================
 
-.. automodule:: smarter.lib.drf.view_helpers
+.. automodule:: smarter.lib.drf.views.helpers
     :members:
     :undoc-members:
     :show-inheritance:
