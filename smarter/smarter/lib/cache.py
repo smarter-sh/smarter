@@ -531,10 +531,12 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                 )
                 if logging_enabled and lazy_cache.cache_logging:
                     logger.info(
-                        "%s cache hit for %s: %s",
+                        "%s cache hit for %s: %s args: %s kwargs: %s",
                         logger_prefix_green,
                         cache_key,
                         "None" if result is None else result,
+                        args,
+                        kwargs,
                     )
             else:
                 # Cache miss, boo! Call the function ...
@@ -543,10 +545,12 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                 lazy_cache.set(cache_key, cache_value, timeout)
                 if logging_enabled and lazy_cache.cache_logging:
                     logger.info(
-                        "%s cache miss for %s, caching result: with timeout %s",
+                        "%s cache miss for %s, caching result: with timeout %s args: %s kwargs: %s",
                         logger_prefix_red,
                         cache_key,
                         timeout,
+                        args,
+                        kwargs,
                     )
             return result
 

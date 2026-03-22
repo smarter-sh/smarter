@@ -11,9 +11,15 @@ from knox import crypto
 from knox.models import AuthToken, AuthTokenManager
 from knox.settings import CONSTANTS
 
-from smarter.apps.account.models import MetaDataWithOwnershipModel, User
+from smarter.apps.account.models import (
+    Account,
+    MetaDataWithOwnershipModel,
+    User,
+    UserProfile,
+)
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.cache import cache_results
 
 logger = getLogger(__name__)
 
@@ -170,6 +176,46 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         if self.last_used_at is None or (datetime.now() - self.last_used_at) > timedelta(minutes=5):
             self.last_used_at = datetime.now()
             self.save()
+
+    @classmethod
+    def get_cached_objects(
+        cls, user_profile: Optional[UserProfile] = None, user: Optional[User] = None, name: Optional[str] = None
+    ) -> models.QuerySet["SmarterAuthToken"]:
+        """
+        Retrieve API keys with caching based on user profile and optional name
+        filter using caching.
+
+        .. param user_profile: The user profile for which to retrieve API keys.
+        .. param user: The user for which to retrieve API keys (used if user_profile is not provided).
+        .. param name: Optional name filter to retrieve API keys with a specific name.
+
+        .. returns:: A queryset of SmarterAuthToken objects matching the criteria.
+        .. rtype:: QuerySet[SmarterAuthToken]
+        """
+
+        # pylint: disable=W0613
+        @cache_results(cls.cache_expiration)
+        def _get_cached_objects_for_user_profile(user_profile_id: int) -> models.QuerySet["SmarterAuthToken"]:
+            queryset = cls.objects.filter(user=user_profile.user)
+            return queryset
+
+        # pylint: disable=W0613
+        @cache_results(cls.cache_expiration)
+        def _get_cached_objects_for_user_profile_and_name(
+            user_profile_id: int, name: str
+        ) -> models.QuerySet["SmarterAuthToken"]:
+            queryset = cls.objects.filter(user=user_profile.user, name=name)
+            return queryset
+
+        if not user_profile and user:
+            user_profile = UserProfile.get_cached_object(user=user)
+
+        if user_profile and name:
+            return _get_cached_objects_for_user_profile_and_name(user_profile.id, name)
+        elif user_profile:
+            return _get_cached_objects_for_user_profile(user_profile.id)
+        else:
+            return super().get_cached_objects(user_profile=user_profile)  # type: ignore
 
     def __str__(self):
         return str(self.name) + " (" + str(self.user) + ") " + str(self.identifier)

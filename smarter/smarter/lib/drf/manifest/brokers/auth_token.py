@@ -462,9 +462,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
 
         if name:
             # if the name is not None, then we are looking for a specific SmarterAuthToken
-            smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user, name=name)
+            smarter_auth_tokens = SmarterAuthToken.get_cached_objects(user=self.user, name=name)  # type: ignore
         else:
-            smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user)
+            smarter_auth_tokens = SmarterAuthToken.get_cached_objects(user=self.user)  # type: ignore
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for smarter_auth_token in smarter_auth_tokens:

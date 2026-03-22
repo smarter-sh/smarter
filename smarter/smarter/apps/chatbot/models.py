@@ -1087,6 +1087,34 @@ class ChatBotAPIKey(TimestampedModel):
     #: The API key (SmarterAuthToken) associated with the ChatBot.
     api_key = models.ForeignKey(SmarterAuthToken, on_delete=models.CASCADE)
 
+    # pylint: disable=W0221
+    @classmethod
+    def get_cached_objects(cls, chatbot: ChatBot) -> models.QuerySet["ChatBotAPIKey"]:
+        """
+        Retrieve a list of ChatBotAPIKey instances associated with a ChatBot using caching.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve API keys for a chatbot with caching
+            api_keys = ChatBotAPIKey.get_cached_objects(my_chatbot)
+
+        :param chatbot: The ChatBot instance for which to retrieve API keys.
+        :returns: A queryset of ChatBotAPIKey instances associated with the ChatBot.
+        :rtype: models.QuerySet["ChatBotAPIKey"]
+
+        """
+
+        @cache_results(cls.cache_expiration)
+        def _get_api_keys_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotAPIKey"]:
+            return cls.objects.filter(chatbot_id=chatbot_id)
+
+        if chatbot:
+            return _get_api_keys_for_chatbot_id(chatbot.id)
+
+        return super().get_cached_objects()
+
 
 class ChatBotPlugin(TimestampedModel):
     """
@@ -1239,6 +1267,27 @@ class ChatBotPlugin(TimestampedModel):
             retval.append(plugin_controller.plugin)
         return retval
 
+    # pylint: disable=W0221
+    @classmethod
+    def get_cached_objects(cls, chatbot: ChatBot) -> models.QuerySet["ChatBotPlugin"]:
+        """
+        Retrieve a queryset of ChatBotPlugin instances associated with a ChatBot using caching.
+
+        :param chatbot: The ChatBot instance for which to retrieve plugins.
+        :returns: A queryset of ChatBotPlugin instances associated with the ChatBot.
+        :rtype: models.QuerySet["ChatBotPlugin"]
+
+        """
+
+        @cache_results(cls.cache_expiration)
+        def _get_plugins_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotPlugin"]:
+            return cls.objects.filter(chatbot_id=chatbot_id)
+
+        if chatbot:
+            return _get_plugins_for_chatbot_id(chatbot.id)
+
+        return super().get_cached_objects()  # type: ignore[return-value]
+
     @classmethod
     def plugins_json(cls, chatbot: ChatBot) -> List[dict]:
         retval = []
@@ -1326,6 +1375,27 @@ class ChatBotFunctions(TimestampedModel):
         chatbot_functions = cls.objects.filter(chatbot=chatbot)
         retval = [chatbot_function.name for chatbot_function in chatbot_functions if chatbot_function.name]
         return retval
+
+    # pylint: disable=W0221
+    @classmethod
+    def get_cached_objects(cls, chatbot: ChatBot) -> models.QuerySet["ChatBotFunctions"]:
+        """
+        Retrieve a queryset of ChatBotFunctions instances associated with a ChatBot using caching.
+
+        :param chatbot: The ChatBot instance for which to retrieve functions.
+        :returns: A queryset of ChatBotFunctions instances associated with the ChatBot.
+        :rtype: models.QuerySet["ChatBotFunctions"]
+
+        """
+
+        @cache_results(cls.cache_expiration)
+        def _get_functions_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotFunctions"]:
+            return cls.objects.filter(chatbot_id=chatbot_id)
+
+        if chatbot:
+            return _get_functions_for_chatbot_id(chatbot.id)
+
+        return super().get_cached_objects()  # type: ignore[return-value]
 
 
 class ChatBotRequests(TimestampedModel):
@@ -1994,7 +2064,10 @@ class ChatBotHelper(SmarterRequestMixin):
         if self.is_chatbot_sandbox_url:
             return True
 
-        if ChatBotAPIKey.objects.filter(chatbot=self.chatbot, api_key__is_active=True).exists():
+        if not self.chatbot:
+            return False
+        chatbotapikeys = ChatBotAPIKey.get_cached_objects(self.chatbot)
+        if chatbotapikeys.filter(api_key__is_active=True).exists():
             return True
         return False
 
@@ -2072,7 +2145,7 @@ class ChatBotHelper(SmarterRequestMixin):
         except Provider.DoesNotExist:
             return None
 
-    @cached_property
+    @property
     def chatbot_plugins_list(self) -> list[ChatBotPlugin]:
         """
         Returns a list of ChatBotPlugin instances associated with the ChatBot.
@@ -2082,7 +2155,7 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         if not self.chatbot:
             return []
-        return list(ChatBotPlugin.objects.filter(chatbot=self.chatbot))
+        return list(ChatBotPlugin.get_cached_objects(chatbot=self.chatbot))
 
     @cached_property
     def chatbot_plugins_list_str(self) -> str:

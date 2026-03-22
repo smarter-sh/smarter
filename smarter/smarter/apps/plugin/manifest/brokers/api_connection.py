@@ -25,7 +25,7 @@ from smarter.apps.plugin.manifest.models.common.connection.metadata import (
 from smarter.apps.plugin.manifest.models.common.connection.status import (
     SAMConnectionCommonStatus,
 )
-from smarter.apps.plugin.models import ApiConnection, ConnectionBase
+from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.plugin.serializers import ApiConnectionSerializer
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
@@ -422,10 +422,10 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             )
 
         # retrieve the apiKey Secret
-        api_key_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value)
+        api_key_name = str(camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value))
         if api_key_name:
             try:
-                secret = Secret.objects.get(name=api_key_name, user_profile=self.user_profile)
+                secret = Secret.get_cached_object(name=api_key_name, user_profile=self.user_profile)
                 config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = secret.id  # type: ignore[assignment]
             except Secret.DoesNotExist:
                 logger.warning(
@@ -436,10 +436,10 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
 
         # retrieve the proxyUsername Secret, if it exists
-        proxy_password_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
+        proxy_password_name = str(camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value))
         if proxy_password_name:
             try:
-                secret = Secret.objects.get(name=proxy_password_name, user_profile=self.user_profile)
+                secret = Secret.get_cached_object(name=proxy_password_name, user_profile=self.user_profile)
                 config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = secret.id  # type: ignore[assignment]
             except Secret.DoesNotExist:
                 logger.warning(
@@ -486,10 +486,8 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 if self.manifest and self.manifest.spec
                 else self.connection.api_key.name if self.connection and self.connection.api_key else None
             )
-            self._api_key_secret = Secret.objects.get(
-                user_profile=self.user_profile,
-                name=name,
-            )
+
+            self._api_key_secret = Secret.get_cached_object(name=name, user_profile=self.user_profile)
             return self._api_key_secret
         except Secret.DoesNotExist:
             logger.warning(
@@ -537,10 +535,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     self.connection.proxy_password.name if self.connection and self.connection.proxy_password else None
                 )
             )
-            self._proxy_password_secret = Secret.objects.get(
-                user_profile=self.user_profile,
-                name=name,
-            )
+            self._proxy_password_secret = Secret.get_cached_object(name=name, user_profile=self.user_profile)
             return self._proxy_password_secret
         except Secret.DoesNotExist:
             logger.warning(
@@ -587,14 +582,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             return self._connection
 
         try:
-            name = self.camel_to_snake(self.name)  # type: ignore
-            self._connection = ApiConnection.objects.get(user_profile__account=self.account, name=name)
+            name = str(self.camel_to_snake(self.name))  # type: ignore
+            self._connection = ApiConnection.get_cached_object(account=self.account, name=name)
         except MultipleObjectsReturned:
             try:
-                self._connection = ApiConnection.objects.get(
-                    user_profile=self.user_profile,
-                    name=name,
-                )
+                self._connection = ApiConnection.get_cached_object(user_profile=self.user_profile, name=name)
             except ApiConnection.DoesNotExist:
                 pass
         except ApiConnection.DoesNotExist:
