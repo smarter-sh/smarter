@@ -395,9 +395,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             except cls.DoesNotExist:
                 return None
 
-        if not pk:
-            raise SmarterValueError("PK parameter is required to retrieve a model instance.")
-
         return _get_model_by_pk(pk)
 
     @classmethod
@@ -563,7 +560,7 @@ class MetaDataModel(TimestampedModel):
             return None
 
         @cache_results(timeout=cls.cache_expiration)
-        def _get_model_by_name(name: str) -> Optional["MetaDataModel"]:
+        def _get_object_by_name(name: str) -> Optional["MetaDataModel"]:
             try:
                 return cls.objects.get(name=name)
             except cls.DoesNotExist:
@@ -576,13 +573,10 @@ class MetaDataModel(TimestampedModel):
                 )
                 raise SmarterValueError(f"Multiple objects found with name '{name}'.") from e
 
-        # priority 1: pk
-        if pk is not None:
-            return super().get_cached_object(pk=pk)  # type: ignore
+        if name:
+            return _get_object_by_name(name)
 
-        if not name:
-            raise SmarterValueError("either of pk or name parameter is required to retrieve a model instance.")
-        return _get_model_by_name(name)
+        return super().get_cached_object(pk=pk)  # type: ignore[return-value]
 
     @classmethod
     def get_cached_objects(cls) -> QuerySet["MetaDataModel"]:
