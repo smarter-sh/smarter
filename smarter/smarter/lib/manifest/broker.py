@@ -957,7 +957,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             self.user_profile,
         )
         try:
-            self._orm_meta_instance = ModelClass.get_cached_model(name=self.name, user_profile=self.user_profile)
+            self._orm_meta_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)
             if self._orm_meta_instance:
                 logger.debug(
                     "%s.orm_meta_instance_setter() - Successfully initialized %s: %s",
@@ -976,7 +976,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                     self.name,
                     account_admin_user_profile,
                 )
-                self._orm_meta_instance = ModelClass.get_cached_model(
+                self._orm_meta_instance = ModelClass.get_cached_object(
                     name=self.name, user_profile=account_admin_user_profile
                 )
                 logger.debug(
@@ -997,7 +997,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         self.name,
                         smarter_admin_user_profile,
                     )
-                    self._orm_meta_instance = ModelClass.get_cached_model(
+                    self._orm_meta_instance = ModelClass.get_cached_object(
                         name=self.name, user_profile=smarter_admin_user_profile
                     )
                     logger.debug(
@@ -1091,7 +1091,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.name,
                 self.user_profile,
             )
-            self._orm_instance = ModelClass.get_cached_model(name=self.name, user_profile=self.user_profile)
+            self._orm_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)
             logger.debug(
                 "%s.orm_instance() - retrieved %s for %s owned by %s",
                 self.abstract_broker_logger_prefix,
@@ -1111,7 +1111,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                     self.name,
                     account_admin_user_profile,
                 )
-                self._orm_instance = ModelClass.get_cached_model(
+                self._orm_instance = ModelClass.get_cached_object(
                     name=self.name, user_profile=account_admin_user_profile
                 )
                 logger.debug(
@@ -1132,7 +1132,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         self.name,
                         smarter_admin_user_profile,
                     )
-                    self._orm_instance = ModelClass.get_cached_model(
+                    self._orm_instance = ModelClass.get_cached_object(
                         name=self.name, user_profile=smarter_admin_user_profile
                     )
                     logger.debug(
@@ -1538,7 +1538,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 name,
                 user_profile,
             )
-            secret = Secret.get_cached_model(user_profile=user_profile, name=name)
+            secret = Secret.get_cached_object(user_profile=user_profile, name=name)
         except Secret.DoesNotExist:
             logger.debug(
                 "%s.get_or_create_secret() Secret %s not found for user %s",

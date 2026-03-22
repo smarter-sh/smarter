@@ -141,7 +141,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 self.name,
                 self.user_profile,
             )
-            self._orm_instance = PluginDataBase.get_cached_model(plugin=self.plugin_meta)
+            self._orm_instance = PluginDataBase.get_cached_object(plugin=self.plugin_meta)
             logger.debug(
                 "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",
                 self.formatted_class_name,
@@ -176,8 +176,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.name,
                     account_admin_user_profile,
                 )
-                plugin_meta = PluginMeta.get_cached_model(user_profile=account_admin_user_profile, name=self.name)
-                self._orm_instance = PluginDataBase.get_cached_model(plugin=plugin_meta)
+                plugin_meta = PluginMeta.get_cached_object(user_profile=account_admin_user_profile, name=self.name)
+                self._orm_instance = PluginDataBase.get_cached_object(plugin=plugin_meta)
                 logger.debug(
                     "%s.orm_instance() - retrieved %s for %s owned by %s",
                     self.formatted_class_name,
@@ -196,8 +196,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                         self.name,
                         smarter_admin_user_profile,
                     )
-                    plugin_meta = PluginMeta.get_cached_model(user_profile=smarter_admin_user_profile, name=self.name)
-                    self._orm_instance = PluginDataBase.get_cached_model(plugin=plugin_meta)
+                    plugin_meta = PluginMeta.get_cached_object(user_profile=smarter_admin_user_profile, name=self.name)
+                    self._orm_instance = PluginDataBase.get_cached_object(plugin=plugin_meta)
                     logger.debug(
                         "%s.orm_instance() - retrieved %s for %s owned by %s",
                         self.formatted_class_name,
@@ -403,10 +403,10 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.name,
                     self.account,
                 )
-                self._plugin_meta = PluginMeta.get_cached_model(account=self.account, name=self.name)
+                self._plugin_meta = PluginMeta.get_cached_object(account=self.account, name=self.name)
             except MultipleObjectsReturned:
                 try:
-                    self._plugin_meta = PluginMeta.get_cached_model(
+                    self._plugin_meta = PluginMeta.get_cached_object(
                         user_profile=self.user_profile,
                         name=self.name,
                     )

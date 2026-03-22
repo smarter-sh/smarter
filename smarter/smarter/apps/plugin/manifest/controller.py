@@ -232,7 +232,7 @@ class PluginController(AbstractController):
     def plugin_meta(self) -> Optional[PluginMeta]:
         if not self._plugin_meta and self.account and self.name and self.manifest:
             try:
-                plugin_meta = PluginMeta.get_cached_model(
+                plugin_meta = PluginMeta.get_cached_object(
                     account=self.account, name=self.name, plugin_class=self.plugin_class
                 )
                 if plugin_meta.user_profile not in valid_resource_owners_for_user(self.user_profile):
@@ -240,7 +240,7 @@ class PluginController(AbstractController):
                 self._plugin_meta = plugin_meta
                 logger.debug("%s retrieved plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
             except MultipleObjectsReturned:
-                self._plugin_meta = PluginMeta.get_cached_model(
+                self._plugin_meta = PluginMeta.get_cached_object(
                     user_profile=self.user_profile, name=self.name, plugin_class=self.plugin_class
                 )
             except PluginMeta.DoesNotExist:

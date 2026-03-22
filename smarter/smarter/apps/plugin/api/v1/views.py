@@ -83,7 +83,7 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
             user_profile=user_profile,
             account=user_profile.account,  # type: ignore[arg-type]
             user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=PluginMeta.get_cached_model(pk=plugin_id),  # type: ignore[attr-defined]
+            plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             return JsonResponse(
@@ -192,7 +192,7 @@ def get_plugin(request, plugin_id):
             user_profile=user_profile,
             account=user_profile.account,  # type: ignore[arg-type]
             user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=PluginMeta.get_cached_model(pk=plugin_id),  # type: ignore[attr-defined]
+            plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             raise PluginDataValueError(
@@ -323,7 +323,7 @@ def delete_plugin(request, plugin_id):
             user_profile=user_profile,
             account=user_profile.account,  # type: ignore[arg-type]
             user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=PluginMeta.get_cached_model(pk=plugin_id),  # type: ignore[attr-defined]
+            plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             raise PluginDataValueError(

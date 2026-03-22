@@ -10,6 +10,7 @@ from typing import Any, Optional
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.query import QuerySet
 from django.forms.models import model_to_dict
 from django.utils.timezone import is_aware, make_aware
 from taggit.managers import TaggableManager
@@ -356,7 +357,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         return retval
 
     @classmethod
-    def get_cached_model(cls, pk: int) -> Optional[models.Model]:
+    def get_cached_object(cls, pk: int) -> Optional[models.Model]:
         """
         Retrieve a model instance by primary key, using caching to
         optimize performance. This method is selectively overridden in
@@ -368,7 +369,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         .. code-block:: python
 
             # Retrieve by primary key
-            instance = MyModel.get_cached_model(pk=1)
+            instance = MyModel.get_cached_object(pk=1)
 
         :param pk: The primary key of the model instance to retrieve.
         :returns: The model instance if found, otherwise None.
@@ -377,7 +378,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
         if cls._meta.abstract:
             raise NotImplementedError(
-                "get_cached_model() must be called on a concrete model class, not an abstract base class."
+                "get_cached_object() must be called on a concrete model class, not an abstract base class."
             )
 
         @cache_results(timeout=cls.cache_expiration)
@@ -392,6 +393,28 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             raise SmarterValueError("PK parameter is required to retrieve a model instance.")
 
         return _get_model_by_pk(pk)
+
+    @classmethod
+    def get_cached_objects(cls) -> QuerySet["TimestampedModel"]:
+        """
+        Retrieve model instances using caching to optimize performance.
+        This method is selectively overridden in models that inherit from
+        TimestampedModel to provide class-specific function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve all instances
+            instances = MyModel.get_cached_objects()
+
+        :returns: A queryset of all model instances.
+        :rtype: QuerySet
+        """
+
+        raise NotImplementedError(
+            "get_cached_objects() must be called on a concrete model class, not an abstract base class."
+        )
 
     def __str__(self):
         return f"{self.__class__.__name__}(id={getattr(self, 'id', None)})"
@@ -492,7 +515,7 @@ class MetaDataModel(TimestampedModel):
         return _get_tags_by_class_and_pk(self.__class__.__name__, self.pk)
 
     @classmethod
-    def get_cached_model(cls, pk: Optional[int] = None, name: Optional[str] = None) -> Optional[models.Model]:
+    def get_cached_object(cls, pk: Optional[int] = None, name: Optional[str] = None) -> Optional["MetaDataModel"]:
         """
         Retrieve a model instance by primary key or name, using caching to
         optimize performance. This method is selectively overridden in
@@ -504,31 +527,61 @@ class MetaDataModel(TimestampedModel):
         .. code-block:: python
 
             # Retrieve by primary key
-            instance = MyModel.get_cached_model(pk=1)
+            instance = MyModel.get_cached_object(pk=1)
             # Retrieve by name
-            instance = MyModel.get_cached_model(name="exampleName")
+            instance = MyModel.get_cached_object(name="exampleName")
 
         :param pk: The primary key of the model instance to retrieve.
         :param name: The name of the model instance to retrieve.
         :returns: The model instance if found, otherwise None.
-        :rtype: Optional[models.Model]
+        :rtype: Optional["MetaDataModel"]
         """
 
         if cls._meta.abstract:
             raise NotImplementedError(
-                "get_cached_model() must be called on a concrete model class, not an abstract base class."
+                "get_cached_object() must be called on a concrete model class, not an abstract base class."
             )
 
         @cache_results(timeout=cls.cache_expiration)
-        def _get_model_by_name(name: str) -> Optional[models.Model]:
+        def _get_model_by_name(name: str) -> Optional["MetaDataModel"]:
             try:
                 return cls.objects.get(name=name)
             except cls.DoesNotExist:
                 return None
+            except cls.MultipleObjectsReturned as e:
+                logger.error(
+                    "%s.get_cached_object() - Multiple objects found with name '%s'. Returning the first one.",
+                    cls.formatted_class_name,
+                    name,
+                )
+                raise SmarterValueError(f"Multiple objects found with name '{name}'.") from e
 
+        # priority 1: pk
         if pk is not None:
-            return super().get_cached_model(pk=pk)
+            return super().get_cached_object(pk=pk)  # type: ignore
 
         if not name:
-            raise SmarterValueError("Name parameter is required to retrieve a model instance.")
+            raise SmarterValueError("either of pk or name parameter is required to retrieve a model instance.")
         return _get_model_by_name(name)
+
+    @classmethod
+    def get_cached_objects(cls) -> QuerySet["MetaDataModel"]:
+        """
+        Retrieve model instances using caching to optimize performance.
+        This method is selectively overridden in models that inherit from
+        MetaDataModel to provide class-specific function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve all instances
+            instances = MyModel.get_cached_objects()
+
+        :returns: A queryset of all model instances.
+        :rtype: QuerySet
+        """
+
+        raise NotImplementedError(
+            "get_cached_objects() must be called on a concrete model class, not an abstract base class."
+        )

@@ -913,7 +913,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return self.Modes.UNKNOWN
 
     @classmethod
-    def get_cached_model(
+    def get_cached_object(
         cls,
         pk: Optional[int] = None,
         name: Optional[str] = None,
@@ -929,10 +929,10 @@ class ChatBot(MetaDataWithOwnershipModel):
         .. code-block:: python
 
             # Retrieve a ChatBot instance by primary key with caching
-            chatbot = ChatBot.get_cached_model(pk=1)
+            chatbot = ChatBot.get_cached_object(pk=1)
 
             # Retrieve a ChatBot instance by name and user profile with caching
-            chatbot = ChatBot.get_cached_model(name="example", user_profile=my_user_profile)
+            chatbot = ChatBot.get_cached_object(name="example", user_profile=my_user_profile)
 
 
         :param pk: The primary key of the model instance to retrieve.
@@ -944,13 +944,13 @@ class ChatBot(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["ChatBot"]
         """
-        retval = super().get_cached_model(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
+        retval = super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
         if isinstance(retval, ChatBot):
             return retval
         return None
 
     @classmethod
-    def get_cached_models(cls, user_profile: UserProfile) -> models.QuerySet["ChatBot"]:
+    def get_cached_objects(cls, user_profile: UserProfile) -> models.QuerySet["ChatBot"]:
         """
         Retrieve a list of ChatBot instances associated with a user profile using caching.
 
@@ -959,7 +959,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         .. code-block:: python
 
             # Retrieve ChatBot instances for a user profile with caching
-            chatbots = ChatBot.get_cached_models(my_user_profile)
+            chatbots = ChatBot.get_cached_objects(my_user_profile)
 
         :param user_profile: The user profile for which to retrieve ChatBot instances.
         :returns: A queryset of ChatBot instances associated with the user profile.
@@ -1006,7 +1006,7 @@ class ChatBot(MetaDataWithOwnershipModel):
             if self.deployed:
                 chatbot_deploy.send(sender=self.__class__, chatbot=self)
         else:
-            orig = ChatBot.get_cached_model(pk=self.pk)
+            orig = ChatBot.get_cached_object(pk=self.pk)
             if orig.dns_verification_status != self.dns_verification_status:
                 chatbot_dns_verification_status_changed.send(sender=self.__class__, chatbot=self)
                 chatbot_deploy_status_changed.send(sender=self.__class__, chatbot=self)
@@ -1613,7 +1613,7 @@ class ChatBotHelper(SmarterRequestMixin):
         if self.is_chatbot:
             if not isinstance(self.chatbot, ChatBot):
                 if self.user_profile and self._name:
-                    self.chatbot = ChatBot.get_cached_model(name=self._name, user_profile=self.user_profile)
+                    self.chatbot = ChatBot.get_cached_object(name=self._name, user_profile=self.user_profile)
 
             if not isinstance(self._chatbot, ChatBot):
                 chatbot_helper_logger.warning(
@@ -1720,7 +1720,7 @@ class ChatBotHelper(SmarterRequestMixin):
             return self._chatbot_id
 
         if self.chatbot_name and self.user_profile:
-            self.chatbot = ChatBot.get_cached_model(name=self.chatbot_name, user_profile=self.user_profile)
+            self.chatbot = ChatBot.get_cached_object(name=self.chatbot_name, user_profile=self.user_profile)
             chatbot_helper_logger.debug(
                 f"chatbot_id() initialized self.chatbot_id={self.chatbot_id} from name={ self.chatbot_name } and account={ self.account }"
             )
@@ -1731,7 +1731,7 @@ class ChatBotHelper(SmarterRequestMixin):
     @chatbot_id.setter
     def chatbot_id(self, chatbot_id: int):
         self._chatbot_id = chatbot_id
-        chatbot = ChatBot.get_cached_model(pk=chatbot_id)
+        chatbot = ChatBot.get_cached_object(pk=chatbot_id)
         if chatbot and chatbot.user_profile.account != self.account:
             raise SmarterValueError("ChatBotHelper.chatbot_id setter: ChatBot's Account does not match self.account")
         self.chatbot = chatbot
@@ -2016,14 +2016,14 @@ class ChatBotHelper(SmarterRequestMixin):
 
         # cheapest possibility
         if self._chatbot_id:
-            self.chatbot = ChatBot.get_cached_model(pk=self._chatbot_id)
+            self.chatbot = ChatBot.get_cached_object(pk=self._chatbot_id)
             chatbot_helper_logger.debug(f"initialized chatbot {self._chatbot} from chatbot_id {self.chatbot_id}")
             return self._chatbot
 
         # our expected case
         if self.user_profile and self.name:
             try:
-                self.chatbot = ChatBot.get_cached_model(name=self.name, user_profile=self.user_profile)
+                self.chatbot = ChatBot.get_cached_object(name=self.name, user_profile=self.user_profile)
                 chatbot_helper_logger.debug(
                     f"initialized chatbot {self._chatbot} from account {self.account} and name {self.name}"
                 )
@@ -2068,7 +2068,7 @@ class ChatBotHelper(SmarterRequestMixin):
         if not self.chatbot:
             return None
         try:
-            return Provider.get_cached_model(name=self.chatbot.provider, account=self.account)
+            return Provider.get_cached_object(name=self.chatbot.provider, account=self.account)
         except Provider.DoesNotExist:
             return None
 

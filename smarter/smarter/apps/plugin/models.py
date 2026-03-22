@@ -476,7 +476,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
     # pylint: disable=W0221
     @classmethod
-    def get_cached_model(
+    def get_cached_object(
         cls,
         pk: Optional[int] = None,
         name: Optional[str] = None,
@@ -502,7 +502,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :rtype: Optional[PluginMeta]
         """
         if not plugin_class:
-            retval = super().get_cached_model(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
+            retval = super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
             if isinstance(retval, PluginMeta):
                 return retval
             return None
@@ -517,14 +517,14 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 return None
 
         if pk:
-            retval = super().get_cached_model(pk=pk)
+            retval = super().get_cached_object(pk=pk)
             if isinstance(retval, PluginMeta):
                 return retval
 
         if not user_profile:
             if not user:
                 raise ImproperlyConfigured(
-                    "PluginMeta.get_cached_model() requires either user_profile or user to be provided."
+                    "PluginMeta.get_cached_object() requires either user_profile or user to be provided."
                 )
             if not account:
                 account = get_cached_account_for_user(user=user)  # type: ignore[arg-type]
@@ -532,14 +532,14 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         if plugin_class:
             return _get_model_by_name_and_userprofile_and_plugin_class(name, user_profile.id, plugin_class)
-        retval = super().get_cached_model(name=name, user_profile=user_profile)
+        retval = super().get_cached_object(name=name, user_profile=user_profile)
         if isinstance(retval, PluginMeta):
             return retval
 
     @classmethod
-    def get_cached_models(cls, user_profile: UserProfile) -> QuerySet["PluginMeta"]:
+    def get_cached_objects(cls, user_profile: UserProfile) -> QuerySet["PluginMeta"]:
 
-        return super().get_cached_models(user_profile=user_profile)  # type: ignore[return-value]
+        return super().get_cached_objects(user_profile=user_profile)  # type: ignore[return-value]
 
     @classmethod
     @cache_results()
@@ -563,7 +563,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         try:
             retval = []
-            user_profile = UserProfile.get_cached_model(pk=user_profile_id)
+            user_profile = UserProfile.get_cached_object(pk=user_profile_id)
             if not user_profile:
                 raise SmarterValueError(f"UserProfile with id {user_profile_id} not found.")
             admin_user = get_cached_admin_user_for_account(account=user_profile.account)
@@ -579,9 +579,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 return False
 
             def get_plugins_for_account() -> QuerySet:
-                user_plugins = PluginMeta.get_cached_models(user_profile=user_profile)
-                admin_plugins = PluginMeta.get_cached_models(user_profile=admin_user_profile)  # type: ignore[assignment]
-                smarter_plugins = PluginMeta.get_cached_models(
+                user_plugins = PluginMeta.get_cached_objects(user_profile=user_profile)
+                admin_plugins = PluginMeta.get_cached_objects(user_profile=admin_user_profile)  # type: ignore[assignment]
+                smarter_plugins = PluginMeta.get_cached_objects(
                     user_profile=smarter_cached_objects.smarter_admin_user_profile
                 )
 
@@ -984,7 +984,9 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
 
     # pylint: disable=W0221
     @classmethod
-    def get_cached_model(cls, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None) -> Optional[models.Model]:
+    def get_cached_object(
+        cls, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None
+    ) -> Optional["PluginDataBase"]:
         """
         Retrieve a model instance by primary key, using caching to
         optimize performance. This method is selectively overridden in
@@ -996,11 +998,11 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
         .. code-block:: python
 
             # Retrieve by primary key
-            instance = MyModel.get_cached_model(pk=1)
+            instance = MyModel.get_cached_object(pk=1)
 
         :param pk: The primary key of the model instance to retrieve.
         :returns: The model instance if found, otherwise None.
-        :rtype: Optional[models.Model]
+        :rtype: Optional["PluginDataBase"]
         """
 
         @cache_results()
@@ -1016,7 +1018,7 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
                 return None
 
         if pk:
-            return super().get_cached_model(pk=pk)
+            return super().get_cached_object(pk=pk)  # type: ignore[return-value]
 
         if plugin:
             return _get_model_by_plugin_meta(plugin.id)
