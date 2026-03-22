@@ -451,7 +451,7 @@ class Provider(MetaDataWithOwnershipModel):
         self.save()
 
     @classmethod
-    def get_cached_model(
+    def get_cached_object(
         cls,
         pk: Optional[int] = None,
         name: Optional[str] = None,
@@ -467,13 +467,13 @@ class Provider(MetaDataWithOwnershipModel):
         .. code-block:: python
 
             # By primary key
-            instance = MyModel.get_cached_model(pk=123)
+            instance = MyModel.get_cached_object(pk=123)
 
             # By name and user profile
-            instance = MyModel.get_cached_model(name="Resource Name", user_profile=user_profile)
+            instance = MyModel.get_cached_object(name="Resource Name", user_profile=user_profile)
 
             # By name and account
-            instance = MyModel.get_cached_model(name="Resource Name", account=account)
+            instance = MyModel.get_cached_object(name="Resource Name", account=account)
 
         :param pk: The primary key of the model instance to retrieve.
         :param name: The name of the model instance to retrieve.
@@ -484,7 +484,7 @@ class Provider(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["Provider"]
         """
-        retval = super().get_cached_model(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
+        retval = super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
         if isinstance(retval, Provider):
             return retval
         return None

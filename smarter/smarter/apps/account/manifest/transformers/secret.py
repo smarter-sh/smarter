@@ -31,7 +31,6 @@ from smarter.apps.account.signals import (
     secret_updated,
 )
 from smarter.apps.account.utils import (
-    get_cached_secret,
     get_user_profiles_for_account,
 )
 from smarter.common.api import SmarterApiVersions
@@ -413,7 +412,7 @@ class SecretTransformer(SmarterHelperMixin):
             logger.warning("%s.secret() User profile is not set.", self.formatted_class_name)
             return None
 
-        self._secret = get_cached_secret(name=self.name, user_profile=self.user_profile)
+        self._secret = Secret.get_cached_object(name=self.name, user_profile=self.user_profile)
         if self._secret:
             logger.debug(
                 "%s.secret() initialized Django ORM Secret %s for user profile %s.",

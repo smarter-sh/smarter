@@ -290,7 +290,7 @@ class SAMChatbotBroker(AbstractBroker):
 
         if not self._chatbot:
             try:
-                self._chatbot = ChatBot.get_cached_model(user_profile=self.user_profile, name=self.name)
+                self._chatbot = ChatBot.get_cached_object(user_profile=self.user_profile, name=self.name)
             except ChatBot.DoesNotExist:
                 if self.manifest:
                     data = self.manifest_to_django_orm()
@@ -943,7 +943,7 @@ class SAMChatbotBroker(AbstractBroker):
                 for plugin_name in self.manifest.spec.plugins:
                     plugin_name = str(self.camel_to_snake(plugin_name))
                     try:
-                        plugin = PluginMeta.get_cached_model(name=plugin_name, account=self.account)
+                        plugin = PluginMeta.get_cached_object(name=plugin_name, account=self.account)
                     except PluginMeta.DoesNotExist as e:
                         logger.error(
                             "%s.apply() failed to find PluginMeta %s",

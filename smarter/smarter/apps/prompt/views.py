@@ -494,7 +494,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
 
         if chatbot_id is not None:
             try:
-                self._chatbot = ChatBot.get_cached_model(pk=chatbot_id)
+                self._chatbot = ChatBot.get_cached_object(pk=chatbot_id)
                 self.chatbot_name = self._chatbot.name
                 logger.debug(
                     "%s.dispatch() - set chatbot=%s from chatbot_id=%s",
@@ -877,7 +877,7 @@ class PromptManifestView(DocsBaseView):
         hashed_id = kwargs.pop("hashed_id", None)
         chatbot_id = ChatBot.id_from_hashed_id(hashed_id) if hashed_id else None
         try:
-            self.chatbot = ChatBot.get_cached_model(pk=chatbot_id)
+            self.chatbot = ChatBot.get_cached_object(pk=chatbot_id)
             self.chatbot_helper = ChatBotHelper(request=request, chatbot=self.chatbot)
         except ChatBot.DoesNotExist:
             return SmarterHttpResponseNotFound(request=request, error_message=f"ChatBot with id {chatbot_id} not found")

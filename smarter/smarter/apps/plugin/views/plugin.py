@@ -93,7 +93,7 @@ class PluginDetailView(DocsBaseView):
         if not self.name:
             logger.error("%s.setup() Plugin name is required but not provided.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="Plugin name is required")
-        self.plugin = PluginMeta.get_cached_model(name=self.name, user=request.user)  # type: ignore[attr-defined]
+        self.plugin = PluginMeta.get_cached_object(name=self.name, user=request.user)  # type: ignore[attr-defined]
 
     def get(self, request, *args, **kwargs):
         if not self.plugin:

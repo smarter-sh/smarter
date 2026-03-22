@@ -41,9 +41,9 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHe
 
         def get_chatbots_for_account() -> QuerySet:
 
-            user_chatbots = ChatBot.get_cached_models(user_profile=user_profile)
-            admin_chatbots = ChatBot.get_cached_models(user_profile=admin_user_profile)  # type: ignore[union-attr]
-            smarter_chatbots = ChatBot.get_cached_models(
+            user_chatbots = ChatBot.get_cached_objects(user_profile=user_profile)
+            admin_chatbots = ChatBot.get_cached_objects(user_profile=admin_user_profile)  # type: ignore[union-attr]
+            smarter_chatbots = ChatBot.get_cached_objects(
                 user_profile=smarter_cached_objects.smarter_admin_user_profile  # type: ignore[union-attr]
             )
 

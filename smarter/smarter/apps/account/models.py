@@ -786,7 +786,7 @@ class UserProfile(MetaDataModel):
         return user_profile.user
 
     @classmethod
-    def get_cached_model(cls, pk: Optional[int] = None, name: Optional[str] = None) -> Optional["UserProfile"]:
+    def get_cached_object(cls, pk: Optional[int] = None, name: Optional[str] = None) -> Optional["UserProfile"]:
         """
         Retrieve a model instance by primary key or name, using caching to
         optimize performance. This method is selectively overridden in
@@ -798,16 +798,16 @@ class UserProfile(MetaDataModel):
         .. code-block:: python
 
             # Retrieve by primary key
-            instance = MyModel.get_cached_model(pk=1)
+            instance = MyModel.get_cached_object(pk=1)
             # Retrieve by name
-            instance = MyModel.get_cached_model(name="exampleName")
+            instance = MyModel.get_cached_object(name="exampleName")
 
         :param pk: The primary key of the model instance to retrieve.
         :param name: The name of the model instance to retrieve.
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["UserProfile"]
         """
-        retval = super().get_cached_model(pk=pk, name=name)
+        retval = super().get_cached_object(pk=pk, name=name)
         if isinstance(retval, UserProfile):
             return retval
 
@@ -844,7 +844,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
     # pylint: disable=W0221
     @classmethod
-    def get_cached_model(
+    def get_cached_object(
         cls,
         pk: Optional[int] = None,
         name: Optional[str] = None,
@@ -860,13 +860,13 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         .. code-block:: python
 
             # By primary key
-            instance = MyModel.get_cached_model(pk=123)
+            instance = MyModel.get_cached_object(pk=123)
 
             # By name and user profile
-            instance = MyModel.get_cached_model(name="Resource Name", user_profile=user_profile)
+            instance = MyModel.get_cached_object(name="Resource Name", user_profile=user_profile)
 
             # By name and account
-            instance = MyModel.get_cached_model(name="Resource Name", account=account)
+            instance = MyModel.get_cached_object(name="Resource Name", account=account)
 
         :param pk: The primary key of the model instance to retrieve.
         :param name: The name of the model instance to retrieve.
@@ -893,8 +893,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return None
             except cls.MultipleObjectsReturned:
                 logger.error(
-                    "%s.get_cached_model() Multiple models found with name '%s'. Defaulting to first result.",
-                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_model()"),
+                    "%s.get_cached_object() Multiple models found with name '%s'. Defaulting to first result.",
+                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()"),
                     name,
                 )
                 return cls.objects.filter(name=name).first()
@@ -907,8 +907,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return None
             except cls.MultipleObjectsReturned:
                 logger.error(
-                    "%s.get_cached_model() Multiple models found with name '%s' and user profile '%s'. Defaulting to first result.",
-                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_model()"),
+                    "%s.get_cached_object() Multiple models found with name '%s' and user profile '%s'. Defaulting to first result.",
+                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()"),
                     name,
                     user_profile,
                 )
@@ -922,8 +922,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return None
             except cls.MultipleObjectsReturned:
                 logger.error(
-                    "%s.get_cached_model() Multiple models found with name '%s' and account '%s'. Defaulting to first result.",
-                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_model()"),
+                    "%s.get_cached_object() Multiple models found with name '%s' and account '%s'. Defaulting to first result.",
+                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()"),
                     name,
                     account,
                 )
@@ -940,8 +940,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return _get_model_by_name_and_user_profile(name, user_profiles.first())
             else:
                 logger.error(
-                    "%s.get_cached_model() Multiple user profiles found for user %s. Defaulting to first profile.",
-                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_model()"),
+                    "%s.get_cached_object() Multiple user profiles found for user %s. Defaulting to first profile.",
+                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()"),
                     user.email,
                 )
                 return _get_model_by_name_and_user_profile(name, user_profiles.first())
@@ -953,7 +953,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         return _get_model_by_name(name)
 
     @classmethod
-    def get_cached_models(cls, user_profile: UserProfile) -> models.QuerySet["MetaDataWithOwnershipModel"]:
+    def get_cached_objects(cls, user_profile: UserProfile) -> models.QuerySet["MetaDataWithOwnershipModel"]:
         """
         Retrieve a list of MetaDataWithOwnershipModel instances associated with a user profile using caching.
 
@@ -962,7 +962,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         .. code-block:: python
 
             # Retrieve MetaDataWithOwnershipModel instances for a user profile with caching
-            models = MetaDataWithOwnershipModel.get_cached_models(my_user_profile)
+            models = MetaDataWithOwnershipModel.get_cached_objects(my_user_profile)
 
         :param user_profile: The user profile for which to retrieve MetaDataWithOwnershipModel instances.
         :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile.
@@ -1450,7 +1450,7 @@ class Secret(MetaDataWithOwnershipModel):
         return fernet
 
     @classmethod
-    def get_cached_model(
+    def get_cached_object(
         cls,
         pk: Optional[int] = None,
         name: Optional[str] = None,
@@ -1466,13 +1466,13 @@ class Secret(MetaDataWithOwnershipModel):
         .. code-block:: python
 
             # By primary key
-            instance = MyModel.get_cached_model(pk=123)
+            instance = MyModel.get_cached_object(pk=123)
 
             # By name and user profile
-            instance = MyModel.get_cached_model(name="Resource Name", user_profile=user_profile)
+            instance = MyModel.get_cached_object(name="Resource Name", user_profile=user_profile)
 
             # By name and account
-            instance = MyModel.get_cached_model(name="Resource Name", account=account)
+            instance = MyModel.get_cached_object(name="Resource Name", account=account)
 
         :param pk: The primary key of the model instance to retrieve.
         :param name: The name of the model instance to retrieve.
@@ -1483,7 +1483,7 @@ class Secret(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[Secret]
         """
-        retval = super().get_cached_model(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
+        retval = super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
         if isinstance(retval, Secret):
             return retval
         return None
