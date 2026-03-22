@@ -9,6 +9,9 @@ from typing import Optional, Union
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils.utils import (
+    rfc1034_compliant_to_snake as utils_rfc1034_compliant_to_snake,
+)
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(f"{__name__}.SmarterConverterMixin")
@@ -312,12 +315,7 @@ class SmarterConverterMixin:
                 print(e)
             # Output: Could not convert RFC 1034 compliant name from <class 'int'>
         """
-        logger.debug("%s.rfc1034_compliant_to_snake()", logger_prefix)
-        if not isinstance(val, str):
-            raise SmarterValueError(f"Could not convert RFC 1034 compliant name from {type(val)}")
-        # Replace hyphens with underscores
-        name = val.replace("-", "_")
-        return name
+        return utils_rfc1034_compliant_to_snake(val)
 
     def mask_string(self, string: str, mask_char: str = "*", mask_length: int = 4, string_length: int = 8) -> str:
         """

@@ -1025,6 +1025,17 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         )
 
         @cache_results(cls.cache_expiration)
+        def _get_object_by_pk(pk: int) -> Optional["MetaDataWithOwnershipModel"]:
+            try:
+                return (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(pk=pk)
+                )
+            except cls.DoesNotExist:
+                return None
+
+        @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_user_profile(
             name: str, user_profile: UserProfile
         ) -> Optional["MetaDataWithOwnershipModel"]:
@@ -1065,7 +1076,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return cls.objects.prefetch_related("tags").filter(name=name, user_profile__account=account).first()
 
         if pk:
-            return super().get_cached_object(pk=pk)  # type: ignore[return-value]
+            return _get_object_by_pk(pk)
 
         try:
             user_profile = user_profile or UserProfile.get_cached_object(user=user, account=account)
