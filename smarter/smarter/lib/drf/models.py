@@ -12,7 +12,6 @@ from knox.models import AuthToken, AuthTokenManager
 from knox.settings import CONSTANTS
 
 from smarter.apps.account.models import (
-    Account,
     MetaDataWithOwnershipModel,
     User,
     UserProfile,
@@ -198,7 +197,11 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
         def _get_cached_objects_for_user_profile(user_profile_id: int) -> models.QuerySet["SmarterAuthToken"]:
-            queryset = cls.objects.prefetch_related("tags").filter(user=user_profile.cached_user)
+            queryset = (
+                cls.objects.prefetch_related("tags")
+                .select_related("user_profile", "user_profile__account", "user_profile__user")
+                .filter(user=user_profile.cached_user)
+            )
             return queryset
 
         # pylint: disable=W0613
@@ -206,7 +209,11 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         def _get_cached_objects_for_user_profile_and_name(
             user_profile_id: int, name: str
         ) -> models.QuerySet["SmarterAuthToken"]:
-            queryset = cls.objects.prefetch_related("tags").filter(user=user_profile.cached_user, name=name)
+            queryset = (
+                cls.objects.prefetch_related("tags")
+                .select_related("user_profile", "user_profile__account", "user_profile__user")
+                .filter(user=user_profile.cached_user, name=name)
+            )
             return queryset
 
         if not user_profile and user:

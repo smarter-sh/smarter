@@ -1078,7 +1078,12 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 user,
                 account,
             )
-            user_profile = UserProfile.objects.filter(user=user, account=account).first()
+            user_profile = (
+                UserProfile.objects.select_related("user_profile", "user_profile__account", "user_profile__user")
+                .prefetch_related("tags")
+                .filter(user=user, account=account)
+                .first()
+            )
 
         if user_profile:
             # call this regardless of whether name is provided.
@@ -1117,7 +1122,11 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         @cache_results(cls.cache_expiration)
         def _get_objects_for_user_profile_id(user_profile_id: int) -> models.QuerySet["MetaDataWithOwnershipModel"]:
-            return cls.objects.prefetch_related("tags").filter(user_profile_id=user_profile_id)
+            return (
+                cls.objects.prefetch_related("tags")
+                .select_related("user_profile", "user_profile__account", "user_profile__user")
+                .filter(user_profile_id=user_profile_id)
+            )
 
         if user_profile:
             return _get_objects_for_user_profile_id(user_profile.id)
