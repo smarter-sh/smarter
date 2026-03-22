@@ -423,6 +423,7 @@ if smarter_settings.aws_is_configured:
                 "region_name": smarter_settings.aws_region,
                 "default_acl": "public-read",
                 "querystring_auth": False,
+                "custom_domain": smarter_settings.environment_cdn_domain,
             },
         }
     }

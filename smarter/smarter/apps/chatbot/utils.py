@@ -23,7 +23,7 @@ logger_prefix = formatted_text(f"{__name__}")
 LRU_CACHE_MAX_SIZE = 128
 
 
-@cache_results()
+@cache_results(timeout=60)
 def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHelper]:
     """
     Returns a list of chatbots for the given user profile.
@@ -40,13 +40,14 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHe
             return False
 
         def get_chatbots_for_account() -> QuerySet:
-            user_chatbots = ChatBot.objects.filter(user_profile=user_profile).order_by("name")
-            admin_chatbots = ChatBot.objects.filter(user_profile=admin_user_profile).order_by("name")
-            smarter_chatbots = ChatBot.objects.filter(
-                user_profile=smarter_cached_objects.smarter_admin_user_profile
-            ).order_by("name")
+
+            user_chatbots = ChatBot.get_cached_models_for_user_profile(user_profile=user_profile)
+            admin_chatbots = ChatBot.get_cached_models_for_user_profile(user_profile=admin_user_profile)  # type: ignore[union-attr]
+            smarter_chatbots = ChatBot.get_cached_models_for_user_profile(
+                user_profile=smarter_cached_objects.smarter_admin_user_profile  # type: ignore[union-attr]
+            )
+
             combined_chatbots = user_chatbots | admin_chatbots | smarter_chatbots
-            combined_chatbots = combined_chatbots.distinct().order_by("name")
             return combined_chatbots
 
         logger.debug(
@@ -58,15 +59,9 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHe
         chatbot_helpers = []
         user_profile = UserProfile.objects.get(id=user_profile_id)
         admin_user = get_cached_admin_user_for_account(account=user_profile.account)
-        if admin_user:
-            admin_user_profile = get_cached_user_profile(user=admin_user)
-        else:
-            logger.error(
-                "%s.get_cached_chatbots_for_user_profile() - No admin user found for account %s",
-                logger_prefix,
-                user_profile.account,
-            )
-            return []
+        if not admin_user:
+            raise ValueError(f"No admin user found for account {user_profile.account}")
+        admin_user_profile = get_cached_user_profile(user=admin_user)
 
         chatbots = get_chatbots_for_account()
         logger.debug(

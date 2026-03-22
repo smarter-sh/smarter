@@ -949,6 +949,34 @@ class ChatBot(MetaDataWithOwnershipModel):
             return retval
         return None
 
+    @classmethod
+    def get_cached_models_for_user_profile(cls, user_profile: UserProfile) -> models.QuerySet["ChatBot"]:
+        """
+        Retrieve a list of ChatBot instances associated with a user profile using caching.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve ChatBot instances for a user profile with caching
+            chatbots = ChatBot.get_cached_models_for_user_profile(my_user_profile)
+
+        :param user_profile: The user profile for which to retrieve ChatBot instances.
+        :returns: A queryset of ChatBot instances associated with the user profile.
+        :rtype: models.QuerySet["ChatBot"]
+
+        """
+        if not user_profile:
+            return cls.objects.none()
+
+        user_profile_id = user_profile.id
+
+        @cache_results(60)
+        def _get_chatbots_for_user_profile_id(user_profile_id: int) -> models.QuerySet["ChatBot"]:
+            return cls.objects.filter(user_profile_id=user_profile_id)
+
+        return _get_chatbots_for_user_profile_id(user_profile_id)
+
     def save(self, *args, asynchronous=False, **kwargs):
         """
         Override save() to validate domain and send signals on status changes.
