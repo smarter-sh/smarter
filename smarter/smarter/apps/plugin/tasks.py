@@ -116,7 +116,7 @@ def create_plugin_selector_history(*args, **kwargs):
         # to catch a race situation in unit tests.
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,  # type: ignore[arg-type]
+            account=user_profile.cached_account,  # type: ignore[arg-type]
             user=user,  # type: ignore[arg-type]
             plugin_meta=plugin_meta,
         )

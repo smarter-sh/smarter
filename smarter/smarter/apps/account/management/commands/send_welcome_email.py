@@ -31,11 +31,11 @@ class Command(SmarterCommand):
 
         if username:
             user_profile = UserProfile.objects.get(user__username=username)
-            account = user_profile.account
-            email = email or user_profile.user.email
+            account = user_profile.cached_account
+            email = email or user_profile.cached_user.email
         elif email:
             user_profile = UserProfile.objects.get(user__email=email)
-            account = user_profile.account
+            account = user_profile.cached_account
         else:
             if options["account_number"]:
                 try:

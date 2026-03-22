@@ -432,7 +432,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     "%s.manifest_to_django_orm() api key Secret %s not found for user %s",
                     self.formatted_class_name,
                     api_key_name,
-                    self.user_profile.user.username,
+                    self.user_profile.cached_user.username,
                 )
 
         # retrieve the proxyUsername Secret, if it exists
@@ -446,7 +446,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     "%s.manifest_to_django_orm() proxy password Secret %s not found for user %s",
                     self.formatted_class_name,
                     proxy_password_name,
-                    self.user_profile.user.username,
+                    self.user_profile.cached_user.username,
                 )
 
         return {**metadata, **config_dump}

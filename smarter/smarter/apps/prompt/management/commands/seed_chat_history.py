@@ -86,6 +86,6 @@ class Command(SmarterCommand):
                         "one or more plugins. Please check the ChatBotPlugin model."
                     )
 
-                default_handler(chat=chat, plugins=plugins, user=user_profile.user, data=data)
+                default_handler(chat=chat, plugins=plugins, user=user_profile.cached_user, data=data)
                 self.stdout.write(self.style.SUCCESS("Chat history seeded."))
         self.handle_completed_success()

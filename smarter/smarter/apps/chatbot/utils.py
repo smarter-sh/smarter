@@ -61,9 +61,9 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHe
         user_profile = UserProfile.get_cached_object(pk=user_profile_id)
         if not user_profile:
             raise SmarterValueError(f"No user profile found for id {user_profile_id}")
-        admin_user = get_cached_admin_user_for_account(account=user_profile.account)
+        admin_user = get_cached_admin_user_for_account(account=user_profile.cached_account)
         if not admin_user:
-            raise SmarterValueError(f"No admin user found for account {user_profile.account}")
+            raise SmarterValueError(f"No admin user found for account {user_profile.cached_account}")
         admin_user_profile = get_cached_user_profile(user=admin_user)
 
         chatbots = get_chatbots_for_account()
@@ -87,9 +87,9 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHe
             chatbot_helper = ChatBotHelper(
                 request=None,  # type: ignore[assignment]
                 chatbot=chatbot,
-                user=user_profile.user,
+                user=user_profile.cached_user,
                 user_profile=user_profile,
-                account=user_profile.account,
+                account=user_profile.cached_account,
             )
             if not was_already_added(chatbot_helper):
                 chatbot_helpers.append(chatbot_helper)

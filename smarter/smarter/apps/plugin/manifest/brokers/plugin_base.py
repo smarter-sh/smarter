@@ -503,15 +503,15 @@ class SAMPluginBaseBroker(AbstractBroker):
             return self._plugin_status
         if not self.plugin_meta:
             return None
-        admin = get_cached_admin_user_for_account(self.plugin_meta.user_profile.account)
+        admin = get_cached_admin_user_for_account(self.plugin_meta.user_profile.cached_account)
         if not admin:
             raise SAMPluginBrokerError(
-                f"No admin user found for account {self.plugin_meta.user_profile.account}",
+                f"No admin user found for account {self.plugin_meta.user_profile.cached_account}",
                 thing=self.kind,
                 command=SmarterJournalCliCommands("describe"),
             )
         self._plugin_status = SAMPluginCommonStatus(
-            accountNumber=self.plugin_meta.user_profile.account.account_number,
+            accountNumber=self.plugin_meta.user_profile.cached_account.account_number,
             username=admin.username,
             created=self.plugin_meta.created_at,
             modified=self.plugin_meta.updated_at,

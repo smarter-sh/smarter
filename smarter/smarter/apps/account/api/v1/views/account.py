@@ -38,7 +38,7 @@ class AccountView(AccountViewBase):
         if account_id and request.user.is_superuser:
             self.account = get_object_or_404(Account, pk=account_id)
         else:
-            self.account = self.user_profile.account
+            self.account = self.user_profile.cached_account
         serializer = self.serializer_class(self.account)
         return Response(serializer.data, status=HTTPStatus.OK)
 
@@ -110,4 +110,4 @@ class AccountListView(AccountListViewBase):
     def get_queryset(self):
         if self.request.user.is_superuser:
             return Account.objects.all()
-        return self.user_profile.account
+        return self.user_profile.cached_account

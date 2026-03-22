@@ -227,7 +227,7 @@ def get_connections(user_profile: UserProfile) -> int:
     :return: The number of API and SQL connections belonging to the user.
     :rtype: int
     """
-    retval = ConnectionBase.get_cached_connections_for_user(user_profile.user)
+    retval = ConnectionBase.get_cached_connections_for_user(user_profile.cached_user)
     return len(retval)
 
 
@@ -266,7 +266,7 @@ def get_providers(user_profile: UserProfile) -> int:
     :return: The number of providers belonging to the user account + those belonging to the official smarter admin.
     :rtype: int
     """
-    retval = Provider.get_cached_providers_for_user(user_profile.user)
+    retval = Provider.get_cached_providers_for_user(user_profile.cached_user)
     return len(retval)
 
 
@@ -351,12 +351,12 @@ def base(request: "HttpRequest") -> dict:
         username = "anonymous"
         is_superuser = False
         is_staff = False
-        if user_profile and user_profile.user.is_authenticated:
+        if user_profile and user_profile.cached_user.is_authenticated:
             try:
-                user_email = user_profile.user.email
-                username = user_profile.user.username
-                is_superuser = user_profile.user.is_superuser
-                is_staff = user_profile.user.is_staff
+                user_email = user_profile.cached_user.email
+                username = user_profile.cached_user.username
+                is_superuser = user_profile.cached_user.is_superuser
+                is_staff = user_profile.cached_user.is_staff
             except AttributeError:
                 # technically, this is supposed to be impossible due to the is_authenticated check
                 pass
@@ -371,8 +371,12 @@ def base(request: "HttpRequest") -> dict:
                 "profile_image_url": (
                     user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
                 ),
-                "first_name": user_profile.user.first_name if user_profile and user_profile.user.first_name else "",
-                "last_name": user_profile.user.last_name if user_profile and user_profile.user.last_name else "",
+                "first_name": (
+                    user_profile.cached_user.first_name if user_profile and user_profile.cached_user.first_name else ""
+                ),
+                "last_name": (
+                    user_profile.cached_user.last_name if user_profile and user_profile.cached_user.last_name else ""
+                ),
                 "product_name": SMARTER_PRODUCT_NAME,
                 "company_name": smarter_settings.root_domain,
                 "smarter_version": "v" + __version__,

@@ -48,7 +48,7 @@ class Command(SmarterCommand):
             if not user_profile:
                 self.handle_completed_failure(msg=f"User {username} does not have a user profile")
                 return
-            account = user_profile.account
+            account = user_profile.cached_account
         if not user:
             user = (
                 User.objects.get(username=username)

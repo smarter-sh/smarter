@@ -63,7 +63,7 @@ class SettingsView(SmarterAdminWebView):
 
     def _handle_write(self, request):
         user_profile = get_cached_user_profile(user=request.user)
-        account_form = AccountForm(request.POST, instance=user_profile.account)
+        account_form = AccountForm(request.POST, instance=user_profile.cached_account)
         if account_form.is_valid():
             if not self._exists("value", str(account_form.instance.currency), CURRENCIES):
                 return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data={"currency": "Invalid currency."})
@@ -81,9 +81,9 @@ class SettingsView(SmarterAdminWebView):
     # -------------------------------------------------------------------------
     # HTTP override methods
     # -------------------------------------------------------------------------
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         user_profile = get_cached_user_profile(user=request.user)
-        account_form = AccountForm(instance=user_profile.account)
+        account_form = AccountForm(instance=user_profile.cached_account)
         context = {
             "account_settings": {
                 "account_form": account_form,
@@ -95,11 +95,11 @@ class SettingsView(SmarterAdminWebView):
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         return self._handle_write(request)
 
-    def patch(self, request):
+    def patch(self, request, *args, **kwargs):
         return self._handle_write(request)
 
-    def put(self, request):
+    def put(self, request, *args, **kwargs):
         return self._handle_write(request)

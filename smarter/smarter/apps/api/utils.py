@@ -133,7 +133,7 @@ def apply_manifest(
         logger.error("%s No UserProfile found for user '%s'.", logger_prefix, username)
         return False
 
-    user = user_profile.user
+    user = user_profile.cached_user
 
     try:
         token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
@@ -252,7 +252,7 @@ def apply_manifest_v2(
         logger.error("%s No UserProfile found for user '%s'.", logger_prefix, username)
         return False
 
-    user = user_profile.user
+    user = user_profile.cached_user
 
     if verbose:
         logger.debug("%s manifest: %s", logger_prefix, data)
@@ -263,7 +263,7 @@ def apply_manifest_v2(
     loader = SAMLoader(manifest=data)
     factory = RequestFactory()
     fake_request = factory.post("/fake-url/", data=loader.manifest, content_type="application/json")
-    fake_request.user = user_profile.user
+    fake_request.user = user_profile.cached_user
 
     if not isinstance(loader.kind, str):
         return False

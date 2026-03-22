@@ -270,7 +270,7 @@ class SecretTransformer(SmarterHelperMixin):
             )
             status = SAMSecretStatus(
                 accountNumber=self.secret.account.account_number if self.secret.account else "missing",
-                username=self.secret.user_profile.user.username if self.secret.user_profile else "missing",
+                username=self.secret.user_profile.cached_user.username if self.secret.user_profile else "missing",
                 created=self.secret.created_at,
                 modified=self.secret.updated_at,
                 last_accessed=self.secret.last_accessed,
@@ -431,13 +431,19 @@ class SecretTransformer(SmarterHelperMixin):
         # if the secret does not exist for the user profile, then we still need to check
         # if the secret exists for the account, and if so, whether self.user_profile
         # is at least a staff user. otherwise, we raise an error.
-        other_user_profiles = get_user_profiles_for_account(self.user_profile.account) if self.user_profile else None
+        other_user_profiles = (
+            get_user_profiles_for_account(self.user_profile.cached_account) if self.user_profile else None
+        )
         secret = Secret.objects.filter(user_profile__in=other_user_profiles, name=self.name).first()
         if secret:
-            if self.user_profile and not self.user_profile.user.is_staff and not self.user_profile.user.is_superuser:
+            if (
+                self.user_profile
+                and not self.user_profile.cached_user.is_staff
+                and not self.user_profile.cached_user.is_superuser
+            ):
                 raise SmarterSecretTransformerError(
-                    f"Secret {self.name} exists for user profile {secret.user_profile.user.username} "
-                    f"but not for user profile {self.user_profile.user.username}."
+                    f"Secret {self.name} exists for user profile {secret.user_profile.cached_user.username} "
+                    f"but not for user profile {self.user_profile.cached_user.username}."
                 )
             self._secret = secret
             logger.debug(

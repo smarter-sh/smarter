@@ -507,7 +507,7 @@ class SAMChatbotBroker(AbstractBroker):
         spec = SAMChatbotSpec(config=spec_config, plugins=plugin_names, functions=function_names, apiKey=api_key)
         status = SAMChatbotStatus(
             accountNumber=self.account.account_number,
-            username=self.user_profile.user.username,
+            username=self.user_profile.cached_user.username,
             created=self.chatbot.created_at,
             modified=self.chatbot.updated_at,
             deployed=self.chatbot.deployed,

@@ -564,13 +564,13 @@ class AccountMixin(SmarterHelperMixin):
                 "%s.is_accountmixin_ready() had to initialize user from user_profile. This is a bug.",
                 self.account_mixin_logger_prefix,
             )
-            self._user = self.user_profile.user
+            self._user = self.user_profile.cached_user
         if not isinstance(self.account, Account):
             logger.debug(
                 "%s.is_accountmixin_ready() had to initialize account from user_profile. This is a bug.",
                 self.account_mixin_logger_prefix,
             )
-            self._account = self.user_profile.account
+            self._account = self.user_profile.cached_account
         logger.debug("%s.is_accountmixin_ready() returning true.", self.account_mixin_logger_prefix)
         return True
 

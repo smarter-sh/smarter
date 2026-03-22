@@ -107,7 +107,7 @@ class Command(SmarterCommand):
                         msg=f"No user profile for user '{username}' associated with account {account.account_number}."
                     )
                     return
-                user = user_profile.user
+                user = user_profile.cached_user
             except UserProfile.DoesNotExist:
                 self.handle_completed_failure(
                     msg=f"No user profile for user '{username}' associated with account {account.account_number}."

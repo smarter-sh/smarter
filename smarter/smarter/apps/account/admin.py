@@ -463,7 +463,7 @@ class RestrictedUserAdmin(UserAdmin):
                     return False
                 user_profile = get_cached_user_profile(request.user)  # type: ignore
                 obj_user_profile = get_cached_user_profile(obj)  # type: ignore
-                if user_profile.account == obj_user_profile.account:
+                if user_profile.cached_account == obj_user_profile.cached_account:
                     return True
                 return False
             except UserProfile.DoesNotExist:
@@ -497,7 +497,7 @@ class RestrictedUserAdmin(UserAdmin):
         if user.is_staff:
             user_profile = get_cached_user_profile(user)  # type: ignore
             return qs.filter(
-                id__in=UserProfile.objects.filter(account=user_profile.account).values_list("user_id", flat=True)
+                id__in=UserProfile.objects.filter(account=user_profile.cached_account).values_list("user_id", flat=True)
             )
         # For non-staff users, return an empty queryset to prevent access to any user records.
         return qs.none()

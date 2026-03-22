@@ -250,7 +250,7 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
         Returns:
             bool: True if the user is not a superuser, False otherwise.
         """
-        if not self.user_profile or not self.user_profile.user.is_superuser:
+        if not self.user_profile or not self.user_profile.cached_user.is_superuser:
             return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
         return False
 

@@ -140,7 +140,7 @@ class TestAccountMixin(SmarterTestBase):
         # get the admin user profile
         user_profile = get_cached_user_profile(user=self.admin_user)
         self.assertIsNotNone(user_profile)
-        self.assertEqual(user_profile.user, self.admin_user)  # type: ignore[return-value]
+        self.assertEqual(user_profile.cached_user, self.admin_user)  # type: ignore[return-value]
 
     def test_empty_initialization(self) -> None:
         """Test instantiation with no arguments."""

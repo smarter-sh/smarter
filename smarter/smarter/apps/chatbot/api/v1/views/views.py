@@ -57,7 +57,7 @@ class ViewBase(SmarterAdminAPIView):
         retval = super().dispatch(request, *args, **kwargs)
         if isinstance(request.user, User):
             self.user_profile = get_object_or_404(UserProfile, user=request.user)
-            self.account = self.user_profile.account
+            self.account = self.user_profile.cached_account
         return retval
 
 
@@ -69,7 +69,7 @@ class ListViewBase(SmarterAdminListAPIView):
         if response.status_code > 299:
             return response
         self.user_profile = get_object_or_404(UserProfile, user=request.user)
-        self.account = self.user_profile.account
+        self.account = self.user_profile.cached_account
         return response
 
 

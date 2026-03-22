@@ -32,8 +32,8 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
         try:
             data = {
                 SmarterJournalApiResponseKeys.DATA: {
-                    "user": UserSerializer(self.user_profile.user).data,
-                    "account": AccountSerializer(self.user_profile.account).data,
+                    "user": UserSerializer(self.user_profile.cached_user).data,
+                    "account": AccountSerializer(self.user_profile.cached_account).data,
                     "environment": smarter_settings.environment,
                 }
             }

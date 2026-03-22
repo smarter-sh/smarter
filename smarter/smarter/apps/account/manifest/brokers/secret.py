@@ -397,7 +397,7 @@ class SAMSecretBroker(AbstractBroker):
             ),
             status=SAMSecretStatus(
                 accountNumber=self.account.account_number,
-                username=self.user_profile.user.username,
+                username=self.user_profile.cached_user.username,
                 created=self.secret.created_at,
                 modified=self.secret.updated_at,
                 last_accessed=self.secret.last_accessed,
@@ -538,7 +538,7 @@ class SAMSecretBroker(AbstractBroker):
                 ),
                 status=SAMSecretStatus(
                     accountNumber=self.account.account_number,
-                    username=self.user_profile.user.username,
+                    username=self.user_profile.cached_user.username,
                     created=self.secret.created_at,
                     modified=self.secret.updated_at,
                     last_accessed=self.secret.last_accessed,

@@ -93,7 +93,7 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
     data: Optional[dict] = None
     if not isinstance(user_profile, UserProfile):
         raise SmarterValueError("User profile is required to add example plugins.")
-    username: str = user_profile.user.username
+    username: str = user_profile.cached_user.username
     output = io.StringIO()
     error_output = io.StringIO()
 
@@ -129,8 +129,8 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             data = yaml.safe_load(yaml_data)
             plugin_controller = PluginController(
                 user_profile=user_profile,
-                account=user_profile.account,  # type: ignore[arg-type]
-                user=user_profile.user,  # type: ignore[arg-type]
+                account=user_profile.cached_account,  # type: ignore[arg-type]
+                user=user_profile.cached_user,  # type: ignore[arg-type]
                 manifest=data,  # type: ignore[arg-type]
             )
             # we do this to ensure that that plugin can instantiate correctly.
