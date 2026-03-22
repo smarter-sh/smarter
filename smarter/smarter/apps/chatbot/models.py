@@ -955,10 +955,7 @@ class ChatBot(MetaDataWithOwnershipModel):
             account,
         )
 
-        retval = super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
-        if isinstance(retval, ChatBot):
-            return retval
-        return None
+        return super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)  # type: ignore[assignment]
 
     @classmethod
     def get_cached_objects(cls, user_profile: Optional[UserProfile] = None) -> models.QuerySet["ChatBot"]:
