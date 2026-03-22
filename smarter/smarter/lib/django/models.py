@@ -412,9 +412,16 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :rtype: QuerySet
         """
 
-        raise NotImplementedError(
-            "get_cached_objects() must be called on a concrete model class, not an abstract base class."
-        )
+        if cls._meta.abstract:
+            raise NotImplementedError(
+                "get_cached_object() must be called on a concrete model class, not an abstract base class."
+            )
+
+        @cache_results(timeout=cls.cache_expiration)
+        def _get_all_models() -> QuerySet["TimestampedModel"]:
+            return cls.objects.all()
+
+        return _get_all_models()
 
     def __str__(self):
         return f"{self.__class__.__name__}(id={getattr(self, 'id', None)})"
@@ -582,6 +589,9 @@ class MetaDataModel(TimestampedModel):
         :rtype: QuerySet
         """
 
-        raise NotImplementedError(
-            "get_cached_objects() must be called on a concrete model class, not an abstract base class."
-        )
+        if cls._meta.abstract:
+            raise NotImplementedError(
+                "get_cached_object() must be called on a concrete model class, not an abstract base class."
+            )
+
+        return super().get_cached_objects()  # type: ignore

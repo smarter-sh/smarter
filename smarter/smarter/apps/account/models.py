@@ -786,7 +786,13 @@ class UserProfile(MetaDataModel):
         return user_profile.user
 
     @classmethod
-    def get_cached_object(cls, pk: Optional[int] = None, name: Optional[str] = None) -> Optional["UserProfile"]:
+    def get_cached_object(
+        cls,
+        pk: Optional[int] = None,
+        name: Optional[str] = None,
+        user: Optional[User] = None,
+        account: Optional[Account] = None,
+    ) -> Optional["UserProfile"]:
         """
         Retrieve a model instance by primary key or name, using caching to
         optimize performance. This method is selectively overridden in
@@ -807,9 +813,36 @@ class UserProfile(MetaDataModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["UserProfile"]
         """
-        retval = super().get_cached_object(pk=pk, name=name)
-        if isinstance(retval, UserProfile):
-            return retval
+
+        @cache_results(cls.cache_expiration)
+        def _get_object_by_user_and_account(user: User, account: Account) -> Optional["UserProfile"]:
+            try:
+                return cls.objects.get(user=user, account=account)
+            except cls.DoesNotExist:
+                return None
+
+        @cache_results(cls.cache_expiration)
+        def _get_object_by_user(user: User) -> Optional["UserProfile"]:
+            try:
+                return cls.objects.get(user=user)
+            except cls.DoesNotExist:
+                return None
+            except cls.MultipleObjectsReturned:
+                logger.error(
+                    "%s.get_cached_object() Multiple UserProfiles found for user %s. Defaulting to first result.",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    user.email,
+                )
+                return cls.objects.filter(user=user).first()
+
+        if user or account:
+            if user and account:
+                return _get_object_by_user_and_account(user, account)
+            if user:
+                return _get_object_by_user(user)
+            raise SmarterValueError("User must be provided if account is provided")
+
+        return super().get_cached_object(pk=pk, name=name)  # type: ignore[return-value]
 
     def __str__(self):
         return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
@@ -879,14 +912,14 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         """
 
         @cache_results(cls.cache_expiration)
-        def _get_model_by_pk(pk: int) -> Optional[models.Model]:
+        def _get_object_by_pk(pk: int) -> Optional[models.Model]:
             try:
                 return cls.objects.get(pk=pk)
             except cls.DoesNotExist:
                 return None
 
         @cache_results(cls.cache_expiration)
-        def _get_model_by_name(name: str) -> Optional[models.Model]:
+        def _get_object_by_name(name: str) -> Optional[models.Model]:
             try:
                 return cls.objects.get(name=name)
             except cls.DoesNotExist:
@@ -900,7 +933,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return cls.objects.filter(name=name).first()
 
         @cache_results(cls.cache_expiration)
-        def _get_model_by_name_and_user_profile(name: str, user_profile: UserProfile) -> Optional[models.Model]:
+        def _get_object_by_name_and_user_profile(name: str, user_profile: UserProfile) -> Optional[models.Model]:
             try:
                 return cls.objects.get(name=name, user_profile=user_profile)
             except cls.DoesNotExist:
@@ -915,7 +948,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return cls.objects.filter(name=name, user_profile=user_profile).first()
 
         @cache_results(cls.cache_expiration)
-        def _get_model_by_name_and_account(name: str, account: Account) -> Optional[models.Model]:
+        def _get_object_by_name_and_account(name: str, account: Account) -> Optional[models.Model]:
             try:
                 return cls.objects.get(name=name, user_profile__account=account)
             except cls.DoesNotExist:
@@ -930,30 +963,32 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return cls.objects.filter(name=name, user_profile__account=account).first()
 
         if pk is not None:
-            return _get_model_by_pk(pk)
+            return _get_object_by_pk(pk)
 
         if user:
             user_profiles = UserProfile.objects.filter(user=user)
             if user_profiles.count() == 0:
                 return None
             elif user_profiles.count() == 1:
-                return _get_model_by_name_and_user_profile(name, user_profiles.first())
+                return _get_object_by_name_and_user_profile(name, user_profiles.first())
             else:
                 logger.error(
                     "%s.get_cached_object() Multiple user profiles found for user %s. Defaulting to first profile.",
                     formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()"),
                     user.email,
                 )
-                return _get_model_by_name_and_user_profile(name, user_profiles.first())
+                return _get_object_by_name_and_user_profile(name, user_profiles.first())
         if account:
-            return _get_model_by_name_and_account(name, account)
+            return _get_object_by_name_and_account(name, account)
         if user_profile:
-            return _get_model_by_name_and_user_profile(name, user_profile)
+            return _get_object_by_name_and_user_profile(name, user_profile)
 
-        return _get_model_by_name(name)
+        return _get_object_by_name(name)
 
     @classmethod
-    def get_cached_objects(cls, user_profile: UserProfile) -> models.QuerySet["MetaDataWithOwnershipModel"]:
+    def get_cached_objects(
+        cls, user_profile: Optional[UserProfile] = None
+    ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
         """
         Retrieve a list of MetaDataWithOwnershipModel instances associated with a user profile using caching.
 
@@ -969,16 +1004,15 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
 
         """
-        if not user_profile:
-            return cls.objects.none()
-
-        user_profile_id = user_profile.id
 
         @cache_results(cls.cache_expiration)
-        def _get_models_for_user_profile_id(user_profile_id: int) -> models.QuerySet["MetaDataWithOwnershipModel"]:
+        def _get_objects_for_user_profile_id(user_profile_id: int) -> models.QuerySet["MetaDataWithOwnershipModel"]:
             return cls.objects.filter(user_profile_id=user_profile_id)
 
-        return _get_models_for_user_profile_id(user_profile_id)
+        if user_profile:
+            return _get_objects_for_user_profile_id(user_profile.id)
+
+        return super().get_cached_objects()  # type: ignore[return-value]
 
 
 class PaymentMethod(TimestampedModel):

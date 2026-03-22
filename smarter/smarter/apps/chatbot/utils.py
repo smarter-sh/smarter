@@ -12,6 +12,7 @@ from smarter.apps.account.utils import (
     get_cached_user_profile,
     smarter_cached_objects,
 )
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
 
@@ -41,7 +42,7 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHe
 
         def get_chatbots_for_account() -> QuerySet:
 
-            user_chatbots = ChatBot.get_cached_objects(user_profile=user_profile)
+            user_chatbots = ChatBot.get_cached_objects(user_profile=user_profile)  # type: ignore[union-attr]
             admin_chatbots = ChatBot.get_cached_objects(user_profile=admin_user_profile)  # type: ignore[union-attr]
             smarter_chatbots = ChatBot.get_cached_objects(
                 user_profile=smarter_cached_objects.smarter_admin_user_profile  # type: ignore[union-attr]
@@ -56,11 +57,13 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHe
             user_profile_id,
         )
 
-        chatbot_helpers = []
-        user_profile = UserProfile.objects.get(id=user_profile_id)
+        chatbot_helpers: list[ChatBotHelper] = []
+        user_profile = UserProfile.get_cached_object(pk=user_profile_id)
+        if not user_profile:
+            raise SmarterValueError(f"No user profile found for id {user_profile_id}")
         admin_user = get_cached_admin_user_for_account(account=user_profile.account)
         if not admin_user:
-            raise ValueError(f"No admin user found for account {user_profile.account}")
+            raise SmarterValueError(f"No admin user found for account {user_profile.account}")
         admin_user_profile = get_cached_user_profile(user=admin_user)
 
         chatbots = get_chatbots_for_account()

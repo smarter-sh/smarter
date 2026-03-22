@@ -1,4 +1,4 @@
-# pylint: disable=W0718
+# pylint: disable=W0718,C0302
 """Smarter API StaticPlugin Manifest handler"""
 
 import logging

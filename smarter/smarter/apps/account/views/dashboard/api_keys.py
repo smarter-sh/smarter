@@ -1,7 +1,9 @@
+# pylint: disable=W0613
 """Views for the account settings."""
 
 import logging
 from http import HTTPStatus
+from typing import Optional
 from uuid import UUID
 
 from django import forms, http
@@ -46,7 +48,7 @@ class APIKeyBase(SmarterAdminWebView):
     """Base class for API key views."""
 
     def dispatch(self, request, *args, **kwargs):
-        self.user_profile = get_cached_user_profile(user=request.user)
+        self.user_profile = get_cached_user_profile(user=request.user)  # type: ignore[assignment]
         self.account = self.user_profile.account
         return super().dispatch(request, *args, **kwargs)
 
@@ -56,10 +58,9 @@ class APIKeysView(APIKeyBase):
 
     template_path = "account/dashboard/api-keys.html"
 
-    def get(self, request):
-        api_keys = SmarterAuthToken.objects.filter(user=self.user_profile.user).only(
-            "user", "description", "created", "last_used_at", "is_active"
-        )
+    def get(self, request, *args, **kwargs):
+        api_keys = SmarterAuthToken.get_cached_objects(user_profile=self.user_profile)  # type: ignore[call-arg]
+        api_keys = api_keys.only("user", "description", "created", "last_used_at", "is_active")
         context = {
             "account_apikeys": {
                 "api_keys": api_keys,
@@ -156,7 +157,7 @@ class APIKeyView(APIKeyBase):
         return str(uuid_obj) == uuid_to_test
 
     # pylint: disable=W0221
-    def get(self, request, key_id: str = None, new_api_key: str = None):
+    def get(self, request, *args, key_id: Optional[str] = None, new_api_key: Optional[str] = None, **kwargs):
         """Get the api key. We also use this to create a new api key."""
 
         # in cases where we arrived here via api-keys/new/
@@ -192,15 +193,15 @@ class APIKeyView(APIKeyBase):
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         return self._handle_create(request)
 
-    def patch(self, request, key_id):
+    def patch(self, request, key_id, *args, **kwargs):
         logger.debug("Received PATCH request: %s", request)
 
         return self._handle_write_request(request, key_id)
 
-    def delete(self, request, key_id):
+    def delete(self, request, key_id, *args, **kwargs):
         logger.debug("Received DELETE request: %s", request)
         try:
             apikey = SmarterAuthToken.objects.get(key_id=key_id)
@@ -219,10 +220,9 @@ class APIKeyListView(APIKeyBase):
 
     template_path = "account/dashboard/api-keys.html"
 
-    def get(self, request):
-        api_keys = SmarterAuthToken.objects.filter(user=self.user_profile.user).only(
-            "user", "description", "created", "last_used_at", "is_active"
-        )
+    def get(self, request, *args, **kwargs):
+        api_keys = SmarterAuthToken.get_cached_objects(user_profile=self.user_profile)  # type: ignore[call-arg]
+        api_keys = api_keys.only("user", "description", "created", "last_used_at", "is_active")
         context = {
             "account_apikeys": {
                 "api_keys": api_keys,

@@ -91,7 +91,8 @@ class Command(SmarterCommand):
             )
 
         # ensure that the Smarter admin user has at least one auth token (api key)
-        if not SmarterAuthToken.objects.filter(user=user).exists():
+        smarterauthtoken = SmarterAuthToken.get_cached_objects(user=user)
+        if not smarterauthtoken.exists():
             _, token_key = SmarterAuthToken.objects.create(
                 user_profile=user_profile, name="smarter-admin-key", user=user, description="created by manage.py"
             )  # type: ignore[assignment]
