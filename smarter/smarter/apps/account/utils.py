@@ -21,6 +21,7 @@ Two caching strategies are used:
 import logging
 import re
 import uuid
+from functools import cached_property
 from typing import Optional
 
 from smarter.apps.account.models import (
@@ -73,12 +74,6 @@ class SmarterCachedObjects:
            and admin user only when accessed.
     """
 
-    def __init__(self):
-        self._smarter_account = None
-        self._smarter_admin = None
-        self._smarter_admin_user_profile = None
-        self._admin_user = None
-
     @property
     def smarter_account(self) -> Account:
         """
@@ -87,18 +82,22 @@ class SmarterCachedObjects:
         :returns: Account instance representing the smarter account.
         :raises SmarterConfigurationError: If the smarter account cannot be found.
         """
-        if not self._smarter_account:
+
+        @cache_results(timeout=600)  # cache for 10 minutes
+        def _get_smarter_account() -> Account:
             try:
-                self._smarter_account, created = Account.objects.get_or_create(account_number=SMARTER_ACCOUNT_NUMBER)
+                smarter_account, created = Account.objects.get_or_create(account_number=SMARTER_ACCOUNT_NUMBER)
                 if created:
                     logger.info(
                         "%s.smarter_account created new smarter account with account number %s",
                         HERE,
                         SMARTER_ACCOUNT_NUMBER,
                     )
+                return smarter_account
             except Account.DoesNotExist as e:
                 raise SmarterConfigurationError("Smarter account does not exist") from e
-        return self._smarter_account
+
+        return _get_smarter_account()
 
     @property
     def smarter_admin(self) -> User:
@@ -108,7 +107,9 @@ class SmarterCachedObjects:
         :returns: User instance representing the smarter admin.
         :raises SmarterConfigurationError: If the smarter admin user cannot be found.
         """
-        if not self._smarter_admin:
+
+        @cache_results(timeout=600)  # cache for 10 minutes
+        def _get_smarter_admin() -> User:
             try:
                 user = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first().user
             except User.DoesNotExist:
@@ -118,8 +119,9 @@ class SmarterCachedObjects:
                 logger.warning(
                     "%s.smarter_admin created new smarter admin user with username %s", HERE, SMARTER_ADMIN_USERNAME
                 )
-            self._smarter_admin = user
-        return self._smarter_admin
+            return user
+
+        return _get_smarter_admin()
 
     @property
     def smarter_admin_user_profile(self) -> UserProfile:
@@ -129,15 +131,18 @@ class SmarterCachedObjects:
         :returns: UserProfile instance for the smarter admin user.
         :raises SmarterConfigurationError: If the UserProfile cannot be found.
         """
-        if not self._smarter_admin_user_profile:
+
+        @cache_results(timeout=600)  # cache for 10 minutes
+        def _get_smarter_admin_user_profile() -> UserProfile:
             try:
                 user_profile = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first()
             except UserProfile.DoesNotExist as e:
                 raise SmarterConfigurationError("No superuser user profile found for smarter account") from e
             if not user_profile:
                 raise SmarterConfigurationError("No superuser user profile found for smarter account")
-            self._smarter_admin_user_profile = user_profile
-        return self._smarter_admin_user_profile
+            return user_profile
+
+        return _get_smarter_admin_user_profile()
 
     @property
     def admin_user(self) -> User:
@@ -147,12 +152,15 @@ class SmarterCachedObjects:
         :returns: User instance representing the admin user.
         :raises SmarterConfigurationError: If the admin user cannot be found.
         """
-        if not self._admin_user:
+
+        @cache_results(timeout=600)  # cache for 10 minutes
+        def _get_admin_user() -> User:
             try:
-                self._admin_user = User.objects.get(username=SMARTER_ADMIN_USERNAME, is_superuser=True)
+                return User.objects.get(username=SMARTER_ADMIN_USERNAME, is_superuser=True)
             except User.DoesNotExist as e:
                 raise SmarterConfigurationError("No staff user found for smarter account") from e
-        return self._admin_user
+
+        return _get_admin_user()
 
 
 smarter_cached_objects = SmarterCachedObjects()
@@ -433,15 +441,20 @@ def get_cached_default_account(invalidate: bool = False) -> Optional[Account]:
     """
 
     @cache_results()
-    def _get_default_account():
+    def _get_default_account() -> Account:
         accounts = Account.objects.filter(is_default_account=True)
         if not accounts.exists():
-            logger.warning("%s.get_cached_default_account() no default account found", HERE)
-            return None
+            raise SmarterConfigurationError(
+                "No default account found. Please ensure an account is marked as the default account."
+            )
         if accounts.count() > 1:
             logger.warning("%s.get_cached_default_account() multiple default accounts found", HERE)
         account = accounts.first()
         logger.debug("%s.get_cached_default_account() retrieving and caching default account %s", HERE, account)
+        if not account:
+            raise SmarterConfigurationError(
+                "No default account found. Please ensure an account is marked as the default account."
+            )
         return account
 
     return _get_default_account() if not invalidate else _get_default_account.invalidate()
