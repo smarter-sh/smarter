@@ -982,7 +982,11 @@ class ChatBot(MetaDataWithOwnershipModel):
 
         @cache_results(60)
         def _get_chatbots_for_user_profile_id(user_profile_id: int) -> models.QuerySet["ChatBot"]:
-            return cls.objects.prefetch_related("tags").filter(user_profile_id=user_profile_id)
+            return (
+                cls.objects.prefetch_related("tags")
+                .select_related("user_profile", "user_profile__account", "user_profile__user")
+                .filter(user_profile_id=user_profile_id)
+            )
 
         if user_profile:
             return _get_chatbots_for_user_profile_id(user_profile.id)
