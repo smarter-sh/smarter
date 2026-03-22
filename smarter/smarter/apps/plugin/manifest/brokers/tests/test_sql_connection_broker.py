@@ -284,7 +284,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         manifest_tags = set(self.broker.manifest.metadata.tags or [])
         django_orm_tags = None
         if isinstance(self.broker.connection.tags, (TaggableManager, _TaggableManager)):
-            django_orm_tags = set(self.broker.connection.tags.names()) if self.broker.connection.tags else set()
+            django_orm_tags = set(self.broker.connection.tags_list) if self.broker.connection.tags else set()
         elif isinstance(self.broker.connection.tags, set):
             django_orm_tags = self.broker.connection.tags
         elif isinstance(self.broker.connection.tags, list):

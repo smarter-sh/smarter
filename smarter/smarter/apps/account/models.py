@@ -828,6 +828,19 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         """
         Retrieve a model instance using caching to optimize performance.
 
+        Examples of retrieval patterns:
+
+        .. code-block:: python
+
+            # By primary key
+            instance = MyModel.get_cached_model(pk=123)
+
+            # By name and user profile
+            instance = MyModel.get_cached_model(name="Resource Name", user_profile=user_profile)
+
+            # By name and account
+            instance = MyModel.get_cached_model(name="Resource Name", account=account)
+
         :param pk: The primary key of the model instance to retrieve.
         :param name: The name of the model instance to retrieve.
         :param user: The user associated with the model instance.

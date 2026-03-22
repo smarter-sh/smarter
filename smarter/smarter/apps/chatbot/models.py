@@ -924,6 +924,17 @@ class ChatBot(MetaDataWithOwnershipModel):
         """
         Retrieve a model instance using caching to optimize performance.
 
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve a ChatBot instance by primary key with caching
+            chatbot = ChatBot.get_cached_model(pk=1)
+
+            # Retrieve a ChatBot instance by name and user profile with caching
+            chatbot = ChatBot.get_cached_model(name="example", user_profile=my_user_profile)
+
+
         :param pk: The primary key of the model instance to retrieve.
         :param name: The name of the model instance to retrieve.
         :param user: The user associated with the model instance.

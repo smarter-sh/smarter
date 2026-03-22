@@ -352,7 +352,7 @@ class SAMAccountBroker(AbstractBroker):
                 name=str(self.brokered_account.name) or self.brokered_account.account_number.replace(" ", "_"),
                 description=self.brokered_account.company_name,
                 version=self.brokered_account.version,
-                tags=self.brokered_account.tags.names(),
+                tags=self.brokered_account.tags_list,
                 accountNumber=self.brokered_account.account_number,
                 annotations=self.brokered_account.annotations,
             )
