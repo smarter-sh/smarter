@@ -941,8 +941,6 @@ class UserProfile(MetaDataModel):
                 return _get_object_by_user_and_account(user, account)
             if user:
                 return _get_object_by_user(user)
-            raise SmarterValueError("User must be provided if account is provided")
-
         return super().get_cached_object(pk=pk, name=name)  # type: ignore[return-value]
 
     def __str__(self):
@@ -1023,32 +1021,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         )
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_pk(pk: int) -> Optional[models.Model]:
-            try:
-                return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
-                    pk=pk
-                )
-            except cls.DoesNotExist:
-                return None
-
-        @cache_results(cls.cache_expiration)
-        def _get_object_by_name(name: str) -> Optional[models.Model]:
-            try:
-                return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
-                    name=name
-                )
-            except cls.DoesNotExist:
-                return None
-            except cls.MultipleObjectsReturned:
-                logger.error(
-                    "%s.get_cached_object() Multiple models found with name '%s'. Defaulting to first result.",
-                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()"),
-                    name,
-                )
-                return cls.objects.filter(name=name).first()
-
-        @cache_results(cls.cache_expiration)
-        def _get_object_by_name_and_user_profile(name: str, user_profile: UserProfile) -> Optional[models.Model]:
+        def _get_object_by_name_and_user_profile(
+            name: str, user_profile: UserProfile
+        ) -> Optional["MetaDataWithOwnershipModel"]:
             try:
                 return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
                     name=name, user_profile=user_profile
@@ -1065,7 +1040,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return cls.objects.filter(name=name, user_profile=user_profile).first()
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_name_and_account(name: str, account: Account) -> Optional[models.Model]:
+        def _get_object_by_name_and_account(name: str, account: Account) -> Optional["MetaDataWithOwnershipModel"]:
             try:
                 return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
                     name=name, user_profile__account=account
@@ -1081,28 +1056,30 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 )
                 return cls.objects.filter(name=name, user_profile__account=account).first()
 
-        if pk is not None:
-            return _get_object_by_pk(pk)
+        if pk:
+            return super().get_cached_object(pk=pk)  # type: ignore[return-value]
 
-        if user:
-            user_profiles = UserProfile.objects.filter(user=user)
-            if user_profiles.count() == 0:
-                return None
-            elif user_profiles.count() == 1:
-                return _get_object_by_name_and_user_profile(name, user_profiles.first())
-            else:
-                logger.error(
-                    "%s.get_cached_object() Multiple user profiles found for user %s. Defaulting to first profile.",
-                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()"),
-                    user.email,
-                )
-                return _get_object_by_name_and_user_profile(name, user_profiles.first())
-        if account:
-            return _get_object_by_name_and_account(name, account)
+        try:
+            user_profile = user_profile or UserProfile.get_cached_object(user=user, account=account)
+        except UserProfile.DoesNotExist:
+            user_profile = None
+        except UserProfile.MultipleObjectsReturned:
+            logger.error(
+                "%s.get_cached_object() Multiple UserProfiles found for user %s and account %s. Defaulting to first result.",
+                formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()"),
+                user,
+                account,
+            )
+            user_profile = UserProfile.objects.filter(user=user, account=account).first()
+
         if user_profile:
+            # call this regardless of whether name is provided.
             return _get_object_by_name_and_user_profile(name, user_profile)
+        elif account:
+            return _get_object_by_name_and_account(name, account)
 
-        return _get_object_by_name(name)
+        # no ownership info provided, so fall back to the super().
+        return super().get_cached_object(pk=pk, name=name)  # type: ignore[return-value]
 
     @classmethod
     def get_cached_objects(

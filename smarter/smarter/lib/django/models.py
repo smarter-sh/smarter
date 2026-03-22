@@ -384,6 +384,9 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                 "get_cached_object() must be called on a concrete model class, not an abstract base class."
             )
 
+        if not pk:
+            return None
+
         @cache_results(timeout=cls.cache_expiration)
         def _get_model_by_pk(pk: int) -> Optional[models.Model]:
 
@@ -555,6 +558,9 @@ class MetaDataModel(TimestampedModel):
             raise NotImplementedError(
                 "get_cached_object() must be called on a concrete model class, not an abstract base class."
             )
+
+        if not pk and not name:
+            return None
 
         @cache_results(timeout=cls.cache_expiration)
         def _get_model_by_name(name: str) -> Optional["MetaDataModel"]:
