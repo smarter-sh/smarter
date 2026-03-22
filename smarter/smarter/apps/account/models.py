@@ -875,7 +875,7 @@ class UserProfile(MetaDataModel):
             formatted_text(__name__ + ".UserProfile()"),
             account,
         )
-        return user_profile.cached_user
+        return user_profile.user
 
     @classmethod
     def get_cached_object(
@@ -918,14 +918,14 @@ class UserProfile(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_object_by_user_and_account(user: User, account: Account) -> Optional["UserProfile"]:
             try:
-                return cls.objects.get(user=user, account=account)
+                return cls.objects.select_related("user", "account").get(user=user, account=account)
             except cls.DoesNotExist:
                 return None
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_user(user: User) -> Optional["UserProfile"]:
             try:
-                return cls.objects.get(user=user)
+                return cls.objects.select_related("user", "account").get(user=user)
             except cls.DoesNotExist:
                 return None
             except cls.MultipleObjectsReturned:
@@ -934,7 +934,7 @@ class UserProfile(MetaDataModel):
                     formatted_text(__name__ + ".UserProfile.get_cached_object()"),
                     user.email,
                 )
-                return cls.objects.filter(user=user).first()
+                return cls.objects.select_related("user", "account").filter(user=user).first()
 
         if user or account:
             if user and account:
@@ -1025,14 +1025,18 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_object_by_pk(pk: int) -> Optional[models.Model]:
             try:
-                return cls.objects.get(pk=pk)
+                return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
+                    pk=pk
+                )
             except cls.DoesNotExist:
                 return None
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name(name: str) -> Optional[models.Model]:
             try:
-                return cls.objects.get(name=name)
+                return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
+                    name=name
+                )
             except cls.DoesNotExist:
                 return None
             except cls.MultipleObjectsReturned:
@@ -1046,7 +1050,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_user_profile(name: str, user_profile: UserProfile) -> Optional[models.Model]:
             try:
-                return cls.objects.get(name=name, user_profile=user_profile)
+                return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
+                    name=name, user_profile=user_profile
+                )
             except cls.DoesNotExist:
                 return None
             except cls.MultipleObjectsReturned:
@@ -1061,7 +1067,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_account(name: str, account: Account) -> Optional[models.Model]:
             try:
-                return cls.objects.get(name=name, user_profile__account=account)
+                return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
+                    name=name, user_profile__account=account
+                )
             except cls.DoesNotExist:
                 return None
             except cls.MultipleObjectsReturned:
