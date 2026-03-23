@@ -598,7 +598,11 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                     str(cached_value),
                 )
             else:
-                logger.debug("%s no cache entry found for %s (nothing to invalidate)", logger_prefix_red, cache_key)
+                logger.debug(
+                    "%s.invalidate() - no cache entry found for %s (nothing to invalidate)",
+                    logger_prefix_red,
+                    cache_key,
+                )
 
         wrapper.invalidate = invalidate  # type: ignore[attr-defined]
         return wrapper
