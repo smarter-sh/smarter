@@ -237,7 +237,7 @@ You should be able to:
 g. Troubleshooting
 -----------------
 
-Provider Not दिखाई in Smarter
+Provider Not Found in Smarter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Verify YAML syntax
