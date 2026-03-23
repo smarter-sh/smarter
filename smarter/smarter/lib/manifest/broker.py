@@ -1317,6 +1317,8 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         """
         Handle broker specific cache invalidation logic.
         """
+        Account.get_cached_objects(invalidate=True)  # type: ignore
+        UserProfile.get_cached_objects(invalidate=True)  # type: ignore
 
     # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
