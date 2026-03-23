@@ -1140,7 +1140,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
     @classmethod
     def get_cached_objects(
-        cls, user_profile: Optional[UserProfile] = None
+        cls, user_profile: Optional[UserProfile] = None, invalidate: Optional[bool] = False
     ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
         """
         Retrieve a list of MetaDataWithOwnershipModel instances associated with a user profile using caching.
@@ -1180,10 +1180,13 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 .filter(user_profile_id=user_profile_id)
             )
 
+        if invalidate:
+            _get_objects_for_user_profile_id.invalidate(user_profile.id)
+
         if user_profile:
             return _get_objects_for_user_profile_id(user_profile.id)
 
-        return super().get_cached_objects()  # type: ignore[return-value]
+        return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
 
 
 class PaymentMethod(TimestampedModel):

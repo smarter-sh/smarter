@@ -648,6 +648,13 @@ class SAMChatbotBroker(AbstractBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def cache_invalidations(self) -> None:
+        """
+        Handle broker specific cache invalidation logic.
+        """
+        ChatBot.get_cached_objects(user_profile=self.user_profile, invalidate=True)
+        return super().cache_invalidations()
+
     @property
     def ORMMetaModelClass(self) -> Type[ChatBot]:
         """
@@ -993,6 +1000,7 @@ class SAMChatbotBroker(AbstractBroker):
                         )
 
             # done! return the response. Django will take care of committing the transaction
+            self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1030,6 +1038,7 @@ class SAMChatbotBroker(AbstractBroker):
         if self.chatbot:
             try:
                 self.chatbot.delete()
+                self.cache_invalidations()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(
