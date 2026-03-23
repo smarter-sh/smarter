@@ -987,6 +987,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         user: Optional[User] = None,
         user_profile: Optional[UserProfile] = None,
         account: Optional[Account] = None,
+        invalidate: Optional[bool] = False,
     ) -> Optional[models.Model]:
         """
         Retrieve a model instance using caching to optimize performance.
@@ -1009,6 +1010,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :param user: The user associated with the model instance.
         :param user_profile: The user profile associated with the model instance.
         :param account: The account associated with the model instance.
+        :param invalidate: Whether to invalidate the cache for this retrieval.
 
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[models.Model]
@@ -1108,6 +1110,11 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 )
                 return cls.objects.prefetch_related("tags").filter(name=name, user_profile__account=account).first()
 
+        if invalidate:
+            _get_object_by_pk.invalidate(pk)
+            _get_object_by_name_and_user_profile.invalidate(name, user_profile)
+            _get_object_by_name_and_account.invalidate(name, account)
+
         if pk:
             return _get_object_by_pk(pk)
 
@@ -1136,7 +1143,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             return _get_object_by_name_and_account(name, account)
 
         # no ownership info provided, so fall back to the super().
-        return super().get_cached_object(pk=pk, name=name)  # type: ignore[return-value]
+        return super().get_cached_object(pk=pk, name=name, invalidate=invalidate)  # type: ignore[return-value]
 
     @classmethod
     def get_cached_objects(

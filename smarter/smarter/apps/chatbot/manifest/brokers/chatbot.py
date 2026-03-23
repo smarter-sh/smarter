@@ -653,6 +653,7 @@ class SAMChatbotBroker(AbstractBroker):
         Handle broker specific cache invalidation logic.
         """
         ChatBot.get_cached_objects(user_profile=self.user_profile, invalidate=True)
+        ChatBot.get_cached_object(pk=self.chatbot.id, invalidate=True)
         return super().cache_invalidations()
 
     @property

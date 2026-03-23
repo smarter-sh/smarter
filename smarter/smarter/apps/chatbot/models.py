@@ -920,6 +920,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         user: Optional[User] = None,
         user_profile: Optional[UserProfile] = None,
         account: Optional[Account] = None,
+        invalidate: Optional[bool] = False,
     ) -> Optional["ChatBot"]:
         """
         Retrieve a model instance using caching to optimize performance.
@@ -955,7 +956,7 @@ class ChatBot(MetaDataWithOwnershipModel):
             account,
         )
 
-        return super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)  # type: ignore[assignment]
+        return super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account, invalidate=invalidate)  # type: ignore[assignment]
 
     @classmethod
     def get_cached_objects(
