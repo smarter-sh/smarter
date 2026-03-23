@@ -1,0 +1,11 @@
+Smarter with Coding Assistants
+==============================
+
+These tutorials walks you through integrating an LLM provider into the Smarter platform and using it as a coding assistant.
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Technical Reference
+
+   smarter-claude-code/getting-started-with-claude-code
