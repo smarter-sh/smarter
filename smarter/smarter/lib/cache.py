@@ -592,7 +592,10 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                 cached_value = lazy_cache.get(cache_key)
                 lazy_cache.delete(cache_key)
                 logger.debug(
-                    "%s invalidated cache entry for %s: %s", logger_prefix_normal, cache_key, str(cached_value)
+                    "%s.invalidate() - invalidated cache entry for %s: %s",
+                    logger_prefix_normal,
+                    cache_key,
+                    str(cached_value),
                 )
             else:
                 logger.debug("%s no cache entry found for %s (nothing to invalidate)", logger_prefix_red, cache_key)
