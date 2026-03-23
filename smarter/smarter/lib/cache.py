@@ -559,38 +559,43 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
             Invalidates the cached result for the given arguments.
             This method can be called on the decorated function to manually clear
             the cache for specific input parameters.
+
+            Example usage::
+
+                .. code-block:: python
+
+                    @cache_results(timeout=60)
+                    def expensive_function(x, y):
+                        # Perform expensive computation
+                        return x + y
+
+                    # Invalidate cache for specific arguments
+                    expensive_function.invalidate(1, 2)
+
             :param args: Positional arguments for which to invalidate the cache.
             :type args: tuple
             :param kwargs: Keyword arguments for which to invalidate the cache.
             :type kwargs: dict
             """
-            if logging_enabled and lazy_cache.cache_logging:
-                logger.info(
-                    "%s -> %s().invalidate() called with args: %s kwargs: %s",
-                    logger_prefix_normal,
-                    func.__name__,
-                    args,
-                    kwargs,
-                )
+            logger.debug(
+                "%s -> %s().invalidate() called with args: %s kwargs: %s",
+                logger_prefix_normal,
+                func.__name__,
+                args,
+                kwargs,
+            )
             key_data: Optional[bytes] = generate_key_data(func, args, kwargs)
             if key_data is None:
                 return
             cache_key: str = generate_cache_key(func, key_data)
             if lazy_cache.has_key(cache_key):
                 cached_value = lazy_cache.get(cache_key)
-                logger.info("%s found cache entry for %s: %s", logger_prefix_normal, cache_key, str(cached_value))
                 lazy_cache.delete(cache_key)
-                msg = f"{logger_prefix_green} invalidated cache entry for {cache_key}"
-                if logging_enabled and lazy_cache.cache_logging:
-                    logger.info(msg)
-                else:
-                    logger.debug(msg)
+                logger.debug(
+                    "%s invalidated cache entry for %s: %s", logger_prefix_normal, cache_key, str(cached_value)
+                )
             else:
-                msg = f"{logger_prefix_red} no cache entry found for {cache_key} (nothing to invalidate)"
-                if logging_enabled and lazy_cache.cache_logging:
-                    logger.info(msg)
-                else:
-                    logger.debug(msg)
+                logger.debug("%s no cache entry found for %s (nothing to invalidate)", logger_prefix_red, cache_key)
 
         wrapper.invalidate = invalidate  # type: ignore[attr-defined]
         return wrapper

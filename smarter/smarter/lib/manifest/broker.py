@@ -1188,7 +1188,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             "%s.orm_instance() - retrieved %s: %s",
             self.abstract_broker_logger_prefix,
             ModelClass.__name__,
-            serializers.serialize("json", [self._orm_instance]),
+            serializers.serialize("json", [self._orm_instance]),  # type: ignore
         )
         if self.ORMModelClass == self.ORMMetaModelClass:
             self._orm_meta_instance = self._orm_instance
@@ -1313,6 +1313,11 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
     ###########################################################################
     # Abstract Methods
     ###########################################################################
+    def cache_invalidations(self) -> None:
+        """
+        Handle broker specific cache invalidation logic.
+        """
+
     # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """

@@ -398,7 +398,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         return _get_model_by_pk(pk)
 
     @classmethod
-    def get_cached_objects(cls) -> QuerySet["TimestampedModel"]:
+    def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["TimestampedModel"]:
         """
         Retrieve model instances using caching to optimize performance.
         This method is selectively overridden in models that inherit from
@@ -425,6 +425,9 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         @cache_results(timeout=cls.cache_expiration)
         def _get_all_models() -> QuerySet["TimestampedModel"]:
             return cls.objects.all()
+
+        if invalidate:
+            _get_all_models.invalidate()
 
         return _get_all_models()
 
@@ -579,7 +582,7 @@ class MetaDataModel(TimestampedModel):
         return super().get_cached_object(pk=pk)  # type: ignore[return-value]
 
     @classmethod
-    def get_cached_objects(cls) -> QuerySet["MetaDataModel"]:
+    def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["MetaDataModel"]:
         """
         Retrieve model instances using caching to optimize performance.
         This method is selectively overridden in models that inherit from
@@ -603,4 +606,7 @@ class MetaDataModel(TimestampedModel):
                 "get_cached_object() must be called on a concrete model class, not an abstract base class."
             )
 
-        return super().get_cached_objects()  # type: ignore
+        if invalidate:
+            pass
+
+        return super().get_cached_objects(invalidate=invalidate)  # type: ignore
