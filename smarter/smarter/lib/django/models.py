@@ -358,7 +358,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         return retval
 
     @classmethod
-    def get_cached_object(cls, pk: int) -> Optional[models.Model]:
+    def get_cached_object(cls, pk: int, invalidate: Optional[bool] = False) -> Optional[models.Model]:
         """
         Retrieve a model instance by primary key, using caching to
         optimize performance. This method is selectively overridden in
@@ -394,6 +394,9 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                 return cls.objects.get(pk=pk)
             except cls.DoesNotExist:
                 return None
+
+        if invalidate:
+            _get_model_by_pk.invalidate(pk)
 
         return _get_model_by_pk(pk)
 
@@ -530,7 +533,9 @@ class MetaDataModel(TimestampedModel):
         return _get_tags_by_class_and_pk(self.__class__.__name__, self.pk)
 
     @classmethod
-    def get_cached_object(cls, pk: Optional[int] = None, name: Optional[str] = None) -> Optional["MetaDataModel"]:
+    def get_cached_object(
+        cls, pk: Optional[int] = None, name: Optional[str] = None, invalidate: Optional[bool] = False
+    ) -> Optional["MetaDataModel"]:
         """
         Retrieve a model instance by primary key or name, using caching to
         optimize performance. This method is selectively overridden in
@@ -576,10 +581,13 @@ class MetaDataModel(TimestampedModel):
                 )
                 raise SmarterValueError(f"Multiple objects found with name '{name}'.") from e
 
+        if invalidate:
+            _get_object_by_name.invalidate(name)
+
         if name:
             return _get_object_by_name(name)
 
-        return super().get_cached_object(pk=pk)  # type: ignore[return-value]
+        return super().get_cached_object(pk=pk, invalidate=invalidate)  # type: ignore[return-value]
 
     @classmethod
     def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["MetaDataModel"]:
