@@ -8,4 +8,4 @@ These tutorials walks you through integrating an LLM provider into the Smarter p
    :maxdepth: 1
    :caption: Technical Reference
 
-   smarter-claude-code/getting-started-with-claude-code
+   smarter-coding-assistants/getting-started-with-claude-code
