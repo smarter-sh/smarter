@@ -83,8 +83,6 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
-CACHE_TIMEOUT = 60  # 1 minute
-
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__)
 logger_prefix_cache_invalidations = formatted_text_blue(f"{__name__}.cache_invalidations()")
@@ -114,13 +112,8 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
         user_profile,
     )
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def _get_pending_deployments(user_profile_id: int) -> int:
-        logger.debug(
-            "%s.get_pending_deployments() Fetching pending deployments for user_profile_id=%s",
-            logger_prefix,
-            user_profile_id,
-        )
         return ChatBot.objects.filter(user_profile__id=user_profile_id, deployed=False).count() or 0
 
     if invalidate and user_profile:
@@ -208,9 +201,8 @@ def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] =
         user_profile,
     )
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def _get_api_keys(user_profile_id: int) -> int:
-        logger.debug("%s.get_api_keys() Fetching API keys for user_profile_id=%s", logger_prefix, user_profile_id)
         return ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
 
     if invalidate and user_profile:
@@ -243,11 +235,8 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
         user_profile,
     )
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def _get_custom_domains(user_profile_id: int) -> int:
-        logger.debug(
-            "%s.get_custom_domains() Fetching custom domains for user_profile_id=%s", logger_prefix, user_profile_id
-        )
         return ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
 
     if invalidate and user_profile:
@@ -281,7 +270,7 @@ def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile
     return len(retval)
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
+@cache_results()
 def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of secrets associated with the specified user's profile.
@@ -342,7 +331,7 @@ def file_drop_zone(request: "HttpRequest") -> dict:
     """
     logger.debug("%s.file_drop_zone() called.", logger_prefix)
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def get_cached_file_drop_zone_context() -> dict:
         retval = {
             "drop_zone": {
@@ -354,7 +343,6 @@ def file_drop_zone(request: "HttpRequest") -> dict:
                 "provider_list_path": reverse("provider:provider_listview"),
             }
         }
-        logger.debug("%s.file_drop_zone() File drop zone context: %s", logger_prefix, retval)
         return retval
 
     return get_cached_file_drop_zone_context()
@@ -387,7 +375,7 @@ def base(request: "HttpRequest") -> dict:
     if resolved_user and getattr(resolved_user, "is_authenticated", False):
         user_profile = UserProfile.objects.filter(user=resolved_user).first()
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def get_cached_context(user: Optional[User]) -> dict:
         """
         Constructs and returns the cached dashboard context for the specified user.
@@ -452,12 +440,6 @@ def base(request: "HttpRequest") -> dict:
                 "my_resources_providers": get_providers(user_profile=user_profile) if user_profile else 0,
             }
         }
-        logger.debug(
-            "%s.get_cached_context() Dashboard context for user_id=%s: %s",
-            logger_prefix,
-            user_profile.id if user_profile else None,
-            cached_context,
-        )
         return cached_context
 
     context = get_cached_context(user=resolved_user)  # type: ignore[assignment]
@@ -491,7 +473,7 @@ def branding(request: "HttpRequest") -> dict:
     """
     logger.debug("%s.branding() called.", logger_prefix)
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def get_cached_context() -> dict:
         current_year = datetime.now().year
         root_url = request.build_absolute_uri("/").rstrip("/")
@@ -541,7 +523,6 @@ def branding(request: "HttpRequest") -> dict:
                 "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
             }
         }
-        logger.debug("%s.get_cached_context() Branding context: %s", logger_prefix, context)
         return context
 
     return get_cached_context()
@@ -631,11 +612,17 @@ def prompt_list_context(request: "HttpRequest") -> dict:
 
 def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     """
-    Invalidates caches for all resource-counting context processors.
+    Invalidates caches for all resource-counting context processors. This function is
+    intended to be called after any operation that modifies the underlying user data.
 
-     This function is intended to be called after any operation that modifies the underlying data for chatbots, plugins, API keys, custom domains, connections, secrets, or providers. By invalidating the caches for all relevant context processors, it ensures that subsequent requests to the dashboard will reflect the most up-to-date information without stale cache interference.
+    .. note::
 
-     The function calls the invalidate method on each cached context processor, passing the appropriate user profile when necessary. This centralized cache invalidation approach helps maintain data consistency across the dashboard while minimizing redundant database queries.
+        This is called by signal handlers in the account app, tied to the AbstractBroker.
+
+    .. seealso::
+
+        - :class:`smarter.lib.manifest.broker.AbstractBroker`
+        - :signal:`smarter.apps.account.signals.cache_invalidate`
     """
     logger.debug("%s called for %s", logger_prefix_cache_invalidations, user_profile)
 
