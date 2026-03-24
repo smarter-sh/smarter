@@ -11,7 +11,6 @@ from django.test import RequestFactory
 from django.urls import reverse
 
 from smarter.apps.account.models import User, UserProfile
-from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
@@ -128,7 +127,7 @@ def apply_manifest(
         logger.error("%s User with username '%s' does not exist.", logger_prefix, username)
         return False
 
-    user_profile = get_cached_user_profile(user=user)
+    user_profile = UserProfile.get_cached_object(user=user)
     if not isinstance(user_profile, UserProfile):
         logger.error("%s No UserProfile found for user '%s'.", logger_prefix, username)
         return False
@@ -247,7 +246,7 @@ def apply_manifest_v2(
         logger.error("%s User with username '%s' does not exist.", logger_prefix, username)
         return False
 
-    user_profile = get_cached_user_profile(user=user)
+    user_profile = UserProfile.get_cached_object(user=user)
     if not isinstance(user_profile, UserProfile):
         logger.error("%s No UserProfile found for user '%s'.", logger_prefix, username)
         return False
@@ -283,6 +282,7 @@ def apply_manifest_v2(
         logger.error("%s - manifest: %s", logger_prefix, data)
         logger.error("%s - response: %s", logger_prefix, response_content.content)
         msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {data}\nresponse: {response_content.content}"
+        # pylint: disable=W0719
         raise Exception(msg)
 
     if isinstance(response_content, (str, bytearray, bytes)):

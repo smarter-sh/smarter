@@ -24,7 +24,6 @@ from smarter.apps.account.serializers import UserProfileSerializer
 from smarter.apps.account.utils import (
     account_number_from_url,
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
     smarter_cached_objects,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
@@ -531,7 +530,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         :rtype: str
         """
         user_profile: UserProfile = self.user_profile
-        admin_user = get_cached_admin_user_for_account(user_profile.cached_account)  # type: ignore[arg-type]
+        admin_user = get_cached_admin_user_for_account(account=user_profile.cached_account)  # type: ignore[arg-type]
         if user_profile.cached_user == admin_user:
             raw_str = self.name
         else:
@@ -915,12 +914,12 @@ class ChatBot(MetaDataWithOwnershipModel):
     @classmethod
     def get_cached_object(
         cls,
+        invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         user: Optional[User] = None,
         user_profile: Optional[UserProfile] = None,
         account: Optional[Account] = None,
-        invalidate: Optional[bool] = False,
     ) -> Optional["ChatBot"]:
         """
         Retrieve a model instance using caching to optimize performance.
@@ -947,20 +946,21 @@ class ChatBot(MetaDataWithOwnershipModel):
         """
         logger_prefix = formatted_text(__name__ + ".ChatBot.get_cached_object()")
         logger.debug(
-            "%s called with pk=%s, name=%s, user=%s, user_profile=%s, account=%s",
+            "%s called with pk=%s, name=%s, user=%s, user_profile=%s, account=%s, invalidate=%s",
             logger_prefix,
             pk,
             name,
             user,
             user_profile,
             account,
+            invalidate,
         )
 
-        return super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account, invalidate=invalidate)  # type: ignore[assignment]
+        return super().get_cached_object(invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account)  # type: ignore[assignment]
 
     @classmethod
     def get_cached_objects(
-        cls, user_profile: Optional[UserProfile] = None, invalidate: Optional[bool] = False
+        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None
     ) -> models.QuerySet["ChatBot"]:
         """
         Retrieve a list of ChatBot instances associated with a user profile using caching.
@@ -970,15 +970,18 @@ class ChatBot(MetaDataWithOwnershipModel):
         .. code-block:: python
 
             # Retrieve ChatBot instances for a user profile with caching
-            chatbots = ChatBot.get_cached_objects(my_user_profile)
+            chatbots = ChatBot.get_cached_objects(my_user_profile, invalidate=True)
 
+
+        :param invalidate: Whether to invalidate the cache for this retrieval.
         :param user_profile: The user profile for which to retrieve ChatBot instances.
+
         :returns: A queryset of ChatBot instances associated with the user profile.
         :rtype: models.QuerySet["ChatBot"]
 
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
-        logger.debug("%s called with user_profile=%s", logger_prefix, user_profile)
+        logger.debug("%s called with user_profile=%s, invalidate=%s", logger_prefix, user_profile, invalidate)
 
         @cache_results(60)
         def _get_chatbots_for_user_profile_id(user_profile_id: int) -> models.QuerySet["ChatBot"]:
@@ -1113,7 +1116,9 @@ class ChatBotAPIKey(TimestampedModel):
 
     # pylint: disable=W0221
     @classmethod
-    def get_cached_objects(cls, chatbot: ChatBot) -> models.QuerySet["ChatBotAPIKey"]:
+    def get_cached_objects(
+        cls, invalidate: Optional[bool] = False, chatbot: Optional[ChatBot] = None
+    ) -> models.QuerySet["ChatBotAPIKey"]:
         """
         Retrieve a list of ChatBotAPIKey instances associated with a ChatBot using caching.
 
@@ -1122,24 +1127,31 @@ class ChatBotAPIKey(TimestampedModel):
         .. code-block:: python
 
             # Retrieve API keys for a chatbot with caching
-            api_keys = ChatBotAPIKey.get_cached_objects(my_chatbot)
+            api_keys = ChatBotAPIKey.get_cached_objects(my_chatbot, invalidate=True)
 
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool, optional
         :param chatbot: The ChatBot instance for which to retrieve API keys.
+        :type chatbot: ChatBot, optional
+
         :returns: A queryset of ChatBotAPIKey instances associated with the ChatBot.
         :rtype: models.QuerySet["ChatBotAPIKey"]
 
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
-        logger.debug("%s called with chatbot=%s", logger_prefix, chatbot)
+        logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
         @cache_results(cls.cache_expiration)
         def _get_api_keys_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotAPIKey"]:
             return cls.objects.filter(chatbot_id=chatbot_id)
 
+        if invalidate and chatbot:
+            _get_api_keys_for_chatbot_id.invalidate(chatbot.id)
+
         if chatbot:
             return _get_api_keys_for_chatbot_id(chatbot.id)
 
-        return super().get_cached_objects()
+        return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
 
 
 class ChatBotPlugin(TimestampedModel):
@@ -1203,7 +1215,7 @@ class ChatBotPlugin(TimestampedModel):
         admin_user = UserProfile.admin_for_account(self.chatbot.user_profile.cached_account)
         if admin_user is None:
             raise SmarterValueError("ChatBotPlugin.plugin() failed to find admin user for chatbot account")
-        user_profile = get_cached_user_profile(admin_user)
+        user_profile = UserProfile.get_cached_object(invalidate=False, user=admin_user)
 
         @cache_results()
         def get_cached_plugin_controller(account_id: int, user_id: int, plugin_meta_id: int, user_profile_id: int):
@@ -1244,7 +1256,7 @@ class ChatBotPlugin(TimestampedModel):
         admin_user = UserProfile.admin_for_account(chatbot.user_profile.cached_account)
         if admin_user is None:
             raise SmarterValueError("ChatBotPlugin.plugin() failed to find admin user for chatbot account")
-        user_profile = get_cached_user_profile(admin_user)
+        user_profile = UserProfile.get_cached_object(invalidate=False, user=admin_user)
         loader = SAMLoader(manifest=data)
         manifest = SAMPluginCommon(**loader.json_data)  # type: ignore[call-arg]
         plugin_controller = PluginController(
@@ -1277,7 +1289,7 @@ class ChatBotPlugin(TimestampedModel):
         admin_user = UserProfile.admin_for_account(chatbot.user_profile.cached_account)
         if admin_user is None:
             raise SmarterValueError("ChatBotPlugin.plugin() failed to find admin user for chatbot account")
-        user_profile = get_cached_user_profile(admin_user)
+        user_profile = UserProfile.get_cached_object(invalidate=False, user=admin_user)
         retval = []
         for chatbot_plugin in chatbot_plugins:
             plugin_controller = PluginController(
@@ -1295,17 +1307,23 @@ class ChatBotPlugin(TimestampedModel):
 
     # pylint: disable=W0221
     @classmethod
-    def get_cached_objects(cls, chatbot: ChatBot) -> models.QuerySet["ChatBotPlugin"]:
+    def get_cached_objects(
+        cls, invalidate: Optional[bool] = False, chatbot: Optional[ChatBot] = None
+    ) -> models.QuerySet["ChatBotPlugin"]:
         """
         Retrieve a queryset of ChatBotPlugin instances associated with a ChatBot using caching.
 
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool, optional
         :param chatbot: The ChatBot instance for which to retrieve plugins.
+        :type chatbot: ChatBot, optional
+
         :returns: A queryset of ChatBotPlugin instances associated with the ChatBot.
         :rtype: models.QuerySet["ChatBotPlugin"]
 
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
-        logger.debug("%s called with chatbot=%s", logger_prefix, chatbot)
+        logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
         @cache_results(cls.cache_expiration)
         def _get_plugins_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotPlugin"]:
@@ -1319,10 +1337,13 @@ class ChatBotPlugin(TimestampedModel):
             """
             return cls.objects.filter(chatbot_id=chatbot_id)
 
+        if invalidate and chatbot:
+            _get_plugins_for_chatbot_id.invalidate(chatbot.id)
+
         if chatbot:
             return _get_plugins_for_chatbot_id(chatbot.id)
 
-        return super().get_cached_objects()  # type: ignore[return-value]
+        return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
 
     @classmethod
     def plugins_json(cls, chatbot: ChatBot) -> List[dict]:
@@ -1414,17 +1435,23 @@ class ChatBotFunctions(TimestampedModel):
 
     # pylint: disable=W0221
     @classmethod
-    def get_cached_objects(cls, chatbot: ChatBot) -> models.QuerySet["ChatBotFunctions"]:
+    def get_cached_objects(
+        cls, invalidate: Optional[bool] = False, chatbot: Optional[ChatBot] = None
+    ) -> models.QuerySet["ChatBotFunctions"]:
         """
         Retrieve a queryset of ChatBotFunctions instances associated with a ChatBot using caching.
 
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool, optional
         :param chatbot: The ChatBot instance for which to retrieve functions.
-        :returns: A queryset of ChatBotFunctions instances associated with the ChatBot.
+        :type chatbot: ChatBot, optional
+
+                :returns: A queryset of ChatBotFunctions instances associated with the ChatBot.
         :rtype: models.QuerySet["ChatBotFunctions"]
 
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
-        logger.debug("%s called with chatbot=%s", logger_prefix, chatbot)
+        logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
         @cache_results(cls.cache_expiration)
         def _get_functions_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotFunctions"]:
@@ -1438,10 +1465,13 @@ class ChatBotFunctions(TimestampedModel):
             """
             return cls.objects.filter(chatbot_id=chatbot_id)
 
+        if invalidate and chatbot:
+            _get_functions_for_chatbot_id.invalidate(chatbot.id)
+
         if chatbot:
             return _get_functions_for_chatbot_id(chatbot.id)
 
-        return super().get_cached_objects()  # type: ignore[return-value]
+        return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
 
 
 class ChatBotRequests(TimestampedModel):
@@ -2112,7 +2142,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
         if not self.chatbot:
             return False
-        chatbotapikeys = ChatBotAPIKey.get_cached_objects(self.chatbot)
+        chatbotapikeys = ChatBotAPIKey.get_cached_objects(chatbot=self.chatbot)
         if chatbotapikeys.filter(api_key__is_active=True).exists():
             return True
         return False
@@ -2260,8 +2290,8 @@ class ChatBotHelper(SmarterRequestMixin):
                     self.root_domain,
                 )
                 return None
-            account_admin = get_cached_admin_user_for_account(self.account)  # type: ignore[arg-type]
-            account_admin_user_profile = get_cached_user_profile(account_admin)  # type: ignore[arg-type]
+            account_admin = get_cached_admin_user_for_account(account=self.account)  # type: ignore[arg-type]
+            account_admin_user_profile = UserProfile.get_cached_object(user=account_admin)  # type: ignore[arg-type]
 
             try:
                 self._chatbot_custom_domain = ChatBotCustomDomain.objects.get(

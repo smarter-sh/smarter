@@ -313,6 +313,7 @@ class Account(MetaDataModel):
     @classmethod
     def get_cached_object(
         cls,
+        invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         account_number: Optional[str] = None,
@@ -324,7 +325,17 @@ class Account(MetaDataModel):
         This method uses caching to optimize retrieval of Account instances by their account number.
         It checks the cache first and falls back to a database query if the cache is missed.
 
+        :param invalidate: If True, invalidate the cache for this query.
+        :type invalidate: bool, optional
+        :param pk: Optional primary key to search for (ignored if account_number is provided).
+        :type pk: int, optional
+        :param name: Optional name to search for (ignored if account_number is provided).
+        :type name: str, optional
         :param account_number: String. The account number to search for.
+        :type account_number: str, optional
+        :param company_name: String. The company name to search for (used if account_number is not provided).
+        :type company_name: str, optional
+
         :returns: Optional[Account]
             The Account instance if found, otherwise None.
 
@@ -340,7 +351,15 @@ class Account(MetaDataModel):
 
         """
         logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
-        logger.debug("%s called with pk=%s, name=%s, account_number=%s", logger_prefix, pk, name, account_number)
+        logger.debug(
+            "%s called with pk=%s, name=%s, account_number=%s, company_name=%s, invalidate=%s",
+            logger_prefix,
+            pk,
+            name,
+            account_number,
+            company_name,
+            invalidate,
+        )
 
         @cache_results(cls.cache_expiration)
         def _get_account_by_number(account_number: str) -> Optional["Account"]:
@@ -356,13 +375,17 @@ class Account(MetaDataModel):
             except cls.DoesNotExist:
                 return None
 
+        if invalidate:
+            _get_account_by_number.invalidate_cache(account_number=account_number)
+            _get_account_by_company_name.invalidate_cache(company_name=company_name)
+
         if account_number:
             return _get_account_by_number(account_number)
 
         if company_name:
             return _get_account_by_company_name(company_name)
 
-        return super().get_cached_object(pk=pk, name=name)  # type: ignore[return-value]
+        return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -880,11 +903,11 @@ class UserProfile(MetaDataModel):
     @classmethod
     def get_cached_object(
         cls,
+        invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         user: Optional[User] = None,
         account: Optional[Account] = None,
-        invalidate: Optional[bool] = False,
     ) -> Optional["UserProfile"]:
         """
         Retrieve a model instance by primary key or name, using caching to
@@ -908,12 +931,13 @@ class UserProfile(MetaDataModel):
         """
         logger_prefix = formatted_text(__name__ + ".UserProfile.get_cached_object()")
         logger.debug(
-            "%s called with pk: %s, name: %s, user: %s, account: %s",
+            "%s called with pk: %s, name: %s, user: %s, account: %s, invalidate: %s",
             logger_prefix,
             pk,
             name,
             user,
             account,
+            invalidate,
         )
 
         @cache_results(cls.cache_expiration)
@@ -941,6 +965,9 @@ class UserProfile(MetaDataModel):
                 )
                 return cls.objects.prefetch_related("tags").select_related("user", "account").filter(user=user).first()
 
+        if not isinstance(invalidate, bool):
+            raise SmarterValueError("Invalidate parameter must be a boolean. Got %s" % type(invalidate))
+
         if invalidate:
             _get_object_by_user_and_account.invalidate(user=user, account=account)
             _get_object_by_user.invalidate(user=user)
@@ -950,7 +977,7 @@ class UserProfile(MetaDataModel):
                 return _get_object_by_user_and_account(user, account)
             if user:
                 return _get_object_by_user(user)
-        return super().get_cached_object(pk=pk, name=name, invalidate=invalidate)  # type: ignore[return-value]
+        return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
 
     def __str__(self):
         return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
@@ -987,12 +1014,12 @@ class MetaDataWithOwnershipModel(MetaDataModel):
     @classmethod
     def get_cached_object(
         cls,
+        invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         user: Optional[User] = None,
         user_profile: Optional[UserProfile] = None,
         account: Optional[Account] = None,
-        invalidate: Optional[bool] = False,
     ) -> Optional[models.Model]:
         """
         Retrieve a model instance using caching to optimize performance.
@@ -1148,11 +1175,11 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             return _get_object_by_name_and_account(name, account)
 
         # no ownership info provided, so fall back to the super().
-        return super().get_cached_object(pk=pk, name=name, invalidate=invalidate)  # type: ignore[return-value]
+        return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
 
     @classmethod
     def get_cached_objects(
-        cls, user_profile: Optional[UserProfile] = None, invalidate: Optional[bool] = False
+        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None
     ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
         """
         Retrieve a list of MetaDataWithOwnershipModel instances associated with a user profile using caching.
@@ -1162,18 +1189,23 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         .. code-block:: python
 
             # Retrieve MetaDataWithOwnershipModel instances for a user profile with caching
-            models = MetaDataWithOwnershipModel.get_cached_objects(my_user_profile)
+            models = MetaDataWithOwnershipModel.get_cached_objects(my_user_profile, invalidate=invalidate)
 
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool, optional
         :param user_profile: The user profile for which to retrieve MetaDataWithOwnershipModel instances.
+        :type user_profile: UserProfile, optional
+
         :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile.
         :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
 
         """
         logger_prefix = formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_objects()")
         logger.debug(
-            "%s called with user_profile: %s",
+            "%s called with user_profile: %s invalidate: %s",
             logger_prefix,
             user_profile,
+            invalidate,
         )
 
         @cache_results(cls.cache_expiration)
@@ -1666,6 +1698,7 @@ class Secret(MetaDataWithOwnershipModel):
     @classmethod
     def get_cached_object(
         cls,
+        invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         user: Optional[User] = None,
@@ -1699,16 +1732,19 @@ class Secret(MetaDataWithOwnershipModel):
         """
         logger_prefix = formatted_text(__name__ + ".Secret.get_cached_object()")
         logger.debug(
-            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s",
+            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s, invalidate: %s",
             logger_prefix,
             pk,
             name,
             user,
             user_profile,
             account,
+            invalidate,
         )
 
-        retval = super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
+        retval = super().get_cached_object(
+            invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account
+        )
         if isinstance(retval, Secret):
             return retval
         return None

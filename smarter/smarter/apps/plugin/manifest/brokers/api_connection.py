@@ -336,7 +336,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             spec = SAMApiConnectionSpec(
                 connection=connection,
             )
-            admin = get_cached_admin_user_for_account(self.account)  # type: ignore
+            admin = get_cached_admin_user_for_account(account=self.account)  # type: ignore
             if not admin:
                 raise SAMBrokerErrorNotReady(
                     f"Admin user not found for account {self.account}. Cannot build manifest.",

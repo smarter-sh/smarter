@@ -6,9 +6,7 @@ from http import HTTPStatus
 
 from django import forms, http
 
-from smarter.apps.account.models import Account
-from smarter.apps.account.utils import get_cached_user_profile
-from smarter.common.conf import smarter_settings
+from smarter.apps.account.models import Account, UserProfile
 from smarter.common.utils import get_readonly_csv_file
 from smarter.lib.django import waffle
 from smarter.lib.django.views import SmarterAdminWebView
@@ -16,6 +14,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
@@ -62,7 +61,7 @@ class SettingsView(SmarterAdminWebView):
         return False
 
     def _handle_write(self, request):
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
         account_form = AccountForm(request.POST, instance=user_profile.cached_account)
         if account_form.is_valid():
             if not self._exists("value", str(account_form.instance.currency), CURRENCIES):
@@ -82,7 +81,7 @@ class SettingsView(SmarterAdminWebView):
     # HTTP override methods
     # -------------------------------------------------------------------------
     def get(self, request, *args, **kwargs):
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
         account_form = AccountForm(instance=user_profile.cached_account)
         context = {
             "account_settings": {

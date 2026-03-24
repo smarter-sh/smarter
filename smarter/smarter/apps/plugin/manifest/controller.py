@@ -56,6 +56,7 @@ SAM_MAP: dict[str, SAMPluginType] = {
 }
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -103,7 +104,7 @@ class PluginController(AbstractController):
     .. code-block:: python
 
         # Initialize a PluginController with manifest data
-        my_user_profile = get_cached_user_profile(admin_user)
+        my_user_profile = UserProfile.get_cached_object(user=admin_user)
         controller = PluginController(
             account=my_account,
             user=admin_user,

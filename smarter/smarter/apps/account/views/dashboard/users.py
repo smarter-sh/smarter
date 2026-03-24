@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """Views for the account settings."""
 
 import logging
@@ -8,8 +9,6 @@ from django.db import transaction
 from django.shortcuts import redirect
 
 from smarter.apps.account.models import User, UserProfile
-from smarter.apps.account.utils import get_cached_user_profile
-from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.views import SmarterAdminWebView
@@ -48,7 +47,7 @@ class UsersView(SmarterAdminWebView):
         """
         Get the users for the account, but exclude any superusers.
         """
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
         user_account = user_profile.cached_account
         user_ids = (
             UserProfile.objects.filter(account=user_account)
@@ -73,7 +72,7 @@ class UserView(SmarterAdminWebView):
         return json.loads(request.body.decode("utf-8").replace("'", '"'))
 
     def _handle_create(self, request, data=None):
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
         user_form = UserForm(data=data)
         if user_form.is_valid():
             target_user = user_form.save()
@@ -86,14 +85,14 @@ class UserView(SmarterAdminWebView):
 
     def _handle_write(self, request, user_id, data=None):
 
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
 
         try:
             target_user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"User": "User not found."})
 
-        target_user_profile = get_cached_user_profile(user=target_user)
+        target_user_profile = UserProfile.get_cached_object(user=target_user)
         if target_user_profile.cached_account != user_profile.cached_account:
             return http.JsonResponse(
                 status=HTTPStatus.FORBIDDEN.value, data={"User": "User not associated with your account."}
@@ -139,13 +138,13 @@ class UserView(SmarterAdminWebView):
         return self._handle_write(request, user_id=user_id, data=data)
 
     def delete(self, request, user_id, *args, **kwargs):
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
         try:
             target_user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"User": "User not found."})
 
-        target_user_profile = get_cached_user_profile(user=target_user)
+        target_user_profile = UserProfile.get_cached_object(user=target_user)
         if target_user_profile.cached_account != user_profile.cached_account:
             return http.JsonResponse(
                 status=HTTPStatus.FORBIDDEN.value, data={"User": "User not associated with your account."}

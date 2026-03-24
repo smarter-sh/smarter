@@ -6,7 +6,6 @@ from typing import Optional
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_user_for_username,
-    get_cached_user_profile,
 )
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.lib.django.management.base import SmarterCommand
@@ -40,7 +39,7 @@ class Command(SmarterCommand):
             raise ValueError(f"User {username} does not exist.") from e
 
         try:
-            user_profile = get_cached_user_profile(user=user)  # type: ignore
+            user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         except UserProfile.DoesNotExist as e:
             self.handle_completed_failure(e, f"UserProfile for {user} does not exist.")
             raise ValueError(f"UserProfile for {user} does not exist.") from e
@@ -49,6 +48,7 @@ class Command(SmarterCommand):
             add_example_plugins(user_profile=user_profile, verbose=verbose)
         # pylint: disable=broad-except
         except Exception as exc:
+            # pylint: disable=import-outside-toplevel
             import traceback
 
             tb = traceback.format_exc()

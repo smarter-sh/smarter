@@ -178,21 +178,37 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
 
     @classmethod
     def get_cached_objects(
-        cls, user_profile: Optional[UserProfile] = None, user: Optional[User] = None, name: Optional[str] = None
+        cls,
+        invalidate: Optional[bool] = False,
+        user_profile: Optional[UserProfile] = None,
+        user: Optional[User] = None,
+        name: Optional[str] = None,
     ) -> models.QuerySet["SmarterAuthToken"]:
         """
         Retrieve API keys with caching based on user profile and optional name
         filter using caching.
 
-        .. param user_profile: The user profile for which to retrieve API keys.
-        .. param user: The user for which to retrieve API keys (used if user_profile is not provided).
-        .. param name: Optional name filter to retrieve API keys with a specific name.
+        :param invalidate: If True, invalidate the cache for this query.
+        :type invalidate: bool, optional
+        :param user_profile: The user profile for which to retrieve API keys.
+        :type user_profile: UserProfile, optional
+        :param user: The user for which to retrieve API keys (used if user_profile is not provided).
+        :type user: User, optional
+        :param name: Optional name filter to retrieve API keys with a specific name.
+        :type name: str, optional
 
-        .. returns:: A queryset of SmarterAuthToken objects matching the criteria.
-        .. rtype:: QuerySet[SmarterAuthToken]
+        :returns: A queryset of SmarterAuthToken objects matching the criteria.
+        :rtype: QuerySet[SmarterAuthToken]
         """
         logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_objects()")
-        logger.debug("%s called with user_profile=%s, user=%s, name=%s", logger_prefix, user_profile, user, name)
+        logger.debug(
+            "%s called with user_profile=%s, user=%s, name=%s, invalidate=%s",
+            logger_prefix,
+            user_profile,
+            user,
+            name,
+            invalidate,
+        )
 
         # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
@@ -212,10 +228,13 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
             """
             Retrieve API keys for a specific user profile and name with caching.
 
-            .. param user_profile_id: The ID of the user profile for which to retrieve API keys.
-            .. param name: The name of the API key to retrieve.
-            .. returns:: A queryset of SmarterAuthToken objects matching the criteria.
-            .. rtype:: QuerySet[SmarterAuthToken]
+            :param user_profile_id: The ID of the user profile for which to retrieve API keys.
+            :type user_profile_id: int
+            :param name: The name of the API key to retrieve.
+            :type name: str
+
+            :returns: A queryset of SmarterAuthToken objects matching the criteria.
+            :rtype: QuerySet[SmarterAuthToken]
             """
             queryset = (
                 cls.objects.prefetch_related("tags")
@@ -223,6 +242,15 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
                 .filter(user=user_profile.cached_user, name=name)
             )
             return queryset
+
+        if invalidate:
+            # Invalidate the cache for both functions
+            _get_cached_objects_for_user_profile.invalidate_cache(
+                user_profile_id=user_profile.id if user_profile else None
+            )
+            _get_cached_objects_for_user_profile_and_name.invalidate_cache(
+                user_profile_id=user_profile.id if user_profile else None, name=name
+            )
 
         if not user_profile and user:
             user_profile = UserProfile.get_cached_object(user=user)
@@ -232,7 +260,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         elif user_profile:
             return _get_cached_objects_for_user_profile(user_profile.id)
         else:
-            return super().get_cached_objects(user_profile=user_profile)  # type: ignore
+            return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate)  # type: ignore
 
     def __str__(self):
         return str(self.name) + " (" + str(self.user) + ") " + str(self.identifier)

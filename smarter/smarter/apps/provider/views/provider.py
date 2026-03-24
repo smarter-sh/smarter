@@ -145,7 +145,7 @@ class ProviderListView(SmarterAuthenticatedNeverCachedWebView):
                 type(request.user),
             )
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.providers = Provider.get_cached_providers_for_user(request.user)
+        self.providers = Provider.get_cached_providers_for_user(user=request.user)
         context = {
             "provider_list": {"providers": self.providers, "smarter_admin": smarter_cached_objects.smarter_admin}
         }

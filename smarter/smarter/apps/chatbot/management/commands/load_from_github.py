@@ -12,12 +12,10 @@ from typing import Optional
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
-    get_cached_account,
     get_cached_admin_user_for_account,
 )
 from smarter.apps.api.utils import apply_manifest
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
-from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import smarter_settings
@@ -279,7 +277,7 @@ class Command(SmarterCommand):
             raise SmarterValueError("username and/or account_number is required.")
 
         if account_number:
-            self.account = get_cached_account(account_number=account_number)  # type: ignore
+            self.account = Account.get_cached_object(invalidate=False, account_number=account_number)  # type: ignore[assignment]
 
         if username:
             self.user = User.objects.get(username=username)

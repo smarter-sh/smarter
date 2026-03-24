@@ -15,10 +15,9 @@ from urllib.parse import urlparse
 
 import dns.resolver
 
-from smarter.apps.account.models import Account, AccountContact
+from smarter.apps.account.models import Account, AccountContact, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
@@ -212,7 +211,7 @@ def register_custom_domain(account_id: int, domain_name: str):
     )
     account = Account.objects.get(id=account_id)
     admin = get_cached_admin_user_for_account(account=account)
-    admin_user_profile = get_cached_user_profile(user=admin, account=account)  # type: ignore[assignment]
+    admin_user_profile = UserProfile.get_cached_object(user=admin, account=account)  # type: ignore[assignment]
     domain_name = aws_helper.aws.domain_resolver(domain_name)
 
     logger.info(

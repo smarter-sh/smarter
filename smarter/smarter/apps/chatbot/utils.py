@@ -9,7 +9,6 @@ from django.db.models import QuerySet
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
     smarter_cached_objects,
 )
 from smarter.common.exceptions import SmarterValueError
@@ -64,7 +63,7 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHe
         admin_user = get_cached_admin_user_for_account(account=user_profile.cached_account)
         if not admin_user:
             raise SmarterValueError(f"No admin user found for account {user_profile.cached_account}")
-        admin_user_profile = get_cached_user_profile(user=admin_user)
+        admin_user_profile = UserProfile.get_cached_object(user=admin_user)
 
         chatbots = get_chatbots_for_account()
         logger.debug(

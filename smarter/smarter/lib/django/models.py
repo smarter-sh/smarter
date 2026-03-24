@@ -358,7 +358,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         return retval
 
     @classmethod
-    def get_cached_object(cls, pk: int, invalidate: Optional[bool] = False) -> Optional[models.Model]:
+    def get_cached_object(cls, invalidate: Optional[bool] = False, pk: Optional[int] = None) -> Optional[models.Model]:
         """
         Retrieve a model instance by primary key, using caching to
         optimize performance. This method is selectively overridden in
@@ -372,20 +372,21 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             # Retrieve by primary key
             instance = MyModel.get_cached_object(pk=1)
 
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool, optional
         :param pk: The primary key of the model instance to retrieve.
+        :type pk: int, optional
+
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[models.Model]
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()")
-        logger.debug("%s.get_cached_object() called with pk: %s", logger_prefix, pk)
+        logger.debug("%s.get_cached_object() called with pk: %s, invalidate=%s", logger_prefix, pk, invalidate)
 
         if cls._meta.abstract:
             raise NotImplementedError(
                 "get_cached_object() must be called on a concrete model class, not an abstract base class."
             )
-
-        if not pk:
-            return None
 
         @cache_results(timeout=cls.cache_expiration)
         def _get_model_by_pk(pk: int) -> Optional[models.Model]:
@@ -397,6 +398,9 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
         if invalidate:
             _get_model_by_pk.invalidate(pk)
+
+        if not pk:
+            return None
 
         return _get_model_by_pk(pk)
 
@@ -414,11 +418,13 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             # Retrieve all instances
             instances = MyModel.get_cached_objects()
 
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool
         :returns: A queryset of all model instances.
         :rtype: QuerySet
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
-        logger.debug("%s.get_cached_objects() called", logger_prefix)
+        logger.debug("%s.get_cached_objects() called with invalidate=%s", logger_prefix, invalidate)
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -534,7 +540,7 @@ class MetaDataModel(TimestampedModel):
 
     @classmethod
     def get_cached_object(
-        cls, pk: Optional[int] = None, name: Optional[str] = None, invalidate: Optional[bool] = False
+        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, name: Optional[str] = None
     ) -> Optional["MetaDataModel"]:
         """
         Retrieve a model instance by primary key or name, using caching to
@@ -551,13 +557,20 @@ class MetaDataModel(TimestampedModel):
             # Retrieve by name
             instance = MyModel.get_cached_object(name="exampleName")
 
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool, optional
         :param pk: The primary key of the model instance to retrieve.
+        :type pk: int, optional
         :param name: The name of the model instance to retrieve.
+        :type name: str, optional
+
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["MetaDataModel"]
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()")
-        logger.debug("%s.get_cached_object() called with pk: %s, name: %s", logger_prefix, pk, name)
+        logger.debug(
+            "%s.get_cached_object() called with pk: %s, name: %s, invalidate: %s", logger_prefix, pk, name, invalidate
+        )
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -587,7 +600,7 @@ class MetaDataModel(TimestampedModel):
         if name:
             return _get_object_by_name(name)
 
-        return super().get_cached_object(pk=pk, invalidate=invalidate)  # type: ignore[return-value]
+        return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
 
     @classmethod
     def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["MetaDataModel"]:
@@ -603,11 +616,13 @@ class MetaDataModel(TimestampedModel):
             # Retrieve all instances
             instances = MyModel.get_cached_objects()
 
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool
         :returns: A queryset of all model instances.
         :rtype: QuerySet
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
-        logger.debug("%s.get_cached_objects() called", logger_prefix)
+        logger.debug("%s.get_cached_objects() called with invalidate=%s", logger_prefix, invalidate)
 
         if cls._meta.abstract:
             raise NotImplementedError(

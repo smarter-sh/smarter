@@ -28,7 +28,6 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
     smarter_cached_objects,
 )
 from smarter.common.api import SmarterApiVersions
@@ -967,7 +966,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 )
         except ModelClass.DoesNotExist:
             account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
-            account_admin_user_profile = get_cached_user_profile(user=account_admin_user)  # type: ignore
+            account_admin_user_profile = UserProfile.get_cached_object(user=account_admin_user)  # type: ignore
             try:
                 logger.debug(
                     "%s.orm_meta_instance_setter() attempting to retrieve %s for %s owned by %s.",
@@ -1102,7 +1101,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         except ModelClass.DoesNotExist:
             # next try with account admin user_profile
             account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
-            account_admin_user_profile = get_cached_user_profile(user=account_admin_user)  # type: ignore
+            account_admin_user_profile = UserProfile.get_cached_object(user=account_admin_user)  # type: ignore
             try:
                 logger.debug(
                     "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",

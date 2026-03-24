@@ -20,7 +20,7 @@ from smarter.apps.account.models import Account
 from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import (
     cache_invalidate,
-    get_cached_smarter_account,
+    smarter_cached_objects,
 )
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -610,7 +610,7 @@ class SAMAccountBroker(AbstractBroker):
         logger.debug("%s.example_manifest() called", self.formatted_class_name)
 
         self.user = None
-        self.brokered_account = get_cached_smarter_account()
+        self.brokered_account = smarter_cached_objects.smarter_account
         if not self.brokered_account:
             raise SAMBrokerErrorNotReady(
                 f"Account not set for {self.kind} broker. Cannot get example manifest.",

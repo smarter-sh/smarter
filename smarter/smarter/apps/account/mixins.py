@@ -28,7 +28,6 @@ from .serializers import (
 from .utils import (
     account_number_from_url,
     get_cached_account_for_user,
-    get_cached_user_profile,
 )
 
 UserType = Union[AnonymousUser, User, None]
@@ -352,7 +351,7 @@ class AccountMixin(SmarterHelperMixin):
             )
             return self._account
         if self._user:
-            self._account = get_cached_account_for_user(self._user)
+            self._account = get_cached_account_for_user(invalidate=False, user=self._user)  # type: ignore[assignment]
             if self._account:
                 logger.debug(
                     "%s.account() set _account to %s based on user %s",
@@ -385,7 +384,7 @@ class AccountMixin(SmarterHelperMixin):
         if self.user:
             # If the user is already set, then we need to verify that the user is part of the account
             # by attempting to fetch the user_profile.
-            self._user_profile = get_cached_user_profile(user=self.user, account=account)  # type: ignore[arg-type]
+            self._user_profile = UserProfile.get_cached_object(invalidate=False, user=self.user, account=account)  # type: ignore[arg-type]
             if not self._user_profile:
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} is not associated with the account {self._account.account_number if isinstance(self._account, Account) else "unknown account"}."
@@ -493,14 +492,14 @@ class AccountMixin(SmarterHelperMixin):
         # the property setters.
         if self._account and isinstance(self._user, User):
             try:
-                self._user_profile = get_cached_user_profile(user=self._user, account=self._account)
+                self._user_profile = UserProfile.get_cached_object(user=self._user, account=self._account)
                 return self._user_profile
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} does not belong to the account {self._account.account_number}."
                 ) from e
         if isinstance(self._user, User):
-            self._user_profile = get_cached_user_profile(user=self._user)
+            self._user_profile = UserProfile.get_cached_object(user=self._user)
         if not self._user_profile:
             logger.debug(
                 "%s: user_profile() could not initialize _user_profile for user: %s, account: %s",

@@ -23,7 +23,6 @@ from smarter.apps.account.utils import (
     get_cached_account_for_user,
     get_cached_admin_user_for_account,
     get_cached_smarter_admin_user_profile,
-    get_cached_user_profile,
     smarter_cached_objects,
 )
 from smarter.common.exceptions import (
@@ -454,6 +453,7 @@ class Provider(MetaDataWithOwnershipModel):
     @classmethod
     def get_cached_object(
         cls,
+        invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         user: Optional[User] = None,
@@ -495,14 +495,16 @@ class Provider(MetaDataWithOwnershipModel):
             user_profile.id if user_profile else None,
             account.id if account else None,
         )
-        retval = super().get_cached_object(pk=pk, name=name, user=user, user_profile=user_profile, account=account)
+        retval = super().get_cached_object(
+            invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account
+        )
         if isinstance(retval, Provider):
             return retval
         return None
 
     @classmethod
     def get_cached_provider_by_account_id_and_name(
-        cls, account_id: int, name: str, invalidate: bool = False
+        cls, invalidate: Optional[bool] = False, account_id: Optional[int] = None, name: Optional[str] = None
     ) -> Optional["Provider"]:
         """Get a cached provider by account ID and name."""
 
@@ -521,13 +523,15 @@ class Provider(MetaDataWithOwnershipModel):
         return provider
 
     @classmethod
-    def get_cached_providers_for_user(cls, user: User, invalidate: bool = False) -> Sequence["Provider"]:
+    def get_cached_providers_for_user(
+        cls, invalidate: Optional[bool] = False, user: Optional[User] = None
+    ) -> Sequence["Provider"]:
         """Get cached providers for a user."""
 
         @cache_results()
         def cached_providers_by_account_id(account_id: int) -> Sequence["Provider"]:
-            admin_user = get_cached_admin_user_for_account(user_profile.cached_account)
-            admin_user_profile = get_cached_user_profile(admin_user)  # type: ignore[arg-type]
+            admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore[arg-type]
+            admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore[arg-type]
 
             account_providers = cls.objects.filter(user_profile=admin_user_profile).order_by("name")
             smarter_providers = cls.objects.filter(
@@ -542,17 +546,19 @@ class Provider(MetaDataWithOwnershipModel):
             )
             return retval
 
-        user_profile = get_cached_user_profile(user)
+        user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
 
-        if invalidate:
+        if invalidate and user_profile and user_profile.account:
             cached_providers_by_account_id.invalidate(user_profile.cached_account.id)
 
-        providers = cached_providers_by_account_id(user_profile.cached_account.id)
-        return list(providers) or []
+        if user_profile and user_profile.account:
+            providers = cached_providers_by_account_id(user_profile.cached_account.id)
+            return list(providers) or []
+        return []
 
     @classmethod
     def get_cached_provider_by_user_and_name(
-        cls, user: User, name: str, invalidate: bool = False
+        cls, invalidate: Optional[bool] = False, user: Optional[User] = None, name: Optional[str] = ""
     ) -> Optional["Provider"]:
         """
         Return a single instance of Provider by name for the given user.
@@ -566,14 +572,13 @@ class Provider(MetaDataWithOwnershipModel):
         :rtype: Optional[Provider]
         """
 
-        account = get_cached_account_for_user(user)
+        account = get_cached_account_for_user(invalidate=invalidate, user=user)
         if not account:
             return None
-        return cls.get_cached_provider_by_account_id_and_name(account.id, name)
+        return cls.get_cached_provider_by_account_id_and_name(invalidate=invalidate, account_id=account.id, name=name)
 
     def validate(self) -> None:
         """Validate the provider before saving."""
-        pass
 
     def __str__(self):
         """String representation of the provider."""

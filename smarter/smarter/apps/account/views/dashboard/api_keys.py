@@ -10,7 +10,7 @@ from django import forms, http
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.models import UserProfile
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
@@ -48,7 +48,7 @@ class APIKeyBase(SmarterAdminWebView):
     """Base class for API key views."""
 
     def dispatch(self, request, *args, **kwargs):
-        self.user_profile = get_cached_user_profile(user=request.user)  # type: ignore[assignment]
+        self.user_profile = UserProfile.get_cached_object(user=request.user)  # type: ignore[assignment]
         self.account = self.user_profile.cached_account
         return super().dispatch(request, *args, **kwargs)
 
