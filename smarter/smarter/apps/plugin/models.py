@@ -39,7 +39,6 @@ from smarter.apps.account.models import (
 from smarter.apps.account.utils import (
     get_cached_account_for_user,
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
     smarter_cached_objects,
 )
 
@@ -478,13 +477,13 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     @classmethod
     def get_cached_object(
         cls,
+        invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         user: Optional[User] = None,
         user_profile: Optional[UserProfile] = None,
         account: Optional[Account] = None,
         plugin_class: Optional[str] = None,
-        invalidate: Optional[bool] = False,
     ) -> Optional["PluginMeta"]:
         """
         Return a single instance of PluginMeta by primary key or by name and user.
@@ -517,7 +516,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         if not plugin_class:
             retval = super().get_cached_object(
-                pk=pk, name=name, user=user, user_profile=user_profile, account=account, invalidate=invalidate
+                invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account
             )
             if isinstance(retval, PluginMeta):
                 return retval
@@ -540,7 +539,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             _get_model_by_name_and_userprofile_and_plugin_class.invalidate(name, user_profile.id, plugin_class)  # type: ignore[union-attr]
 
         if pk:
-            return super().get_cached_object(pk=pk, invalidate=invalidate)  # type: ignore[return-value]
+            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
 
         if not user_profile:
             if not user:
@@ -548,24 +547,26 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     "PluginMeta.get_cached_object() requires either user_profile or user to be provided."
                 )
             if not account:
-                account = get_cached_account_for_user(user=user, invalidate=invalidate)  # type: ignore[arg-type]
-            user_profile = get_cached_user_profile(user=user, account=account, invalidate=invalidate)  # type: ignore[arg-type]
+                account = get_cached_account_for_user(invalidate=invalidate, user=user)  # type: ignore[arg-type]
+            user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
 
         if plugin_class:
             return _get_model_by_name_and_userprofile_and_plugin_class(name, user_profile.id, plugin_class)
-        retval = super().get_cached_object(name=name, user_profile=user_profile, invalidate=invalidate)
+        retval = super().get_cached_object(invalidate=invalidate, name=name, user_profile=user_profile)
         if isinstance(retval, PluginMeta):
             return retval
 
     # pylint: disable=W0222
     @classmethod
     def get_cached_objects(
-        cls, user_profile: UserProfile, invalidate: Optional[bool] = False
+        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None
     ) -> QuerySet["PluginMeta"]:
         """
         Return a QuerySet of all PluginMeta instances for the given user profile.
         This method caches the results to improve performance.
 
+        :param invalidate: If True, invalidate the cache for this query.
+        :type invalidate: bool
         :param user_profile: The user profile whose plugins should be retrieved.
         :type user_profile: UserProfile
         :return: A QuerySet of PluginMeta instances for the user profile.
@@ -574,14 +575,14 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         # pylint: disable=W0621
         logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_objects()")
-        logger.debug("%s called with user_profile=%s", logger_prefix, user_profile)
+        logger.debug("%s called with user_profile=%s, invalidate=%s", logger_prefix, user_profile, invalidate)
 
-        return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate)  # type: ignore[return-value]
+        return super().get_cached_objects(invalidate=invalidate, user_profile=user_profile)  # type: ignore[return-value]
 
     @classmethod
     @cache_results()
     def get_cached_plugins_for_user_profile_id(
-        cls, user_profile_id: int, invalidate: bool = False
+        cls, invalidate: Optional[bool] = False, user_profile_id: Optional[int] = None
     ) -> list["PluginMeta"]:
         """
         Return a list of all instances of PluginMeta for the given user.
@@ -602,11 +603,11 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         try:
             retval = []
-            user_profile = UserProfile.get_cached_object(pk=user_profile_id, invalidate=invalidate)
+            user_profile = UserProfile.get_cached_object(invalidate=invalidate, pk=user_profile_id)
             if not user_profile:
                 raise SmarterValueError(f"UserProfile with id {user_profile_id} not found.")
-            admin_user = get_cached_admin_user_for_account(account=user_profile.cached_account, invalidate=invalidate)  # type: ignore[arg-type]
-            admin_user_profile = get_cached_user_profile(user=admin_user, account=user_profile.cached_account, invalidate=invalidate)  # type: ignore[arg-type]
+            admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore[arg-type]
+            admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user, account=user_profile.cached_account)  # type: ignore[arg-type]
 
             def was_already_added(plugin_meta: PluginMeta) -> bool:
                 if not plugin_meta:
@@ -1024,7 +1025,7 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
     # pylint: disable=W0221
     @classmethod
     def get_cached_object(
-        cls, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None
+        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None
     ) -> Optional["PluginDataBase"]:
         """
         Retrieve a model instance by primary key, using caching to
@@ -1039,7 +1040,13 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
             # Retrieve by primary key
             instance = MyModel.get_cached_object(pk=1)
 
+        :param invalidate: If True, invalidate the cache for this query before retrieving the object.
+        :type invalidate: bool
         :param pk: The primary key of the model instance to retrieve.
+        :type pk: int
+        :param plugin: The PluginMeta instance associated with the data to retrieve.
+        :type plugin: PluginMeta
+
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["PluginDataBase"]
         """
@@ -1064,8 +1071,11 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
                 )
                 return None
 
+        if invalidate and plugin:
+            _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
+
         if pk:
-            return super().get_cached_object(pk=pk)  # type: ignore[return-value]
+            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
 
         if plugin:
             return _get_model_by_plugin_meta(plugin.id)
@@ -1350,9 +1360,9 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         if user is None:
             logger.warning("%s.get_cached_connections_for_user: user is None", cls.formatted_class_name)
             return []
-        user_profile = get_cached_user_profile(user=user, invalidate=invalidate)
-        admin_user = get_cached_admin_user_for_account(user_profile.cached_account, invalidate=invalidate)  # type: ignore
-        admin_user_profile = get_cached_user_profile(user=admin_user, invalidate=invalidate)  # type: ignore
+        user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
+        admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore
+        admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore
         instances = []
         for subclass in ConnectionBase.__subclasses__():
             instances.extend(subclass.objects.filter(user_profile=user_profile).order_by("name"))
@@ -1426,7 +1436,7 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
             except ApiConnection.DoesNotExist:
                 return None
 
-        account = get_cached_account_for_user(user)
+        account = get_cached_account_for_user(invalidate=False, user=user)
         if not kind or not kind in [SAMKinds.SQL_CONNECTION, SAMKinds.API_CONNECTION]:
             raise SmarterValueError(f"Unsupported connection kind: {kind}")
         if kind == SAMKinds.SQL_CONNECTION:

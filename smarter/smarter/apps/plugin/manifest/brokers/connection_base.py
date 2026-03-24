@@ -178,7 +178,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
         Return the common connection status from the manifest.
         """
         if self.connection:
-            admin = get_cached_admin_user_for_account(self.connection.user_profile.cached_account)
+            admin = get_cached_admin_user_for_account(account=self.connection.user_profile.cached_account)
             if not admin:
                 raise SAMBrokerErrorNotReady(
                     f"Admin user not found for account {self.connection.user_profile.cached_account.account_number}. Cannot retrieve connection status.",

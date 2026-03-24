@@ -57,7 +57,7 @@ class Command(SmarterCommand):
             logger.error("Account with account number '%s' does not exist.", account_number)
             self.handle_completed_failure()
             return
-        user = get_cached_admin_user_for_account(account)
+        user = get_cached_admin_user_for_account(account=account)
         user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
         chatbot, _ = ChatBot.objects.get_or_create(user_profile=user_profile, name=SMARTER_EXAMPLE_CHATBOT_NAME)
         chatbot.provider = settings_defaults.LLM_DEFAULT_PROVIDER

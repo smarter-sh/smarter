@@ -266,7 +266,7 @@ def get_providers(user_profile: UserProfile) -> int:
     :return: The number of providers belonging to the user account + those belonging to the official smarter admin.
     :rtype: int
     """
-    retval = Provider.get_cached_providers_for_user(user_profile.cached_user)
+    retval = Provider.get_cached_providers_for_user(user=user_profile.cached_user)
     return len(retval)
 
 

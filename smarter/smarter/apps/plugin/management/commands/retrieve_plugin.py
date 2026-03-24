@@ -7,7 +7,6 @@ from django.core.exceptions import MultipleObjectsReturned
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_user_for_username,
-    get_cached_user_profile,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
@@ -59,7 +58,7 @@ class Command(SmarterCommand):
             )
 
         try:
-            user_profile = get_cached_user_profile(user=user, account=account)  # type: ignore
+            user_profile = UserProfile.get_cached_object(user=user, account=account)  # type: ignore
         except UserProfile.DoesNotExist as e:
             self.handle_completed_failure(
                 e,

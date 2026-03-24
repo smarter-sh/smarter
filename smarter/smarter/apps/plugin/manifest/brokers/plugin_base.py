@@ -9,10 +9,9 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
-from smarter.apps.account.models import User
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
     smarter_cached_objects,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
@@ -146,7 +145,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",
                 self.formatted_class_name,
                 PluginDataBase.__name__,
-                serializers.serialize("json", [self._orm_instance]),
+                serializers.serialize("json", [self._orm_instance]),  # type: ignore
                 self.name,
                 self.user_profile,
             )
@@ -167,7 +166,7 @@ class SAMPluginBaseBroker(AbstractBroker):
         except PluginDataBase.DoesNotExist:
             # next try with account admin
             account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
-            account_admin_user_profile = get_cached_user_profile(user=account_admin_user)  # type: ignore
+            account_admin_user_profile = UserProfile.get_cached_object(user=account_admin_user)  # type: ignore
             try:
                 logger.debug(
                     "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
@@ -442,7 +441,7 @@ class SAMPluginBaseBroker(AbstractBroker):
         self.account = None
         self.user = None
         self.account = value.account
-        self.user = get_cached_admin_user_for_account(value.account)
+        self.user = get_cached_admin_user_for_account(account=value.account)
 
     @property
     def plugin_data(self) -> Optional[PluginDataBase]:
@@ -503,7 +502,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             return self._plugin_status
         if not self.plugin_meta:
             return None
-        admin = get_cached_admin_user_for_account(self.plugin_meta.user_profile.cached_account)
+        admin = get_cached_admin_user_for_account(account=self.plugin_meta.user_profile.cached_account)
         if not admin:
             raise SAMPluginBrokerError(
                 f"No admin user found for account {self.plugin_meta.user_profile.cached_account}",

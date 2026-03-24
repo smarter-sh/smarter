@@ -165,6 +165,6 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
                 "%s.get() Request user is None or anonymous. This should not happen.", self.formatted_class_name
             )
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.plugins = PluginMeta.get_cached_plugins_for_user_profile_id(self.user_profile.id)  # type: ignore[attr-defined]
+        self.plugins = PluginMeta.get_cached_plugins_for_user_profile_id(user_profile_id=self.user_profile.id)  # type: ignore[attr-defined]
         context = {"plugins": self.plugins, "smarter_admin": smarter_cached_objects.smarter_admin}
         return self.clean_http_response(request=request, template_path=self.template_path, context=context)

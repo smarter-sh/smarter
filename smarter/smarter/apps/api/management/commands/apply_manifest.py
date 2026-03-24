@@ -9,7 +9,6 @@ from django.core.management import CommandError
 from django.test import RequestFactory
 
 from smarter.apps.account.models import User, UserProfile
-from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -144,7 +143,7 @@ class Command(SmarterCommand):
             self.handle_completed_failure(e, msg=f"User '{username}' does not exist.")
             return
 
-        user_profile = get_cached_user_profile(user=self.user)
+        user_profile = UserProfile.get_cached_object(user=self.user)
         if not isinstance(user_profile, UserProfile):
             self.handle_completed_failure(msg="No admin user profile found.")
             return

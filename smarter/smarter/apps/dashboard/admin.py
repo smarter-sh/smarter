@@ -1,4 +1,4 @@
-# pylint: disable=missing-class-docstring,missing-function-docstring
+# pylint: disable=missing-class-docstring,missing-function-docstring,W0613
 """Rebuild the admin site to restrict access to certain apps and models."""
 
 import logging
@@ -14,7 +14,6 @@ from smarter.__version__ import __version__
 from smarter.apps.account.models import ResolvedUserType, UserProfile, get_resolved_user
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
 )
 from smarter.common.helpers.console_helpers import formatted_text
 
@@ -52,7 +51,7 @@ def smarter_filter_queryset_for_user(
         logger.debug("%s: User %s is superuser, returning unfiltered queryset", logger_prefix, user)
         return qs
 
-    user_profile = get_cached_user_profile(user=user)  # type: ignore
+    user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
 
     # 2.) if user is staff then select all chatbots for the account of the user.
     if user.is_staff:
@@ -69,8 +68,8 @@ def smarter_filter_queryset_for_user(
     # user + all chatbots shared with the user which are chatbots owned
     # by an admin user of the account (could be more than one).
     logger.debug("%s: User %s is customer, filtering queryset for owned and shared objects", logger_prefix, user)
-    admin_user = get_cached_admin_user_for_account(user_profile.cached_account)  # type: ignore
-    admin_profile = get_cached_user_profile(user=admin_user)  # type: ignore
+    admin_user = get_cached_admin_user_for_account(account=user_profile.cached_account)  # type: ignore
+    admin_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
     if user_profile_filter:
         try:
             qs_owned = qs.filter(**{user_profile_filter: user_profile})
@@ -158,7 +157,7 @@ def smarter_has_read_permission(request: HttpRequest, obj=None) -> bool:
         logger.debug("%s: User %s is superuser, granting read permission", logger_prefix, user)
         return True
 
-    user_profile = get_cached_user_profile(user)  # type: ignore
+    user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
     obj_user_profile = None
     if not user_profile:
         logger.debug("%s: No user profile found for user %s", logger_prefix, user)
@@ -175,7 +174,7 @@ def smarter_has_read_permission(request: HttpRequest, obj=None) -> bool:
             logger.debug("%s: User %s is the owner of object %s, granting read permission", logger_prefix, user, obj)
             return True
 
-        obj_user_profile = get_cached_user_profile(obj_user)  # type: ignore
+        obj_user_profile = UserProfile.get_cached_object(user=obj_user)  # type: ignore
 
     if not isinstance(user_profile, UserProfile) or not isinstance(obj_user_profile, UserProfile):
         logger.debug("%s: user profiles not found for object user %s", logger_prefix, obj_user)
@@ -233,11 +232,11 @@ def smarter_has_ud_permission(request: HttpRequest, obj=None) -> bool:
     if not user.is_staff:
         logger.debug("%s: User %s is not staff", logger_prefix, user)
         return False
-    user_profile = get_cached_user_profile(user)  # type: ignore
+    user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
     if not user_profile:
         logger.debug("%s: No user profile found for user %s", logger_prefix, user)
         return False
-    obj_user_profile = get_cached_user_profile(obj_user)  # type: ignore
+    obj_user_profile = UserProfile.get_cached_object(user=obj_user)  # type: ignore
     if not obj_user_profile:
         logger.debug("%s: No user profile found for object user %s", logger_prefix, obj_user)
         return False

@@ -9,7 +9,6 @@ from smarter.apps.account.urls import AccountNamedUrls
 from smarter.common.utils import is_authenticated_request
 
 from .models import UserProfile
-from .utils import get_cached_user_profile
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ def base(request):
     }
     if is_authenticated_request(request):
         try:
-            user_profile = get_cached_user_profile(user=request.user)
+            user_profile = UserProfile.get_cached_object(user=request.user)
         except UserProfile.DoesNotExist:
             logger.warning("UserProfile.DoesNotExist: user_profile not found for user %s", request.user)
 

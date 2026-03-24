@@ -28,7 +28,7 @@ from .signals import (
     secret_saved,
     secret_updated,
 )
-from .utils import cache_invalidate, get_cached_default_account, get_cached_user_profile
+from .utils import cache_invalidate, get_cached_default_account
 
 
 def should_log(level):
@@ -51,7 +51,7 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
       if not, create one with the default account.
     """
     logger.info("%s User logged in: %s", formatted_text(f"{module_prefix}.user_logged_in()"), user)
-    if not get_cached_user_profile(user=user):
+    if not UserProfile.get_cached_object(user=user):
         logger.warning("User profile not found for user: %s", user)
         account = get_cached_default_account()
         UserProfile.objects.create(name=user.username, user=user, account=account)

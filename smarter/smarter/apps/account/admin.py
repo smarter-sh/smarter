@@ -12,8 +12,7 @@ from django.http.request import HttpRequest
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from smarter.apps.account.models import User, get_resolved_user
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
     SmarterStaffOnlyModelAdmin,
@@ -345,7 +344,7 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
             return "********"
 
         self.user = self.request.user
-        self.user_profile = get_cached_user_profile(self.user)  # type: ignore
+        self.user_profile = UserProfile.get_cached_object(user=self.user)  # type: ignore
         retval = obj.get_secret(update_last_accessed=False)
         logger.debug(
             "%s.display_value() Retrieved secret value for Secret %s. Checking permissions for user %s. Actual value: %s",
@@ -461,8 +460,8 @@ class RestrictedUserAdmin(UserAdmin):
             try:
                 if not obj:
                     return False
-                user_profile = get_cached_user_profile(request.user)  # type: ignore
-                obj_user_profile = get_cached_user_profile(obj)  # type: ignore
+                user_profile = UserProfile.get_cached_object(user=request.user)  # type: ignore
+                obj_user_profile = UserProfile.get_cached_object(user=obj)  # type: ignore
                 if user_profile.cached_account == obj_user_profile.cached_account:
                     return True
                 return False
@@ -475,7 +474,7 @@ class RestrictedUserAdmin(UserAdmin):
 
     def profile_account(self, obj) -> Optional[Account]:
         """Custom method to display the account associated with the user's profile."""
-        userprofile = get_cached_user_profile(user=obj)
+        userprofile = UserProfile.get_cached_object(user=obj)
         if userprofile:
             return userprofile.account
         return None
@@ -495,7 +494,7 @@ class RestrictedUserAdmin(UserAdmin):
         if user and user.is_superuser:
             return qs
         if user.is_staff:
-            user_profile = get_cached_user_profile(user)  # type: ignore
+            user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
             return qs.filter(
                 id__in=UserProfile.objects.filter(account=user_profile.cached_account).values_list("user_id", flat=True)
             )

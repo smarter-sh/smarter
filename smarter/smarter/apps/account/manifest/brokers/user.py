@@ -21,7 +21,6 @@ from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import (
     cache_invalidate,
     get_cached_smarter_admin_user_profile,
-    get_cached_user_profile,
 )
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -311,7 +310,7 @@ class SAMUserBroker(AbstractBroker):
             return None
 
         try:
-            self._brokered_user_profile = get_cached_user_profile(user=self.brokered_user, account=self.account)  # type: ignore
+            self._brokered_user_profile = UserProfile.get_cached_object(user=self.brokered_user, account=self.account)  # type: ignore
             logger.debug(
                 "%s.brokered_user_profile() initialized existing UserProfile: %s",
                 self.formatted_class_name,
@@ -1027,7 +1026,7 @@ class SAMUserBroker(AbstractBroker):
             ) from e
 
         try:
-            self._user_profile = get_cached_user_profile(user=self._user, account=self.account)
+            self._user_profile = UserProfile.get_cached_object(user=self._user, account=self.account)
         except UserProfile.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {self.username}. User is not associated with your account",

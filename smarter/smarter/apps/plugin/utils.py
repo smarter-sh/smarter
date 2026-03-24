@@ -9,25 +9,19 @@ import yaml
 from django.core.management import call_command
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import (
-    get_cached_admin_user_for_account,
-    get_cached_user_profile,
-    smarter_cached_objects,
-)
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .models import PluginMeta
 from .plugin.utils import PluginExamples
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -86,6 +80,7 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             print("Example plugins created successfully.")
 
     """
+    # pylint: disable=W0621
     logger_prefix = formatted_text(f"{__name__}.add_example_plugins()")
     logger.debug("%s.add_example_plugins Adding example plugins for user profile: %s", logger_prefix, user_profile)
 
