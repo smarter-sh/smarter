@@ -1044,7 +1044,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[models.Model]
         """
-        logger_prefix = formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()")
+        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()")
         logger.debug(
             "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s",
             logger_prefix,

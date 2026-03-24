@@ -491,9 +491,9 @@ class Provider(MetaDataWithOwnershipModel):
             logger_prefix,
             pk,
             name,
-            user.username if user else None,
-            user_profile.id if user_profile else None,
-            account.id if account else None,
+            user,
+            user_profile,
+            account,
         )
         retval = super().get_cached_object(
             invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account
