@@ -16,10 +16,9 @@ from smarter.apps.account.manifest.models.account.spec import (
     SAMAccountSpecConfig,
 )
 from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import (
-    cache_invalidate,
     smarter_cached_objects,
 )
 from smarter.lib import json
@@ -588,6 +587,11 @@ class SAMAccountBroker(AbstractBroker):
         """
         return SAMAccount
 
+    def cache_invalidations(self) -> None:
+        Account.get_cached_object(invalidate=True, pk=self.brokered_account.id)  # type: ignore
+        UserProfile.get_cached_object(invalidate=True, account=self.brokered_account)
+        return super().cache_invalidations()
+
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example manifest for the Smarter API Account.
@@ -777,7 +781,6 @@ class SAMAccountBroker(AbstractBroker):
             tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
             self.brokered_account.tags.set(tags)
             self.brokered_account.refresh_from_db()
-            cache_invalidate(user=self.user, account=self.brokered_account)  # type: ignore
             logger.debug(
                 "%s.apply() Saved %s with ID %s: %s",
                 self.formatted_class_name,
@@ -788,6 +791,7 @@ class SAMAccountBroker(AbstractBroker):
         except Exception as e:
             tb = traceback.format_exc()
             raise SAMBrokerError(message=f"Error in {command}: {e}\n{tb}", thing=self.kind, command=command) from e
+        self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:

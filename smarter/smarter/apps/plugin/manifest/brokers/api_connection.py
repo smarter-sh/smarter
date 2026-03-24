@@ -722,6 +722,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def cache_invalidations(self) -> None:
+        if self.connection:
+            ApiConnection.get_cached_object(invalidate=True, pk=self.connection.id)
+        super().cache_invalidations()
+
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve a list of ApiConnection objects as a journaled JSON response.
@@ -918,6 +923,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+        self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:

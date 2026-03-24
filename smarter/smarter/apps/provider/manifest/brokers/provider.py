@@ -604,6 +604,7 @@ class SAMProviderBroker(AbstractBroker):
                 thing=self.kind,
                 command=command,
             ) from e
+        self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

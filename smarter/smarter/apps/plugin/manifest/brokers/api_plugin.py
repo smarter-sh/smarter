@@ -587,6 +587,10 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def cache_invalidations(self) -> None:
+        PluginDataApi.get_cached_object(invalidate=True, plugin=self.plugin)  # type: ignore
+        super().cache_invalidations()
+
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response containing an example API plugin manifest.
@@ -758,6 +762,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                 self.plugin.save()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
+            self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
         try:
             raise SAMBrokerErrorNotReady(

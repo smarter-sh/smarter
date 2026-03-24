@@ -1,7 +1,7 @@
 # pylint: disable=W0212
 """Admin configuration for the chatbot app."""
 
-from smarter.apps.account.utils import get_resolved_user
+from smarter.apps.account.models import get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
     smarter_filter_queryset_for_user,
@@ -47,7 +47,7 @@ class ChatBotAdmin(SmarterCustomerModelAdmin):
     ordering = ["-updated_at"]
 
     def ready(self, obj: ChatBot) -> bool:
-        return obj.ready()
+        return obj.ready
 
     def mode(self, obj: ChatBot) -> str:
         return obj.mode(obj.url)
