@@ -650,10 +650,34 @@ class SAMChatbotBroker(AbstractBroker):
     ###########################################################################
     def cache_invalidations(self) -> None:
         """
-        Handle broker specific cache invalidation logic.
+        Handle broker specific cache invalidation logic. We should invalidate
+        any cached objects that are related to the ChatBot when any mutation
+        occurs.
+
+        .. returns: None
+        .. rtype: None
         """
-        ChatBot.get_cached_objects(user_profile=self.user_profile, invalidate=True)
+
+        # invalidate the ChatBot cache itself.
         ChatBot.get_cached_object(pk=self.chatbot.id, invalidate=True)
+
+        # invalidate anything else in which the chatbot is part of. this could
+        # include listviews, the plugins, functions and api keys.
+
+        ChatBot.get_cached_objects(user_profile=self.user_profile, invalidate=True)
+
+        chatbot_functions = ChatBotFunctions.objects.filter(chatbot=self.chatbot)
+        for chatbot_function in chatbot_functions:
+            ChatBotFunctions.get_cached_object(pk=chatbot_function.id, invalidate=True)
+
+        chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot)
+        for chatbot_plugin in chatbot_plugins:
+            ChatBotPlugin.get_cached_object(pk=chatbot_plugin.id, invalidate=True)
+
+        chatbot_api_keys = ChatBotAPIKey.objects.filter(chatbot=self.chatbot)
+        for chatbot_api_key in chatbot_api_keys:
+            ChatBotAPIKey.get_cached_object(pk=chatbot_api_key.id, invalidate=True)
+
         return super().cache_invalidations()
 
     @property

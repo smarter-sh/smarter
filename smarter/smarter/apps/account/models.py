@@ -884,6 +884,7 @@ class UserProfile(MetaDataModel):
         name: Optional[str] = None,
         user: Optional[User] = None,
         account: Optional[Account] = None,
+        invalidate: Optional[bool] = False,
     ) -> Optional["UserProfile"]:
         """
         Retrieve a model instance by primary key or name, using caching to
@@ -940,12 +941,16 @@ class UserProfile(MetaDataModel):
                 )
                 return cls.objects.prefetch_related("tags").select_related("user", "account").filter(user=user).first()
 
+        if invalidate:
+            _get_object_by_user_and_account.invalidate(user=user, account=account)
+            _get_object_by_user.invalidate(user=user)
+
         if user or account:
             if user and account:
                 return _get_object_by_user_and_account(user, account)
             if user:
                 return _get_object_by_user(user)
-        return super().get_cached_object(pk=pk, name=name)  # type: ignore[return-value]
+        return super().get_cached_object(pk=pk, name=name, invalidate=invalidate)  # type: ignore[return-value]
 
     def __str__(self):
         return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
