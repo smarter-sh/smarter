@@ -5,14 +5,26 @@
 {{ block.super }}
 
 <style>
- .manifest-drop-zone {
+ div.file-open-command-button {
+   border: 2px solid #ccc;
+   border-radius: 5px;
+   padding: 10px;
+ }
+ div.manifest-drop-zone {
+   padding: 10px;
    border: 2px dashed #ccc;
    border-radius: 5px;
-   padding: 20px;
-   text-align: center;
-   color: #999;
    font-size: 16px;
    transition: border-color 0.3s, background-color 0.3s;
+   min-height: 500px;
+   height: 75vh;
+ }
+ div.manifest-drop-zone span {
+   pointer-events: none;
+   font-family: Arial, sans-serif;
+   font-size: 84px;
+   font-weight: bold;
+   color: #999;
  }
 </style>
 {% endblock %}
@@ -28,11 +40,22 @@
         <!--begin::Col-->
         <div class="col-xl-8 mb-5 mb-xl-10">
           <!--begin::Row-->
-          <div class="row g-5 g-xl-10 mb-l-10">
-            <h3 class="pt-5">Apply Manifest</h3>
+          <div class="g-5 g-xl-10 mb-l-10">
+            <h3 class="pt-5">Apply Smarter YAML Manifest</h3>
+            <!--begin:: File Open -->
+            <div class="file-open-command-button mt-5 mb-5">
+              <div class="col-10"></div>
+              <div class="col-2">
+                <input type="file" id="fileInput" style="display: none;" accept=".yaml,.yml,.json" />
+                <a class="btn btn-sm btn-primary justify-content-right" href="#" onclick="document.getElementById('fileInput').click(); return false;">
+                  File Open
+                </a>
+              </div>
+            </div>
+            <!--end:: File Open -->
             <!--begin:: Drop Zone -->
-            <div class="manifest-drop-zone">
-              Drop zone goes here.
+            <div id="drop-zone-overlay" class="manifest-drop-zone d-flex justify-content-center align-items-center">
+              <span>Drop Zone</span>
             </div>
             <!--end:: Drop Zone -->
           </div>
@@ -45,4 +68,10 @@
     <!--end::Content container-->
   </div>
 </section>
+{% endblock %}
+
+{% block javascript_extra %}
+{{ block.super }}
+  <script src="{% static 'js/handle-file-drop.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
 {% endblock %}
