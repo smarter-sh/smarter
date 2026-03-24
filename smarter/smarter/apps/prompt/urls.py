@@ -95,7 +95,7 @@ urlpatterns = [
         "chatbots/<str:hashed_id>/config/", ChatConfigView.as_view(), name=PromptReverseViews.prompt_config_by_hashed_id
     ),
     path(
-        "/manifest/apply/",
+        "manifest/apply/",
         ManifestDropZoneView.as_view(),
         name=PromptReverseViews.apply,
     ),
