@@ -15,6 +15,7 @@ from django.forms.models import model_to_dict
 from django.utils.timezone import is_aware, make_aware
 from taggit.managers import TaggableManager
 
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
@@ -84,7 +85,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     HASH_SUFFIX = "x"
     HASH_FLOOR = 1000000
     _hash_regex = None
-    cache_expiration = 60  # 60 seconds
+    cache_expiration = smarter_settings.cache_expiration
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, editable=False, db_index=True)
     """
