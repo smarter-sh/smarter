@@ -80,7 +80,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .signals import chat_config_invoked, chat_session_invoked
 
 MAX_RETURNED_PLUGINS = 10
-PROMPT_LIST_CACHE_TIMEOUT = 15
+PROMPT_LIST_CACHE_TIMEOUT = smarter_settings.cache_expiration
 
 
 def should_log(level):

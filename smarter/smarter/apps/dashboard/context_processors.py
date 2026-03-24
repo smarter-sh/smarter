@@ -634,3 +634,27 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     get_connections(invalidate=True, user_profile=user_profile)
     get_secrets(invalidate=True, user_profile=user_profile)
     get_providers(invalidate=True, user_profile=user_profile)
+
+    # page cache invalidations
+    # dashboard:dashboard
+    #
+    # resolve the reverse url, create an authenticated request
+    # and call the invalidate_view method with the request and user_profile
+    from django.test import RequestFactory
+    from django.urls import reverse
+
+    from smarter.apps.dashboard.views.dashboard import DashboardView
+    from smarter.lib.django.views import SmarterAuthenticatedWebView
+
+    factory = RequestFactory()
+    url = reverse("dashboard:dashboard")
+    request = factory.get(url)
+
+    logger.debug(
+        "%s.cache_invalidations() Created invalidation request for URL %s: %s",
+        logger_prefix_cache_invalidations,
+        url,
+        request,
+    )
+    request.user = user_profile.user
+    DashboardView.dispatch.invalidate(request)

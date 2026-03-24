@@ -983,6 +983,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                     ModelClass.__name__,
                     self._orm_meta_instance,
                 )
+        except ModelClass.MultipleObjectsReturned:
+            logger.error(
+                "%s.orm_meta_instance_setter() - Multiple %s instances found for name '%s' and user_profile '%s'. Cannot determine which one to use.",
+                self.abstract_broker_logger_prefix,
+                ModelClass.__name__,
+                self.name,
+                self.user_profile,
+            )
+            return None
         except ModelClass.DoesNotExist:
             account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
             account_admin_user_profile = UserProfile.get_cached_object(user=account_admin_user)  # type: ignore
@@ -1004,6 +1013,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                     self.name,
                     account_admin_user_profile,
                 )
+            except ModelClass.MultipleObjectsReturned:
+                logger.error(
+                    "%s.orm_meta_instance_setter() - Multiple %s instances found for name '%s' and account admin user_profile '%s'. Cannot determine which one to use.",
+                    self.abstract_broker_logger_prefix,
+                    ModelClass.__name__,
+                    self.name,
+                    account_admin_user_profile,
+                )
+                return None
             except ModelClass.DoesNotExist:
                 # finally try with Smarter platform admin user_profile
                 smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
@@ -1025,6 +1043,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         self.name,
                         smarter_admin_user_profile,
                     )
+                except ModelClass.MultipleObjectsReturned:
+                    logger.error(
+                        "%s.orm_meta_instance_setter() - Multiple %s instances found for name '%s' and Smarter admin user_profile '%s'. Cannot determine which one to use.",
+                        self.abstract_broker_logger_prefix,
+                        ModelClass.__name__,
+                        self.name,
+                        smarter_admin_user_profile,
+                    )
+                    return None
                 except ModelClass.DoesNotExist:
                     logger.warning(
                         "%s.orm_meta_instance_setter() - %s does not exist for %s owned by %s",
@@ -1117,6 +1144,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.name,
                 self.user_profile,
             )
+        except ModelClass.MultipleObjectsReturned:
+            logger.error(
+                "%s.orm_instance() - Multiple %s instances found for name '%s' and user_profile '%s'. Cannot determine which one to use.",
+                self.abstract_broker_logger_prefix,
+                ModelClass.__name__,
+                self.name,
+                self.user_profile,
+            )
+            return None
         except ModelClass.DoesNotExist:
             # next try with account admin user_profile
             account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
@@ -1139,6 +1175,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                     self.name,
                     account_admin_user_profile,
                 )
+            except ModelClass.MultipleObjectsReturned:
+                logger.error(
+                    "%s.orm_instance() - Multiple %s instances found for name '%s' and account admin user_profile '%s'. Cannot determine which one to use.",
+                    self.abstract_broker_logger_prefix,
+                    ModelClass.__name__,
+                    self.name,
+                    account_admin_user_profile,
+                )
+                return None
             except ModelClass.DoesNotExist:
                 # finally try with Smarter platform admin user_profile
                 smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
@@ -1160,6 +1205,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         self.name,
                         smarter_admin_user_profile,
                     )
+                except ModelClass.MultipleObjectsReturned:
+                    logger.error(
+                        "%s.orm_instance() - Multiple %s instances found for name '%s' and Smarter admin user_profile '%s'. Cannot determine which one to use.",
+                        self.abstract_broker_logger_prefix,
+                        ModelClass.__name__,
+                        self.name,
+                        smarter_admin_user_profile,
+                    )
+                    return None
                 except ModelClass.DoesNotExist:
                     logger.warning(
                         "%s.orm_instance() - %s does not exist for %s owned by %s",
@@ -1342,6 +1396,12 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         )
         Account.get_cached_objects(invalidate=True)  # type: ignore
         UserProfile.get_cached_objects(invalidate=True)  # type: ignore
+
+        # This should be the very last thing that happens. This Django
+        # signal will potentially trigger a wide variety of cache invalidations
+        # in outer concentric layers of the application, so we want to ensure
+        # that all SAM resources have already invalidated in order to avoid
+        # unpredictable downstream behavior.
         cache_invalidate.send(sender=self.__class__, user_profile=self.user_profile)
 
     # mcdaniel: there's a reason why this is not an abstract method, but i forget why.

@@ -16,7 +16,8 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
+from smarter.lib.cache import lazy_cache
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -31,6 +32,8 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(__name__)
+logger_prefix_invalidations = formatted_text_blue(f"{__name__}.smarter_cache_page_by_user.invalidate()")
 
 register = template.Library()
 cache_prefix = f"{__name__}.smarter_cache_page_by_user"
@@ -70,16 +73,37 @@ def smarter_cache_page_by_user(timeout):
     def decorator(view_func):
 
         @wraps(view_func)
-        def _wrapped_view(request, *args, **kwargs):
+        def wrapper(request, *args, **kwargs):
             if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SMARTER_PAGE_CACHING):
                 return view_func(request, *args, **kwargs)
+            path = str(request.path).replace("/", ".").strip(".")
             if hasattr(request, "user") and request.user.is_authenticated:
-                key_prefix = f"{cache_prefix}.user_{request.user.id}"
+                key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"
             else:
-                key_prefix = f"{cache_prefix}.user_anon"
+                key_prefix = f"{cache_prefix}.user_anon.{path}"
+            logger.debug("%s - %s with cache key_prefix: %s and timeout %s", logger_prefix, path, key_prefix, timeout)
             return cache_page(timeout, key_prefix=key_prefix)(view_func)(request, *args, **kwargs)
 
-        return _wrapped_view
+        def invalidate(request: HttpRequest, *args, **kwargs):
+            if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SMARTER_PAGE_CACHING):
+                return
+            logger.debug(
+                "%s called with request: %s, args: %s, kwargs: %s", logger_prefix_invalidations, request, args, kwargs
+            )
+            if request:
+                path = str(request.path).replace("/", ".").strip(".")
+                if hasattr(request, "user") and request.user.is_authenticated:
+                    key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"
+                else:
+                    key_prefix = f"{cache_prefix}.user_anon.{path}"
+                logger.debug("%s searching cache for key_prefix: %s", logger_prefix_invalidations, key_prefix)
+                hit = lazy_cache.get(key_prefix)
+                if hit is not None:
+                    lazy_cache.delete(key_prefix)
+                    logger.info("%s Cache invalidated for key_prefix: %s", logger_prefix_invalidations, key_prefix)
+
+        wrapper.invalidate = invalidate
+        return wrapper
 
     return decorator
 

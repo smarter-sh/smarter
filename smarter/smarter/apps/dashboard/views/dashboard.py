@@ -12,6 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
 
 from smarter.apps.dashboard.models import EmailContactList
+from smarter.common.conf import smarter_settings
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json
@@ -22,7 +23,7 @@ from smarter.lib.django.views import (
     smarter_cache_page_by_user,
 )
 
-DASHBOARD_CACHE_TIMEOUT = 60  # seconds
+DASHBOARD_CACHE_TIMEOUT = smarter_settings.cache_expiration
 
 
 # ------------------------------------------------------------------------------
@@ -102,6 +103,8 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
     template_path = "dashboard/authenticated.html"
 
     def get(self, request: WSGIRequest, *args, **kwargs):
+        if kwargs.get("invalidate_cache", False):
+            self.invalidate(request=request, *args, **kwargs)
         if is_authenticated_request(request):
             return super().get(request, *args, **kwargs)
         return redirect(reverse("login_view"))
