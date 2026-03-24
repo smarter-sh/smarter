@@ -142,3 +142,15 @@ Example::
 
     broker_ready.send(sender=self.__class__, broker=self)
 """
+
+cache_invalidate = Signal()
+"""
+Signal sent to trigger cache invalidation.
+
+Arguments:
+    None
+
+Example::
+
+    cache_invalidate.send(sender=self.__class__)
+"""

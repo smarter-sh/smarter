@@ -633,6 +633,10 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches when the manifest or plugin data changes.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         PluginDataStatic.get_cached_object(invalidate=True, plugin=self.plugin_meta)  # type: ignore
         return super().cache_invalidations()
 

@@ -625,6 +625,10 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches when the manifest or plugin data changes.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         if self.plugin:
             PluginDataSql.get_cached_object(invalidate=True, plugin=self.plugin)  # type: ignore
         return super().cache_invalidations()

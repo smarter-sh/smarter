@@ -207,6 +207,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
              :class:`SAMConnectionBaseBroker`
              :meth:`SAMConnectionBaseBroker.apply`
         """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         if self.connection:
             ConnectionBase.get_cached_object(invalidate=True, pk=self.connection.id)  # type: ignore
         return super().cache_invalidations()

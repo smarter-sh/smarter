@@ -26,13 +26,14 @@ from smarter.apps.account.models import (
     User,
     UserProfile,
 )
+from smarter.apps.account.signals import cache_invalidate
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
     smarter_cached_objects,
 )
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.mixins import SmarterConverterMixin
@@ -411,6 +412,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
     # Class Instance Properties
     ###########################################################################
     @property
+    def abstract_broker_logger_cache_invalidation_prefix(self) -> str:
+        """Return the logger prefix for the AbstractBroker cache invalidation.
+
+        :return: The logger prefix for the AbstractBroker.
+        :rtype: str
+        """
+        return formatted_text_blue(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+
+    @property
     def abstract_broker_logger_prefix(self) -> str:
         """Return the logger prefix for the AbstractBroker.
 
@@ -427,6 +437,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :rtype: str
         """
         return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+
+    @property
+    def formatted_class_name_cache_invalidations(self) -> str:
+        """Return the logger prefix for the AbstractBroker cache invalidations.
+
+        :return: The logger prefix for the AbstractBroker cache invalidations.
+        :rtype: str
+        """
+        return formatted_text_blue(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
 
     @property
     def is_ready_abstract_broker(self) -> bool:
@@ -1316,8 +1335,14 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         """
         Handle broker specific cache invalidation logic.
         """
+        logger.debug(
+            "%s.cache_invalidations() called for %s",
+            self.abstract_broker_logger_cache_invalidation_prefix,
+            self.user_profile,
+        )
         Account.get_cached_objects(invalidate=True)  # type: ignore
         UserProfile.get_cached_objects(invalidate=True)  # type: ignore
+        cache_invalidate.send(sender=self.__class__, user_profile=self.user_profile)
 
     # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:

@@ -659,6 +659,7 @@ class SAMChatbotBroker(AbstractBroker):
         .. returns: None
         .. rtype: None
         """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
 
         # 1.) invalidate the ChatBot cache itself.
         # -----------------------------

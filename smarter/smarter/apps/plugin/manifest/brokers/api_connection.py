@@ -723,6 +723,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches when the manifest or connection data changes.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+
         if self.connection:
             ApiConnection.get_cached_object(invalidate=True, pk=self.connection.id)
         super().cache_invalidations()

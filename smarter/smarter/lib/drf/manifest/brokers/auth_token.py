@@ -429,6 +429,10 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             )
 
     def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches when the manifest or SmarterAuthToken data changes.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         SmarterAuthToken.get_cached_object(invalidate=True, user=self.user, name=self.name)  # type: ignore
         return super().cache_invalidations()
 

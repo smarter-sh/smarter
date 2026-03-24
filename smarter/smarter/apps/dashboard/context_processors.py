@@ -69,7 +69,6 @@ from smarter.apps.account.models import (
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
-from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.plugin.models import (
     ConnectionBase,
     PluginMeta,
@@ -77,7 +76,7 @@ from smarter.apps.plugin.models import (
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.lib.cache import cache_results
 
 if TYPE_CHECKING:
@@ -88,9 +87,10 @@ CACHE_TIMEOUT = 60  # 1 minute
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__)
+logger_prefix_cache_invalidations = formatted_text_blue(f"{__name__}.cache_invalidations()")
 
 
-def get_pending_deployments(user_profile: UserProfile) -> int:
+def get_pending_deployments(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the number of chatbot deployments that are pending for the specified user.
 
@@ -101,11 +101,18 @@ def get_pending_deployments(user_profile: UserProfile) -> int:
     The result is cached for a short duration to minimize database load and
     improve dashboard responsiveness.
 
-    :param user: The user whose pending deployments are to be counted.
-    :type user: User
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :param user_profile: UserProfile instance. The user profile whose pending deployments are to be counted.
+    :type user_profile: UserProfile
     :return: The number of pending chatbot deployments for the user.
     :rtype: int
     """
+    logger.debug(
+        "%s.get_pending_deployments() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
 
     @cache_results(timeout=CACHE_TIMEOUT)
     def _get_pending_deployments(user_profile_id: int) -> int:
@@ -116,10 +123,13 @@ def get_pending_deployments(user_profile: UserProfile) -> int:
         )
         return ChatBot.objects.filter(user_profile__id=user_profile_id, deployed=False).count() or 0
 
+    if invalidate and user_profile:
+        _get_pending_deployments.invalidate(user_profile.id)  # type: ignore
+
     return _get_pending_deployments(user_profile.id)
 
 
-def get_chatbots(user_profile: UserProfile) -> int:
+def get_chatbots(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of chatbots associated with the specified user.
 
@@ -130,17 +140,24 @@ def get_chatbots(user_profile: UserProfile) -> int:
     The result is cached for a short duration to reduce database queries and
     improve dashboard performance.
 
-    :param user: The user whose chatbots are to be counted.
-    :type user: User
+    :param user_profile: UserProfile instance. The user profile whose chatbots are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+
     :return: The number of chatbots belonging to the user.
     :rtype: int
     """
-
-    chatbots = get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id)
+    logger.debug(
+        "%s.get_chatbots() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
+    chatbots = ChatBot.get_cached_objects(invalidate=invalidate, user_profile=user_profile)
     return len(chatbots)
 
 
-def get_plugins(user_profile: UserProfile) -> int:
+def get_plugins(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of plugins associated with the specified user.
 
@@ -151,17 +168,23 @@ def get_plugins(user_profile: UserProfile) -> int:
     The result is cached for a short duration to reduce database queries and
     improve dashboard performance.
 
-    :param user: The user whose plugins are to be counted.
-    :type user: User
+    :param user_profile: UserProfile instance. The user profile whose plugins are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :return: The number of plugins belonging to the user.
     :rtype: int
     """
-
-    retval = PluginMeta.get_cached_plugins_for_user_profile_id(user_profile_id=user_profile.id)
+    logger.debug(
+        "%s.get_plugins() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
+    retval = PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=invalidate, user_profile_id=user_profile.id)
     return len(retval)
 
 
-def get_api_keys(user_profile: UserProfile) -> int:
+def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of API keys associated with the specified user.
 
@@ -172,21 +195,31 @@ def get_api_keys(user_profile: UserProfile) -> int:
     The result is cached for a short duration to reduce database queries and
     improve dashboard performance.
 
-    :param user: The user whose API keys are to be counted.
-    :type user: User
+    :param user_profile: UserProfile instance. The user profile whose API keys are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :return: The number of API keys belonging to the user.
     :rtype: int
     """
+    logger.debug(
+        "%s.get_api_keys() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
 
     @cache_results(timeout=CACHE_TIMEOUT)
     def _get_api_keys(user_profile_id: int) -> int:
         logger.debug("%s.get_api_keys() Fetching API keys for user_profile_id=%s", logger_prefix, user_profile_id)
         return ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
 
+    if invalidate and user_profile:
+        _get_api_keys.invalidate(user_profile.id)  # type: ignore
+
     return _get_api_keys(user_profile.id)
 
 
-def get_custom_domains(user_profile: UserProfile) -> int:
+def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of custom domains associated with the specified user.
 
@@ -197,11 +230,18 @@ def get_custom_domains(user_profile: UserProfile) -> int:
     The result is cached for a short duration to reduce database queries and
     improve dashboard performance.
 
-    :param user: The user whose custom domains are to be counted.
-    :type user: User
+    :param user_profile: UserProfile instance. The user profile whose custom domains are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :return: The number of custom domains belonging to the user.
     :rtype: int
     """
+    logger.debug(
+        "%s.get_custom_domains() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
 
     @cache_results(timeout=CACHE_TIMEOUT)
     def _get_custom_domains(user_profile_id: int) -> int:
@@ -210,10 +250,13 @@ def get_custom_domains(user_profile: UserProfile) -> int:
         )
         return ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
 
+    if invalidate and user_profile:
+        _get_custom_domains.invalidate(user_profile.id)  # type: ignore
+
     return _get_custom_domains(user_profile.id)
 
 
-def get_connections(user_profile: UserProfile) -> int:
+def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of API and SQL connections associated with the specified user.
 
@@ -222,17 +265,24 @@ def get_connections(user_profile: UserProfile) -> int:
     The result is cached for a short duration to reduce database queries and
     improve dashboard performance.
 
-    :param user: The user whose connections are to be counted.
-    :type user: User
+    :param user_profile: UserProfile instance. The user profile whose connections are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :return: The number of API and SQL connections belonging to the user.
     :rtype: int
     """
-    retval = ConnectionBase.get_cached_connections_for_user(user_profile.cached_user)
+    logger.debug(
+        "%s.get_connections() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
+    retval = ConnectionBase.get_cached_connections_for_user(invalidate=invalidate, user=user_profile.cached_user) or []
     return len(retval)
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_secrets(user_profile: UserProfile) -> int:
+def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of secrets associated with the specified user's profile.
 
@@ -247,12 +297,13 @@ def get_secrets(user_profile: UserProfile) -> int:
     :return: The number of secrets belonging to the user profile.
     :rtype: int
     """
-    logger.debug("%s.get_secrets() Fetching secrets for user_profile_id=%s", logger_prefix, user_profile.id)
-    return Secret.objects.filter(user_profile=user_profile).count() if user_profile else 0
+    logger.debug(
+        "%s.get_secrets() called with invalidate=%s for user_profile_id=%s", logger_prefix, invalidate, user_profile.id
+    )
+    return Secret.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
-def get_providers(user_profile: UserProfile) -> int:
+def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of providers associated with the specified user's account.
 
@@ -266,7 +317,13 @@ def get_providers(user_profile: UserProfile) -> int:
     :return: The number of providers belonging to the user account + those belonging to the official smarter admin.
     :rtype: int
     """
-    retval = Provider.get_cached_providers_for_user(user=user_profile.cached_user)
+    logger.debug(
+        "%s.get_providers() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile.id,
+    )
+    retval = Provider.get_cached_providers_for_user(invalidate=invalidate, user=user_profile.cached_user) or []
     return len(retval)
 
 
@@ -283,6 +340,7 @@ def file_drop_zone(request: "HttpRequest") -> dict:
     :return: A dictionary containing the file drop zone context variable.
     :rtype: dict
     """
+    logger.debug("%s.file_drop_zone() called.", logger_prefix)
 
     @cache_results(timeout=CACHE_TIMEOUT)
     def get_cached_file_drop_zone_context() -> dict:
@@ -322,6 +380,7 @@ def base(request: "HttpRequest") -> dict:
     :return: A dictionary containing the dashboard context variables.
     :rtype: dict
     """
+    logger.debug("%s.base() called.", logger_prefix)
     user = request.user
     resolved_user = get_resolved_user(user)
     user_profile: Optional[UserProfile] = None
@@ -430,6 +489,7 @@ def branding(request: "HttpRequest") -> dict:
 
     This processor is intended to be added to the ``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings, making the ``branding`` context variable available in all templates rendered by Django that inherit from ``base.html``.
     """
+    logger.debug("%s.branding() called.", logger_prefix)
 
     @cache_results(timeout=CACHE_TIMEOUT)
     def get_cached_context() -> dict:
@@ -511,7 +571,7 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
         {{ footer.plans_url }}
         {{ footer.contact_url }}
     """
-
+    logger.debug("%s.footer() called.", logger_prefix)
     context = {
         "footer": {
             "about_url": smarter_settings.marketing_site_url,
@@ -565,4 +625,25 @@ def prompt_list_context(request: "HttpRequest") -> dict:
     DEPRECATED: This context processor is slated for removal in future releases as
     the underlying issues with Wagtail integration are resolved.
     """
+    logger.debug("%s.prompt_list_context() called.", logger_prefix)
     return {"prompt_list": {"smarter_admin": smarter_cached_objects.smarter_admin, "chatbot_helpers": []}}
+
+
+def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
+    """
+    Invalidates caches for all resource-counting context processors.
+
+     This function is intended to be called after any operation that modifies the underlying data for chatbots, plugins, API keys, custom domains, connections, secrets, or providers. By invalidating the caches for all relevant context processors, it ensures that subsequent requests to the dashboard will reflect the most up-to-date information without stale cache interference.
+
+     The function calls the invalidate method on each cached context processor, passing the appropriate user profile when necessary. This centralized cache invalidation approach helps maintain data consistency across the dashboard while minimizing redundant database queries.
+    """
+    logger.debug("%s called for %s", logger_prefix_cache_invalidations, user_profile)
+
+    get_pending_deployments(invalidate=True, user_profile=user_profile)
+    get_chatbots(invalidate=True, user_profile=user_profile)
+    get_plugins(invalidate=True, user_profile=user_profile)
+    get_api_keys(invalidate=True, user_profile=user_profile)
+    get_custom_domains(invalidate=True, user_profile=user_profile)
+    get_connections(invalidate=True, user_profile=user_profile)
+    get_secrets(invalidate=True, user_profile=user_profile)
+    get_providers(invalidate=True, user_profile=user_profile)
