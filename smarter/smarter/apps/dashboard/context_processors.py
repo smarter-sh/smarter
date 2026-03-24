@@ -57,6 +57,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urljoin
 
+from django.test import RequestFactory
 from django.urls import reverse
 
 from smarter.__version__ import __version__
@@ -626,6 +627,9 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     """
     logger.debug("%s called for %s", logger_prefix_cache_invalidations, user_profile)
 
+    ###########################################################################
+    # context invalidations
+    ###########################################################################
     get_pending_deployments(invalidate=True, user_profile=user_profile)
     get_chatbots(invalidate=True, user_profile=user_profile)
     get_plugins(invalidate=True, user_profile=user_profile)
@@ -635,17 +639,9 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     get_secrets(invalidate=True, user_profile=user_profile)
     get_providers(invalidate=True, user_profile=user_profile)
 
+    ###########################################################################
     # page cache invalidations
-    # dashboard:dashboard
-    #
-    # resolve the reverse url, create an authenticated request
-    # and call the invalidate_view method with the request and user_profile
-    from django.test import RequestFactory
-    from django.urls import reverse
-
-    from smarter.apps.dashboard.views.dashboard import DashboardView
-    from smarter.lib.django.views import SmarterAuthenticatedWebView
-
+    ###########################################################################
     factory = RequestFactory()
     url = reverse("dashboard:dashboard")
     request = factory.get(url)
@@ -657,4 +653,21 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
         request,
     )
     request.user = user_profile.user
+    # pylint: disable=C0415
+    from smarter.apps.dashboard.views.dashboard import DashboardView
+
     DashboardView.dispatch.invalidate(request)
+
+    url = reverse("prompt_workbench:listview")
+    request = factory.get(url)
+    logger.debug(
+        "%s.cache_invalidations() Created invalidation request for URL %s: %s",
+        logger_prefix_cache_invalidations,
+        url,
+        request,
+    )
+    request.user = user_profile.user
+    # pylint: disable=C0415
+    from smarter.apps.prompt.views import PromptListView
+
+    PromptListView.dispatch.invalidate(request)
