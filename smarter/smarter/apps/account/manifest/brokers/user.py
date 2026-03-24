@@ -19,7 +19,6 @@ from smarter.apps.account.models import AccountContact, User, UserProfile
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import (
-    cache_invalidate,
     get_cached_smarter_admin_user_profile,
 )
 from smarter.lib import json
@@ -764,6 +763,10 @@ class SAMUserBroker(AbstractBroker):
         """
         return SAMUser
 
+    def cache_invalidations(self) -> None:
+        UserProfile.get_cached_object(invalidate=True, user=self.brokered_user, account=self.account)  # type: ignore
+        return super().cache_invalidations()
+
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return the SAM `User` model associated with the Smarter API User manifest.
@@ -964,7 +967,6 @@ class SAMUserBroker(AbstractBroker):
                 self.brokered_user.refresh_from_db()
                 self.brokered_user_profile.save()
                 self.brokered_user_profile.refresh_from_db()
-                cache_invalidate(user=self.brokered_user, account=self.account)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             raise SAMUserBrokerError(
@@ -972,6 +974,7 @@ class SAMUserBroker(AbstractBroker):
                 thing=self.kind,
                 command=command,
             ) from e
+        self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:

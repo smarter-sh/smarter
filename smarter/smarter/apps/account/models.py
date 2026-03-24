@@ -908,6 +908,7 @@ class UserProfile(MetaDataModel):
         name: Optional[str] = None,
         user: Optional[User] = None,
         account: Optional[Account] = None,
+        username: Optional[str] = None,
     ) -> Optional["UserProfile"]:
         """
         Retrieve a model instance by primary key or name, using caching to
@@ -931,14 +932,26 @@ class UserProfile(MetaDataModel):
         """
         logger_prefix = formatted_text(__name__ + ".UserProfile.get_cached_object()")
         logger.debug(
-            "%s called with pk: %s, name: %s, user: %s, account: %s, invalidate: %s",
+            "%s called with pk: %s, name: %s, user: %s, username: %s, account: %s, invalidate: %s",
             logger_prefix,
             pk,
             name,
             user,
+            username,
             account,
             invalidate,
         )
+
+        if username and not user:
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                logger.error(
+                    "%s.get_cached_object() No user found with username %s.",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    username,
+                )
+                return None
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_user_and_account(user: User, account: Account) -> Optional["UserProfile"]:
@@ -1016,6 +1029,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         name: Optional[str] = None,
         user: Optional[User] = None,
         user_profile: Optional[UserProfile] = None,
+        username: Optional[str] = None,
         account: Optional[Account] = None,
     ) -> Optional[models.Model]:
         """
@@ -1046,14 +1060,19 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()")
         logger.debug(
-            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s",
+            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
             logger_prefix,
             pk,
             name,
             user,
             user_profile,
+            username,
             account,
         )
+
+        if username and not user and not user_profile:
+            user_profile = UserProfile.get_cached_object(invalidate=invalidate, username=username)
+            user = user_profile.cached_user if user_profile else None
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_pk(pk: int) -> Optional["MetaDataWithOwnershipModel"]:

@@ -27,7 +27,6 @@ from smarter.apps.account.models import (
     Account,
     User,
     UserProfile,
-    get_resolved_user,
 )
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
@@ -550,68 +549,6 @@ def get_user_profiles_for_account(account: Account) -> Optional[list[UserProfile
 
     user_profiles = UserProfile.objects.filter(account=account)
     return user_profiles  # type: ignore[list-item,return-value]
-
-
-def cache_invalidate(user: Optional[User] = None, account: Optional[Account] = None):
-    """
-    Invalidate all cache entries for the specified user and/or account.
-
-    :param user: User instance, optional. The user whose cache entries should be invalidated.
-    :param account: Account instance, optional. The account whose cache entries should be invalidated.
-
-    .. important::
-
-           At least one of ``user`` or ``account`` must be provided. If neither is given, an exception is raised.
-
-    .. warning::
-
-           If the user or account cannot be resolved, cache invalidation will not occur and a warning is logged.
-
-    .. tip::
-
-           Use this function after updating user or account data to ensure cache consistency across the platform.
-
-    **Example usage**::
-
-        # Invalidate cache for a user
-        cache_invalidate(user=user)
-
-        # Invalidate cache for an account
-        cache_invalidate(account=account)
-
-        # Invalidate cache for both user and account
-        cache_invalidate(user=user, account=account)
-    """
-    logger.debug("%s.cache_invalidate() called with user: %s account: %s", HERE, user, account)
-    resolved_user = get_resolved_user(user) if user else None
-
-    if not isinstance(resolved_user, User) and not isinstance(account, Account):
-        raise SmarterValueError("either user or account is required")
-
-    if not isinstance(resolved_user, User) and isinstance(account, Account):
-        resolved_user = get_cached_admin_user_for_account(invalidate=True, account=account)
-    else:
-        user_profile = UserProfile.objects.filter(user=resolved_user).first()
-        if not user_profile:
-            # this can happen during new platform bootstrap initialization, so just log a warning and return
-            logger.warning("%s.cache_invalidate() no UserProfile found for user: %s", HERE, resolved_user)
-            return
-        account = user_profile.cached_account
-
-    logger.debug("%s.cache_invalidate() invalidating cache for user: %s account: %s", HERE, resolved_user, account)
-
-    if not isinstance(account, Account):
-        raise SmarterValueError(f"could not resolve account {account} for user {user}")
-
-    if isinstance(account, Account):
-        Account.get_cached_object(pk=account.id, invalidate=True)
-        get_cached_admin_user_for_account(invalidate=True, account=account)
-
-    if isinstance(resolved_user, User):
-        get_cached_account_for_user(invalidate=True, user=resolved_user)
-        UserProfile.get_cached_object(invalidate=True, user=resolved_user, account=account)
-        get_cached_user_for_user_id(invalidate=True, user_id=resolved_user.id)
-        get_cached_user_for_username(invalidate=True, username=resolved_user.username)
 
 
 def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[UserProfile]:

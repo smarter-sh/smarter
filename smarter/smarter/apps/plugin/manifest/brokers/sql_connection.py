@@ -779,6 +779,10 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def cache_invalidations(self) -> None:
+        if self.connection:
+            SqlConnection.get_cached_object(invalidate=True, pk=self.connection.id)  # type: ignore
+        super().cache_invalidations()
 
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -1036,6 +1040,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             self.connection.tags.set(tags)
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+        self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:

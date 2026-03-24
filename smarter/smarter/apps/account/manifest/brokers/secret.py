@@ -24,7 +24,6 @@ from smarter.apps.account.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
 from smarter.apps.account.models import Secret
 from smarter.apps.account.signals import broker_ready
-from smarter.apps.account.utils import cache_invalidate
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -789,9 +788,9 @@ class SAMSecretBroker(AbstractBroker):
             try:
                 self.secret_transformer.save()
                 self.secret.refresh_from_db()
-                cache_invalidate(user=self.user, account=self.account)  # type: ignore
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
+            self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
         try:
             raise SAMBrokerErrorNotReady(f"Secret {self.name} not ready", thing=self.kind, command=command)

@@ -193,6 +193,24 @@ class SAMConnectionBaseBroker(AbstractBroker):
             )
         return self._sam_connection_status
 
+    def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches after applying changes to the connection.
+
+         This method should be called after any updates to the connection model to ensure that cached data is refreshed. Subclasses can override this method to add additional cache invalidation logic specific to their implementation.
+
+         :return: None
+         :rtype: None
+
+         .. seealso::
+
+             :class:`SAMConnectionBaseBroker`
+             :meth:`SAMConnectionBaseBroker.apply`
+        """
+        if self.connection:
+            ConnectionBase.get_cached_object(invalidate=True, pk=self.connection.id)  # type: ignore
+        return super().cache_invalidations()
+
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
         Apply the manifest by copying its metadata to the Django ORM model and saving it to the database.
@@ -271,6 +289,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
                     updated = True
         if updated:
             self.connection.save()
+            self.cache_invalidations()
 
         if tags is not None:
             self.connection.tags.set(tags)

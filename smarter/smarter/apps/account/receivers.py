@@ -28,7 +28,7 @@ from .signals import (
     secret_saved,
     secret_updated,
 )
-from .utils import cache_invalidate, get_cached_default_account
+from .utils import get_cached_default_account
 
 
 def should_log(level):
@@ -67,9 +67,6 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
         instance,
         created,
     )
-    if not created:
-        logger.info("%s invalidating cache for User: %s", formatted_text(f"{module_prefix}.user_post_save()"), instance)
-        cache_invalidate(user=instance)
 
 
 @receiver(post_delete, sender=User)
@@ -98,7 +95,8 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
             formatted_text(f"{module_prefix}.user_profile_post_save()"),
             instance,
         )
-        cache_invalidate(user=instance.user, account=instance.account)
+        if instance:
+            UserProfile.get_cached_object(invalidate=True, pk=instance.id)
 
 
 @receiver(post_delete, sender=UserProfile)
@@ -124,7 +122,8 @@ def account_post_save(sender: Account, instance: Account, created, **kwargs):
         logger.info(
             "%s invalidating cache for Account: %s", formatted_text(f"{module_prefix}.account_post_save()"), instance
         )
-        cache_invalidate(account=instance)
+        if instance:
+            Account.get_cached_object(invalidate=True, pk=instance.id)
 
 
 @receiver(post_delete, sender=Account)

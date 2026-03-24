@@ -903,6 +903,10 @@ class SAMPluginBaseBroker(AbstractBroker):
         except Exception as e:
             raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
 
+    def cache_invalidations(self) -> None:
+        PluginMeta.get_cached_object(invalidate=True, pk=self.plugin_meta.id)  # type: ignore
+        return super().cache_invalidations()
+
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
         Apply the manifest to the Django ORM model and persist changes to the database.

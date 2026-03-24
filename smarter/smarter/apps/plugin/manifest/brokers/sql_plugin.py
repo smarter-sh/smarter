@@ -624,6 +624,11 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def cache_invalidations(self) -> None:
+        if self.plugin:
+            PluginDataSql.get_cached_object(invalidate=True, plugin=self.plugin)  # type: ignore
+        return super().cache_invalidations()
+
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Returns an example SQL plugin manifest as a JSON response.
@@ -799,6 +804,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                 self.plugin.save()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
+            self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
         try:
             raise SAMBrokerErrorNotReady(
