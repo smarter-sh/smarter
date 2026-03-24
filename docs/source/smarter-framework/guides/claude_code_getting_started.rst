@@ -179,6 +179,7 @@ improving productivity and code quality.
    :maxdepth: 1
    :caption: External Resources
 
+   ../../external-links/claude-reference
    ../../external-links/support-smarter
    ../../external-links/swagger
    ../../external-links/manifest-reference
