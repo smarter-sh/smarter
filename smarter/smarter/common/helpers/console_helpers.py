@@ -42,6 +42,7 @@ def formatted_text_green(text: str) -> str:
 
     if environment != SmarterEnvironments.LOCAL:
         return text
+
     # bright green
     return f"\033[92m{text}\033[0m"
 
@@ -52,3 +53,11 @@ def formatted_text_red(text: str) -> str:
         return text
     # bright red
     return f"\033[91m{text}\033[0m"
+
+
+def formatted_text_blue(text: str) -> str:
+
+    if environment != SmarterEnvironments.LOCAL:
+        return text
+    # bold and dark blue
+    return f"\033[1;34m{text}\033[0m"

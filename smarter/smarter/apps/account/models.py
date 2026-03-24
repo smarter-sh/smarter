@@ -965,9 +965,6 @@ class UserProfile(MetaDataModel):
                 )
                 return cls.objects.prefetch_related("tags").select_related("user", "account").filter(user=user).first()
 
-        if not isinstance(invalidate, bool):
-            raise SmarterValueError("Invalidate parameter must be a boolean. Got %s" % type(invalidate))
-
         if invalidate:
             _get_object_by_user_and_account.invalidate(user=user, account=account)
             _get_object_by_user.invalidate(user=user)

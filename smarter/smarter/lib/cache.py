@@ -43,6 +43,7 @@ from typing import Any, Callable, Optional
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import (
     formatted_text,
+    formatted_text_blue,
     formatted_text_green,
     formatted_text_red,
 )
@@ -51,6 +52,7 @@ logger = logging.getLogger(__name__)
 logger_prefix_normal = formatted_text(f"{__name__}.@cache_results()")
 logger_prefix_green = formatted_text_green(f"{__name__}.@cache_results()")
 logger_prefix_red = formatted_text_red(f"{__name__}.@cache_results()")
+logger_prefix_blue = formatted_text_blue(f"{__name__}.@cache_results()")
 
 
 class CacheSentinel:
@@ -593,14 +595,14 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                 lazy_cache.delete(cache_key)
                 logger.debug(
                     "%s.invalidate() - invalidated cache entry for %s: %s",
-                    logger_prefix_normal,
+                    logger_prefix_blue,
                     cache_key,
                     str(cached_value),
                 )
             else:
                 logger.debug(
                     "%s.invalidate() - no cache entry found for %s (nothing to invalidate)",
-                    logger_prefix_red,
+                    logger_prefix_normal,
                     cache_key,
                 )
 
