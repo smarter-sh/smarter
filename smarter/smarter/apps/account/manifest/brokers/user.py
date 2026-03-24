@@ -764,6 +764,11 @@ class SAMUserBroker(AbstractBroker):
         return SAMUser
 
     def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches for the brokered user.
+        Invalidates the UserProfile cache for the brokered user and account.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         UserProfile.get_cached_object(invalidate=True, user=self.brokered_user, account=self.account)  # type: ignore
         return super().cache_invalidations()
 

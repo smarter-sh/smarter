@@ -588,6 +588,11 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def cache_invalidations(self) -> None:
+        """
+        Handle broker specific cache invalidation logic.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+
         PluginDataApi.get_cached_object(invalidate=True, plugin=self.plugin)  # type: ignore
         super().cache_invalidations()
 

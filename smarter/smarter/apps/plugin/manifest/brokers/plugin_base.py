@@ -904,6 +904,10 @@ class SAMPluginBaseBroker(AbstractBroker):
             raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
 
     def cache_invalidations(self) -> None:
+        """
+        Invalidate relevant cache entries for the plugin metadata and data.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         PluginMeta.get_cached_object(invalidate=True, pk=self.plugin_meta.id)  # type: ignore
         return super().cache_invalidations()
 

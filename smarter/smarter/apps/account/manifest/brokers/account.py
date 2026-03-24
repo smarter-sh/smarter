@@ -588,6 +588,11 @@ class SAMAccountBroker(AbstractBroker):
         return SAMAccount
 
     def cache_invalidations(self) -> None:
+        """
+        Handle broker specific cache invalidation logic. Invalidates
+        the cache for the `Account` and `UserProfile` models.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         Account.get_cached_object(invalidate=True, pk=self.brokered_account.id)  # type: ignore
         UserProfile.get_cached_object(invalidate=True, account=self.brokered_account)
         return super().cache_invalidations()
