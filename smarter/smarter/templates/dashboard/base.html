@@ -3,6 +3,7 @@
 
 {% block root %}
 <link rel="stylesheet" href="{% static 'common-styles.css' %}">
+{% block style_extra %}
 <style>
   .not-selectable {
     user-select: none;
@@ -14,6 +15,7 @@
     color: gray;
   }
   </style>
+{% endblock %}
 <!--begin::Page-->
 <div class="app-page flex-column flex-column-fluid" id="kt_app_page">
 	<!--begin::Header-->
@@ -340,7 +342,24 @@
 									</a>
 									<!--end:Menu link-->
 								</div>
-								<!--end:Menu item-->
+								<!--end:Menu item Workbench -->
+
+                                <!--begin:Menu item Apply -->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="{% url 'prompt_workbench:apply' %}" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-add-files fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Apply Manifest</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item Apply -->
 
                                 <!--begin:Menu item Providers -->
 								<div class="menu-item">

@@ -1,0 +1,48 @@
+{% extends 'dashboard/base.html' %}
+{% load static custom_filters %}
+
+{% block style_extra %}
+{{ block.super }}
+
+<style>
+ .manifest-drop-zone {
+   border: 2px dashed #ccc;
+   border-radius: 5px;
+   padding: 20px;
+   text-align: center;
+   color: #999;
+   font-size: 16px;
+   transition: border-color 0.3s, background-color 0.3s;
+ }
+</style>
+{% endblock %}
+
+
+{% block dashboard_content %}
+<section id="manifest-apply">
+  <div id="kt_app_content" class="app-content flex-column-fluid">
+    <!--begin::Content container-->
+    <div id="kt_app_content_container" class="app-container container-xxl">
+      <!--begin::Row-->
+      <div class="row g-5 g-xl-10">
+        <!--begin::Col-->
+        <div class="col-xl-8 mb-5 mb-xl-10">
+          <!--begin::Row-->
+          <div class="row g-5 g-xl-10 mb-l-10">
+            <h3 class="pt-5">Apply Manifest</h3>
+            <!--begin:: Drop Zone -->
+            <div class="manifest-drop-zone">
+              Drop zone goes here.
+            </div>
+            <!--end:: Drop Zone -->
+          </div>
+          <!--end::Row-->
+        </div>
+        <!--end::Col-->
+      </div>
+      <!--end::Row-->
+    </div>
+    <!--end::Content container-->
+  </div>
+</section>
+{% endblock %}
