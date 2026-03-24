@@ -178,6 +178,15 @@ class SmarterChatSession(SmarterHelperMixin):
         return retval
 
 
+class ManifestDropZoneView(SmarterAuthenticatedNeverCachedWebView):
+    """ """
+
+    template_path = "prompt/manifest-apply.html"
+
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
+        return render(request, self.template_path, context={})
+
+
 class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat configuration view for the Smarter web application.
@@ -833,7 +842,7 @@ class PromptManifestView(DocsBaseView):
 
     """
 
-    template_path = "prompt/manifest_detail.html"
+    template_path = "prompt/manifest-detail.html"
 
     chatbot: Optional[ChatBot] = None
     chatbot_helper: Optional[ChatBotHelper] = None
