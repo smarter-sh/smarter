@@ -210,7 +210,8 @@ class SAMConnectionBaseBroker(AbstractBroker):
         """
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         if self.connection:
-            ConnectionBase.get_cached_object(invalidate=True, pk=self.connection.id)  # type: ignore
+            ModelClass = self.ORMMetaModelClass
+            ModelClass.get_cached_object(invalidate=True, pk=self.connection.id)  # type: ignore
         return super().cache_invalidations()
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:

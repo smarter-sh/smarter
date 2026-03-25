@@ -10,6 +10,7 @@ from django.core.management import CommandError, call_command
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
+    smarter_cached_objects,
 )
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.chatbot.models import ChatBot
@@ -66,7 +67,12 @@ class Command(SmarterCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("--account_number", type=str, help="The Smarter account number to which the user belongs")
+        parser.add_argument(
+            "--account_number",
+            type=str,
+            help="The Smarter account number to which the user belongs",
+            default=smarter_cached_objects.smarter_account.account_number,
+        )
 
     def delete_chatbot(self, name: str):
         """Delete a chatbot by name."""

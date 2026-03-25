@@ -6,6 +6,7 @@ from typing import Optional
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_user_for_username,
+    smarter_cached_objects,
 )
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.lib.django.management.base import SmarterCommand
@@ -19,7 +20,12 @@ class Command(SmarterCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("--username", type=str, required=True, help="The user that will own the new plugin.")
+        parser.add_argument(
+            "--username",
+            type=str,
+            help="The user that will own the new plugin.",
+            default=smarter_cached_objects.smarter_admin.username,
+        )
         parser.add_argument("--verbose", action="store_true", help="Enable verbose output.")
 
     def handle(self, *args, **options):

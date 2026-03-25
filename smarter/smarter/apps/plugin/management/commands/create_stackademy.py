@@ -11,6 +11,7 @@ from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
 )
 from smarter.apps.api.utils import apply_manifest_v2
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -46,6 +47,7 @@ class Command(SmarterCommand):
             "--account_number",
             type=str,
             help="The account number that will own the remote Api connection. Defaults to smarter_test_api",
+            default=SMARTER_ACCOUNT_NUMBER,
         )
 
     def handle(self, *args, **options):

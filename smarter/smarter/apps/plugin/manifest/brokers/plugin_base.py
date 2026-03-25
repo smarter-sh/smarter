@@ -909,7 +909,8 @@ class SAMPluginBaseBroker(AbstractBroker):
         Invalidate relevant cache entries for the plugin metadata and data.
         """
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
-        PluginMeta.get_cached_object(invalidate=True, pk=self.plugin_meta.id)  # type: ignore
+        if self.plugin_meta:
+            PluginMeta.get_cached_object(invalidate=True, pk=self.plugin_meta.id)  # type: ignore
         return super().cache_invalidations()
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:

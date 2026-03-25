@@ -241,10 +241,19 @@ class SqlPlugin(PluginBase):
         if self._manifest and self.plugin_meta:
             # this is an update scenario. the Plugin exists in the database,
             # AND we've received manifest data from the cli.
+            logger.debug(
+                "%s.plugin_data() constructing %s from manifest and plugin metadata.",
+                self.formatted_class_name,
+                self.plugin_data_class.__name__,
+            )
             self._plugin_data = PluginDataSql(**self.plugin_data_django_model)  # type: ignore[call-arg]
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
+            logger.debug(
+                "%s.plugin_data() retrieving PluginDataSql from database using plugin metadata.",
+                self.formatted_class_name,
+            )
             self._plugin_data = PluginDataSql.get_cached_data_by_plugin(
                 plugin=self.plugin_meta,
             )
@@ -436,8 +445,10 @@ class SqlPlugin(PluginBase):
             return None
 
         if not isinstance(self.plugin_meta, PluginMeta):
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} plugin metadata is not available."
+            logger.debug(
+                "%s.plugin_data_django_model() plugin_meta is not set. plugin_meta: %s",
+                self.formatted_class_name,
+                self.plugin_meta,
             )
 
         if not isinstance(self.manifest, SAMSqlPlugin):
