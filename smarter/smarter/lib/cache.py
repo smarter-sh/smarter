@@ -1,37 +1,5 @@
 """
-The Smarter Framework implements its own, proprietary caching technology,
-designed as a one-size-fits-all easy-to-implement solution for caching
-function outputs based on their input parameters.
-
-This module consists of two main components:
-
-- a general-purpose caching decorator, ``@cache_results()``, for caching function results, and
-- a lazy singleton cache wrapper, ``lazy_cache``, around Django's cache framework.
-
-Usage examples::
-
-    # a.) use the decorator.
-    # Best approach in most cases.
-    # -------------------------------------------------
-    @cache_results(timeout=600)
-    def expensive_function(x, y, *args, **kwargs):
-        # Perform expensive computation ...
-        result = "some very expensive computational result"
-        return result
-
-    result = expensive_function(1, 2)
-    expensive_function.invalidate(1, 2)
-
-    # b.) work directly with the cache.
-    # If you need more control.
-    # -------------------------------------------------
-    from smarter.lib.cache import lazy_cache as cache
-
-    cache.set("my_key", "my_value", timeout=300)
-    value = cache.get("my_key")
-    print(value)  # Outputs: "my_value"
-
-
+Smarter cache decorator and lazy cache wrapper.
 """
 
 import hashlib
@@ -387,6 +355,8 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
             # Perform expensive computation ...
             result = "some very expensive computational result"
             return result
+
+        expensive_function.invalidate(1, 2)  # Invalidate cache for specific arguments
 
     """
 
