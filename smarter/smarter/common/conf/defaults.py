@@ -82,7 +82,7 @@ class SettingsDefaults:
 
     # for liveness and readiness probes from kubernetes.
     # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
-    ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", ["localhost"])
+    ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", ["localhost", "testserver"])
     ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY", is_secret=True, is_required=True))
 
     API_DESCRIPTION: str = get_env(

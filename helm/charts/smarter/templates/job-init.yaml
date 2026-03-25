@@ -54,6 +54,13 @@ spec:
               python manage.py makemigrations
               python manage.py migrate
               python manage.py initialize_platform --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --email "{{ .Values.env.SMARTER_ADMIN_USERNAME }}@{{ .Values.env.ROOT_DOMAIN }}" --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}"
+              python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/QueriumCorp/smarter-demo
+              python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/examples --repo_version 2
+              python manage.py add_plugin_examples
+              python manage.py deploy_example_chatbot
+              python manage.py deploy_builtin_chatbots --account_number 3141-5926-5359
+              python manage.py create_stackacademy
+
           command:
             - /bin/sh
             - -c
