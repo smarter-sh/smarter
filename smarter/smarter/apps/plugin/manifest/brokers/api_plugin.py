@@ -453,19 +453,19 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         .. code-block:: json
 
             {
-                'type': 'object',
-                'required': [],
-                'properties': {
-                    'max_cost': {
-                        'type': 'string',
-                        'description': 'A ceiling on the maximum cost of the course.'
+                "type": "object",
+                "required": [],
+                "properties": {
+                    "max_cost": {
+                        "type": "string",
+                        "description": "A ceiling on the maximum cost of the course."
                     },
-                    'description': {
-                        'type': 'string',
-                        'description': 'A keyword to search for in the course description.'
+                    "description": {
+                        "type": "string",
+                        "description": "A keyword to search for in the course description."
                     }
                 },
-                'additionalProperties': False
+                "additionalProperties": false
             }
 
         :return: The plugin data as a Pydantic model.
