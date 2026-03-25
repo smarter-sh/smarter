@@ -745,6 +745,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         manifest_status = SAMPluginCommonStatus(
             accountNumber="1234-5678-9012",
             username="example_user",
+            recordLocator="abc123def456",
             created=datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
             modified=datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
         )

@@ -84,6 +84,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     HASH_PREFIX = "r"
     HASH_SUFFIX = "x"
     HASH_FLOOR = 1000000
+    RECORD_LOCATOR_LENGTH = 24
     _hash_regex = None
     cache_expiration = smarter_settings.cache_expiration
 
@@ -189,6 +190,96 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         id_value = int(self.id) + self.HASH_FLOOR
         encoded = base64.urlsafe_b64encode(str(id_value).encode()).decode().rstrip("=")
         return self.HASH_PREFIX + encoded + self.HASH_SUFFIX
+
+    @cached_property
+    def record_locator(self) -> str:
+        """
+        Returns a short, URL-friendly record locator derived from the object's ID.
+        Encoding scheme:
+        1. Take the object's ID and add a large constant (HASH_FLOOR) to ensure it's not easily guessable.
+        2. Convert the resulting number to a string and encode it using URL-safe base64 encoding.
+        3. Remove any padding characters from the encoded string.
+        4. Add a prefix and suffix to the encoded string to create a recognizable format.
+        5. Pad the final string to a fixed length with zeros if necessary.
+
+        Example:
+
+        .. code-block:: python
+
+            obj = MyModel.objects.create(name="Example")
+            print(obj.id)  # e.g., 123
+            print(obj.record_locator)  # e.g., "chatbot-0000000000000000000000rc2x"
+
+
+        :returns: Record locator string (URL-safe, no padding)
+        :rtype: str
+        """
+        id_value = int(self.id) + self.HASH_FLOOR
+        encoded = base64.urlsafe_b64encode(str(id_value).encode()).decode().rstrip("=")
+        padded_encoded = f"{self.HASH_PREFIX}{encoded}{self.HASH_SUFFIX}"
+        padded_encoded = padded_encoded.rjust(self.RECORD_LOCATOR_LENGTH, "0")
+        prefix = str(self.__class__.__name__).lower()
+        return f"{prefix}-{padded_encoded}"
+
+    @classmethod
+    def get_object_by_locator(cls, locator: str) -> Optional["TimestampedModel"]:
+        """
+        Retrieves an object based on its record locator.
+
+        :param locator: The record locator string to decode and search for.
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional[TimestampedModel]
+        """
+        logger.debug(
+            "%s.get_object_by_locator() - Attempting to retrieve object with locator: %s",
+            cls.formatted_class_name,
+            locator,
+        )
+        try:
+            prefix = str(cls.__name__).lower()
+            if not locator.startswith(f"{prefix}-"):
+                logger.warning(
+                    "%s.get_object_by_locator() - Locator '%s' does not start with expected prefix '%s-'.",
+                    cls.formatted_class_name,
+                    locator,
+                    prefix,
+                )
+                return None
+            hashed_part = locator[len(prefix) + 1 :].lstrip("0")
+            id_value = cls.id_from_hashed_id(hashed_part)
+            if id_value is None:
+                logger.warning(
+                    "%s.get_object_by_locator() - Failed to decode hashed part '%s' from locator '%s'.",
+                    cls.formatted_class_name,
+                    hashed_part,
+                    locator,
+                )
+                return None
+            obj = cls.get_cached_object(pk=id_value)
+            if obj is None:
+                logger.warning(
+                    "%s.get_object_by_locator() - No object found with ID %d decoded from locator '%s'.",
+                    cls.formatted_class_name,
+                    id_value,
+                    locator,
+                )
+            else:
+                logger.debug(
+                    "%s.get_object_by_locator() - Successfully retrieved object with ID %d from locator '%s'.",
+                    cls.formatted_class_name,
+                    id_value,
+                    locator,
+                )
+            return obj  # type: ignore[return-value]
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.exception(
+                "%s.get_object_by_locator() - Unexpected error while retrieving object with locator '%s': %s",
+                cls.formatted_class_name,
+                locator,
+                e,
+            )
+            return None
 
     @classmethod
     def id_from_hashed_id(cls, hashed_id: str) -> Optional[int]:

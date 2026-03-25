@@ -264,6 +264,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 )
         elif self.smarter_auth_token:
             status = SAMSmarterAuthTokenStatus(
+                recordLocator=self.smarter_auth_token.record_locator,
                 created=self.smarter_auth_token.created_at,
                 modified=self.smarter_auth_token.updated_at,
                 lastUsedAt=self.smarter_auth_token.last_used_at,

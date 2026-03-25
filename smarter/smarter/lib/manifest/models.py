@@ -5,6 +5,7 @@ import datetime
 import decimal
 import re
 import uuid
+from datetime import datetime
 from logging import getLogger
 from typing import List, Optional, Union
 
@@ -276,6 +277,19 @@ class AbstractSAMSpecBase(SmarterBasePydanticModel, abc.ABC):
 
 class AbstractSAMStatusBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Status base class. Expected to be subclassed by specific manifest classes."""
+
+    recordLocator: Optional[str] = Field(
+        None,
+        description="recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+    )
+
+    created: datetime = Field(
+        description="The date in which this resource was created. Read only.",
+    )
+
+    modified: datetime = Field(
+        description="The date in which this resource was most recently changed. Read only.",
+    )
 
 
 class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):

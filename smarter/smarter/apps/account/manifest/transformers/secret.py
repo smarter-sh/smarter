@@ -271,6 +271,7 @@ class SecretTransformer(SmarterHelperMixin):
             status = SAMSecretStatus(
                 accountNumber=self.secret.account.account_number if self.secret.account else "missing",
                 username=self.secret.user_profile.cached_user.username if self.secret.user_profile else "missing",
+                recordLocator=self.secret.record_locator,
                 created=self.secret.created_at,
                 modified=self.secret.updated_at,
                 last_accessed=self.secret.last_accessed,

@@ -508,6 +508,7 @@ class SAMChatbotBroker(AbstractBroker):
         status = SAMChatbotStatus(
             accountNumber=self.account.account_number,
             username=self.user_profile.cached_user.username,
+            recordLocator=self.chatbot.record_locator,
             created=self.chatbot.created_at,
             modified=self.chatbot.updated_at,
             deployed=self.chatbot.deployed,
@@ -771,6 +772,7 @@ class SAMChatbotBroker(AbstractBroker):
         status = SAMChatbotStatus(
             accountNumber=smarter_cached_objects.smarter_account.account_number,
             username=smarter_cached_objects.smarter_admin.username,
+            recordLocator="abc123def456",
             created=datetime.datetime.now(),
             modified=datetime.datetime.now(),
             deployed=False,

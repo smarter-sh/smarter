@@ -512,6 +512,7 @@ class SAMPluginBaseBroker(AbstractBroker):
         self._plugin_status = SAMPluginCommonStatus(
             accountNumber=self.plugin_meta.user_profile.cached_account.account_number,
             username=admin.username,
+            recordLocator=self.plugin_meta.record_locator,
             created=self.plugin_meta.created_at,
             modified=self.plugin_meta.updated_at,
         )

@@ -77,13 +77,13 @@ from smarter.common.utils import camel_to_snake
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
 
 from .base import PluginBase, SmarterPluginError
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -266,7 +266,7 @@ class ApiPlugin(PluginBase):
                     pass
             if not plugin_data_apiconnection:
                 raise SmarterApiPluginError(
-                    f"{self.formatted_class_name}.plugin_data_django_model() error: ApiConnection {connection_name} does not exist for Plugin {self.plugin_meta.name if self.plugin_meta else "(Missing name)"} in account {account}. Error: {e}"
+                    f"{self.formatted_class_name}.plugin_data_django_model() error: ApiConnection {connection_name} does not exist for Plugin {self.plugin_meta.name if self.plugin_meta else "(Missing name)"} in account {account}"
                 )
 
             api_data["connection"] = plugin_data_apiconnection
@@ -377,7 +377,7 @@ class ApiPlugin(PluginBase):
         api_data = ApiData(
             endpoint="/stackademy/course-catalogue/",
             method="GET",
-            url_params=[
+            urlParams=[
                 UrlParam(
                     key="max_cost",
                     value="500.00",
@@ -411,7 +411,7 @@ class ApiPlugin(PluginBase):
                     default="Python",
                 ),
             ],
-            test_values=[
+            testValues=[
                 TestValue(
                     name="username",
                     value=SMARTER_ADMIN_USERNAME,
@@ -433,6 +433,7 @@ class ApiPlugin(PluginBase):
         status = SAMPluginCommonStatus(
             accountNumber="0123456789",
             username=SMARTER_ADMIN_USERNAME,
+            recordLocator="abc123def456",
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )

@@ -188,6 +188,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
             self._sam_connection_status = SAMConnectionCommonStatus(
                 account_number=self.connection.user_profile.cached_account.account_number,
                 username=admin.username,
+                recordLocator=self.connection.record_locator,
                 created=self.connection.created_at,
                 modified=self.connection.updated_at,
             )

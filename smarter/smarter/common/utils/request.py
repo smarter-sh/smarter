@@ -129,7 +129,7 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
 
     # pylint: disable=W0718
     except Exception as e:
-        logger.debug("%s.is_authenticated_request() failed: %s", logger_prefix, formatted_text(str(e)))
+        logger.error("%s.is_authenticated_request() failed: %s", logger_prefix, formatted_text(str(e)))
         return False
 
 
