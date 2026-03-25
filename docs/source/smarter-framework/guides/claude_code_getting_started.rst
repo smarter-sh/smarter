@@ -1,6 +1,10 @@
 Getting Started with Claude-Powered Coding in Smarter
 =====================================================
 
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+
 Goal
 ----
 
@@ -180,8 +184,3 @@ improving productivity and code quality.
    :caption: External Resources
 
    ../../external-links/claude-reference
-   ../../external-links/support-smarter
-   ../../external-links/swagger
-   ../../external-links/manifest-reference
-   ../../external-links/json-schemas
-   ../../external-links/youtube
