@@ -397,6 +397,7 @@ class SAMSecretBroker(AbstractBroker):
             status=SAMSecretStatus(
                 accountNumber=self.account.account_number,
                 username=self.user_profile.cached_user.username,
+                recordLocator=self.secret.record_locator,
                 created=self.secret.created_at,
                 modified=self.secret.updated_at,
                 last_accessed=self.secret.last_accessed,
@@ -538,6 +539,7 @@ class SAMSecretBroker(AbstractBroker):
                 status=SAMSecretStatus(
                     accountNumber=self.account.account_number,
                     username=self.user_profile.cached_user.username,
+                    recordLocator=self.secret.record_locator,
                     created=self.secret.created_at,
                     modified=self.secret.updated_at,
                     last_accessed=self.secret.last_accessed,
@@ -632,6 +634,7 @@ class SAMSecretBroker(AbstractBroker):
         status = SAMSecretStatus(
             accountNumber=SMARTER_ACCOUNT_NUMBER,
             username=SMARTER_ADMIN_USERNAME,
+            recordLocator="example-record-locator",
             created=current_date,
             modified=current_date,
             last_accessed=current_date,

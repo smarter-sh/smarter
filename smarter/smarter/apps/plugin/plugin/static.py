@@ -59,6 +59,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .base import PluginBase, SmarterPluginError
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -430,7 +431,6 @@ class StaticPlugin(PluginBase):
             maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
         )
         data = SAMPluginStaticSpecData(
-            description="Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
             staticData={
                 "contact": [
                     {"name": "Willy Wonka"},
@@ -470,6 +470,7 @@ class StaticPlugin(PluginBase):
         status = SAMPluginCommonStatus(
             accountNumber="1234567890",
             username="example_user",
+            recordLocator="abc123def456",
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )

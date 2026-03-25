@@ -866,6 +866,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         status = SAMConnectionCommonStatus(
             account_number="123456789012",
             username="example_user",
+            recordLocator="example_record_locator",
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )

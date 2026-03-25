@@ -705,6 +705,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         status = SAMConnectionCommonStatus(
             account_number="2194-1233-0815",
             username="admin_user",
+            recordLocator="abc123def456",
             created=datetime.now(),
             modified=datetime.now(),
         )

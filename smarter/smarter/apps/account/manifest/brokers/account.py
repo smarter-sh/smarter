@@ -343,6 +343,7 @@ class SAMAccountBroker(AbstractBroker):
             account_number = str(self.brokered_account.account_number)
             status = SAMAccountStatus(
                 adminAccount=account_number,
+                recordLocator=self.brokered_account.record_locator,
                 created=self.brokered_account.created_at,
                 modified=self.brokered_account.updated_at,
             )

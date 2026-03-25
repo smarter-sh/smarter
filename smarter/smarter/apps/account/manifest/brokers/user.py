@@ -626,6 +626,7 @@ class SAMUserBroker(AbstractBroker):
                 ),
                 status=SAMUserStatus(
                     account_number=self.account.account_number,
+                    recordLocator=f"user-{self.brokered_user.id}-###-###-###",
                     username=self.brokered_user.username,
                     created=self.brokered_user.date_joined,
                     modified=self.brokered_user.last_login or self.brokered_user.date_joined,
