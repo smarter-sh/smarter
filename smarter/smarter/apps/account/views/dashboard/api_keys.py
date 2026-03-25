@@ -60,7 +60,7 @@ class APIKeysView(APIKeyBase):
 
     def get(self, request, *args, **kwargs):
         api_keys = SmarterAuthToken.get_cached_objects(user_profile=self.user_profile)  # type: ignore[call-arg]
-        api_keys = api_keys.only("user", "description", "created", "last_used_at", "is_active")
+        api_keys = api_keys.only("user_profile", "description", "created", "last_used_at", "is_active")
         context = {
             "account_apikeys": {
                 "api_keys": api_keys,
@@ -222,7 +222,7 @@ class APIKeyListView(APIKeyBase):
 
     def get(self, request, *args, **kwargs):
         api_keys = SmarterAuthToken.get_cached_objects(user_profile=self.user_profile)  # type: ignore[call-arg]
-        api_keys = api_keys.only("user", "description", "created", "last_used_at", "is_active")
+        api_keys = api_keys.only("user_profile", "description", "created", "last_used_at", "is_active")
         context = {
             "account_apikeys": {
                 "api_keys": api_keys,

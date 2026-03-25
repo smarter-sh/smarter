@@ -28,6 +28,7 @@ init:
 	make check-python		# verify Python 3.13 is installed
 	make docker-check		# verify Docker is installed and running
 	make python-init		# create/replace Python virtual environment and install dependencies
+	make build			    # build the Smarter Docker container
 	make docker-init		# initialize MySQL and create the smarter database
 	make pre-commit-init	# install and configure pre-commit
 

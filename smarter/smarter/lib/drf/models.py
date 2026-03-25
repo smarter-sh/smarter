@@ -130,9 +130,6 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         verbose_name_plural = "API Keys"
 
     key_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    name = models.CharField(max_length=255)
-    description = models.CharField(max_length=255, blank=True, null=True)
-    tags = models.JSONField(default=list, blank=True)
     last_used_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
@@ -213,12 +210,24 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
         def _get_cached_objects_for_user_profile(user_profile_id: int) -> models.QuerySet["SmarterAuthToken"]:
-            queryset = (
-                cls.objects.prefetch_related("tags")
-                .select_related("user_profile", "user_profile__account", "user_profile__user")
-                .filter(user=user_profile.cached_user)
-            )
-            return queryset
+
+            try:
+                queryset = cls.objects.select_related(
+                    "user_profile", "user_profile__account", "user_profile__user"
+                ).filter(user=user_profile.cached_user)
+                return queryset
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("Error retrieving cached objects: %s", e)
+                try:
+                    queryset = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).filter(user=user_profile.cached_user)
+                    return queryset
+                except Exception as e2:
+                    logger.error("Error retrieving objects without cache: %s", e2)
+                    queryset = cls.objects.filter(user=user_profile.cached_user)
+                    return queryset
 
         # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
@@ -236,19 +245,26 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
             :returns: A queryset of SmarterAuthToken objects matching the criteria.
             :rtype: QuerySet[SmarterAuthToken]
             """
-            queryset = (
-                cls.objects.prefetch_related("tags")
-                .select_related("user_profile", "user_profile__account", "user_profile__user")
-                .filter(user=user_profile.cached_user, name=name)
-            )
+            try:
+                queryset = cls.objects.select_related(
+                    "user_profile", "user_profile__account", "user_profile__user"
+                ).filter(user=user_profile.cached_user, name=name)
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("Error retrieving cached objects: %s", e)
+                try:
+                    queryset = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).filter(user=user_profile.cached_user, name=name)
+                except Exception as e2:
+                    logger.error("Error retrieving objects without cache: %s", e2)
+                    queryset = cls.objects.filter(user=user_profile.cached_user, name=name)
             return queryset
 
         if invalidate:
             # Invalidate the cache for both functions
-            _get_cached_objects_for_user_profile.invalidate_cache(
-                user_profile_id=user_profile.id if user_profile else None
-            )
-            _get_cached_objects_for_user_profile_and_name.invalidate_cache(
+            _get_cached_objects_for_user_profile.invalidate(user_profile_id=user_profile.id if user_profile else None)
+            _get_cached_objects_for_user_profile_and_name.invalidate(
                 user_profile_id=user_profile.id if user_profile else None, name=name
             )
 

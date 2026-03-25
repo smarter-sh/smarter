@@ -376,8 +376,8 @@ class Account(MetaDataModel):
                 return None
 
         if invalidate:
-            _get_account_by_number.invalidate_cache(account_number=account_number)
-            _get_account_by_company_name.invalidate_cache(company_name=company_name)
+            _get_account_by_number.invalidate(account_number=account_number)
+            _get_account_by_company_name.invalidate(company_name=company_name)
 
         if account_number:
             return _get_account_by_number(account_number)
