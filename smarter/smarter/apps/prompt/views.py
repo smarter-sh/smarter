@@ -944,8 +944,6 @@ class PromptManifestView(DocsBaseView):
         return render(request, self.template_path, context=context)  # type: ignore
 
 
-@method_decorator(cache_control(max_age=PROMPT_LIST_CACHE_TIMEOUT), name="dispatch")
-@method_decorator(smarter_cache_page_by_user(PROMPT_LIST_CACHE_TIMEOUT), name="dispatch")
 class PromptListView(SmarterAuthenticatedNeverCachedWebView):
     """
     list view for smarter workbench web console. This view is protected and
