@@ -19,7 +19,7 @@ from django.db import models
 from django.template.loader import render_to_string
 from django.test.client import RequestFactory
 from django.utils import timezone
-from django.utils.functional import SimpleLazyObject, cached_property
+from django.utils.functional import SimpleLazyObject
 
 # our stuff
 from smarter.common.conf import smarter_settings
@@ -362,7 +362,7 @@ class Account(MetaDataModel):
         )
 
         @cache_results(cls.cache_expiration)
-        def _get_account_by_number(account_number: str) -> Optional["Account"]:
+        def _get_account_by_number(account_number: str, class_name: str) -> Optional["Account"]:
             try:
                 logger.debug(
                     "%s._get_account_by_number() cache miss for account_number=%s", logger_prefix, account_number
@@ -375,7 +375,7 @@ class Account(MetaDataModel):
                 return None
 
         @cache_results(cls.cache_expiration)
-        def _get_account_by_company_name(company_name: str) -> Optional["Account"]:
+        def _get_account_by_company_name(company_name: str, class_name: str) -> Optional["Account"]:
             try:
                 logger.debug(
                     "%s._get_account_by_company_name() cache miss for company_name=%s", logger_prefix, company_name
@@ -390,14 +390,14 @@ class Account(MetaDataModel):
                 return None
 
         if invalidate:
-            _get_account_by_number.invalidate(account_number=account_number)
-            _get_account_by_company_name.invalidate(company_name=company_name)
+            _get_account_by_number.invalidate(account_number=account_number, class_name=Account.__name__)
+            _get_account_by_company_name.invalidate(company_name=company_name, class_name=Account.__name__)
 
         if account_number:
-            return _get_account_by_number(account_number)
+            return _get_account_by_number(account_number=account_number, class_name=Account.__name__)
 
         if company_name:
-            return _get_account_by_company_name(company_name)
+            return _get_account_by_company_name(company_name=company_name, class_name=Account.__name__)
 
         return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
 
@@ -892,30 +892,38 @@ class UserProfile(MetaDataModel):
 
             :class:`UserProfile`
         """
-        admins = cls.objects.filter(account=account, user__is_staff=True).order_by("user__id")
-        if admins.exists():
-            return admins.first().user  # type: ignore[return-value]
 
-        logger.error(
-            "%s.admin_for_account() No admin found for account %s", formatted_text(__name__ + ".UserProfile()"), account
-        )
+        @cache_results(cls.cache_expiration)
+        def _get_admin_for_account(account_id: int, class_name: str) -> Optional[User]:
 
-        users = cls.objects.filter(account=account).order_by("user__id")
-        if users.exists():
-            user = users.first().user  # type: ignore[return-value]
-            return user
+            admins = cls.objects.filter(account_id=account_id, user__is_staff=True).order_by("user__id")
+            if admins.exists():
+                return admins.first().user  # type: ignore[return-value]
 
-        logger.error(
-            "%s.admin_for_account() No user for account %s", formatted_text(__name__ + ".UserProfile()"), account
-        )
-        admin_user = cls.objects.get_or_create(username=SMARTER_ADMIN_USERNAME)
-        user_profile = cls.objects.create(user=admin_user, account=account)
-        logger.warning(
-            "%s.admin_for_account() Created admin user for account %s. Use manage.py to set the password",
-            formatted_text(__name__ + ".UserProfile()"),
-            account,
-        )
-        return user_profile.user
+            logger.error(
+                "%s.admin_for_account() No admin found for account %s",
+                formatted_text(__name__ + ".UserProfile()"),
+                account,
+            )
+
+            users = cls.objects.filter(account_id=account_id).order_by("user__id")
+            if users.exists():
+                user = users.first().user  # type: ignore[return-value]
+                return user
+
+            logger.error(
+                "%s.admin_for_account() No user for account %s", formatted_text(__name__ + ".UserProfile()"), account
+            )
+            admin_user = cls.objects.get_or_create(username=SMARTER_ADMIN_USERNAME)
+            user_profile = cls.objects.create(user=admin_user, account=account)
+            logger.warning(
+                "%s.admin_for_account() Created admin user for account %s. Use manage.py to set the password",
+                formatted_text(__name__ + ".UserProfile()"),
+                account,
+            )
+            return user_profile.user
+
+        return _get_admin_for_account(account_id=account.id, class_name=UserProfile.__name__)
 
     @classmethod
     def get_cached_object(
@@ -960,10 +968,10 @@ class UserProfile(MetaDataModel):
         )
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_user_and_account(user: User, account: Account) -> Optional["UserProfile"]:
+        def _get_object_by_user_and_account(user: User, account: Account, class_name: str) -> Optional["UserProfile"]:
             try:
                 retval = (
-                    cls.objects.prefetch_related("tags")
+                    UserProfile.objects.prefetch_related("tags")
                     .select_related("user", "account")
                     .get(user=user, account=account)
                 )
@@ -974,76 +982,87 @@ class UserProfile(MetaDataModel):
                     user.email,
                     account,
                 )
+                _ = retval.user
+                _ = retval.account
                 return retval
-            except cls.DoesNotExist:
+            except UserProfile.DoesNotExist:
                 logger.debug(
                     "%s._get_object_by_user_and_account() no %s found for user: %s, account: %s",
                     formatted_text(__name__ + ".UserProfile.get_cached_object()"),
-                    cls.__name__,
+                    UserProfile.__name__,
                     user.email,
                     account,
                 )
                 return None
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_user(user: User) -> Optional["UserProfile"]:
+        def _get_object_by_user(user: User, class_name: str) -> Optional["UserProfile"]:
             try:
-                retval = cls.objects.prefetch_related("tags").select_related("user", "account").get(user=user)
+                retval = UserProfile.objects.prefetch_related("tags").select_related("user", "account").get(user=user)
                 logger.debug(
                     "%s._get_object_by_user() fetched %s for user: %s",
                     formatted_text(__name__ + ".UserProfile.get_cached_object()"),
                     cls.__name__,
                     user.email,
                 )
+                _ = retval.user
+                _ = retval.account
                 return retval
-            except cls.DoesNotExist:
+            except UserProfile.DoesNotExist:
                 logger.debug(
                     "%s._get_object_by_user() no %s found for user: %s",
                     formatted_text(__name__ + ".UserProfile.get_cached_object()"),
-                    cls.__name__,
+                    UserProfile.__name__,
                     user.email,
                 )
                 return None
-            except cls.MultipleObjectsReturned:
+            except UserProfile.MultipleObjectsReturned:
                 logger.error(
                     "%s.get_cached_object() Multiple UserProfiles found for user %s. Defaulting to first result.",
                     formatted_text(__name__ + ".UserProfile.get_cached_object()"),
                     user.email,
                 )
-                return cls.objects.prefetch_related("tags").select_related("user", "account").filter(user=user).first()
+                return (
+                    UserProfile.objects.prefetch_related("tags")
+                    .select_related("user", "account")
+                    .filter(user=user)
+                    .first()
+                )
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_account(account: Account) -> Optional["UserProfile"]:
+        def _get_object_by_account(account: Account, class_name: str) -> Optional["UserProfile"]:
             try:
                 user = UserProfile.admin_for_account(account)
                 retval = (
-                    cls.objects.prefetch_related("tags")
+                    UserProfile.objects.prefetch_related("tags")
                     .select_related("user", "account")
                     .get(account=account, user=user)
                 )
                 logger.debug(
                     "%s._get_object_by_account() fetched %s for account admin %s",
                     formatted_text(__name__ + ".UserProfile.get_cached_object()"),
-                    cls.__name__,
+                    UserProfile.__name__,
                     retval,
                 )
+                _ = retval.user
+                _ = retval.account
                 return retval
-            except cls.DoesNotExist:
+            except UserProfile.DoesNotExist:
                 logger.debug(
                     "%s._get_object_by_account() no %s found for account admin %s",
                     formatted_text(__name__ + ".UserProfile.get_cached_object()"),
-                    cls.__name__,
+                    UserProfile.__name__,
                     user,
                 )
                 return None
-            except cls.MultipleObjectsReturned:
+            except UserProfile.MultipleObjectsReturned:
                 logger.error(
                     "%s.get_cached_object() Multiple UserProfiles found for account %s. Defaulting to first result.",
                     formatted_text(__name__ + ".UserProfile.get_cached_object()"),
                     account,
                 )
                 return (
-                    cls.objects.prefetch_related("tags")
+                    UserProfile.objects.prefetch_related("tags")
                     .select_related("user", "account")
                     .filter(account=account)
                     .first()
@@ -1066,17 +1085,17 @@ class UserProfile(MetaDataModel):
                 return None
 
         if invalidate:
-            _get_object_by_user_and_account.invalidate(user=user, account=account)
-            _get_object_by_user.invalidate(user=user)
-            _get_object_by_account.invalidate(account=account)
+            _get_object_by_user_and_account.invalidate(user=user, account=account, class_name=UserProfile.__name__)
+            _get_object_by_user.invalidate(user=user, class_name=UserProfile.__name__)
+            _get_object_by_account.invalidate(account=account, class_name=UserProfile.__name__)
 
         if user or account:
             if user and account:
-                return _get_object_by_user_and_account(user, account)
+                return _get_object_by_user_and_account(user, account, UserProfile.__name__)
             if user:
-                return _get_object_by_user(user)
+                return _get_object_by_user(user=user, class_name=UserProfile.__name__)
             if account:
-                return _get_object_by_account(account)
+                return _get_object_by_account(account=account, class_name=UserProfile.__name__)
 
         return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
 
@@ -1319,12 +1338,14 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return cls.objects.prefetch_related("tags").filter(name=name, user_profile__account=account).first()
 
         if invalidate:
-            _get_object_by_pk.invalidate(pk, cls.__name__)
-            _get_object_by_name_and_user_profile.invalidate(name, user_profile, cls.__name__)
-            _get_object_by_name_and_account.invalidate(name, account, cls.__name__)
+            _get_object_by_pk.invalidate(pk=pk, class_name=cls.__name__)
+            _get_object_by_name_and_user_profile.invalidate(
+                name=name, user_profile=user_profile, class_name=cls.__name__
+            )
+            _get_object_by_name_and_account.invalidate(name=name, account=account, class_name=cls.__name__)
 
         if pk:
-            return _get_object_by_pk(pk)
+            return _get_object_by_pk(pk=pk, class_name=cls.__name__)
 
         try:
             user_profile = user_profile or UserProfile.get_cached_object(user=user, account=account)
@@ -1346,9 +1367,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         if user_profile:
             # call this regardless of whether name is provided.
-            return _get_object_by_name_and_user_profile(name, user_profile)
+            return _get_object_by_name_and_user_profile(name=name, user_profile=user_profile, class_name=cls.__name__)
         elif account:
-            return _get_object_by_name_and_account(name, account)
+            return _get_object_by_name_and_account(name=name, account=account, class_name=cls.__name__)
 
         # no ownership info provided, so fall back to the super().
         return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]

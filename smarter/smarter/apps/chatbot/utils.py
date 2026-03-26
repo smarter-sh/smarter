@@ -13,7 +13,6 @@ from smarter.apps.account.utils import (
 )
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.cache import cache_results
 
 from .models import ChatBot, ChatBotHelper
 
