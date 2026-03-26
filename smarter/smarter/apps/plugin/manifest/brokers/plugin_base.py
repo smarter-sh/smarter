@@ -141,26 +141,42 @@ class SAMPluginBaseBroker(AbstractBroker):
                 self.user_profile,
             )
             self._orm_instance = PluginDataBase.get_cached_object(plugin=self.plugin_meta)
-            logger.debug(
-                "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",
-                self.formatted_class_name,
-                PluginDataBase.__name__,
-                serializers.serialize("json", [self._orm_instance]),  # type: ignore
-                self.name,
-                self.user_profile,
-            )
-            self._orm_meta_instance = self._orm_instance.plugin
-            logger.debug(
-                "%s.orm_instance() - retrieved meta instance %s",
-                self.formatted_class_name,
-                self._orm_meta_instance,
-            )
-            self._plugin_meta = self._orm_meta_instance
-            logger.debug(
-                "%s.orm_instance() - set plugin_meta from self._orm_meta_instance %s",
-                self.formatted_class_name,
-                self._plugin_meta,
-            )
+            if self._orm_instance:
+                logger.debug(
+                    "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",
+                    self.formatted_class_name,
+                    PluginDataBase.__name__,
+                    serializers.serialize("json", [self._orm_instance]),  # type: ignore
+                    self.name,
+                    self.user_profile,
+                )
+            else:
+                logger.debug(
+                    "%s.orm_instance() - no %s instance found for %s owned by %s",
+                    self.formatted_class_name,
+                    PluginDataBase.__name__,
+                    self.name,
+                    self.user_profile,
+                )
+            if self._orm_instance:
+                self._orm_meta_instance = self._orm_instance.plugin
+                logger.debug(
+                    "%s.orm_instance() - retrieved meta instance %s",
+                    self.formatted_class_name,
+                    self._orm_meta_instance,
+                )
+                self._plugin_meta = self._orm_meta_instance
+                logger.debug(
+                    "%s.orm_instance() - set plugin_meta from self._orm_meta_instance %s",
+                    self.formatted_class_name,
+                    self._plugin_meta,
+                )
+            else:
+                logger.debug(
+                    "%s.orm_instance() - no meta instance found for %s",
+                    self.formatted_class_name,
+                    self.name,
+                )
 
             return self._orm_instance
         except PluginDataBase.DoesNotExist:
@@ -244,7 +260,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                 PluginDataBase.__name__,
                 self.name,
                 self.user_profile,
-                str(e),
+                e,
+                exc_info=True,
             )
             return None
 
@@ -394,33 +411,25 @@ class SAMPluginBaseBroker(AbstractBroker):
         if self.orm_meta_instance:
             self._plugin_meta = self.orm_meta_instance
             return self._plugin_meta
-        if self.name and self.account:
-            try:
-                logger.debug(
-                    "%s.plugin_meta() - retrieving PluginMeta for name=%s, account=%s",
-                    logger_prefix,
-                    self.name,
-                    self.account,
-                )
-                self._plugin_meta = PluginMeta.get_cached_object(account=self.account, name=self.name)
-            except MultipleObjectsReturned:
-                try:
-                    self._plugin_meta = PluginMeta.get_cached_object(
-                        user_profile=self.user_profile,
-                        name=self.name,
-                    )
-                except PluginMeta.DoesNotExist:
-                    logger.warning(
-                        "PluginMeta does not exist for name %s and user_profile %s",
-                        self.name,
-                        self.user_profile,
-                    )
-            except PluginMeta.DoesNotExist:
-                logger.warning(
-                    "PluginMeta does not exist for name %s and account %s",
-                    self.name,
-                    self.account,
-                )
+        try:
+            self._plugin_meta = PluginMeta.get_cached_object(
+                user_profile=self.user_profile,
+                name=self.name,
+            )
+            logger.debug(
+                "%s.plugin_meta() - retrieved %s for name=%s, user_profile=%s",
+                logger_prefix,
+                self._plugin_meta.__class__.__name__,
+                self.name,
+                self.user_profile,
+            )
+        except PluginMeta.DoesNotExist:
+            logger.warning(
+                "%s.plugin_meta() - PluginMeta does not exist for name=%s and user_profile=%s",
+                logger_prefix,
+                self.name,
+                self.user_profile,
+            )
         return self._plugin_meta
 
     @plugin_meta.setter

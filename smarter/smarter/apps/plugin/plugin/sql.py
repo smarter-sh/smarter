@@ -236,17 +236,33 @@ class SqlPlugin(PluginBase):
         """
         if self._plugin_data:
             return self._plugin_data
+
+        self._plugin_data = PluginDataSql.get_cached_object(plugin=self.plugin_meta)  # type: ignore[call-arg]
+        if self._plugin_data:
+            logger.debug(
+                "%s.plugin_data() retrieved existing PluginDataSql from database.",
+                self.formatted_class_name,
+            )
+            return self._plugin_data
+        else:
+            logger.debug(
+                "%s.plugin_data() no existing PluginDataSql found in database for plugin_meta: %s",
+                self.formatted_class_name,
+                self.plugin_meta,
+            )
+
         # we only want a preexisting manifest ostensibly sourced
         # from the cli, not a lazy-loaded
         if self._manifest and self.plugin_meta:
             # this is an update scenario. the Plugin exists in the database,
             # AND we've received manifest data from the cli.
+            self._plugin_data = PluginDataSql(**self.plugin_data_django_model)  # type: ignore[call-arg]
+            self._plugin_data.save()
             logger.debug(
-                "%s.plugin_data() constructing %s from manifest and plugin metadata.",
+                "%s.plugin_data() created new instance of %s from manifest and plugin metadata.",
                 self.formatted_class_name,
                 self.plugin_data_class.__name__,
             )
-            self._plugin_data = PluginDataSql(**self.plugin_data_django_model)  # type: ignore[call-arg]
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
