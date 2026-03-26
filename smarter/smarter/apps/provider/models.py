@@ -511,9 +511,20 @@ class Provider(MetaDataWithOwnershipModel):
         @cache_results()
         def cached_provider_by_account_id_and_name(account_id: int, name: str) -> Optional["Provider"]:
             try:
-                provider = cls.objects.get(user_profile__account__id=account_id, name=name)
-                return provider
+                logger.debug(
+                    "%s.cached_provider_by_account_id_and_name() cache miss for account_id: %s, name: %s",
+                    cls.formatted_class_name,
+                    account_id,
+                    name,
+                )
+                return cls.objects.get(user_profile__account__id=account_id, name=name)
             except cls.DoesNotExist:
+                logger.debug(
+                    "%s.cached_provider_by_account_id_and_name() no provider found for account_id: %s, name: %s",
+                    cls.formatted_class_name,
+                    account_id,
+                    name,
+                )
                 return None
 
         if invalidate:

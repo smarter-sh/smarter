@@ -523,7 +523,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[models.Model]
         """
-        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()")
+        logger_prefix = formatted_text(__name__ + "." + TimestampedModel.__name__ + ".get_cached_object()")
         logger.debug("%s.get_cached_object() called with pk: %s, invalidate=%s", logger_prefix, pk, invalidate)
 
         if cls._meta.abstract:
@@ -535,14 +535,25 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         def _get_model_by_pk(pk: int) -> Optional[models.Model]:
 
             try:
+                logger.debug(
+                    "%s._get_model_by_pk() cache miss for pk: %s",
+                    logger_prefix,
+                    pk,
+                )
                 return cls.objects.get(pk=pk)
             except cls.DoesNotExist:
+                logger.debug(
+                    "%s._get_model_by_pk() no object found for pk: %s",
+                    logger_prefix,
+                    pk,
+                )
                 return None
 
         if invalidate:
             _get_model_by_pk.invalidate(pk)
 
         if not pk:
+            logger.debug("%s._get_model_by_pk() called with no pk", logger_prefix)
             return None
 
         return _get_model_by_pk(pk)
@@ -710,7 +721,7 @@ class MetaDataModel(TimestampedModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["MetaDataModel"]
         """
-        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()")
+        logger_prefix = formatted_text(__name__ + "." + MetaDataModel.__name__ + ".get_cached_object()")
         logger.debug(
             "%s.get_cached_object() called with pk: %s, name: %s, invalidate: %s", logger_prefix, pk, name, invalidate
         )
@@ -726,8 +737,18 @@ class MetaDataModel(TimestampedModel):
         @cache_results(timeout=cls.cache_expiration)
         def _get_object_by_name(name: str) -> Optional["MetaDataModel"]:
             try:
+                logger.debug(
+                    "%s._get_object_by_name() cache miss for name: %s",
+                    logger_prefix,
+                    name,
+                )
                 return cls.objects.prefetch_related("tags").get(name=name)
             except cls.DoesNotExist:
+                logger.debug(
+                    "%s._get_object_by_name() no object found with name: %s",
+                    logger_prefix,
+                    name,
+                )
                 return None
             except cls.MultipleObjectsReturned as e:
                 logger.error(

@@ -521,12 +521,20 @@ class SAMAccountBroker(AbstractBroker):
                 self.name,
             )
             self._orm_instance = Account.get_cached_object(name=self.name)
-            logger.debug(
-                "%s.orm_instance() - retrieved %s instance: %s",
-                self.formatted_class_name,
-                Account.__name__,
-                serializers.serialize("json", [self._orm_instance]),  # type: ignore[list-item]
-            )
+            if self._orm_instance:
+                logger.debug(
+                    "%s.orm_instance() - retrieved %s instance: %s",
+                    self.formatted_class_name,
+                    Account.__name__,
+                    serializers.serialize("json", [self._orm_instance]),  # type: ignore[list-item]
+                )
+            else:
+                logger.debug(
+                    "%s.orm_instance() - no %s instance found for name: %s",
+                    self.formatted_class_name,
+                    Account.__name__,
+                    self.name,
+                )
             return self._orm_instance
         except Account.DoesNotExist:
             logger.warning(

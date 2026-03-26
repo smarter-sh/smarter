@@ -517,12 +517,14 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                 lazy_cache.set(cache_key, cache_value, timeout)
                 if logging_enabled and lazy_cache.cache_logging:
                     logger.info(
-                        "%s cache miss for %s, caching result: with timeout %s args: %s kwargs: %s",
+                        "%s caching %s - %s, with timeout %s args: %s kwargs: %s for %s",
                         logger_prefix_red,
+                        type(cache_value).__name__,
                         cache_key,
                         timeout,
                         args,
                         kwargs,
+                        cache_value,
                     )
             return result
 
@@ -564,8 +566,9 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                 cached_value = lazy_cache.get(cache_key)
                 lazy_cache.delete(cache_key)
                 logger.debug(
-                    "%s.invalidate() - invalidated cache entry for %s: %s",
+                    "%s.invalidate() - invalidated %s - %s: %s",
                     logger_prefix_blue,
+                    type(cached_value).__name__,
                     cache_key,
                     str(cached_value),
                 )

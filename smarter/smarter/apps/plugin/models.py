@@ -514,6 +514,43 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             plugin_class,
         )
 
+        @cache_results(cls.cache_expiration)
+        def _get_model_by_name_and_userprofile_and_plugin_class(
+            name: str, user_profile_id: int, plugin_class: str
+        ) -> Optional["PluginMeta"]:
+            try:
+                logger.debug(
+                    "%s._get_model_by_name_and_userprofile_and_plugin_class() cache miss for name: %s, user_profile_id: %s, plugin_class: %s",
+                    logger_prefix,
+                    name,
+                    user_profile_id,
+                    plugin_class,
+                )
+                return (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(name=name, user_profile_id=user_profile_id, plugin_class=plugin_class)
+                )
+            except cls.DoesNotExist:
+                logger.debug(
+                    "%s._get_model_by_name_and_userprofile_and_plugin_class() no PluginMeta found for name: %s, user_profile_id: %s, plugin_class: %s",
+                    logger_prefix,
+                    name,
+                    user_profile_id,
+                    plugin_class,
+                )
+                return None
+
+        user_profile = user_profile or UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
+        if not user_profile and not pk:
+            raise SmarterValueError("either a pk or UserProfile + name is required to get a PluginMeta object.")
+
+        if invalidate and user_profile and name:
+            _get_model_by_name_and_userprofile_and_plugin_class.invalidate(name, user_profile.id, plugin_class)  # type: ignore[union-attr]
+
+        if pk:
+            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
+
         if not plugin_class:
             retval = super().get_cached_object(
                 invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account
@@ -521,34 +558,6 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             if isinstance(retval, PluginMeta):
                 return retval
             return None
-
-        @cache_results(cls.cache_expiration)
-        def _get_model_by_name_and_userprofile_and_plugin_class(
-            name: str, user_profile_id: int, plugin_class: str
-        ) -> Optional["PluginMeta"]:
-            try:
-                return (
-                    cls.objects.prefetch_related("tags")
-                    .select_related("user_profile", "user_profile__account", "user_profile__user")
-                    .get(name=name, user_profile_id=user_profile_id, plugin_class=plugin_class)
-                )
-            except cls.DoesNotExist:
-                return None
-
-        if invalidate:
-            _get_model_by_name_and_userprofile_and_plugin_class.invalidate(name, user_profile.id, plugin_class)  # type: ignore[union-attr]
-
-        if pk:
-            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
-
-        if not user_profile:
-            if not user:
-                raise ImproperlyConfigured(
-                    "PluginMeta.get_cached_object() requires either user_profile or user to be provided."
-                )
-            if not account:
-                account = get_cached_account_for_user(invalidate=invalidate, user=user)  # type: ignore[arg-type]
-            user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
 
         if plugin_class:
             return _get_model_by_name_and_userprofile_and_plugin_class(name, user_profile.id, plugin_class)
@@ -913,6 +922,13 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
     - :class:`PluginMeta`
     """
 
+    def __str__(self) -> str:
+        plugin: PluginMeta = self.plugin
+        user_profile = plugin.user_profile if self.plugin else "No User Profile"
+        user_profile = str(user_profile)
+        name = str(plugin.name) if plugin else "No Plugin Name"
+        return str("<" + user_profile + " - " + name + ">")
+
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data_base_plugin")
 
     description = models.TextField(
@@ -1022,64 +1038,6 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
 
         raise NotImplementedError("Subclasses must implement get_cached_data_by_plugin method.")
 
-    # pylint: disable=W0221
-    @classmethod
-    def get_cached_object(
-        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None
-    ) -> Optional["PluginDataBase"]:
-        """
-        Retrieve a model instance by primary key, using caching to
-        optimize performance. This method is selectively overridden in
-        models that inherit from MetaDataModel to provide class-specific
-        function parameters.
-
-        Example usage:
-
-        .. code-block:: python
-
-            # Retrieve by primary key
-            instance = MyModel.get_cached_object(pk=1)
-
-        :param invalidate: If True, invalidate the cache for this query before retrieving the object.
-        :type invalidate: bool
-        :param pk: The primary key of the model instance to retrieve.
-        :type pk: int
-        :param plugin: The PluginMeta instance associated with the data to retrieve.
-        :type plugin: PluginMeta
-
-        :returns: The model instance if found, otherwise None.
-        :rtype: Optional["PluginDataBase"]
-        """
-        # pylint: disable=W0621
-        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
-        logger.debug(
-            "%s called with pk: %s, plugin: %s",
-            logger_prefix,
-            pk,
-            plugin,
-        )
-
-        @cache_results()
-        def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataBase"]:
-            try:
-                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
-            except cls.DoesNotExist:
-                logger.warning(
-                    "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
-                    cls.formatted_class_name,
-                    plugin_id,
-                )
-                return None
-
-        if invalidate and plugin:
-            _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
-
-        if pk:
-            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
-
-        if plugin:
-            return _get_model_by_plugin_meta(plugin.id)
-
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""
         self.validate()
@@ -1113,6 +1071,10 @@ class PluginDataStatic(PluginDataBase):
     - :class:`PluginDataBase`
     - :class:`PluginMeta`
     """
+
+    class Meta:
+        verbose_name = "Plugin Static Data"
+        verbose_name_plural = "Plugin Static Data"
 
     static_data = models.JSONField(
         help_text="The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.",
@@ -1247,8 +1209,8 @@ class PluginDataStatic(PluginDataBase):
                 return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist:
                 logger.warning(
-                    "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
-                    cls.formatted_class_name,
+                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
+                    formatted_text(cls.__name__),
                     plugin_id,
                 )
                 return None
@@ -1258,12 +1220,68 @@ class PluginDataStatic(PluginDataBase):
 
         return data_by_plugin_id(plugin.id)
 
-    def __str__(self) -> str:
-        return str(self.plugin.name)
+    # pylint: disable=W0221
+    @classmethod
+    def get_cached_object(
+        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None
+    ) -> Optional["PluginDataBase"]:
+        """
+        Retrieve a model instance by primary key, using caching to
+        optimize performance. This method is selectively overridden in
+        models that inherit from MetaDataModel to provide class-specific
+        function parameters.
 
-    class Meta:
-        verbose_name = "Plugin Static Data"
-        verbose_name_plural = "Plugin Static Data"
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve by primary key
+            instance = MyModel.get_cached_object(pk=1)
+
+        :param invalidate: If True, invalidate the cache for this query before retrieving the object.
+        :type invalidate: bool
+        :param pk: The primary key of the model instance to retrieve.
+        :type pk: int
+        :param plugin: The PluginMeta instance associated with the data to retrieve.
+        :type plugin: PluginMeta
+
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional["PluginDataBase"]
+        """
+        # pylint: disable=W0621
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, plugin: %s",
+            logger_prefix,
+            pk,
+            plugin,
+        )
+
+        @cache_results()
+        def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataBase"]:
+            try:
+                logger.debug(
+                    "%s._get_model_by_plugin_meta() cache miss for plugin_id: %s",
+                    logger_prefix,
+                    plugin_id,
+                )
+                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
+                    cls.formatted_class_name,
+                    plugin_id,
+                )
+                return None
+
+        if invalidate and plugin:
+            _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
+
+        if pk:
+            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
+
+        if plugin:
+            return _get_model_by_plugin_meta(plugin.id)
 
 
 class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
@@ -1299,6 +1317,10 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
     class Meta:
         abstract = True
+        unique_together = (
+            "user_profile",
+            "name",
+        )
 
     CONNECTION_KIND_CHOICES = [
         (SAMKinds.SQL_CONNECTION.value, SAMKinds.SQL_CONNECTION.value),
@@ -1487,6 +1509,14 @@ class SqlConnection(ConnectionBase):
     - :class:`PluginDataSql`
     - :class:`smarter.apps.account.models.Secret`
     """
+
+    class Meta:
+        verbose_name = "SQL Connection"
+        verbose_name_plural = "SQL Connections"
+        unique_together = (
+            "user_profile",
+            "name",
+        )
 
     _connection: Optional[BaseDatabaseWrapper] = None
 
@@ -2394,6 +2424,69 @@ class PluginDataSql(PluginDataBase):
         super().save(*args, **kwargs)
         self.get_cached_data_by_plugin(self.plugin, invalidate=True)
 
+    # pylint: disable=W0221
+    @classmethod
+    def get_cached_object(
+        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None
+    ) -> Optional["PluginDataBase"]:
+        """
+        Retrieve a model instance by primary key, using caching to
+        optimize performance. This method is selectively overridden in
+        models that inherit from MetaDataModel to provide class-specific
+        function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve by primary key
+            instance = MyModel.get_cached_object(pk=1)
+
+        :param invalidate: If True, invalidate the cache for this query before retrieving the object.
+        :type invalidate: bool
+        :param pk: The primary key of the model instance to retrieve.
+        :type pk: int
+        :param plugin: The PluginMeta instance associated with the data to retrieve.
+        :type plugin: PluginMeta
+
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional["PluginDataBase"]
+        """
+        # pylint: disable=W0621
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, plugin: %s",
+            logger_prefix,
+            pk,
+            plugin,
+        )
+
+        @cache_results()
+        def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataBase"]:
+            try:
+                logger.debug(
+                    "%s._get_model_by_plugin_meta() cache miss for plugin_id: %s",
+                    logger_prefix,
+                    plugin_id,
+                )
+                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
+                    cls.formatted_class_name,
+                    plugin_id,
+                )
+                return None
+
+        if invalidate and plugin:
+            _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
+
+        if pk:
+            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
+
+        if plugin:
+            return _get_model_by_plugin_meta(plugin.id)
+
     @classmethod
     def get_cached_data_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginDataSql", None]:
         """
@@ -2413,7 +2506,7 @@ class PluginDataSql(PluginDataBase):
                 return cls.objects.select_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist:
                 logger.warning(
-                    "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
+                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
                     cls.formatted_class_name,
                     plugin_id,
                 )
@@ -2423,13 +2516,6 @@ class PluginDataSql(PluginDataBase):
             data_by_plugin_id.invalidate(plugin.id)
 
         return data_by_plugin_id(plugin.id)
-
-    def __str__(self) -> str:
-        plugin: PluginMeta = self.plugin
-        user_profile = plugin.user_profile if self.plugin else "No User Profile"
-        user_profile = str(user_profile)
-        name = str(plugin.name) if plugin else "No Plugin Name"
-        return str(user_profile + " - " + name)
 
 
 class ApiConnection(ConnectionBase):
@@ -2462,6 +2548,14 @@ class ApiConnection(ConnectionBase):
     - :class:`PluginDataApi`
     - :class:`smarter.apps.account.models.Secret`
     """
+
+    class Meta:
+        verbose_name = "API Connection"
+        verbose_name_plural = "API Connections"
+        unique_together = (
+            "user_profile",
+            "name",
+        )
 
     AUTH_METHOD_CHOICES = [
         ("none", "None"),
@@ -2888,7 +2982,7 @@ class PluginDataApi(PluginDataBase):
                 return cls.objects.prefetch_related("tags").select_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist:
                 logger.warning(
-                    "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
+                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
                     cls.formatted_class_name,
                     plugin_id,
                 )
@@ -2899,12 +2993,68 @@ class PluginDataApi(PluginDataBase):
 
         return data_by_plugin_id(plugin.id)
 
-    def __str__(self) -> str:
-        plugin: PluginMeta = self.plugin
-        user_profile = plugin.user_profile if plugin else "No User Profile"
-        user_profile = str(user_profile)
-        name = str(plugin.name) if plugin else "No Plugin Name"
-        return str(user_profile + " - " + name)
+    # pylint: disable=W0221
+    @classmethod
+    def get_cached_object(
+        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None
+    ) -> Optional["PluginDataBase"]:
+        """
+        Retrieve a model instance by primary key, using caching to
+        optimize performance. This method is selectively overridden in
+        models that inherit from MetaDataModel to provide class-specific
+        function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve by primary key
+            instance = MyModel.get_cached_object(pk=1)
+
+        :param invalidate: If True, invalidate the cache for this query before retrieving the object.
+        :type invalidate: bool
+        :param pk: The primary key of the model instance to retrieve.
+        :type pk: int
+        :param plugin: The PluginMeta instance associated with the data to retrieve.
+        :type plugin: PluginMeta
+
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional["PluginDataBase"]
+        """
+        # pylint: disable=W0621
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, plugin: %s",
+            logger_prefix,
+            pk,
+            plugin,
+        )
+
+        @cache_results()
+        def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataBase"]:
+            try:
+                logger.debug(
+                    "%s._get_model_by_plugin_meta() cache miss for plugin_id: %s",
+                    logger_prefix,
+                    plugin_id,
+                )
+                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
+                    cls.formatted_class_name,
+                    plugin_id,
+                )
+                return None
+
+        if invalidate and plugin:
+            _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
+
+        if pk:
+            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
+
+        if plugin:
+            return _get_model_by_plugin_meta(plugin.id)
 
 
 PluginDataType = type[PluginDataStatic] | type[PluginDataApi] | type[PluginDataSql]

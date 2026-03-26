@@ -1070,6 +1070,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         self.name,
                         smarter_admin_user_profile,
                         e,
+                        exc_info=True,
                     )
                     return None
         # pylint: disable=broad-except
@@ -1081,6 +1082,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.name,
                 self.user_profile,
                 e,
+                exc_info=True,
             )
 
     @property
@@ -1232,6 +1234,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         self.name,
                         smarter_admin_user_profile,
                         e,
+                        exc_info=True,
                     )
                     return None
             # pylint: disable=broad-except
@@ -1243,6 +1246,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                     self.name,
                     account_admin_user_profile,
                     e,
+                    exc_info=True,
                 )
                 return None
         # pylint: disable=broad-except
@@ -1254,14 +1258,24 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.name,
                 self.user_profile,
                 e,
+                exc_info=True,
             )
             return None
-        logger.debug(
-            "%s.orm_instance() - retrieved %s: %s",
-            self.abstract_broker_logger_prefix,
-            ModelClass.__name__,
-            serializers.serialize("json", [self._orm_instance]),  # type: ignore
-        )
+        if self._orm_instance:
+            logger.debug(
+                "%s.orm_instance() - retrieved %s: %s",
+                self.abstract_broker_logger_prefix,
+                ModelClass.__name__,
+                serializers.serialize("json", [self._orm_instance]),  # type: ignore
+            )
+        else:
+            logger.debug(
+                "%s.orm_instance() - could not retrieve %s instance for %s owned by %s",
+                self.abstract_broker_logger_prefix,
+                ModelClass.__name__,
+                self.name,
+                self.user_profile,
+            )
         if self.ORMModelClass == self.ORMMetaModelClass:
             self._orm_meta_instance = self._orm_instance
             logger.debug(

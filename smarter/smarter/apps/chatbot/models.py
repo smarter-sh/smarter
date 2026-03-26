@@ -956,7 +956,18 @@ class ChatBot(MetaDataWithOwnershipModel):
             invalidate,
         )
 
-        return super().get_cached_object(invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account)  # type: ignore[assignment]
+        retval = super().get_cached_object(invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account)  # type: ignore[assignment]
+        if retval is None:
+            logger.warning(
+                "%s did not find a ChatBot with pk=%s, name=%s, user=%s, user_profile=%s, account=%s",
+                logger_prefix,
+                pk,
+                name,
+                user,
+                user_profile,
+                account,
+            )
+        return retval  # type: ignore[return-value]
 
     @classmethod
     def get_cached_objects(

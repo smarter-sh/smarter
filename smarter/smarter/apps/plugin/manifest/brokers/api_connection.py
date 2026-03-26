@@ -583,14 +583,37 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         try:
             name = str(self.camel_to_snake(self.name))  # type: ignore
+            logger.debug(
+                "%s.connection() attempting ApiConnection with account %s and name %s",
+                self.formatted_class_name,
+                self.account,
+                name,
+            )
             self._connection = ApiConnection.get_cached_object(account=self.account, name=name)
         except MultipleObjectsReturned:
+            logger.debug(
+                "%s.connection() multiple ApiConnection objects found for account %s and name %s",
+                self.formatted_class_name,
+                self.account,
+                name,
+            )
             try:
                 self._connection = ApiConnection.get_cached_object(user_profile=self.user_profile, name=name)
             except ApiConnection.DoesNotExist:
-                pass
+                logger.debug(
+                    "%s.connection() no ApiConnection found for user profile %s and name %s",
+                    self.formatted_class_name,
+                    self.user_profile,
+                    name,
+                )
+
         except ApiConnection.DoesNotExist:
-            pass
+            logger.debug(
+                "%s.connection() no ApiConnection found for account %s and name %s",
+                self.formatted_class_name,
+                self.account,
+                name,
+            )
 
         if not self._connection:
             if self._manifest:
@@ -621,14 +644,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 self._connection.save()
                 self._created = True
                 logger.info(
-                    "%s created ApiConnection %s for account %s",
+                    "%s.connection() created ApiConnection %s for account %s",
                     self.formatted_class_name,
                     self.name or "(name is missing)",
                     self.account or "(account is missing)",
                 )
             else:
                 logger.error(
-                    "%s ApiConnection %s not found for account %s",
+                    "%s.connection() ApiConnection %s not found for account %s",
                     self.formatted_class_name,
                     self.name or "(name is missing)",
                     self.account or "(account is missing)",
