@@ -13,6 +13,7 @@ from smarter.apps.account.utils import (
 )
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.cache import cache_results
 
 from .models import ChatBot, ChatBotHelper
 
@@ -22,9 +23,17 @@ logger_prefix = formatted_text(f"{__name__}")
 LRU_CACHE_MAX_SIZE = 128
 
 
-def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHelper]:
+def get_cached_chatbots_for_user_profile(user_profile_id: int, invalidate: bool = False) -> list[ChatBotHelper]:
     """
     Returns a list of chatbots for the given user profile.
+
+    :param user_profile_id: The ID of the user profile to get chatbots for.
+    :type user_profile_id: int
+    :param invalidate: Whether to invalidate the cache and fetch fresh data.
+    :type invalidate: bool
+
+    :return: A list of ChatBotHelper instances for the given user profile.
+    :rtype: list[ChatBotHelper]
     """
     try:
 
@@ -60,8 +69,25 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHe
                 len(smarter_chatbots),
             )
 
-            combined_chatbots = user_chatbots | admin_chatbots | smarter_chatbots
-            return combined_chatbots
+            # pylint: disable=W0613
+            @cache_results(15)
+            def _combined_chatbots_list(use_profile_id: int, class_name: str = ChatBot.__name__) -> QuerySet:
+                """
+                Short-lived cache for combined chatbots list.
+                Combines user, admin, and smarter chatbots into a single queryset
+                and caches the result for 15 seconds to improve performance.
+                """
+
+                combined_chatbots = user_chatbots | admin_chatbots | smarter_chatbots
+                combined_chatbots = (
+                    combined_chatbots.distinct()
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .order_by("name")
+                )
+
+                return combined_chatbots
+
+            return _combined_chatbots_list(user_profile_id, class_name=ChatBot.__name__)
 
         logger.debug(
             "%s.get_cached_chatbots_for_user_profile() - Getting chatbots for user_profile_id %s",

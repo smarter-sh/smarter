@@ -637,30 +637,47 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             def get_plugins_for_account() -> QuerySet:
                 user_plugins = PluginMeta.get_cached_objects(user_profile=user_profile, invalidate=invalidate)
                 logger.debug(
-                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d user plugins for user",
+                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d user plugins for %s",
                     logger_prefix,
                     len(user_plugins),
+                    user_profile,
                 )
 
                 admin_plugins = PluginMeta.get_cached_objects(user_profile=admin_user_profile, invalidate=invalidate)  # type: ignore[assignment]
                 logger.debug(
-                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d admin plugins for account admin",
+                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d admin plugins for %s",
                     logger_prefix,
                     len(admin_plugins),
+                    admin_user_profile,
                 )
 
                 smarter_plugins = PluginMeta.get_cached_objects(
                     user_profile=smarter_cached_objects.smarter_admin_user_profile, invalidate=invalidate
                 )
                 logger.debug(
-                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d smarter plugins for smarter admin",
+                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d smarter plugins for %s",
                     logger_prefix,
                     len(smarter_plugins),
+                    smarter_cached_objects.smarter_admin_user_profile,
                 )
 
-                combined_plugins = user_plugins | admin_plugins | smarter_plugins
-                combined_plugins = combined_plugins.distinct().order_by("name")
-                return combined_plugins
+                @cache_results(15)
+                def _combined_plugins_list(use_profile_id: int, class_name: str = PluginMeta.__name__) -> QuerySet:
+                    """
+                    Short-lived cache for combined plugins list.
+                    Combines user, admin, and smarter plugins into a single queryset
+                    and caches the result for 15 seconds to improve performance.
+                    """
+
+                    combined_plugins = user_plugins | admin_plugins | smarter_plugins
+                    combined_plugins = (
+                        combined_plugins.distinct()
+                        .select_related("user_profile", "user_profile__account", "user_profile__user")
+                        .order_by("name")
+                    )
+                    return combined_plugins
+
+                return _combined_plugins_list(user_profile.id, class_name=PluginMeta.__name__)
 
             plugins = get_plugins_for_account()
 
