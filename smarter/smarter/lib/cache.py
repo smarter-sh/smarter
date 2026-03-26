@@ -502,9 +502,12 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                     None if isinstance(cached_result, str) and cached_result == CACHE_NONE_SENTINEL else cached_result
                 )
                 if logging_enabled and lazy_cache.cache_logging:
+                    class_name = kwargs.get("class_name", "")
+                    class_name = f"{class_name} - " if class_name else ""
                     logger.info(
-                        "%s cache hit for %s: %s args: %s kwargs: %s",
+                        "%s cache hit for %s%s: %s args: %s kwargs: %s",
                         logger_prefix_green,
+                        class_name,
                         cache_key,
                         "None" if result is None else result,
                         args,
@@ -565,7 +568,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
             if lazy_cache.has_key(cache_key):
                 cached_value = lazy_cache.get(cache_key)
                 lazy_cache.delete(cache_key)
-                logger.debug(
+                logger.info(
                     "%s.invalidate() - invalidated %s - %s: %s",
                     logger_prefix_blue,
                     type(cached_value).__name__,

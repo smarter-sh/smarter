@@ -1386,13 +1386,14 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         @cache_results(cls.cache_expiration)
         def _get_objects_for_user_profile_id(
-            class_name: str, user_profile_id: int
+            user_profile_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
             """
             Internal method to retrieve MetaDataWithOwnershipModel instances for
             a given user profile ID with caching.
 
             :param user_profile_id: The ID of the user profile for which to retrieve MetaDataWithOwnershipModel instances.
+            :param class_name: The name of the class for cache key purposes.
             :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile ID.
             :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
             """
@@ -1403,10 +1404,10 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             )
 
         if invalidate:
-            _get_objects_for_user_profile_id.invalidate(cls.__name__, user_profile.id)
+            _get_objects_for_user_profile_id.invalidate(user_profile_id=user_profile.id, class_name=cls.__name__)
 
         if user_profile:
-            return _get_objects_for_user_profile_id(cls.__name__, user_profile.id)
+            return _get_objects_for_user_profile_id(user_profile_id=user_profile.id, class_name=cls.__name__)
 
         return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
 

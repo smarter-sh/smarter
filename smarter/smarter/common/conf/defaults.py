@@ -119,7 +119,7 @@ class SettingsDefaults:
         "BRANDING_URL_LINKEDIN", "https://www.linkedin.com/in/lawrencemcdaniel/"
     )
 
-    CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 10))  # 10 minutes
+    CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
     CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
     CONFIGURE_UBC_ACCOUNT: bool = bool_environment_variable("CONFIGURE_UBC_ACCOUNT", False)
     CHATBOT_CACHE_EXPIRATION: int = int(get_env("CHATBOT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
