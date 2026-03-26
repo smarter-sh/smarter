@@ -1408,8 +1408,6 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             self.abstract_broker_logger_cache_invalidation_prefix,
             self.user_profile,
         )
-        Account.get_cached_objects(invalidate=True)  # type: ignore
-        UserProfile.get_cached_objects(invalidate=True)  # type: ignore
 
         # This should be the very last thing that happens. This Django
         # signal will potentially trigger a wide variety of cache invalidations

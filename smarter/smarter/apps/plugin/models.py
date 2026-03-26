@@ -2979,7 +2979,7 @@ class PluginDataApi(PluginDataBase):
         @cache_results()
         def data_by_plugin_id(plugin_id: int) -> Union["PluginDataApi", None]:
             try:
-                return cls.objects.prefetch_related("tags").select_related("plugin").get(plugin_id=plugin_id)
+                return cls.objects.select_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist:
                 logger.warning(
                     "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",

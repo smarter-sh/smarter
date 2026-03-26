@@ -287,33 +287,46 @@ class SAMChatbotBroker(AbstractBroker):
             Creating/updating database records should be handled in apply().
 
         """
+        if self._chatbot:
+            return self._chatbot
 
-        if not self._chatbot:
-            try:
-                self._chatbot = ChatBot.get_cached_object(user_profile=self.user_profile, name=self.name)
-            except ChatBot.DoesNotExist:
-                if self.manifest:
-                    data = self.manifest_to_django_orm()
-                    data["user_profile"] = self.user_profile
-                    logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
-                    tags = data.pop("tags", [])
-                    self._chatbot = ChatBot.objects.create(**data)
-                    if tags:
-                        self._chatbot.tags.set(tags)
-                    self._created = True
-                    logger.warning(
-                        "%s.chatbot() lazily created new ChatBot instance %s owned by %s. This logic should be handled in apply().",
-                        self.formatted_class_name,
-                        self.name,
-                        self.user_profile,
-                    )
-                else:
-                    logger.warning(
-                        "%s.chatbot() %s not found for user_profile %s",
-                        self.formatted_class_name,
-                        self.name,
-                        self.user_profile,
-                    )
+        self._chatbot = ChatBot.get_cached_object(invalidate=True, user_profile=self.user_profile, name=self.name)
+        if self._chatbot:
+            logger.debug(
+                "%s.chatbot() retrieved existing ChatBot instance %s owned by %s from database.",
+                self.formatted_class_name,
+                self._chatbot,
+                self.user_profile,
+            )
+            return self._chatbot
+
+        logger.debug(
+            "%s.chatbot() ChatBot instance not found for user_profile %s. Attempting to create a new instance.",
+            self.formatted_class_name,
+            self.user_profile,
+        )
+        if self.manifest:
+            data = self.manifest_to_django_orm()
+            data["user_profile"] = self.user_profile
+            logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
+            tags = data.pop("tags", [])
+            self._chatbot = ChatBot.objects.create(**data)
+            if tags:
+                self._chatbot.tags.set(tags)
+            self._created = True
+            logger.warning(
+                "%s.chatbot() lazily created new ChatBot instance %s owned by %s. This logic should be handled in apply().",
+                self.formatted_class_name,
+                self._chatbot,
+                self.user_profile,
+            )
+        else:
+            logger.warning(
+                "%s.chatbot() %s not found for user_profile %s",
+                self.formatted_class_name,
+                self._chatbot,
+                self.user_profile,
+            )
 
         return self._chatbot
 
@@ -983,7 +996,7 @@ class SAMChatbotBroker(AbstractBroker):
                 for plugin_name in self.manifest.spec.plugins:
                     plugin_name = str(self.camel_to_snake(plugin_name))
                     try:
-                        plugin = PluginMeta.get_cached_object(name=plugin_name, account=self.account)
+                        plugin = PluginMeta.get_cached_object(invalidate=True, name=plugin_name, account=self.account)
                     except PluginMeta.DoesNotExist as e:
                         logger.error(
                             "%s.apply() failed to find PluginMeta %s",
