@@ -451,69 +451,21 @@ class Provider(MetaDataWithOwnershipModel):
         self.save()
 
     @classmethod
-    def get_cached_object(
-        cls,
-        invalidate: Optional[bool] = False,
-        pk: Optional[int] = None,
-        name: Optional[str] = None,
-        user: Optional[User] = None,
-        user_profile: Optional[UserProfile] = None,
-        account: Optional[Account] = None,
-    ) -> Optional["Provider"]:
-        """
-        Retrieve a model instance using caching to optimize performance.
-
-        Examples of retrieval patterns:
-
-        .. code-block:: python
-
-            # By primary key
-            instance = MyModel.get_cached_object(pk=123)
-
-            # By name and user profile
-            instance = MyModel.get_cached_object(name="Resource Name", user_profile=user_profile)
-
-            # By name and account
-            instance = MyModel.get_cached_object(name="Resource Name", account=account)
-
-        :param pk: The primary key of the model instance to retrieve.
-        :param name: The name of the model instance to retrieve.
-        :param user: The user associated with the model instance.
-        :param user_profile: The user profile associated with the model instance.
-        :param account: The account associated with the model instance.
-
-        :returns: The model instance if found, otherwise None.
-        :rtype: Optional["Provider"]
-        """
-        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()")
-        logger.debug(
-            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s",
-            logger_prefix,
-            pk,
-            name,
-            user,
-            user_profile,
-            account,
-        )
-        retval = super().get_cached_object(
-            invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account
-        )
-        if isinstance(retval, Provider):
-            return retval
-        return None
-
-    @classmethod
     def get_cached_provider_by_account_id_and_name(
         cls, invalidate: Optional[bool] = False, account_id: Optional[int] = None, name: Optional[str] = None
     ) -> Optional["Provider"]:
         """Get a cached provider by account ID and name."""
+
+        logger_prefix = formatted_text(
+            __name__ + "." + Provider.__name__ + ".get_cached_provider_by_account_id_and_name()"
+        )
 
         @cache_results()
         def cached_provider_by_account_id_and_name(account_id: int, name: str) -> Optional["Provider"]:
             try:
                 logger.debug(
                     "%s.cached_provider_by_account_id_and_name() cache miss for account_id: %s, name: %s",
-                    cls.formatted_class_name,
+                    logger_prefix,
                     account_id,
                     name,
                 )
@@ -521,7 +473,7 @@ class Provider(MetaDataWithOwnershipModel):
             except cls.DoesNotExist:
                 logger.debug(
                     "%s.cached_provider_by_account_id_and_name() no provider found for account_id: %s, name: %s",
-                    cls.formatted_class_name,
+                    logger_prefix,
                     account_id,
                     name,
                 )

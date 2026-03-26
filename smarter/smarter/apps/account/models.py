@@ -924,8 +924,8 @@ class UserProfile(MetaDataModel):
         pk: Optional[int] = None,
         name: Optional[str] = None,
         user: Optional[User] = None,
-        account: Optional[Account] = None,
         username: Optional[str] = None,
+        account: Optional[Account] = None,
     ) -> Optional["UserProfile"]:
         """
         Retrieve a model instance by primary key or name, using caching to
@@ -1174,6 +1174,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         )
 
         if username and not user and not user_profile:
+            logger.debug("%s Resolving user_profile from username: %s", logger_prefix, username)
             user_profile = UserProfile.get_cached_object(invalidate=invalidate, username=username)
             user = user_profile.cached_user if user_profile else None
 
@@ -1183,13 +1184,15 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             account = account or user_profile.cached_account
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_pk(pk: int) -> Optional["MetaDataWithOwnershipModel"]:
+        def _get_object_by_pk(pk: int, class_name: str = cls.__name__) -> Optional["MetaDataWithOwnershipModel"]:
             """
             Internal method to retrieve a model instance by primary key with caching.
             Prefetches related tags and selects related user profile, account, and
             user for optimal access. Handles most common SAM pk retrieval scenarios.
 
             :param pk: The primary key of the model instance to retrieve.
+            :param class_name: The name of the class for logging purposes.
+            :class_name: The name of the class for cache key purposes.
             :returns: The model instance if found, otherwise None.
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
@@ -1201,7 +1204,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 )
                 logger.debug(
                     "%s._get_object_by_pk() fetched %s - %s",
-                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     type(retval).__name__,
                     str(retval),
                 )
@@ -1209,7 +1212,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             except cls.DoesNotExist:
                 logger.debug(
                     "%s._get_object_by_pk() no %s object found for pk: %s",
-                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     cls.__name__,
                     pk,
                 )
@@ -1217,7 +1220,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_user_profile(
-            name: str, user_profile: UserProfile
+            name: str, user_profile: UserProfile, class_name: str = cls.__name__
         ) -> Optional["MetaDataWithOwnershipModel"]:
             """
             Internal method to retrieve a model instance by name and user
@@ -1227,6 +1230,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
             :param name: The name of the model instance to retrieve.
             :param user_profile: The user profile associated with the model instance.
+            :param class_name: The name of the class for cache key purposes.
 
             :returns: The model instance if found, otherwise None.
             :rtype: Optional["MetaDataWithOwnershipModel"]
@@ -1239,7 +1243,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 )
                 logger.debug(
                     "%s._get_object_by_name_and_user_profile() fetched %s for name: %s and user_profile: %s",
-                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     type(retval).__class__.__name__,
                     name,
                     user_profile,
@@ -1248,7 +1252,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             except cls.DoesNotExist:
                 logger.debug(
                     "%s._get_object_by_name_and_user_profile() no %s found for name: %s and user_profile: %s",
-                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     cls.__name__,
                     name,
                     user_profile,
@@ -1257,7 +1261,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             except cls.MultipleObjectsReturned:
                 logger.error(
                     "%s.get_cached_object() Multiple %s objects found with name '%s' and user profile '%s'. Defaulting to first result.",
-                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()"),
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     cls.__name__,
                     name,
                     user_profile,
@@ -1265,7 +1269,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return cls.objects.prefetch_related("tags").filter(name=name, user_profile=user_profile).first()
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_name_and_account(name: str, account: Account) -> Optional["MetaDataWithOwnershipModel"]:
+        def _get_object_by_name_and_account(
+            name: str, account: Account, class_name: str = cls.__name__
+        ) -> Optional["MetaDataWithOwnershipModel"]:
             """
             Internal method to retrieve a model instance by name and account with
             caching. Prefetches related tags and selects related user profile,
@@ -1274,6 +1280,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
             :param name: The name of the model instance to retrieve.
             :param account: The account associated with the model instance.
+            :param class_name: The name of the class for cache key purposes.
 
             :returns: The model instance if found, otherwise None.
             :rtype: Optional["MetaDataWithOwnershipModel"]
@@ -1286,7 +1293,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 )
                 logger.debug(
                     "%s._get_object_by_name_and_account() fetched %s for name: %s and account: %s",
-                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     type(retval).__class__.__name__,
                     name,
                     account,
@@ -1295,7 +1302,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             except cls.DoesNotExist:
                 logger.debug(
                     "%s._get_object_by_name_and_account() no %s found for name: %s and account: %s",
-                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     cls.__name__,
                     name,
                     account,
@@ -1304,7 +1311,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             except cls.MultipleObjectsReturned:
                 logger.error(
                     "%s.get_cached_object() Multiple %s objects found with name '%s' and account '%s'. Defaulting to first result.",
-                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     cls.__name__,
                     name,
                     account,
@@ -1312,9 +1319,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 return cls.objects.prefetch_related("tags").filter(name=name, user_profile__account=account).first()
 
         if invalidate:
-            _get_object_by_pk.invalidate(pk)
-            _get_object_by_name_and_user_profile.invalidate(name, user_profile)
-            _get_object_by_name_and_account.invalidate(name, account)
+            _get_object_by_pk.invalidate(pk, cls.__name__)
+            _get_object_by_name_and_user_profile.invalidate(name, user_profile, cls.__name__)
+            _get_object_by_name_and_account.invalidate(name, account, cls.__name__)
 
         if pk:
             return _get_object_by_pk(pk)
@@ -1901,7 +1908,7 @@ class Secret(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[Secret]
         """
-        logger_prefix = formatted_text(__name__ + ".Secret.get_cached_object()")
+        logger_prefix = formatted_text(__name__ + "." + Secret.__name__ + ".get_cached_object()")
         logger.debug(
             "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s, invalidate: %s",
             logger_prefix,

@@ -944,10 +944,11 @@ class ChatBot(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["ChatBot"]
         """
-        logger_prefix = formatted_text(__name__ + ".ChatBot.get_cached_object()")
+        logger_prefix = formatted_text(__name__ + "." + ChatBot.__name__ + ".get_cached_object()")
         logger.debug(
-            "%s called with pk=%s, name=%s, user=%s, user_profile=%s, account=%s, invalidate=%s",
+            "%s called %s with pk=%s, name=%s, user=%s, user_profile=%s, account=%s, invalidate=%s",
             logger_prefix,
+            cls.__name__,
             pk,
             name,
             user,
@@ -959,8 +960,9 @@ class ChatBot(MetaDataWithOwnershipModel):
         retval = super().get_cached_object(invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account)  # type: ignore[assignment]
         if retval is None:
             logger.warning(
-                "%s did not find a ChatBot with pk=%s, name=%s, user=%s, user_profile=%s, account=%s",
+                "%s did not find a %s with pk=%s, name=%s, user=%s, user_profile=%s, account=%s",
                 logger_prefix,
+                cls.__name__,
                 pk,
                 name,
                 user,
@@ -991,10 +993,10 @@ class ChatBot(MetaDataWithOwnershipModel):
         :rtype: models.QuerySet["ChatBot"]
 
         """
-        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
+        logger_prefix = formatted_text(__name__ + "." + ChatBot.__name__ + ".get_cached_objects()")
         logger.debug("%s called with user_profile=%s, invalidate=%s", logger_prefix, user_profile, invalidate)
 
-        @cache_results(60)
+        @cache_results()
         def _get_chatbots_for_user_profile_id(user_profile_id: int) -> models.QuerySet["ChatBot"]:
             return (
                 cls.objects.prefetch_related("tags")
@@ -1157,12 +1159,22 @@ class ChatBotAPIKey(TimestampedModel):
         :rtype: models.QuerySet["ChatBotAPIKey"]
 
         """
-        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
+        logger_prefix = formatted_text(__name__ + "." + ChatBotAPIKey.__name__ + ".get_cached_objects()")
         logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
         @cache_results(cls.cache_expiration)
         def _get_api_keys_for_chatbot_id(chatbot_id: int) -> models.QuerySet["ChatBotAPIKey"]:
-            return cls.objects.filter(chatbot_id=chatbot_id)
+            return cls.objects.filter(chatbot_id=chatbot_id).select_related(
+                "chatbot",
+                "chatbot__user_profile",
+                "chatbot__user_profile__user",
+                "chatbot__user_profile__account",
+                "api_key",
+                "api_key__user_profile",
+                "api_key__user_profile",
+                "api_key__user_profile__user",
+                "api_key__user_profile__account",
+            )
 
         if invalidate and chatbot:
             _get_api_keys_for_chatbot_id.invalidate(chatbot.id)
@@ -1348,7 +1360,7 @@ class ChatBotPlugin(TimestampedModel):
         :rtype: models.QuerySet["ChatBotPlugin"]
 
         """
-        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
+        logger_prefix = formatted_text(__name__ + "." + ChatBotPlugin.__name__ + ".get_cached_objects()")
         logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
         @cache_results(cls.cache_expiration)
@@ -1364,6 +1376,10 @@ class ChatBotPlugin(TimestampedModel):
 
             return cls.objects.filter(chatbot_id=chatbot_id).select_related(
                 "plugin_meta",
+                "plugin_meta__user_profile",
+                "plugin_meta__user_profile__user",
+                "plugin_meta__user_profile__account",
+                "chatbot__user_profile",
                 "chatbot__user_profile__user",
                 "chatbot__user_profile__account",
             )
@@ -1481,7 +1497,7 @@ class ChatBotFunctions(TimestampedModel):
         :rtype: models.QuerySet["ChatBotFunctions"]
 
         """
-        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
+        logger_prefix = formatted_text(__name__ + "." + ChatBotFunctions.__name__ + ".get_cached_objects()")
         logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
         @cache_results(cls.cache_expiration)
@@ -1494,7 +1510,15 @@ class ChatBotFunctions(TimestampedModel):
             :returns: A queryset of ChatBotFunctions instances associated with the ChatBot.
             :rtype: models.QuerySet["ChatBotFunctions"]
             """
-            return cls.objects.filter(chatbot_id=chatbot_id)
+            return cls.objects.filter(chatbot_id=chatbot_id).select_related(
+                "plugin_meta",
+                "plugin_meta__user_profile",
+                "plugin_meta__user_profile__user",
+                "plugin_meta__user_profile__account",
+                "chatbot__user_profile",
+                "chatbot__user_profile__user",
+                "chatbot__user_profile__account",
+            )
 
         if invalidate and chatbot:
             _get_functions_for_chatbot_id.invalidate(chatbot.id)
@@ -2256,7 +2280,8 @@ class ChatBotHelper(SmarterRequestMixin):
         if not self.chatbot:
             return None
         try:
-            return Provider.get_cached_object(name=self.chatbot.provider, account=self.account)
+            # FIX NOTE: self.chatbot.provider should be a foreign key to Provider.
+            return Provider.get_cached_object(name=self.chatbot.provider, account=self.account)  # type: ignore[return-value]
         except Provider.DoesNotExist:
             return None
 

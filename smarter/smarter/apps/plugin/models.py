@@ -482,6 +482,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         name: Optional[str] = None,
         user: Optional[User] = None,
         user_profile: Optional[UserProfile] = None,
+        username: Optional[str] = None,
         account: Optional[Account] = None,
         plugin_class: Optional[str] = None,
     ) -> Optional["PluginMeta"]:
@@ -496,13 +497,15 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :type user: User
         :param account: The account associated with the plugin.
         :type account: Account
+        :param username: The username of the user who owns the plugin.
+        :type username: str
         :param invalidate: If True, invalidate the cache for this query.
         :type invalidate: bool
         :return: A PluginMeta instance if found, otherwise None.
         :rtype: Optional[PluginMeta]
         """
         # pylint: disable=W0621
-        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger_prefix = formatted_text(f"{__name__}.{PluginMeta.__name__}.get_cached_object()")
         logger.debug(
             "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s, plugin_class: %s",
             logger_prefix,
@@ -540,6 +543,11 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     plugin_class,
                 )
                 return None
+
+        if username and not user:
+            user_profile = UserProfile.get_cached_object(invalidate=invalidate, username=username, account=account)  # type: ignore[arg-type]
+            user = user_profile.user if user_profile else None
+            account = account or (user_profile.account if user_profile else None)
 
         user_profile = user_profile or UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
         if not user_profile and not pk:
@@ -583,7 +591,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         """
 
         # pylint: disable=W0621
-        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_objects()")
+        logger_prefix = formatted_text(f"{__name__}.{PluginMeta.__name__}.get_cached_objects()")
         logger.debug("%s called with user_profile=%s, invalidate=%s", logger_prefix, user_profile, invalidate)
 
         return super().get_cached_objects(invalidate=invalidate, user_profile=user_profile)  # type: ignore[return-value]
@@ -1265,7 +1273,7 @@ class PluginDataStatic(PluginDataBase):
         :rtype: Optional["PluginDataBase"]
         """
         # pylint: disable=W0621
-        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger_prefix = formatted_text(f"{__name__}.{PluginDataStatic.__name__}.get_cached_object()")
         logger.debug(
             "%s called with pk: %s, plugin: %s",
             logger_prefix,
@@ -2469,7 +2477,7 @@ class PluginDataSql(PluginDataBase):
         :rtype: Optional["PluginDataBase"]
         """
         # pylint: disable=W0621
-        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger_prefix = formatted_text(f"{__name__}.{PluginDataSql.__name__}.get_cached_object()")
         logger.debug(
             "%s called with pk: %s, plugin: %s",
             logger_prefix,
@@ -3038,7 +3046,7 @@ class PluginDataApi(PluginDataBase):
         :rtype: Optional["PluginDataBase"]
         """
         # pylint: disable=W0621
-        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger_prefix = formatted_text(f"{__name__}.{PluginDataApi.__name__}.get_cached_object()")
         logger.debug(
             "%s called with pk: %s, plugin: %s",
             logger_prefix,

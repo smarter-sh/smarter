@@ -374,7 +374,7 @@ def base(request: "HttpRequest") -> dict:
     resolved_user = get_resolved_user(user)
     user_profile: Optional[UserProfile] = None
     if resolved_user and getattr(resolved_user, "is_authenticated", False):
-        user_profile = UserProfile.objects.filter(user=resolved_user).first()
+        user_profile = UserProfile.get_cached_object(user=resolved_user)  # type: ignore
 
     @cache_results()
     def get_cached_context(user: Optional[User]) -> dict:
