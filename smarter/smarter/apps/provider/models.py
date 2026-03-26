@@ -496,10 +496,24 @@ class Provider(MetaDataWithOwnershipModel):
             admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore[arg-type]
             admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore[arg-type]
 
-            account_providers = cls.objects.filter(user_profile=admin_user_profile).order_by("name")
-            smarter_providers = cls.objects.filter(
-                user_profile=smarter_cached_objects.smarter_admin_user_profile
-            ).order_by("name")
+            account_providers = (
+                Provider.objects.filter(user_profile=admin_user_profile)
+                .select_related(
+                    "user_profile",
+                    "user_profile__account",
+                    "user_profile__user",
+                )
+                .order_by("name")
+            )
+            smarter_providers = (
+                Provider.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile)
+                .select_related(
+                    "user_profile",
+                    "user_profile__account",
+                    "user_profile__user",
+                )
+                .order_by("name")
+            )
             retval = list((account_providers | smarter_providers).distinct()) or []
             logger.debug(
                 "%s.cached_providers_by_account_id() retrieved %s providers for account %s",
@@ -702,7 +716,9 @@ def get_providers() -> list[Provider]:
     Raises a Smarter error if anything goes wrong.
     """
     try:
-        providers = Provider.objects.filter(is_active=True)
+        providers = Provider.objects.filter(is_active=True).select_related(
+            "user_profile", "user_profile__account", "user_profile__user"
+        )
     except Provider.DoesNotExist as e:
         raise SmarterValueError("No active providers found.") from e
 
