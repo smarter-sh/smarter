@@ -312,7 +312,7 @@ regex==2025.9.1
     # via
     #   nltk
     #   python-hcl2
-requests==2.32.5
+requests==2.33.0
     # via
     #   -r smarter/requirements/in/base.in
     #   google-auth
