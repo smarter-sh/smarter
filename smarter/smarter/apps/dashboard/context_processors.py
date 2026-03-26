@@ -62,6 +62,7 @@ from django.urls import reverse
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
+    Account,
     Secret,
     User,
     UserProfile,
@@ -628,6 +629,12 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     logger.debug("%s called for %s", logger_prefix_cache_invalidations, user_profile)
 
     ###########################################################################
+    # resource invalidations
+    ###########################################################################
+    Account.get_cached_object(invalidate=True, pk=user_profile.account.id)
+    UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)
+
+    ###########################################################################
     # context invalidations
     ###########################################################################
     get_pending_deployments(invalidate=True, user_profile=user_profile)
@@ -667,7 +674,3 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
         request,
     )
     request.user = user_profile.user
-    # pylint: disable=C0415
-    from smarter.apps.prompt.views import PromptListView
-
-    PromptListView.dispatch.invalidate(request)
