@@ -1361,7 +1361,12 @@ class ChatBotPlugin(TimestampedModel):
             :returns: A queryset of ChatBotPlugin instances associated with the ChatBot.
             :rtype: models.QuerySet["ChatBotPlugin"]
             """
-            return cls.objects.filter(chatbot_id=chatbot_id)
+
+            return cls.objects.filter(chatbot_id=chatbot_id).select_related(
+                "plugin_meta",
+                "chatbot__user_profile__user",
+                "chatbot__user_profile__account",
+            )
 
         if invalidate and chatbot:
             _get_plugins_for_chatbot_id.invalidate(chatbot.id)
