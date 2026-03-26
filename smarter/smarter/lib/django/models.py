@@ -532,25 +532,27 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             )
 
         @cache_results(timeout=cls.cache_expiration)
-        def _get_model_by_pk(pk: int) -> Optional[models.Model]:
+        def _get_model_by_pk(pk: int, class_name: str = cls.__name__) -> Optional[models.Model]:
 
             try:
                 logger.debug(
-                    "%s._get_model_by_pk() cache miss for pk: %s",
+                    "%s._get_model_by_pk() cache miss for %s pk: %s",
                     logger_prefix,
+                    class_name,
                     pk,
                 )
                 return cls.objects.get(pk=pk)
             except cls.DoesNotExist:
                 logger.debug(
-                    "%s._get_model_by_pk() no object found for pk: %s",
+                    "%s._get_model_by_pk() no object found for %s pk: %s",
                     logger_prefix,
+                    class_name,
                     pk,
                 )
                 return None
 
         if invalidate:
-            _get_model_by_pk.invalidate(pk)
+            _get_model_by_pk.invalidate(pk, cls.__name__)
 
         if not pk:
             logger.debug("%s._get_model_by_pk() called with no pk", logger_prefix)
@@ -586,11 +588,11 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             )
 
         @cache_results(timeout=cls.cache_expiration)
-        def _get_all_models() -> QuerySet["TimestampedModel"]:
+        def _get_all_models(class_name: str = cls.__name__) -> QuerySet["TimestampedModel"]:
             return cls.objects.all()
 
         if invalidate:
-            _get_all_models.invalidate()
+            _get_all_models.invalidate(cls.__name__)
 
         return _get_all_models()
 
@@ -735,31 +737,34 @@ class MetaDataModel(TimestampedModel):
             return None
 
         @cache_results(timeout=cls.cache_expiration)
-        def _get_object_by_name(name: str) -> Optional["MetaDataModel"]:
+        def _get_object_by_name(name: str, class_name: str = cls.__name__) -> Optional["MetaDataModel"]:
             try:
                 logger.debug(
-                    "%s._get_object_by_name() cache miss for name: %s",
+                    "%s._get_object_by_name() cache miss for %s name: %s",
                     logger_prefix,
+                    class_name,
                     name,
                 )
                 return cls.objects.prefetch_related("tags").get(name=name)
             except cls.DoesNotExist:
                 logger.debug(
-                    "%s._get_object_by_name() no object found with name: %s",
+                    "%s._get_object_by_name() no %s object found for name: %s",
                     logger_prefix,
+                    class_name,
                     name,
                 )
                 return None
             except cls.MultipleObjectsReturned as e:
                 logger.error(
-                    "%s.get_cached_object() - Multiple objects found with name '%s'. Returning the first one.",
-                    cls.formatted_class_name,
+                    "%s.get_cached_object() - Multiple %s objects found for name '%s'. Returning the first one.",
+                    logger_prefix,
+                    class_name,
                     name,
                 )
-                raise SmarterValueError(f"Multiple objects found with name '{name}'.") from e
+                raise SmarterValueError(f"Multiple {class_name} objects found for name '{name}'.") from e
 
         if invalidate:
-            _get_object_by_name.invalidate(name)
+            _get_object_by_name.invalidate(name, cls.__name__)
 
         if name:
             return _get_object_by_name(name)
