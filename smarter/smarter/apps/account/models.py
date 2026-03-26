@@ -409,6 +409,9 @@ class Account(MetaDataModel):
     def __str__(self):
         return str(self.account_number) + " - " + str(self.company_name)
 
+    def __repr__(self) -> str:
+        return super().__str__()
+
 
 class AccountContact(TimestampedModel):
     """
@@ -754,7 +757,7 @@ class UserProfile(MetaDataModel):
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
     )
 
-    @cached_property
+    @property
     def cached_user(self) -> Optional[User]:
         """
         Retrieve the associated User instance with caching.
@@ -773,7 +776,7 @@ class UserProfile(MetaDataModel):
         """
         return self.user
 
-    @cached_property
+    @property
     def cached_account(self) -> Optional[Account]:
         """
         Retrieve the associated Account instance with caching.
@@ -1080,6 +1083,9 @@ class UserProfile(MetaDataModel):
     def __str__(self):
         return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
 
+    def __repr__(self):
+        return self.__str__()
+
 
 class MetaDataWithOwnershipModel(MetaDataModel):
     """
@@ -1146,7 +1152,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[models.Model]
         """
-        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()")
+        logger_prefix = formatted_text(cls.__name__ + ".get_cached_object()")
         logger.debug(
             "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
             logger_prefix,
@@ -1162,6 +1168,11 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             user_profile = UserProfile.get_cached_object(invalidate=invalidate, username=username)
             user = user_profile.cached_user if user_profile else None
 
+        if user_profile is not None and (not user or not account):
+            logger.debug("%s Resolving user and account from user_profile: %s", logger_prefix, user_profile)
+            user = user or user_profile.cached_user
+            account = account or user_profile.cached_account
+
         @cache_results(cls.cache_expiration)
         def _get_object_by_pk(pk: int) -> Optional["MetaDataWithOwnershipModel"]:
             """
@@ -1174,20 +1185,23 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
             try:
-                logger.debug(
-                    "%s._get_object_by_pk() cache miss for pk: %s",
-                    formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()"),
-                    pk,
-                )
-                return (
+                retval = (
                     cls.objects.prefetch_related("tags")
                     .select_related("user_profile", "user_profile__account", "user_profile__user")
                     .get(pk=pk)
                 )
+                logger.debug(
+                    "%s._get_object_by_pk() fetched %s - %s",
+                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    type(retval).__name__,
+                    str(retval),
+                )
+                return retval
             except cls.DoesNotExist:
                 logger.debug(
-                    "%s._get_object_by_pk() no object found for pk: %s",
-                    formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()"),
+                    "%s._get_object_by_pk() no %s object found for pk: %s",
+                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    cls.__name__,
                     pk,
                 )
                 return None
@@ -1209,17 +1223,33 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
             try:
-                return (
+                retval = (
                     cls.objects.prefetch_related("tags")
                     .select_related("user_profile", "user_profile__account", "user_profile__user")
                     .get(name=name, user_profile=user_profile)
                 )
+                logger.debug(
+                    "%s._get_object_by_name_and_user_profile() fetched %s for name: %s and user_profile: %s",
+                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    type(retval).__class__.__name__,
+                    name,
+                    user_profile,
+                )
+                return retval
             except cls.DoesNotExist:
+                logger.debug(
+                    "%s._get_object_by_name_and_user_profile() no %s found for name: %s and user_profile: %s",
+                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    cls.__name__,
+                    name,
+                    user_profile,
+                )
                 return None
             except cls.MultipleObjectsReturned:
                 logger.error(
-                    "%s.get_cached_object() Multiple models found with name '%s' and user profile '%s'. Defaulting to first result.",
+                    "%s.get_cached_object() Multiple %s objects found with name '%s' and user profile '%s'. Defaulting to first result.",
                     formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()"),
+                    cls.__name__,
                     name,
                     user_profile,
                 )
@@ -1240,17 +1270,33 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
             try:
-                return (
+                retval = (
                     cls.objects.prefetch_related("tags")
                     .select_related("user_profile", "user_profile__account", "user_profile__user")
                     .get(name=name, user_profile__account=account)
                 )
+                logger.debug(
+                    "%s._get_object_by_name_and_account() fetched %s for name: %s and account: %s",
+                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    type(retval).__class__.__name__,
+                    name,
+                    account,
+                )
+                return retval
             except cls.DoesNotExist:
+                logger.debug(
+                    "%s._get_object_by_name_and_account() no %s found for name: %s and account: %s",
+                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    cls.__name__,
+                    name,
+                    account,
+                )
                 return None
             except cls.MultipleObjectsReturned:
                 logger.error(
-                    "%s.get_cached_object() Multiple models found with name '%s' and account '%s'. Defaulting to first result.",
-                    formatted_text(__name__ + ".MetaDataWithOwnershipModel.get_cached_object()"),
+                    "%s.get_cached_object() Multiple %s objects found with name '%s' and account '%s'. Defaulting to first result.",
+                    formatted_text(cls.__name__ + ".get_cached_object()"),
+                    cls.__name__,
                     name,
                     account,
                 )
@@ -1271,7 +1317,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         except UserProfile.MultipleObjectsReturned:
             logger.error(
                 "%s.get_cached_object() Multiple UserProfiles found for user %s and account %s. Defaulting to first result.",
-                formatted_text(__name__ + "." + cls.__name__ + ".get_cached_object()"),
+                formatted_text(cls.__name__ + ".get_cached_object()"),
                 user,
                 account,
             )

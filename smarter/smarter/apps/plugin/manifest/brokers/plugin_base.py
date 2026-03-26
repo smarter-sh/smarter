@@ -140,7 +140,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                 self.name,
                 self.user_profile,
             )
-            self._orm_instance = PluginDataBase.get_cached_object(plugin=self.plugin_meta)
+            if self.plugin_meta:
+                self._orm_instance = PluginDataBase.get_cached_object(pk=self.plugin_meta.id)  # type: ignore
             if self._orm_instance:
                 logger.debug(
                     "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",

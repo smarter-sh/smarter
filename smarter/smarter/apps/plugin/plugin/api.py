@@ -310,22 +310,9 @@ class ApiPlugin(PluginBase):
                     recasted_parameters["required"].append(parameter["name"])
 
             api_data["parameters"] = recasted_parameters
-        else:
+        elif parameters is not None:
             raise SmarterConfigurationError(
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
-            )
-
-        if not isinstance(self.plugin_meta, PluginMeta):
-            raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required plugin_meta."
-            )
-        if not isinstance(self.manifest, SAMApiPlugin):
-            raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required manifest."
-            )
-        if not isinstance(api_data, dict):
-            raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required api_data."
             )
 
         return {
