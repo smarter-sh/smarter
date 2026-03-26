@@ -5,7 +5,6 @@ import logging
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
-from functools import cached_property
 from http import HTTPStatus
 from typing import Any, Optional, Type, Union
 from urllib.parse import parse_qs, urlparse
@@ -267,24 +266,22 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         )
         if manifest:
             self.manifest_setter(manifest)
+
+        loader = loader or kwargs.pop("loader", None) or next((arg for arg in args if isinstance(arg, SAMLoader)), None)
+        if loader:
+            self.loader = loader
         else:
-            loader = (
-                loader or kwargs.pop("loader", None) or next((arg for arg in args if isinstance(arg, SAMLoader)), None)
-            )
-            if loader:
-                self.loader = loader
-            else:
-                if isinstance(file_path, str):
-                    if self._loader:
-                        logger.warning(
-                            f"{self.abstract_broker_logger_prefix}.__init__() - Both loader and file_path provided. "
-                            f"file_path will override loader."
-                        )
-                    self.loader = SAMLoader(file_path=file_path)
-                    if self._loader.ready:
-                        self.kind_setter(self._loader.manifest_kind)
-                        name = self._loader.manifest_metadata.get("name")
-                        self.name_cached_property_setter(name)  # type: ignore
+            if isinstance(file_path, str):
+                if self._loader:
+                    logger.warning(
+                        f"{self.abstract_broker_logger_prefix}.__init__() - Both loader and file_path provided. "
+                        f"file_path will override loader."
+                    )
+                self.loader = SAMLoader(file_path=file_path)
+                if self._loader.ready:
+                    self.kind_setter(self._loader.manifest_kind)
+                    name = self._loader.manifest_metadata.get("name")
+                    self.name_cached_property_setter(name)  # type: ignore
 
         # ----------------------------------------------------------------------
         # Fallback logic to initialize from the ORM, if we have a name and
@@ -469,23 +466,26 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         # ---------------------------------------------------------------------
         if bool(self._manifest):
             logger.debug(
-                "%s.is_ready_abstract_broker() returning true because manifest is loaded.",
+                "%s.is_ready_abstract_broker() manifest is loaded.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
         if bool(self.loader) and self.loader.ready:
             logger.debug(
-                "%s.is_ready_abstract_broker() returning true because loader is ready.",
+                "%s.is_ready_abstract_broker() loader is ready.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
         if bool(self.orm_meta_instance):
             logger.debug(
-                "%s.is_ready_abstract_broker() returning true because %s instance is available.",
+                "%s.is_ready_abstract_broker() %s instance is available.",
                 self.abstract_broker_logger_prefix,
                 self.ORMMetaModelClass.__name__,
             )
             self._is_ready_abstract_broker = True
+
+        if not bool(self.name):
+            self._is_ready_abstract_broker = False
 
         if self._is_ready_abstract_broker:
             return self._is_ready_abstract_broker
@@ -493,6 +493,11 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         # ---------------------------------------------------------------------
         # log every reason why we are not ready.
         # ---------------------------------------------------------------------
+        if not self.name:
+            logger.warning(
+                "%s.is_ready_abstract_broker() - Broker name is not set. Cannot process broker.",
+                self.abstract_broker_logger_prefix,
+            )
         if not self.is_accountmixin_ready:
             logger.warning(
                 "%s.is_ready_abstract_broker() - AccountMixin is not ready. Cannot process broker.",
@@ -681,7 +686,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         self._kind = value
         logger.debug("%s.kind() setter set kind to %s", self.abstract_broker_logger_prefix, self._kind)
 
-    @cached_property
+    @property
     def name(self) -> Optional[str]:
         """
         Retrieve the unique name identifier for the ChatBot instance managed by this broker.
@@ -847,6 +852,12 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         """
         if self._loader and self._loader.ready:
             return self._loader
+        logger.debug(
+            "%s.loader() getter - loader is not ready. Current loader state: %s",
+            self.abstract_broker_logger_prefix,
+            self._loader,
+        )
+        return None
 
     @loader.setter
     def loader(self, value: SAMLoader):
@@ -1641,7 +1652,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 name,
                 user_profile,
             )
-            secret = Secret.get_cached_object(user_profile=user_profile, name=name)
+            secret = Secret.objects.get(user_profile=user_profile, name=name)
         except Secret.DoesNotExist:
             logger.debug(
                 "%s.get_or_create_secret() Secret %s not found for user %s",

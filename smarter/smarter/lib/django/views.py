@@ -7,6 +7,7 @@ from http import HTTPStatus
 
 from bs4 import BeautifulSoup
 from django import template
+from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
@@ -353,6 +354,7 @@ class SmarterNeverCachedWebView(SmarterWebHtmlView):
         return formatted_text(f"{__name__}.{SmarterNeverCachedWebView.__name__}")
 
 
+@method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     """
     An optimized view that requires authentication.

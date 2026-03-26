@@ -1038,7 +1038,15 @@ class ChatBot(MetaDataWithOwnershipModel):
             if self.deployed:
                 chatbot_deploy.send(sender=self.__class__, chatbot=self)
         else:
-            orig = ChatBot.get_cached_object(pk=self.pk)
+            orig: ChatBot
+            try:
+                orig = ChatBot.objects.get(id=self.pk)
+            except ChatBot.DoesNotExist:
+                logger.error(
+                    "%s.save() could not find original ChatBot with id: %s", self.formatted_class_name, self.pk
+                )
+                return super().save(*args, **kwargs)
+
             if orig.dns_verification_status != self.dns_verification_status:
                 chatbot_dns_verification_status_changed.send(sender=self.__class__, chatbot=self)
                 chatbot_deploy_status_changed.send(sender=self.__class__, chatbot=self)
@@ -1211,7 +1219,14 @@ class ChatBotPlugin(TimestampedModel):
     plugin_meta = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{str(self.chatbot.url)} - {str(self.plugin_meta.name)}"
+        try:
+            url = self.chatbot.url if self.chatbot else "undefined chatbot"
+            plugin_name = self.plugin_meta.name if self.plugin_meta else "undefined plugin"
+        except ChatBot.DoesNotExist:
+            url = "undefined chatbot"
+        except PluginMeta.DoesNotExist:
+            plugin_name = "undefined plugin"
+        return f"{url} - {plugin_name}"
 
     @property
     def plugin(self) -> Optional[PluginBase]:
@@ -1770,7 +1785,15 @@ class ChatBotHelper(SmarterRequestMixin):
         if self.is_chatbot:
             if not isinstance(self.chatbot, ChatBot):
                 if self.user_profile and self._name:
-                    self.chatbot = ChatBot.get_cached_object(name=self._name, user_profile=self.user_profile)
+                    try:
+                        self.chatbot = ChatBot.objects.get(name=self._name, user_profile=self.user_profile)
+                    except ChatBot.DoesNotExist:
+                        chatbot_helper_logger.warning(
+                            "%s.__init__() could not find ChatBot with name=%s and user_profile=%s",
+                            self.formatted_class_name,
+                            self._name,
+                            self.user_profile,
+                        )
 
             if not isinstance(self._chatbot, ChatBot):
                 chatbot_helper_logger.warning(
@@ -1888,7 +1911,7 @@ class ChatBotHelper(SmarterRequestMixin):
     @chatbot_id.setter
     def chatbot_id(self, chatbot_id: int):
         self._chatbot_id = chatbot_id
-        chatbot = ChatBot.get_cached_object(pk=chatbot_id)
+        chatbot = ChatBot.objects.get(id=chatbot_id)
         if chatbot and chatbot.user_profile.cached_account != self.account:
             raise SmarterValueError("ChatBotHelper.chatbot_id setter: ChatBot's Account does not match self.account")
         self.chatbot = chatbot

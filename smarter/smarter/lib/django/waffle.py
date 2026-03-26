@@ -231,7 +231,7 @@ class SmarterWaffleSwitches:
         ACCOUNT_LOGGING: SmarterWaffleSwitch(
             name=ACCOUNT_LOGGING,
             comment="Enables logging throughout the smarter.app.account namespace.",
-            default=False,
+            default=True,
         ),
         ACCOUNT_MIXIN_LOGGING: SmarterWaffleSwitch(
             name=ACCOUNT_MIXIN_LOGGING,
@@ -241,32 +241,32 @@ class SmarterWaffleSwitches:
         API_LOGGING: SmarterWaffleSwitch(
             name=API_LOGGING,
             comment="Enables logging throughout the smarter.api namespace.",
-            default=False,
+            default=True,
         ),
         CACHE_LOGGING: SmarterWaffleSwitch(
             name=CACHE_LOGGING,
             comment="Enables detailed logging for caching operations including cache hits, misses, and errors.",
-            default=False,
+            default=True,
         ),
         PROMPT_LOGGING: SmarterWaffleSwitch(
             name=PROMPT_LOGGING,
             comment="Enables logging throughout the smarter.app.prompt namespace.",
-            default=False,
+            default=True,
         ),
         CHATAPP_LOGGING: SmarterWaffleSwitch(
             name=CHATAPP_LOGGING,
             comment="For the React Chat UI component. Enables debug-level javascript console logging inside the browser",
-            default=False,
+            default=True,
         ),
         CHATBOT_LOGGING: SmarterWaffleSwitch(
             name=CHATBOT_LOGGING,
             comment="Enables logging throughout the smarter.app.chatbot namespace.",
-            default=False,
+            default=True,
         ),
         CHATBOT_HELPER_LOGGING: SmarterWaffleSwitch(
             name=CHATBOT_HELPER_LOGGING,
             comment="Enables logging within the smarter.apps.chatbot.model.ChatBotHelper class.",
-            default=False,
+            default=True,
         ),
         CSRF_SUPPRESS_FOR_CHATBOTS: SmarterWaffleSwitch(
             name=CSRF_SUPPRESS_FOR_CHATBOTS,
@@ -321,7 +321,7 @@ class SmarterWaffleSwitches:
         ENABLE_MIDDLEWARE_CORS: SmarterWaffleSwitch(
             name=ENABLE_MIDDLEWARE_CORS,
             comment="Enables SmarterCorsMiddleware",
-            default=False,
+            default=True,
         ),
         ENABLE_MIDDLEWARE_SECURITY: SmarterWaffleSwitch(
             name=ENABLE_MIDDLEWARE_SECURITY,
@@ -331,7 +331,7 @@ class SmarterWaffleSwitches:
         ENABLE_REACTAPP_DEBUG_MODE: SmarterWaffleSwitch(
             name=ENABLE_REACTAPP_DEBUG_MODE,
             comment="Enables React app debug mode within the Smarter React Chat component.",
-            default=False,
+            default=True,
         ),
         ENABLE_NEW_USER_PASSWORD_EMAIL: SmarterWaffleSwitch(
             name=ENABLE_NEW_USER_PASSWORD_EMAIL,
@@ -341,7 +341,7 @@ class SmarterWaffleSwitches:
         MANIFEST_LOGGING: SmarterWaffleSwitch(
             name=MANIFEST_LOGGING,
             comment="Enables detailed diagnostic logging for manifest initialization, validation and brokered operations.",
-            default=False,
+            default=True,
         ),
         MIDDLEWARE_LOGGING: SmarterWaffleSwitch(
             name=MIDDLEWARE_LOGGING,
@@ -351,12 +351,12 @@ class SmarterWaffleSwitches:
         PLUGIN_LOGGING: SmarterWaffleSwitch(
             name=PLUGIN_LOGGING,
             comment="Enables logging throughout the smarter.app.plugin namespace.",
-            default=False,
+            default=True,
         ),
         PROVIDER_LOGGING: SmarterWaffleSwitch(
             name=PROVIDER_LOGGING,
             comment="Enables logging throughout the smarter.app.provider namespace.",
-            default=False,
+            default=True,
         ),
         REQUEST_MIXIN_LOGGING: SmarterWaffleSwitch(
             name=REQUEST_MIXIN_LOGGING,
@@ -366,7 +366,7 @@ class SmarterWaffleSwitches:
         RECEIVER_LOGGING: SmarterWaffleSwitch(
             name=RECEIVER_LOGGING,
             comment="Enables logging in all Django signal receivers throughout the Smarter codebase.",
-            default=False,
+            default=True,
         ),
         TASK_LOGGING: SmarterWaffleSwitch(
             name=TASK_LOGGING,
@@ -381,7 +381,7 @@ class SmarterWaffleSwitches:
         VIEW_LOGGING: SmarterWaffleSwitch(
             name=VIEW_LOGGING,
             comment="Enables logging in all Django views throughout the Smarter codebase.",
-            default=False,
+            default=True,
         ),
     }
 

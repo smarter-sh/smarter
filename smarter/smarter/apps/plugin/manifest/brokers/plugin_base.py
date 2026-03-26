@@ -141,7 +141,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 self.user_profile,
             )
             if self.plugin_meta:
-                self._orm_instance = PluginDataBase.get_cached_object(pk=self.plugin_meta.id)  # type: ignore
+                self._orm_instance = PluginDataBase.objects.get(id=self.plugin_meta.id)  # type: ignore
             if self._orm_instance:
                 logger.debug(
                     "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",
@@ -192,8 +192,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.name,
                     account_admin_user_profile,
                 )
-                plugin_meta = PluginMeta.get_cached_object(user_profile=account_admin_user_profile, name=self.name)
-                self._orm_instance = PluginDataBase.get_cached_object(plugin=plugin_meta)
+                plugin_meta = PluginMeta.objects.get(user_profile=account_admin_user_profile, name=self.name)
+                self._orm_instance = PluginDataBase.objects.get(plugin=plugin_meta)
                 logger.debug(
                     "%s.orm_instance() - retrieved %s for %s owned by %s",
                     self.formatted_class_name,
@@ -212,8 +212,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                         self.name,
                         smarter_admin_user_profile,
                     )
-                    plugin_meta = PluginMeta.get_cached_object(user_profile=smarter_admin_user_profile, name=self.name)
-                    self._orm_instance = PluginDataBase.get_cached_object(plugin=plugin_meta)
+                    plugin_meta = PluginMeta.objects.get(user_profile=smarter_admin_user_profile, name=self.name)
+                    self._orm_instance = PluginDataBase.objects.get(plugin=plugin_meta)
                     logger.debug(
                         "%s.orm_instance() - retrieved %s for %s owned by %s",
                         self.formatted_class_name,
@@ -413,7 +413,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             self._plugin_meta = self.orm_meta_instance
             return self._plugin_meta
         try:
-            self._plugin_meta = PluginMeta.get_cached_object(
+            self._plugin_meta = PluginMeta.objects.get(
                 user_profile=self.user_profile,
                 name=self.name,
             )
