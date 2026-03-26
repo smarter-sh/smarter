@@ -966,7 +966,7 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
         if response.status_code >= 300:
             return response
 
-        self.chatbot_helpers = get_cached_chatbots_for_user_profile(self.user_profile.id)
+        self.chatbot_helpers = get_cached_chatbots_for_user_profile(user_profile_id=self.user_profile.id)
 
         user_chatbots = [
             chatbot_helper
