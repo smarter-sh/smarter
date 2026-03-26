@@ -233,7 +233,7 @@ class PluginController(AbstractController):
     def plugin_meta(self) -> Optional[PluginMeta]:
         if not self._plugin_meta and self.user_profile and self.name and self.manifest:
             try:
-                plugin_meta = PluginMeta.get_cached_object(
+                plugin_meta = PluginMeta.objects.get(
                     user_profile=self.user_profile, name=self.name, plugin_class=self.plugin_class
                 )
                 if not plugin_meta:
@@ -256,7 +256,7 @@ class PluginController(AbstractController):
                 self._plugin_meta = plugin_meta
                 logger.debug("%s retrieved plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
             except MultipleObjectsReturned:
-                self._plugin_meta = PluginMeta.get_cached_object(
+                self._plugin_meta = PluginMeta.objects.get(
                     user_profile=self.user_profile, name=self.name, plugin_class=self.plugin_class
                 )
             except PluginMeta.DoesNotExist:
