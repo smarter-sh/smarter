@@ -589,7 +589,6 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         return super().get_cached_objects(invalidate=invalidate, user_profile=user_profile)  # type: ignore[return-value]
 
     @classmethod
-    @cache_results()
     def get_cached_plugins_for_user_profile_id(
         cls, invalidate: Optional[bool] = False, user_profile_id: Optional[int] = None
     ) -> list["PluginMeta"]:
@@ -629,9 +628,26 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
             def get_plugins_for_account() -> QuerySet:
                 user_plugins = PluginMeta.get_cached_objects(user_profile=user_profile, invalidate=invalidate)
+                logger.debug(
+                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d user plugins for user",
+                    logger_prefix,
+                    len(user_plugins),
+                )
+
                 admin_plugins = PluginMeta.get_cached_objects(user_profile=admin_user_profile, invalidate=invalidate)  # type: ignore[assignment]
+                logger.debug(
+                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d admin plugins for account admin",
+                    logger_prefix,
+                    len(admin_plugins),
+                )
+
                 smarter_plugins = PluginMeta.get_cached_objects(
                     user_profile=smarter_cached_objects.smarter_admin_user_profile, invalidate=invalidate
+                )
+                logger.debug(
+                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d smarter plugins for smarter admin",
+                    logger_prefix,
+                    len(smarter_plugins),
                 )
 
                 combined_plugins = user_plugins | admin_plugins | smarter_plugins

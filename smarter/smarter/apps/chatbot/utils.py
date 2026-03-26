@@ -23,7 +23,6 @@ logger_prefix = formatted_text(f"{__name__}")
 LRU_CACHE_MAX_SIZE = 128
 
 
-@cache_results(timeout=60)
 def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHelper]:
     """
     Returns a list of chatbots for the given user profile.
@@ -42,9 +41,24 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int) -> list[ChatBotHe
         def get_chatbots_for_account() -> QuerySet:
 
             user_chatbots = ChatBot.get_cached_objects(user_profile=user_profile)  # type: ignore[union-attr]
+            logger.debug(
+                "%s.get_cached_chatbots_for_user_profile() - Retrieved %d user chatbots for user",
+                logger_prefix,
+                len(user_chatbots),
+            )
             admin_chatbots = ChatBot.get_cached_objects(user_profile=admin_user_profile)  # type: ignore[union-attr]
+            logger.debug(
+                "%s.get_cached_chatbots_for_user_profile() - Retrieved %d admin chatbots for account admin",
+                logger_prefix,
+                len(admin_chatbots),
+            )
             smarter_chatbots = ChatBot.get_cached_objects(
                 user_profile=smarter_cached_objects.smarter_admin_user_profile  # type: ignore[union-attr]
+            )
+            logger.debug(
+                "%s.get_cached_chatbots_for_user_profile() - Retrieved %d smarter chatbots for smarter admin",
+                logger_prefix,
+                len(smarter_chatbots),
             )
 
             combined_chatbots = user_chatbots | admin_chatbots | smarter_chatbots
