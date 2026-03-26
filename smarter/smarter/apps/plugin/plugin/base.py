@@ -270,7 +270,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         elif plugin_meta:
             self.id = plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
         elif name and self.user_profile:
-            self._plugin_meta = PluginMeta.get_cached_object(account=self.user_profile.cached_account, name=name)  # type: ignore[attr-defined]
+            self._plugin_meta = PluginMeta.get_cached_object(invalidate=True, account=self.user_profile.cached_account, name=name)  # type: ignore[attr-defined]
 
         #######################################################################
         # Smarter API Manifest based initialization
@@ -802,7 +802,12 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                 "Configuration error: UserProfile must be set before initializing a plugin instance by its ORM model id."
             )
         self.reinitialize_plugin()
-        self._plugin_meta = PluginMeta.get_cached_object(pk=value)
+        try:
+            self._plugin_meta = PluginMeta.objects.get(id=value)
+        except PluginMeta.DoesNotExist as e:
+            raise SmarterPluginError(
+                f"PluginMeta with id {value} does not exist for plugin {self.formatted_pluginbase_class_name}."
+            ) from e
 
     @property
     def plugin_meta(self) -> Optional[PluginMeta]:
@@ -823,7 +828,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             return self._plugin_meta
         if self.user_profile and self._manifest:
             self._plugin_meta = PluginMeta.get_cached_object(
-                account=self.user_profile.cached_account, name=self.manifest.metadata.name
+                invalidate=True, account=self.user_profile.cached_account, name=self.manifest.metadata.name
             )
 
         return self._plugin_meta

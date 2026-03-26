@@ -1081,7 +1081,16 @@ class UserProfile(MetaDataModel):
         return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
 
     def __str__(self):
-        return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
+        try:
+            user_identifier = (
+                self.user.email if self.user and self.user.email else (self.user.username if self.user else "NoUser")
+            )
+            company_name = self.account.company_name if self.account else "NoAccount"
+        except User.DoesNotExist:
+            user_identifier = "NoUser"
+        except Account.DoesNotExist:
+            company_name = "NoAccount"
+        return f"{company_name}-{user_identifier}"
 
     def __repr__(self):
         return self.__str__()

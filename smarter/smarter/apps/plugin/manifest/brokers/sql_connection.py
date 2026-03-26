@@ -5,8 +5,6 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
-from django.core.exceptions import MultipleObjectsReturned
-
 from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.enum import (
     SAMSqlConnectionSpecConnectionKeys,
@@ -31,6 +29,7 @@ from smarter.apps.plugin.manifest.models.sql_connection.spec import (
 )
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -475,16 +474,16 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         password = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
         try:
             connection[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.get_or_create_secret(
-                user_profile=self.user_profile, name=connection[password]  # type: ignore
+                user_profile=self.user_profile, name=connection.get(password)  # type: ignore
             )
         except SAMBrokerError as e:
             raise SAMConnectionBrokerError(
-                message=f"Failed to create or retrieve {Secret.__name__} {connection[password]}",
+                message=f"Failed to create or retrieve {Secret.__name__} {connection.get(password)}",
                 thing=self.thing,
             ) from e
         except Exception as e:
             raise SAMConnectionBrokerError(
-                message=f"Encountered an unexpected error while creating or retrieving {Secret.__name__} {connection[password]}",
+                message=f"Encountered an unexpected error while creating or retrieving {Secret.__name__} {connection.get(password)}",
                 thing=self.thing,
             ) from e
 
@@ -493,7 +492,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         if connection.get(proxy_password_name):
             connection[proxy_password_name] = self.get_or_create_secret(
                 user_profile=self.user_profile,  # type: ignore
-                name=connection[proxy_password_name],
+                name=connection.get(proxy_password_name),
             )
 
         return {**metadata, **connection}
@@ -659,19 +658,28 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         if self._connection:
             return self._connection
 
+        name = self.camel_to_snake(self.name)  # type: ignore
+        if not name:
+            raise SmarterValueError(
+                f"{self.formatted_class_name} connection name is required to retrieve or create connection."
+            )
+
         try:
-            name = self.camel_to_snake(self.name)  # type: ignore
-            self._connection = SqlConnection.objects.get(user_profile__account=self.account, name=name)
-        except MultipleObjectsReturned:
-            try:
-                self._connection = SqlConnection.objects.get(
-                    user_profile=self.user_profile,
-                    name=name,
-                )
-            except SqlConnection.DoesNotExist:
-                pass
+            self._connection = SqlConnection.objects.get(user_profile=self.user_profile, name=name)
+            logger.debug(
+                "%s found %s - %s for account %s",
+                self.formatted_class_name,
+                type(self._connection).__name__,
+                self.name or "(name is missing)",
+                self.user_profile or "(user_profile is missing)",
+            )
         except SqlConnection.DoesNotExist:
-            pass
+            logger.debug(
+                "%s SqlConnection %s not found for %s",
+                self.formatted_class_name,
+                self.name or "(name is missing)",
+                self.user_profile or "(user_profile is missing)",
+            )
 
         if not self._connection:
             logger.warning(

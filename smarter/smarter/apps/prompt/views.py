@@ -183,7 +183,7 @@ class ManifestDropZoneView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "prompt/manifest-apply.html"
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs):
         return render(request, self.template_path, context={})
 
 

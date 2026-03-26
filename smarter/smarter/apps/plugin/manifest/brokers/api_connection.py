@@ -27,6 +27,7 @@ from smarter.apps.plugin.manifest.models.common.connection.status import (
 )
 from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.plugin.serializers import ApiConnectionSerializer
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -425,7 +426,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         api_key_name = str(camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value))
         if api_key_name:
             try:
-                secret = Secret.get_cached_object(name=api_key_name, user_profile=self.user_profile)
+                secret = Secret.objects.get(name=api_key_name, user_profile=self.user_profile)
                 config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = secret.id if secret else None  # type: ignore[assignment]
             except Secret.DoesNotExist:
                 logger.warning(
@@ -439,7 +440,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         proxy_password_name = str(camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value))
         if proxy_password_name:
             try:
-                secret = Secret.get_cached_object(name=proxy_password_name, user_profile=self.user_profile)
+                secret = Secret.objects.get(name=proxy_password_name, user_profile=self.user_profile)
                 config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = secret.id if secret else None  # type: ignore[assignment]
             except Secret.DoesNotExist:
                 logger.warning(
@@ -487,7 +488,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 else self.connection.api_key.name if self.connection and self.connection.api_key else None
             )
 
-            self._api_key_secret = Secret.get_cached_object(name=name, user_profile=self.user_profile)
+            self._api_key_secret = Secret.objects.get(name=name, user_profile=self.user_profile)
             return self._api_key_secret
         except Secret.DoesNotExist:
             logger.warning(
@@ -535,7 +536,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     self.connection.proxy_password.name if self.connection and self.connection.proxy_password else None
                 )
             )
-            self._proxy_password_secret = Secret.get_cached_object(name=name, user_profile=self.user_profile)
+            self._proxy_password_secret = Secret.objects.get(name=name, user_profile=self.user_profile)
             return self._proxy_password_secret
         except Secret.DoesNotExist:
             logger.warning(
@@ -581,24 +582,28 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         if self._connection:
             return self._connection
 
+        name = str(self.camel_to_snake(self.name))  # type: ignore
+        if not name:
+            raise SmarterValueError(
+                f"Connection name is required to retrieve or create ApiConnection for {self.user_profile}"
+            )
         try:
-            name = str(self.camel_to_snake(self.name))  # type: ignore
             logger.debug(
                 "%s.connection() attempting ApiConnection with account %s and name %s",
                 self.formatted_class_name,
                 self.account,
                 name,
             )
-            self._connection = ApiConnection.get_cached_object(account=self.account, name=name)
+            self._connection = ApiConnection.objects.get(user_profile=self.user_profile, name=name)
         except MultipleObjectsReturned:
             logger.debug(
-                "%s.connection() multiple ApiConnection objects found for account %s and name %s",
+                "%s.connection() multiple ApiConnection objects found for %s and name %s",
                 self.formatted_class_name,
                 self.account,
                 name,
             )
             try:
-                self._connection = ApiConnection.get_cached_object(user_profile=self.user_profile, name=name)
+                self._connection = ApiConnection.objects.get(user_profile=self.user_profile, name=name)
             except ApiConnection.DoesNotExist:
                 logger.debug(
                     "%s.connection() no ApiConnection found for user profile %s and name %s",

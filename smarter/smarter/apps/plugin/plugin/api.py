@@ -246,6 +246,7 @@ class ApiPlugin(PluginBase):
         api_data = {camel_to_snake(key): value for key, value in api_data.items()}
 
         connection_name = self._manifest.spec.connection if self._manifest and self._manifest.spec else None
+        plugin_data_apiconnection: Optional[ApiConnection] = None
         if connection_name:
             # recast the Pydantic model to the PluginDataApi Django ORM model
             try:
