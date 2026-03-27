@@ -31,8 +31,15 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
 
 
+# pylint: disable=W0613
+def should_log_verbose(level):
+    """Check if logging should be done based on the waffle switch."""
+    return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
+
+
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
 logger_prefix = formatted_text(__name__)
 logger_prefix_invalidations = formatted_text_blue(f"{__name__}.smarter_cache_page_by_user.invalidate()")
 
@@ -82,13 +89,15 @@ def smarter_cache_page_by_user(timeout):
                 key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"
             else:
                 key_prefix = f"{cache_prefix}.user_anon.{path}"
-            logger.debug("%s - %s with cache key_prefix: %s and timeout %s", logger_prefix, path, key_prefix, timeout)
+            verbose_logger.debug(
+                "%s - %s with cache key_prefix: %s and timeout %s", logger_prefix, path, key_prefix, timeout
+            )
             return cache_page(timeout, key_prefix=key_prefix)(view_func)(request, *args, **kwargs)
 
         def invalidate(request: HttpRequest, *args, **kwargs):
             if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SMARTER_PAGE_CACHING):
                 return
-            logger.debug(
+            verbose_logger.debug(
                 "%s called with request: %s, args: %s, kwargs: %s", logger_prefix_invalidations, request, args, kwargs
             )
             if request:
@@ -97,7 +106,7 @@ def smarter_cache_page_by_user(timeout):
                     key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"
                 else:
                     key_prefix = f"{cache_prefix}.user_anon.{path}"
-                logger.debug("%s searching cache for key_prefix: %s", logger_prefix_invalidations, key_prefix)
+                verbose_logger.debug("%s searching cache for key_prefix: %s", logger_prefix_invalidations, key_prefix)
                 hit = lazy_cache.get(key_prefix)
                 if hit is not None:
                     lazy_cache.delete(key_prefix)
@@ -144,7 +153,7 @@ class SmarterView(View, SmarterRequestMixin):
         :return: None
         :rtype: None
         """
-        logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.logger_prefix, args, kwargs)
+        verbose_logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.logger_prefix, args, kwargs)
         super().__init__(*args, **kwargs)
 
         # none of these are actually expected until sometime between dispatch() and setup()
@@ -235,7 +244,7 @@ class SmarterView(View, SmarterRequestMixin):
         :return: The result of the superclass setup method.
         :rtype: Any
         """
-        logger.debug(
+        verbose_logger.debug(
             "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
         )
         if not self.smarter_request:
@@ -243,7 +252,7 @@ class SmarterView(View, SmarterRequestMixin):
                 request or kwargs["request"] or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
             )
             if self.smarter_request:
-                logger.debug(
+                verbose_logger.debug(
                     "%s.setup() - SmarterRequestMixin.smarter_request initialized successfully.",
                     self.logger_prefix,
                 )
@@ -403,7 +412,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         :return: The result of the superclass setup method.
         :rtype: Any
         """
-        logger.debug(
+        verbose_logger.debug(
             "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
         )
         retval = super().setup(request, *args, **kwargs)
@@ -420,7 +429,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         :return: An HttpResponse object.
         :rtype: HttpResponse
         """
-        logger.debug(
+        verbose_logger.debug(
             "%s.dispatch() called with request: %s, args: %s, kwargs: %s",
             self.logger_prefix,
             request,

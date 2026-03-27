@@ -25,9 +25,22 @@ import yaml
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__)
+
+
+# pylint: disable=W0613
+def should_log_verbose(level):
+    """Check if logging should be done based on the waffle switch."""
+    # pylint: disable=C0415
+    from smarter.common.conf import smarter_settings
+
+    return smarter_settings.verbose_logging
+
+
+verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
 
 
 def hash_factory(length: int = 16) -> str:
@@ -161,7 +174,7 @@ def camel_to_snake_dict(dictionary: dict) -> dict:
         # Output: {'user_name': 'alice', 'user_profile': {'first_name': 'Alice', 'last_name': 'Smith'}}
 
     """
-    logger.debug("%s.camel_to_snake_dict()", logger_prefix)
+    verbose_logger.debug("%s.camel_to_snake_dict()", logger_prefix)
 
     def convert(name: str):
         s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
@@ -211,7 +224,7 @@ def recursive_sort_dict(d):
         # Output: {'a': {'c': 3, 'd': 4}, 'b': 2}
 
     """
-    logger.debug("%s.recursive_sort_dict()", logger_prefix)
+    verbose_logger.debug("%s.recursive_sort_dict()", logger_prefix)
     return {k: recursive_sort_dict(v) if isinstance(v, dict) else v for k, v in sorted(d.items())}
 
 
@@ -268,7 +281,7 @@ def dict_is_contained_in(dict1, dict2):
         print(result)  # False
 
     """
-    logger.debug("%s.dict_is_contained_in()", logger_prefix)
+    verbose_logger.debug("%s.dict_is_contained_in()", logger_prefix)
     for key, value in dict1.items():
         if key not in dict2:
             print(f"the key {key} is not present in the model dict: ")
@@ -340,7 +353,7 @@ def dict_is_subset(small, big) -> bool:
         print(result)  # False
 
     """
-    logger.debug("%s.dict_is_subset()", logger_prefix)
+    verbose_logger.debug("%s.dict_is_subset()", logger_prefix)
     if isinstance(small, dict) and isinstance(big, dict):
         for k, v in small.items():
             if k not in big:
@@ -413,7 +426,7 @@ def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_
         print(masked)  # Output: abc
 
     """
-    logger.debug("%s.mask_string()", logger_prefix)
+    verbose_logger.debug("%s.mask_string()", logger_prefix)
     warnings.warn(
         "mask_string is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2
     )
@@ -494,7 +507,7 @@ def snake_to_camel(data: Union[str, dict, list], convert_values: bool = False) -
         # Output: {'userName': 'firstName'}
 
     """
-    logger.debug("%s.snake_to_camel()", logger_prefix)
+    verbose_logger.debug("%s.snake_to_camel()", logger_prefix)
 
     def convert(name: str) -> str:
         components = name.split("_")
@@ -547,7 +560,7 @@ def snake_case(name: str) -> str:
         print(snake_case("FirstName LastName"))  # Output: first_name_last_name
 
     """
-    logger.debug("%s.snake_case()", logger_prefix)
+    verbose_logger.debug("%s.snake_case()", logger_prefix)
     name = name.replace(" ", "_")
     name = re.sub("_+", "_", name)
     return name.lower()
@@ -577,7 +590,7 @@ def pascal_to_snake(name: str) -> str:
         print(pascal_to_snake("FirstName LastName"))  # Output: first_name_last_name
 
     """
-    logger.debug("%s.pascal_to_snake()", logger_prefix)
+    verbose_logger.debug("%s.pascal_to_snake()", logger_prefix)
     pattern = re.compile(r"(?<!^)(?=[A-Z])")
     return pattern.sub("_", name).lower()
 
@@ -753,7 +766,7 @@ def rfc1034_compliant_to_snake(val) -> str:
             print(e)
         # Output: Could not convert RFC 1034 compliant name from <class 'int'>
     """
-    logger.debug("%s.rfc1034_compliant_to_snake()", logger_prefix)
+    verbose_logger.debug("%s.rfc1034_compliant_to_snake()", logger_prefix)
     if not isinstance(val, str):
         raise SmarterValueError(f"Could not convert RFC 1034 compliant name from {type(val)}")
     # Replace hyphens with underscores
@@ -783,17 +796,17 @@ def generate_fernet_encryption_key() -> str:
         print(key)  # e.g., 'gAAAAABh...'
 
     """
-    logger.debug("%s.generate_fernet_encryption_key()", logger_prefix)
+    verbose_logger.debug("%s.generate_fernet_encryption_key()", logger_prefix)
     # pylint: disable=C0415
     from cryptography.fernet import Fernet
 
-    logger.debug("%s.generate_fernet_encryption_key() Generating new Fernet encryption key.", logger_prefix)
+    verbose_logger.debug("%s.generate_fernet_encryption_key() Generating new Fernet encryption key.", logger_prefix)
     return Fernet.generate_key().decode("utf-8")
 
 
 def bool_environment_variable(var_name: str, default: bool) -> bool:
     """Get a boolean environment variable"""
-    logger.debug("%s.bool_environment_variable()", logger_prefix)
+    verbose_logger.debug("%s.bool_environment_variable()", logger_prefix)
     value = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
     if value is None:
         return default
