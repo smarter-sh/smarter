@@ -35,6 +35,10 @@ Many of the resource-counting functions in this module are decorated with a
 caching mechanism to reduce database load and improve performance. The cache
 timeout is configurable and set to 60 seconds by default.
 
+cache_invalidations(user_profile) is a utility function provided to invalidate
+all relevant caches when user data changes, ensuring that the dashboard
+reflects the most current information.
+
 Usage
 -----
 
