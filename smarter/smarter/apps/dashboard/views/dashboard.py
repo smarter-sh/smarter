@@ -12,18 +12,16 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
 
 from smarter.apps.dashboard.models import EmailContactList
-from smarter.common.conf import smarter_settings
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json
 from smarter.lib.django.views import (
-    SmarterAuthenticatedNeverCachedWebView,
     SmarterAuthenticatedWebView,
     SmarterWebHtmlView,
     smarter_cache_page_by_user,
 )
 
-DASHBOARD_CACHE_TIMEOUT = smarter_settings.cache_expiration
+DASHBOARD_CACHE_TIMEOUT = 10  # 10 seconds. keeps the dashboard snappy while avoiding appearing stale.
 
 
 # ------------------------------------------------------------------------------
@@ -97,7 +95,7 @@ class NotificationsView(SmarterAuthenticatedWebView):
 
 @method_decorator(cache_control(max_age=DASHBOARD_CACHE_TIMEOUT), name="dispatch")
 @method_decorator(smarter_cache_page_by_user(DASHBOARD_CACHE_TIMEOUT), name="dispatch")
-class DashboardView(SmarterAuthenticatedNeverCachedWebView):
+class DashboardView(SmarterAuthenticatedWebView):
     """Public Access Dashboard view"""
 
     template_path = "dashboard/authenticated.html"
