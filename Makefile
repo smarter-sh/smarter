@@ -37,9 +37,23 @@ init:
 	make build			    # build the Smarter Docker container
 	make docker-init		# initialize MySQL and create the smarter database
 	make pre-commit-init	# install and configure pre-commit
+	@echo ""
+	@echo ""
 	@echo "==============================================================================="
-	@echo "Initialization complete! Run 'make run' to start the application,"
-	@echo "or 'make help' to see all available commands."
+	@echo "Initialization complete!"
+	@echo ""
+	@echo "Run 'source venv/bin/activate' to activate the Python virtual environment."
+	@echo "Run 'make run' to start the application."
+	@echo "    'make help' to see all available commands."
+	@echo ""
+	@echo "The application is served at http://localhost:9357/ with the following credentials:"
+	@echo "    Username: admin"
+	@echo "    Email: admin@smarter.sh"
+	@echo "    Password: smarter"
+	@echo ""
+	@echo "The database is accessible at localhost:3306 with the following credentials:"
+	@echo "    Username: root"
+	@echo "    Password: smarter"
 	@echo "==============================================================================="
 
 activate:
@@ -112,12 +126,15 @@ release:
 # Docker
 # ---------------------------------------------------------
 docker-check:
+	@echo ""
 	@echo "==============================================================================="
 	@echo "Verifying that Docker is installed and running ..."
 	@echo "==============================================================================="
+	@echo ""
 	@docker ps >/dev/null 2>&1 || { echo >&2 "This project requires Docker but it's not running.  Aborting."; exit 1; }
 
 docker-init:
+	@echo ""
 	@echo "==============================================================================="
 	@echo "Initializing Docker environment, including MySQL database and Smarter application setup. This may take a few minutes..."
 	@echo "==============================================================================="
@@ -155,6 +172,7 @@ docker-test:
 	docker exec smarter-app bash -c "python manage.py test smarter"
 
 docker-prune:
+	@echo ""
 	@echo "==============================================================================="
 	@echo "Pruning Docker images, containers, volumes, and networks. "
 	@echo "This will free up drive space by removing all unused Docker objects..."
@@ -174,9 +192,11 @@ docker-prune:
 # Python
 # ---------------------------------------------------------
 check-python:
+	@echo ""
 	@echo "==============================================================================="
 	@echo "Verifying that Python $(PYTHON) is installed ..."
 	@echo "==============================================================================="
+	@echo ""
 	@command -v $(PYTHON) >/dev/null 2>&1 || { echo >&2 "This project requires $(PYTHON) but it's not installed.  Aborting."; exit 1; }
 
 python-init:
@@ -192,17 +212,21 @@ python-init:
 	PIP_CACHE_DIR=.pypi_cache $(PIP) install -r smarter/requirements/local.txt
 
 python-lint:
+	@echo ""
 	@echo "==============================================================================="
 	@echo "Running Python linting using pre-commit ..."
 	@echo "==============================================================================="
+	@echo ""
 	make check-python
 	make pre-commit-run
 	pylint smarter/smarter
 
 python-clean:
+	@echo ""
 	@echo "==============================================================================="
 	@echo "Cleaning Python virtual environment and __pycache__ directories ..."
 	@echo "==============================================================================="
+	@echo ""
 	rm -rf venv
 	find ./smarter/ -name __pycache__ -type d -exec rm -rf {} +
 
@@ -264,6 +288,7 @@ change-log:
 # what ReadTheDocs does as closely as possible.
 # -------------------------------------------------------------------------
 sphinx-init:
+	@echo ""
 	@echo "==============================================================================="
 	@echo "Initializing Sphinx documentation environment."
 	@echo "Note: this is a simplified Python environment that skips setting up the full"
@@ -275,6 +300,7 @@ sphinx-init:
 	make pre-commit-init	# install and configure pre-commit
 
 sphinx-docs:
+	@echo ""
 	@echo "==============================================================================="
 	@echo "Building Sphinx documentation using local Python environment.
 	@echo "This may take a few minutes..."
