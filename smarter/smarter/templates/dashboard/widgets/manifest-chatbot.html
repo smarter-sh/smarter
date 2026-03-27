@@ -1,0 +1,55 @@
+      <!--begin::Col ChatBot manifest-->
+      <div class="col-xl-6 mb-xl-10">
+        <h5 class="text-center">Example ChatBot Manifest</h5>
+        <div class="code-sample-body">
+          <pre class="code-snippet prettyprint w-100">
+            <code>
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  annotations:
+  - smarter.sh/display-name: About Smarter Plugin
+  - smarter.sh/category: Information Plugins
+  description: Create and deploy an example Smarter chatbot. Prompt with the phrase, 'example function calling' to trigger the example Static Plugin
+  name: example_chatbot
+  tags:
+  - sales
+  - about
+  - smarter
+  - information
+  version: 0.1.0
+spec:
+  apiKey: snake_case_api_key_name
+  config:
+    appAssistant: Elle
+    appBackgroundImageUrl: https://example.com/background-image.jpg
+    appExamplePrompts:
+    - example function calling
+    - What is the weather in New York?
+    - Tell me a joke
+    - What is the capital of France?
+    appFileAttachment: false
+    appInfoUrl: https://example.com
+    appLogoUrl: https://example.com/logo.png
+    appName: Example Chatbot
+    appPlaceholder: Ask me anything...
+    appWelcomeMessage: Welcome to the Example Chatbot! How can I help you today?
+    customDomain: null
+    defaultMaxTokens: 256
+    defaultModel: gpt-4-turbo
+    defaultSystemRole: You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.
+    defaultTemperature: 0.5
+    deployed: false
+    dnsVerificationStatus: Not Verified
+    provider: openai
+    subdomain: example-chatbot
+  functions:
+  - weather
+  plugins:
+  - everlasting_gobstopper
+  - example_configuration
+            </code>
+          </pre>
+        </div>
+      </div>
+      <!--end::Col ChatBot manifest-->
