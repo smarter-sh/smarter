@@ -23,13 +23,13 @@ endif
 all: help
 
 # initialize local development environment.
-# takes around 5 minutes to complete
+# takes between 5 and 20 minutes to complete
 init:
 	@echo "==============================================================================="
-	@echo "Initializing local development environment. This will verify and set up your
-	@echo "Python virtual environment, install all 3rd-party package requirements,
-	@echo "build the Docker containers, initialize the MySQL database, and create example users,
-	@echo "prompts and AI resources. This may take a few minutes..."
+	@echo "Initializing local development environment. This will verify and set up your"
+	@echo "Python virtual environment, install all 3rd-party package requirements,"
+	@echo "build the Docker containers, initialize the MySQL database, and create example users,"
+	@echo "prompts and AI resources. This may take up to 20 minutes..."
 	@echo "==============================================================================="
 	make check-python		# verify Python 3.13 is installed
 	make docker-check		# verify Docker is installed and running
@@ -37,6 +37,10 @@ init:
 	make build			    # build the Smarter Docker container
 	make docker-init		# initialize MySQL and create the smarter database
 	make pre-commit-init	# install and configure pre-commit
+	@echo "==============================================================================="
+	@echo "Initialization complete! Run 'make run' to start the application,"
+	@echo "or 'make help' to see all available commands."
+	@echo "==============================================================================="
 
 activate:
 	./scripts/activate.sh
@@ -118,9 +122,7 @@ docker-init:
 	@echo "Initializing Docker environment, including MySQL database and Smarter application setup. This may take a few minutes..."
 	@echo "==============================================================================="
 	make docker-check && \
-	@echo "Building Docker images..." && \
 	docker-compose up -d && \
-	@echo "Initializing Docker..." && \
 	docker exec smarter-mysql bash -c "sleep 20; until echo '\q' | mysql -u smarter -psmarter; do echo 'Waiting for MySQL to be ready...'; sleep 10; done" && \
 	docker exec smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
 	docker exec smarter-app bash -c "\
@@ -130,8 +132,8 @@ docker-init:
 		python manage.py create_stackademy && \
 		python manage.py deploy_builtin_chatbots && \
 		python manage.py deploy_example_chatbot" && \
-	docker exec smarter-mysql mysql -u smarter -psmarter -e 'UPDATE smarter.chatbot_chatbot SET deployed = 0;' && \
-	@echo "Docker and Smarter are initialized." && \
+	docker exec smarter-mysql mysql -u smarter -psmarter -e 'UPDATE smarter.chatbot_chatbot SET deployed = 0;'
+	@echo "Docker and Smarter are initialized."
 	docker ps
 
 
@@ -264,7 +266,7 @@ change-log:
 sphinx-init:
 	@echo "==============================================================================="
 	@echo "Initializing Sphinx documentation environment."
-	@echo "Note: this is a simplified Python environment that skips setting up the full
+	@echo "Note: this is a simplified Python environment that skips setting up the full"
 	@echo "      development environment."
 	@echo "==============================================================================="
 	make check-python		# verify Python 3.13 is installed
