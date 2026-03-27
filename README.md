@@ -46,7 +46,7 @@ Runs on Linux, Windows and macOS.
 
 3. Initialize, build and run the application locally.
 
-````console
+```console
 git clone https://github.com/smarter-sh/smarter
 make help           # scaffolds a .env file in the root of the repo
                     #
@@ -59,7 +59,8 @@ make init           # pulls Docker containers, creates a Python virtual environm
                     # installs all packages, creates and initializes a
                     # local MySql database, preloads example AI resources
 make run            # runs all docker containers and starts a
-                    # local web server http://localhost:9357/```
+                    # local web server http://localhost:9357/
+```
 
 4. Login at http://localhost:9357/login/ with user `admin@smarter.sh` and password `smarter`.
 
@@ -89,7 +90,7 @@ Pull the chart:
 
 ```console
 helm pull oci://ghcr.io/smarter-sh/charts/smarter --version 0.7.6
-````
+```
 
 Install to Kubernetes:
 
