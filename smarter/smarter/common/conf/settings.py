@@ -3407,6 +3407,20 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"stripe_test_secret_key of type {type(v)} is not a SecretStr.")
         return v
 
+    verbose_logging: bool = Field(
+        settings_defaults.VERBOSE_LOGGING,
+        description="Whether to enable verbose logging for debugging purposes.",
+        examples=[True, False],
+        title="Verbose Logging",
+    )
+    """
+    Whether to enable verbose logging for debugging purposes.
+    If True, enables verbose logging throughout the Smarter platform for debugging purposes.
+    :type: bool
+    :default: Value from ``settings_defaults.VERBOSE_LOGGING``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
     ###########################################################################
     # Properties
     ###########################################################################

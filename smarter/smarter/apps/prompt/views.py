@@ -94,6 +94,14 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
+def should_log_verbose(level):
+    """Check if logging should be done based on the waffle switch."""
+    return smarter_settings.verbose_logging
+
+
+verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
+
+
 class SmarterChatappViewError(SmarterException):
     """Base class for all SmarterChatapp errors."""
 
@@ -115,7 +123,9 @@ class SmarterChatSession(SmarterHelperMixin):
 
     def __init__(self, request: HttpRequest, session_key: str, *args, chatbot: Optional[ChatBot] = None, **kwargs):
         super().__init__()
-        logger.debug("SmarterChatSession().__init__() called with session_key=%s, chatbot=%s", session_key, chatbot)
+        verbose_logger.debug(
+            "SmarterChatSession().__init__() called with session_key=%s, chatbot=%s", session_key, chatbot
+        )
         self.request = request
         if not isinstance(session_key, str):
             logger.error("%s - session_key is not a string: %s", self.formatted_class_name, type(session_key))
@@ -132,7 +142,7 @@ class SmarterChatSession(SmarterHelperMixin):
         self._chat_helper = ChatHelper(request, *args, session_key=self.session_key, chatbot=self.chatbot, **kwargs)
         self._chat = self._chat_helper.chat
 
-        logger.debug("%s - session established: %s", self.formatted_class_name, self.session_key)
+        verbose_logger.debug("%s - session established: %s", self.formatted_class_name, self.session_key)
 
         chat_session_invoked.send(sender=self.__class__, instance=self, request=request)
 
@@ -293,10 +303,10 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
             self.account = self._chatbot_helper.account
             self.user = self._chatbot_helper.user
             self.user_profile = self._chatbot_helper.user_profile
-            logger.debug("%s - chatbot_helper() setter chatbot=%s", self.formatted_class_name, self.chatbot)
+            verbose_logger.debug("%s - chatbot_helper() setter chatbot=%s", self.formatted_class_name, self.chatbot)
         else:
             self._chatbot = None
-            logger.debug("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
+            verbose_logger.debug("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
 
     def clean_url(self, url: str) -> str:
         """
@@ -507,14 +517,14 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
             try:
                 self._chatbot = ChatBot.get_cached_object(pk=chatbot_id)
                 self.chatbot_name = self._chatbot.name
-                logger.debug(
+                verbose_logger.debug(
                     "%s.dispatch() - set chatbot=%s from chatbot_id=%s",
                     self.formatted_class_name,
                     self._chatbot,
                     chatbot_id,
                 )
             except ChatBot.DoesNotExist:
-                logger.error(
+                verbose_logger.error(
                     "%s.dispatch() - ChatBot with id=%s does not exist. Returning 404.",
                     self.formatted_class_name,
                     chatbot_id,
@@ -525,7 +535,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
             try:
                 self._chatbot = get_cached_chatbot_by_request(request=request)
                 if not self._chatbot:
-                    logger.debug(
+                    verbose_logger.debug(
                         "%s.dispatch() - get_cached_chatbot_by_request() returned None. Attempting to instantiate ChatBotHelper with additional info",
                         self.formatted_class_name,
                     )
@@ -564,7 +574,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
                 "Authentication failed. Are you logged in? Smarter sessions automatically expire after 24 hours.",
             )
 
-        logger.debug(
+        verbose_logger.debug(
             "%s - chatbot=%s - chatbot_helper=%s", self.formatted_class_name, self.chatbot, self.chatbot_helper
         )
 
@@ -574,7 +584,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
         self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
 
-        logger.debug(
+        verbose_logger.debug(
             "%s.dispatch() completed with chatbot=%s, session_key=%s",
             self.formatted_class_name,
             self.chatbot,
@@ -724,14 +734,14 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
         if session_key is not None:
             self._session_key = session_key
-            logger.debug(
+            verbose_logger.debug(
                 "%s.dispatch() - setting session_key=%s from kwargs",
                 self.formatted_class_name,
                 self.session_key,
             )
 
         try:
-            logger.debug(
+            verbose_logger.debug(
                 "%s.dispatch() - url=%s, account=%s, user=%s",
                 self.formatted_class_name,
                 self.url,
@@ -751,7 +761,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 )
                 self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
             if self.chatbot:
-                logger.debug(
+                verbose_logger.debug(
                     "%s.dispatch() - set chatbot=%s from self.chatbot_helper",
                     self.formatted_class_name,
                     self.chatbot,
@@ -791,7 +801,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
             }
         }
-        logger.debug(
+        verbose_logger.debug(
             "%s.dispatch() - rendering template %s with context: %s",
             self.formatted_class_name,
             self.template_path,
@@ -997,7 +1007,7 @@ class PromptListView(SmarterAuthenticatedWebView):
                 "config": f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_config_by_hashed_id}",
             },
         }
-        logger.debug(
+        verbose_logger.debug(
             "%s.dispatch() rendering template %s with context: %s",
             self.formatted_class_name,
             self.template_path,

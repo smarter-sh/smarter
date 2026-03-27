@@ -7,14 +7,25 @@ import re
 import warnings
 from typing import Optional, Union
 
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils.utils import (
     rfc1034_compliant_to_snake as utils_rfc1034_compliant_to_snake,
 )
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(f"{__name__}.SmarterConverterMixin")
+
+
+# pylint: disable=W0613
+def should_log_verbose(level):
+    """Check if logging should be done based on the waffle switch."""
+    return smarter_settings.verbose_logging
+
+
+verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
 
 
 class SmarterConverterMixin:
@@ -85,7 +96,7 @@ class SmarterConverterMixin:
             # Output: {'userName': 'firstName'}
 
         """
-        logger.debug("%s.snake_to_camel()", logger_prefix)
+        verbose_logger.debug("%s.snake_to_camel()", logger_prefix)
 
         def convert(name: str) -> str:
             components = name.split("_")
@@ -137,7 +148,7 @@ class SmarterConverterMixin:
             print(pascal_to_snake("FirstName LastName"))  # Output: first_name_last_name
 
         """
-        logger.debug("%s.pascal_to_snake()", logger_prefix)
+        verbose_logger.debug("%s.pascal_to_snake()", logger_prefix)
         pattern = re.compile(r"(?<!^)(?=[A-Z])")
         return pattern.sub("_", name).lower()
 
@@ -184,7 +195,7 @@ class SmarterConverterMixin:
             print(camel_to_snake(["firstName", "lastName"]))
             # Output: ['first_name', 'last_name']
         """
-        logger.debug("%s.camel_to_snake() - data: %s", logger_prefix, data)
+        verbose_logger.debug("%s.camel_to_snake() - data: %s", logger_prefix, data)
 
         def convert(name: str):
             name = name.replace(" ", "_")
@@ -254,7 +265,7 @@ class SmarterConverterMixin:
             print(rfc1034_compliant_str(long_name))  # Output: thisisareallylongchatbotnamethatshouldbetruncatedtosixtythreecharacters
 
         """
-        logger.debug("%s.rfc1034_compliant_str()", logger_prefix)
+        verbose_logger.debug("%s.rfc1034_compliant_str()", logger_prefix)
         if not isinstance(val, str):
             raise SmarterValueError(f"Could not generate RFC 1034 compliant name from {type(val)}")
         # Replace underscores with hyphens
@@ -368,7 +379,7 @@ class SmarterConverterMixin:
             print(masked)  # Output: abc
 
         """
-        logger.debug("%s.mask_string()", logger_prefix)
+        verbose_logger.debug("%s.mask_string()", logger_prefix)
         warnings.warn(
             "mask_string is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2
         )

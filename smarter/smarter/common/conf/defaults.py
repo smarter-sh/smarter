@@ -294,6 +294,8 @@ class SettingsDefaults:
     STRIPE_LIVE_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_LIVE_SECRET_KEY", is_secret=True))
     STRIPE_TEST_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_TEST_SECRET_KEY", is_secret=True))
 
+    VERBOSE_LOGGING: bool = bool_environment_variable("VERBOSE_LOGGING", False)
+
     @classmethod
     def to_dict(cls):
         """Convert SettingsDefaults to dict"""

@@ -5,7 +5,7 @@ Smarter cache decorator and lazy cache wrapper.
 import hashlib
 import logging
 import pickle
-from functools import wraps
+from functools import cached_property, wraps
 from typing import Any, Callable, Optional
 
 from smarter.common.conf import smarter_settings
@@ -178,7 +178,18 @@ class LazyCache:
 
         return self._waffle
 
-    @property
+    @cached_property
+    def verbose_logging(self) -> bool:
+        """
+        Check if verbose logging (here, inside this module) is enabled via Waffle switch.
+
+        :return: True if verbose logging is enabled, False otherwise.
+        :rtype: bool
+        """
+
+        return self.cache_logging and smarter_settings.verbose_logging
+
+    @cached_property
     def cache_logging(self) -> bool:
         """
         Check if cache activity logging (here, inside this module) is enabled via Waffle switch.
@@ -501,7 +512,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                 result = (
                     None if isinstance(cached_result, str) and cached_result == CACHE_NONE_SENTINEL else cached_result
                 )
-                if logging_enabled and lazy_cache.cache_logging:
+                if logging_enabled and lazy_cache.verbose_logging:
                     class_name = kwargs.get("class_name", "")
                     class_name = f"{class_name} - " if class_name else ""
                     logger.info(
@@ -513,12 +524,23 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                         args,
                         kwargs,
                     )
+                elif logging_enabled and lazy_cache.cache_logging:
+                    class_name = kwargs.get("class_name", "")
+                    class_name = f"{class_name} - " if class_name else ""
+                    logger.info(
+                        "%s cache hit for %s: %s args: %s kwargs: %s",
+                        logger_prefix_green,
+                        class_name,
+                        cache_key,
+                        args,
+                        kwargs,
+                    )
             else:
                 # Cache miss, boo! Call the function ...
                 result = func(*args, **kwargs)
                 cache_value = CACHE_NONE_SENTINEL if result is None else result
                 lazy_cache.set(cache_key, cache_value, timeout)
-                if logging_enabled and lazy_cache.cache_logging:
+                if logging_enabled and lazy_cache.verbose_logging:
                     logger.info(
                         "%s caching %s - %s, with timeout %s args: %s kwargs: %s for %s",
                         logger_prefix_red,

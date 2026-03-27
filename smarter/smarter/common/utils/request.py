@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Optional, Union
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .uri import smarter_build_absolute_uri
 
@@ -17,6 +18,17 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__)
 RequestType = Union["HttpRequest", "Request", "WSGIRequest"]
+
+
+# pylint: disable=W0613
+def should_log_verbose(level):
+    """Check if logging should be done based on the waffle switch."""
+    from smarter.common.conf import smarter_settings
+
+    return smarter_settings.verbose_logging
+
+
+verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
 
 
 def is_authenticated_request(request: Optional[RequestType]) -> bool:
@@ -59,7 +71,7 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         authenticated = is_authenticated_request(drf_request)
         print(authenticated)
     """
-    logger.debug("%s.is_authenticated_request()", logger_prefix)
+    verbose_logger.debug("%s.is_authenticated_request()", logger_prefix)
     try:
         # pylint: disable=import-outside-toplevel
         from django.core.handlers.wsgi import WSGIRequest
@@ -68,14 +80,14 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
 
         is_valid_request_object = isinstance(request, (HttpRequest, Request, WSGIRequest))
         if is_valid_request_object:
-            logger.debug(
+            verbose_logger.debug(
                 "%s.is_authenticated_request() Valid request object of type %s",
                 logger_prefix,
                 type(request),
             )
         else:
             # suggests buggy code, hence the warning
-            logger.warning(
+            verbose_logger.warning(
                 "%s.is_authenticated_request() Invalid request object of type %s - returning False",
                 logger_prefix,
                 type(request),
@@ -84,26 +96,26 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
 
         has_user = hasattr(request, "user")
         if has_user:
-            logger.debug(
+            verbose_logger.debug(
                 "%s.is_authenticated_request() Request has 'user' attribute of type %s",
                 logger_prefix,
                 type(request.user),
             )
         else:
-            logger.debug(
+            verbose_logger.debug(
                 "%s.is_authenticated_request() Request does not have 'user' attribute - returning False",
                 logger_prefix,
             )
 
         has_is_authenticated = has_user and hasattr(request.user, "is_authenticated")
         if has_is_authenticated:
-            logger.debug(
+            verbose_logger.debug(
                 "%s.is_authenticated_request() Request.user has 'is_authenticated' attribute",
                 logger_prefix,
             )
         else:
             # this should not happen in normal code, hence the warning
-            logger.warning(
+            verbose_logger.warning(
                 "%s.is_authenticated_request() Request.user of type %s does not have 'is_authenticated' attribute - returning False",
                 logger_prefix,
                 type(request.user),

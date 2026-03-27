@@ -22,9 +22,19 @@ from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 logger = getLogger(__name__)
 cache_prefix = f"{__name__}."
+
+
+# pylint: disable=W0613
+def should_log_verbose(level):
+    """Check if logging should be done based on the waffle switch."""
+    return smarter_settings.verbose_logging
+
+
+verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
 
 
 def validate_no_spaces(value) -> None:
@@ -179,7 +189,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :rtype: Optional[int]
         """
         try:
-            logger.debug(
+            verbose_logger.debug(
                 "%s.id_from_hashed_id() - Attempting to decode hashed_id: %s",
                 cls.formatted_class_name,
                 hashed_id,
@@ -200,7 +210,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             decoded_bytes = base64.urlsafe_b64decode(encoded_str.encode())
             decoded_str = decoded_bytes.decode()
             retval = int(decoded_str) - cls.HASH_FLOOR
-            logger.debug(
+            verbose_logger.debug(
                 "%s.id_from_hashed_id() - Successfully decoded hashed_id: %s to id: %d",
                 cls.formatted_class_name,
                 hashed_id,
@@ -235,7 +245,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The first matching hashed ID if found, otherwise None.
         :rtype: Optional[str]
         """
-        logger.debug(
+        verbose_logger.debug(
             "%s.find_hash() - Searching for hashed ID in value: %s",
             cls.formatted_class_name,
             value,
@@ -244,13 +254,13 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         match = pattern.search(value)
         retval = match.group(0) if match else None
         if retval:
-            logger.debug(
+            verbose_logger.debug(
                 "%s.find_hash() - Found hashed ID: %s",
                 cls.formatted_class_name,
                 retval,
             )
         else:
-            logger.debug(
+            verbose_logger.debug(
                 "%s.find_hash() - No hashed ID found in value: %s",
                 cls.formatted_class_name,
                 value,
@@ -359,7 +369,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional[TimestampedModel]
         """
-        logger.debug(
+        verbose_logger.debug(
             "%s.get_object_by_locator() - Attempting to retrieve object with locator: %s",
             cls.formatted_class_name,
             locator,
@@ -393,7 +403,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                     locator,
                 )
             else:
-                logger.debug(
+                verbose_logger.debug(
                     "%s.get_object_by_locator() - Successfully retrieved object with ID %d from locator '%s'.",
                     cls.formatted_class_name,
                     id_value,
@@ -524,7 +534,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :rtype: Optional[models.Model]
         """
         logger_prefix = formatted_text(__name__ + "." + TimestampedModel.__name__ + ".get_cached_object()")
-        logger.debug("%s.get_cached_object() called with pk: %s, invalidate=%s", logger_prefix, pk, invalidate)
+        verbose_logger.debug("%s.get_cached_object() called with pk: %s, invalidate=%s", logger_prefix, pk, invalidate)
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -535,7 +545,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         def _get_model_by_pk(pk: int, class_name: str = cls.__name__) -> Optional[models.Model]:
 
             try:
-                logger.debug(
+                verbose_logger.debug(
                     "%s._get_model_by_pk() cache miss for %s pk: %s",
                     logger_prefix,
                     class_name,
@@ -543,7 +553,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                 )
                 return cls.objects.get(pk=pk)
             except cls.DoesNotExist:
-                logger.debug(
+                verbose_logger.debug(
                     "%s._get_model_by_pk() no object found for %s pk: %s",
                     logger_prefix,
                     class_name,
@@ -555,7 +565,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             _get_model_by_pk.invalidate(pk, cls.__name__)
 
         if not pk:
-            logger.debug("%s._get_model_by_pk() called with no pk", logger_prefix)
+            verbose_logger.debug("%s._get_model_by_pk() called with no pk", logger_prefix)
             return None
 
         return _get_model_by_pk(pk)
@@ -580,7 +590,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :rtype: QuerySet
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
-        logger.debug("%s.get_cached_objects() called with invalidate=%s", logger_prefix, invalidate)
+        verbose_logger.debug("%s.get_cached_objects() called with invalidate=%s", logger_prefix, invalidate)
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -684,7 +694,7 @@ class MetaDataModel(TimestampedModel):
             """
             Helper to cache tags retrieval.
             """
-            logger.debug(
+            verbose_logger.debug(
                 "%s.tags_list - Retrieving tags for %s with pk=%d from database",
                 self.formatted_class_name,
                 cls_name,
@@ -724,7 +734,7 @@ class MetaDataModel(TimestampedModel):
         :rtype: Optional["MetaDataModel"]
         """
         logger_prefix = formatted_text(__name__ + "." + MetaDataModel.__name__ + ".get_cached_object()")
-        logger.debug(
+        verbose_logger.debug(
             "%s.get_cached_object() called with pk: %s, name: %s, invalidate: %s", logger_prefix, pk, name, invalidate
         )
 
@@ -739,7 +749,7 @@ class MetaDataModel(TimestampedModel):
         @cache_results(timeout=cls.cache_expiration)
         def _get_object_by_name(name: str, class_name: str = cls.__name__) -> Optional["MetaDataModel"]:
             try:
-                logger.debug(
+                verbose_logger.debug(
                     "%s._get_object_by_name() cache miss for %s name: %s",
                     logger_prefix,
                     class_name,
@@ -747,7 +757,7 @@ class MetaDataModel(TimestampedModel):
                 )
                 return cls.objects.prefetch_related("tags").get(name=name)
             except cls.DoesNotExist:
-                logger.debug(
+                verbose_logger.debug(
                     "%s._get_object_by_name() no %s object found for name: %s",
                     logger_prefix,
                     class_name,
@@ -791,7 +801,7 @@ class MetaDataModel(TimestampedModel):
         :rtype: QuerySet
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
-        logger.debug("%s.get_cached_objects() called with invalidate=%s", logger_prefix, invalidate)
+        verbose_logger.debug("%s.get_cached_objects() called with invalidate=%s", logger_prefix, invalidate)
 
         if cls._meta.abstract:
             raise NotImplementedError(
