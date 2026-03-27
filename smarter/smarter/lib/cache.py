@@ -313,7 +313,7 @@ leading to buggy cache misses such as browser session values not being stored.
 """
 
 
-def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=True):
+def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=False):
     """
     A decorator that caches the result of a function based on the arguments
     passed to it. When
