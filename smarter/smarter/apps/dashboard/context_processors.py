@@ -118,6 +118,9 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
     def _get_pending_deployments(user_profile_id: int) -> int:
         return ChatBot.objects.filter(user_profile__id=user_profile_id, deployed=False).count() or 0
 
+    if not user_profile:
+        logger.warning("%s.get_pending_deployments() called without user_profile. Returning None.", logger_prefix)
+        return 0
     if invalidate and user_profile:
         _get_pending_deployments.invalidate(user_profile.id)  # type: ignore
 
@@ -142,6 +145,10 @@ def get_chatbots(invalidate: bool = False, user_profile: Optional[UserProfile] =
     :return: The number of chatbots belonging to the user.
     :rtype: int
     """
+    if not user_profile:
+        logger.warning("%s.get_chatbots() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
     logger.debug(
         "%s.get_chatbots() called with invalidate=%s for user_profile_id=%s",
         logger_prefix,
@@ -175,6 +182,9 @@ def get_plugins(invalidate: bool = False, user_profile: Optional[UserProfile] = 
         invalidate,
         user_profile,
     )
+    if not user_profile:
+        logger.warning("%s.get_plugins() called without user_profile. Returning None.", logger_prefix)
+        return 0
     retval = PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=invalidate, user_profile_id=user_profile.id)
     return len(retval)
 
@@ -206,6 +216,10 @@ def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] =
     @cache_results()
     def _get_api_keys(user_profile_id: int) -> int:
         return ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+
+    if not user_profile:
+        logger.warning("%s.get_api_keys() called without user_profile. Returning None.", logger_prefix)
+        return 0
 
     if invalidate and user_profile:
         _get_api_keys.invalidate(user_profile.id)  # type: ignore
@@ -241,6 +255,10 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
     def _get_custom_domains(user_profile_id: int) -> int:
         return ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
 
+    if not user_profile:
+        logger.warning("%s.get_custom_domains() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
     if invalidate and user_profile:
         _get_custom_domains.invalidate(user_profile.id)  # type: ignore
 
@@ -262,6 +280,10 @@ def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile
     :return: The number of API and SQL connections belonging to the user.
     :rtype: int
     """
+    if not user_profile:
+        logger.warning("%s.get_connections() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
     logger.debug(
         "%s.get_connections() called with invalidate=%s for user_profile_id=%s",
         logger_prefix,
@@ -288,6 +310,10 @@ def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = 
     :return: The number of secrets belonging to the user profile.
     :rtype: int
     """
+    if not user_profile:
+        logger.warning("%s.get_secrets() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
     logger.debug(
         "%s.get_secrets() called with invalidate=%s for user_profile_id=%s", logger_prefix, invalidate, user_profile.id
     )
@@ -308,6 +334,10 @@ def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] 
     :return: The number of providers belonging to the user account + those belonging to the official smarter admin.
     :rtype: int
     """
+    if not user_profile:
+        logger.warning("%s.get_providers() called without user_profile. Returning 0.", logger_prefix)
+        return 0
+
     logger.debug(
         "%s.get_providers() called with invalidate=%s for user_profile_id=%s",
         logger_prefix,
@@ -626,13 +656,21 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
         - :class:`smarter.lib.manifest.broker.AbstractBroker`
         - :signal:`smarter.apps.account.signals.cache_invalidate`
     """
+    if not user_profile:
+        logger.warning(
+            "%s.cache_invalidations() called without user_profile. No caches will be invalidated.",
+            logger_prefix_cache_invalidations,
+        )
+        return
+
     logger.debug("%s called for %s", logger_prefix_cache_invalidations, user_profile)
 
     ###########################################################################
     # resource invalidations
     ###########################################################################
-    Account.get_cached_object(invalidate=True, pk=user_profile.account.id)
-    UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)
+    if user_profile:
+        Account.get_cached_object(invalidate=True, pk=user_profile.account.id)
+        UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)
 
     ###########################################################################
     # context invalidations
