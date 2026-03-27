@@ -224,8 +224,11 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         )
         self.api_version = api_version or SmarterApiVersions.V1
         name = name or kwargs.pop("name", None)
-        self.name_cached_property_setter(name)
-        self.kind_setter(kind or kwargs.pop("kind", None))
+        if name:
+            self.name_cached_property_setter(name)
+        kind = kind or kwargs.pop("kind", None)
+        if kind:
+            self.kind_setter(kind or kwargs.pop("kind", None))
 
         # ----------------------------------------------------------------------
         # Resolve all initialization parameters to pass to the mixins.
