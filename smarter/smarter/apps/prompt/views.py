@@ -1,4 +1,4 @@
-# pylint: disable=W0613
+# pylint: disable=W0613,C0302
 """
 Views for the React chat component used in the Smarter web application.
 """
@@ -66,6 +66,7 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
+    SmarterAuthenticatedWebView,
     smarter_cache_page_by_user,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -81,6 +82,7 @@ from .signals import chat_config_invoked, chat_session_invoked
 
 MAX_RETURNED_PLUGINS = 10
 PROMPT_LIST_CACHE_TIMEOUT = smarter_settings.cache_expiration
+WORKBENCH_CACHE_TIMEOUT = 10  # 10 seconds. keeps the workbench snappy while avoiding appearing stale.
 
 
 def should_log(level):
@@ -944,7 +946,9 @@ class PromptManifestView(DocsBaseView):
         return render(request, self.template_path, context=context)  # type: ignore
 
 
-class PromptListView(SmarterAuthenticatedNeverCachedWebView):
+@method_decorator(cache_control(max_age=WORKBENCH_CACHE_TIMEOUT), name="dispatch")
+@method_decorator(smarter_cache_page_by_user(WORKBENCH_CACHE_TIMEOUT), name="dispatch")
+class PromptListView(SmarterAuthenticatedWebView):
     """
     list view for smarter workbench web console. This view is protected and
     requires the user to be authenticated. It generates cards for each
