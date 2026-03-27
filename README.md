@@ -35,26 +35,31 @@ integrations to remote data sources like Sql databases and remote APIs.
 
 ## Quickstart
 
-You can spin up the platform locally in Docker in around 10 minutes. Runs on Linux, Windows and macOS.
+This setup uses Docker and takes around 20 minutes for first time installations.
+Runs on Linux, Windows and macOS.
 
 1. Verify project requirements: [Python 3.13](https://www.python.org/), [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/).
 
 2. Add your credentials to [.env](./.env.example) in the root of this repo.
+   See the inline documentation for details on the minimum environment variables
+   that you will need to set.
 
 3. Initialize, build and run the application locally.
 
-```console
-git clone https://github.com/smarter-sh/smarter-deploy
-make                # scaffold a .env file in the root of the repo
+````console
+git clone https://github.com/smarter-sh/smarter
+make help           # scaffolds a .env file in the root of the repo
                     #
                     # ****************************
                     # STOP HERE!
                     # ****************************
                     # Add your credentials to .env located in the project root folder.
                     #
-make init           # pulls Docker containers, creates and initializes a local MySql database, preloads example AI resources
-make run            # runs all docker containers and starts a local web server http://localhost:9357/
-```
+make init           # pulls Docker containers, creates a Python virtual environment,
+                    # installs all packages, creates and initializes a
+                    # local MySql database, preloads example AI resources
+make run            # runs all docker containers and starts a
+                    # local web server http://localhost:9357/```
 
 4. Login at http://localhost:9357/login/ with user `admin@smarter.sh` and password `smarter`.
 
@@ -84,7 +89,7 @@ Pull the chart:
 
 ```console
 helm pull oci://ghcr.io/smarter-sh/charts/smarter --version 0.7.6
-```
+````
 
 Install to Kubernetes:
 
