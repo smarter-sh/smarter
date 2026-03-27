@@ -50,12 +50,17 @@ A :doc:`declarative <smarter-framework/pydantic/smarter-manifests>` AI :doc:`res
 
 - **Cloud-Native Application Framework**
 
-  - Built on :doc:`Django <smarter-framework/django>`, :doc:`Django REST Framework <smarter-framework/drf>`, :doc:`Pydantic <smarter-framework/pydantic>`.
+  - Built mightily on :doc:`Django <smarter-framework/django>`, :doc:`Django REST Framework <smarter-framework/drf>`, :doc:`Pydantic <smarter-framework/pydantic>`.
   - Automated :doc:`AWS cloud infrastructure <smarter-framework/aws>` and :doc:`Kubernetes <smarter-framework/kubernetes>` management.
   - ReactJS component-based :doc:`UI integration solution <smarter-framework/smarter-react-ui>` that works for any web page.
   - Build AI tools that connect to enterprise resources like :doc:`Sql databases <smarter-resources/plugins/plugin/sql>` and :doc:`REST APIs <smarter-resources/plugins/plugin/api>`.
   - :doc:`Prompt engineer workbench <smarter-framework/smarter-react-ui>` for testing prompts and workflows before you deploy.
   - Vibrant developer community: `PyPI <https://pypi.org/project/smarter-api/>`_, `NPM <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, `VS Code extensions <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_, and more.
+
+- **Open Source**
+
+  - Fully open source under the `AGPL-3 License <https://www.gnu.org/licenses/agpl-3.0>`_.
+  - Contributions welcome! See our `GitHub repo <https://github.com/project-smarter/smarter>`__.
 
 
 Usage
@@ -92,7 +97,6 @@ Usage
 
 
 
-
 .. toctree::
    :maxdepth: 1
    :caption: Table of Contents
@@ -100,6 +104,7 @@ Usage
    smarter-platform
    smarter-resources
    smarter-framework
+   smarter-claude-code
    adr
 
 .. toctree::
