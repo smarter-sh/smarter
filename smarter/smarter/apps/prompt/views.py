@@ -782,7 +782,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             "chatapp_workbench": {
                 "div_id": smarter_settings.smarter_reactjs_root_div_id,
                 "app_loader_url": self.reactjs_loader_url,
-                "chatbot_api_url": self.chatbot.url,
+                "chatbot_api_url": self.chatbot.sandbox_url,
                 "toggle_metadata": True,
                 "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
                 "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter chat session, not the Django session.
