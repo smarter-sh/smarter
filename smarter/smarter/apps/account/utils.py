@@ -443,17 +443,7 @@ def get_cached_admin_user_for_account(
             )
             return user_profile.cached_user  # type: ignore[return-value]
         else:
-            # Create a new admin user and UserProfile
-            random_email = f"{uuid.uuid4().hex[:8]}@mail.com"
-            if account and isinstance(account.account_number, str):
-                admin_user = User.objects.create_user(username=account.account_number, email=random_email, is_staff=True)  # type: ignore[arg-type]
-                logger.debug("%s created new admin User %s for account %s", console_prefix, admin_user, account)
-                user_profile = UserProfile.objects.create(name=admin_user.username, user=admin_user, account=account)
-                logger.debug("%s created new admin UserProfile for user %s", console_prefix, user_profile)
-        if not user_profile:
-            logger.debug("%s failed to query nor create admin UserProfile for account %s", console_prefix, account)
-            raise SmarterConfigurationError("Failed to create admin UserProfile")
-        return user_profile.cached_user if user_profile else None  # type: ignore[return-value]
+            raise SmarterConfigurationError(f"No admin user found for account {account}.")
 
     if invalidate:
         _admin_user_for_account_number.invalidate(account_number=account.account_number, class_name=User.__name__)

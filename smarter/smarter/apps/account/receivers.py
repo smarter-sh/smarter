@@ -99,8 +99,6 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
         instance,
         created,
     )
-    if not created and bool(instance.id):
-        cache_invalidations(user_profile=instance)
 
 
 @receiver(post_delete, sender=UserProfile)
@@ -126,10 +124,6 @@ def account_post_save(sender: Account, instance: Account, created, **kwargs):
         logger.info(
             "%s invalidating cache for Account: %s", formatted_text(f"{module_prefix}.account_post_save()"), instance
         )
-        if instance:
-            admin_user = get_cached_admin_user_for_account(invalidate=True, account=instance)
-            user_profile = UserProfile.get_cached_object(invalidate=True, user=admin_user, account=instance)
-            cache_invalidations(user_profile=user_profile)
 
 
 @receiver(post_delete, sender=Account)
