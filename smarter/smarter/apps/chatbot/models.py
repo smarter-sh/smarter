@@ -1006,7 +1006,7 @@ class ChatBot(MetaDataWithOwnershipModel):
                 .filter(user_profile_id=user_profile_id)
             )
 
-        if invalidate:
+        if invalidate and user_profile:
             _get_chatbots_for_user_profile_id.invalidate(user_profile_id=user_profile.id, class_name=cls.__name__)
 
         if user_profile:
@@ -1723,7 +1723,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
     The following are examples of valid URLs that this helper can process:
 
-    º- **Authentication Optional URLs:**
+    - **Authentication Optional URLs:**
         - ``https://example-username.3141-5926-5359.alpha.api.example.com/``
         - ``https://example-username.3141-5926-5359.alpha.api.example.com/config/``
 
@@ -1853,7 +1853,7 @@ class ChatBotHelper(SmarterRequestMixin):
             if not isinstance(self.chatbot, ChatBot):
                 if self.user_profile and self._name:
                     try:
-                        self.chatbot = ChatBot.objects.get(name=self._name, user_profile=self.user_profile)
+                        self.chatbot = ChatBot.get_cached_object(name=self._name, user_profile=self.user_profile)
                     except ChatBot.DoesNotExist:
                         chatbot_helper_logger.warning(
                             "%s.__init__() could not find ChatBot with name=%s and user_profile=%s",
@@ -1978,7 +1978,7 @@ class ChatBotHelper(SmarterRequestMixin):
     @chatbot_id.setter
     def chatbot_id(self, chatbot_id: int):
         self._chatbot_id = chatbot_id
-        chatbot = ChatBot.objects.get(id=chatbot_id)
+        chatbot = ChatBot.get_cached_object(pk=chatbot_id)
         if chatbot and chatbot.user_profile.cached_account != self.account:
             raise SmarterValueError("ChatBotHelper.chatbot_id setter: ChatBot's Account does not match self.account")
         self.chatbot = chatbot

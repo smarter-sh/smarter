@@ -1424,7 +1424,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 .filter(user_profile_id=user_profile_id)
             )
 
-        if invalidate:
+        if invalidate and user_profile:
             _get_objects_for_user_profile_id.invalidate(user_profile_id=user_profile.id, class_name=cls.__name__)
 
         if user_profile:
