@@ -209,6 +209,12 @@ change-log:
 # our local build target for Sphinx documentation is intended to try to match
 # what ReadTheDocs does as closely as possible.
 # -------------------------------------------------------------------------
+sphinx-init:
+	make check-python		# verify Python 3.13 is installed
+	make python-init		# create/replace Python virtual environment and install dependencies
+	make build			    # build the Smarter Docker container
+	make pre-commit-init	# install and configure pre-commit
+
 sphinx-docs:
 	cd docs && make SPHINXOPTS="-W -T -D language=en" html
 
@@ -254,6 +260,7 @@ help:
 	@echo '<************************** AWS **************************>'
 	@echo 'helm-update            - Update Helm chart dependencies'
 	@echo '<************************** AWS **************************>'
+	@echo 'sphinx-init            - Initialize Sphinx documentation environment'
 	@echo 'sphinx-docs            - Build Sphinx documentation'
 	@echo '===================================================================='
 	@echo 'change-log             - update CHANGELOG.md file'
