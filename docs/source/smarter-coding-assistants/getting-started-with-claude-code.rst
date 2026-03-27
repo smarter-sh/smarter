@@ -34,7 +34,7 @@ c. Setup
 --------
 
 1. Obtain Anthropic API Credentials
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Navigate to the Anthropic console
 - Generate an API key
@@ -45,7 +45,7 @@ c. Setup
    export ANTHROPIC_API_KEY="your_api_key_here"
 
 2. Review Smarter Provider Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Smarter requires defining a provider with:
 
@@ -59,7 +59,7 @@ Reference:
 https://docs.smarter.sh/en/latest/smarter-resources/smarter-provider.html
 
 3. Create a New Provider Definition
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create a new provider configuration file:
 
@@ -93,7 +93,7 @@ Create a new provider configuration file:
          output_path: content[0].text
 
 4. Register Provider in Smarter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Place the YAML file in the Smarter providers directory
 - Restart or reload Smarter services (depending on deployment)
@@ -102,10 +102,10 @@ Create a new provider configuration file:
 ---
 
 d. Concept Overview
-------------------
+-------------------
 
 Smarter Provider Abstraction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Smarter decouples model providers from user workflows via a provider abstraction layer. Each provider defines:
 
@@ -126,7 +126,7 @@ Claude Code is optimized for:
 It operates via structured message input rather than raw prompt strings.
 
 Prompt Engineering for Code
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Effective prompts typically include:
 
@@ -141,7 +141,7 @@ e. Step-by-Step
 ---------------
 
 Step 1: Validate Provider Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 From Smarter UI:
 
@@ -173,7 +173,7 @@ We will define a log parser requirement:
 ---
 
 Step 3: Execute Prompt in Smarter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Open Smarter prompt interface
 - Select Claude Code model
@@ -198,7 +198,7 @@ Iterate with follow-up prompts:
 ---
 
 Step 5: Integrate into Local Workflow
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Copy generated code into your IDE
 - Validate execution
@@ -207,7 +207,7 @@ Step 5: Integrate into Local Workflow
 ---
 
 f. Proof of Concept
-------------------
+-------------------
 
 Expected Output Example:
 
@@ -235,7 +235,7 @@ You should be able to:
 ---
 
 g. Troubleshooting
------------------
+------------------
 
 Provider Not Found in Smarter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -259,7 +259,7 @@ Malformed Responses
 - Adjust parsing path if Anthropic response format changes
 
 Model Not Responding
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 - Confirm correct model identifier
 - Check API quota / rate limits
