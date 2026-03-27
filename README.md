@@ -36,9 +36,15 @@ integrations to remote data sources like Sql databases and remote APIs.
 ## Quickstart
 
 This setup uses Docker and takes around 20 minutes for first time installations.
-Runs on Linux, Windows and macOS.
 
-1. Verify project requirements: [Python 3.13](https://www.python.org/), [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/).
+1. Verify project requirements:
+
+   - Windows, macOS, Linux operating system
+   - 20Gib disk storage capacity
+   - 4Gib system memory
+   - [Python 3.13](https://www.python.org/)
+   - [Docker](https://www.docker.com/products/docker-desktop/),
+   - [Docker Compose](https://docs.docker.com/compose/install/).
 
 2. Add your credentials to [.env](./.env.example) in the root of this repo.
    See the inline documentation for details on the minimum environment variables
