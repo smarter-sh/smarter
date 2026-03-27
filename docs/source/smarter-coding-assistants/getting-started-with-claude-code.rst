@@ -55,9 +55,6 @@ Smarter requires defining a provider with:
 - Model definitions
 - Request/response mappings
 
-Reference:
-https://docs.smarter.sh/en/latest/smarter-resources/smarter-provider.html
-
 3. Create a New Provider Definition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
