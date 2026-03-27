@@ -36,6 +36,8 @@ class Command(SmarterCommand):
         account, created = Account.objects.get_or_create(
             account_number=SMARTER_ACCOUNT_NUMBER,
         )
+        account.name = f"{smarter_settings.platform_name} Admin Account"
+        account.description = f"automatically-generated {smarter_settings.platform_name} Admin account"
         account.company_name = smarter_settings.branding_corporate_name
         account.is_default_account = True
         account.phone_number = smarter_settings.branding_support_phone_number
