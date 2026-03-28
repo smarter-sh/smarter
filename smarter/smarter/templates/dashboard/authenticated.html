@@ -6,7 +6,7 @@
   <!--begin::Content container-->
   <div id="kt_app_content_container" class="app-container container-xxl">
     <!--begin::Row-->
-    <section class="row g-5 g-xl-10">
+    <section class="row g-5 g-xl-10 mt-3">
      {% include "dashboard/widgets/my-resources.html" %}
       <!--begin::Col-->
       <div class="col-xl-8 mb-5 mb-xl-10">
@@ -16,24 +16,38 @@
           {% include "dashboard/widgets/certification-program.html" %}
         </div>
         <!--end::Row-->
-        {% include "dashboard/widgets/download-cli.html" %}
+        {% include "dashboard/widgets/vscode-extension.html" %}
       </div>
       <!--end::Col-->
     </section>
     <!--end::Row-->
-    <!--begin::Row downloads Shalim -->
+
+    <!--begin::Row Developer/enthusiast banner -->
     <section class="row g-5 g-xl-10">
-      {% include "dashboard/widgets/download-vscode.html" %}
-      {% include "dashboard/widgets/download-pypi.html" %}
-      {% include "dashboard/widgets/download-npm.html" %}
+      <div class="col-xl-12 mb-5 mb-xl-10 text-center">
+        <h2 class="text-gray-600">Resources for Developers, Solution Architects, and Enterprise Users</h2>
+      </div>
+    </section>
+    <!--end::Row Developer/enthusiast banner -->
+
+    <!--begin::Row downloads Shalim -->
+    <section class="row g-5 g-xl-10 align-items-stretch">
+      {% include "dashboard/widgets/sdk.html" %}
+      {% include "dashboard/widgets/cli.html" %}
     </section>
     <!--end::Row downloads Shalim -->
-    <!--begin::Row manifests-->
-    <div class="row g-5 g-xl-10">
-      {% include "dashboard/widgets/manifest-chatbot.html" %}
-      {% include "dashboard/widgets/manifest-plugin.html" %}
-    </div>
-    <!--end::Row manifests-->
+
+    <!--begin::Row install/contribute -->
+      <section class="row g-5 g-xl-10 align-items-stretch">
+        <div class="col-xl-6 mb-5 mb-xl-10" style="min-height: 300px">
+          {% include "dashboard/widgets/self-host.html" %}
+        </div>
+        <div class="col-xl-6 mb-5 mb-xl-10" style="min-height: 300px">
+          {% include "dashboard/widgets/contribute.html" %}
+        </div>
+      </section>
+    <!--end::Row install/contribute -->
+
     <!--begin::Row yt videos-->
     <div class="row g-5 g-xl-10">
       {% include "dashboard/widgets/youtube-video-1.html" %}

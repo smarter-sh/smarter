@@ -1,0 +1,41 @@
+{% load static %}
+
+<!--begin::Engage widget 4-->
+<div
+  class="card border-transparent h-100"
+  data-bs-theme="light"
+  style="background-color: #1C325E;"
+>
+  <!--begin::Body-->
+  <div class="row w-100">
+    <div class="card-body d-flex flex-column ps-xl-15 h-100">
+      <!--begin::Title-->
+      <div class="position-relative fs-2x z-index-2 fw-bold text-white mb-7">
+        <span class="position-relative d-inline-block text-danger">
+          <a href="https://github.com/smarter-sh/smarter-deploy" class="btn btn-primary fw-semibold me-2 opacity-75-hover"
+            >Quickstart</a
+          >
+          <span class="me-2"> Self-host Smarter</span>
+        </span>
+      </div>
+      <!--end::Title-->
+      <!--begin::Illustration-->
+      <img
+        src="{% static 'assets/media/illustrations/sigma-1/14-dark.png' %}"
+        class="position-absolute me-3 bottom-0 end-0 w-100"
+        alt=""
+      />
+      <!--end::Illustration-->
+
+      <div class="text-white mt-auto mb-0 pt-5 align-self-end rounded" style="width: 50%; background: rgba(34, 34, 34, 0.25); z-index: 10; position: relative;">
+        <ul>
+          <li><a href="https://github.com/smarter-sh/smarter-deploy" class="text-white">Docker</a></li>
+          <li><a href="https://artifacthub.io/packages/helm/project-smarter/smarter" class="text-white">Kubernetes</a></li>
+          <li><a href="https://github.com/smarter-sh/smarter-infrastructure" class="text-white">Terraform</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!--end::Body-->
+</div>
+<!--end::Engage widget 4-->
