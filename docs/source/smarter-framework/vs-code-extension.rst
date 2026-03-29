@@ -25,6 +25,11 @@ Getting Started
 ----------------
 
 1. Install the extension from the VS Code Marketplace (or manually if in development).
+
+   .. image:: https://cdn.smarter.sh/docs/smarter-vscode-marketplace-extension.png
+      :width: 90%
+      :alt: VS Code Extension Marketplace
+
 2. Open a YAML manifest file in VS Code.
 3. The extension will automatically validate and provide suggestions.
 
@@ -32,7 +37,7 @@ Getting Started
 Configuration
 ----------------
 
-You can configure the extension by adding the following settings to your settings.json:
+You can optionally configure the extension by adding the following settings to your settings.json:
 
 .. code-block:: json
 
