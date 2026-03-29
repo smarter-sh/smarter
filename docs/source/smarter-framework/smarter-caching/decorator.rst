@@ -25,5 +25,5 @@ Usage examples::
 
 .. literalinclude:: ../../../../smarter/smarter/lib/cache.py
    :language: python
-   :lines: 305-
+   :lines: 295-
    :caption: Smarter cache_results() decorator implementation

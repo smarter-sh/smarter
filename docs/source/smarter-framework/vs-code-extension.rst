@@ -27,7 +27,7 @@ Getting Started
 1. Install the extension from the VS Code Marketplace (or manually if in development).
 
    .. image:: https://cdn.smarter.sh/docs/smarter-vscode-marketplace-extension.png
-      :width: 90%
+      :width: 100%
       :alt: VS Code Extension Marketplace
 
 2. Open a YAML manifest file in VS Code.
