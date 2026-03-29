@@ -38,7 +38,7 @@ class AccountView(AccountViewBase):
         if account_id and request.user.is_superuser:
             self.account = get_object_or_404(Account, pk=account_id)
         else:
-            self.account = self.user_profile.cached_account
+            self.account = self.user_profile.account
         serializer = self.serializer_class(self.account)
         return Response(serializer.data, status=HTTPStatus.OK)
 

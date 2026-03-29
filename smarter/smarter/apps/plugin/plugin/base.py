@@ -1423,7 +1423,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
 
         plugin_meta_django_model = self.plugin_meta_django_model
         if not plugin_meta_django_model:
-            account_number = self.user_profile.cached_account.account_number if self.user_profile else "Unknown"
+            account_number = self.user_profile.account.account_number if self.user_profile else "Unknown"
             raise SmarterPluginError(
                 f"Plugin {self.manifest.metadata.name} for account {account_number} does not exist."
             )
@@ -1746,14 +1746,10 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                 SAMKeys.STATUS.value: {
                     "id": self.plugin_meta.id if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
                     "accountNumber": (
-                        self.user_profile.cached_account.account_number
-                        if isinstance(self.user_profile, UserProfile)
-                        else None
+                        self.user_profile.account.account_number if isinstance(self.user_profile, UserProfile) else None
                     ),
                     "username": (
-                        self.user_profile.cached_user.get_username()
-                        if isinstance(self.user_profile, UserProfile)
-                        else None
+                        self.user_profile.user.get_username() if isinstance(self.user_profile, UserProfile) else None
                     ),
                     "created": (
                         self.plugin_meta.created_at.isoformat()

@@ -366,7 +366,7 @@ class TestPluginBase(TestAccountMixin):
         for plugin in plugins:
             self.assertTrue(
                 PluginController(
-                    account=self.user_profile.cached_account, user=self.user_profile.cached_user, plugin_meta=plugin
+                    account=self.user_profile.account, user=self.user_profile.user, plugin_meta=plugin
                 ).ready
             )
 

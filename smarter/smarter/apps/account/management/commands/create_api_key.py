@@ -37,7 +37,7 @@ class Command(SmarterCommand):
 
         if account_number:
             account = Account.objects.get(account_number=account_number)
-            user = get_cached_admin_user_for_account(account)
+            user = get_cached_admin_user_for_account(account=account)
         if username:
             user = User.objects.get(username=username)
             user_profile = (
@@ -48,12 +48,12 @@ class Command(SmarterCommand):
             if not user_profile:
                 self.handle_completed_failure(msg=f"User {username} does not have a user profile")
                 return
-            account = user_profile.cached_account
+            account = user_profile.account
         if not user:
             user = (
                 User.objects.get(username=username)
                 if username
-                else get_cached_admin_user_for_account(account) if account else None
+                else get_cached_admin_user_for_account(account=account) if account else None
             )
         user_profile = UserProfile.objects.get(user=user, account=account)
 

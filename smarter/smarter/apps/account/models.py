@@ -788,7 +788,7 @@ class UserProfile(MetaDataModel):
 
         **Example usage**::
 
-            account = profile.cached_account
+            account = user_profile.cached_account
             if account:
                 print(account.company_name)
 

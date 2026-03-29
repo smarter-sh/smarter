@@ -75,7 +75,7 @@ class Command(SmarterCommand):
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
         if created:
             self.handle_completed_success(
-                msg=f"Created user profile for {user_profile.cached_user.username} {user_profile.cached_user.email}, account {user_profile.cached_account.account_number} {user_profile.cached_account.company_name}"
+                msg=f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.cached_account.company_name}"
             )
 
         account_contact, created = AccountContact.objects.get_or_create(

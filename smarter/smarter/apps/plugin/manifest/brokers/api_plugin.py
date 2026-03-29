@@ -292,6 +292,11 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
 
         # 2.) next, (and only if a loader is not available) try to initialize
         #     from existing Account model if available
+        if not self.plugin_meta:
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} No plugin metadata found for {self.kind}",
+                thing=self.kind,
+            )
         elif self._plugin_meta:
             metadata = self.plugin_metadata_orm2pydantic()
             status = self.plugin_status_pydantic()
@@ -308,7 +313,6 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                     f"{self.formatted_class_name} No plugin spec found for {self.kind} {self.plugin_meta.name}",
                     thing=self.kind,
                 )
-
             admin = get_cached_admin_user_for_account(account=self.plugin_meta.user_profile.cached_account)
             if not admin:
                 raise SAMPluginBrokerError(

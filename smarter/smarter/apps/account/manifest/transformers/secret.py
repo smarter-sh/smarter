@@ -433,18 +433,14 @@ class SecretTransformer(SmarterHelperMixin):
         # if the secret exists for the account, and if so, whether self.user_profile
         # is at least a staff user. otherwise, we raise an error.
         other_user_profiles = (
-            get_user_profiles_for_account(self.user_profile.cached_account) if self.user_profile else None
+            get_user_profiles_for_account(account=self.user_profile.account) if self.user_profile else None
         )
         secret = Secret.objects.filter(user_profile__in=other_user_profiles, name=self.name).first()
         if secret:
-            if (
-                self.user_profile
-                and not self.user_profile.cached_user.is_staff
-                and not self.user_profile.cached_user.is_superuser
-            ):
+            if self.user_profile and not self.user_profile.user.is_staff and not self.user_profile.user.is_superuser:
                 raise SmarterSecretTransformerError(
                     f"Secret {self.name} exists for user profile {secret.user_profile.cached_user.username} "
-                    f"but not for user profile {self.user_profile.cached_user.username}."
+                    f"but not for user profile {self.user_profile.user.username}."
                 )
             self._secret = secret
             logger.debug(
@@ -471,7 +467,7 @@ class SecretTransformer(SmarterHelperMixin):
         if self._secret:
             self._name = self._secret.name
             # Only set _user_profile if it exists. This will be missing on new secrets.
-            if hasattr(self._secret, "user_profile") and self._secret.user_profile_id is not None:
+            if hasattr(self._secret, "user_profile") and self._secret.user_profile.id is not None:
                 self._user_profile = self._secret.user_profile
 
     @property
