@@ -9,6 +9,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlparse
 
+import httpx
 import markdown
 from django.http.response import HttpResponse
 from django.shortcuts import render
@@ -85,7 +86,7 @@ class DocsBaseView(SmarterAuthenticatedWebView):
             reverse_name,
             path,
         )
-        cli_request = factory.get(path)
+        cli_request = factory.post(path)
         cli_request.user = request.user if hasattr(request, "user") else get_cached_smarter_admin_user_profile().user
         if hasattr(request, SMARTER_IS_INTERNAL_API_REQUEST):
             setattr(cli_request, SMARTER_IS_INTERNAL_API_REQUEST, getattr(request, SMARTER_IS_INTERNAL_API_REQUEST))
@@ -102,7 +103,30 @@ class DocsBaseView(SmarterAuthenticatedWebView):
             kwargs,
         )
         response = view(request=cli_request, kind=self.kind.value, *args, **kwargs)
-        json_response = json.loads(response.content.decode("utf-8"))
+        if response.status_code != httpx.codes.OK:
+            logger.error(
+                "%s.get_brokered_json_response() received non-200 response for reverse_name=%s, kind=%s, request.user=%s response status: %s, content: %s",
+                self.formatted_class_name,
+                reverse_name,
+                self.kind,
+                request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr]
+                response.status_code if hasattr(response, "status_code") else "N/A",
+                response.content if hasattr(response, "content") else "N/A",
+            )
+            raise DocsError(f"Received non-200 response from brokered view: {response.status_code}")
+        try:
+            json_response = json.loads(response.content.decode("utf-8"))
+        except json.JSONDecodeError as e:
+            logger.error(
+                "%s.get_brokered_json_response() failed to decode JSON response for reverse_name=%s, kind=%s, request.user=%s response status: %s, content: %s",
+                self.formatted_class_name,
+                reverse_name,
+                self.kind,
+                request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr]
+                response.status_code if hasattr(response, "status_code") else "N/A",
+                response.content if hasattr(response, "content") else "N/A",
+            )
+            raise DocsError("Failed to decode JSON response") from e
 
         if SmarterJournalApiResponseKeys.DATA in json_response:
             # unpack the smarter.sh/api response payload
