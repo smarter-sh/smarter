@@ -51,15 +51,24 @@ You can optionally configure the extension by adding the following settings to y
 JSON Schemas
 --------------
 
-- https://platform.smarter.sh/api/v1/cli/schema/Chatbot/
-- https://platform.smarter.sh/api/v1/cli/schema/Plugin/
-- https://platform.smarter.sh/api/v1/cli/schema/Account/
-- https://platform.smarter.sh/api/v1/cli/schema/SmarterAuthToken/
-- https://platform.smarter.sh/api/v1/cli/schema/User/
-- https://platform.smarter.sh/api/v1/cli/schema/Chat/
-- https://platform.smarter.sh/api/v1/cli/schema/ChatConfig/
-- https://platform.smarter.sh/api/v1/cli/schema/ChatHistory/
-- https://platform.smarter.sh/api/v1/cli/schema/ChatPluginUsage/
-- https://platform.smarter.sh/api/v1/cli/schema/ChatToolCall/
-- https://platform.smarter.sh/api/v1/cli/schema/SqlConnection/
-- https://platform.smarter.sh/api/v1/cli/schema/ApiConnection/
+the VS Code Extension uses Smarter's Pydantic-generated JSON schemas
+to validate the structure of
+Smarter YAML manifest files.
+
+The following schemas are available:
+
+- /api/v1/cli/schema/Account/
+- /api/v1/cli/schema/ApiConnection/
+- /api/v1/cli/schema/ApiPlugin/
+- /api/v1/cli/schema/Chat/
+- /api/v1/cli/schema/Chatbot/
+- /api/v1/cli/schema/ChatHistory/
+- /api/v1/cli/schema/ChatPluginUsage/
+- /api/v1/cli/schema/ChatToolCall/
+- /api/v1/cli/schema/Plugin/
+- /api/v1/cli/schema/SqlConnection/
+- /api/v1/cli/schema/SqlPlugin/
+- /api/v1/cli/schema/SmarterAuthToken/
+- /api/v1/cli/schema/User/
+
+See :doc:`Pydantic <pydantic>` for more details on these schemas and their properties.
