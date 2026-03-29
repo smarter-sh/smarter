@@ -302,7 +302,7 @@ sphinx-init:
 sphinx-docs:
 	@echo ""
 	@echo "==============================================================================="
-	@echo "Building Sphinx documentation using local Python environment.
+	@echo "Building Sphinx documentation using local Python environment."
 	@echo "This may take a few minutes..."
 	@echo "==============================================================================="
 	cd docs && make SPHINXOPTS="-W -T -D language=en" html
