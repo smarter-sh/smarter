@@ -568,7 +568,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             verbose_logger.debug("%s._get_model_by_pk() called with no pk", logger_prefix)
             return None
 
-        return _get_model_by_pk(pk)
+        return _get_model_by_pk(pk, class_name=cls.__name__)
 
     @classmethod
     def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["TimestampedModel"]:
