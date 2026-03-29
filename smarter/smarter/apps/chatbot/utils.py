@@ -4,6 +4,7 @@ Chatbot utility functions.
 
 from logging import getLogger
 
+from django.contrib.auth.models import User
 from django.db.models import QuerySet
 
 from smarter.apps.account.models import UserProfile
@@ -11,13 +12,24 @@ from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
     smarter_cached_objects,
 )
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import ChatBot, ChatBotHelper
 
+
+def should_log_verbose(level):
+    """Check if logging should be done based on the waffle switch."""
+    return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING)
+
+
 logger = getLogger(__name__)
+verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
 logger_prefix = formatted_text(f"{__name__}")
 
 LRU_CACHE_MAX_SIZE = 128
@@ -38,6 +50,12 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int, invalidate: bool 
     try:
 
         def was_already_added(chatbot_helper: ChatBotHelper) -> bool:
+            verbose_logger.debug(
+                "%s.was_already_added() - Checking if chatbot %s has already been added for user_profile_id %s",
+                logger_prefix,
+                chatbot_helper.chatbot,
+                user_profile_id,
+            )
             if not chatbot_helper.chatbot:
                 logger.error("%s.dispatch() - chatbot_helper.chatbot is None. This is a bug.", logger_prefix)
                 return False
@@ -49,13 +67,13 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int, invalidate: bool 
         def get_chatbots_for_account() -> QuerySet:
 
             user_chatbots = ChatBot.get_cached_objects(user_profile=user_profile)  # type: ignore[union-attr]
-            logger.debug(
+            verbose_logger.debug(
                 "%s.get_cached_chatbots_for_user_profile() - Retrieved %d user chatbots for user",
                 logger_prefix,
                 len(user_chatbots),
             )
             admin_chatbots = ChatBot.get_cached_objects(user_profile=admin_user_profile)  # type: ignore[union-attr]
-            logger.debug(
+            verbose_logger.debug(
                 "%s.get_cached_chatbots_for_user_profile() - Retrieved %d admin chatbots for account admin",
                 logger_prefix,
                 len(admin_chatbots),
@@ -63,7 +81,7 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int, invalidate: bool 
             smarter_chatbots = ChatBot.get_cached_objects(
                 user_profile=smarter_cached_objects.smarter_admin_user_profile  # type: ignore[union-attr]
             )
-            logger.debug(
+            verbose_logger.debug(
                 "%s.get_cached_chatbots_for_user_profile() - Retrieved %d smarter chatbots for smarter admin",
                 logger_prefix,
                 len(smarter_chatbots),
@@ -77,6 +95,11 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int, invalidate: bool 
                 Combines user, admin, and smarter chatbots into a single queryset
                 and caches the result for 15 seconds to improve performance.
                 """
+                verbose_logger.debug(
+                    "%s._combined_chatbots_list() - Combining chatbots for user_profile_id %s",
+                    logger_prefix,
+                    use_profile_id,
+                )
 
                 combined_chatbots = user_chatbots | admin_chatbots | smarter_chatbots
                 combined_chatbots = (
@@ -97,12 +120,20 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int, invalidate: bool 
 
         chatbot_helpers: list[ChatBotHelper] = []
         user_profile = UserProfile.get_cached_object(pk=user_profile_id)
-        if not user_profile:
-            raise SmarterValueError(f"No user profile found for id {user_profile_id}")
+        if not isinstance(user_profile, UserProfile):
+            raise SmarterValueError(
+                f"No user profile found for id {user_profile_id}. Got {type(user_profile)} {user_profile} instead."
+            )
         admin_user = get_cached_admin_user_for_account(account=user_profile.cached_account)
-        if not admin_user:
-            raise SmarterValueError(f"No admin user found for account {user_profile.cached_account}")
+        if not isinstance(admin_user, User):
+            raise SmarterValueError(
+                f"No admin user found for account {user_profile.cached_account}. Got {type(admin_user)} {admin_user} instead."
+            )
         admin_user_profile = UserProfile.get_cached_object(user=admin_user)
+        if not isinstance(admin_user_profile, UserProfile):
+            raise SmarterValueError(
+                f"No user profile found for admin user {admin_user}. Got {type(admin_user_profile)} {admin_user_profile} instead."
+            )
 
         chatbots = get_chatbots_for_account()
         logger.debug(
@@ -114,6 +145,10 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int, invalidate: bool 
 
         i = 0
         for chatbot in chatbots:
+            if not isinstance(chatbot, ChatBot):
+                raise SmarterValueError(
+                    f"Expected chatbot to be an instance of ChatBot, but got {type(chatbot)}: {chatbot}"
+                )
             i += 1
             logger.debug(
                 "%s.get_cached_chatbots_for_user_profile() - Processing chatbot %s %s for user_profile_id %s",
@@ -146,6 +181,7 @@ def get_cached_chatbots_for_user_profile(user_profile_id: int, invalidate: bool 
             logger_prefix,
             user_profile,
             e,
+            stack_info=True,
         )
         return []
 

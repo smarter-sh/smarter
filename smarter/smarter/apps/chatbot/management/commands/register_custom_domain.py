@@ -35,6 +35,10 @@ class Command(SmarterCommand):
     def handle(self, *args, **options):
         self.handle_begin()
 
+        if not aws_helper.ready():
+            self.handle_completed_failure(msg="AWS services are currently unavailable. Please try again later.")
+            return
+
         account_number = options["account_number"]
         domain = options["domain"]
 
@@ -42,7 +46,7 @@ class Command(SmarterCommand):
 
         try:
             domain_name = ChatBotCustomDomain.objects.get(domain_name=domain)
-            if domain_name.account != account:
+            if domain_name.user_profile.account != account:
                 self.handle_completed_failure(msg=f"The domain name {domain} is already registered by another account.")
                 return None
         except ChatBotCustomDomain.DoesNotExist:

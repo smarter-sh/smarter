@@ -535,7 +535,7 @@ class ChatBot(MetaDataWithOwnershipModel):
             raw_str = self.name
         else:
             # note: rfc1034_compliant_str() filters out the "."
-            raw_str = f"{self.name}-{user_profile.cached_user.username}"
+            raw_str = f"{self.name}-{user_profile.user.username}"
         return rfc1034_compliant_str(raw_str)
 
     @property

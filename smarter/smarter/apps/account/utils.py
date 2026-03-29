@@ -270,9 +270,9 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
         """
         user_profiles = UserProfile.objects.filter(user_id=user_id)
         for user_profile in user_profiles:
-            if user_profile.cached_account.is_default_account and waffle.switch_is_active(
-                SmarterWaffleSwitches.CACHE_LOGGING
-            ):
+            if not isinstance(user_profile, UserProfile):
+                raise SmarterConfigurationError(f"Expected UserProfile instance, got {type(user_profile)}")
+            if user_profile.account.is_default_account and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.debug(
                     "%s.get_cached_account_for_user() retrieving and caching default account %s for user %s",
                     HERE,

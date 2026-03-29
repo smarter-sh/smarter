@@ -62,11 +62,17 @@ activate:
 # complete Docker build. Performs all 13 steps of the build process regardless of current state.
 # takes around 4 minutes to complete
 build:
+	@echo "==============================================================================="
+	@echo "Building Docker containers ..."
+	@echo "==============================================================================="
 	make docker-build
 
 # run the web application from Docker
 # takes around 30 seconds to complete
 run:
+	@echo "==============================================================================="
+	@echo "Running Docker containers ..."
+	@echo "==============================================================================="
 	make docker-run
 
 test:

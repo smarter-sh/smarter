@@ -493,6 +493,11 @@ class Provider(MetaDataWithOwnershipModel):
 
         @cache_results()
         def cached_providers_by_account_id(account_id: int) -> Sequence["Provider"]:
+            if not user_profile:
+                logger.debug(
+                    "%s: No user profile found for user %s, returning empty list", cls.formatted_class_name, user
+                )
+                return []
             admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore[arg-type]
             admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore[arg-type]
 
@@ -519,17 +524,20 @@ class Provider(MetaDataWithOwnershipModel):
                 "%s.cached_providers_by_account_id() retrieved %s providers for account %s",
                 cls.formatted_class_name,
                 retval,
-                user_profile.cached_account,
+                user_profile.account,
             )
             return retval
 
         user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
+        if not user_profile:
+            logger.debug("%s: No user profile found for user %s, returning empty list", cls.formatted_class_name, user)
+            return []
 
         if invalidate and user_profile and user_profile.account:
-            cached_providers_by_account_id.invalidate(user_profile.cached_account.id)
+            cached_providers_by_account_id.invalidate(user_profile.account.id)
 
         if user_profile and user_profile.account:
-            providers = cached_providers_by_account_id(user_profile.cached_account.id)
+            providers = cached_providers_by_account_id(user_profile.account.id)
             return list(providers) or []
         return []
 

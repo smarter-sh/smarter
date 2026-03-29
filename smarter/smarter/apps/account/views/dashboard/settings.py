@@ -62,7 +62,9 @@ class SettingsView(SmarterAdminWebView):
 
     def _handle_write(self, request):
         user_profile = UserProfile.get_cached_object(user=request.user)
-        account_form = AccountForm(request.POST, instance=user_profile.cached_account)
+        if not user_profile:
+            return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "User profile not found."})
+        account_form = AccountForm(request.POST, instance=user_profile.account)
         if account_form.is_valid():
             if not self._exists("value", str(account_form.instance.currency), CURRENCIES):
                 return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data={"currency": "Invalid currency."})
@@ -82,7 +84,9 @@ class SettingsView(SmarterAdminWebView):
     # -------------------------------------------------------------------------
     def get(self, request, *args, **kwargs):
         user_profile = UserProfile.get_cached_object(user=request.user)
-        account_form = AccountForm(instance=user_profile.cached_account)
+        if not user_profile:
+            return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "User profile not found."})
+        account_form = AccountForm(instance=user_profile.account)
         context = {
             "account_settings": {
                 "account_form": account_form,

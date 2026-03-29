@@ -445,6 +445,8 @@ class RestrictedUserAdmin(UserAdmin):
         """
         Prevent deletion for non-superusers.
         """
+        if not hasattr(request, "user") or not request.user.is_authenticated:
+            return False
         if request.user.is_superuser:
             return True
         return False
@@ -454,6 +456,8 @@ class RestrictedUserAdmin(UserAdmin):
         Allow change permissions for superusers and to
         staff users if they are changing a user within their own account.
         """
+        if not hasattr(request, "user") or not request.user.is_authenticated:
+            return False
         if request.user.is_superuser:
             return True
         if request.user.is_staff:
@@ -461,7 +465,11 @@ class RestrictedUserAdmin(UserAdmin):
                 if not obj:
                     return False
                 user_profile = UserProfile.get_cached_object(user=request.user)  # type: ignore
+                if not user_profile:
+                    return False
                 obj_user_profile = UserProfile.get_cached_object(user=obj)  # type: ignore
+                if not obj_user_profile:
+                    return False
                 if user_profile.cached_account == obj_user_profile.cached_account:
                     return True
                 return False
@@ -495,6 +503,8 @@ class RestrictedUserAdmin(UserAdmin):
             return qs
         if user.is_staff:
             user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
+            if not user_profile:
+                return qs.none()
             return qs.filter(
                 id__in=UserProfile.objects.filter(account=user_profile.cached_account).values_list("user_id", flat=True)
             )

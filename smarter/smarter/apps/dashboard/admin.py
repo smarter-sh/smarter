@@ -38,6 +38,9 @@ def smarter_filter_queryset_for_user(
         This function only works for models that inherit from
         smarter.apps.account.models.MetaDataWithOwnershipModel
     """
+    if not user or not user.is_authenticated:
+        logger.debug("smarter_filter_queryset_for_user: User is not authenticated, returning empty queryset")
+        return qs.none()
     logger_prefix = formatted_text(f"{__file__}.smarter_filter_queryset_for_user()")
     logger.debug(
         "%s: Filtering queryset for user %s with role %s",
@@ -52,14 +55,17 @@ def smarter_filter_queryset_for_user(
         return qs
 
     user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
+    if not user_profile:
+        logger.debug("%s: No user profile found for user %s, returning empty queryset", logger_prefix, user)
+        return qs.none()
 
     # 2.) if user is staff then select all chatbots for the account of the user.
     if user.is_staff:
         logger.debug(
-            "%s: User %s is staff, filtering queryset for account %s", logger_prefix, user, user_profile.cached_account
+            "%s: User %s is staff, filtering queryset for account %s", logger_prefix, user, user_profile.account
         )
         try:
-            return qs.filter(**{account_filter: user_profile.cached_account})
+            return qs.filter(**{account_filter: user_profile.account})
         except FieldError as e:
             logger.error("Error filtering queryset for staff user %s: %s", user, e)
             return qs.none()
