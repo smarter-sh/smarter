@@ -53,7 +53,6 @@ from smarter.common.const import (
 )
 from smarter.common.exceptions import (
     SmarterException,
-    SmarterValueError,
 )
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.helpers.url_helpers import clean_url
@@ -192,7 +191,10 @@ class SmarterChatSession(SmarterHelperMixin):
 
 
 class ManifestDropZoneView(SmarterAuthenticatedNeverCachedWebView):
-    """ """
+    """
+    A simple view that renders a page with a manifest drop zone
+    for plugin development.
+    """
 
     template_path = "prompt/manifest-apply.html"
 
@@ -728,6 +730,12 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         --------
         ChatConfigView : The endpoint that provides configuration data to the React app.
         """
+        if not self.user_profile:
+            logger.error(
+                "%s.dispatch() - user_profile is None. This should not happen. Returning 403.",
+                self.formatted_class_name,
+            )
+            return SmarterHttpResponseForbidden(request=request, error_message="Authentication required")
         retval = super().dispatch(request, *args, **kwargs)
         if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
@@ -747,7 +755,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 self.formatted_class_name,
                 self.url,
                 self.account,
-                self.user_profile.cached_user,
+                self.user_profile.user,
             )
             # first try to avoid some quite-expensive steps by looking for the chatbot
             # in the cache based on the request.
@@ -859,42 +867,6 @@ class PromptManifestView(DocsBaseView):
 
     chatbot: Optional[ChatBot] = None
     chatbot_helper: Optional[ChatBotHelper] = None
-
-    def setup(self, request: HttpRequest, *args, **kwargs):
-        """
-        Setup method to initialize the view with the chatbot based on the provided name and kind.
-
-        This method retrieves the chatbot using the name and kind parameters from the URL. If the chatbot is not found,
-        it returns a 404 response. The chatbot and its helper are stored as instance variables for use in the dispatch method.
-
-        Parameters
-        ----------
-        request : HttpRequest
-            The incoming HTTP request object.
-        *args
-            Additional positional arguments.
-        **kwargs
-            Additional keyword arguments, expected to include 'name' and 'kind' for chatbot retrieval.
-
-        Returns
-        -------
-        None
-            This method does not return a value but initializes instance variables for the view.
-
-        Raises
-        ------
-        SmarterHttpResponseNotFound
-            If the chatbot cannot be found based on the provided name and kind.
-        """
-        logger.debug(
-            "%s.setup() called with request=%s, args=%s, kwargs=%s",
-            self.formatted_class_name,
-            request.build_absolute_uri(),
-            args,
-            kwargs,
-        )
-        request = self.set_is_internal_api_request(request=request, value=True)
-        super().setup(request, *args, **kwargs)
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
@@ -1026,9 +998,11 @@ class PromptListView(SmarterAuthenticatedWebView):
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         # pylint: disable=C0415
         if not isinstance(self.user_profile, UserProfile):
-            raise SmarterValueError(
-                "PromptListView.dispatch() - user_profile is not set or is not a UserProfile instance"
+            logger.error(
+                "%s.dispatch() - user_profile is not set or not an instance of UserProfile. This should not happen. Returning 403.",
+                self.formatted_class_name,
             )
+            return SmarterHttpResponseForbidden(request=request, error_message="Authentication required")
 
         from smarter.apps.prompt.urls import PromptReverseViews
 
@@ -1039,17 +1013,17 @@ class PromptListView(SmarterAuthenticatedWebView):
         if response.status_code >= 300:
             return response
 
-        self.chatbot_helpers = get_cached_chatbots_for_user_profile(user_profile_id=self.user_profile.id)
+        self.chatbot_helpers = get_cached_chatbots_for_user_profile(user_profile_id=self.user_profile.id)  # type: ignore
 
         user_chatbots = [
             chatbot_helper
             for chatbot_helper in self.chatbot_helpers
-            if chatbot_helper.chatbot.user_profile == self.user_profile
+            if chatbot_helper.chatbot.user_profile == self.user_profile  # type: ignore
         ]
         shared_chatbots = [
             chatbot_helper
             for chatbot_helper in self.chatbot_helpers
-            if chatbot_helper.chatbot.user_profile != self.user_profile
+            if chatbot_helper.chatbot.user_profile != self.user_profile  # type: ignore
         ]
 
         smarter_admin = get_cached_smarter_admin_user_profile()

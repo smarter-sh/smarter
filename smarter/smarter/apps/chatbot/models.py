@@ -602,7 +602,7 @@ class ChatBot(MetaDataWithOwnershipModel):
 
         """
         user_profile: UserProfile = self.user_profile
-        return f"{user_profile.cached_account.account_number}.{self.base_api_domain}"
+        return f"{user_profile.account.account_number}.{self.base_api_domain}"
 
     @property
     def default_host(self):
@@ -920,7 +920,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         user: Optional[User] = None,
         user_profile: Optional[UserProfile] = None,
         account: Optional[Account] = None,
-    ) -> Optional["ChatBot"]:
+    ) -> "ChatBot":
         """
         Retrieve a model instance using caching to optimize performance.
 
@@ -959,16 +959,7 @@ class ChatBot(MetaDataWithOwnershipModel):
 
         retval = super().get_cached_object(invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account)  # type: ignore[assignment]
         if retval is None:
-            logger.warning(
-                "%s did not find a %s with pk=%s, name=%s, user=%s, user_profile=%s, account=%s",
-                logger_prefix,
-                cls.__name__,
-                pk,
-                name,
-                user,
-                user_profile,
-                account,
-            )
+            raise ChatBot.DoesNotExist(f"{cls.__name__} matching query does not exist.")
         return retval  # type: ignore[return-value]
 
     @classmethod
@@ -1007,10 +998,10 @@ class ChatBot(MetaDataWithOwnershipModel):
             )
 
         if invalidate and user_profile:
-            _get_chatbots_for_user_profile_id.invalidate(user_profile_id=user_profile.id, class_name=cls.__name__)
+            _get_chatbots_for_user_profile_id.invalidate(user_profile_id=user_profile.id, class_name=cls.__name__)  # type: ignore[union-attr]
 
         if user_profile:
-            return _get_chatbots_for_user_profile_id(user_profile_id=user_profile.id, class_name=cls.__name__)
+            return _get_chatbots_for_user_profile_id(user_profile_id=user_profile.id, class_name=cls.__name__)  # type: ignore[return-value]
 
         return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate)  # type: ignore[return-value]
 
@@ -1150,10 +1141,10 @@ class ChatBotAPIKey(TimestampedModel):
             return cls.objects.filter(chatbot_id=chatbot_id, api_key__is_active=True).exists()
 
         if invalidate and chatbot:
-            _has_active_api_key.invalidate(chatbot_id=chatbot.id, class_name=ChatBotAPIKey.__name__)
+            _has_active_api_key.invalidate(chatbot_id=chatbot.id, class_name=ChatBotAPIKey.__name__)  # type: ignore[union-attr]
 
         if chatbot:
-            return _has_active_api_key(chatbot_id=chatbot.id, class_name=ChatBotAPIKey.__name__)
+            return _has_active_api_key(chatbot_id=chatbot.id, class_name=ChatBotAPIKey.__name__)  # type: ignore[return-value]
         return False
 
     # pylint: disable=W0221
@@ -1200,11 +1191,11 @@ class ChatBotAPIKey(TimestampedModel):
             )
 
         if invalidate and chatbot:
-            _get_api_keys_for_chatbot_id.invalidate(chatbot_id=chatbot.id, class_name=cls.__name__)
+            _get_api_keys_for_chatbot_id.invalidate(chatbot_id=chatbot.id, class_name=cls.__name__)  # type: ignore[union-attr]
 
         if chatbot:
             if ChatBotAPIKey.has_active_api_key(chatbot=chatbot, invalidate=invalidate):
-                return _get_api_keys_for_chatbot_id(chatbot_id=chatbot.id, class_name=cls.__name__)
+                return _get_api_keys_for_chatbot_id(chatbot_id=chatbot.id, class_name=cls.__name__)  # type: ignore[return-value]
             return ChatBotAPIKey.objects.none()
 
         return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
@@ -1298,9 +1289,9 @@ class ChatBotPlugin(TimestampedModel):
 
         plugin_controller = get_cached_plugin_controller(
             account_id=self.chatbot.user_profile.cached_account.id,
-            user_id=admin_user.id,
+            user_id=admin_user.id,  # type: ignore[union-attr]
             plugin_meta_id=self.plugin_meta.id,
-            user_profile_id=user_profile.id,
+            user_profile_id=user_profile.id,  # type: ignore[union-attr]
             class_name=self.__class__.__name__,
         )
         this_plugin = plugin_controller.plugin
@@ -1420,10 +1411,10 @@ class ChatBotPlugin(TimestampedModel):
             )
 
         if invalidate and chatbot:
-            _get_plugins_for_chatbot_id.invalidate(chatbot_id=chatbot.id, class_name=cls.__name__)
+            _get_plugins_for_chatbot_id.invalidate(chatbot_id=chatbot.id, class_name=cls.__name__)  # type: ignore[union-attr]
 
         if chatbot:
-            return _get_plugins_for_chatbot_id(chatbot_id=chatbot.id, class_name=cls.__name__)
+            return _get_plugins_for_chatbot_id(chatbot_id=chatbot.id, class_name=cls.__name__)  # type: ignore[return-value]
 
         return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
 
@@ -1559,10 +1550,10 @@ class ChatBotFunctions(TimestampedModel):
             )
 
         if invalidate and chatbot:
-            _get_functions_for_chatbot_id.invalidate(chatbot_id=chatbot.id, class_name=cls.__name__)
+            _get_functions_for_chatbot_id.invalidate(chatbot_id=chatbot.id, class_name=cls.__name__)  # type: ignore[union-attr]
 
         if chatbot:
-            return _get_functions_for_chatbot_id(chatbot_id=chatbot.id, class_name=cls.__name__)
+            return _get_functions_for_chatbot_id(chatbot_id=chatbot.id, class_name=cls.__name__)  # type: ignore[return-value]
 
         return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
 
@@ -2295,7 +2286,7 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         self._chatbot = chatbot
         if self._chatbot:
-            self._chatbot_id = self._chatbot.id
+            self._chatbot_id = self._chatbot.id  # type: ignore[assignment]
             self._name = self._chatbot.name
             chatbot_helper_logger.debug(
                 f"@chatbot.setter initialized self.chatbot_id={self.chatbot_id} and self.name={self.name} from chatbot"

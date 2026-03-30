@@ -72,7 +72,6 @@ class ConnectionDetailView(DocsBaseView):
     connection: Optional[ConnectionBase] = None
 
     def setup(self, request, *args, **kwargs):
-        request = self.set_is_internal_api_request(request, True)
         super().setup(request, *args, **kwargs)
         self.name = kwargs.pop("name", None)
         self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))

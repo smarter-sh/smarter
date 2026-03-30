@@ -3,7 +3,7 @@ Views for provider-related pages in the Smarter Workbench web console.
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Sequence
 
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
@@ -24,6 +24,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -70,7 +71,6 @@ class ProviderDetailView(DocsBaseView):
     provider: Optional[Provider] = None
 
     def setup(self, request, *args, **kwargs):
-        request = self.set_is_internal_api_request(request, True)
         super().setup(request, *args, **kwargs)
         if not isinstance(request.user, User):
             logger.error("Request user instance of type %s is not a User. This should not happen.", type(request.user))
@@ -138,7 +138,7 @@ class ProviderListView(SmarterAuthenticatedNeverCachedWebView):
     """
 
     template_path = "provider/provider_list.html"
-    providers: list[Provider]
+    providers: Sequence[Provider]
 
     def get(self, request: WSGIRequest, *args, **kwargs):
         self.smarter_request = request
