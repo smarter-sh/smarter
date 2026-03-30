@@ -172,7 +172,7 @@ class SmarterRequestMixin(AccountMixin):
         self._timestamp = datetime.now()
         self._url: Optional[ParseResult] = None
         self._url_account_number: Optional[str] = None
-        self._parsed_url: ParseResult = None
+        self._parsed_url: Optional[ParseResult] = None
         self._params: Optional[QueryDict] = None
         self._session_key: Optional[str] = kwargs.pop("session_key") if "session_key" in kwargs else None
         self._data: Optional[dict] = None
@@ -2119,7 +2119,7 @@ class SmarterRequestMixin(AccountMixin):
             )
 
         # this is our expected case. we look for the session key in the parsed url.
-        session_key = session_key_from_url(self.url)  # type: ignore
+        session_key = session_key_from_url(self.url)
         if session_key:
             session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
