@@ -103,7 +103,7 @@ def smarter_cache_page_by_user(timeout):
             if request:
                 path = str(request.path).replace("/", ".").strip(".")
                 if hasattr(request, "user") and request.user.is_authenticated:
-                    key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"
+                    key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"  # type: ignore[union-attr]
                 else:
                     key_prefix = f"{cache_prefix}.user_anon.{path}"
                 verbose_logger.debug("%s searching cache for key_prefix: %s", logger_prefix_invalidations, key_prefix)
@@ -112,7 +112,7 @@ def smarter_cache_page_by_user(timeout):
                     lazy_cache.delete(key_prefix)
                     logger.info("%s Cache invalidated for key_prefix: %s", logger_prefix_invalidations, key_prefix)
 
-        wrapper.invalidate = invalidate
+        wrapper.invalidate = invalidate  # type: ignore[attr-defined]
         return wrapper
 
     return decorator
@@ -420,6 +420,12 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
             kwargs,
             getattr(request, "user", None),
         )
+        # This flag is used to circumvent DRF token authentication for the brokered
+        # request we make to our own API views in get_brokered_json_response().
+        # We initialize it now, to ensure that it's present for any downstream
+        # code that might check it before we get to dispatch().
+        request = self.set_is_internal_api_request(request, False)
+
         retval = super().setup(request, *args, **kwargs)
         if not self.smarter_request:
             self.smarter_request = request

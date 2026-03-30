@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 import httpx
 import markdown
-from django.http.response import HttpResponse, HttpResponseForbidden
+from django.http.response import HttpResponse
 from django.shortcuts import render
 from django.test import RequestFactory
 from django.urls import reverse
@@ -151,7 +151,7 @@ class DocsBaseView(SmarterAuthenticatedWebView):
         # the user is already authenticated with a session cookie, and we
         # don't want DRF to reject the brokered request due to missing
         # or invalid token.
-        self.set_is_internal_api_request(request, True)
+        request = self.set_is_internal_api_request(request, True)
 
         return super().dispatch(request, *args, **kwargs)  # type: ignore[return]
 
