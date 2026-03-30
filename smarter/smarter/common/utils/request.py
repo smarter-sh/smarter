@@ -5,6 +5,7 @@ Module: smarter.common.utils.is_authenticated_request
 import logging
 from typing import TYPE_CHECKING, Optional, Union
 
+from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -125,10 +126,11 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         if is_valid_request_object and has_user and has_is_authenticated:
             retval = request.user.is_authenticated
             logger.debug(
-                "%s.is_authenticated_request() Request is_authenticated: %s URL: %s",
+                "%s.is_authenticated_request() Request is_authenticated: %s URL: %s, user: %s",
                 logger_prefix,
                 retval,
                 url,
+                request.user,
             )
         else:
             retval = False
@@ -137,6 +139,27 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
                 logger_prefix,
                 url,
             )
+        if hasattr(request, SMARTER_IS_INTERNAL_API_REQUEST):
+            logger.debug(
+                "%s.is_authenticated_request() Request has SMARTER_IS_INTERNAL_API_REQUEST=%s",
+                logger_prefix,
+                getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False),
+            )
+
+        # check request head for Authorization
+        if hasattr(request, "headers") and request.headers is not None:
+            auth_header = request.headers.get("Authorization")
+            if auth_header:
+                logger.debug(
+                    "%s.is_authenticated_request() Request has Authorization header (first 4 chars): %s",
+                    logger_prefix,
+                    str(auth_header)[:4],
+                )
+            else:
+                logger.debug(
+                    "%s.is_authenticated_request() Request does not have Authorization header",
+                    logger_prefix,
+                )
         return retval
 
     # pylint: disable=W0718

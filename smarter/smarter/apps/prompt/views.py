@@ -22,6 +22,7 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.chatbot.models import (
@@ -48,11 +49,11 @@ from smarter.apps.prompt.models import Chat, ChatHelper
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
-    SMARTER_IS_INTERNAL_API_REQUEST,
     SmarterHttpMethods,
 )
 from smarter.common.exceptions import (
     SmarterException,
+    SmarterValueError,
 )
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.helpers.url_helpers import clean_url
@@ -859,6 +860,42 @@ class PromptManifestView(DocsBaseView):
     chatbot: Optional[ChatBot] = None
     chatbot_helper: Optional[ChatBotHelper] = None
 
+    def setup(self, request: HttpRequest, *args, **kwargs):
+        """
+        Setup method to initialize the view with the chatbot based on the provided name and kind.
+
+        This method retrieves the chatbot using the name and kind parameters from the URL. If the chatbot is not found,
+        it returns a 404 response. The chatbot and its helper are stored as instance variables for use in the dispatch method.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request object.
+        *args
+            Additional positional arguments.
+        **kwargs
+            Additional keyword arguments, expected to include 'name' and 'kind' for chatbot retrieval.
+
+        Returns
+        -------
+        None
+            This method does not return a value but initializes instance variables for the view.
+
+        Raises
+        ------
+        SmarterHttpResponseNotFound
+            If the chatbot cannot be found based on the provided name and kind.
+        """
+        logger.debug(
+            "%s.setup() called with request=%s, args=%s, kwargs=%s",
+            self.formatted_class_name,
+            request.build_absolute_uri(),
+            args,
+            kwargs,
+        )
+        request = self.set_is_internal_api_request(request=request, value=True)
+        super().setup(request, *args, **kwargs)
+
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch method to handle the request for the manifest detail page.
@@ -891,7 +928,17 @@ class PromptManifestView(DocsBaseView):
         HttpResponse
             Renders the Django template for the manifest detail page, displaying chatbot manifest details in YAML format.
         """
+        logger.debug(
+            "%s.dispatch() called with request=%s, args=%s, kwargs=%s",
+            self.formatted_class_name,
+            request.build_absolute_uri(),
+            args,
+            kwargs,
+        )
         retval = super().dispatch(request, *args, **kwargs)
+        if not self.user_profile:
+            return SmarterHttpResponseForbidden(request=request, error_message="Authentication required")
+
         if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
 
@@ -899,6 +946,8 @@ class PromptManifestView(DocsBaseView):
         chatbot_id = ChatBot.id_from_hashed_id(hashed_id) if hashed_id else None
         try:
             self.chatbot = ChatBot.get_cached_object(pk=chatbot_id)
+            if not isinstance(self.chatbot, ChatBot):
+                raise ChatBot.DoesNotExist(f"ChatBot with id {chatbot_id} does not exist")
             self.chatbot_helper = ChatBotHelper(request=request, chatbot=self.chatbot)
         except ChatBot.DoesNotExist:
             return SmarterHttpResponseNotFound(request=request, error_message=f"ChatBot with id {chatbot_id} not found")
@@ -908,7 +957,7 @@ class PromptManifestView(DocsBaseView):
             self.formatted_class_name,
             self.url,
             self.account,
-            self.user_profile.cached_user,
+            self.user_profile.user,
             self.chatbot,
         )
 
@@ -921,10 +970,15 @@ class PromptManifestView(DocsBaseView):
         # purposes of generating the manifest.
         self.kind = SAMKinds.CHATBOT
         kwargs["name"] = self.chatbot.name
-        orginal_user = getattr(request, "user", None)
+        original_user = getattr(request, "user", None)
+        if not original_user or not original_user.is_authenticated:
+            logger.warning(
+                "%s.dispatch() - original request user is not authenticated. This is unexpected since the view is protected. Proceeding with request.user set to chatbot owner.",
+                self.formatted_class_name,
+            )
+            return SmarterHttpResponseForbidden(request=request, error_message="Authentication required")
         request.user = self.chatbot.user_profile.cached_user
 
-        setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, True)
         logger.debug(
             "%s.dispatch() - rendering template %s with kwargs: %s",
             self.formatted_class_name,
@@ -952,7 +1006,7 @@ class PromptManifestView(DocsBaseView):
             "page_title": self.chatbot.name,
             "owner": self.chatbot.user_profile,
         }
-        request.user = orginal_user
+        request.user = original_user
         return render(request, self.template_path, context=context)  # type: ignore
 
 
@@ -971,6 +1025,11 @@ class PromptListView(SmarterAuthenticatedWebView):
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         # pylint: disable=C0415
+        if not isinstance(self.user_profile, UserProfile):
+            raise SmarterValueError(
+                "PromptListView.dispatch() - user_profile is not set or is not a UserProfile instance"
+            )
+
         from smarter.apps.prompt.urls import PromptReverseViews
 
         logger.debug(

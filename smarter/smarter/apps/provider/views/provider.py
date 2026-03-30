@@ -16,7 +16,6 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.provider.models import Provider
-from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.utils import rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
@@ -71,6 +70,7 @@ class ProviderDetailView(DocsBaseView):
     provider: Optional[Provider] = None
 
     def setup(self, request, *args, **kwargs):
+        request = self.set_is_internal_api_request(request, True)
         super().setup(request, *args, **kwargs)
         if not isinstance(request.user, User):
             logger.error("Request user instance of type %s is not a User. This should not happen.", type(request.user))
@@ -82,17 +82,22 @@ class ProviderDetailView(DocsBaseView):
             return SmarterHttpResponseNotFound(request=request, error_message="Provider name is required")
         self.provider = Provider.get_cached_provider_by_user_and_name(user=request.user, name=self.name)
 
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         if not self.provider:
-            logger.error("Provider %s not found for user %s.", self.name, request.user.username)  # type: ignore[union-attr]
+            logger.error("%s.post() Provider %s not found for user %s.", self.formatted_class_name, self.name, request.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
 
-        logger.debug("Rendering connection detail view for %s of kind %s, kwargs=%s.", self.name, self.kind, kwargs)
+        logger.debug(
+            "%s.post() Rendering provider detail view for %s of kind %s, kwargs=%s.",
+            self.formatted_class_name,
+            self.name,
+            self.kind,
+            kwargs,
+        )
         # get_brokered_json_response() adds self.kind to kwargs, so we remove it here.
         # TypeError: smarter.apps.api.v1.cli.views.describe.View.as_view.<locals>.view() got multiple values for keyword argument 'kind'
         kwargs["name"] = self.name
         self.kind = SAMKinds.PROVIDER
-        setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, True)
         view = ApiV1CliDescribeApiView.as_view()
         json_response = self.get_brokered_json_response(
             reverse_name=ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe,
@@ -108,7 +113,7 @@ class ProviderDetailView(DocsBaseView):
             "page_title": self.name,
         }
         if not self.template_path:
-            logger.error("self.template_path is not set.")
+            logger.error("%s.post() self.template_path is not set.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="Template path not set")
         return render(request, self.template_path, context=context)
 
