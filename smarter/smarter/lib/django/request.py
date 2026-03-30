@@ -36,7 +36,10 @@ from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.common.const import (
+    SMARTER_CHAT_SESSION_KEY_NAME,
+    SMARTER_IS_INTERNAL_API_REQUEST,
+)
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
     formatted_text,
@@ -424,23 +427,26 @@ class SmarterRequestMixin(AccountMixin):
         self._smarter_request = request
         self._data = None
         verbose_logger.debug(
-            "%s.smarter_request setter - request set to: %s",
+            "%s.smarter_request setter - request set to: %s, user: %s",
             self.request_mixin_logger_prefix,
             request,
+            request.user if self.is_authenticated else "Anonymous",  # type: ignore[union-attr],
         )
         if request is not None:
-            self._url = smarter_build_absolute_uri(request) if request else None
+            url = smarter_build_absolute_uri(request) if request else None
+            if not url:
+                raise SmarterValueError(
+                    f"{self.request_mixin_logger_prefix}.smarter_request setter - could not build url from request: {request}"
+                )
+            self._url = urlparse(url)
+
             verbose_logger.debug(
                 "%s.smarter_request setter - url set to: %s",
                 self.request_mixin_logger_prefix,
                 self._url,
             )
-            if (
-                hasattr(request, "user")
-                and request.user
-                and hasattr(request.user, "is_authenticated")
-                and request.user.is_authenticated
-            ):
+            if self.is_authenticated:
+                verbose_logger.debug("hi dad")
                 self._smarter_request_user = request.user  # type: ignore
                 verbose_logger.debug(
                     "%s.smarter_request setter - smarter_request_user set to: %s is_authenticated=%s",
@@ -457,7 +463,18 @@ class SmarterRequestMixin(AccountMixin):
                 # where authentication is performed. in those cases,
                 # we attempt to authenticate here, to the same overall
                 # effect.
+                verbose_logger.debug(
+                    "%s.smarter_request setter - request does not have an authenticated user. Attempting to authenticate.",
+                    self.request_mixin_logger_prefix,
+                )
                 self.authenticate()
+        verbose_logger.debug(
+            "%s.smarter_request setter - finished setting smarter_request. request: %s, url: %s, smarter_request_user: %s",
+            self.request_mixin_logger_prefix,
+            request,
+            self.url,
+            self.smarter_request_user,
+        )
 
     @property
     def smarter_request_user(self) -> Optional[UserType]:
@@ -2275,3 +2292,76 @@ class SmarterRequestMixin(AccountMixin):
             **super().to_json(),
         }
         return self.sorted_dict(retval)
+
+    def is_internal_api_request(self, request: HttpRequest) -> bool:
+        """
+        Check if the request is an internal API request.
+
+        This method checks for a custom attribute on the request object that indicates
+        whether the request is an internal API request. This can be used to bypass
+        certain authentication or permission checks for internal requests.
+
+        :param request: The Django request object.
+        :type request: HttpRequest
+        :return: True if it's an internal API request, False otherwise.
+        :rtype: bool
+        """
+        retval = getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False)
+        logger.debug(
+            "%s.is_internal_api_request() - request %s internal API request: %s",
+            self.request_mixin_logger_prefix,
+            request,
+            retval,
+        )
+        return retval
+
+    def set_is_internal_api_request(self, request: HttpRequest, value: bool = True) -> HttpRequest:
+        """
+        Set the internal API request attribute on the request object.
+
+        This method allows you to mark a request as an internal API request by setting
+        a custom attribute on the request object. This can be used in middleware or views
+        to indicate that the request should be treated as internal.
+
+        :param request: The Django request object.
+        :type request: HttpRequest
+        :param value: The value to set for the internal API request attribute (default is True).
+        :type value: bool
+        :return: The modified Django request object.
+        :rtype: HttpRequest
+        """
+        if not isinstance(request, HttpRequest):
+            raise SmarterValueError(f"Expected request to be an instance of HttpRequest, got {type(request).__name__}")
+
+        logger.debug(
+            "%s.set_is_internal_api_request() - setting request %s internal API request to: %s",
+            self.request_mixin_logger_prefix,
+            request.path,
+            value,
+        )
+        setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, value)
+        return request
+
+    @property
+    def is_authenticated(self) -> bool:
+        """
+        Returns True if the request is authenticated, False otherwise.
+        """
+
+        # Django Rest Framework's Request object
+        if (
+            hasattr(self.smarter_request, "_user")
+            and self.smarter_request._user
+            and hasattr(self.smarter_request._user, "is_authenticated")
+            and self.smarter_request._user.is_authenticated
+        ):
+            return True
+
+        return (
+            True
+            if self.smarter_request
+            and hasattr(self.smarter_request, "user")
+            and self.smarter_request.user
+            and self.smarter_request.user.is_authenticated
+            else False
+        )

@@ -20,7 +20,6 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.utils import rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
@@ -75,6 +74,7 @@ class PluginDetailView(DocsBaseView):
     plugin: Optional[PluginMeta] = None
 
     def setup(self, request, *args, **kwargs):
+        request = self.set_is_internal_api_request(request, True)
         super().setup(request, *args, **kwargs)
         if not isinstance(request.user, User):
             logger.error("%s.setup() Request user is None. This should not happen.", self.formatted_class_name)
@@ -95,13 +95,13 @@ class PluginDetailView(DocsBaseView):
             return SmarterHttpResponseNotFound(request=request, error_message="Plugin name is required")
         self.plugin = PluginMeta.get_cached_object(name=self.name, user=request.user)  # type: ignore[attr-defined]
 
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         if not self.plugin:
-            logger.error("%s.get() Plugin %s not found for user %s.", self.formatted_class_name, self.name, request.user.username)  # type: ignore[union-attr]
+            logger.error("%s.post() Plugin %s not found for user %s.", self.formatted_class_name, self.name, request.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Plugin not found")
 
         logger.debug(
-            "%s.get() Rendering plugin detail view for %s of kind %s, kwargs=%s.",
+            "%s.post() Rendering plugin detail view for %s of kind %s, kwargs=%s.",
             self.formatted_class_name,
             self.name,
             self.kind,
@@ -111,7 +111,6 @@ class PluginDetailView(DocsBaseView):
         # TypeError: smarter.apps.api.v1.cli.views.describe.View.as_view.<locals>.view() got multiple values for keyword argument 'kind'
         kwargs.pop("kind", None)
         kwargs["name"] = self.name
-        setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, True)
         view = ApiV1CliDescribeApiView.as_view()
         json_response = self.get_brokered_json_response(
             reverse_name=ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe,
@@ -127,7 +126,7 @@ class PluginDetailView(DocsBaseView):
             "page_title": self.name,
         }
         if not self.template_path:
-            logger.error("%s.setup() self.template_path is not set.", self.formatted_class_name)
+            logger.error("%s.post() self.template_path is not set.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="Template path not set")
         return render(request, self.template_path, context=context)
 

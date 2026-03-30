@@ -147,6 +147,11 @@ def get_resolved_user(
 
     # this is the expected case
     if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
+        logger.debug(
+            "%s - user is instance of expected type: %s",
+            formatted_text(__name__) + ".get_resolved_user()",
+            type(user),
+        )
         return user
 
     # these are manageable edge cases
@@ -1399,8 +1404,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         """
         logger_prefix = formatted_text(__name__ + f".{MetaDataWithOwnershipModel.__name__}.get_cached_objects()")
         logger.debug(
-            "%s called with user_profile: %s invalidate: %s",
+            "%s called for %s with user_profile: %s invalidate: %s",
             logger_prefix,
+            cls.__name__,
             user_profile,
             invalidate,
         )

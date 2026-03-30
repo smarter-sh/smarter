@@ -413,7 +413,12 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         :rtype: Any
         """
         verbose_logger.debug(
-            "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
+            "%s.setup() called with request: %s, args: %s, kwargs: %s, user: %s",
+            self.logger_prefix,
+            request,
+            args,
+            kwargs,
+            getattr(request, "user", None),
         )
         retval = super().setup(request, *args, **kwargs)
         if not self.smarter_request:
@@ -430,9 +435,10 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         :rtype: HttpResponse
         """
         verbose_logger.debug(
-            "%s.dispatch() called with request: %s, args: %s, kwargs: %s",
+            "%s.dispatch() called with request: %s, user: %s, args: %s, kwargs: %s",
             self.logger_prefix,
             request,
+            getattr(request, "user", None),
             args,
             kwargs,
         )

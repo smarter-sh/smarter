@@ -801,7 +801,9 @@ class MetaDataModel(TimestampedModel):
         :rtype: QuerySet
         """
         logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
-        verbose_logger.debug("%s.get_cached_objects() called with invalidate=%s", logger_prefix, invalidate)
+        verbose_logger.debug(
+            "%s.get_cached_objects() called for %s with invalidate=%s", logger_prefix, cls.__name__, invalidate
+        )
 
         if cls._meta.abstract:
             raise NotImplementedError(

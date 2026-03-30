@@ -19,7 +19,7 @@ from django.urls import reverse
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST, SmarterEnvironments
+from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterException
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json
@@ -88,10 +88,8 @@ class DocsBaseView(SmarterAuthenticatedWebView):
         )
         cli_request = factory.post(path)
         cli_request.user = request.user if hasattr(request, "user") else get_cached_smarter_admin_user_profile().user
-        if hasattr(request, SMARTER_IS_INTERNAL_API_REQUEST):
-            setattr(cli_request, SMARTER_IS_INTERNAL_API_REQUEST, getattr(request, SMARTER_IS_INTERNAL_API_REQUEST))
-        else:
-            setattr(cli_request, SMARTER_IS_INTERNAL_API_REQUEST, False)
+        is_internal_api_request = self.is_internal_api_request(request)
+        cli_request = self.set_is_internal_api_request(cli_request, is_internal_api_request)
 
         logger.debug(
             "%s.get_brokered_json_response() creating brokered request for path=%s, kind=%s, request.user=%s, args=%s, kwargs=%s",
@@ -105,13 +103,12 @@ class DocsBaseView(SmarterAuthenticatedWebView):
         response = view(request=cli_request, kind=self.kind.value, *args, **kwargs)
         if response.status_code != httpx.codes.OK:
             logger.error(
-                "%s.get_brokered_json_response() received non-200 response for reverse_name=%s, kind=%s, request.user=%s response status: %s, content: %s",
+                "%s.get_brokered_json_response() received non-200 response for reverse_name=%s, kind=%s, request.user=%s response status: %s",
                 self.formatted_class_name,
                 reverse_name,
                 self.kind,
                 request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr]
                 response.status_code if hasattr(response, "status_code") else "N/A",
-                response.content if hasattr(response, "content") else "N/A",
             )
             raise DocsError(f"Received non-200 response from brokered view: {response.status_code}")
         try:

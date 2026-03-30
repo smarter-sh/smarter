@@ -17,7 +17,6 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.plugin.models import ConnectionBase
-from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
@@ -73,6 +72,7 @@ class ConnectionDetailView(DocsBaseView):
     connection: Optional[ConnectionBase] = None
 
     def setup(self, request, *args, **kwargs):
+        request = self.set_is_internal_api_request(request, True)
         super().setup(request, *args, **kwargs)
         self.name = kwargs.pop("name", None)
         self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
@@ -94,16 +94,16 @@ class ConnectionDetailView(DocsBaseView):
             user=request.user, kind=self.kind, name=self.name  # type: ignore[arg-type]
         )
 
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         if request.user is None:
-            logger.error("%s.get() Request user is None. This should not happen.", self.formatted_class_name)
+            logger.error("%s.post() Request user is None. This should not happen.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         if not self.connection:
-            logger.error("%s.get() Connection %s of kind %s not found for user %s.", self.formatted_class_name, self.name, self.kind, request.user.username)  # type: ignore[union-attr]
+            logger.error("%s.post() Connection %s of kind %s not found for user %s.", self.formatted_class_name, self.name, self.kind, request.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Connection not found")
 
         logger.info(
-            "%s.get() Rendering connection detail view for %s of kind %s, kwargs=%s.",
+            "%s.post() Rendering connection detail view for %s of kind %s, kwargs=%s.",
             self.formatted_class_name,
             self.name,
             self.kind,
@@ -113,7 +113,6 @@ class ConnectionDetailView(DocsBaseView):
         # TypeError: smarter.apps.api.v1.cli.views.describe.View.as_view.<locals>.view() got multiple values for keyword argument 'kind'
         kwargs.pop("kind", None)
         kwargs["name"] = self.name
-        setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, True)
         view = ApiV1CliDescribeApiView.as_view()
         json_response = self.get_brokered_json_response(
             reverse_name=ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe,
