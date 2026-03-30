@@ -74,7 +74,6 @@ class PluginDetailView(DocsBaseView):
     plugin: Optional[PluginMeta] = None
 
     def setup(self, request, *args, **kwargs):
-        request = self.set_is_internal_api_request(request, True)
         super().setup(request, *args, **kwargs)
         if not isinstance(request.user, User):
             logger.error("%s.setup() Request user is None. This should not happen.", self.formatted_class_name)
@@ -94,6 +93,15 @@ class PluginDetailView(DocsBaseView):
             logger.error("%s.setup() Plugin name is required but not provided.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="Plugin name is required")
         self.plugin = PluginMeta.get_cached_object(name=self.name, user=request.user)  # type: ignore[attr-defined]
+        if not self.plugin:
+            logger.error(
+                "%s.setup() Plugin with name %s and kind %s not found for user %s.",
+                self.formatted_class_name,
+                self.name,
+                self.kind,
+                request.user.username,
+            )
+            return SmarterHttpResponseNotFound(request=request, error_message="Plugin not found")
 
     def post(self, request, *args, **kwargs):
         if not self.plugin:
@@ -155,7 +163,7 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
         logger.debug(
             "%s.get() Rendering plugin list view for user %s with args=%s, kwargs=%s.",
             self.formatted_class_name,
-            request.user.username if request.user else "None",
+            request.user.username if request.user else "None",  # type: ignore[union-attr]
             args,
             kwargs,
         )

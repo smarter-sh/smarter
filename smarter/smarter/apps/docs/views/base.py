@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 import httpx
 import markdown
-from django.http.response import HttpResponse
+from django.http.response import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render
 from django.test import RequestFactory
 from django.urls import reverse
@@ -144,6 +144,14 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 
     def dispatch(self, request: "HttpRequest", *args, **kwargs) -> HttpResponse:
         self.context = {}
+
+        # This flag is used to circumvent DRF token authentication for the brokered
+        # request we make to our own API views in get_brokered_json_response().
+        # We want to use session authentication for the brokered request since
+        # the user is already authenticated with a session cookie, and we
+        # don't want DRF to reject the brokered request due to missing
+        # or invalid token.
+        self.set_is_internal_api_request(request, True)
 
         return super().dispatch(request, *args, **kwargs)  # type: ignore[return]
 
