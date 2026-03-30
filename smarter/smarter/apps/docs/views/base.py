@@ -11,10 +11,11 @@ from urllib.parse import urlparse
 
 import httpx
 import markdown
-from django.http.response import HttpResponse, HttpResponseForbidden
+from django.http.response import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.test import RequestFactory
 from django.urls import reverse
+from rest_framework.views import AsView
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import smarter_settings
@@ -53,11 +54,12 @@ class DocsBaseView(SmarterAuthenticatedWebView):
     """JSON Schema base view"""
 
     template_path: Optional[str] = None
+    name: Optional[str] = None
     kind: Optional[SAMKinds] = None
     context: dict = {}
 
     def get_brokered_json_response(
-        self, reverse_name: str, view, request: "HttpRequest", *args, **kwargs
+        self, reverse_name: str, view: AsView, request: "HttpRequest", *args, **kwargs
     ) -> dict[str, Any]:
         """
         Get the JSON response from the brokered smarter.sh/api endpoint.
@@ -155,7 +157,7 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 
         try:
             json_response = json.loads(response.content.decode("utf-8"))
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
             logger.error(
                 "%s.get_brokered_json_response() failed to decode JSON response for reverse_name=%s, kind=%s, request.user=%s response status: %s, content: %s",
                 self.formatted_class_name,
@@ -189,8 +191,8 @@ class DocsBaseView(SmarterAuthenticatedWebView):
         Override dispatch to set up context and handle authentication for brokered
         API requests. Since the /docs/ views are publicly accessible to any
         authenticated user, and the brokered API requests made within these
-        views need to be made on behalf of the original request user, w
-        e set a flag on the request to indicate that it's an internal API
+        views need to be made on behalf of the original request user, we
+        set a flag on the request to indicate that it's an internal API
         request. This allows us to use session authentication for the brokered
         requests without running into issues with missing or invalid tokens
         in DRF's token authentication.
@@ -220,6 +222,23 @@ class DocsBaseView(SmarterAuthenticatedWebView):
         request = self.set_is_internal_api_request(request, True)
 
         return super().dispatch(request, *args, **kwargs)  # type: ignore[return]
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponseBadRequest("GET method not supported for this view.")
+
+    def put(self, request, *args, **kwargs):
+        return HttpResponseBadRequest("PUT method not supported for this view.")
+
+    def patch(self, request, *args, **kwargs):
+        return HttpResponseBadRequest("PATCH method not supported for this view.")
+
+    def post(self, request, *args, **kwargs):
+        raise NotImplementedError(
+            "POST method not implemented for base view. This should be implemented in the subclass."
+        )
+
+    def delete(self, request, *args, **kwargs):
+        return HttpResponseBadRequest("DELETE method not supported for this view.")
 
 
 # ------------------------------------------------------------------------------
