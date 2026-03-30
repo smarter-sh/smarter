@@ -7,6 +7,7 @@ from typing import Optional, Sequence
 
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
 from smarter.apps.account.models import User
@@ -16,9 +17,13 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.provider.models import Provider
+from smarter.common.helpers.logger_helpers import formatted_json
 from smarter.common.utils import rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
-from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseNotFound,
+    SmarterHttpResponseServerError,
+)
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -70,7 +75,33 @@ class ProviderDetailView(DocsBaseView):
     kwargs: Optional[dict] = None
     provider: Optional[Provider] = None
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """
+        Handle POST requests to render the provider manifest detail view.
+        This method processes the incoming request to retrieve the
+        specified provider's manifest details and renders them in a
+        user-friendly format. It performs validation on the provided provider
+        name and kind, retrieves the provider metadata, and handles any
+        errors that may arise during this process.
+
+        Process:
+        1. Extract and validate 'name' and 'kind' from kwargs.
+        2. Retrieve the provider metadata using the provided name and user context.
+        3. If the provider is found, call the API view to get the provider details
+        4. Convert the JSON response to YAML format for better readability.
+        5. Render the provider manifest detail template with the retrieved data.
+        6. Handle any errors that occur during the process and return appropriate error responses.
+
+        :param request: Django HTTP request object.
+        :type request: WSGIRequest
+        :param args: Additional positional arguments.
+        :type args: tuple
+        :param kwargs: Keyword arguments, must include 'name' (provider name) and 'kind' (provider type).
+        :type kwargs: dict
+
+        :returns: Rendered HTML page with provider manifest details, or an error response if the provider is not found or parameters are invalid.
+        :rtype: HttpResponse
+        """
 
         if not isinstance(request.user, User):
             logger.error("Request user instance of type %s is not a User. This should not happen.", type(request.user))
@@ -106,7 +137,17 @@ class ProviderDetailView(DocsBaseView):
             **kwargs,
         )
 
-        yaml_response = yaml.dump(json_response, default_flow_style=False)
+        try:
+            yaml_response = yaml.dump(json_response, default_flow_style=False)
+        except yaml.YAMLError as e:
+            logger.error(
+                "%s.dispatch() - Error converting JSON response to YAML: %s. JSON response: %s",
+                self.formatted_class_name,
+                str(e),
+                formatted_json(json_response),
+            )
+            return SmarterHttpResponseServerError(request=request, error_message="Error converting manifest to YAML")
+
         context = {
             "manifest": yaml_response,
             "page_title": self.name,
@@ -114,7 +155,20 @@ class ProviderDetailView(DocsBaseView):
         if not self.template_path:
             logger.error("%s.post() self.template_path is not set.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="Template path not set")
-        return render(request, self.template_path, context=context)
+
+        try:
+            response = render(request, self.template_path, context=context)  # type: ignore
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.dispatch() - Error rendering template: %s. context: %s",
+                self.formatted_class_name,
+                str(e),
+                formatted_json(context),
+                exec_info=True,
+            )
+            return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
+        return response
 
 
 class ProviderListView(SmarterAuthenticatedNeverCachedWebView):

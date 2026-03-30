@@ -15,7 +15,6 @@ from django.http.response import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.test import RequestFactory
 from django.urls import reverse
-from rest_framework.views import AsView
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import smarter_settings
@@ -32,6 +31,7 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
+    from rest_framework.views import AsView
 
 logger = getLogger(__name__)
 
@@ -59,7 +59,7 @@ class DocsBaseView(SmarterAuthenticatedWebView):
     context: dict = {}
 
     def get_brokered_json_response(
-        self, reverse_name: str, view: AsView, request: "HttpRequest", *args, **kwargs
+        self, reverse_name: str, view: "AsView", request: "HttpRequest", *args, **kwargs
     ) -> dict[str, Any]:
         """
         Get the JSON response from the brokered smarter.sh/api endpoint.
