@@ -868,37 +868,32 @@ class PromptManifestView(DocsBaseView):
     chatbot: Optional[ChatBot] = None
     chatbot_helper: Optional[ChatBotHelper] = None
 
-    def post(self, request: HttpRequest, *args, **kwargs):
+    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
-        Dispatch method to handle the request for the manifest detail page.
+        Handle POST requests to render the chatbot manifest detail view.
+        This method processes the incoming request to retrieve the
+        specified chatbot's manifest details and renders them in a
+        user-friendly format. It performs validation on the provided chatbot
+        name and kind, retrieves the chatbot metadata, and handles any
+        errors that may arise during this process.
 
-        This method is called from an action button in PromptListView,
-        which importantly, contains chatbots that are owned not only by
-        the authenticated user, but also chatbots owned by the user's
-        account, and also owned by the Smarter admin user. We therefore
-        generate this view from the actual chatbot ID, rather than
-        by name and kind, and this is ambiguous in the context of
-        shared chatbots.
+        Process:
+        1. Extract and validate 'name' and 'kind' from kwargs.
+        2. Retrieve the chatbot metadata using the provided name and user context.
+        3. If the chatbot is found, call the API view to get the chatbot details
+        4. Convert the JSON response to YAML format for better readability.
+        5. Render the chatbot manifest detail template with the retrieved data.
+        6. Handle any errors that occur during the process and return appropriate error responses.
 
-        **Key Features:**
+        :param request: Django HTTP request object.
+        :type request: WSGIRequest
+        :param args: Additional positional arguments.
+        :type args: tuple
+        :param kwargs: Keyword arguments, must include 'name' (chatbot name) and 'kind' (chatbot type).
+        :type kwargs: dict
 
-        - **Authentication Protected:**
-          Requires the user to be authenticated. If the user is not authenticated, access is denied.
-
-
-        Parameters
-        ----------
-        request : HttpRequest
-            The incoming HTTP request object.
-        *args
-            Additional positional arguments.
-        **kwargs
-            Additional keyword arguments.
-
-        Returns
-        -------
-        HttpResponse
-            Renders the Django template for the manifest detail page, displaying chatbot manifest details in YAML format.
+        :returns: Rendered HTML page with chatbot manifest details, or an error response if the chatbot is not found or parameters are invalid.
+        :rtype: HttpResponse
         """
         logger.debug(
             "%s.dispatch() called with request=%s, args=%s, kwargs=%s",

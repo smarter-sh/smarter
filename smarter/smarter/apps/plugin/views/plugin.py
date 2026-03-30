@@ -11,6 +11,7 @@ from typing import Optional
 import yaml
 from django.contrib.auth.models import AnonymousUser
 from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpResponse
 from django.shortcuts import render
 
 from smarter.apps.account.utils import smarter_cached_objects
@@ -75,7 +76,32 @@ class PluginDetailView(DocsBaseView):
     kwargs: Optional[dict] = None
     plugin: Optional[PluginMeta] = None
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+        """
+        Handle POST requests to render the plugin manifest detail view.
+        This method processes the incoming request to retrieve the
+        specified plugin's manifest details and renders them in a
+        user-friendly format. It performs validation on the provided plugin
+        name and kind, retrieves the plugin metadata, and handles any
+        errors that may arise during this process.
+
+        Process:
+        1. Extract and validate 'name' and 'kind' from kwargs.
+        2. Retrieve the plugin metadata using the provided name and user context.
+        3. If the plugin is found, call the API view to get the plugin details        4. Convert the JSON response to YAML format for better readability.
+        5. Render the plugin manifest detail template with the retrieved data.
+        6. Handle any errors that occur during the process and return appropriate error responses.
+
+        :param request: Django HTTP request object.
+        :type request: WSGIRequest
+        :param args: Additional positional arguments.
+        :type args: tuple
+        :param kwargs: Keyword arguments, must include 'name' (plugin name) and 'kind' (plugin type).
+        :type kwargs: dict
+
+        :returns: Rendered HTML page with plugin manifest details, or an error response if the plugin is not found or parameters are invalid.
+        :rtype: HttpResponse
+        """
 
         # to avoid potential circular import issues.
         # pylint: disable=import-outside-toplevel

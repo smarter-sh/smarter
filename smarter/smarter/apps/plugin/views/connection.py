@@ -10,6 +10,7 @@ from typing import Optional
 
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpResponse
 from django.shortcuts import render
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
@@ -74,7 +75,33 @@ class ConnectionDetailView(DocsBaseView):
     kwargs: Optional[dict] = None
     connection: Optional[ConnectionBase] = None
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+        """
+        Handle POST requests to render the connection manifest detail view.
+        This method processes the incoming request to retrieve the
+        specified connection's manifest details and renders them in a
+        user-friendly format. It performs validation on the provided connection
+        name and kind, retrieves the connection metadata, and handles any
+        errors that may arise during this process.
+
+        Process:
+        1. Extract and validate 'name' and 'kind' from kwargs.
+        2. Retrieve the connection metadata using the provided name and user context.
+        3. If the connection is found, call the API view to get the connection details
+        4. Convert the JSON response to YAML format for better readability.
+        5. Render the connection manifest detail template with the retrieved data.
+        6. Handle any errors that occur during the process and return appropriate error responses.
+
+        :param request: Django HTTP request object.
+        :type request: WSGIRequest
+        :param args: Additional positional arguments.
+        :type args: tuple
+        :param kwargs: Keyword arguments, must include 'name' (connection name) and 'kind' (connection type).
+        :type kwargs: dict
+
+        :returns: Rendered HTML page with connection manifest details, or an error response if the connection is not found or parameters are invalid.
+        :rtype: HttpResponse
+        """
 
         self.name = kwargs.pop("name", None)
         self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
