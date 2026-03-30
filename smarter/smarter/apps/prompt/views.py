@@ -955,14 +955,12 @@ class PromptManifestView(DocsBaseView):
         # that is not necessarily the same as the authenticated user, we need
         # to spoof the request user to be the owner of the chatbot for the
         # purposes of generating the manifest.
-        original_user = getattr(request, "user", None)
-        if not original_user or not original_user.is_authenticated:
-            logger.warning(
-                "%s.dispatch() - original request user is not authenticated. This is unexpected since the view is protected. Proceeding with request.user set to chatbot owner.",
-                self.formatted_class_name,
-            )
-            return SmarterHttpResponseForbidden(request=request, error_message="Authentication required")
-        request.user = self.chatbot.user_profile.cached_user
+        #
+        # things we know:
+        # - request.user was validated in the base classes.
+        # - self.chatbot.user_profile was validated in ChatBotHelper
+        # - user_profile always has a valid user.
+        request.user = self.chatbot.user_profile.user
 
         logger.debug(
             "%s.dispatch() - rendering template %s with kwargs: %s",
@@ -985,14 +983,35 @@ class PromptManifestView(DocsBaseView):
             **kwargs,
         )
 
-        yaml_response = yaml.dump(json_response, default_flow_style=False)
+        try:
+            yaml_response = yaml.dump(json_response, default_flow_style=False)
+        except yaml.YAMLError as e:
+            logger.error(
+                "%s.dispatch() - Error converting JSON response to YAML: %s. JSON response: %s",
+                self.formatted_class_name,
+                str(e),
+                formatted_json(json_response),
+            )
+            return SmarterHttpResponseServerError(request=request, error_message="Error converting manifest to YAML")
+
         context = {
             "manifest": yaml_response,
             "page_title": self.chatbot.name,
             "owner": self.chatbot.user_profile,
         }
-        request.user = original_user
-        return render(request, self.template_path, context=context)  # type: ignore
+        try:
+            response = render(request, self.template_path, context=context)  # type: ignore
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.dispatch() - Error rendering template: %s. context: %s",
+                self.formatted_class_name,
+                str(e),
+                formatted_json(context),
+                exec_info=True,
+            )
+            return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
+        return response
 
 
 @method_decorator(cache_control(max_age=WORKBENCH_CACHE_TIMEOUT), name="dispatch")
