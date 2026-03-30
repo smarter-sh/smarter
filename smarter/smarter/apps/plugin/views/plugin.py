@@ -72,8 +72,6 @@ class PluginDetailView(DocsBaseView):
     """
 
     template_path = "plugin/manifest_detail.html"
-    name: Optional[str] = None
-    kwargs: Optional[dict] = None
     plugin: Optional[PluginMeta] = None
 
     def post(self, request, *args, **kwargs) -> HttpResponse:

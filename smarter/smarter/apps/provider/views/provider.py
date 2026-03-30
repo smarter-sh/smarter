@@ -71,8 +71,6 @@ class ProviderDetailView(DocsBaseView):
     """
 
     template_path = "provider/manifest_detail.html"
-    name: Optional[str] = None
-    kwargs: Optional[dict] = None
     provider: Optional[Provider] = None
 
     def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:

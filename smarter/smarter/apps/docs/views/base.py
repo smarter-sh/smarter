@@ -57,6 +57,7 @@ class DocsBaseView(SmarterAuthenticatedWebView):
     name: Optional[str] = None
     kind: Optional[SAMKinds] = None
     context: dict = {}
+    kwargs: Optional[dict] = None
 
     def get_brokered_json_response(
         self, reverse_name: str, view: "AsView", request: "HttpRequest", *args, **kwargs

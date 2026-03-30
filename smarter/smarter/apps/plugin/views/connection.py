@@ -72,7 +72,6 @@ class ConnectionDetailView(DocsBaseView):
     """
 
     template_path = "plugin/manifest_detail.html"
-    kwargs: Optional[dict] = None
     connection: Optional[ConnectionBase] = None
 
     def post(self, request, *args, **kwargs) -> HttpResponse:
