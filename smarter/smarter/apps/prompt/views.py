@@ -907,20 +907,35 @@ class PromptManifestView(DocsBaseView):
             args,
             kwargs,
         )
-        retval = super().dispatch(request, *args, **kwargs)
+
+        # calling this first ensures that we're already authenticated, and that
+        # all base class setup and validation work is complete in
+        # setup() and initial().
+        response = super().dispatch(request, *args, **kwargs)
         if not self.user_profile:
             return SmarterHttpResponseForbidden(request=request, error_message="Authentication required")
 
-        if retval.status_code >= HTTPStatus.BAD_REQUEST:
-            return retval
+        if response.status_code >= HTTPStatus.BAD_REQUEST:
+            return response
 
         hashed_id = kwargs.pop("hashed_id", None)
         chatbot_id = ChatBot.id_from_hashed_id(hashed_id) if hashed_id else None
         try:
             self.chatbot = ChatBot.get_cached_object(pk=chatbot_id)
+
             if not isinstance(self.chatbot, ChatBot):
-                raise ChatBot.DoesNotExist(f"ChatBot with id {chatbot_id} does not exist")
+                raise ChatBot.DoesNotExist(
+                    f"ChatBot with id {chatbot_id} does not exist. Received {type(self.chatbot)} {self.chatbot}"
+                )
             self.chatbot_helper = ChatBotHelper(request=request, chatbot=self.chatbot)
+
+            # we'll pass the chatbot name as a kwarge to the APICli
+            # along with ownership info which we'll set below.
+            kwargs["name"] = self.chatbot.name
+
+            # there are many ways that we could do this, but using the system
+            # const is easiest.
+            self.kind = SAMKinds.CHATBOT
         except ChatBot.DoesNotExist:
             return SmarterHttpResponseNotFound(request=request, error_message=f"ChatBot with id {chatbot_id} not found")
 
@@ -940,8 +955,6 @@ class PromptManifestView(DocsBaseView):
         # that is not necessarily the same as the authenticated user, we need
         # to spoof the request user to be the owner of the chatbot for the
         # purposes of generating the manifest.
-        self.kind = SAMKinds.CHATBOT
-        kwargs["name"] = self.chatbot.name
         original_user = getattr(request, "user", None)
         if not original_user or not original_user.is_authenticated:
             logger.warning(
