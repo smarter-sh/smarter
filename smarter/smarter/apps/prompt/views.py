@@ -868,7 +868,7 @@ class PromptManifestView(DocsBaseView):
     chatbot: Optional[ChatBot] = None
     chatbot_helper: Optional[ChatBotHelper] = None
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs):
+    def post(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch method to handle the request for the manifest detail page.
 
@@ -974,9 +974,11 @@ class PromptManifestView(DocsBaseView):
         from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
         from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 
+        # build the relative url path to the API CLI end point.
+        reverse_name = str(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe).lower()
         view = ApiV1CliDescribeApiView.as_view()
         json_response = self.get_brokered_json_response(
-            reverse_name=str(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe).lower(),
+            reverse_name=reverse_name,
             view=view,
             request=request,
             *args,

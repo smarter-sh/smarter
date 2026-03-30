@@ -70,8 +70,8 @@ class ProviderDetailView(DocsBaseView):
     kwargs: Optional[dict] = None
     provider: Optional[Provider] = None
 
-    def setup(self, request, *args, **kwargs):
-        super().setup(request, *args, **kwargs)
+    def post(self, request, *args, **kwargs):
+
         if not isinstance(request.user, User):
             logger.error("Request user instance of type %s is not a User. This should not happen.", type(request.user))
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
@@ -82,7 +82,6 @@ class ProviderDetailView(DocsBaseView):
             return SmarterHttpResponseNotFound(request=request, error_message="Provider name is required")
         self.provider = Provider.get_cached_provider_by_user_and_name(user=request.user, name=self.name)
 
-    def post(self, request, *args, **kwargs):
         if not self.provider:
             logger.error("%s.post() Provider %s not found for user %s.", self.formatted_class_name, self.name, request.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
