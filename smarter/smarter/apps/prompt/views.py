@@ -868,9 +868,9 @@ class PromptManifestView(DocsBaseView):
     chatbot: Optional[ChatBot] = None
     chatbot_helper: Optional[ChatBotHelper] = None
 
-    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
-        Handle POST requests to render the chatbot manifest detail view.
+        Handle GET requests to render the chatbot manifest detail view.
         This method processes the incoming request to retrieve the
         specified chatbot's manifest details and renders them in a
         user-friendly format. It performs validation on the provided chatbot
@@ -902,16 +902,6 @@ class PromptManifestView(DocsBaseView):
             args,
             kwargs,
         )
-
-        # calling this first ensures that we're already authenticated, and that
-        # all base class setup and validation work is complete in
-        # setup() and initial().
-        response = super().dispatch(request, *args, **kwargs)
-        if not self.user_profile:
-            return SmarterHttpResponseForbidden(request=request, error_message="Authentication required")
-
-        if response.status_code >= HTTPStatus.BAD_REQUEST:
-            return response
 
         hashed_id = kwargs.pop("hashed_id", None)
         chatbot_id = ChatBot.id_from_hashed_id(hashed_id) if hashed_id else None

@@ -74,9 +74,9 @@ class PluginDetailView(DocsBaseView):
     template_path = "plugin/manifest_detail.html"
     plugin: Optional[PluginMeta] = None
 
-    def post(self, request, *args, **kwargs) -> HttpResponse:
+    def get(self, request, *args, **kwargs) -> HttpResponse:
         """
-        Handle POST requests to render the plugin manifest detail view.
+        Handle GET requests to render the plugin manifest detail view.
         This method processes the incoming request to retrieve the
         specified plugin's manifest details and renders them in a
         user-friendly format. It performs validation on the provided plugin
