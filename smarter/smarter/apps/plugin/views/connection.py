@@ -10,6 +10,7 @@ from typing import Optional
 
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpResponse
 from django.shortcuts import render
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
@@ -17,11 +18,15 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.plugin.models import ConnectionBase
-from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.helpers.console_helpers import formatted_json
+from smarter.common.utils.request import is_authenticated_request
 from smarter.lib.django import waffle
-from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
-from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseNotFound,
+    SmarterHttpResponseServerError,
+)
+from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -67,13 +72,36 @@ class ConnectionDetailView(DocsBaseView):
     """
 
     template_path = "plugin/manifest_detail.html"
-    name: Optional[str] = None
-    kind: Optional[SAMKinds] = None
-    kwargs: Optional[dict] = None
     connection: Optional[ConnectionBase] = None
 
-    def setup(self, request, *args, **kwargs):
-        super().setup(request, *args, **kwargs)
+    def get(self, request, *args, **kwargs) -> HttpResponse:
+        """
+        Handle GET requests to render the connection manifest detail view.
+        This method processes the incoming request to retrieve the
+        specified connection's manifest details and renders them in a
+        user-friendly format. It performs validation on the provided connection
+        name and kind, retrieves the connection metadata, and handles any
+        errors that may arise during this process.
+
+        Process:
+        1. Extract and validate 'name' and 'kind' from kwargs.
+        2. Retrieve the connection metadata using the provided name and user context.
+        3. If the connection is found, call the API view to get the connection details
+        4. Convert the JSON response to YAML format for better readability.
+        5. Render the connection manifest detail template with the retrieved data.
+        6. Handle any errors that occur during the process and return appropriate error responses.
+
+        :param request: Django HTTP request object.
+        :type request: WSGIRequest
+        :param args: Additional positional arguments.
+        :type args: tuple
+        :param kwargs: Keyword arguments, must include 'name' (connection name) and 'kind' (connection type).
+        :type kwargs: dict
+
+        :returns: Rendered HTML page with connection manifest details, or an error response if the connection is not found or parameters are invalid.
+        :rtype: HttpResponse
+        """
+
         self.name = kwargs.pop("name", None)
         self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
         if self.kind is None:
@@ -87,23 +115,18 @@ class ConnectionDetailView(DocsBaseView):
         if not self.name:
             logger.error("%s.setup() Connection name is required but not provided.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="Connection name is required")
-        if not request.user:
+        if not is_authenticated_request(request):
             logger.error("%s.setup() User is not authenticated.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         self.connection = ConnectionBase.get_cached_connection_by_name_and_kind(
             user=request.user, kind=self.kind, name=self.name  # type: ignore[arg-type]
         )
-
-    def get(self, request, *args, **kwargs):
-        if request.user is None:
-            logger.error("%s.get() Request user is None. This should not happen.", self.formatted_class_name)
-            return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         if not self.connection:
-            logger.error("%s.get() Connection %s of kind %s not found for user %s.", self.formatted_class_name, self.name, self.kind, request.user.username)  # type: ignore[union-attr]
+            logger.error("%s.post() Connection %s of kind %s not found for user %s.", self.formatted_class_name, self.name, self.kind, request.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Connection not found")
 
         logger.info(
-            "%s.get() Rendering connection detail view for %s of kind %s, kwargs=%s.",
+            "%s.post() Rendering connection detail view for %s of kind %s, kwargs=%s.",
             self.formatted_class_name,
             self.name,
             self.kind,
@@ -113,7 +136,6 @@ class ConnectionDetailView(DocsBaseView):
         # TypeError: smarter.apps.api.v1.cli.views.describe.View.as_view.<locals>.view() got multiple values for keyword argument 'kind'
         kwargs.pop("kind", None)
         kwargs["name"] = self.name
-        setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, True)
         view = ApiV1CliDescribeApiView.as_view()
         json_response = self.get_brokered_json_response(
             reverse_name=ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe,
@@ -123,14 +145,37 @@ class ConnectionDetailView(DocsBaseView):
             **kwargs,
         )
 
-        yaml_response = yaml.dump(json_response, default_flow_style=False)
+        try:
+            yaml_response = yaml.dump(json_response, default_flow_style=False)
+        except yaml.YAMLError as e:
+            logger.error(
+                "%s.dispatch() - Error converting JSON response to YAML: %s. JSON response: %s",
+                self.formatted_class_name,
+                str(e),
+                formatted_json(json_response),
+            )
+            return SmarterHttpResponseServerError(request=request, error_message="Error converting manifest to YAML")
+
         context = {
             "manifest": yaml_response,
             "page_title": self.name,
         }
         if not self.template_path:
             raise SmarterConfigurationError("self.template_path not set.")
-        return render(request, self.template_path, context=context)
+
+        try:
+            response = render(request, self.template_path, context=context)  # type: ignore
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.dispatch() - Error rendering template: %s. context: %s",
+                self.formatted_class_name,
+                str(e),
+                formatted_json(context),
+                exec_info=True,
+            )
+            return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
+        return response
 
 
 class ConnectionListView(SmarterAuthenticatedNeverCachedWebView):

@@ -3,6 +3,7 @@
 
 from typing import Optional
 
+from django.http import HttpResponseBadRequest
 from django.shortcuts import render
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
@@ -30,6 +31,9 @@ class DocsJsonSchemaBaseView(DocsBaseView):
         json_response = json.dumps(json_response)
         self.context["json_schema"] = json_response
         return render(request, self.template_path, context=self.context)  # type: ignore
+
+    def post(self, request, *args, **kwargs):
+        return HttpResponseBadRequest("POST method not allowed on this endpoint.")
 
 
 class DocsJsonSchemaAccountView(DocsJsonSchemaBaseView):

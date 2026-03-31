@@ -16,9 +16,11 @@ from smarter.apps.account.manifest.models.account.spec import (
     SAMAccountSpecConfig,
 )
 from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.signals import broker_ready
-from smarter.apps.account.utils import cache_invalidate, get_cached_smarter_account
+from smarter.apps.account.utils import (
+    smarter_cached_objects,
+)
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -219,7 +221,7 @@ class SAMAccountBroker(AbstractBroker):
             return None
 
         try:
-            self._brokered_account = Account.objects.get(name=self.name)
+            self._brokered_account = Account.get_cached_object(name=self.name)
             logger.debug(
                 "%s.brokered_account() initialized existing Account: %s",
                 self.formatted_class_name,
@@ -341,6 +343,7 @@ class SAMAccountBroker(AbstractBroker):
             account_number = str(self.brokered_account.account_number)
             status = SAMAccountStatus(
                 adminAccount=account_number,
+                recordLocator=self.brokered_account.record_locator,
                 created=self.brokered_account.created_at,
                 modified=self.brokered_account.updated_at,
             )
@@ -348,7 +351,7 @@ class SAMAccountBroker(AbstractBroker):
                 name=str(self.brokered_account.name) or self.brokered_account.account_number.replace(" ", "_"),
                 description=self.brokered_account.company_name,
                 version=self.brokered_account.version,
-                tags=self.brokered_account.tags.names(),
+                tags=self.brokered_account.tags_list,
                 accountNumber=self.brokered_account.account_number,
                 annotations=self.brokered_account.annotations,
             )
@@ -517,13 +520,21 @@ class SAMAccountBroker(AbstractBroker):
                 self.user,
                 self.name,
             )
-            self._orm_instance = Account.objects.get(name=self.name)
-            logger.debug(
-                "%s.orm_instance() - retrieved %s instance: %s",
-                self.formatted_class_name,
-                Account.__name__,
-                serializers.serialize("json", [self._orm_instance]),
-            )
+            self._orm_instance = Account.get_cached_object(name=self.name)
+            if self._orm_instance:
+                logger.debug(
+                    "%s.orm_instance() - retrieved %s instance: %s",
+                    self.formatted_class_name,
+                    Account.__name__,
+                    serializers.serialize("json", [self._orm_instance]),  # type: ignore[list-item]
+                )
+            else:
+                logger.debug(
+                    "%s.orm_instance() - no %s instance found for name: %s",
+                    self.formatted_class_name,
+                    Account.__name__,
+                    self.name,
+                )
             return self._orm_instance
         except Account.DoesNotExist:
             logger.warning(
@@ -558,7 +569,7 @@ class SAMAccountBroker(AbstractBroker):
 
         self._orm_meta_instance = None
         try:
-            self._orm_meta_instance = Account.objects.get(name=self.name)
+            self._orm_meta_instance = Account.get_cached_object(name=self.name)
         except Account.DoesNotExist:
             logger.warning(
                 "%s.orm_meta_instance_setter() - ORM meta instance does not exist for account=%s, name=%s",
@@ -585,6 +596,16 @@ class SAMAccountBroker(AbstractBroker):
         """
         return SAMAccount
 
+    def cache_invalidations(self) -> None:
+        """
+        Handle broker specific cache invalidation logic. Invalidates
+        the cache for the `Account` and `UserProfile` models.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        Account.get_cached_object(invalidate=True, pk=self.brokered_account.id)  # type: ignore
+        UserProfile.get_cached_object(invalidate=True, account=self.brokered_account)
+        return super().cache_invalidations()
+
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example manifest for the Smarter API Account.
@@ -607,7 +628,7 @@ class SAMAccountBroker(AbstractBroker):
         logger.debug("%s.example_manifest() called", self.formatted_class_name)
 
         self.user = None
-        self.brokered_account = get_cached_smarter_account()
+        self.brokered_account = smarter_cached_objects.smarter_account
         if not self.brokered_account:
             raise SAMBrokerErrorNotReady(
                 f"Account not set for {self.kind} broker. Cannot get example manifest.",
@@ -661,7 +682,8 @@ class SAMAccountBroker(AbstractBroker):
         model_titles = self.get_model_titles(serializer=AccountSerializer())
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
-        accounts = Account.objects.filter(id=self.brokered_account.id)  # type: ignore
+        account = Account.get_cached_object(pk=self.brokered_account.id)
+        accounts = [account] if account else []
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for account in accounts:
@@ -773,7 +795,6 @@ class SAMAccountBroker(AbstractBroker):
             tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
             self.brokered_account.tags.set(tags)
             self.brokered_account.refresh_from_db()
-            cache_invalidate(user=self.user, account=self.brokered_account)  # type: ignore
             logger.debug(
                 "%s.apply() Saved %s with ID %s: %s",
                 self.formatted_class_name,
@@ -784,6 +805,7 @@ class SAMAccountBroker(AbstractBroker):
         except Exception as e:
             tb = traceback.format_exc()
             raise SAMBrokerError(message=f"Error in {command}: {e}\n{tb}", thing=self.kind, command=command) from e
+        self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:

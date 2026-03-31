@@ -6,7 +6,7 @@ from typing import Optional
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_user_for_username,
-    get_cached_user_profile,
+    smarter_cached_objects,
 )
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.lib.django.management.base import SmarterCommand
@@ -20,7 +20,12 @@ class Command(SmarterCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("--username", type=str, required=True, help="The user that will own the new plugin.")
+        parser.add_argument(
+            "--username",
+            type=str,
+            help="The user that will own the new plugin.",
+            default=smarter_cached_objects.smarter_admin.username,
+        )
         parser.add_argument("--verbose", action="store_true", help="Enable verbose output.")
 
     def handle(self, *args, **options):
@@ -40,7 +45,7 @@ class Command(SmarterCommand):
             raise ValueError(f"User {username} does not exist.") from e
 
         try:
-            user_profile = get_cached_user_profile(user=user)  # type: ignore
+            user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         except UserProfile.DoesNotExist as e:
             self.handle_completed_failure(e, f"UserProfile for {user} does not exist.")
             raise ValueError(f"UserProfile for {user} does not exist.") from e
@@ -49,6 +54,7 @@ class Command(SmarterCommand):
             add_example_plugins(user_profile=user_profile, verbose=verbose)
         # pylint: disable=broad-except
         except Exception as exc:
+            # pylint: disable=import-outside-toplevel
             import traceback
 
             tb = traceback.format_exc()

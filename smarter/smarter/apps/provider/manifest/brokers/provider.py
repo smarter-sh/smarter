@@ -227,6 +227,7 @@ class SAMProviderBroker(AbstractBroker):
         )
         spec = SAMProviderSpec(provider=spec_provider)
         status = SAMProviderStatus(
+            recordLocator=self.provider.record_locator,
             created=self.provider.created_at,
             modified=self.provider.updated_at,
             is_active=self.provider.is_active,
@@ -422,6 +423,7 @@ class SAMProviderBroker(AbstractBroker):
         )
         spec = SAMProviderSpec(provider=spec_provider)
         status = SAMProviderStatus(
+            recordLocator="example_record_locator",
             created=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
             modified=datetime.datetime(2024, 1, 15, 12, 0, 0, tzinfo=datetime.timezone.utc),
             is_active=True,
@@ -604,6 +606,7 @@ class SAMProviderBroker(AbstractBroker):
                 thing=self.kind,
                 command=command,
             ) from e
+        self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

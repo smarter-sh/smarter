@@ -1,7 +1,6 @@
 """This module is used to update the encrypted value of a Secret."""
 
-from smarter.apps.account.models import Secret, User
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.models import Secret, User, UserProfile
 from smarter.lib.django.management.base import SmarterCommand
 
 
@@ -41,7 +40,7 @@ class Command(SmarterCommand):
             self.handle_completed_failure(msg=f"User '{username}' does not exist.")
             return
 
-        user_profile = get_cached_user_profile(user=user)
+        user_profile = UserProfile.get_cached_object(user=user)
         if not user_profile:
             self.handle_completed_failure(msg=f"User profile for '{username}' does not exist.")
             return

@@ -1,7 +1,7 @@
 # pylint: disable=W0613
 """Django views for the account dashboard."""
 
-from smarter.lib.django.view_helpers import SmarterAuthenticatedWebView
+from smarter.lib.django.views import SmarterAuthenticatedWebView
 
 
 class OverviewView(SmarterAuthenticatedWebView):

@@ -12,15 +12,7 @@ import sys
 
 # 3rd party stuff
 from dotenv import load_dotenv
-from pydantic import (
-    EmailStr,
-    Field,
-    HttpUrl,
-    SecretStr,
-    ValidationError,
-    ValidationInfo,
-    field_validator,
-)
+from pydantic import SecretStr
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -28,15 +20,15 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-# our stuff
-from ..conf import (  # noqa: E402
+from smarter.common.conf import (  # noqa: E402
     Services,
     Settings,
-    SettingsDefaults,
-    empty_str_to_bool_default,
-    empty_str_to_int_default,
-    get_semantic_version,
+    settings_defaults,
 )
+
+# our stuff
+from smarter.common.utils import get_semantic_version
+
 from ..exceptions import SmarterConfigurationError
 
 
@@ -63,30 +55,30 @@ class TestConfiguration(SmarterTestBase):
         return os.path.join(self.here, filename)
 
     def test_conf_defaults(self):
-        """Test that settings == SettingsDefaults when no .env is in use."""
+        """Test that settings == settings_defaults when no .env is in use."""
         os.environ.clear()
         mock_settings = Settings(init_info="test_conf_defaults()")
 
-        self.assertEqual(mock_settings.aws_region, SettingsDefaults.AWS_REGION)
-        self.assertEqual(mock_settings.openai_endpoint_image_n, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE)
+        self.assertEqual(mock_settings.aws_region, settings_defaults.AWS_REGION)
+        self.assertEqual(mock_settings.openai_endpoint_image_n, settings_defaults.OPENAI_ENDPOINT_IMAGE_N)
+        self.assertEqual(mock_settings.openai_endpoint_image_size, settings_defaults.OPENAI_ENDPOINT_IMAGE_SIZE)
 
-        self.assertEqual(mock_settings.debug_mode, SettingsDefaults.DEBUG_MODE)
-        self.assertEqual(mock_settings.langchain_memory_key, SettingsDefaults.LANGCHAIN_MEMORY_KEY)
-        self.assertEqual(mock_settings.openai_endpoint_image_n, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE)
+        self.assertEqual(mock_settings.debug_mode, settings_defaults.DEBUG_MODE)
+        self.assertEqual(mock_settings.langchain_memory_key, settings_defaults.LANGCHAIN_MEMORY_KEY)
+        self.assertEqual(mock_settings.openai_endpoint_image_n, settings_defaults.OPENAI_ENDPOINT_IMAGE_N)
+        self.assertEqual(mock_settings.openai_endpoint_image_size, settings_defaults.OPENAI_ENDPOINT_IMAGE_SIZE)
         # pylint: disable=no-member
         self.assertEqual(
-            mock_settings.openai_api_key.get_secret_value(), SettingsDefaults.OPENAI_API_KEY.get_secret_value()
+            mock_settings.openai_api_key.get_secret_value(), settings_defaults.OPENAI_API_KEY.get_secret_value()
         )
-        self.assertEqual(mock_settings.openai_api_organization, SettingsDefaults.OPENAI_API_ORGANIZATION)
+        self.assertEqual(mock_settings.openai_api_organization, settings_defaults.OPENAI_API_ORGANIZATION)
         # pylint: disable=no-member
         self.assertEqual(
-            mock_settings.pinecone_api_key.get_secret_value(), SettingsDefaults.PINECONE_API_KEY.get_secret_value()
+            mock_settings.pinecone_api_key.get_secret_value(), settings_defaults.PINECONE_API_KEY.get_secret_value()
         )
 
     def test_conf_defaults_secrets(self):
-        """Test that settings == SettingsDefaults when no .env is in use."""
+        """Test that settings == settings_defaults when no .env is in use."""
         if not Services.enabled(Services.AWS_LAMBDA):
             return
 
@@ -108,10 +100,10 @@ class TestConfiguration(SmarterTestBase):
 
         mock_settings = Settings(init_info="test_env_legal_nulls()")
 
-        self.assertEqual(mock_settings.aws_region, SettingsDefaults.AWS_REGION)
-        self.assertEqual(mock_settings.langchain_memory_key, SettingsDefaults.LANGCHAIN_MEMORY_KEY)
-        self.assertEqual(mock_settings.openai_endpoint_image_n, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE)
+        self.assertEqual(mock_settings.aws_region, settings_defaults.AWS_REGION)
+        self.assertEqual(mock_settings.langchain_memory_key, settings_defaults.LANGCHAIN_MEMORY_KEY)
+        self.assertEqual(mock_settings.openai_endpoint_image_n, settings_defaults.OPENAI_ENDPOINT_IMAGE_N)
+        self.assertEqual(mock_settings.openai_endpoint_image_size, settings_defaults.OPENAI_ENDPOINT_IMAGE_SIZE)
 
     def test_env_illegal_nulls(self):
         """Test that settings handles certain missing .env values."""
@@ -233,16 +225,6 @@ class TestConfiguration(SmarterTestBase):
             services.raise_error_on_disabled(services.AWS_DYNAMODB)
         self.assertIsInstance(services.to_dict(), dict)
         self.assertIn(services.AWS_CLI[0], services.enabled_services())
-
-    def test_empty_str_to_bool_default(self):
-        """Test that empty strings are converted to bool defaults."""
-        self.assertFalse(empty_str_to_bool_default("", False))
-        self.assertTrue(empty_str_to_bool_default("true", True))
-
-    def test_empty_str_to_int_default(self):
-        """Test that empty strings are converted to int defaults."""
-        self.assertEqual(empty_str_to_int_default("", 0), 0)
-        self.assertEqual(empty_str_to_int_default("1", 1), 1)
 
     def test_settings_aws_account_info(self):
         """Test that the AWS account ID is valid."""

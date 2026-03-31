@@ -13,7 +13,6 @@ from smarter.apps.account.models import (
     User,
     UserProfile,
 )
-from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib.django import waffle
@@ -25,6 +24,7 @@ HERE = formatted_text(__name__)
 COMMON_VERSION = "0.0.1"
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
@@ -150,7 +150,7 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
 
 def factory_account_teardown(user: User, account: Optional[Account], user_profile: UserProfile):
     if user and account and not user_profile:
-        user_profile = get_cached_user_profile(user=user, account=account)
+        user_profile = UserProfile.get_cached_object(user=user, account=account)
     elif user and not user_profile:
         user_profile = UserProfile.objects.filter(user=user).first()
     try:

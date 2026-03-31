@@ -48,13 +48,13 @@ class Command(SmarterCommand):
 
         if options["account_number"]:
             try:
-                account = Account.objects.get(account_number=account_number)
+                account = Account.get_cached_object(account_number=account_number)
             except Account.DoesNotExist:
                 self.handle_completed_failure(msg=f"Account {account_number} not found.")
                 return
         elif options["company_name"]:
             try:
-                account = Account.objects.get(company_name=company_name)
+                account = Account.get_cached_object(company_name=company_name)
             except Account.DoesNotExist:
                 self.handle_completed_failure(msg=f"Account {company_name} not found.")
                 return

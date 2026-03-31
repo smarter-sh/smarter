@@ -6,708 +6,781 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.210](https://github.com/smarter-sh/smarter/compare/v0.13.209...v0.13.210) (2026-03-31)
+
+### Bug Fixes
+
+* add an ai doc icon to My Resources ([07dbf1a](https://github.com/smarter-sh/smarter/commit/07dbf1aada8096ca210db8e8f384f9bcd4c1fe7e))
+* add branding to self-host widget ([5c74f13](https://github.com/smarter-sh/smarter/commit/5c74f13abca9e63d6bb32679a09bf8dc1b6cdf4f))
+* add global recordLocator to all SAM resources ([064667f](https://github.com/smarter-sh/smarter/commit/064667f92edb6042fe19a860b45f91ba96e92053))
+* add language logos to sdk widget ([eb4f940](https://github.com/smarter-sh/smarter/commit/eb4f9400d1b8fa2f4f109f7b58604bea93f61765))
+* add sphinx-init ([d120f90](https://github.com/smarter-sh/smarter/commit/d120f904bc62e47048fcee343136baa2587039dc))
+* always use the sandbox url for the api ([4a1ed9f](https://github.com/smarter-sh/smarter/commit/4a1ed9fc6ad5eee339ea8e00b450d945edb33652))
+* cast_value() should always return the default when val is None ([0cc8a16](https://github.com/smarter-sh/smarter/commit/0cc8a16e73a1c6926772f9e30fde3c4ae31b3e8e))
+* code apply drop zone page ([afc0788](https://github.com/smarter-sh/smarter/commit/afc0788ed73a766898c312f36a71d6c33c3b039d))
+* do not raise error on email service failure ([ab271f6](https://github.com/smarter-sh/smarter/commit/ab271f61ae0c2ccbae53bf38cd76da6213a90adb))
+* don't set name until we're certain we have a value ([fab3262](https://github.com/smarter-sh/smarter/commit/fab3262e1f6c4aa0dfa00443009b9d4bf72ca584))
+* ensure that SAMStatus is included in all describe() ([a8fb48d](https://github.com/smarter-sh/smarter/commit/a8fb48d03eb10e2b9b4450ccd668c9832a0ad167))
+* ensure that session_key_from_url() can process both ParseResult and str ([5fe3a9a](https://github.com/smarter-sh/smarter/commit/5fe3a9a2d881ef2d8e9de19688be31c87c320e8d))
+* get_brokered_json_response() has to use post() from now on ([57fa83f](https://github.com/smarter-sh/smarter/commit/57fa83f65178894ee06960db6bb29c428a10d291))
+* inherit tags TaggableManager from MetaDataWithOwnershipModel ([d66928a](https://github.com/smarter-sh/smarter/commit/d66928a1a940a705979c65ef6a26498c8850037f))
+* logging should be disabled by default ([5f7da0f](https://github.com/smarter-sh/smarter/commit/5f7da0f5ff6f95188a93efa34269a445edc2cdd6))
+* partial solution to csrf issues when changing manifest detail views from get() to post() ([6a0a6a9](https://github.com/smarter-sh/smarter/commit/6a0a6a9755731c4d600b5587f90475a4d8302d83))
+* remap SMARTER_EMAIL_ADMIN to input ([e6ab14a](https://github.com/smarter-sh/smarter/commit/e6ab14ad40613f0b33856c396ceb19e6524d67e0))
+* remove superuser restriction on menu link to Django admin ([dffdf5d](https://github.com/smarter-sh/smarter/commit/dffdf5d14e462411ef865f11eb3a7b9e630d2435))
+* return waffle_orig.switch_is_active(switch_name) so that we benefit from caching ([fb9d8aa](https://github.com/smarter-sh/smarter/commit/fb9d8aa1c985539050c75f694e0dc830763a29bc))
+* scaffold a file drop zone page for manifests ([092336b](https://github.com/smarter-sh/smarter/commit/092336b10370d1af45034c2856a2d46a4bcad6c2))
+* test db init from scratch ([038ed17](https://github.com/smarter-sh/smarter/commit/038ed170b6e2dfa9cc45f50f31a1f788737eb002))
+* test plugin caching ([26cea38](https://github.com/smarter-sh/smarter/commit/26cea38dcc9cc8dad91ae421da41e59610593913))
+* type check user_profile and user_profile.account ([6b86285](https://github.com/smarter-sh/smarter/commit/6b862851bda478ed3ae7d9538513b5759454b925))
+* use _get_model_by_pk(pk, class_name=cls.__name__) ([2aa6fe2](https://github.com/smarter-sh/smarter/commit/2aa6fe2143b41153561b44158211d3c31a2c5d8d))
+* work on dashboard widgets ([f26c199](https://github.com/smarter-sh/smarter/commit/f26c1993bdf6cb166e98a524d6cfd86c07cb3e80))
+* wrap up new dashboard widgets ([57f7d4e](https://github.com/smarter-sh/smarter/commit/57f7d4e8f47b8644d7bd0f33f2dc99a6b2c1ab77))
+
+### Performance Improvements
+
+* Account, UserProfile and SmarterCachedObjects caching ([b13629d](https://github.com/smarter-sh/smarter/commit/b13629db9e945381988edefa606c8f21eee2e3eb))
+* add a pk handler that prefetches tags and user_profile ([93f6cd9](https://github.com/smarter-sh/smarter/commit/93f6cd90c5ec441a464e846bc9877d52794e8492))
+* add cache_invalidations() to account receivers ([b76ea71](https://github.com/smarter-sh/smarter/commit/b76ea718b587bcef18d6aa75a69f6fa8f1eb3898))
+* add cached_account and cached_user ([0a54cec](https://github.com/smarter-sh/smarter/commit/0a54cec002fa38244b52778d618995d99ed93fb6))
+* add class-based caching to ChatBot ([ff2e748](https://github.com/smarter-sh/smarter/commit/ff2e748307aad3ffb258b0aab81882a7069aa053))
+* add fk prefetching for chatbot and provider resources ([a1551a7](https://github.com/smarter-sh/smarter/commit/a1551a754cdff3fd456d32fc02ba98bb6feb1acc))
+* add invalidation for the workbench listview ([ad20390](https://github.com/smarter-sh/smarter/commit/ad20390fba733490a7fe15ee27356258036a76a5))
+* add select_related() and prefetch_related() ([2b68606](https://github.com/smarter-sh/smarter/commit/2b686063aba446aae0fff10ac499946dd8a2fb50))
+* add select_related() and prefetch_related() ([f1d14af](https://github.com/smarter-sh/smarter/commit/f1d14aff141e856ecbb7faa1da22eb0ff3f963db))
+* cache composite QuerySet results for PromptListView, PluginsListView and ChatBots ([d7df950](https://github.com/smarter-sh/smarter/commit/d7df9503bc348069be7d4636440b3bace993ae4c))
+* cache tags retrieval ([bd52320](https://github.com/smarter-sh/smarter/commit/bd52320a6df9001cb5195904ef1bde5e08eaefeb))
+* ChatBot.get_cached_objects() cached prefetching ([a1920ff](https://github.com/smarter-sh/smarter/commit/a1920ffd5fcee57b951782bd8cff20c9d18687fc))
+* create cls.get_cached_models_for_user_profile() ([97e15a8](https://github.com/smarter-sh/smarter/commit/97e15a87992d17f27e7090ce448a7eb3ff3db852))
+* create formatted_text_blue() for cache invalidations ([fe3ac80](https://github.com/smarter-sh/smarter/commit/fe3ac805ae9a6acb7cd8d3c80cdcf66dc00c2cea))
+* create TimestampedModel.get_cached_model() ([93ee7b4](https://github.com/smarter-sh/smarter/commit/93ee7b4b39ee13b9fac8256a86b8d23700ca7c34))
+* enable 10-second page cache ([c10d9b1](https://github.com/smarter-sh/smarter/commit/c10d9b1dc94088b1123e501f5eb31de9f5e0f455))
+* ensure all SAM querysets prefetch and select related objects ([9867ab1](https://github.com/smarter-sh/smarter/commit/9867ab1deb7837b84e28f9a74a056b006cea522b))
+* expire cached smarter instances every 600 seconds ([4c52001](https://github.com/smarter-sh/smarter/commit/4c520011438320177cbb690dba6f6eef1acd1062))
+* fail gracefully when we don't have a workable combination of parameters ([6dfef2d](https://github.com/smarter-sh/smarter/commit/6dfef2d257c3cbdaa14c218dda2526c75bb7b074))
+* invalidate object lists for plugin and chatbot views ([809df8a](https://github.com/smarter-sh/smarter/commit/809df8ac177a6eaeead89d001d49b7c68fa369ab))
+* move orm caching to the parent MetaDataModel ([df3dbdd](https://github.com/smarter-sh/smarter/commit/df3dbdd21854ad9a2f0f7f9bc0151085e61292ee))
+* prefetch tags ([f14536e](https://github.com/smarter-sh/smarter/commit/f14536ef266051f78c07cdb241d1b13e105a8a1c))
+* prefetch tags ([0c56095](https://github.com/smarter-sh/smarter/commit/0c5609569e126a810209719b4de6b66e38edf84e))
+* read aws s3 bucket from cdn. cache chatbot.objects.filter ([ff9f1fa](https://github.com/smarter-sh/smarter/commit/ff9f1fad74b3a6d3a2b51e9fbc7f04799a75748c))
+* scaffold class-based cache invalidation ([6e00acc](https://github.com/smarter-sh/smarter/commit/6e00accf4535d57e23e675173de94399712df626))
+* scaffold class-based cache invalidation ([ab2b0c9](https://github.com/smarter-sh/smarter/commit/ab2b0c992c70ff8fb8f441ba67c27b3ff7d6a848))
+* scaffold class-based cache invalidation ([773d5c7](https://github.com/smarter-sh/smarter/commit/773d5c710aa56998dd1ad2077c72d70a9b9fb3bc))
+* scaffold class-based cache invalidation ([f665c03](https://github.com/smarter-sh/smarter/commit/f665c03371f36e56299217dad59e970391131da3))
+* scaffold class-based cache invalidation ([2bc136d](https://github.com/smarter-sh/smarter/commit/2bc136d23ee6d6cb3f230b54cf11bf8a0180aef6))
+* scaffold class-based cache invalidation ([e1ec35c](https://github.com/smarter-sh/smarter/commit/e1ec35c0a02114be57e49f5b13bafdb8f98c05bd))
+* select related objects along with the instance itself, so that all is cached ([84f9988](https://github.com/smarter-sh/smarter/commit/84f9988c59507bf2be6dcfed5d66df1d4436b3b8))
+* set default cache expiration to 600 seconds. ([31cdd53](https://github.com/smarter-sh/smarter/commit/31cdd53d5a323ff4997e7ff108506f0e7be282d3))
+* switch to get_cached_account() ([a174e6e](https://github.com/smarter-sh/smarter/commit/a174e6e6fc52bff8f8e824373b5988267ca04a8f))
+* work on cache invalidations for context processors ([8ce1ad1](https://github.com/smarter-sh/smarter/commit/8ce1ad18d9cb92d3feda6f2ba9eff410f9bc5bad))
+* work on cache_invalidations() ([3072853](https://github.com/smarter-sh/smarter/commit/30728533626d976ff68a61c37dc6673655e7d788))
+* work on class-based cache keys for SAM objects and page caching ([10c171a](https://github.com/smarter-sh/smarter/commit/10c171a7f6cfabf958e825256d722a2c6a1ce96a))
+* work on get_cached_model() ([4c707ea](https://github.com/smarter-sh/smarter/commit/4c707eac873ae6b1b041481c03944dc27e768eec))
+* work on get_cached_object() and get_cached_objects() ([2836992](https://github.com/smarter-sh/smarter/commit/2836992b6e083f49580549e021d813e477051cd3))
+* work on invalidation() ([b5beff7](https://github.com/smarter-sh/smarter/commit/b5beff75b28ac529c3a1570664fb62975400a872))
+
 ## [0.13.209](https://github.com/smarter-sh/smarter/compare/v0.13.208...v0.13.209) (2026-03-20)
 
 ### Bug Fixes
 
-* cache pages by user ([07c7db6](https://github.com/smarter-sh/smarter/commit/07c7db60ae85cac533fe01b889a6f38ddfacceb4))
-* handle xml pages differently ([61b70cb](https://github.com/smarter-sh/smarter/commit/61b70cb9843a3912b48566ae6883921175691140))
+- cache pages by user ([07c7db6](https://github.com/smarter-sh/smarter/commit/07c7db60ae85cac533fe01b889a6f38ddfacceb4))
+- handle xml pages differently ([61b70cb](https://github.com/smarter-sh/smarter/commit/61b70cb9843a3912b48566ae6883921175691140))
 
 ## [0.13.208](https://github.com/smarter-sh/smarter/compare/v0.13.207...v0.13.208) (2026-03-20)
 
 ### Bug Fixes
 
-* missing csrf js script ([c7c0e77](https://github.com/smarter-sh/smarter/commit/c7c0e773b833de9416c1eb5094e83cef109b68d9))
+- missing csrf js script ([c7c0e77](https://github.com/smarter-sh/smarter/commit/c7c0e773b833de9416c1eb5094e83cef109b68d9))
 
 ## [0.13.207](https://github.com/smarter-sh/smarter/compare/v0.13.206...v0.13.207) (2026-03-19)
 
 ### Bug Fixes
 
-* add in-line documentation and re-release ([32b19c1](https://github.com/smarter-sh/smarter/commit/32b19c19f3cbdb962a984ef6f192eda715b78103))
+- add in-line documentation and re-release ([32b19c1](https://github.com/smarter-sh/smarter/commit/32b19c19f3cbdb962a984ef6f192eda715b78103))
 
 ## [0.13.206](https://github.com/smarter-sh/smarter/compare/v0.13.205...v0.13.206) (2026-03-19)
 
 ### Bug Fixes
 
-* missing renamed imports to smarter/smarter/lib/django/models ([e1a6dfa](https://github.com/smarter-sh/smarter/commit/e1a6dfacdfaae1983c0cbf56d13b1d842be55893))
+- missing renamed imports to smarter/smarter/lib/django/models ([e1a6dfa](https://github.com/smarter-sh/smarter/commit/e1a6dfacdfaae1983c0cbf56d13b1d842be55893))
 
 ## [0.13.205](https://github.com/smarter-sh/smarter/compare/v0.13.204...v0.13.205) (2026-03-19)
 
 ### Bug Fixes
 
-* og_url ([c754647](https://github.com/smarter-sh/smarter/commit/c75464767b2e6786fdad9cb957b7d9566457b06a))
+- og_url ([c754647](https://github.com/smarter-sh/smarter/commit/c75464767b2e6786fdad9cb957b7d9566457b06a))
 
 ## [0.13.204](https://github.com/smarter-sh/smarter/compare/v0.13.203...v0.13.204) (2026-03-18)
 
 ### Bug Fixes
 
-* force a new release ([db4a1a4](https://github.com/smarter-sh/smarter/commit/db4a1a4f5bfc129ac86cdd60c1b6edcfd593c9f9))
+- force a new release ([db4a1a4](https://github.com/smarter-sh/smarter/commit/db4a1a4f5bfc129ac86cdd60c1b6edcfd593c9f9))
 
 ## [0.13.203](https://github.com/smarter-sh/smarter/compare/v0.13.202...v0.13.203) (2026-03-18)
 
 ### Bug Fixes
 
-* add yaml validation ([4eb3581](https://github.com/smarter-sh/smarter/commit/4eb35819daf38c89727d4c47b77437faa66abdaa))
+- add yaml validation ([4eb3581](https://github.com/smarter-sh/smarter/commit/4eb35819daf38c89727d4c47b77437faa66abdaa))
 
 ### Performance Improvements
 
-* minor startup improvements to waffle handling ([07ab3b4](https://github.com/smarter-sh/smarter/commit/07ab3b4ec10f79860a1be4af1edb3d8b413b9ef7))
+- minor startup improvements to waffle handling ([07ab3b4](https://github.com/smarter-sh/smarter/commit/07ab3b4ec10f79860a1be4af1edb3d8b413b9ef7))
 
 ## [0.13.202](https://github.com/smarter-sh/smarter/compare/v0.13.201...v0.13.202) (2026-03-18)
 
 ### Bug Fixes
 
-* add caching to TimestampedModel ([32679c6](https://github.com/smarter-sh/smarter/commit/32679c6b93c550cc43b1b4d190c2b9d98c758076))
-* add waffle switch ALLOW_API_GET ([b95b4c2](https://github.com/smarter-sh/smarter/commit/b95b4c2c1abb825a72e4f18a16f914133ce604d1))
-* add waffle switch ALLOW_API_GET ([5598e4c](https://github.com/smarter-sh/smarter/commit/5598e4c63bcf335d67ad80b36bead6648691ec96))
-* work on short-lived html page caching for dashboard and workbench ([2f38bc5](https://github.com/smarter-sh/smarter/commit/2f38bc5c4cb8a1e9bdd028bc94f52d18387f1544))
+- add caching to TimestampedModel ([32679c6](https://github.com/smarter-sh/smarter/commit/32679c6b93c550cc43b1b4d190c2b9d98c758076))
+- add waffle switch ALLOW_API_GET ([b95b4c2](https://github.com/smarter-sh/smarter/commit/b95b4c2c1abb825a72e4f18a16f914133ce604d1))
+- add waffle switch ALLOW_API_GET ([5598e4c](https://github.com/smarter-sh/smarter/commit/5598e4c63bcf335d67ad80b36bead6648691ec96))
+- work on short-lived html page caching for dashboard and workbench ([2f38bc5](https://github.com/smarter-sh/smarter/commit/2f38bc5c4cb8a1e9bdd028bc94f52d18387f1544))
 
 ## [0.13.201](https://github.com/smarter-sh/smarter/compare/v0.13.200...v0.13.201) (2026-03-18)
 
 ### Bug Fixes
 
-* revert /chat/config/ redirect ([3413e98](https://github.com/smarter-sh/smarter/commit/3413e980a8056ccc2a1514a185bd37779e265e65))
+- revert /chat/config/ redirect ([3413e98](https://github.com/smarter-sh/smarter/commit/3413e980a8056ccc2a1514a185bd37779e265e65))
 
 ## [0.13.200](https://github.com/smarter-sh/smarter/compare/v0.13.199...v0.13.200) (2026-03-18)
 
 ### Bug Fixes
 
-* refactor /chatbot/v1/api urls to use hashed_id slugs ([89a6885](https://github.com/smarter-sh/smarter/commit/89a68859a7cb0d55cd1b8f8378344889eb8ef91a))
+- refactor /chatbot/v1/api urls to use hashed_id slugs ([89a6885](https://github.com/smarter-sh/smarter/commit/89a68859a7cb0d55cd1b8f8378344889eb8ef91a))
 
 ## [0.13.199](https://github.com/smarter-sh/smarter/compare/v0.13.198...v0.13.199) (2026-03-17)
 
 ### Bug Fixes
 
-* refactor all ChatBot urls to use new hashed_id slug ([94a9017](https://github.com/smarter-sh/smarter/commit/94a9017d16d10c19f34572a03dabe0cb511d91b8))
-* work on middleware caching and logging ([31e58a6](https://github.com/smarter-sh/smarter/commit/31e58a6c2855460892620bc71df686ac6d412794))
+- refactor all ChatBot urls to use new hashed_id slug ([94a9017](https://github.com/smarter-sh/smarter/commit/94a9017d16d10c19f34572a03dabe0cb511d91b8))
+- work on middleware caching and logging ([31e58a6](https://github.com/smarter-sh/smarter/commit/31e58a6c2855460892620bc71df686ac6d412794))
 
 ## [0.13.198](https://github.com/smarter-sh/smarter/compare/v0.13.197...v0.13.198) (2026-03-17)
 
 ### Bug Fixes
 
-* anonymize workbench urls ([350ec3a](https://github.com/smarter-sh/smarter/commit/350ec3a701f48052e854c08bc307b1947f8f1a24))
+- anonymize workbench urls ([350ec3a](https://github.com/smarter-sh/smarter/commit/350ec3a701f48052e854c08bc307b1947f8f1a24))
 
 ## [0.13.197](https://github.com/smarter-sh/smarter/compare/v0.13.196...v0.13.197) (2026-03-16)
 
 ### Bug Fixes
 
-* you can only call example_chatbot.tags.names() if a pk exists ([3f20b01](https://github.com/smarter-sh/smarter/commit/3f20b010f62a12bbf7020567eef3e4636a008fe5))
+- you can only call example_chatbot.tags.names() if a pk exists ([3f20b01](https://github.com/smarter-sh/smarter/commit/3f20b010f62a12bbf7020567eef3e4636a008fe5))
 
 ## [0.13.196](https://github.com/smarter-sh/smarter/compare/v0.13.195...v0.13.196) (2026-03-16)
 
 ### Bug Fixes
 
-* exit gracefully if we are missing name or user_profile ([5f08fa9](https://github.com/smarter-sh/smarter/commit/5f08fa9ac1949368139cf28412be313c5383ec38))
-* need to consider that self._broker is None/Falsy if its not in a ready state ([3a61531](https://github.com/smarter-sh/smarter/commit/3a6153135b3435d79ddc524b72a60a44a46ae6b2))
+- exit gracefully if we are missing name or user_profile ([5f08fa9](https://github.com/smarter-sh/smarter/commit/5f08fa9ac1949368139cf28412be313c5383ec38))
+- need to consider that self.\_broker is None/Falsy if its not in a ready state ([3a61531](https://github.com/smarter-sh/smarter/commit/3a6153135b3435d79ddc524b72a60a44a46ae6b2))
 
 ## [0.13.195](https://github.com/smarter-sh/smarter/compare/v0.13.194...v0.13.195) (2026-03-16)
 
 ### Bug Fixes
 
-* add ROOT_DOMAIN and prune env console output ([71f4e55](https://github.com/smarter-sh/smarter/commit/71f4e55e8496ba7b521a3635ce49a4327b9042d6))
-* add tag data using set() ([e05f831](https://github.com/smarter-sh/smarter/commit/e05f8318cbb0d76520c04bf67c612a2216d70b74))
-* revert to default Django password form ([b5e49dc](https://github.com/smarter-sh/smarter/commit/b5e49dc690d15719a807a4f474d4e9610cf1fb5e))
+- add ROOT_DOMAIN and prune env console output ([71f4e55](https://github.com/smarter-sh/smarter/commit/71f4e55e8496ba7b521a3635ce49a4327b9042d6))
+- add tag data using set() ([e05f831](https://github.com/smarter-sh/smarter/commit/e05f8318cbb0d76520c04bf67c612a2216d70b74))
+- revert to default Django password form ([b5e49dc](https://github.com/smarter-sh/smarter/commit/b5e49dc690d15719a807a4f474d4e9610cf1fb5e))
 
 ## [0.13.194](https://github.com/smarter-sh/smarter/compare/v0.13.193...v0.13.194) (2026-03-16)
 
 ### Bug Fixes
 
-* orm initializations for shared ownership ([7a1b5eb](https://github.com/smarter-sh/smarter/commit/7a1b5ebc531f55df94cf2cae33aba0ec91320cda))
-* remaining code for SAMApiPluginBroker().plugin_data_orm2pydantic() ([4ad4546](https://github.com/smarter-sh/smarter/commit/4ad4546194926376b5db4e3b356c369848445044))
+- orm initializations for shared ownership ([7a1b5eb](https://github.com/smarter-sh/smarter/commit/7a1b5ebc531f55df94cf2cae33aba0ec91320cda))
+- remaining code for SAMApiPluginBroker().plugin_data_orm2pydantic() ([4ad4546](https://github.com/smarter-sh/smarter/commit/4ad4546194926376b5db4e3b356c369848445044))
 
 ## [0.13.193](https://github.com/smarter-sh/smarter/compare/v0.13.192...v0.13.193) (2026-03-16)
 
 ### Bug Fixes
 
-* add AbstractBroker().orm_meta_instance ([e80d629](https://github.com/smarter-sh/smarter/commit/e80d629595f2f117d83c62a7fa71cedcdcc74ca0))
+- add AbstractBroker().orm_meta_instance ([e80d629](https://github.com/smarter-sh/smarter/commit/e80d629595f2f117d83c62a7fa71cedcdcc74ca0))
 
 ## [0.13.192](https://github.com/smarter-sh/smarter/compare/v0.13.191...v0.13.192) (2026-03-15)
 
 ### Bug Fixes
 
-* add ORMMetaModelClass for querying ORM models by name and user_profile ([2e08b66](https://github.com/smarter-sh/smarter/commit/2e08b664dfe0441cf5f302afcdde575cf993cf97))
+- add ORMMetaModelClass for querying ORM models by name and user_profile ([2e08b66](https://github.com/smarter-sh/smarter/commit/2e08b664dfe0441cf5f302afcdde575cf993cf97))
 
 ## [0.13.191](https://github.com/smarter-sh/smarter/compare/v0.13.190...v0.13.191) (2026-03-15)
 
 ### Bug Fixes
 
-* try to initialize broker from the orm instance when no manifest is provided ([e9e930c](https://github.com/smarter-sh/smarter/commit/e9e930c66007420e2c9748bd9f01225623b74d40))
+- try to initialize broker from the orm instance when no manifest is provided ([e9e930c](https://github.com/smarter-sh/smarter/commit/e9e930c66007420e2c9748bd9f01225623b74d40))
 
 ## [0.13.190](https://github.com/smarter-sh/smarter/compare/v0.13.189...v0.13.190) (2026-03-15)
 
 ### Bug Fixes
 
-* re-order the chatbot listview by modification date desc ([c118cfe](https://github.com/smarter-sh/smarter/commit/c118cfe88f4e200a2ebdafd1847d788a45719a90))
+- re-order the chatbot listview by modification date desc ([c118cfe](https://github.com/smarter-sh/smarter/commit/c118cfe88f4e200a2ebdafd1847d788a45719a90))
 
 ## [0.13.189](https://github.com/smarter-sh/smarter/compare/v0.13.188...v0.13.189) (2026-03-15)
 
 ### Bug Fixes
 
-* add handler for TaggedItem ([4466479](https://github.com/smarter-sh/smarter/commit/44664791a9dac8425340034bf993ae499f9671d4))
+- add handler for TaggedItem ([4466479](https://github.com/smarter-sh/smarter/commit/44664791a9dac8425340034bf993ae499f9671d4))
 
 ## [0.13.188](https://github.com/smarter-sh/smarter/compare/v0.13.187...v0.13.188) (2026-03-15)
 
 ### Bug Fixes
 
-* move manifest_to_django_orm() metadata logic to AbstractBroker. add TaggableManager handling to all apply() ([2b87d2d](https://github.com/smarter-sh/smarter/commit/2b87d2d0878cabf100e82e66aed39543f962b8b4))
+- move manifest_to_django_orm() metadata logic to AbstractBroker. add TaggableManager handling to all apply() ([2b87d2d](https://github.com/smarter-sh/smarter/commit/2b87d2d0878cabf100e82e66aed39543f962b8b4))
 
 ## [0.13.187](https://github.com/smarter-sh/smarter/compare/v0.13.186...v0.13.187) (2026-03-14)
 
 ### Bug Fixes
 
-* add sane defaults for defaultTemperature and defaultMaxTokens ([c27546a](https://github.com/smarter-sh/smarter/commit/c27546abac75b03b6f104453bffa5dcbb876360f))
-* loosen null and blank restrictions on manifest metadata ([c4224fc](https://github.com/smarter-sh/smarter/commit/c4224fc1612cb9acd0d379e170e02c8de3aeea77))
+- add sane defaults for defaultTemperature and defaultMaxTokens ([c27546a](https://github.com/smarter-sh/smarter/commit/c27546abac75b03b6f104453bffa5dcbb876360f))
+- loosen null and blank restrictions on manifest metadata ([c4224fc](https://github.com/smarter-sh/smarter/commit/c4224fc1612cb9acd0d379e170e02c8de3aeea77))
 
 ## [0.13.186](https://github.com/smarter-sh/smarter/compare/v0.13.185...v0.13.186) (2026-03-14)
 
 ### Bug Fixes
 
-* refactor chatbot broker to use SAM model for rendering json ([1b76d68](https://github.com/smarter-sh/smarter/commit/1b76d68a1626d987ab5043c5f815b577aa207574))
+- refactor chatbot broker to use SAM model for rendering json ([1b76d68](https://github.com/smarter-sh/smarter/commit/1b76d68a1626d987ab5043c5f815b577aa207574))
 
 ## [0.13.185](https://github.com/smarter-sh/smarter/compare/v0.13.184...v0.13.185) (2026-03-13)
 
 ### Bug Fixes
 
-* use django slugify() to ensure that name is url friendly ([f7d69c7](https://github.com/smarter-sh/smarter/commit/f7d69c7f0e32478ba0b8f0d6c7eb77c65d157560))
+- use django slugify() to ensure that name is url friendly ([f7d69c7](https://github.com/smarter-sh/smarter/commit/f7d69c7f0e32478ba0b8f0d6c7eb77c65d157560))
 
 ## [0.13.184](https://github.com/smarter-sh/smarter/compare/v0.13.183...v0.13.184) (2026-03-10)
 
 ### Bug Fixes
 
-* django template render errors django.template.base.VariableDoesNotExist: Failed lookup for key [name] in URLResolver ([d94aa49](https://github.com/smarter-sh/smarter/commit/d94aa495dbca3eec27ab06d34cddeaf79ab28d90))
+- django template render errors django.template.base.VariableDoesNotExist: Failed lookup for key [name] in URLResolver ([d94aa49](https://github.com/smarter-sh/smarter/commit/d94aa495dbca3eec27ab06d34cddeaf79ab28d90))
 
 ## [0.13.183](https://github.com/smarter-sh/smarter/compare/v0.13.182...v0.13.183) (2026-03-10)
 
 ### Bug Fixes
 
-* debug_toolbar ([2d18144](https://github.com/smarter-sh/smarter/commit/2d181440902e30c280ae07b2fcdbdd56598180d9))
+- debug_toolbar ([2d18144](https://github.com/smarter-sh/smarter/commit/2d181440902e30c280ae07b2fcdbdd56598180d9))
 
 ## [0.13.182](https://github.com/smarter-sh/smarter/compare/v0.13.181...v0.13.182) (2026-03-10)
 
 ### Bug Fixes
 
-* debug_toolbar ([d05a131](https://github.com/smarter-sh/smarter/commit/d05a13168f16260c51b2159aa61ac3eeaf2259ec))
+- debug_toolbar ([d05a131](https://github.com/smarter-sh/smarter/commit/d05a13168f16260c51b2159aa61ac3eeaf2259ec))
 
 ## [0.13.181](https://github.com/smarter-sh/smarter/compare/v0.13.180...v0.13.181) (2026-03-10)
 
 ### Bug Fixes
 
-* debug_toolbar ([fca0aa6](https://github.com/smarter-sh/smarter/commit/fca0aa6d018c458c1cba945b16a1868bb2d78ee5))
+- debug_toolbar ([fca0aa6](https://github.com/smarter-sh/smarter/commit/fca0aa6d018c458c1cba945b16a1868bb2d78ee5))
 
 ## [0.13.180](https://github.com/smarter-sh/smarter/compare/v0.13.179...v0.13.180) (2026-03-10)
 
 ### Bug Fixes
 
-* debug_toolbar import ([7dce20c](https://github.com/smarter-sh/smarter/commit/7dce20cf2ef379789df9e01aa640652483138c18))
+- debug_toolbar import ([7dce20c](https://github.com/smarter-sh/smarter/commit/7dce20cf2ef379789df9e01aa640652483138c18))
 
 ## [0.13.179](https://github.com/smarter-sh/smarter/compare/v0.13.178...v0.13.179) (2026-03-10)
 
 ### Bug Fixes
 
-* add cors waffle switch with means of enabling localhost api ([9bffacb](https://github.com/smarter-sh/smarter/commit/9bffacb0689e47c71014bc3f797606b64f1ed24c))
+- add cors waffle switch with means of enabling localhost api ([9bffacb](https://github.com/smarter-sh/smarter/commit/9bffacb0689e47c71014bc3f797606b64f1ed24c))
 
 ## [0.13.178](https://github.com/smarter-sh/smarter/compare/v0.13.177...v0.13.178) (2026-03-09)
 
 ### Bug Fixes
 
-* add a waffle debug model toggle ([4e31931](https://github.com/smarter-sh/smarter/commit/4e31931016c3809d5b2b570ac8c568b016c65d0d))
+- add a waffle debug model toggle ([4e31931](https://github.com/smarter-sh/smarter/commit/4e31931016c3809d5b2b570ac8c568b016c65d0d))
 
 ## [0.13.177](https://github.com/smarter-sh/smarter/compare/v0.13.176...v0.13.177) (2026-03-09)
 
 ### Bug Fixes
 
-* missing waffle switch - ENABLE_MIDDLEWARE_SECURITY ([5a606c5](https://github.com/smarter-sh/smarter/commit/5a606c56741e452a112100b000da85cc5b5da908))
+- missing waffle switch - ENABLE_MIDDLEWARE_SECURITY ([5a606c5](https://github.com/smarter-sh/smarter/commit/5a606c56741e452a112100b000da85cc5b5da908))
 
 ## [0.13.176](https://github.com/smarter-sh/smarter/compare/v0.13.175...v0.13.176) (2026-03-09)
 
 ### Bug Fixes
 
-* add waffle switch for SmarterSecurityMiddleware ([1d7a9c9](https://github.com/smarter-sh/smarter/commit/1d7a9c9b13304b909921b9eb4b26624c3eb14630))
+- add waffle switch for SmarterSecurityMiddleware ([1d7a9c9](https://github.com/smarter-sh/smarter/commit/1d7a9c9b13304b909921b9eb4b26624c3eb14630))
 
 ## [0.13.175](https://github.com/smarter-sh/smarter/compare/v0.13.174...v0.13.175) (2026-03-09)
 
 ### Bug Fixes
 
-* api ingress cluster issuer should be environment api domain ([7cce6d0](https://github.com/smarter-sh/smarter/commit/7cce6d08264ccd2859a1761dfb39109827fa5744))
+- api ingress cluster issuer should be environment api domain ([7cce6d0](https://github.com/smarter-sh/smarter/commit/7cce6d08264ccd2859a1761dfb39109827fa5744))
 
 ## [0.13.174](https://github.com/smarter-sh/smarter/compare/v0.13.173...v0.13.174) (2026-03-07)
 
 ### Bug Fixes
 
-* Settings.dump() ([c50b6e7](https://github.com/smarter-sh/smarter/commit/c50b6e79cc20bfa9fbe1169061845f5248930432))
+- Settings.dump() ([c50b6e7](https://github.com/smarter-sh/smarter/commit/c50b6e79cc20bfa9fbe1169061845f5248930432))
 
 ## [0.13.173](https://github.com/smarter-sh/smarter/compare/v0.13.172...v0.13.173) (2026-03-07)
 
 ### Bug Fixes
 
-* expand possible values of THE_EMPTY_SET ([6e31343](https://github.com/smarter-sh/smarter/commit/6e31343e59a9145a9c9ab3f0d37b326cdf6317f3))
+- expand possible values of THE_EMPTY_SET ([6e31343](https://github.com/smarter-sh/smarter/commit/6e31343e59a9145a9c9ab3f0d37b326cdf6317f3))
 
 ## [0.13.172](https://github.com/smarter-sh/smarter/compare/v0.13.171...v0.13.172) (2026-03-07)
 
 ### Bug Fixes
 
-* workflow ([3cdff3e](https://github.com/smarter-sh/smarter/commit/3cdff3e21c411f5d20aef293a7af59f4fe7260fb))
+- workflow ([3cdff3e](https://github.com/smarter-sh/smarter/commit/3cdff3e21c411f5d20aef293a7af59f4fe7260fb))
 
 ## [0.13.171](https://github.com/smarter-sh/smarter/compare/v0.13.170...v0.13.171) (2026-03-06)
 
 ### Bug Fixes
 
-* move branding inputs to github secrets ([9662011](https://github.com/smarter-sh/smarter/commit/9662011f93dd684a6432c13872cec1fd9bba2cd7))
+- move branding inputs to github secrets ([9662011](https://github.com/smarter-sh/smarter/commit/9662011f93dd684a6432c13872cec1fd9bba2cd7))
 
 ## [0.13.170](https://github.com/smarter-sh/smarter/compare/v0.13.169...v0.13.170) (2026-03-06)
 
 ### Bug Fixes
 
-* create daily MariaDb backup ([33feddb](https://github.com/smarter-sh/smarter/commit/33feddb36ce832b748929a592c9d8cac3a7ef544))
-* refactor account initialization and add an --all option ([bb73435](https://github.com/smarter-sh/smarter/commit/bb73435d9c9e68ca57ed64be7ec72e7fa79d9bc5))
-* remove account initialization from deployment job ([b479b38](https://github.com/smarter-sh/smarter/commit/b479b38a6a592796bf38b9ac6db70ef290a04e91))
-* work on account initialization ([cdc3180](https://github.com/smarter-sh/smarter/commit/cdc3180eb7171209f8929c5df9e3e39b817d3bee))
+- create daily MariaDb backup ([33feddb](https://github.com/smarter-sh/smarter/commit/33feddb36ce832b748929a592c9d8cac3a7ef544))
+- refactor account initialization and add an --all option ([bb73435](https://github.com/smarter-sh/smarter/commit/bb73435d9c9e68ca57ed64be7ec72e7fa79d9bc5))
+- remove account initialization from deployment job ([b479b38](https://github.com/smarter-sh/smarter/commit/b479b38a6a592796bf38b9ac6db70ef290a04e91))
+- work on account initialization ([cdc3180](https://github.com/smarter-sh/smarter/commit/cdc3180eb7171209f8929c5df9e3e39b817d3bee))
 
 ## [0.13.169](https://github.com/smarter-sh/smarter/compare/v0.13.168...v0.13.169) (2026-03-04)
 
 ### Bug Fixes
 
-* refactor permission logic in SecretAdmin.display_value() ([61591fc](https://github.com/smarter-sh/smarter/commit/61591fcf99f3488668392ef85da13ffc72b288cd))
+- refactor permission logic in SecretAdmin.display_value() ([61591fc](https://github.com/smarter-sh/smarter/commit/61591fcf99f3488668392ef85da13ffc72b288cd))
 
 ## [0.13.168](https://github.com/smarter-sh/smarter/compare/v0.13.167...v0.13.168) (2026-03-04)
 
 ### Bug Fixes
 
-* model visibiity in admin console ([c9f80c5](https://github.com/smarter-sh/smarter/commit/c9f80c522d0f194a01dc930d128fa574197d4841))
-* role-base access to models in admin console ([b6219b8](https://github.com/smarter-sh/smarter/commit/b6219b8c1760ddded48b65094cda2fb5de03f2f2))
-* role-based access to models in admin console ([d5c8446](https://github.com/smarter-sh/smarter/commit/d5c8446bad8fb8d091ee17146ab66f2e4fc77d9c))
-* setup role-based access to admin console models ([f6c7100](https://github.com/smarter-sh/smarter/commit/f6c7100fd9831f94bcc2333593c284ef6643894f))
+- model visibiity in admin console ([c9f80c5](https://github.com/smarter-sh/smarter/commit/c9f80c522d0f194a01dc930d128fa574197d4841))
+- role-base access to models in admin console ([b6219b8](https://github.com/smarter-sh/smarter/commit/b6219b8c1760ddded48b65094cda2fb5de03f2f2))
+- role-based access to models in admin console ([d5c8446](https://github.com/smarter-sh/smarter/commit/d5c8446bad8fb8d091ee17146ab66f2e4fc77d9c))
+- setup role-based access to admin console models ([f6c7100](https://github.com/smarter-sh/smarter/commit/f6c7100fd9831f94bcc2333593c284ef6643894f))
 
 ## [0.13.167](https://github.com/smarter-sh/smarter/compare/v0.13.166...v0.13.167) (2026-03-04)
 
 ### Bug Fixes
 
-* work on customer access to models in admin page ([5c53e0b](https://github.com/smarter-sh/smarter/commit/5c53e0bf0b9a365860cd9a213a580e1ee948d6cf))
+- work on customer access to models in admin page ([5c53e0b](https://github.com/smarter-sh/smarter/commit/5c53e0bf0b9a365860cd9a213a580e1ee948d6cf))
 
 ## [0.13.166](https://github.com/smarter-sh/smarter/compare/v0.13.165...v0.13.166) (2026-03-03)
 
 ### Bug Fixes
 
-* update permission and layout of User ([f3e781a](https://github.com/smarter-sh/smarter/commit/f3e781a5032f9960412b639ed99157230b18865b))
-* update the <video> configuration ([fe1ff72](https://github.com/smarter-sh/smarter/commit/fe1ff72ffaf358d2d45c74eddbaf6aa29759b677))
+- update permission and layout of User ([f3e781a](https://github.com/smarter-sh/smarter/commit/f3e781a5032f9960412b639ed99157230b18865b))
+- update the <video> configuration ([fe1ff72](https://github.com/smarter-sh/smarter/commit/fe1ff72ffaf358d2d45c74eddbaf6aa29759b677))
 
 ## [0.13.165](https://github.com/smarter-sh/smarter/compare/v0.13.164...v0.13.165) (2026-03-03)
 
 ### Bug Fixes
 
-* toggle welcome email if password will be sent separately. ([1d86e91](https://github.com/smarter-sh/smarter/commit/1d86e91092e669072d7121965c64b8d8ab76160e))
+- toggle welcome email if password will be sent separately. ([1d86e91](https://github.com/smarter-sh/smarter/commit/1d86e91092e669072d7121965c64b8d8ab76160e))
 
 ## [0.13.164](https://github.com/smarter-sh/smarter/compare/v0.13.163...v0.13.164) (2026-03-03)
 
 ### Bug Fixes
 
-* add a waffle switch to toggle new user password email ([d2e1b55](https://github.com/smarter-sh/smarter/commit/d2e1b5593b27823b3bc0abf3095765dc2424ee31))
+- add a waffle switch to toggle new user password email ([d2e1b55](https://github.com/smarter-sh/smarter/commit/d2e1b5593b27823b3bc0abf3095765dc2424ee31))
 
 ## [0.13.163](https://github.com/smarter-sh/smarter/compare/v0.13.162...v0.13.163) (2026-03-02)
 
 ### Bug Fixes
 
-* welcome email - add deployment options bullet ([caf2958](https://github.com/smarter-sh/smarter/commit/caf295873ef78aa93168a51e208de8d269b69cf3))
+- welcome email - add deployment options bullet ([caf2958](https://github.com/smarter-sh/smarter/commit/caf295873ef78aa93168a51e208de8d269b69cf3))
 
 ## [0.13.162](https://github.com/smarter-sh/smarter/compare/v0.13.161...v0.13.162) (2026-03-02)
 
 ### Bug Fixes
 
-* welcome email png img styling ([e95ba0f](https://github.com/smarter-sh/smarter/commit/e95ba0fe85cd23b083bbd5e3b93b7446c7a17837))
+- welcome email png img styling ([e95ba0f](https://github.com/smarter-sh/smarter/commit/e95ba0fe85cd23b083bbd5e3b93b7446c7a17837))
 
 ## [0.13.161](https://github.com/smarter-sh/smarter/compare/v0.13.160...v0.13.161) (2026-03-02)
 
 ### Bug Fixes
 
-* welcome email social link styling ([3c4bc31](https://github.com/smarter-sh/smarter/commit/3c4bc313539a622e92858451e42e00cf4bf069ae))
+- welcome email social link styling ([3c4bc31](https://github.com/smarter-sh/smarter/commit/3c4bc313539a622e92858451e42e00cf4bf069ae))
 
 ## [0.13.160](https://github.com/smarter-sh/smarter/compare/v0.13.159...v0.13.160) (2026-03-02)
 
 ### Bug Fixes
 
-* convert all email svg images to png ([77e627e](https://github.com/smarter-sh/smarter/commit/77e627e3c448f2a4ea077e0cbacaafcd881eca5c))
+- convert all email svg images to png ([77e627e](https://github.com/smarter-sh/smarter/commit/77e627e3c448f2a4ea077e0cbacaafcd881eca5c))
 
 ## [0.13.159](https://github.com/smarter-sh/smarter/compare/v0.13.158...v0.13.159) (2026-03-02)
 
 ### Bug Fixes
 
-* welcome email ([6b53b86](https://github.com/smarter-sh/smarter/commit/6b53b8670b3c0bd64d49650e898bb57861b47a82))
+- welcome email ([6b53b86](https://github.com/smarter-sh/smarter/commit/6b53b8670b3c0bd64d49650e898bb57861b47a82))
 
 ## [0.13.158](https://github.com/smarter-sh/smarter/compare/v0.13.157...v0.13.158) (2026-03-01)
 
 ### Bug Fixes
 
-* gpt-5-nano doesn't support tool calls. ([c8c3752](https://github.com/smarter-sh/smarter/commit/c8c3752ed623913f2ed89b55f719511a725bda80))
-* LLM prompt error responses. pass these in the message list instead of raising a modal dialogue ([5952d8d](https://github.com/smarter-sh/smarter/commit/5952d8de379aeab9daad201d3b273faa189617c1))
+- gpt-5-nano doesn't support tool calls. ([c8c3752](https://github.com/smarter-sh/smarter/commit/c8c3752ed623913f2ed89b55f719511a725bda80))
+- LLM prompt error responses. pass these in the message list instead of raising a modal dialogue ([5952d8d](https://github.com/smarter-sh/smarter/commit/5952d8de379aeab9daad201d3b273faa189617c1))
 
 ## [0.13.157](https://github.com/smarter-sh/smarter/compare/v0.13.156...v0.13.157) (2026-02-28)
 
 ### Bug Fixes
 
-* cleanup ChatBotHelper initialization ([24d4243](https://github.com/smarter-sh/smarter/commit/24d4243b05b92334f55c5f1c29e52f1debb9f6ca))
+- cleanup ChatBotHelper initialization ([24d4243](https://github.com/smarter-sh/smarter/commit/24d4243b05b92334f55c5f1c29e52f1debb9f6ca))
 
 ## [0.13.156](https://github.com/smarter-sh/smarter/compare/v0.13.155...v0.13.156) (2026-02-28)
 
 ### Bug Fixes
 
-* cleanup  AbstractBroker().__init__() ([acaa7c6](https://github.com/smarter-sh/smarter/commit/acaa7c62fa3e5ad3606f4560ea4bb0e05fa1dd8d))
-* cleanup manifest().setter ([787bef8](https://github.com/smarter-sh/smarter/commit/787bef8315cad0c83a1675f0e1ae92da87a916c0))
-* SAMChatbotBroker.apply() logic for pruning plugins ([57713ba](https://github.com/smarter-sh/smarter/commit/57713ba9e9f0dbb722adb668b7f056d3b581849b))
+- cleanup AbstractBroker().**init**() ([acaa7c6](https://github.com/smarter-sh/smarter/commit/acaa7c62fa3e5ad3606f4560ea4bb0e05fa1dd8d))
+- cleanup manifest().setter ([787bef8](https://github.com/smarter-sh/smarter/commit/787bef8315cad0c83a1675f0e1ae92da87a916c0))
+- SAMChatbotBroker.apply() logic for pruning plugins ([57713ba](https://github.com/smarter-sh/smarter/commit/57713ba9e9f0dbb722adb668b7f056d3b581849b))
 
 ## [0.13.155](https://github.com/smarter-sh/smarter/compare/v0.13.154...v0.13.155) (2026-02-28)
 
 ### Bug Fixes
 
-* add weather and simple chatbot examples ([b45c9d0](https://github.com/smarter-sh/smarter/commit/b45c9d0d104ac1b8e35bdcd253ab0aff4e9a5139))
+- add weather and simple chatbot examples ([b45c9d0](https://github.com/smarter-sh/smarter/commit/b45c9d0d104ac1b8e35bdcd253ab0aff4e9a5139))
 
 ## [0.13.154](https://github.com/smarter-sh/smarter/compare/v0.13.153...v0.13.154) (2026-02-27)
 
 ### Bug Fixes
 
-* create calculator() LLM tool call function ([02b3716](https://github.com/smarter-sh/smarter/commit/02b371670f4aff85d9faef73de6c3e9424313f5c))
+- create calculator() LLM tool call function ([02b3716](https://github.com/smarter-sh/smarter/commit/02b371670f4aff85d9faef73de6c3e9424313f5c))
 
 ## [0.13.153](https://github.com/smarter-sh/smarter/compare/v0.13.152...v0.13.153) (2026-02-27)
 
 ### Bug Fixes
 
-* add date_calculator LLM tool call function ([442b543](https://github.com/smarter-sh/smarter/commit/442b5430c74aaf897e017b28a298f83b0262bc6a))
+- add date_calculator LLM tool call function ([442b543](https://github.com/smarter-sh/smarter/commit/442b5430c74aaf897e017b28a298f83b0262bc6a))
 
 ## [0.13.152](https://github.com/smarter-sh/smarter/compare/v0.13.151...v0.13.152) (2026-02-26)
 
 ### Bug Fixes
 
-* aws and k8s naming for local ([4f4a6ab](https://github.com/smarter-sh/smarter/commit/4f4a6ab6eb264e5573f346df389f067ae04824fb))
-* refactor KubernetesHelper ([a506a50](https://github.com/smarter-sh/smarter/commit/a506a509f93caa36d48748fbd9e6c74d2db86dc7))
+- aws and k8s naming for local ([4f4a6ab](https://github.com/smarter-sh/smarter/commit/4f4a6ab6eb264e5573f346df389f067ae04824fb))
+- refactor KubernetesHelper ([a506a50](https://github.com/smarter-sh/smarter/commit/a506a509f93caa36d48748fbd9e6c74d2db86dc7))
 
 ## [0.13.151](https://github.com/smarter-sh/smarter/compare/v0.13.150...v0.13.151) (2026-02-25)
 
 ### Bug Fixes
 
-* welcome email context parameters ([990034d](https://github.com/smarter-sh/smarter/commit/990034dfdef4ffd1baecd06e6eb2d3107cc8e5a4))
+- welcome email context parameters ([990034d](https://github.com/smarter-sh/smarter/commit/990034dfdef4ffd1baecd06e6eb2d3107cc8e5a4))
 
 ## [0.13.150](https://github.com/smarter-sh/smarter/compare/v0.13.149...v0.13.150) (2026-02-25)
 
 ### Bug Fixes
 
-* work on welcome email ([8400e27](https://github.com/smarter-sh/smarter/commit/8400e2721ec2702f835a26cd145419038672d51a))
+- work on welcome email ([8400e27](https://github.com/smarter-sh/smarter/commit/8400e2721ec2702f835a26cd145419038672d51a))
 
 ## [0.13.149](https://github.com/smarter-sh/smarter/compare/v0.13.148...v0.13.149) (2026-02-25)
 
 ### Bug Fixes
 
-* work on welcome email ([128b0dd](https://github.com/smarter-sh/smarter/commit/128b0dd2b70ceda290d847e5e4a74d7c35e1e351))
+- work on welcome email ([128b0dd](https://github.com/smarter-sh/smarter/commit/128b0dd2b70ceda290d847e5e4a74d7c35e1e351))
 
 ## [0.13.148](https://github.com/smarter-sh/smarter/compare/v0.13.147...v0.13.148) (2026-02-25)
 
 ### Bug Fixes
 
-* work on password reset email ([c5d9465](https://github.com/smarter-sh/smarter/commit/c5d9465e9d6938e33db7d5bdd33732e47c8be4bd))
+- work on password reset email ([c5d9465](https://github.com/smarter-sh/smarter/commit/c5d9465e9d6938e33db7d5bdd33732e47c8be4bd))
 
 ## [0.13.147](https://github.com/smarter-sh/smarter/compare/v0.13.146...v0.13.147) (2026-02-25)
 
 ### Bug Fixes
 
-* work on html template parameters and defaults ([d5de3d5](https://github.com/smarter-sh/smarter/commit/d5de3d5d52cf8c753870bc912f6edea95024225b))
+- work on html template parameters and defaults ([d5de3d5](https://github.com/smarter-sh/smarter/commit/d5de3d5d52cf8c753870bc912f6edea95024225b))
 
 ## [0.13.146](https://github.com/smarter-sh/smarter/compare/v0.13.145...v0.13.146) (2026-02-25)
 
 ### Bug Fixes
 
-* parameterize product name, description ([3bb1c32](https://github.com/smarter-sh/smarter/commit/3bb1c32b715d9db60f0f1b3174f1933f173946b9))
+- parameterize product name, description ([3bb1c32](https://github.com/smarter-sh/smarter/commit/3bb1c32b715d9db60f0f1b3174f1933f173946b9))
 
 ## [0.13.145](https://github.com/smarter-sh/smarter/compare/v0.13.144...v0.13.145) (2026-02-25)
 
 ### Bug Fixes
 
-* sign-in page ([1f04182](https://github.com/smarter-sh/smarter/commit/1f04182f4475ce1a4111ba1c8cc64c303f251ee4))
+- sign-in page ([1f04182](https://github.com/smarter-sh/smarter/commit/1f04182f4475ce1a4111ba1c8cc64c303f251ee4))
 
 ## [0.13.144](https://github.com/smarter-sh/smarter/compare/v0.13.143...v0.13.144) (2026-02-25)
 
 ### Bug Fixes
 
-* parameterize sign-in page features with waffle switches ([3b6a2b3](https://github.com/smarter-sh/smarter/commit/3b6a2b39b13b5c41d7f08303875b3f449a1b83eb))
+- parameterize sign-in page features with waffle switches ([3b6a2b3](https://github.com/smarter-sh/smarter/commit/3b6a2b39b13b5c41d7f08303875b3f449a1b83eb))
 
 ## [0.13.143](https://github.com/smarter-sh/smarter/compare/v0.13.142...v0.13.143) (2026-02-24)
 
 ### Bug Fixes
 
-* add annotations to ChatConfig ([4bafaca](https://github.com/smarter-sh/smarter/commit/4bafacafd9e06d6eaa03796898531bef5880438c))
-* refactor forgot password email workflow ([2738c58](https://github.com/smarter-sh/smarter/commit/2738c587f5591c21c55e7343d2eb1375d031c89a))
-* refactor welcome email ([4da7001](https://github.com/smarter-sh/smarter/commit/4da7001560c51e9767725b41c738e95650f8ed87))
+- add annotations to ChatConfig ([4bafaca](https://github.com/smarter-sh/smarter/commit/4bafacafd9e06d6eaa03796898531bef5880438c))
+- refactor forgot password email workflow ([2738c58](https://github.com/smarter-sh/smarter/commit/2738c587f5591c21c55e7343d2eb1375d031c89a))
+- refactor welcome email ([4da7001](https://github.com/smarter-sh/smarter/commit/4da7001560c51e9767725b41c738e95650f8ed87))
 
 ## [0.13.142](https://github.com/smarter-sh/smarter/compare/v0.13.141...v0.13.142) (2026-02-24)
 
 ### Bug Fixes
 
-* repoint cdn.platform.smarter.sh to cdn.smarter.sh ([50e495f](https://github.com/smarter-sh/smarter/commit/50e495f3deabd985f8e5af803658183e1863c946))
+- repoint cdn.platform.smarter.sh to cdn.smarter.sh ([50e495f](https://github.com/smarter-sh/smarter/commit/50e495f3deabd985f8e5af803658183e1863c946))
 
 ## [0.13.141](https://github.com/smarter-sh/smarter/compare/v0.13.140...v0.13.141) (2026-02-24)
 
 ### Bug Fixes
 
-* create security FAQ ([d49475c](https://github.com/smarter-sh/smarter/commit/d49475c8420c68531f64c8a9d7a41abc75a59d33))
+- create security FAQ ([d49475c](https://github.com/smarter-sh/smarter/commit/d49475c8420c68531f64c8a9d7a41abc75a59d33))
 
 ## [0.13.140](https://github.com/smarter-sh/smarter/compare/v0.13.139...v0.13.140) (2026-02-21)
 
 ### Bug Fixes
 
-* only block sensitive file if we actually have an IP address to block ([6d44b66](https://github.com/smarter-sh/smarter/commit/6d44b6690a5422863fa36a69a2be5c58aecd0d50))
+- only block sensitive file if we actually have an IP address to block ([6d44b66](https://github.com/smarter-sh/smarter/commit/6d44b6690a5422863fa36a69a2be5c58aecd0d50))
 
 ## [0.13.139](https://github.com/smarter-sh/smarter/compare/v0.13.138...v0.13.139) (2026-02-21)
 
 ### Bug Fixes
 
-* work on dns ([ac617b8](https://github.com/smarter-sh/smarter/commit/ac617b8867734c1869052461aa2654a85f5c1aaa))
+- work on dns ([ac617b8](https://github.com/smarter-sh/smarter/commit/ac617b8867734c1869052461aa2654a85f5c1aaa))
 
 ## [0.13.138](https://github.com/smarter-sh/smarter/compare/v0.13.137...v0.13.138) (2026-02-21)
 
 ### Bug Fixes
 
-* deployment workflow ([24ac124](https://github.com/smarter-sh/smarter/commit/24ac124abbc4227519ef3e48c1a0f8783c70ade0))
+- deployment workflow ([24ac124](https://github.com/smarter-sh/smarter/commit/24ac124abbc4227519ef3e48c1a0f8783c70ade0))
 
 ## [0.13.137](https://github.com/smarter-sh/smarter/compare/v0.13.136...v0.13.137) (2026-02-21)
 
 ### Bug Fixes
 
-* deploy local to proxy api domain ([c2d248a](https://github.com/smarter-sh/smarter/commit/c2d248ac3f9738dd1f00af494d8263dcb47b19dd))
+- deploy local to proxy api domain ([c2d248a](https://github.com/smarter-sh/smarter/commit/c2d248ac3f9738dd1f00af494d8263dcb47b19dd))
 
 ## [0.13.136](https://github.com/smarter-sh/smarter/compare/v0.13.135...v0.13.136) (2026-02-21)
 
 ### Bug Fixes
 
-* add waffle switches to toggle middleware ([b946a78](https://github.com/smarter-sh/smarter/commit/b946a785ab5877b2a68963e3983bc35fc2716962))
-* broken links ([11c5dc7](https://github.com/smarter-sh/smarter/commit/11c5dc7bd6833df706a43d87e505f1c8c4c97506))
-* dns verification logic where api.platform.example.com resides inside of platform.example.com ([2208653](https://github.com/smarter-sh/smarter/commit/2208653919f3f0dc86e50127adec2c307e323a8a))
-* refactor manage.py verify_dns_configuration ([09720a8](https://github.com/smarter-sh/smarter/commit/09720a81ed707a8adc7d3285399d81896c0524fd))
+- add waffle switches to toggle middleware ([b946a78](https://github.com/smarter-sh/smarter/commit/b946a785ab5877b2a68963e3983bc35fc2716962))
+- broken links ([11c5dc7](https://github.com/smarter-sh/smarter/commit/11c5dc7bd6833df706a43d87e505f1c8c4c97506))
+- dns verification logic where api.platform.example.com resides inside of platform.example.com ([2208653](https://github.com/smarter-sh/smarter/commit/2208653919f3f0dc86e50127adec2c307e323a8a))
+- refactor manage.py verify_dns_configuration ([09720a8](https://github.com/smarter-sh/smarter/commit/09720a81ed707a8adc7d3285399d81896c0524fd))
 
 ## [0.13.135](https://github.com/smarter-sh/smarter/compare/v0.13.134...v0.13.135) (2026-02-20)
 
 ### Bug Fixes
 
-* convert api ingress to traefik ([58b2bb6](https://github.com/smarter-sh/smarter/commit/58b2bb6eff4099875f36cd08aac9fa0a4082b46a))
+- convert api ingress to traefik ([58b2bb6](https://github.com/smarter-sh/smarter/commit/58b2bb6eff4099875f36cd08aac9fa0a4082b46a))
 
 ## [0.13.134](https://github.com/smarter-sh/smarter/compare/v0.13.133...v0.13.134) (2026-02-20)
 
 ### Bug Fixes
 
-* recursion error in ChatBotHelper.is_chatbothelper_ready() ([cf3dd9d](https://github.com/smarter-sh/smarter/commit/cf3dd9d61998c63771009b23212a29462442ded1))
+- recursion error in ChatBotHelper.is_chatbothelper_ready() ([cf3dd9d](https://github.com/smarter-sh/smarter/commit/cf3dd9d61998c63771009b23212a29462442ded1))
 
 ## [0.13.133](https://github.com/smarter-sh/smarter/compare/v0.13.132...v0.13.133) (2026-02-17)
 
 ### Bug Fixes
 
-* sphinx linter errors ([30ca7e9](https://github.com/smarter-sh/smarter/commit/30ca7e9d47b5ead0fd48413840693709e6147722))
+- sphinx linter errors ([30ca7e9](https://github.com/smarter-sh/smarter/commit/30ca7e9d47b5ead0fd48413840693709e6147722))
 
 ## [0.13.132](https://github.com/smarter-sh/smarter/compare/v0.13.131...v0.13.132) (2026-02-17)
 
 ### Bug Fixes
 
-* sphinx doc linting ([99dbb72](https://github.com/smarter-sh/smarter/commit/99dbb72d5820c241b8e46acf9a5f3cb25d6b26f5))
+- sphinx doc linting ([99dbb72](https://github.com/smarter-sh/smarter/commit/99dbb72d5820c241b8e46acf9a5f3cb25d6b26f5))
 
 ## [0.13.131](https://github.com/smarter-sh/smarter/compare/v0.13.130...v0.13.131) (2026-02-17)
 
 ### Bug Fixes
 
-* update deployment docs ([64c7300](https://github.com/smarter-sh/smarter/commit/64c73005d66d09440723458f8cf5a164b8f4fb01))
+- update deployment docs ([64c7300](https://github.com/smarter-sh/smarter/commit/64c73005d66d09440723458f8cf5a164b8f4fb01))
 
 ## [0.13.130](https://github.com/smarter-sh/smarter/compare/v0.13.129...v0.13.130) (2026-02-17)
 
 ### Bug Fixes
 
-* add a deployment page. fix linter errors ([3307903](https://github.com/smarter-sh/smarter/commit/3307903a52f0786332ddd42550bd9c488f841a0c))
-* root_api_domain should be of the form api.platform.example.com ([73e14b1](https://github.com/smarter-sh/smarter/commit/73e14b144c2a4100bb5a356b96bc5460c9930ed9))
+- add a deployment page. fix linter errors ([3307903](https://github.com/smarter-sh/smarter/commit/3307903a52f0786332ddd42550bd9c488f841a0c))
+- root_api_domain should be of the form api.platform.example.com ([73e14b1](https://github.com/smarter-sh/smarter/commit/73e14b144c2a4100bb5a356b96bc5460c9930ed9))
 
 ## [0.13.129](https://github.com/smarter-sh/smarter/compare/v0.13.128...v0.13.129) (2026-02-17)
 
 ### Bug Fixes
 
-* parameterize smarter_settings.platform_subdomain ([34752d5](https://github.com/smarter-sh/smarter/commit/34752d53ff92029927cb98363083140d799127d6))
+- parameterize smarter_settings.platform_subdomain ([34752d5](https://github.com/smarter-sh/smarter/commit/34752d53ff92029927cb98363083140d799127d6))
 
 ## [0.13.128](https://github.com/smarter-sh/smarter/compare/v0.13.127...v0.13.128) (2026-02-16)
 
 ### Bug Fixes
 
-* Values should be .Values ([6971e50](https://github.com/smarter-sh/smarter/commit/6971e50f404d97393a8e1d2e1bcb3703ea17df19))
+- Values should be .Values ([6971e50](https://github.com/smarter-sh/smarter/commit/6971e50f404d97393a8e1d2e1bcb3703ea17df19))
 
 ## [0.13.127](https://github.com/smarter-sh/smarter/compare/v0.13.126...v0.13.127) (2026-02-16)
 
 ### Bug Fixes
 
-* Values.env.SMARTER should be Values.env.SMARTER_MYSQL_ ([d60a00c](https://github.com/smarter-sh/smarter/commit/d60a00c6240a4ae1dce1d5678a023ab560a3d3d9))
+- Values.env.SMARTER should be Values.env.SMARTER*MYSQL* ([d60a00c](https://github.com/smarter-sh/smarter/commit/d60a00c6240a4ae1dce1d5678a023ab560a3d3d9))
 
 ## [0.13.126](https://github.com/smarter-sh/smarter/compare/v0.13.125...v0.13.126) (2026-02-14)
 
 ### Bug Fixes
 
-* revert/restore original Redis default values ([d36eff2](https://github.com/smarter-sh/smarter/commit/d36eff280552388b144e31a01124aba010569fa0))
+- revert/restore original Redis default values ([d36eff2](https://github.com/smarter-sh/smarter/commit/d36eff280552388b144e31a01124aba010569fa0))
 
 ## [0.13.125](https://github.com/smarter-sh/smarter/compare/v0.13.124...v0.13.125) (2026-02-08)
 
 ### Bug Fixes
 
-* pass task_id to receivers for logging ([8c93406](https://github.com/smarter-sh/smarter/commit/8c93406fd2fa33f5da46a1159b1c25d7c0543205))
+- pass task_id to receivers for logging ([8c93406](https://github.com/smarter-sh/smarter/commit/8c93406fd2fa33f5da46a1159b1c25d7c0543205))
 
 ## [0.13.124](https://github.com/smarter-sh/smarter/compare/v0.13.123...v0.13.124) (2026-02-08)
 
 ### Bug Fixes
 
-* stope endless cycle of deploy-undeploy ([a658fb1](https://github.com/smarter-sh/smarter/commit/a658fb15c38bc466198ced964f4ebe019dd748df))
+- stope endless cycle of deploy-undeploy ([a658fb1](https://github.com/smarter-sh/smarter/commit/a658fb15c38bc466198ced964f4ebe019dd748df))
 
 ## [0.13.123](https://github.com/smarter-sh/smarter/compare/v0.13.122...v0.13.123) (2026-02-08)
 
 ### Bug Fixes
 
-* add Celery task id to all asyncronous task log entries ([65bc036](https://github.com/smarter-sh/smarter/commit/65bc0368831899c21b91b2b83ebe4a2b49d991e9))
-* resolve django.template.response.ContentNotRenderedError: The response content must be rendered before it can be accessed. ([6c63699](https://github.com/smarter-sh/smarter/commit/6c636991db3e0efdd8e6826182687264d9fe0942))
+- add Celery task id to all asynchronous task log entries ([65bc036](https://github.com/smarter-sh/smarter/commit/65bc0368831899c21b91b2b83ebe4a2b49d991e9))
+- resolve django.template.response.ContentNotRenderedError: The response content must be rendered before it can be accessed. ([6c63699](https://github.com/smarter-sh/smarter/commit/6c636991db3e0efdd8e6826182687264d9fe0942))
 
 ## [0.13.122](https://github.com/smarter-sh/smarter/compare/v0.13.121...v0.13.122) (2026-02-08)
 
 ### Bug Fixes
 
-* gemini flash 1.5 is deprecated ([a39911d](https://github.com/smarter-sh/smarter/commit/a39911df73e25edd8c16dbc1c651e8fe0dc7d6a3))
-* swap deprecated google.generativeai for google.genai ([1745dff](https://github.com/smarter-sh/smarter/commit/1745dffa495eafb354ddf25da305ddfb4a36403b))
-* update default model ([0c27533](https://github.com/smarter-sh/smarter/commit/0c275334e64630b77d8fff6a28e95586dba75122))
-* update googleai model family ([2dd21a2](https://github.com/smarter-sh/smarter/commit/2dd21a2644af117ec493c5cc8772e28761b912c6))
+- gemini flash 1.5 is deprecated ([a39911d](https://github.com/smarter-sh/smarter/commit/a39911df73e25edd8c16dbc1c651e8fe0dc7d6a3))
+- swap deprecated google.generativeai for google.genai ([1745dff](https://github.com/smarter-sh/smarter/commit/1745dffa495eafb354ddf25da305ddfb4a36403b))
+- update default model ([0c27533](https://github.com/smarter-sh/smarter/commit/0c275334e64630b77d8fff6a28e95586dba75122))
+- update googleai model family ([2dd21a2](https://github.com/smarter-sh/smarter/commit/2dd21a2644af117ec493c5cc8772e28761b912c6))
 
 ## [0.13.121](https://github.com/smarter-sh/smarter/compare/v0.13.120...v0.13.121) (2026-02-07)
 
 ### Bug Fixes
 
-* every main urls module needs a 'root_home' ([b2ff8f3](https://github.com/smarter-sh/smarter/commit/b2ff8f303cb22175139680555570017e50b0d2b3))
+- every main urls module needs a 'root_home' ([b2ff8f3](https://github.com/smarter-sh/smarter/commit/b2ff8f303cb22175139680555570017e50b0d2b3))
 
 ## [0.13.120](https://github.com/smarter-sh/smarter/compare/v0.13.119...v0.13.120) (2026-02-07)
 
 ### Bug Fixes
 
-* fixup page titles ([b7bbfc1](https://github.com/smarter-sh/smarter/commit/b7bbfc1c9694caa9ff66dfa84ed02a23aee5c464))
-* setup DJANGO_ override system for defined Django settings overrides from .env ([4f2fd23](https://github.com/smarter-sh/smarter/commit/4f2fd2300d77bf827f1097659ba5d8ae1a29bbac))
-* work on Django settings overrides ([da851d3](https://github.com/smarter-sh/smarter/commit/da851d377579feffc0de2fd1c998e5ba0ec29566))
+- fixup page titles ([b7bbfc1](https://github.com/smarter-sh/smarter/commit/b7bbfc1c9694caa9ff66dfa84ed02a23aee5c464))
+- setup DJANGO\_ override system for defined Django settings overrides from .env ([4f2fd23](https://github.com/smarter-sh/smarter/commit/4f2fd2300d77bf827f1097659ba5d8ae1a29bbac))
+- work on Django settings overrides ([da851d3](https://github.com/smarter-sh/smarter/commit/da851d377579feffc0de2fd1c998e5ba0ec29566))
 
 ## [0.13.119](https://github.com/smarter-sh/smarter/compare/v0.13.118...v0.13.119) (2026-02-06)
 
 ### Bug Fixes
 
-* add a manifest view accessible from the workbench chatbots list view ([2ab378e](https://github.com/smarter-sh/smarter/commit/2ab378ef5b106fa64b495dd8c731ff1f0b0087ea))
-* add ownership title to template. add inline documentation ([c0dc5e3](https://github.com/smarter-sh/smarter/commit/c0dc5e37bc7458fbc0cf40c869d1dc2f741d8aad))
+- add a manifest view accessible from the workbench chatbots list view ([2ab378e](https://github.com/smarter-sh/smarter/commit/2ab378ef5b106fa64b495dd8c731ff1f0b0087ea))
+- add ownership title to template. add inline documentation ([c0dc5e3](https://github.com/smarter-sh/smarter/commit/c0dc5e37bc7458fbc0cf40c869d1dc2f741d8aad))
 
 ## [0.13.118](https://github.com/smarter-sh/smarter/compare/v0.13.117...v0.13.118) (2026-02-06)
 
 ### Bug Fixes
 
-* add a listview and toggle switch ([5cf937f](https://github.com/smarter-sh/smarter/commit/5cf937fa55530ffe119af536a35248a57dfca2e7))
-* add a listview and toggle switch ([340fabe](https://github.com/smarter-sh/smarter/commit/340fabe947aaab22ccce8a7b55b45a5f9cc2514c))
-* add a listview and toggle switch ([9f317a8](https://github.com/smarter-sh/smarter/commit/9f317a84d1785dbe49a920f3aa0121f8b24507ba))
+- add a listview and toggle switch ([5cf937f](https://github.com/smarter-sh/smarter/commit/5cf937fa55530ffe119af536a35248a57dfca2e7))
+- add a listview and toggle switch ([340fabe](https://github.com/smarter-sh/smarter/commit/340fabe947aaab22ccce8a7b55b45a5f9cc2514c))
+- add a listview and toggle switch ([9f317a8](https://github.com/smarter-sh/smarter/commit/9f317a84d1785dbe49a920f3aa0121f8b24507ba))
 
 ## [0.13.117](https://github.com/smarter-sh/smarter/compare/v0.13.116...v0.13.117) (2026-02-06)
 
 ### Bug Fixes
 
-* create a listview with a toggle switch ([5935dc6](https://github.com/smarter-sh/smarter/commit/5935dc69da2fd17ad5126dd9a67cfbaf34f1d730))
+- create a listview with a toggle switch ([5935dc6](https://github.com/smarter-sh/smarter/commit/5935dc69da2fd17ad5126dd9a67cfbaf34f1d730))
 
 ## [0.13.116](https://github.com/smarter-sh/smarter/compare/v0.13.115...v0.13.116) (2026-02-04)
 
 ### Bug Fixes
 
-* ensure that smarter_reactjs_app_loader_url() doesn't break collectstatic ([95989f0](https://github.com/smarter-sh/smarter/commit/95989f05a9af47d81c9ab74a08fe2120cf14314e))
+- ensure that smarter_reactjs_app_loader_url() doesn't break collectstatic ([95989f0](https://github.com/smarter-sh/smarter/commit/95989f05a9af47d81c9ab74a08fe2120cf14314e))
 
 ## [0.13.115](https://github.com/smarter-sh/smarter/compare/v0.13.114...v0.13.115) (2026-02-04)
 
 ### Bug Fixes
 
-* ensure that deployment is triggered on chatbot.save() ([b87973e](https://github.com/smarter-sh/smarter/commit/b87973eb8098ead202dd439581e5de750504716d))
+- ensure that deployment is triggered on chatbot.save() ([b87973e](https://github.com/smarter-sh/smarter/commit/b87973eb8098ead202dd439581e5de750504716d))
 
 ## [0.13.114](https://github.com/smarter-sh/smarter/compare/v0.13.113...v0.13.114) (2026-02-04)
 
 ### Bug Fixes
 
-* roll back last commit and disable dependabot for Python dependencies ([035609d](https://github.com/smarter-sh/smarter/commit/035609de25699e4d9ba182a94175c3c5864f6f24))
+- roll back last commit and disable dependabot for Python dependencies ([035609d](https://github.com/smarter-sh/smarter/commit/035609de25699e4d9ba182a94175c3c5864f6f24))
 
 ## [0.13.113](https://github.com/smarter-sh/smarter/compare/v0.13.112...v0.13.113) (2026-02-04)
 
 ### Bug Fixes
 
-* enable manifest-driven functions ([2d9c6f0](https://github.com/smarter-sh/smarter/commit/2d9c6f06f8fc6b4ff01e3134f2b49261cdaf399a))
-* ensure that hyphenated chatbot name slugs work in the workbench ([36242c4](https://github.com/smarter-sh/smarter/commit/36242c4ba948d5df26351854c9b4c95e704084a1))
+- enable manifest-driven functions ([2d9c6f0](https://github.com/smarter-sh/smarter/commit/2d9c6f06f8fc6b4ff01e3134f2b49261cdaf399a))
+- ensure that hyphenated chatbot name slugs work in the workbench ([36242c4](https://github.com/smarter-sh/smarter/commit/36242c4ba948d5df26351854c9b4c95e704084a1))
 
 ## [0.13.112](https://github.com/smarter-sh/smarter/compare/v0.13.111...v0.13.112) (2026-01-31)
 
 ### Bug Fixes
 
-* add pillow to venv ([d0fcc6e](https://github.com/smarter-sh/smarter/commit/d0fcc6e5674a32258f4891cee7266468c6f64267))
+- add pillow to venv ([d0fcc6e](https://github.com/smarter-sh/smarter/commit/d0fcc6e5674a32258f4891cee7266468c6f64267))
 
 ## [0.13.111](https://github.com/smarter-sh/smarter/compare/v0.13.110...v0.13.111) (2026-01-31)
 
 ### Bug Fixes
 
-* force a new release ([6500eec](https://github.com/smarter-sh/smarter/commit/6500eec54069c0223aac2c6d748b3452d8f889fa))
+- force a new release ([6500eec](https://github.com/smarter-sh/smarter/commit/6500eec54069c0223aac2c6d748b3452d8f889fa))
 
 ## [0.13.110](https://github.com/smarter-sh/smarter/compare/v0.13.109...v0.13.110) (2026-01-29)
 
 ### Bug Fixes
 
-* history in ChatConfigView ([28bbbc2](https://github.com/smarter-sh/smarter/commit/28bbbc286e627e49c835e7f1f62a3fcc3d3900a9))
+- history in ChatConfigView ([28bbbc2](https://github.com/smarter-sh/smarter/commit/28bbbc286e627e49c835e7f1f62a3fcc3d3900a9))
 
 ## [0.13.109](https://github.com/smarter-sh/smarter/compare/v0.13.108...v0.13.109) (2026-01-28)
 
 ### Bug Fixes
 
-* restyle the workbench listview ([cf23fe9](https://github.com/smarter-sh/smarter/commit/cf23fe969cd641ebdefccfb1dd11fb7efb90e37a))
+- restyle the workbench listview ([cf23fe9](https://github.com/smarter-sh/smarter/commit/cf23fe969cd641ebdefccfb1dd11fb7efb90e37a))
 
 ## [0.13.108](https://github.com/smarter-sh/smarter/compare/v0.13.107...v0.13.108) (2026-01-28)
 
 ### Bug Fixes
 
-* place profile image if it exists ([5132af4](https://github.com/smarter-sh/smarter/commit/5132af438ce9d73b11493b33bddd8433f84d64ba))
+- place profile image if it exists ([5132af4](https://github.com/smarter-sh/smarter/commit/5132af438ce9d73b11493b33bddd8433f84d64ba))
 
 ## [0.13.107](https://github.com/smarter-sh/smarter/compare/v0.13.106...v0.13.107) (2026-01-28)
 
 ### Bug Fixes
 
-* social auth user experience improvements ([4468213](https://github.com/smarter-sh/smarter/commit/44682132af827ae3e1689185a27b360528762f5f))
+- social auth user experience improvements ([4468213](https://github.com/smarter-sh/smarter/commit/44682132af827ae3e1689185a27b360528762f5f))
 
 ## [0.13.106](https://github.com/smarter-sh/smarter/compare/v0.13.105...v0.13.106) (2026-01-28)
 
 ### Bug Fixes
 
-* enable waffle flags by default. re-add wagtail urls ([f202bd5](https://github.com/smarter-sh/smarter/commit/f202bd578f3f53df2fe65789fe7197bf13aa67e6))
+- enable waffle flags by default. re-add wagtail urls ([f202bd5](https://github.com/smarter-sh/smarter/commit/f202bd578f3f53df2fe65789fe7197bf13aa67e6))
 
 ## [0.13.105](https://github.com/smarter-sh/smarter/compare/v0.13.104...v0.13.105) (2026-01-28)
 
 ### Bug Fixes
 
-* django-csrftoken should contain the csrf token value, not the cookie name. ([7c51ffb](https://github.com/smarter-sh/smarter/commit/7c51ffb25fd4685ca490c251655d73176e0df320))
+- django-csrftoken should contain the csrf token value, not the cookie name. ([7c51ffb](https://github.com/smarter-sh/smarter/commit/7c51ffb25fd4685ca490c251655d73176e0df320))
 
 ## [0.13.104](https://github.com/smarter-sh/smarter/compare/v0.13.103...v0.13.104) (2026-01-28)
 
 ### Bug Fixes
 
-* set ingressClassName to 'default' and remove deprecated annotation ([bfdb4a8](https://github.com/smarter-sh/smarter/commit/bfdb4a8db1c5270acccc2511d38c9c0d0b654180))
+- set ingressClassName to 'default' and remove deprecated annotation ([bfdb4a8](https://github.com/smarter-sh/smarter/commit/bfdb4a8db1c5270acccc2511d38c9c0d0b654180))
 
 ## [0.13.103](https://github.com/smarter-sh/smarter/compare/v0.13.102...v0.13.103) (2026-01-27)
 
 ### Bug Fixes
 
-* tweaks to Smarter account bootup ([111ce56](https://github.com/smarter-sh/smarter/commit/111ce56a6b39e9d9da3ad525edcae8fefa3668c2))
+- tweaks to Smarter account ([111ce56](https://github.com/smarter-sh/smarter/commit/111ce56a6b39e9d9da3ad525edcae8fefa3668c2))
 
 ## [0.13.102](https://github.com/smarter-sh/smarter/compare/v0.13.101...v0.13.102) (2026-01-27)
 
 ### Bug Fixes
 
-* control django debug toolbar with smarter_settings.debug_mode ([c20b944](https://github.com/smarter-sh/smarter/commit/c20b9449867442d05918e6acb6ecc3cb51609a80))
+- control django debug toolbar with smarter_settings.debug_mode ([c20b944](https://github.com/smarter-sh/smarter/commit/c20b9449867442d05918e6acb6ecc3cb51609a80))
 
 ## [0.13.101](https://github.com/smarter-sh/smarter/compare/v0.13.100...v0.13.101) (2026-01-27)
 
 ### Bug Fixes
 
-* automatically navigate to the page listview containing the resource that was applied ([d7fda39](https://github.com/smarter-sh/smarter/commit/d7fda39c5c2d18315d3296b819a5756b1c58e4b4))
+- automatically navigate to the page listview containing the resource that was applied ([d7fda39](https://github.com/smarter-sh/smarter/commit/d7fda39c5c2d18315d3296b819a5756b1c58e4b4))
 
 ## [0.13.100](https://github.com/smarter-sh/smarter/compare/v0.13.99...v0.13.100) (2026-01-27)
 
 ### Bug Fixes
 
-* code the browser js drop-zone handler ([4b05b74](https://github.com/smarter-sh/smarter/commit/4b05b7411968b16c65423c49526f7526add927f7))
-* code yaml manifest drop zone ([5847764](https://github.com/smarter-sh/smarter/commit/58477640370018ff7e18a04405f52baf1eed1fb4))
-* scaffold yaml file drop zone over web console ([9681290](https://github.com/smarter-sh/smarter/commit/9681290b055e5309067cf8ea7e709bc1d1db8f6a))
+- code the browser js drop-zone handler ([4b05b74](https://github.com/smarter-sh/smarter/commit/4b05b7411968b16c65423c49526f7526add927f7))
+- code yaml manifest drop zone ([5847764](https://github.com/smarter-sh/smarter/commit/58477640370018ff7e18a04405f52baf1eed1fb4))
+- scaffold yaml file drop zone over web console ([9681290](https://github.com/smarter-sh/smarter/commit/9681290b055e5309067cf8ea7e709bc1d1db8f6a))
 
 ## [0.13.99](https://github.com/smarter-sh/smarter/compare/v0.13.98...v0.13.99) (2026-01-26)
 

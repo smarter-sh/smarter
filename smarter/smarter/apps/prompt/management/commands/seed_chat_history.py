@@ -5,10 +5,9 @@ import os
 import secrets
 from pathlib import Path
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
 )
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.prompt.models import Chat
@@ -49,12 +48,12 @@ class Command(SmarterCommand):
             self.handle_completed_failure(msg=f"Account not found: {SMARTER_ACCOUNT_NUMBER}")
             raise ValueError(f"Account not found: {SMARTER_ACCOUNT_NUMBER}")
 
-        user = get_cached_admin_user_for_account(account)
+        user = get_cached_admin_user_for_account(account=account)
         if not user:
             self.handle_completed_failure(msg=f"User not found for account: {account}")
             raise ValueError(f"User not found for account: {account}")
 
-        user_profile = get_cached_user_profile(account=account, user=user)
+        user_profile = UserProfile.get_cached_object(account=account, user=user)
         if not user_profile:
             self.handle_completed_failure(msg=f"User profile not found for account: {account} user: {user}")
             raise ValueError(f"User profile not found for account: {account} user: {user}")
@@ -86,6 +85,6 @@ class Command(SmarterCommand):
                         "one or more plugins. Please check the ChatBotPlugin model."
                     )
 
-                default_handler(chat=chat, plugins=plugins, user=user_profile.user, data=data)
+                default_handler(chat=chat, plugins=plugins, user=user_profile.cached_user, data=data)  # type: ignore
                 self.stdout.write(self.style.SUCCESS("Chat history seeded."))
         self.handle_completed_success()

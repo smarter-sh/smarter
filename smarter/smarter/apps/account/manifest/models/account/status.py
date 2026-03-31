@@ -1,7 +1,6 @@
 """Smarter API Manifest - Account.status"""
 
 import os
-from datetime import datetime
 from typing import ClassVar
 
 from pydantic import Field
@@ -20,12 +19,4 @@ class SAMAccountStatus(AbstractSAMStatusBase):
 
     adminAccount: str = Field(
         description=f"{class_identifier}.adminAccount: The designated Smarter admin user for this {MANIFEST_KIND}. Read only.",
-    )
-
-    created: datetime = Field(
-        description=f"{class_identifier}.created: The date in which this {MANIFEST_KIND} was created. Read only.",
-    )
-
-    modified: datetime = Field(
-        description=f"{class_identifier}.modified: The date in which this {MANIFEST_KIND} was most recently changed. Read only.",
     )

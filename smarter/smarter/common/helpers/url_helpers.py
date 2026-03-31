@@ -2,8 +2,8 @@
 url helper functions
 """
 
-from typing import Optional
-from urllib.parse import parse_qs, urlparse
+from typing import Optional, Union
+from urllib.parse import ParseResult, parse_qs, urlparse
 
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.django.validators import SmarterValidator
@@ -18,7 +18,7 @@ def clean_url(url: str) -> str:
     return retval
 
 
-def session_key_from_url(url: str) -> Optional[str]:
+def session_key_from_url(url: Union[str, ParseResult]) -> Optional[str]:
     """
     Extract the session key from a URL.
 
@@ -30,9 +30,13 @@ def session_key_from_url(url: str) -> Optional[str]:
     """
     if not url:
         return None
-    SmarterValidator.validate_url(url)
-    parsed_url = urlparse(url)
-    query_params = parse_qs(parsed_url.query)
-    session_key = query_params.get(SMARTER_CHAT_SESSION_KEY_NAME, [None])[0]
-    session_key = session_key.strip() if isinstance(session_key, str) else None
-    return session_key
+    if isinstance(url, ParseResult):
+        url = url.geturl()
+    if isinstance(url, str):
+        SmarterValidator.validate_url(url)
+        parsed_url = urlparse(url)
+        query_params = parse_qs(parsed_url.query)
+        session_key = query_params.get(SMARTER_CHAT_SESSION_KEY_NAME, [None])[0]
+        session_key = session_key.strip() if isinstance(session_key, str) else None
+        return session_key
+    return None

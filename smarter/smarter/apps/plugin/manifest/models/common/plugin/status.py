@@ -1,7 +1,6 @@
 """Smarter API Manifest - Plugin.status"""
 
 import os
-from datetime import datetime
 from typing import ClassVar
 
 from pydantic import Field
@@ -26,12 +25,4 @@ class SAMPluginCommonStatus(AbstractSAMStatusBase):
 
     username: str = Field(
         description=f"{class_identifier}.account_number: The Smarter user who created this {MANIFEST_KIND}. Read only.",
-    )
-
-    created: datetime = Field(
-        description=f"{class_identifier}.created: The date in which this {MANIFEST_KIND} was created. Read only.",
-    )
-
-    modified: datetime = Field(
-        description=f"{class_identifier}.modified: The date in which this {MANIFEST_KIND} was most recently changed. Read only.",
     )

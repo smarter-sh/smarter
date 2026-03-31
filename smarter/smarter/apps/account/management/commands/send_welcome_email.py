@@ -31,21 +31,21 @@ class Command(SmarterCommand):
 
         if username:
             user_profile = UserProfile.objects.get(user__username=username)
-            account = user_profile.account
+            account = user_profile.cached_account
             email = email or user_profile.user.email
         elif email:
             user_profile = UserProfile.objects.get(user__email=email)
-            account = user_profile.account
+            account = user_profile.cached_account
         else:
             if options["account_number"]:
                 try:
-                    account = Account.objects.get(account_number=account_number)
+                    account = Account.get_cached_object(account_number=account_number)
                 except Account.DoesNotExist as e:
                     self.handle_completed_failure(e, msg=f"Account {account_number} not found.")
                     return
             elif options["company_name"]:
                 try:
-                    account = Account.objects.get(company_name=company_name)
+                    account = Account.get_cached_object(company_name=company_name)
                 except Account.DoesNotExist as e:
                     self.handle_completed_failure(e, msg=f"Account {company_name} not found.")
                     return

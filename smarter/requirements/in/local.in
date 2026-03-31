@@ -56,7 +56,7 @@ tox                                 # testing tool
 watchdog                            # file system monitoring
 
 # Documentation
-sphinx~=8.0                         # for Readthedocs
+sphinx                              # for Readthedocs
 sphinx-rtd-theme                    # Sphinx theme for Readthedocs
 autodoc_pydantic                    # Sphinx extension for Pydantic models
 sphinxcontrib-django                # Sphinx for django settings

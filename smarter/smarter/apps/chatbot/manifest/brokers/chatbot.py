@@ -32,8 +32,8 @@ from smarter.apps.chatbot.models import (
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
-from smarter.common.conf import SettingsDefaults
-from smarter.common.utils import formatted_text
+from smarter.common.conf import settings_defaults
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -287,33 +287,46 @@ class SAMChatbotBroker(AbstractBroker):
             Creating/updating database records should be handled in apply().
 
         """
+        if self._chatbot:
+            return self._chatbot
 
-        if not self._chatbot:
-            try:
-                self._chatbot = ChatBot.objects.get(user_profile=self.user_profile, name=self.name)
-            except ChatBot.DoesNotExist:
-                if self.manifest:
-                    data = self.manifest_to_django_orm()
-                    data["user_profile"] = self.user_profile
-                    logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
-                    tags = data.pop("tags", [])
-                    self._chatbot = ChatBot.objects.create(**data)
-                    if tags:
-                        self._chatbot.tags.set(tags)
-                    self._created = True
-                    logger.warning(
-                        "%s.chatbot() lazily created new ChatBot instance %s owned by %s. This logic should be handled in apply().",
-                        self.formatted_class_name,
-                        self.name,
-                        self.user_profile,
-                    )
-                else:
-                    logger.warning(
-                        "%s.chatbot() %s not found for user_profile %s",
-                        self.formatted_class_name,
-                        self.name,
-                        self.user_profile,
-                    )
+        self._chatbot = ChatBot.get_cached_object(invalidate=True, user_profile=self.user_profile, name=self.name)
+        if self._chatbot:
+            logger.debug(
+                "%s.chatbot() retrieved existing ChatBot instance %s owned by %s from database.",
+                self.formatted_class_name,
+                self._chatbot,
+                self.user_profile,
+            )
+            return self._chatbot
+
+        logger.debug(
+            "%s.chatbot() ChatBot instance not found for user_profile %s. Attempting to create a new instance.",
+            self.formatted_class_name,
+            self.user_profile,
+        )
+        if self.manifest:
+            data = self.manifest_to_django_orm()
+            data["user_profile"] = self.user_profile
+            logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
+            tags = data.pop("tags", [])
+            self._chatbot = ChatBot.objects.create(**data)
+            if tags:
+                self._chatbot.tags.set(tags)
+            self._created = True
+            logger.warning(
+                "%s.chatbot() lazily created new ChatBot instance %s owned by %s. This logic should be handled in apply().",
+                self.formatted_class_name,
+                self._chatbot,
+                self.user_profile,
+            )
+        else:
+            logger.warning(
+                "%s.chatbot() %s not found for user_profile %s",
+                self.formatted_class_name,
+                self._chatbot,
+                self.user_profile,
+            )
 
         return self._chatbot
 
@@ -500,14 +513,15 @@ class SAMChatbotBroker(AbstractBroker):
             name=self.chatbot.name,
             description=self.chatbot.description,
             version=self.chatbot.version,
-            tags=self.chatbot.tags.names() if self.chatbot.tags else [],
+            tags=self.chatbot.tags_list,
             annotations=self.chatbot.annotations if isinstance(self.chatbot.annotations, list) else [],
         )
         spec_config = SAMChatbotSpecConfig(**chatbot_dict)
         spec = SAMChatbotSpec(config=spec_config, plugins=plugin_names, functions=function_names, apiKey=api_key)
         status = SAMChatbotStatus(
             accountNumber=self.account.account_number,
-            username=self.user_profile.user.username,
+            username=self.user_profile.cached_user.username,
+            recordLocator=self.chatbot.record_locator,
             created=self.chatbot.created_at,
             modified=self.chatbot.updated_at,
             deployed=self.chatbot.deployed,
@@ -648,6 +662,44 @@ class SAMChatbotBroker(AbstractBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def cache_invalidations(self) -> None:
+        """
+        Handle broker specific cache invalidation logic. We should invalidate
+        any cached objects that are related to the ChatBot when any mutation
+        occurs. In this case, we need to invalidate the ChatBot cache itself,
+        but also any related objects such as the plugins, functions and
+        api keys.
+
+        .. returns: None
+        .. rtype: None
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+
+        # 1.) invalidate the ChatBot cache itself.
+        # -----------------------------
+        ChatBot.get_cached_object(pk=self.chatbot.id, invalidate=True)
+
+        # 2.) invalidate anything else in which the chatbot is part of. this could
+        # include listviews, the plugins, functions and api keys.
+        # -----------------------------
+        ChatBot.get_cached_objects(user_profile=self.user_profile, invalidate=True)
+
+        # 3.) invalidate all children of ChatBot
+        # -----------------------------
+        chatbot_functions = ChatBotFunctions.objects.filter(chatbot=self.chatbot)
+        for chatbot_function in chatbot_functions:
+            ChatBotFunctions.get_cached_object(pk=chatbot_function.id, invalidate=True)
+
+        chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot)
+        for chatbot_plugin in chatbot_plugins:
+            ChatBotPlugin.get_cached_object(pk=chatbot_plugin.id, invalidate=True)
+
+        chatbot_api_keys = ChatBotAPIKey.objects.filter(chatbot=self.chatbot)
+        for chatbot_api_key in chatbot_api_keys:
+            ChatBotAPIKey.get_cached_object(pk=chatbot_api_key.id, invalidate=True)
+
+        return super().cache_invalidations()
+
     @property
     def ORMMetaModelClass(self) -> Type[ChatBot]:
         """
@@ -682,7 +734,7 @@ class SAMChatbotBroker(AbstractBroker):
         - :py:class:`smarter.apps.chatbot.manifest.enum.SAMMetadataKeys`
         - :py:class:`smarter.apps.chatbot.manifest.enum.SCLIResponseGet`
         - :py:class:`smarter.apps.chatbot.manifest.enum.SCLIResponseGetData`
-        - :py:class:`from smarter.common.conf.SettingsDefaults`
+        - :py:class:`from smarter.common.conf.settings_defaults`
 
         """
 
@@ -704,11 +756,11 @@ class SAMChatbotBroker(AbstractBroker):
             subdomain=None,
             customDomain=None,
             deployed=False,
-            provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
-            defaultModel=SettingsDefaults.LLM_DEFAULT_MODEL,
-            defaultSystemRole=SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE,
-            defaultTemperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-            defaultMaxTokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+            provider=settings_defaults.LLM_DEFAULT_PROVIDER,
+            defaultModel=settings_defaults.LLM_DEFAULT_MODEL,
+            defaultSystemRole=settings_defaults.LLM_DEFAULT_SYSTEM_ROLE,
+            defaultTemperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
+            defaultMaxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
             appName="Example Chatbot",
             appAssistant="Example Assistant",
             appWelcomeMessage="Welcome to the Example Chatbot! How can I assist you today?",
@@ -733,6 +785,7 @@ class SAMChatbotBroker(AbstractBroker):
         status = SAMChatbotStatus(
             accountNumber=smarter_cached_objects.smarter_account.account_number,
             username=smarter_cached_objects.smarter_admin.username,
+            recordLocator="abc123def456",
             created=datetime.datetime.now(),
             modified=datetime.datetime.now(),
             deployed=False,
@@ -941,12 +994,12 @@ class SAMChatbotBroker(AbstractBroker):
                     )
             if self.manifest.spec.plugins:
                 for plugin_name in self.manifest.spec.plugins:
-                    plugin_name = self.camel_to_snake(plugin_name)
+                    plugin_name = str(self.camel_to_snake(plugin_name))
                     try:
-                        plugin = PluginMeta.objects.get(name=plugin_name, user_profile__account=self.account)
+                        plugin = PluginMeta.objects.get(name=plugin_name, user_profile=self.user_profile)
                     except PluginMeta.DoesNotExist as e:
                         logger.error(
-                            "%s.apply() failed to find PluginMeta %s",
+                            "%s.apply() did not find a Plugin named %s",
                             self.formatted_class_name,
                             plugin_name,
                             exc_info=True,
@@ -993,6 +1046,7 @@ class SAMChatbotBroker(AbstractBroker):
                         )
 
             # done! return the response. Django will take care of committing the transaction
+            self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1030,6 +1084,7 @@ class SAMChatbotBroker(AbstractBroker):
         if self.chatbot:
             try:
                 self.chatbot.delete()
+                self.cache_invalidations()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(

@@ -11,9 +11,14 @@ from knox import crypto
 from knox.models import AuthToken, AuthTokenManager
 from knox.settings import CONSTANTS
 
-from smarter.apps.account.models import MetaDataWithOwnershipModel, User
+from smarter.apps.account.models import (
+    MetaDataWithOwnershipModel,
+    User,
+    UserProfile,
+)
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.cache import cache_results
 
 logger = getLogger(__name__)
 
@@ -125,9 +130,6 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         verbose_name_plural = "API Keys"
 
     key_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    name = models.CharField(max_length=255)
-    description = models.CharField(max_length=255, blank=True, null=True)
-    tags = models.JSONField(default=list, blank=True)
     last_used_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
@@ -170,6 +172,111 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         if self.last_used_at is None or (datetime.now() - self.last_used_at) > timedelta(minutes=5):
             self.last_used_at = datetime.now()
             self.save()
+
+    @classmethod
+    def get_cached_objects(
+        cls,
+        invalidate: Optional[bool] = False,
+        user_profile: Optional[UserProfile] = None,
+        user: Optional[User] = None,
+        name: Optional[str] = None,
+    ) -> models.QuerySet["SmarterAuthToken"]:
+        """
+        Retrieve API keys with caching based on user profile and optional name
+        filter using caching.
+
+        :param invalidate: If True, invalidate the cache for this query.
+        :type invalidate: bool, optional
+        :param user_profile: The user profile for which to retrieve API keys.
+        :type user_profile: UserProfile, optional
+        :param user: The user for which to retrieve API keys (used if user_profile is not provided).
+        :type user: User, optional
+        :param name: Optional name filter to retrieve API keys with a specific name.
+        :type name: str, optional
+
+        :returns: A queryset of SmarterAuthToken objects matching the criteria.
+        :rtype: QuerySet[SmarterAuthToken]
+        """
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_objects()")
+        logger.debug(
+            "%s called with user_profile=%s, user=%s, name=%s, invalidate=%s",
+            logger_prefix,
+            user_profile,
+            user,
+            name,
+            invalidate,
+        )
+
+        # pylint: disable=W0613
+        @cache_results(cls.cache_expiration)
+        def _get_cached_objects_for_user_profile(user_profile_id: int) -> models.QuerySet["SmarterAuthToken"]:
+
+            try:
+                queryset = cls.objects.select_related(
+                    "user_profile", "user_profile__account", "user_profile__user"
+                ).filter(user=user_profile.cached_user)
+                return queryset
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("Error retrieving cached objects: %s", e)
+                try:
+                    queryset = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).filter(user=user_profile.cached_user)
+                    return queryset
+                except Exception as e2:
+                    logger.error("Error retrieving objects without cache: %s", e2)
+                    queryset = cls.objects.filter(user=user_profile.cached_user)
+                    return queryset
+
+        # pylint: disable=W0613
+        @cache_results(cls.cache_expiration)
+        def _get_cached_objects_for_user_profile_and_name(
+            user_profile_id: int, name: str
+        ) -> models.QuerySet["SmarterAuthToken"]:
+            """
+            Retrieve API keys for a specific user profile and name with caching.
+
+            :param user_profile_id: The ID of the user profile for which to retrieve API keys.
+            :type user_profile_id: int
+            :param name: The name of the API key to retrieve.
+            :type name: str
+
+            :returns: A queryset of SmarterAuthToken objects matching the criteria.
+            :rtype: QuerySet[SmarterAuthToken]
+            """
+            try:
+                queryset = cls.objects.select_related(
+                    "user_profile", "user_profile__account", "user_profile__user"
+                ).filter(user=user_profile.cached_user, name=name)
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("Error retrieving cached objects: %s", e)
+                try:
+                    queryset = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).filter(user=user_profile.cached_user, name=name)
+                except Exception as e2:
+                    logger.error("Error retrieving objects without cache: %s", e2)
+                    queryset = cls.objects.filter(user=user_profile.cached_user, name=name)
+            return queryset
+
+        if invalidate:
+            # Invalidate the cache for both functions
+            _get_cached_objects_for_user_profile.invalidate(user_profile_id=user_profile.id if user_profile else None)
+            _get_cached_objects_for_user_profile_and_name.invalidate(
+                user_profile_id=user_profile.id if user_profile else None, name=name
+            )
+
+        if not user_profile and user:
+            user_profile = UserProfile.get_cached_object(user=user)
+
+        if user_profile and name:
+            return _get_cached_objects_for_user_profile_and_name(user_profile.id, name)
+        elif user_profile:
+            return _get_cached_objects_for_user_profile(user_profile.id)
+        else:
+            return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate)  # type: ignore
 
     def __str__(self):
         return str(self.name) + " (" + str(self.user) + ") " + str(self.identifier)

@@ -39,6 +39,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
@@ -623,6 +624,15 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches when the manifest or plugin data changes.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        if self.plugin:
+            PluginDataSql.get_cached_object(invalidate=True, plugin=self.plugin)  # type: ignore
+        return super().cache_invalidations()
+
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Returns an example SQL plugin manifest as a JSON response.
@@ -798,6 +808,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                 self.plugin.save()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
+            self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
         try:
             raise SAMBrokerErrorNotReady(

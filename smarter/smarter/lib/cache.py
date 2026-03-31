@@ -1,48 +1,17 @@
 """
-The Smarter Framework implements its own, proprietary caching technology,
-designed as a one-size-fits-all easy-to-implement solution for caching
-function outputs based on their input parameters.
-
-This module consists of two main components:
-
-- a general-purpose caching decorator, ``@cache_results()``, for caching function results, and
-- a lazy singleton cache wrapper, ``lazy_cache``, around Django's cache framework.
-
-Usage examples::
-
-    # a.) use the decorator.
-    # Best approach in most cases.
-    # -------------------------------------------------
-    @cache_results(timeout=600)
-    def expensive_function(x, y, *args, **kwargs):
-        # Perform expensive computation ...
-        result = "some very expensive computational result"
-        return result
-
-    result = expensive_function(1, 2)
-    expensive_function.invalidate(1, 2)
-
-    # b.) work directly with the cache.
-    # If you need more control.
-    # -------------------------------------------------
-    from smarter.lib.cache import lazy_cache as cache
-
-    cache.set("my_key", "my_value", timeout=300)
-    value = cache.get("my_key")
-    print(value)  # Outputs: "my_value"
-
-
+Smarter cache decorator and lazy cache wrapper.
 """
 
 import hashlib
 import logging
 import pickle
-from functools import wraps
+from functools import cached_property, wraps
 from typing import Any, Callable, Optional
 
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import (
     formatted_text,
+    formatted_text_blue,
     formatted_text_green,
     formatted_text_red,
 )
@@ -51,6 +20,7 @@ logger = logging.getLogger(__name__)
 logger_prefix_normal = formatted_text(f"{__name__}.@cache_results()")
 logger_prefix_green = formatted_text_green(f"{__name__}.@cache_results()")
 logger_prefix_red = formatted_text_red(f"{__name__}.@cache_results()")
+logger_prefix_blue = formatted_text_blue(f"{__name__}.@cache_results()")
 
 
 class CacheSentinel:
@@ -208,7 +178,18 @@ class LazyCache:
 
         return self._waffle
 
-    @property
+    @cached_property
+    def verbose_logging(self) -> bool:
+        """
+        Check if verbose logging (here, inside this module) is enabled via Waffle switch.
+
+        :return: True if verbose logging is enabled, False otherwise.
+        :rtype: bool
+        """
+
+        return self.cache_logging and smarter_settings.verbose_logging
+
+    @cached_property
     def cache_logging(self) -> bool:
         """
         Check if cache activity logging (here, inside this module) is enabled via Waffle switch.
@@ -332,7 +313,7 @@ leading to buggy cache misses such as browser session values not being stored.
 """
 
 
-def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=True):
+def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=False):
     """
     A decorator that caches the result of a function based on the arguments
     passed to it. When
@@ -385,6 +366,8 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
             # Perform expensive computation ...
             result = "some very expensive computational result"
             return result
+
+        expensive_function.invalidate(1, 2)  # Invalidate cache for specific arguments
 
     """
 
@@ -529,24 +512,44 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                 result = (
                     None if isinstance(cached_result, str) and cached_result == CACHE_NONE_SENTINEL else cached_result
                 )
-                if logging_enabled and lazy_cache.cache_logging:
+                if logging_enabled and lazy_cache.verbose_logging:
+                    class_name = kwargs.get("class_name", "")
+                    class_name = f"{class_name} - " if class_name else ""
                     logger.info(
-                        "%s cache hit for %s: %s",
+                        "%s cache hit for %s%s: %s args: %s kwargs: %s",
                         logger_prefix_green,
+                        class_name,
                         cache_key,
                         "None" if result is None else result,
+                        args,
+                        kwargs,
+                    )
+                elif logging_enabled and lazy_cache.cache_logging:
+                    class_name = kwargs.get("class_name", "")
+                    class_name = f"{class_name} - " if class_name else ""
+                    logger.info(
+                        "%s cache hit for %s: %s args: %s kwargs: %s",
+                        logger_prefix_green,
+                        class_name,
+                        cache_key,
+                        args,
+                        kwargs,
                     )
             else:
                 # Cache miss, boo! Call the function ...
                 result = func(*args, **kwargs)
                 cache_value = CACHE_NONE_SENTINEL if result is None else result
                 lazy_cache.set(cache_key, cache_value, timeout)
-                if logging_enabled and lazy_cache.cache_logging:
+                if logging_enabled and lazy_cache.verbose_logging:
                     logger.info(
-                        "%s cache miss for %s, caching result: with timeout %s",
+                        "%s caching %s - %s, with timeout %s args: %s kwargs: %s for %s",
                         logger_prefix_red,
+                        type(cache_value).__name__,
                         cache_key,
                         timeout,
+                        args,
+                        kwargs,
+                        cache_value,
                     )
             return result
 
@@ -555,38 +558,51 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
             Invalidates the cached result for the given arguments.
             This method can be called on the decorated function to manually clear
             the cache for specific input parameters.
+
+            Example usage::
+
+                .. code-block:: python
+
+                    @cache_results(timeout=60)
+                    def expensive_function(x, y):
+                        # Perform expensive computation
+                        return x + y
+
+                    # Invalidate cache for specific arguments
+                    expensive_function.invalidate(1, 2)
+
             :param args: Positional arguments for which to invalidate the cache.
             :type args: tuple
             :param kwargs: Keyword arguments for which to invalidate the cache.
             :type kwargs: dict
             """
-            if logging_enabled and lazy_cache.cache_logging:
-                logger.info(
-                    "%s -> %s().invalidate() called with args: %s kwargs: %s",
-                    logger_prefix_normal,
-                    func.__name__,
-                    args,
-                    kwargs,
-                )
+            logger.debug(
+                "%s -> %s().invalidate() called with args: %s kwargs: %s",
+                logger_prefix_normal,
+                func.__name__,
+                args,
+                kwargs,
+            )
             key_data: Optional[bytes] = generate_key_data(func, args, kwargs)
             if key_data is None:
                 return
             cache_key: str = generate_cache_key(func, key_data)
             if lazy_cache.has_key(cache_key):
                 cached_value = lazy_cache.get(cache_key)
-                logger.info("%s found cache entry for %s: %s", logger_prefix_normal, cache_key, str(cached_value))
                 lazy_cache.delete(cache_key)
-                msg = f"{logger_prefix_green} invalidated cache entry for {cache_key}"
-                if logging_enabled and lazy_cache.cache_logging:
-                    logger.info(msg)
-                else:
-                    logger.debug(msg)
+                logger.info(
+                    "%s.invalidate() - invalidated %s - %s: %s",
+                    logger_prefix_blue,
+                    type(cached_value).__name__,
+                    cache_key,
+                    str(cached_value),
+                )
             else:
-                msg = f"{logger_prefix_red} no cache entry found for {cache_key} (nothing to invalidate)"
-                if logging_enabled and lazy_cache.cache_logging:
-                    logger.info(msg)
-                else:
-                    logger.debug(msg)
+                logger.debug(
+                    "%s.invalidate() - no cache entry found for %s (nothing to invalidate)",
+                    logger_prefix_normal,
+                    cache_key,
+                )
 
         wrapper.invalidate = invalidate  # type: ignore[attr-defined]
         return wrapper

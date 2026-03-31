@@ -6,7 +6,7 @@ from typing import Any, Optional
 import botocore.exceptions
 from botocore.config import Config
 
-from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings_defaults
 
 from .aws import AWSBase, SmarterAWSException
 
@@ -36,9 +36,9 @@ class AWSAPIGateway(AWSBase):
             return None
         try:
             config = Config(
-                read_timeout=SettingsDefaults.AWS_APIGATEWAY_READ_TIMEOUT,
-                connect_timeout=SettingsDefaults.AWS_APIGATEWAY_CONNECT_TIMEOUT,
-                retries={"max_attempts": SettingsDefaults.AWS_APIGATEWAY_MAX_ATTEMPTS},
+                read_timeout=settings_defaults.AWS_APIGATEWAY_READ_TIMEOUT,
+                connect_timeout=settings_defaults.AWS_APIGATEWAY_CONNECT_TIMEOUT,
+                retries={"max_attempts": settings_defaults.AWS_APIGATEWAY_MAX_ATTEMPTS},
             )
             self.client = self.aws_session.client(self._client_type, config=config)
             logger.debug("%s.client() AWS API Gateway client created successfully", self.formatted_class_name)

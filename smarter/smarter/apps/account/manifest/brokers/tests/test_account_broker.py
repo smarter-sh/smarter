@@ -238,7 +238,7 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         django_orm_tags = None
         if isinstance(self.broker.brokered_account.tags, (TaggableManager, _TaggableManager)):
             django_orm_tags = (
-                set(self.broker.brokered_account.tags.names()) if self.broker.brokered_account.tags else set()
+                set(self.broker.brokered_account.tags_list) if self.broker.brokered_account.tags else set()
             )
         elif isinstance(self.broker.brokered_account.tags, set):
             django_orm_tags = self.broker.brokered_account.tags

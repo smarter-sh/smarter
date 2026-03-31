@@ -6,11 +6,7 @@ import logging
 import time
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.account.utils import (
-    get_cached_admin_user_for_account,
-    get_cached_smarter_account,
-    get_cached_smarter_admin_user_profile,
-)
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain
 from smarter.apps.chatbot.tasks import (
     create_custom_domain_dns_record,
@@ -38,9 +34,9 @@ class TestChatBotTasks(TestAccountMixin):
         # we want to test with the Smarter account so that we retain the
         # same account number for DNS verifications in local.api.smarter.sh in
         # AWS Route53
-        cls.smarter_account = get_cached_smarter_account()
-        cls.smarter_user_profile = get_cached_smarter_admin_user_profile()
-        cls.smarter_admin_user = get_cached_admin_user_for_account(account=cls.smarter_account)
+        cls.smarter_account = smarter_cached_objects.smarter_account
+        cls.smarter_user_profile = smarter_cached_objects.smarter_user_profile
+        cls.smarter_admin_user = smarter_cached_objects.smarter_admin_user
 
     def setUp(self):
         """Set up test fixtures."""
@@ -113,7 +109,8 @@ class TestChatBotTasks(TestAccountMixin):
         dns_record = aws_helper.route53.get_dns_record(
             hosted_zone_id=custom_domain.aws_hosted_zone_id, record_name=resolved_domain, record_type="TXT"
         )
-
+        if not isinstance(dns_record, dict):
+            self.fail(f"Expected dns_record to be a dict, got {type(dns_record)}: {dns_record}")
         self.assertIsNotNone(dns_record)
         self.assertIn(dns_record["Name"], [resolved_domain, resolved_domain + "."])
         self.assertEqual(dns_record["Type"], "TXT")
@@ -149,6 +146,11 @@ class TestChatBotTasks(TestAccountMixin):
         # mcdaniel: 2021-09-29: This test is failing even though the the record is being created.
         # aws_helper.route53.get_dns_record() weirdly returns None even though the record is there.
         self.assertIsNotNone(dns_record)
+        self.assertIsInstance(
+            dns_record, dict, f"Expected dns_record to be a dict, got {type(dns_record)}: {dns_record}"
+        )
+        if not isinstance(dns_record, dict):
+            self.fail(f"Expected dns_record to be a dict, got {type(dns_record)}: {dns_record}")
         self.assertEqual(str(dns_record["Name"]).rstrip("."), str(resolved_domain).rstrip("."))
         self.assertEqual(dns_record["Type"], "A")
 
@@ -204,10 +206,12 @@ class TestChatBotTasks(TestAccountMixin):
         self.assertIsNotNone(a_record)
 
         resolved_hostname = aws_helper.aws.domain_resolver(self.chatbot.default_host)
+        if not isinstance(a_record, dict):
+            self.fail(f"Expected a_record to be a dict, got {type(a_record)}: {a_record}")
         self.assertIn(a_record["Name"], [resolved_hostname, resolved_hostname + "."])
         self.assertEqual(a_record["Type"], "A")
 
-        self.assertTrue(self.chatbot.ready())
+        self.assertTrue(self.chatbot.ready)
         # we'll test this separately since it run asynchronously. For now, just ensure it's one of the two hoped-for values.
         self.assertIn(
             self.chatbot.dns_verification_status,

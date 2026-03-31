@@ -50,7 +50,7 @@ from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginStaticSerializer
 from smarter.apps.plugin.signals import plugin_called, plugin_responded
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings_defaults
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -59,6 +59,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .base import PluginBase, SmarterPluginError
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -423,14 +424,13 @@ class StaticPlugin(PluginBase):
             ],
         )
         prompt = SAMPluginCommonSpecPrompt(
-            provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+            provider=settings_defaults.LLM_DEFAULT_PROVIDER,
             systemRole="You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com). Whenever possible you should defer to the tool calls provided for additional information about everlasting gobstoppers.",
-            model=SettingsDefaults.LLM_DEFAULT_MODEL,
-            temperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-            maxTokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+            model=settings_defaults.LLM_DEFAULT_MODEL,
+            temperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
+            maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
         )
         data = SAMPluginStaticSpecData(
-            description="Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
             staticData={
                 "contact": [
                     {"name": "Willy Wonka"},
@@ -470,6 +470,7 @@ class StaticPlugin(PluginBase):
         status = SAMPluginCommonStatus(
             accountNumber="1234567890",
             username="example_user",
+            recordLocator="abc123def456",
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )

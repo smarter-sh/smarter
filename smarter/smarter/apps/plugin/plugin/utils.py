@@ -11,7 +11,6 @@ import yaml
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_smarter_admin_user_profile,
-    get_cached_user_profile,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
@@ -66,8 +65,8 @@ class Plugins:
     def __init__(self, user: User, account: Account):
 
         self.plugins = []
-        self.account = account or get_cached_user_profile(user=user).account
-        self.user_profile = get_cached_user_profile(user=user, account=account)
+        self.account = account or UserProfile.get_cached_object(user=user).account
+        self.user_profile = UserProfile.get_cached_object(user=user, account=account)
 
         # plugins for this user profile
         for plugin in PluginMeta.objects.filter(user_profile=self.user_profile):

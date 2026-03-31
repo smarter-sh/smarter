@@ -10,18 +10,31 @@ from typing import Any, Optional
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.query import QuerySet
 from django.forms.models import model_to_dict
 from django.utils.timezone import is_aware, make_aware
 from taggit.managers import TaggableManager
 
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.lib.cache import lazy_cache as cache
+from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 logger = getLogger(__name__)
 cache_prefix = f"{__name__}."
+
+
+# pylint: disable=W0613
+def should_log_verbose(level):
+    """Check if logging should be done based on the waffle switch."""
+    return smarter_settings.verbose_logging
+
+
+verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
 
 
 def validate_no_spaces(value) -> None:
@@ -81,6 +94,11 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     HASH_SUFFIX = "x"
     HASH_FLOOR = 1000000
     _hash_regex = None
+    cache_expiration = smarter_settings.cache_expiration
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        abstract = True
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, editable=False, db_index=True)
     """
@@ -95,9 +113,163 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     It is indexed in the database for efficient querying.
     """
 
-    # pylint: disable=missing-class-docstring
-    class Meta:
-        abstract = True
+    ###########################################################################
+    # public methods for internal use.
+    ###########################################################################
+
+    @classmethod
+    def hash_regex(cls) -> re.Pattern:
+        """
+        Returns a regex pattern that matches the hashed ID format for this model anywhere in a string.
+
+        The hashed ID format is defined by the ``HASH_PREFIX`` and ``HASH_SUFFIX`` class attributes,
+        with a base64-encoded string in between. This regex can be used to validate or extract
+        hashed IDs from strings, including when embedded in URLs.
+
+        :returns: A regex pattern for matching hashed IDs.
+        :rtype: re.Pattern
+        """
+        if cls._hash_regex is None:
+            cls._hash_regex = re.compile(f"{cls.HASH_PREFIX}[A-Za-z0-9_-]+{cls.HASH_SUFFIX}")
+        return cls._hash_regex
+
+    @cached_property
+    def hashed_id(self) -> str:
+        """
+        Returns a URL-friendly hashed version of the object's ID for use in URLs and other
+        contexts where an obscured, non-identifying, non-sequential identifier is preferred.
+
+        Encoding scheme:
+        1. Take the object's ID and add a large constant (HASH_FLOOR) to ensure it's not easily guessable.
+        2. Convert the resulting number to a string and encode it using URL-safe base64 encoding.
+        3. Remove any padding characters from the encoded string.
+        4. Add a prefix and suffix to the encoded string to create a recognizable format.
+
+        Example:
+
+        .. code-block:: python
+
+            obj = MyModel.objects.create()
+            print(obj.id)  # e.g., 123
+            print(obj.hashed_id)  # e.g., "rc2x"
+
+        :returns: Hashed ID string (URL-safe, no padding)
+        :rtype: str
+        """
+        id_value = int(self.id) + self.HASH_FLOOR
+        encoded = str(base64.urlsafe_b64encode(str(id_value).encode()).decode().rstrip("="))
+        padded_encoded = f"{self.HASH_PREFIX}{encoded}{self.HASH_SUFFIX}"
+        return padded_encoded
+
+    @classmethod
+    def id_from_hashed_id(cls, hashed_id: str) -> Optional[int]:
+        """
+        Decodes a hashed ID back to the original object ID.
+
+        decoding scheme:
+        1. Validate that the hashed ID starts with the expected prefix and ends with the expected suffix.
+        2. Remove the prefix and suffix to isolate the base64-encoded string.
+        3. Add padding if necessary to make the length of the encoded string a multiple of 4.
+        4. Decode the base64 string to get the original number as a string.
+        5. Convert the decoded string to an integer and subtract the HASH_FLOOR to get the original ID.
+
+        Example:
+
+        .. code-block:: python
+
+            my_record = MyModel.objects.create()
+            print(my_record.id)  # e.g., 123
+            hashed_id = my_record.hashed_id  # e.g., "rc2x"
+
+            original_id = MyModel.id_from_hashed_id(hashed_id)
+            print(original_id)  # Should print the original ID (e.g., 123)
+
+        :param hashed_id: The hashed ID string to decode (URL-safe, no padding).
+        :returns: The original object ID if decoding is successful, otherwise None.
+        :rtype: Optional[int]
+        """
+        try:
+            verbose_logger.debug(
+                "%s.id_from_hashed_id() - Attempting to decode hashed_id: %s",
+                cls.formatted_class_name,
+                hashed_id,
+            )
+            if not hashed_id.startswith(cls.HASH_PREFIX) or not hashed_id.endswith(cls.HASH_SUFFIX):
+                logger.warning(
+                    "%s.id_from_hashed_id() - Hashed ID '%s' does not start with '%s' or end with '%s'.",
+                    cls.formatted_class_name,
+                    hashed_id,
+                    cls.HASH_PREFIX,
+                    cls.HASH_SUFFIX,
+                )
+                return None
+            encoded_str = hashed_id[len(cls.HASH_PREFIX) : -len(cls.HASH_SUFFIX)]
+            # Add padding if needed
+            padding = "=" * (-len(encoded_str) % 4)
+            encoded_str += padding
+            decoded_bytes = base64.urlsafe_b64decode(encoded_str.encode())
+            decoded_str = decoded_bytes.decode()
+            retval = int(decoded_str) - cls.HASH_FLOOR
+            verbose_logger.debug(
+                "%s.id_from_hashed_id() - Successfully decoded hashed_id: %s to id: %d",
+                cls.formatted_class_name,
+                hashed_id,
+                retval,
+            )
+            return retval
+        except (base64.binascii.Error, ValueError) as e:
+            logger.error(
+                "%s.id_from_hashed_id() - Failed to decode hashed_id '%s': %s",
+                cls.formatted_class_name,
+                hashed_id,
+                e,
+            )
+            return None
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.exception(
+                "%s.id_from_hashed_id() - Unexpected error while decoding hashed_id '%s': %s",
+                cls.formatted_class_name,
+                hashed_id,
+                e,
+            )
+            return None
+
+    @classmethod
+    def find_hash(cls, value: str) -> Optional[str]:
+        """
+        Finds and returns the first substring in the given value that matches
+        the hashed ID format.
+
+        :param value: The string to search for a hashed ID.
+        :returns: The first matching hashed ID if found, otherwise None.
+        :rtype: Optional[str]
+        """
+        verbose_logger.debug(
+            "%s.find_hash() - Searching for hashed ID in value: %s",
+            cls.formatted_class_name,
+            value,
+        )
+        pattern = cls.hash_regex()
+        match = pattern.search(value)
+        retval = match.group(0) if match else None
+        if retval:
+            verbose_logger.debug(
+                "%s.find_hash() - Found hashed ID: %s",
+                cls.formatted_class_name,
+                retval,
+            )
+        else:
+            verbose_logger.debug(
+                "%s.find_hash() - No hashed ID found in value: %s",
+                cls.formatted_class_name,
+                value,
+            )
+        return retval
+
+    ###########################################################################
+    # public methods for public use.
+    ###########################################################################
 
     def validate(self):
         """
@@ -156,122 +328,97 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             ) from e
         super().save(*args, **kwargs)
 
-    @classmethod
-    def hash_regex(cls) -> re.Pattern:
-        """
-        Returns a regex pattern that matches the hashed ID format for this model anywhere in a string.
-
-        The hashed ID format is defined by the ``HASH_PREFIX`` and ``HASH_SUFFIX`` class attributes,
-        with a base64-encoded string in between. This regex can be used to validate or extract
-        hashed IDs from strings, including when embedded in URLs.
-
-        :returns: A regex pattern for matching hashed IDs.
-        :rtype: re.Pattern
-        """
-        if cls._hash_regex is None:
-            cls._hash_regex = re.compile(f"{cls.HASH_PREFIX}[A-Za-z0-9_-]+{cls.HASH_SUFFIX}")
-        return cls._hash_regex
-
     @cached_property
-    def hashed_id(self) -> str:
+    def record_locator(self) -> str:
         """
-        Returns a URL-friendly hashed version of the object's ID for use in URLs and other
-        contexts where an obscured, non-identifying, non-sequential identifier is preferred.
+        Returns a short, URL-friendly record locator derived from the object's ID.
 
-        :returns: Hashed ID string (URL-safe, no padding)
+        Example:
+
+        .. code-block:: python
+
+            obj = MyModel.objects.create(name="Example")
+            print(obj.id)  # e.g., 123
+            print(obj.record_locator)  # e.g., "chatbot-rc2x"
+
+
+        :returns: Record locator string (URL-safe, no padding)
         :rtype: str
         """
-        id_value = int(self.id) + self.HASH_FLOOR
-        encoded = base64.urlsafe_b64encode(str(id_value).encode()).decode().rstrip("=")
-        return self.HASH_PREFIX + encoded + self.HASH_SUFFIX
+        prefix = str(self.__class__.__name__).lower()
+        return f"{prefix}-{self.hashed_id}"
 
     @classmethod
-    def id_from_hashed_id(cls, hashed_id: str) -> Optional[int]:
+    def get_object_by_locator(cls, locator: str) -> Optional["TimestampedModel"]:
         """
-        Decodes a hashed ID back to the original object ID.
+        Retrieves an object based on its record locator.
 
-        :param hashed_id: The hashed ID string to decode (URL-safe, no padding).
-        :returns: The original object ID if decoding is successful, otherwise None.
-        :rtype: Optional[int]
+        Example:
+
+        .. code-block:: python
+
+            obj = MyModel.objects.create()
+            print(obj.id)  # e.g., 123
+            locator = obj.record_locator # e.g., "mymodel-rc2x"
+
+            retrieved_obj = MyModel.get_object_by_locator(locator)
+            print(type(retrieved_obj))  # Should be <class 'MyModel'>
+            print(retrieved_obj)  # Should be the same as obj
+
+        :param locator: The record locator string to decode and search for.
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional[TimestampedModel]
         """
-
-        cache_key = f"{cache_prefix}id_from_hashed_id:{hashed_id}"
-        cached_result = cache.get(cache_key)
-        if cached_result is not None:
-            return cached_result
-
+        verbose_logger.debug(
+            "%s.get_object_by_locator() - Attempting to retrieve object with locator: %s",
+            cls.formatted_class_name,
+            locator,
+        )
         try:
-            logger.debug(
-                "%s.id_from_hashed_id() - Attempting to decode hashed_id: %s",
-                cls.formatted_class_name,
-                hashed_id,
-            )
-            if not hashed_id.startswith(cls.HASH_PREFIX) or not hashed_id.endswith(cls.HASH_SUFFIX):
+            prefix = str(cls.__name__).lower()
+            if not locator.startswith(f"{prefix}-"):
+                logger.warning(
+                    "%s.get_object_by_locator() - Locator '%s' does not start with expected prefix '%s-'.",
+                    cls.formatted_class_name,
+                    locator,
+                    prefix,
+                )
                 return None
-            encoded_str = hashed_id[len(cls.HASH_PREFIX) : -len(cls.HASH_SUFFIX)]
-            # Add padding if needed
-            padding = "=" * (-len(encoded_str) % 4)
-            encoded_str += padding
-            decoded_bytes = base64.urlsafe_b64decode(encoded_str.encode())
-            decoded_str = decoded_bytes.decode()
-            retval = int(decoded_str) - cls.HASH_FLOOR
-            logger.debug(
-                "%s.id_from_hashed_id() - Successfully decoded hashed_id: %s to id: %d",
-                cls.formatted_class_name,
-                hashed_id,
-                retval,
-            )
-            cache.set(cache_key, retval)
-            return retval
-        except (base64.binascii.Error, ValueError) as e:
-            logger.error(
-                "%s.id_from_hashed_id() - Failed to decode hashed_id '%s': %s",
-                cls.formatted_class_name,
-                hashed_id,
-                e,
-            )
-            return None
+            hashed_part = locator[len(prefix) + 1 :].lstrip("0")
+            id_value = cls.id_from_hashed_id(hashed_part)
+            if id_value is None:
+                logger.warning(
+                    "%s.get_object_by_locator() - Failed to decode hashed part '%s' from locator '%s'.",
+                    cls.formatted_class_name,
+                    hashed_part,
+                    locator,
+                )
+                return None
+            obj = cls.get_cached_object(pk=id_value)
+            if obj is None:
+                logger.warning(
+                    "%s.get_object_by_locator() - No object found with ID %d decoded from locator '%s'.",
+                    cls.formatted_class_name,
+                    id_value,
+                    locator,
+                )
+            else:
+                verbose_logger.debug(
+                    "%s.get_object_by_locator() - Successfully retrieved object with ID %d from locator '%s'.",
+                    cls.formatted_class_name,
+                    id_value,
+                    locator,
+                )
+            return obj  # type: ignore[return-value]
         # pylint: disable=broad-except
         except Exception as e:
             logger.exception(
-                "%s.id_from_hashed_id() - Unexpected error while decoding hashed_id '%s': %s",
+                "%s.get_object_by_locator() - Unexpected error while retrieving object with locator '%s': %s",
                 cls.formatted_class_name,
-                hashed_id,
+                locator,
                 e,
             )
             return None
-
-    @classmethod
-    def find_hash(cls, value: str) -> Optional[str]:
-        """
-        Finds and returns the first substring in the given value that matches
-        the hashed ID format.
-
-        :param value: The string to search for a hashed ID.
-        :returns: The first matching hashed ID if found, otherwise None.
-        :rtype: Optional[str]
-        """
-        logger.debug(
-            "%s.find_hash() - Searching for hashed ID in value: %s",
-            cls.formatted_class_name,
-            value,
-        )
-        pattern = cls.hash_regex()
-        match = pattern.search(value)
-        retval = match.group(0) if match else None
-        if retval:
-            logger.debug(
-                "%s.find_hash() - Found hashed ID: %s",
-                cls.formatted_class_name,
-                retval,
-            )
-        else:
-            logger.debug(
-                "%s.find_hash() - No hashed ID found in value: %s",
-                cls.formatted_class_name,
-                value,
-            )
-        return retval
 
     @property
     def elapsed_updated(self, dt=None) -> Optional[int]:
@@ -348,10 +495,116 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: A dictionary representation of the model instance suitable for JSON serialization.
         :rtype: dict[str, Any]
         """
+        try:
+            data = model_to_dict(self)
+            data["record_locator"] = self.record_locator
+            data["elapsed_updated"] = self.elapsed_updated
+            return json.loads(json.dumps(data, cls=SmarterJSONEncoder))
+        except Exception as e:
+            logger.exception(
+                "%s.to_json() - Error serializing model to JSON. model=%s, field_values=%s, exception: %s",
+                self.formatted_class_name,
+                self.__class__.__name__,
+                self.__dict__,
+                e,
+            )
+            raise SmarterValueError(f"Error serializing model to JSON: {e}") from e
 
-        data = model_to_dict(self)
-        retval = json.loads(json.dumps(data, cls=SmarterJSONEncoder))
-        return retval
+    @classmethod
+    def get_cached_object(cls, invalidate: Optional[bool] = False, pk: Optional[int] = None) -> Optional[models.Model]:
+        """
+        Retrieve a model instance by primary key, using caching to
+        optimize performance. This method is selectively overridden in
+        models that inherit from TimestampedModel to provide class-specific
+        function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve by primary key
+            instance = MyModel.get_cached_object(pk=1)
+
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool, optional
+        :param pk: The primary key of the model instance to retrieve.
+        :type pk: int, optional
+
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional[models.Model]
+        """
+        logger_prefix = formatted_text(__name__ + "." + TimestampedModel.__name__ + ".get_cached_object()")
+        verbose_logger.debug("%s.get_cached_object() called with pk: %s, invalidate=%s", logger_prefix, pk, invalidate)
+
+        if cls._meta.abstract:
+            raise NotImplementedError(
+                "get_cached_object() must be called on a concrete model class, not an abstract base class."
+            )
+
+        @cache_results(timeout=cls.cache_expiration)
+        def _get_model_by_pk(pk: int, class_name: str = cls.__name__) -> Optional[models.Model]:
+
+            try:
+                verbose_logger.debug(
+                    "%s._get_model_by_pk() cache miss for %s pk: %s",
+                    logger_prefix,
+                    class_name,
+                    pk,
+                )
+                return cls.objects.get(pk=pk)
+            except cls.DoesNotExist:
+                verbose_logger.debug(
+                    "%s._get_model_by_pk() no object found for %s pk: %s",
+                    logger_prefix,
+                    class_name,
+                    pk,
+                )
+                return None
+
+        if invalidate:
+            _get_model_by_pk.invalidate(pk, cls.__name__)
+
+        if not pk:
+            verbose_logger.debug("%s._get_model_by_pk() called with no pk", logger_prefix)
+            return None
+
+        return _get_model_by_pk(pk, class_name=cls.__name__)
+
+    @classmethod
+    def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["TimestampedModel"]:
+        """
+        Retrieve model instances using caching to optimize performance.
+        This method is selectively overridden in models that inherit from
+        TimestampedModel to provide class-specific function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve all instances
+            instances = MyModel.get_cached_objects()
+
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool
+        :returns: A queryset of all model instances.
+        :rtype: QuerySet
+        """
+        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
+        verbose_logger.debug("%s.get_cached_objects() called with invalidate=%s", logger_prefix, invalidate)
+
+        if cls._meta.abstract:
+            raise NotImplementedError(
+                "get_cached_object() must be called on a concrete model class, not an abstract base class."
+            )
+
+        @cache_results(timeout=cls.cache_expiration)
+        def _get_all_models(class_name: str = cls.__name__) -> QuerySet["TimestampedModel"]:
+            return cls.objects.all()
+
+        if invalidate:
+            _get_all_models.invalidate(cls.__name__)
+
+        return _get_all_models()
 
     def __str__(self):
         return f"{self.__class__.__name__}(id={getattr(self, 'id', None)})"
@@ -421,3 +674,143 @@ class MetaDataModel(TimestampedModel):
         # version should be a semantic version: MAJOR.MINOR.PATCH
         if self.version and not SmarterValidator.is_valid_semantic_version(self.version):
             raise SmarterValueError(f"Version '{self.version}' is not a valid semantic version (MAJOR.MINOR.PATCH).")
+
+    @cached_property
+    def tags_list(self) -> list[str]:
+        """
+        Return the tags as a list of strings. We assume that @cached_property
+        is more efficient at fetch that @cache_results, all things considered
+        equal, which provides a marginal boost to instances. Meanwhile, the
+        @cache_results is persisted to the Django cache, and thus outlives
+        this instance. Thus, best of both worlds.
+
+        :returns: List of tag names.
+        :rtype: list[str]
+        """
+
+        # pylint: disable=W0613
+        @cache_results(timeout=self.cache_expiration)
+        def _get_tags_by_class_and_pk(cls_name: str, pk: int) -> list[str]:
+            """
+            Helper to cache tags retrieval.
+            """
+            verbose_logger.debug(
+                "%s.tags_list - Retrieving tags for %s with pk=%d from database",
+                self.formatted_class_name,
+                cls_name,
+                pk,
+            )
+            return [tag.name for tag in self.tags.all()]
+
+        return _get_tags_by_class_and_pk(self.__class__.__name__, self.pk)
+
+    @classmethod
+    def get_cached_object(
+        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, name: Optional[str] = None
+    ) -> Optional["MetaDataModel"]:
+        """
+        Retrieve a model instance by primary key or name, using caching to
+        optimize performance. This method is selectively overridden in
+        models that inherit from MetaDataModel to provide class-specific
+        function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve by primary key
+            instance = MyModel.get_cached_object(pk=1)
+            # Retrieve by name
+            instance = MyModel.get_cached_object(name="exampleName")
+
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool, optional
+        :param pk: The primary key of the model instance to retrieve.
+        :type pk: int, optional
+        :param name: The name of the model instance to retrieve.
+        :type name: str, optional
+
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional["MetaDataModel"]
+        """
+        logger_prefix = formatted_text(__name__ + "." + MetaDataModel.__name__ + ".get_cached_object()")
+        verbose_logger.debug(
+            "%s.get_cached_object() called with pk: %s, name: %s, invalidate: %s", logger_prefix, pk, name, invalidate
+        )
+
+        if cls._meta.abstract:
+            raise NotImplementedError(
+                "get_cached_object() must be called on a concrete model class, not an abstract base class."
+            )
+
+        if not pk and not name:
+            return None
+
+        @cache_results(timeout=cls.cache_expiration)
+        def _get_object_by_name(name: str, class_name: str = cls.__name__) -> Optional["MetaDataModel"]:
+            try:
+                verbose_logger.debug(
+                    "%s._get_object_by_name() cache miss for %s name: %s",
+                    logger_prefix,
+                    class_name,
+                    name,
+                )
+                return cls.objects.prefetch_related("tags").get(name=name)
+            except cls.DoesNotExist:
+                verbose_logger.debug(
+                    "%s._get_object_by_name() no %s object found for name: %s",
+                    logger_prefix,
+                    class_name,
+                    name,
+                )
+                return None
+            except cls.MultipleObjectsReturned as e:
+                logger.error(
+                    "%s.get_cached_object() - Multiple %s objects found for name '%s'. Returning the first one.",
+                    logger_prefix,
+                    class_name,
+                    name,
+                )
+                raise SmarterValueError(f"Multiple {class_name} objects found for name '{name}'.") from e
+
+        if invalidate:
+            _get_object_by_name.invalidate(name, cls.__name__)
+
+        if name:
+            return _get_object_by_name(name)
+
+        return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
+
+    @classmethod
+    def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["MetaDataModel"]:
+        """
+        Retrieve model instances using caching to optimize performance.
+        This method is selectively overridden in models that inherit from
+        MetaDataModel to provide class-specific function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve all instances
+            instances = MyModel.get_cached_objects()
+
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool
+        :returns: A queryset of all model instances.
+        :rtype: QuerySet
+        """
+        logger_prefix = formatted_text(__name__ + "." + cls.__name__ + ".get_cached_objects()")
+        verbose_logger.debug(
+            "%s.get_cached_objects() called for %s with invalidate=%s", logger_prefix, cls.__name__, invalidate
+        )
+
+        if cls._meta.abstract:
+            raise NotImplementedError(
+                "get_cached_object() must be called on a concrete model class, not an abstract base class."
+            )
+
+        if invalidate:
+            pass
+
+        return super().get_cached_objects(invalidate=invalidate)  # type: ignore

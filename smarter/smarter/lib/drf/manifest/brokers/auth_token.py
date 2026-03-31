@@ -11,7 +11,6 @@ from pydantic_core import ValidationError as PydanticValidationError
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import User
-from smarter.apps.account.utils import cache_invalidate
 from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
 from smarter.lib.drf.manifest.models.auth_token.const import MANIFEST_KIND
 from smarter.lib.drf.manifest.models.auth_token.metadata import (
@@ -265,6 +264,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 )
         elif self.smarter_auth_token:
             status = SAMSmarterAuthTokenStatus(
+                recordLocator=self.smarter_auth_token.record_locator,
                 created=self.smarter_auth_token.created_at,
                 modified=self.smarter_auth_token.updated_at,
                 lastUsedAt=self.smarter_auth_token.last_used_at,
@@ -429,6 +429,14 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 str(e),
             )
 
+    def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches when the manifest or SmarterAuthToken data changes.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        SmarterAuthToken.get_cached_object(invalidate=True, user=self.user, name=self.name)  # type: ignore
+        return super().cache_invalidations()
+
     def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug("%s.example_manifest() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.example_manifest.__name__
@@ -462,9 +470,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
 
         if name:
             # if the name is not None, then we are looking for a specific SmarterAuthToken
-            smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user, name=name)
+            smarter_auth_tokens = SmarterAuthToken.get_cached_objects(user=self.user, name=name)  # type: ignore
         else:
-            smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user)
+            smarter_auth_tokens = SmarterAuthToken.get_cached_objects(user=self.user)  # type: ignore
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for smarter_auth_token in smarter_auth_tokens:
@@ -594,7 +602,6 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             self.smarter_auth_token.save()
             self.smarter_auth_token.tags.set(tags)
             self.smarter_auth_token.refresh_from_db()
-            cache_invalidate(user=self.user, account=self.smarter_auth_token)  # type: ignore
             logger.debug(
                 "%s.apply() Saved %s: %s",
                 self.formatted_class_name,
@@ -604,6 +611,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         except Exception as e:
             tb = traceback.format_exc()
             raise SAMBrokerError(message=f"Error in {command}: {e}\n{tb}", thing=self.kind, command=command) from e
+        self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
