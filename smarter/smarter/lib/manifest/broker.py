@@ -782,6 +782,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 command=SmarterJournalCliCommands.APPLY,
             )
         metadata = self.manifest.metadata.model_dump()
+        metadata = self.camel_to_snake(metadata)
         retval = {
             "user_profile": self.user_profile,
             **metadata,

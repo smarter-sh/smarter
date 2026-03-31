@@ -204,17 +204,40 @@ class StaticPlugin(PluginBase):
         """
         if self._plugin_data:
             return self._plugin_data
+
+        try:
+            self._plugin_data = PluginDataStatic.get_cached_object(plugin=self.plugin_meta)  # type: ignore[call-arg]
+            logger.debug(
+                "%s.plugin_data() retrieved existing PluginDataStatic from database.",
+                self.formatted_class_name,
+            )
+            return self._plugin_data
+        except PluginDataStatic.DoesNotExist:
+            logger.debug(
+                "%s.plugin_data() no existing PluginDataStatic found in database for plugin_meta: %s",
+                self.formatted_class_name,
+                self.plugin_meta,
+            )
+
         # we only want a preexisting manifest ostensibly sourced
         # from the cli, not a lazy-loaded
         if self._manifest and self.plugin_meta:
             # this is an update scenario. the Plugin exists in the database,
             # AND we've received manifest data from the cli.
-            self._plugin_data = (
-                PluginDataStatic(**self.plugin_data_django_model) if self.plugin_data_django_model else None
+            self._plugin_data = PluginDataStatic(**self.plugin_data_django_model)  # type: ignore[call-arg]
+            self._plugin_data.save()
+            logger.debug(
+                "%s.plugin_data() created new instance of %s from manifest and plugin metadata.",
+                self.formatted_class_name,
+                self.plugin_data_class.__name__,
             )
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
+            logger.debug(
+                "%s.plugin_data() retrieving PluginDataStatic from database using plugin metadata.",
+                self.formatted_class_name,
+            )
             self._plugin_data = PluginDataStatic.get_cached_data_by_plugin(
                 plugin=self.plugin_meta,
             )

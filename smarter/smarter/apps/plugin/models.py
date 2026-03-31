@@ -512,8 +512,8 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             pk,
             name,
             user.username if user else None,
-            user_profile.id if user_profile else None,
-            account.id if account else None,
+            user_profile.id if user_profile else None,  # type: ignore[attr-defined]
+            account.id if account else None,  # type: ignore[attr-defined]
             plugin_class,
         )
 
@@ -534,7 +534,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     .select_related("user_profile", "user_profile__account", "user_profile__user")
                     .get(name=name, user_profile_id=user_profile_id, plugin_class=plugin_class)
                 )
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 logger.debug(
                     "%s._get_model_by_name_and_userprofile_and_plugin_class() no PluginMeta found for name: %s, user_profile_id: %s, plugin_class: %s",
                     logger_prefix,
@@ -542,7 +542,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     user_profile_id,
                     plugin_class,
                 )
-                return None
+                raise cls.DoesNotExist(
+                    f"No PluginMeta found for name: {name}, user_profile_id: {user_profile_id}, plugin_class: {plugin_class}"
+                ) from e
 
         if username and not user:
             user_profile = UserProfile.get_cached_object(invalidate=invalidate, username=username, account=account)  # type: ignore[arg-type]
@@ -568,7 +570,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             return None
 
         if plugin_class:
-            return _get_model_by_name_and_userprofile_and_plugin_class(name, user_profile.id, plugin_class)
+            return _get_model_by_name_and_userprofile_and_plugin_class(name, user_profile.id, plugin_class)  # type: ignore[return-value]
         retval = super().get_cached_object(invalidate=invalidate, name=name, user_profile=user_profile)
         if isinstance(retval, PluginMeta):
             return retval
@@ -630,7 +632,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     logger.error("%s.dispatch() - plugin_meta is None. This is a bug.", logger_prefix)
                     return False
                 for b in retval:
-                    if b.id == plugin_meta.id:
+                    if b.id == plugin_meta.id:  # type: ignore[union-attr]
                         return True
                 return False
 
@@ -677,7 +679,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     )
                     return combined_plugins
 
-                return _combined_plugins_list(user_profile.id, class_name=PluginMeta.__name__)
+                return _combined_plugins_list(user_profile.id, class_name=PluginMeta.__name__)  # type: ignore[return-value]
 
             plugins = get_plugins_for_account()
 
@@ -772,18 +774,18 @@ class PluginSelector(TimestampedModel, SmarterHelperMixin):
         def selector_by_plugin_id(plugin_id: int) -> Union["PluginSelector", None]:
             try:
                 return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_selector_by_plugin: Selector not found for plugin_id: %s",
                     cls.formatted_class_name,
                     plugin_id,
                 )
-                return None
+                raise cls.DoesNotExist(f"PluginSelector with plugin_id {plugin_id} does not exist.") from e
 
         if invalidate:
-            selector_by_plugin_id.invalidate(plugin.id)
+            selector_by_plugin_id.invalidate(plugin.id)  # type: ignore[union-attr]
 
-        return selector_by_plugin_id(plugin.id)
+        return selector_by_plugin_id(plugin.id)  # type: ignore[return-value]
 
 
 class PluginSelectorSerializer(serializers.ModelSerializer):
@@ -917,18 +919,18 @@ class PluginPrompt(TimestampedModel, SmarterHelperMixin):
         def prompt_by_plugin_id(plugin_id: int) -> Union["PluginPrompt", None]:
             try:
                 return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_prompt_by_plugin: Prompt not found for plugin_id: %s",
                     cls.formatted_class_name,
                     plugin_id,
                 )
-                return None
+                raise cls.DoesNotExist(f"PluginPrompt not found for plugin_id: {plugin_id}") from e
 
         if invalidate:
-            prompt_by_plugin_id.invalidate(plugin.id)
+            prompt_by_plugin_id.invalidate(plugin.id)  # type: ignore[union-attr]
 
-        return prompt_by_plugin_id(plugin.id)
+        return prompt_by_plugin_id(plugin.id)  # type: ignore[return-value]
 
 
 class PluginDataBase(TimestampedModel, SmarterHelperMixin):
@@ -1248,18 +1250,18 @@ class PluginDataStatic(PluginDataBase):
         def data_by_plugin_id(plugin_id: int) -> Union["PluginDataStatic", None]:
             try:
                 return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
                     formatted_text(cls.__name__),
                     plugin_id,
                 )
-                return None
+                raise cls.DoesNotExist(f"PluginDataStatic with plugin_id {plugin_id} does not exist.") from e
 
         if invalidate:
-            data_by_plugin_id.invalidate(plugin.id)
+            data_by_plugin_id.invalidate(plugin.id)  # type: ignore[union-attr]
 
-        return data_by_plugin_id(plugin.id)
+        return data_by_plugin_id(plugin.id)  # type: ignore[return-value]
 
     # pylint: disable=W0221
     @classmethod
@@ -1307,13 +1309,13 @@ class PluginDataStatic(PluginDataBase):
                     plugin_id,
                 )
                 return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
                     cls.formatted_class_name,
                     plugin_id,
                 )
-                return None
+                raise cls.DoesNotExist(f"PluginDataStatic with plugin_id {plugin_id} does not exist.") from e
 
         if invalidate and plugin:
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
@@ -1322,7 +1324,7 @@ class PluginDataStatic(PluginDataBase):
             return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
 
         if plugin:
-            return _get_model_by_plugin_meta(plugin.id)
+            return _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
 
 
 class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
@@ -1505,16 +1507,16 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         if kind == SAMKinds.SQL_CONNECTION:
             try:
                 if invalidate:
-                    cached_sqlconnection_by_id_and_name.invalidate(account.id, name)
-                return cached_sqlconnection_by_id_and_name(account.id, name)
+                    cached_sqlconnection_by_id_and_name.invalidate(account.id, name)  # type: ignore[union-attr]
+                return cached_sqlconnection_by_id_and_name(account.id, name)  # type: ignore[return-value]
             except SqlConnection.DoesNotExist:
                 pass
 
         elif kind == SAMKinds.API_CONNECTION:
             try:
                 if invalidate:
-                    cached_apiconnection_by_id_and_name.invalidate(account.id, name)
-                return cached_apiconnection_by_id_and_name(account.id, name)
+                    cached_apiconnection_by_id_and_name.invalidate(account.id, name)  # type: ignore[union-attr]
+                return cached_apiconnection_by_id_and_name(account.id, name)  # type: ignore[return-value]
             except ApiConnection.DoesNotExist:
                 pass
 
@@ -2511,13 +2513,13 @@ class PluginDataSql(PluginDataBase):
                     plugin_id,
                 )
                 return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
                     cls.formatted_class_name,
                     plugin_id,
                 )
-                return None
+                raise cls.DoesNotExist(f"No {cls.formatted_class_name} found for plugin_id: {plugin_id}") from e
 
         if invalidate and plugin:
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
@@ -2526,7 +2528,7 @@ class PluginDataSql(PluginDataBase):
             return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
 
         if plugin:
-            return _get_model_by_plugin_meta(plugin.id)
+            return _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
 
     @classmethod
     def get_cached_data_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginDataSql", None]:
@@ -2545,18 +2547,18 @@ class PluginDataSql(PluginDataBase):
         def data_by_plugin_id(plugin_id: int) -> Union["PluginDataSql", None]:
             try:
                 return cls.objects.select_related("plugin").get(plugin_id=plugin_id)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
                     cls.formatted_class_name,
                     plugin_id,
                 )
-                return None
+                raise cls.DoesNotExist(f"No {cls.formatted_class_name} found for plugin_id: {plugin_id}") from e
 
         if invalidate:
-            data_by_plugin_id.invalidate(plugin.id)
+            data_by_plugin_id.invalidate(plugin.id)  # type: ignore[union-attr]
 
-        return data_by_plugin_id(plugin.id)
+        return data_by_plugin_id(plugin.id)  # type: ignore[return-value]
 
 
 class ApiConnection(ConnectionBase):
@@ -3021,18 +3023,18 @@ class PluginDataApi(PluginDataBase):
         def data_by_plugin_id(plugin_id: int) -> Union["PluginDataApi", None]:
             try:
                 return cls.objects.select_related("plugin").get(plugin_id=plugin_id)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
                     cls.formatted_class_name,
                     plugin_id,
                 )
-                return None
+                raise cls.DoesNotExist(f"PluginDataApi not found for plugin_id: {plugin_id}") from e
 
         if invalidate:
-            data_by_plugin_id.invalidate(plugin.id)
+            data_by_plugin_id.invalidate(plugin.id)  # type: ignore[union-attr]
 
-        return data_by_plugin_id(plugin.id)
+        return data_by_plugin_id(plugin.id)  # type: ignore[return-value]
 
     # pylint: disable=W0221
     @classmethod
@@ -3080,13 +3082,13 @@ class PluginDataApi(PluginDataBase):
                     plugin_id,
                 )
                 return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
                     cls.formatted_class_name,
                     plugin_id,
                 )
-                return None
+                raise cls.DoesNotExist(f"PluginDataApi not found for plugin_id: {plugin_id}") from e
 
         if invalidate and plugin:
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
@@ -3095,7 +3097,7 @@ class PluginDataApi(PluginDataBase):
             return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
 
         if plugin:
-            return _get_model_by_plugin_meta(plugin.id)
+            return _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
 
 
 PluginDataType = type[PluginDataStatic] | type[PluginDataApi] | type[PluginDataSql]
