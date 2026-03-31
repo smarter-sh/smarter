@@ -491,12 +491,12 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         try:
             data = PluginDataStatic.get_cached_data_by_plugin(plugin=self.plugin_meta)
-            if not data:
-                raise SAMPluginBrokerError(
-                    f"{self.formatted_class_name} plugin_data() failed to get cached data for {self.kind} {self.plugin_meta.name}",
-                    thing=self.kind,
-                )
-            self._plugin_data = data
+            logger.debug(
+                "%s.plugin_data() PluginDataStatic object retrieved for %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.plugin_meta.name,
+            )
         except PluginDataStatic.DoesNotExist:
             logger.warning(
                 "%s.plugin_data() PluginDataStatic object does not exist for %s %s",

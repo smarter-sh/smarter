@@ -410,7 +410,7 @@ class SAMPluginBaseBroker(AbstractBroker):
         if self._plugin_meta:
             return self._plugin_meta
         if self.orm_meta_instance:
-            self._plugin_meta = self.orm_meta_instance
+            self._plugin_meta = self.orm_meta_instance  # type: ignore
             return self._plugin_meta
         try:
             self._plugin_meta = PluginMeta.objects.get(
@@ -425,12 +425,21 @@ class SAMPluginBaseBroker(AbstractBroker):
                 self.user_profile,
             )
         except PluginMeta.DoesNotExist:
-            logger.warning(
+            logger.debug(
                 "%s.plugin_meta() - PluginMeta does not exist for name=%s and user_profile=%s",
                 logger_prefix,
                 self.name,
                 self.user_profile,
             )
+            if self._manifest:
+                logger.warning(
+                    "%s.plugin_meta() - created ORM instance from manifest for name=%s, user_profile=%s. This should be done elsewhere.",
+                    logger_prefix,
+                    self.name,
+                    self.user_profile,
+                )
+                self._plugin_meta = PluginMeta(**self.manifest_to_django_orm())
+                self._plugin_meta.save()
         return self._plugin_meta
 
     @plugin_meta.setter
@@ -450,8 +459,8 @@ class SAMPluginBaseBroker(AbstractBroker):
         self.user_profile = None
         self.account = None
         self.user = None
-        self.account = value.account
-        self.user = get_cached_admin_user_for_account(account=value.account)
+        self.account = value.user_profile.account
+        self.user = get_cached_admin_user_for_account(account=value.user_profile.account)
 
     @property
     def plugin_data(self) -> Optional[PluginDataBase]:

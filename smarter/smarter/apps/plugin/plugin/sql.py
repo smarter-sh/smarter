@@ -237,14 +237,14 @@ class SqlPlugin(PluginBase):
         if self._plugin_data:
             return self._plugin_data
 
-        self._plugin_data = PluginDataSql.get_cached_object(plugin=self.plugin_meta)  # type: ignore[call-arg]
-        if self._plugin_data:
+        try:
+            self._plugin_data = PluginDataSql.get_cached_object(plugin=self.plugin_meta)  # type: ignore[call-arg]
             logger.debug(
                 "%s.plugin_data() retrieved existing PluginDataSql from database.",
                 self.formatted_class_name,
             )
             return self._plugin_data
-        else:
+        except PluginDataSql.DoesNotExist:
             logger.debug(
                 "%s.plugin_data() no existing PluginDataSql found in database for plugin_meta: %s",
                 self.formatted_class_name,

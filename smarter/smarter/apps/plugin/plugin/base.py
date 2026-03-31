@@ -906,7 +906,23 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if not self.plugin_meta:
             return None
 
-        self._plugin_selector = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
+        try:
+            self._plugin_selector = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
+        except PluginSelector.DoesNotExist:
+            if self._manifest and self._manifest.spec and self._manifest.spec.selector:
+                self._plugin_selector = PluginSelector.objects.create(
+                    plugin=self.plugin_meta,
+                    directive=self.manifest.spec.selector.directive,
+                    search_terms=self.manifest.spec.selector.searchTerms,
+                )
+            logger.warning(
+                "%s.plugin_selector() PluginSelector did not exist for plugin %s %s %s. Created from manifest.",
+                self.formatted_pluginbase_class_name,
+                self.plugin_meta.name,
+                self.plugin_meta.kind,
+                self.user_profile,
+            )
+
         return self._plugin_selector
 
     @property
@@ -957,7 +973,24 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             return self._plugin_prompt
         if not self.plugin_meta:
             return None
-        self._plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
+        try:
+            self._plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
+        except PluginPrompt.DoesNotExist:
+            if self._manifest and self._manifest.spec and self._manifest.spec.prompt:
+                self._plugin_prompt = PluginPrompt.objects.create(
+                    plugin=self.plugin_meta,
+                    system_role=self.manifest.spec.prompt.systemRole,
+                    model=self.manifest.spec.prompt.model,
+                    temperature=self.manifest.spec.prompt.temperature,
+                    max_completion_tokens=self.manifest.spec.prompt.maxTokens,
+                )
+                logger.warning(
+                    "%s.plugin_prompt() PluginPrompt did not exist for plugin %s %s %s. Created from manifest.",
+                    self.formatted_pluginbase_class_name,
+                    self.plugin_meta.name,
+                    self.plugin_meta.kind,
+                    self.user_profile,
+                )
         return self._plugin_prompt
 
     @property

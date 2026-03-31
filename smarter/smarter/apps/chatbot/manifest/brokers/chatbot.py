@@ -290,8 +290,8 @@ class SAMChatbotBroker(AbstractBroker):
         if self._chatbot:
             return self._chatbot
 
-        self._chatbot = ChatBot.get_cached_object(invalidate=True, user_profile=self.user_profile, name=self.name)
-        if self._chatbot:
+        try:
+            self._chatbot = ChatBot.get_cached_object(invalidate=True, user_profile=self.user_profile, name=self.name)
             logger.debug(
                 "%s.chatbot() retrieved existing ChatBot instance %s owned by %s from database.",
                 self.formatted_class_name,
@@ -299,6 +299,8 @@ class SAMChatbotBroker(AbstractBroker):
                 self.user_profile,
             )
             return self._chatbot
+        except ChatBot.DoesNotExist:
+            self._chatbot = None
 
         logger.debug(
             "%s.chatbot() ChatBot instance not found for user_profile %s. Attempting to create a new instance.",
