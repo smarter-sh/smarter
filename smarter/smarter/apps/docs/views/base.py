@@ -144,6 +144,7 @@ class DocsBaseView(SmarterAuthenticatedWebView):
             args,
             kwargs,
         )
+        kwargs.pop("kind", None)
         response = view(request=cli_request, kind=self.kind.value, *args, **kwargs)
         if response.status_code != httpx.codes.OK:
             logger.error(
@@ -224,9 +225,6 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 
         return super().dispatch(request, *args, **kwargs)  # type: ignore[return]
 
-    def get(self, request, *args, **kwargs):
-        return HttpResponseBadRequest("GET method not supported for this view.")
-
     def put(self, request, *args, **kwargs):
         return HttpResponseBadRequest("PUT method not supported for this view.")
 
@@ -234,9 +232,7 @@ class DocsBaseView(SmarterAuthenticatedWebView):
         return HttpResponseBadRequest("PATCH method not supported for this view.")
 
     def post(self, request, *args, **kwargs):
-        raise NotImplementedError(
-            "POST method not implemented for base view. This should be implemented in the subclass."
-        )
+        return HttpResponseBadRequest("PATCH method not supported for this view.")
 
     def delete(self, request, *args, **kwargs):
         return HttpResponseBadRequest("DELETE method not supported for this view.")

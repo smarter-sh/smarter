@@ -73,9 +73,9 @@ class ProviderDetailView(DocsBaseView):
     template_path = "provider/manifest_detail.html"
     provider: Optional[Provider] = None
 
-    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
-        Handle POST requests to render the provider manifest detail view.
+        Handle GET requests to render the provider manifest detail view.
         This method processes the incoming request to retrieve the
         specified provider's manifest details and renders them in a
         user-friendly format. It performs validation on the provided provider
