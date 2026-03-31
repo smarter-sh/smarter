@@ -37,7 +37,7 @@ class Command(SmarterCommand):
 
         if account_number:
             account = Account.objects.get(account_number=account_number)
-            user = get_cached_admin_user_for_account(account)
+            user = get_cached_admin_user_for_account(account=account)
         if username:
             user = User.objects.get(username=username)
             user_profile = (
@@ -53,7 +53,7 @@ class Command(SmarterCommand):
             user = (
                 User.objects.get(username=username)
                 if username
-                else get_cached_admin_user_for_account(account) if account else None
+                else get_cached_admin_user_for_account(account=account) if account else None
             )
         user_profile = UserProfile.objects.get(user=user, account=account)
 

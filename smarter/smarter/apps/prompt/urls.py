@@ -16,6 +16,7 @@ from .const import namespace
 from .views import (
     ChatAppWorkbenchView,
     ChatConfigView,
+    ManifestDropZoneView,
     PromptLandingView,
     PromptListView,
     PromptManifestView,
@@ -73,6 +74,7 @@ class PromptReverseViews:
     prompt_chat_by_hashed_id = camel_case(ChatAppWorkbenchView)
     prompt_config_by_hashed_id = camel_case(ChatConfigView)
     prompt_landing_by_hashed_id = camel_case(PromptLandingView)
+    apply = "apply"
 
 
 urlpatterns = [
@@ -91,5 +93,10 @@ urlpatterns = [
     ),
     path(
         "chatbots/<str:hashed_id>/config/", ChatConfigView.as_view(), name=PromptReverseViews.prompt_config_by_hashed_id
+    ),
+    path(
+        "manifest/apply/",
+        ManifestDropZoneView.as_view(),
+        name=PromptReverseViews.apply,
     ),
 ]

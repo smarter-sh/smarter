@@ -30,14 +30,6 @@ class SAMSecretStatus(AbstractSAMStatusBase):
         description=f"{class_identifier}.account_number: The Smarter user who created this {MANIFEST_KIND}. Read only.",
     )
 
-    created: datetime = Field(
-        description=f"{class_identifier}.created: The date in which this {MANIFEST_KIND} was created. Read only.",
-    )
-
-    modified: datetime = Field(
-        description=f"{class_identifier}.modified: The date in which this {MANIFEST_KIND} was most recently changed. Read only.",
-    )
-
     last_accessed: Optional[datetime] = Field(
         None,
         description=f"{class_identifier}.last_accessed: The date in which this {MANIFEST_KIND} was most recently accessed. Read only.",

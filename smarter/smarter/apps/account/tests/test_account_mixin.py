@@ -14,7 +14,6 @@ from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
@@ -33,7 +32,7 @@ class TestAccountMixin(SmarterTestBase):
         super().setUpClass()
         logger.debug("%s.setUpClass()", cls.test_account_mixin_logger_prefix)
         cls.mortal_user, cls.account, cls.user_profile = mortal_user_factory()
-        cls.admin_user = get_cached_admin_user_for_account(cls.account)
+        cls.admin_user = get_cached_admin_user_for_account(account=cls.account)
         cls.other_user, cls.other_account, cls.other_user_profile = mortal_user_factory()
 
     @classmethod
@@ -54,7 +53,7 @@ class TestAccountMixin(SmarterTestBase):
 
         # tear down the admin user
         try:
-            up = get_cached_user_profile(user=cls.admin_user)
+            up = UserProfile.get_cached_object(user=cls.admin_user)
             if up:
                 up.delete()
         except UserProfile.DoesNotExist:
@@ -113,7 +112,7 @@ class TestAccountMixin(SmarterTestBase):
         # verify that the admin user is what we think it is and that it's profile is cached
         # and that it's associated with the same account as user.
         self.assertIsNotNone(self.admin_user)
-        admin_user_profile = get_cached_user_profile(user=self.admin_user, account=self.account)
+        admin_user_profile = UserProfile.get_cached_object(user=self.admin_user, account=self.account)
         self.assertIsNotNone(admin_user_profile)
         if not isinstance(admin_user_profile, UserProfile):
             self.fail("Admin user profile should not be None")
@@ -122,25 +121,25 @@ class TestAccountMixin(SmarterTestBase):
 
     def test_get_cached_admin_user_for_account(self) -> None:
         """Test get_cached_admin_user_for_account."""
-        admin_user = get_cached_admin_user_for_account(self.account)
+        admin_user = get_cached_admin_user_for_account(account=self.account)
         self.assertIsNotNone(admin_user)
         self.assertEqual(admin_user, self.admin_user)
 
     def test_get_cached_user_profile(self) -> None:
-        """Test get_cached_user_profile."""
-        user_profile = get_cached_user_profile(user=self.mortal_user, account=self.account)
+        """Test get_cached_object()."""
+        user_profile = UserProfile.get_cached_object(user=self.mortal_user, account=self.account)
         self.assertIsNotNone(user_profile)
         self.assertEqual(user_profile, self.user_profile)
 
         # get the profile without providing an account
-        user_profile = get_cached_user_profile(user=self.mortal_user)
+        user_profile = UserProfile.get_cached_object(user=self.mortal_user)
         self.assertIsNotNone(user_profile)
         self.assertEqual(user_profile, self.user_profile)
 
         # get the admin user profile
-        user_profile = get_cached_user_profile(user=self.admin_user)
+        user_profile = UserProfile.get_cached_object(user=self.admin_user)
         self.assertIsNotNone(user_profile)
-        self.assertEqual(user_profile.user, self.admin_user)  # type: ignore[return-value]
+        self.assertEqual(user_profile.cached_user, self.admin_user)  # type: ignore[return-value]
 
     def test_empty_initialization(self) -> None:
         """Test instantiation with no arguments."""

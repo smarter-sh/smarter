@@ -7,7 +7,7 @@ from pydantic import Field
 
 from smarter.apps.account.models import PROVIDERS
 from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
-from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings_defaults
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
@@ -60,22 +60,22 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
     )
     defaultModel: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.default_model[str]. Optional. The default model to use for the chatbot. This changes routinely and is currently defaults to {SettingsDefaults.LLM_DEFAULT_MODEL}",
+        description=f"{class_identifier}.default_model[str]. Optional. The default model to use for the chatbot. This changes routinely and is currently defaults to {settings_defaults.LLM_DEFAULT_MODEL}",
     )
     defaultSystemRole: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.default_system_role[str]. Optional. The default system prompt to use for the chatbot. This defaults to the following value:\n{SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE}.\nThe system prompt is the first message in the conversation and is used to set the context for the chatbot. It is important to keep this prompt short, as it is included in the token count for each message. The maximum length of the system prompt is {SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH} characters.",
+        description=f"{class_identifier}.default_system_role[str]. Optional. The default system prompt to use for the chatbot. This defaults to the following value:\n{settings_defaults.LLM_DEFAULT_SYSTEM_ROLE}.\nThe system prompt is the first message in the conversation and is used to set the context for the chatbot. It is important to keep this prompt short, as it is included in the token count for each message. The maximum length of the system prompt is {SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH} characters.",
     )
     defaultTemperature: Optional[float] = Field(
         None,
         ge=0.0,
         le=1.0,
-        description=f"{class_identifier}.default_temperature[float]. Optional. The default temperature to use for the chatbot. This defaults to {SettingsDefaults.LLM_DEFAULT_TEMPERATURE}.\nThe temperature is a floating point value between 0 and 1 that controls the randomness of the chatbot's responses. A value of 0 means that the chatbot will always choose the most likely response, while a value of 1 means that the chatbot will choose a random response. Low values work better for information retrieval tasks, while high values work better for creative tasks.",
+        description=f"{class_identifier}.default_temperature[float]. Optional. The default temperature to use for the chatbot. This defaults to {settings_defaults.LLM_DEFAULT_TEMPERATURE}.\nThe temperature is a floating point value between 0 and 1 that controls the randomness of the chatbot's responses. A value of 0 means that the chatbot will always choose the most likely response, while a value of 1 means that the chatbot will choose a random response. Low values work better for information retrieval tasks, while high values work better for creative tasks.",
     )
     defaultMaxTokens: Optional[int] = Field(
         None,
         gt=0,
-        description=f"{class_identifier}.default_max_tokens[int]. Optional. The default max tokens to use for the chatbot. This defaults to {SettingsDefaults.LLM_DEFAULT_MAX_TOKENS}.\nThe max tokens is an integer value that controls the maximum number of tokens in the chatbot's response. The maximum number of tokens is the sum of the tokens in the prompt and the tokens in the response. The maximum number of tokens varies by provider. Refer to vendor documentation as this value routinely changes as new models are released.",
+        description=f"{class_identifier}.default_max_tokens[int]. Optional. The default max tokens to use for the chatbot. This defaults to {settings_defaults.LLM_DEFAULT_MAX_TOKENS}.\nThe max tokens is an integer value that controls the maximum number of tokens in the chatbot's response. The maximum number of tokens is the sum of the tokens in the prompt and the tokens in the response. The maximum number of tokens varies by provider. Refer to vendor documentation as this value routinely changes as new models are released.",
     )
 
     appName: Optional[str] = Field(

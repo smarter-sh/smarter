@@ -30,6 +30,8 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
 
     def whoami(self):
         try:
+            if not self.user_profile:
+                return JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "User profile not found."})
             data = {
                 SmarterJournalApiResponseKeys.DATA: {
                     "user": UserSerializer(self.user_profile.user).data,

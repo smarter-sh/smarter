@@ -20,8 +20,7 @@ from smarter.apps.account.models import (
     get_resolved_user,
 )
 from smarter.apps.account.serializers import PaymentMethodSerializer
-from smarter.apps.account.utils import get_cached_account, get_cached_account_for_user
-from smarter.common.conf import smarter_settings
+from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -30,6 +29,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .base import AccountListViewBase, AccountViewBase
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
@@ -43,7 +43,7 @@ class PaymentMethodView(AccountViewBase):
     """Payment method view for smarter api."""
 
     def get(self, request, payment_method_id: Optional[int] = None):
-        return get_payment_method(request, payment_method_id)
+        return get_payment_method(request, payment_method_id)  # type: ignore[return-value]
 
     def post(self, request):
         return create_payment_method(request)
@@ -104,7 +104,7 @@ def get_payment_method(request, payment_method_id: int):
     user = get_resolved_user(request.user)
     if user is None:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
-    account = get_cached_account_for_user(user=user)
+    account = get_cached_account_for_user(invalidate=False, user=user)  # type: ignore[assignment]
 
     # staff can manage payment methods for their account
     if isinstance(request.user, User) and request.user.is_superuser or (account == account and request.user.is_staff):
@@ -177,7 +177,7 @@ def update_payment_method(request: WSGIRequest):
         return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND.value)
 
     if isinstance(request.user, User):
-        account = get_cached_account_for_user(user=request.user)
+        account = get_cached_account_for_user(invalidate=False, user=request.user)
 
     # superusers can manage any payment method. staff can manage payment methods for their account
     if isinstance(request.user, User) and not (
@@ -213,7 +213,7 @@ def delete_payment_method(request: WSGIRequest, payment_method_id: Optional[int]
 
     try:
         if payment_method_id:
-            account = get_cached_account(account_id=payment_method_id)
+            account = Account.get_cached_object(pk=payment_method_id)
         else:
             account = UserProfile.objects.get(user=request.user).account
     except UserProfile.DoesNotExist:

@@ -1,7 +1,7 @@
 SmarterAdminWebView
 ===================
 
-.. autoclass:: smarter.lib.django.view_helpers.SmarterAdminWebView
+.. autoclass:: smarter.lib.django.views.SmarterAdminWebView
    :members:
    :undoc-members:
    :inherited-members:

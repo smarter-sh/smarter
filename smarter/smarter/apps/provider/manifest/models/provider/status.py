@@ -18,14 +18,6 @@ class SAMProviderStatus(AbstractSAMStatusBase):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    created: datetime = Field(
-        description=f"{class_identifier}.created: The date in which this {MANIFEST_KIND} was created. Read only.",
-    )
-
-    modified: datetime = Field(
-        description=f"{class_identifier}.modified: The date in which this {MANIFEST_KIND} was most recently changed. Read only.",
-    )
-
     is_active: bool = Field(
         description=f"{class_identifier}.is_active: Indicates whether this {MANIFEST_KIND} is currently active. Read only.",
     )

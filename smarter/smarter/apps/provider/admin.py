@@ -3,7 +3,7 @@
 
 from django.contrib import admin
 
-from smarter.apps.account.utils import get_resolved_user
+from smarter.apps.account.models import get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,

@@ -7,6 +7,7 @@ from http import HTTPStatus
 
 from bs4 import BeautifulSoup
 from django import template
+from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
@@ -16,7 +17,8 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
+from smarter.lib.cache import lazy_cache
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -29,11 +31,20 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
 
 
+# pylint: disable=W0613
+def should_log_verbose(level):
+    """Check if logging should be done based on the waffle switch."""
+    return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
+
+
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
+logger_prefix = formatted_text(__name__)
+logger_prefix_invalidations = formatted_text_blue(f"{__name__}.smarter_cache_page_by_user.invalidate()")
 
 register = template.Library()
-cache_prefix = f"{__name__}.cache_page_by_user"
+cache_prefix = f"{__name__}.smarter_cache_page_by_user"
 
 
 def redirect_and_expire_cache(path: str = "/"):
@@ -45,7 +56,7 @@ def redirect_and_expire_cache(path: str = "/"):
     return response
 
 
-def cache_page_by_user(timeout):
+def smarter_cache_page_by_user(timeout):
     """
     Decorator to cache a view's response based on the authenticated user.
     This decorator applies Django's `cache_page` decorator with a cache key
@@ -57,7 +68,7 @@ def cache_page_by_user(timeout):
 
         .. code-block:: python
 
-            @method_decorator(cache_page_by_user(60 * 15), name="dispatch")
+            @method_decorator(smarter_cache_page_by_user(60 * 15), name="dispatch")
             class MyView(SmarterAuthenticatedWebView):
             ...
 
@@ -70,14 +81,39 @@ def cache_page_by_user(timeout):
     def decorator(view_func):
 
         @wraps(view_func)
-        def _wrapped_view(request, *args, **kwargs):
+        def wrapper(request, *args, **kwargs):
+            if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SMARTER_PAGE_CACHING):
+                return view_func(request, *args, **kwargs)
+            path = str(request.path).replace("/", ".").strip(".")
             if hasattr(request, "user") and request.user.is_authenticated:
-                key_prefix = f"{cache_prefix}.user_{request.user.id}"
+                key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"
             else:
-                key_prefix = f"{cache_prefix}.user_anon"
+                key_prefix = f"{cache_prefix}.user_anon.{path}"
+            verbose_logger.debug(
+                "%s - %s with cache key_prefix: %s and timeout %s", logger_prefix, path, key_prefix, timeout
+            )
             return cache_page(timeout, key_prefix=key_prefix)(view_func)(request, *args, **kwargs)
 
-        return _wrapped_view
+        def invalidate(request: HttpRequest, *args, **kwargs):
+            if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SMARTER_PAGE_CACHING):
+                return
+            verbose_logger.debug(
+                "%s called with request: %s, args: %s, kwargs: %s", logger_prefix_invalidations, request, args, kwargs
+            )
+            if request:
+                path = str(request.path).replace("/", ".").strip(".")
+                if hasattr(request, "user") and request.user.is_authenticated:
+                    key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"  # type: ignore[union-attr]
+                else:
+                    key_prefix = f"{cache_prefix}.user_anon.{path}"
+                verbose_logger.debug("%s searching cache for key_prefix: %s", logger_prefix_invalidations, key_prefix)
+                hit = lazy_cache.get(key_prefix)
+                if hit is not None:
+                    lazy_cache.delete(key_prefix)
+                    logger.info("%s Cache invalidated for key_prefix: %s", logger_prefix_invalidations, key_prefix)
+
+        wrapper.invalidate = invalidate  # type: ignore[attr-defined]
+        return wrapper
 
     return decorator
 
@@ -117,7 +153,7 @@ class SmarterView(View, SmarterRequestMixin):
         :return: None
         :rtype: None
         """
-        logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.logger_prefix, args, kwargs)
+        verbose_logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.logger_prefix, args, kwargs)
         super().__init__(*args, **kwargs)
 
         # none of these are actually expected until sometime between dispatch() and setup()
@@ -208,7 +244,7 @@ class SmarterView(View, SmarterRequestMixin):
         :return: The result of the superclass setup method.
         :rtype: Any
         """
-        logger.debug(
+        verbose_logger.debug(
             "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
         )
         if not self.smarter_request:
@@ -216,7 +252,7 @@ class SmarterView(View, SmarterRequestMixin):
                 request or kwargs["request"] or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
             )
             if self.smarter_request:
-                logger.debug(
+                verbose_logger.debug(
                     "%s.setup() - SmarterRequestMixin.smarter_request initialized successfully.",
                     self.logger_prefix,
                 )
@@ -327,6 +363,7 @@ class SmarterNeverCachedWebView(SmarterWebHtmlView):
         return formatted_text(f"{__name__}.{SmarterNeverCachedWebView.__name__}")
 
 
+@method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     """
     An optimized view that requires authentication.
@@ -375,9 +412,20 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         :return: The result of the superclass setup method.
         :rtype: Any
         """
-        logger.debug(
-            "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
+        verbose_logger.debug(
+            "%s.setup() called with request: %s, args: %s, kwargs: %s, user: %s",
+            self.logger_prefix,
+            request,
+            args,
+            kwargs,
+            getattr(request, "user", None),
         )
+        # This flag is used to circumvent DRF token authentication for the brokered
+        # request we make to our own API views in get_brokered_json_response().
+        # We initialize it now, to ensure that it's present for any downstream
+        # code that might check it before we get to dispatch().
+        request = self.set_is_internal_api_request(request, False)
+
         retval = super().setup(request, *args, **kwargs)
         if not self.smarter_request:
             self.smarter_request = request
@@ -392,6 +440,14 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         :return: An HttpResponse object.
         :rtype: HttpResponse
         """
+        verbose_logger.debug(
+            "%s.dispatch() called with request: %s, user: %s, args: %s, kwargs: %s",
+            self.logger_prefix,
+            request,
+            getattr(request, "user", None),
+            args,
+            kwargs,
+        )
         if hasattr(request, "user") and hasattr(request.user, "is_authenticated") and request.user.is_authenticated:
             response = super().dispatch(request, *args, **kwargs)
             patch_vary_headers(response, ["Cookie"])

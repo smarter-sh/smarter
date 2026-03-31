@@ -17,7 +17,6 @@ from rest_framework.response import Response
 
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.utils import (
-    get_cached_user_profile,
     valid_resource_owners_for_user,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
@@ -75,23 +74,15 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
 
     def post(self, request: WSGIRequest, plugin_id, new_name):
 
-        @cache_results()
-        def cached_plugin_by_id(plugin_id: int) -> Optional[PluginMeta]:
-            """Retrieve PluginMeta by ID with caching."""
-            try:
-                return PluginMeta.objects.get(id=plugin_id)
-            except PluginMeta.DoesNotExist:
-                return None
-
         user = get_resolved_user(request.user)
         if not user:
             return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
-        user_profile = get_cached_user_profile(user=user)  # type: ignore
+        user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,  # type: ignore[arg-type]
-            user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=cached_plugin_by_id(plugin_id),
+            account=user_profile.cached_account,  # type: ignore[arg-type]
+            user=user_profile.cached_user,  # type: ignore[arg-type]
+            plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             return JsonResponse(
@@ -131,7 +122,7 @@ class AddPluginExamplesView(SmarterAuthenticatedAPIView):
 
         try:
             user = cached_user_by_id(user_id) if user_id else request.user
-            user_profile = get_cached_user_profile(user=user)  # type: ignore
+            user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -188,27 +179,19 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 def get_plugin(request, plugin_id):
     """Get a plugin json representation by id."""
 
-    @cache_results()
-    def cached_plugin_by_id(plugin_id: int) -> Optional[PluginMeta]:
-        """Retrieve PluginMeta by ID with caching."""
-        try:
-            return PluginMeta.objects.get(id=plugin_id)
-        except PluginMeta.DoesNotExist:
-            return None
-
     plugin: Optional[PluginBase] = None
 
     try:
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
 
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,  # type: ignore[arg-type]
-            user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=cached_plugin_by_id(plugin_id),
+            account=user_profile.cached_account,  # type: ignore[arg-type]
+            user=user_profile.cached_user,  # type: ignore[arg-type]
+            plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             raise PluginDataValueError(
@@ -230,7 +213,7 @@ def get_plugin(request, plugin_id):
 def create_plugin(request, data: Optional[dict] = None):
     """Create a plugin from a json representation in the body of the request."""
     try:
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
@@ -251,8 +234,8 @@ def create_plugin(request, data: Optional[dict] = None):
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,  # type: ignore[arg-type]
-            user=user_profile.user,  # type: ignore[arg-type]
+            account=user_profile.cached_account,  # type: ignore[arg-type]
+            user=user_profile.cached_user,  # type: ignore[arg-type]
             manifest=data,  # type: ignore[arg-type]
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -279,7 +262,7 @@ def update_plugin(request: WSGIRequest):
     if not user:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
     try:
-        user_profile = get_cached_user_profile(user=user)  # type: ignore
+        user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
@@ -305,8 +288,8 @@ def update_plugin(request: WSGIRequest):
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,
-            user=user_profile.user,
+            account=user_profile.cached_account,  # type: ignore[arg-type]
+            user=user_profile.cached_user,  # type: ignore[arg-type]
             manifest=SAMPluginCommon(**data),  # type: ignore[arg-type]
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -330,16 +313,16 @@ def update_plugin(request: WSGIRequest):
 def delete_plugin(request, plugin_id):
     """delete a plugin by id."""
     try:
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = UserProfile.get_cached_object(user=request.user)
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,  # type: ignore[arg-type]
-            user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=PluginMeta.objects.get(id=plugin_id),
+            account=user_profile.cached_account,  # type: ignore[arg-type]
+            user=user_profile.cached_user,  # type: ignore[arg-type]
+            plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
             raise PluginDataValueError(

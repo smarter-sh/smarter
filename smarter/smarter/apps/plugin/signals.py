@@ -131,7 +131,7 @@ Example::
     plugin_selected.send(
         sender=self.selected,
         plugin=self,
-        user=self.user_profile.user if self.user_profile else None,
+        user=self.user_profile.cached_user if self.user_profile else None,
         input_text=input_text,
         search_term=search_term,
     )

@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 import botocore.exceptions
 
-from smarter.common.conf import Services, smarter_settings
+from smarter.common.conf import services, smarter_settings
 
 # our stuff
 from smarter.common.const import (
@@ -101,7 +101,7 @@ class AWSBase(SmarterHelperMixin):
         debug_mode: bool = False,
         init_info: Optional[str] = None,
     ):
-        Services.raise_error_on_disabled(Services.AWS_CLI)
+        services.raise_error_on_disabled(services.AWS_CLI)
         logger.debug("%s.__init__() initializing", self.formatted_class_name)
 
         self._shared_resource_identifier = shared_resource_identifier or smarter_settings.shared_resource_identifier

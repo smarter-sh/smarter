@@ -27,6 +27,7 @@ from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.models import MetaDataModel, TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
@@ -53,6 +54,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 ResolvedUserType = Optional[Union["User", "AbstractUser", "AnonymousUser"]]
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
@@ -145,6 +147,11 @@ def get_resolved_user(
 
     # this is the expected case
     if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
+        logger.debug(
+            "%s - user is instance of expected type: %s",
+            formatted_text(__name__) + ".get_resolved_user()",
+            type(user),
+        )
         return user
 
     # these are manageable edge cases
@@ -308,6 +315,97 @@ class Account(MetaDataModel):
         except cls.DoesNotExist:
             return None
 
+    @classmethod
+    def get_cached_object(
+        cls,
+        invalidate: Optional[bool] = False,
+        pk: Optional[int] = None,
+        name: Optional[str] = None,
+        account_number: Optional[str] = None,
+        company_name: Optional[str] = None,
+    ) -> Optional["Account"]:
+        """
+        Retrieve an Account instance by account number with caching.
+
+        This method uses caching to optimize retrieval of Account instances by their account number.
+        It checks the cache first and falls back to a database query if the cache is missed.
+
+        :param invalidate: If True, invalidate the cache for this query.
+        :type invalidate: bool, optional
+        :param pk: Optional primary key to search for (ignored if account_number is provided).
+        :type pk: int, optional
+        :param name: Optional name to search for (ignored if account_number is provided).
+        :type name: str, optional
+        :param account_number: String. The account number to search for.
+        :type account_number: str, optional
+        :param company_name: String. The company name to search for (used if account_number is not provided).
+        :type company_name: str, optional
+
+        :returns: Optional[Account]
+            The Account instance if found, otherwise None.
+
+        .. note::
+
+            Caching can significantly improve performance for frequently accessed accounts.
+
+        **Example usage**::
+
+            account = Account.get_cached_object(account_number="1234-5678-9012")
+            if account:
+                print(account.company_name)
+
+        """
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger.debug(
+            "%s called with pk=%s, name=%s, account_number=%s, company_name=%s, invalidate=%s",
+            logger_prefix,
+            pk,
+            name,
+            account_number,
+            company_name,
+            invalidate,
+        )
+
+        @cache_results(cls.cache_expiration)
+        def _get_account_by_number(account_number: str, class_name: str) -> Optional["Account"]:
+            try:
+                logger.debug(
+                    "%s._get_account_by_number() cache miss for account_number=%s", logger_prefix, account_number
+                )
+                return cls.objects.get(account_number=account_number)
+            except cls.DoesNotExist:
+                logger.debug(
+                    "%s._get_account_by_number() no Account found for account_number=%s", logger_prefix, account_number
+                )
+                return None
+
+        @cache_results(cls.cache_expiration)
+        def _get_account_by_company_name(company_name: str, class_name: str) -> Optional["Account"]:
+            try:
+                logger.debug(
+                    "%s._get_account_by_company_name() cache miss for company_name=%s", logger_prefix, company_name
+                )
+                return cls.objects.get(company_name=company_name)
+            except cls.DoesNotExist:
+                logger.debug(
+                    "%s._get_account_by_company_name() no Account found for company_name=%s",
+                    logger_prefix,
+                    company_name,
+                )
+                return None
+
+        if invalidate:
+            _get_account_by_number.invalidate(account_number=account_number, class_name=Account.__name__)
+            _get_account_by_company_name.invalidate(company_name=company_name, class_name=Account.__name__)
+
+        if account_number:
+            return _get_account_by_number(account_number=account_number, class_name=Account.__name__)
+
+        if company_name:
+            return _get_account_by_company_name(company_name=company_name, class_name=Account.__name__)
+
+        return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
+
     # pylint: disable=missing-class-docstring
     class Meta:
         verbose_name = "Account"
@@ -315,6 +413,9 @@ class Account(MetaDataModel):
 
     def __str__(self):
         return str(self.account_number) + " - " + str(self.company_name)
+
+    def __repr__(self) -> str:
+        return super().__str__()
 
 
 class AccountContact(TimestampedModel):
@@ -661,6 +762,44 @@ class UserProfile(MetaDataModel):
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
     )
 
+    @property
+    def cached_user(self) -> Optional[User]:
+        """
+        Retrieve the associated User instance with caching.
+        This significantly reduces the number of database queries when accessing
+        the user from the user profile.
+
+        :returns: Optional[User]
+            The associated User instance, or None if not found.
+
+        **Example usage**::
+
+            user = profile.cached_user
+            if user:
+                print(user.email)
+
+        """
+        return self.user
+
+    @property
+    def cached_account(self) -> Optional[Account]:
+        """
+        Retrieve the associated Account instance with caching.
+        This significantly reduces the number of database queries
+        when accessing the account from the user profile.
+
+        :returns: Optional[Account]
+            The associated Account instance, or None if not found.
+
+        **Example usage**::
+
+            account = user_profile.cached_account
+            if account:
+                print(account.company_name)
+
+        """
+        return self.account
+
     def add_to_account_contacts(self, is_primary: bool = False):
         """
         Add the user to the account's contact list.
@@ -758,33 +897,227 @@ class UserProfile(MetaDataModel):
 
             :class:`UserProfile`
         """
-        admins = cls.objects.filter(account=account, user__is_staff=True).order_by("user__id")
-        if admins.exists():
-            return admins.first().user  # type: ignore[return-value]
 
-        logger.error(
-            "%s.admin_for_account() No admin found for account %s", formatted_text(__name__ + ".UserProfile()"), account
-        )
+        @cache_results(cls.cache_expiration)
+        def _get_admin_for_account(account_id: int, class_name: str) -> Optional[User]:
 
-        users = cls.objects.filter(account=account).order_by("user__id")
-        if users.exists():
-            user = users.first().user  # type: ignore[return-value]
-            return user
+            admins = cls.objects.filter(account_id=account_id, user__is_staff=True).order_by("user__id")
+            if admins.exists():
+                return admins.first().user  # type: ignore[return-value]
 
-        logger.error(
-            "%s.admin_for_account() No user for account %s", formatted_text(__name__ + ".UserProfile()"), account
-        )
-        admin_user = cls.objects.get_or_create(username=SMARTER_ADMIN_USERNAME)
-        user_profile = cls.objects.create(user=admin_user, account=account)
-        logger.warning(
-            "%s.admin_for_account() Created admin user for account %s. Use manage.py to set the password",
-            formatted_text(__name__ + ".UserProfile()"),
+            logger.error(
+                "%s.admin_for_account() No admin found for account %s",
+                formatted_text(__name__ + ".UserProfile()"),
+                account,
+            )
+
+            users = cls.objects.filter(account_id=account_id).order_by("user__id")
+            if users.exists():
+                user = users.first().user  # type: ignore[return-value]
+                return user
+
+            logger.error(
+                "%s.admin_for_account() No user for account %s", formatted_text(__name__ + ".UserProfile()"), account
+            )
+            admin_user = cls.objects.get_or_create(username=SMARTER_ADMIN_USERNAME)
+            user_profile = cls.objects.create(user=admin_user, account=account)
+            logger.warning(
+                "%s.admin_for_account() Created admin user for account %s. Use manage.py to set the password",
+                formatted_text(__name__ + ".UserProfile()"),
+                account,
+            )
+            return user_profile.user
+
+        return _get_admin_for_account(account_id=account.id, class_name=UserProfile.__name__)
+
+    @classmethod
+    def get_cached_object(
+        cls,
+        invalidate: Optional[bool] = False,
+        pk: Optional[int] = None,
+        name: Optional[str] = None,
+        user: Optional[User] = None,
+        username: Optional[str] = None,
+        account: Optional[Account] = None,
+    ) -> Optional["UserProfile"]:
+        """
+        Retrieve a model instance by primary key or name, using caching to
+        optimize performance. This method is selectively overridden in
+        models that inherit from MetaDataModel to provide class-specific
+        function parameters.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve by primary key
+            instance = MyModel.get_cached_object(pk=1)
+            # Retrieve by name
+            instance = MyModel.get_cached_object(name="exampleName")
+
+        :param pk: The primary key of the model instance to retrieve.
+        :param name: The name of the model instance to retrieve.
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional["UserProfile"]
+        """
+        logger_prefix = formatted_text(__name__ + ".UserProfile.get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, name: %s, user: %s, username: %s, account: %s, invalidate: %s",
+            logger_prefix,
+            pk,
+            name,
+            user,
+            username,
             account,
+            invalidate,
         )
-        return user_profile.user
+
+        @cache_results(cls.cache_expiration)
+        def _get_object_by_user_and_account(user: User, account: Account, class_name: str) -> Optional["UserProfile"]:
+            try:
+                retval = (
+                    UserProfile.objects.prefetch_related("tags")
+                    .select_related("user", "account")
+                    .get(user=user, account=account)
+                )
+                logger.debug(
+                    "%s._get_object_by_user_and_account() fetched %s for user: %s and account: %s",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    cls.__name__,
+                    user.email,
+                    account,
+                )
+                _ = retval.user
+                _ = retval.account
+                return retval
+            except UserProfile.DoesNotExist:
+                logger.debug(
+                    "%s._get_object_by_user_and_account() no %s found for user: %s, account: %s",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    UserProfile.__name__,
+                    user.email,
+                    account,
+                )
+                return None
+
+        @cache_results(cls.cache_expiration)
+        def _get_object_by_user(user: User, class_name: str) -> Optional["UserProfile"]:
+            try:
+                retval = UserProfile.objects.prefetch_related("tags").select_related("user", "account").get(user=user)
+                logger.debug(
+                    "%s._get_object_by_user() fetched %s for user: %s",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    cls.__name__,
+                    user.email,
+                )
+                _ = retval.user
+                _ = retval.account
+                return retval
+            except UserProfile.DoesNotExist:
+                logger.debug(
+                    "%s._get_object_by_user() no %s found for user: %s",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    UserProfile.__name__,
+                    user.email,
+                )
+                return None
+            except UserProfile.MultipleObjectsReturned:
+                logger.error(
+                    "%s.get_cached_object() Multiple UserProfiles found for user %s. Defaulting to first result.",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    user.email,
+                )
+                return (
+                    UserProfile.objects.prefetch_related("tags")
+                    .select_related("user", "account")
+                    .filter(user=user)
+                    .first()
+                )
+
+        @cache_results(cls.cache_expiration)
+        def _get_object_by_account(account: Account, class_name: str) -> Optional["UserProfile"]:
+            try:
+                user = UserProfile.admin_for_account(account)
+                retval = (
+                    UserProfile.objects.prefetch_related("tags")
+                    .select_related("user", "account")
+                    .get(account=account, user=user)
+                )
+                logger.debug(
+                    "%s._get_object_by_account() fetched %s for account admin %s",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    UserProfile.__name__,
+                    retval,
+                )
+                _ = retval.user
+                _ = retval.account
+                return retval
+            except UserProfile.DoesNotExist:
+                logger.debug(
+                    "%s._get_object_by_account() no %s found for account admin %s",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    UserProfile.__name__,
+                    user,
+                )
+                return None
+            except UserProfile.MultipleObjectsReturned:
+                logger.error(
+                    "%s.get_cached_object() Multiple UserProfiles found for account %s. Defaulting to first result.",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    account,
+                )
+                return (
+                    UserProfile.objects.prefetch_related("tags")
+                    .select_related("user", "account")
+                    .filter(account=account)
+                    .first()
+                )
+
+        if username and not user:
+            try:
+                user = User.objects.get(username=username)
+                logger.debug(
+                    "%s.get_cached_object() fetched user by username: %s",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    username,
+                )
+            except User.DoesNotExist:
+                logger.error(
+                    "%s.get_cached_object() No user found with username %s.",
+                    formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    username,
+                )
+                return None
+
+        if invalidate:
+            _get_object_by_user_and_account.invalidate(user=user, account=account, class_name=UserProfile.__name__)
+            _get_object_by_user.invalidate(user=user, class_name=UserProfile.__name__)
+            _get_object_by_account.invalidate(account=account, class_name=UserProfile.__name__)
+
+        if user or account:
+            if user and account:
+                return _get_object_by_user_and_account(user, account, UserProfile.__name__)
+            if user:
+                return _get_object_by_user(user=user, class_name=UserProfile.__name__)
+            if account:
+                return _get_object_by_account(account=account, class_name=UserProfile.__name__)
+
+        return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
 
     def __str__(self):
-        return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
+        try:
+            user_identifier = (
+                self.user.email if self.user and self.user.email else (self.user.username if self.user else "NoUser")
+            )
+            company_name = self.account.company_name if self.account else "NoAccount"
+        except User.DoesNotExist:
+            user_identifier = "NoUser"
+        except Account.DoesNotExist:
+            company_name = "NoAccount"
+        return f"{company_name}-{user_identifier}"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class MetaDataWithOwnershipModel(MetaDataModel):
@@ -813,6 +1146,297 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         )
 
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="%(class)ss")
+
+    # pylint: disable=W0221
+    @classmethod
+    def get_cached_object(
+        cls,
+        invalidate: Optional[bool] = False,
+        pk: Optional[int] = None,
+        name: Optional[str] = None,
+        user: Optional[User] = None,
+        user_profile: Optional[UserProfile] = None,
+        username: Optional[str] = None,
+        account: Optional[Account] = None,
+    ) -> Optional[models.Model]:
+        """
+        Retrieve a model instance using caching to optimize performance.
+
+        Examples of retrieval patterns:
+
+        .. code-block:: python
+
+            # By primary key
+            instance = MyModel.get_cached_object(pk=123)
+
+            # By name and user profile
+            instance = MyModel.get_cached_object(name="Resource Name", user_profile=user_profile)
+
+            # By name and account
+            instance = MyModel.get_cached_object(name="Resource Name", account=account)
+
+        :param pk: The primary key of the model instance to retrieve.
+        :param name: The name of the model instance to retrieve.
+        :param user: The user associated with the model instance.
+        :param user_profile: The user profile associated with the model instance.
+        :param account: The account associated with the model instance.
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional[models.Model]
+        """
+        logger_prefix = formatted_text(cls.__name__ + ".get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
+            logger_prefix,
+            pk,
+            name,
+            user,
+            user_profile,
+            username,
+            account,
+        )
+
+        if username and not user and not user_profile:
+            logger.debug("%s Resolving user_profile from username: %s", logger_prefix, username)
+            user_profile = UserProfile.get_cached_object(invalidate=invalidate, username=username)
+            user = user_profile.cached_user if user_profile else None
+
+        if user_profile is not None and (not user or not account):
+            logger.debug("%s Resolving user and account from user_profile: %s", logger_prefix, user_profile)
+            user = user or user_profile.cached_user
+            account = account or user_profile.cached_account
+
+        @cache_results(cls.cache_expiration)
+        def _get_object_by_pk(pk: int, class_name: str = cls.__name__) -> Optional["MetaDataWithOwnershipModel"]:
+            """
+            Internal method to retrieve a model instance by primary key with caching.
+            Prefetches related tags and selects related user profile, account, and
+            user for optimal access. Handles most common SAM pk retrieval scenarios.
+
+            :param pk: The primary key of the model instance to retrieve.
+            :param class_name: The name of the class for logging purposes.
+            :class_name: The name of the class for cache key purposes.
+            :returns: The model instance if found, otherwise None.
+            :rtype: Optional["MetaDataWithOwnershipModel"]
+            """
+            try:
+                retval = (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(pk=pk)
+                )
+                logger.debug(
+                    "%s._get_object_by_pk() fetched %s - %s",
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    type(retval).__name__,
+                    str(retval),
+                )
+                return retval
+            except cls.DoesNotExist:
+                logger.debug(
+                    "%s._get_object_by_pk() no %s object found for pk: %s",
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    cls.__name__,
+                    pk,
+                )
+                return None
+
+        @cache_results(cls.cache_expiration)
+        def _get_object_by_name_and_user_profile(
+            name: str, user_profile: UserProfile, class_name: str = cls.__name__
+        ) -> Optional["MetaDataWithOwnershipModel"]:
+            """
+            Internal method to retrieve a model instance by name and user
+            profile with caching. Prefetches related tags and selects
+            related user profile, account, and user for optimal access.
+            Handles common SAM retrieval patterns for name/user.
+
+            :param name: The name of the model instance to retrieve.
+            :param user_profile: The user profile associated with the model instance.
+            :param class_name: The name of the class for cache key purposes.
+
+            :returns: The model instance if found, otherwise None.
+            :rtype: Optional["MetaDataWithOwnershipModel"]
+            """
+            try:
+                retval = (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(name=name, user_profile=user_profile)
+                )
+                logger.debug(
+                    "%s._get_object_by_name_and_user_profile() fetched %s for name: %s and user_profile: %s",
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    type(retval).__class__.__name__,
+                    name,
+                    user_profile,
+                )
+                return retval
+            except cls.DoesNotExist:
+                logger.debug(
+                    "%s._get_object_by_name_and_user_profile() no %s found for name: %s and user_profile: %s",
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    cls.__name__,
+                    name,
+                    user_profile,
+                )
+                return None
+            except cls.MultipleObjectsReturned:
+                logger.error(
+                    "%s.get_cached_object() Multiple %s objects found with name '%s' and user profile '%s'. Defaulting to first result.",
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    cls.__name__,
+                    name,
+                    user_profile,
+                )
+                return cls.objects.prefetch_related("tags").filter(name=name, user_profile=user_profile).first()
+
+        @cache_results(cls.cache_expiration)
+        def _get_object_by_name_and_account(
+            name: str, account: Account, class_name: str = cls.__name__
+        ) -> Optional["MetaDataWithOwnershipModel"]:
+            """
+            Internal method to retrieve a model instance by name and account with
+            caching. Prefetches related tags and selects related user profile,
+            account, and user for optimal access. Handles common SAM retrieval
+            patterns for name/account.
+
+            :param name: The name of the model instance to retrieve.
+            :param account: The account associated with the model instance.
+            :param class_name: The name of the class for cache key purposes.
+
+            :returns: The model instance if found, otherwise None.
+            :rtype: Optional["MetaDataWithOwnershipModel"]
+            """
+            try:
+                retval = (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(name=name, user_profile__account=account)
+                )
+                logger.debug(
+                    "%s._get_object_by_name_and_account() fetched %s for name: %s and account: %s",
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    type(retval).__class__.__name__,
+                    name,
+                    account,
+                )
+                return retval
+            except cls.DoesNotExist:
+                logger.debug(
+                    "%s._get_object_by_name_and_account() no %s found for name: %s and account: %s",
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    cls.__name__,
+                    name,
+                    account,
+                )
+                return None
+            except cls.MultipleObjectsReturned:
+                logger.error(
+                    "%s.get_cached_object() Multiple %s objects found with name '%s' and account '%s'. Defaulting to first result.",
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    cls.__name__,
+                    name,
+                    account,
+                )
+                return cls.objects.prefetch_related("tags").filter(name=name, user_profile__account=account).first()
+
+        if invalidate:
+            _get_object_by_pk.invalidate(pk=pk, class_name=cls.__name__)
+            _get_object_by_name_and_user_profile.invalidate(
+                name=name, user_profile=user_profile, class_name=cls.__name__
+            )
+            _get_object_by_name_and_account.invalidate(name=name, account=account, class_name=cls.__name__)
+
+        if pk:
+            return _get_object_by_pk(pk=pk, class_name=cls.__name__)
+
+        try:
+            user_profile = user_profile or UserProfile.get_cached_object(user=user, account=account)
+        except UserProfile.DoesNotExist:
+            user_profile = None
+        except UserProfile.MultipleObjectsReturned:
+            logger.error(
+                "%s.get_cached_object() Multiple UserProfiles found for user %s and account %s. Defaulting to first result.",
+                formatted_text(cls.__name__ + ".get_cached_object()"),
+                user,
+                account,
+            )
+            user_profile = (
+                UserProfile.objects.select_related("user_profile", "user_profile__account", "user_profile__user")
+                .prefetch_related("tags")
+                .filter(user=user, account=account)
+                .first()
+            )
+
+        if user_profile:
+            # call this regardless of whether name is provided.
+            return _get_object_by_name_and_user_profile(name=name, user_profile=user_profile, class_name=cls.__name__)
+        elif account:
+            return _get_object_by_name_and_account(name=name, account=account, class_name=cls.__name__)
+
+        # no ownership info provided, so fall back to the super().
+        return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
+
+    @classmethod
+    def get_cached_objects(
+        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None
+    ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
+        """
+        Retrieve a list of MetaDataWithOwnershipModel instances associated with a user profile using caching.
+
+        Example usage:
+
+        .. code-block:: python
+
+            # Retrieve MetaDataWithOwnershipModel instances for a user profile with caching
+            models = MetaDataWithOwnershipModel.get_cached_objects(my_user_profile, invalidate=invalidate)
+
+        :param invalidate: Whether to invalidate the cache for this retrieval.
+        :type invalidate: bool, optional
+        :param user_profile: The user profile for which to retrieve MetaDataWithOwnershipModel instances.
+        :type user_profile: UserProfile, optional
+
+        :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile.
+        :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
+
+        """
+        logger_prefix = formatted_text(__name__ + f".{MetaDataWithOwnershipModel.__name__}.get_cached_objects()")
+        logger.debug(
+            "%s called for %s with user_profile: %s invalidate: %s",
+            logger_prefix,
+            cls.__name__,
+            user_profile,
+            invalidate,
+        )
+
+        @cache_results(cls.cache_expiration)
+        def _get_objects_for_user_profile_id(
+            user_profile_id: int, class_name: str = cls.__name__
+        ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
+            """
+            Internal method to retrieve MetaDataWithOwnershipModel instances for
+            a given user profile ID with caching.
+
+            :param user_profile_id: The ID of the user profile for which to retrieve MetaDataWithOwnershipModel instances.
+            :param class_name: The name of the class for cache key purposes.
+            :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile ID.
+            :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
+            """
+            return (
+                cls.objects.prefetch_related("tags")
+                .select_related("user_profile", "user_profile__account", "user_profile__user")
+                .filter(user_profile_id=user_profile_id)
+            )
+
+        if invalidate and user_profile:
+            _get_objects_for_user_profile_id.invalidate(user_profile_id=user_profile.id, class_name=cls.__name__)
+
+        if user_profile:
+            return _get_objects_for_user_profile_id(user_profile_id=user_profile.id, class_name=cls.__name__)
+
+        return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
 
 
 class PaymentMethod(TimestampedModel):
@@ -1062,12 +1686,6 @@ class Secret(MetaDataWithOwnershipModel):
     )
     encrypted_value = models.BinaryField(help_text="Read-only encrypted representation of the secret's value.")
 
-    def validate(self):
-        super().validate()
-        if hasattr(self, "user_profile") and hasattr(self, "account"):
-            if self.user_profile.account != self.account:
-                raise SmarterValueError("UserProfile's account does not match the Secret's account.")
-
     def save(self, *args, **kwargs):
         """
         Encrypt and persist the secret value for this instance.
@@ -1104,7 +1722,7 @@ class Secret(MetaDataWithOwnershipModel):
             raise SmarterValueError(
                 f"Name and encrypted_value are required fields. Got name: {self.name}, encrypted_value: {self.encrypted_value}"
             )
-        self.account = self.user_profile.account
+        self.user_profile = self.user_profile
         super().save(*args, **kwargs)
         if is_new:
             secret_created.send(sender=self.__class__, secret=self)
@@ -1282,3 +1900,62 @@ class Secret(MetaDataWithOwnershipModel):
             )
         fernet = Fernet(encryption_key)
         return fernet
+
+    @classmethod
+    def get_cached_object(
+        cls,
+        invalidate: Optional[bool] = False,
+        pk: Optional[int] = None,
+        name: Optional[str] = None,
+        user: Optional[User] = None,
+        user_profile: Optional[UserProfile] = None,
+        account: Optional[Account] = None,
+    ) -> Optional["Secret"]:
+        """
+        Retrieve a model instance using caching to optimize performance.
+
+        Examples of retrieval patterns:
+
+        .. code-block:: python
+
+            # By primary key
+            instance = MyModel.get_cached_object(pk=123)
+
+            # By name and user profile
+            instance = MyModel.get_cached_object(name="Resource Name", user_profile=user_profile)
+
+            # By name and account
+            instance = MyModel.get_cached_object(name="Resource Name", account=account)
+
+        :param pk: The primary key of the model instance to retrieve.
+        :param name: The name of the model instance to retrieve.
+        :param user: The user associated with the model instance.
+        :param user_profile: The user profile associated with the model instance.
+        :param account: The account associated with the model instance.
+
+        :returns: The model instance if found, otherwise None.
+        :rtype: Optional[Secret]
+        """
+        logger_prefix = formatted_text(__name__ + "." + Secret.__name__ + ".get_cached_object()")
+        logger.debug(
+            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s, invalidate: %s",
+            logger_prefix,
+            pk,
+            name,
+            user,
+            user_profile,
+            account,
+            invalidate,
+        )
+
+        retval = super().get_cached_object(
+            invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account
+        )
+        if isinstance(retval, Secret):
+            return retval
+        logger.debug(
+            "%s super().get_cached_object() did not return a Secret instance. Got: %s. Returning None.",
+            logger_prefix,
+            type(retval),
+        )
+        return None

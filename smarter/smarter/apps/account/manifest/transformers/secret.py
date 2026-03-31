@@ -31,7 +31,6 @@ from smarter.apps.account.signals import (
     secret_updated,
 )
 from smarter.apps.account.utils import (
-    get_cached_secret,
     get_user_profiles_for_account,
 )
 from smarter.common.api import SmarterApiVersions
@@ -262,7 +261,7 @@ class SecretTransformer(SmarterHelperMixin):
                 name=self.secret.name,
                 description=self.secret.description,
                 version=self.secret.version,
-                tags=self.secret.tags.names() if self.secret.tags else [],
+                tags=self.secret.tags_list,
                 annotations=self.secret.annotations if self.secret.annotations else [],
             )
             spec_config = SAMSecretSpecConfig(
@@ -271,7 +270,8 @@ class SecretTransformer(SmarterHelperMixin):
             )
             status = SAMSecretStatus(
                 accountNumber=self.secret.account.account_number if self.secret.account else "missing",
-                username=self.secret.user_profile.user.username if self.secret.user_profile else "missing",
+                username=self.secret.user_profile.cached_user.username if self.secret.user_profile else "missing",
+                recordLocator=self.secret.record_locator,
                 created=self.secret.created_at,
                 modified=self.secret.updated_at,
                 last_accessed=self.secret.last_accessed,
@@ -315,7 +315,7 @@ class SecretTransformer(SmarterHelperMixin):
     @property
     def version(self) -> str:
         """Return the secret version."""
-        if self._manifest and self._manifest.metadata:
+        if self._manifest and self._manifest.metadata and self._manifest.metadata.version:
             return self._manifest.metadata.version
         return "1.0.0"
 
@@ -413,7 +413,7 @@ class SecretTransformer(SmarterHelperMixin):
             logger.warning("%s.secret() User profile is not set.", self.formatted_class_name)
             return None
 
-        self._secret = get_cached_secret(name=self.name, user_profile=self.user_profile)
+        self._secret = Secret.get_cached_object(name=self.name, user_profile=self.user_profile)
         if self._secret:
             logger.debug(
                 "%s.secret() initialized Django ORM Secret %s for user profile %s.",
@@ -432,12 +432,14 @@ class SecretTransformer(SmarterHelperMixin):
         # if the secret does not exist for the user profile, then we still need to check
         # if the secret exists for the account, and if so, whether self.user_profile
         # is at least a staff user. otherwise, we raise an error.
-        other_user_profiles = get_user_profiles_for_account(self.user_profile.account) if self.user_profile else None
+        other_user_profiles = (
+            get_user_profiles_for_account(account=self.user_profile.account) if self.user_profile else None
+        )
         secret = Secret.objects.filter(user_profile__in=other_user_profiles, name=self.name).first()
         if secret:
             if self.user_profile and not self.user_profile.user.is_staff and not self.user_profile.user.is_superuser:
                 raise SmarterSecretTransformerError(
-                    f"Secret {self.name} exists for user profile {secret.user_profile.user.username} "
+                    f"Secret {self.name} exists for user profile {secret.user_profile.cached_user.username} "
                     f"but not for user profile {self.user_profile.user.username}."
                 )
             self._secret = secret
@@ -465,7 +467,7 @@ class SecretTransformer(SmarterHelperMixin):
         if self._secret:
             self._name = self._secret.name
             # Only set _user_profile if it exists. This will be missing on new secrets.
-            if hasattr(self._secret, "user_profile") and self._secret.user_profile_id is not None:
+            if hasattr(self._secret, "user_profile") and self._secret.user_profile.id is not None:
                 self._user_profile = self._secret.user_profile
 
     @property

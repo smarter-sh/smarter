@@ -11,7 +11,6 @@ from django.urls import reverse
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
 )
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import smarter_settings
@@ -101,13 +100,13 @@ class Command(SmarterCommand):
         user = get_cached_admin_user_for_account(account=account)
         if username != user.get_username():
             try:
-                user_profile = get_cached_user_profile(account=account, user=user)
+                user_profile = UserProfile.get_cached_object(account=account, user=user)
                 if not user_profile:
                     self.handle_completed_failure(
                         msg=f"No user profile for user '{username}' associated with account {account.account_number}."
                     )
                     return
-                user = user_profile.user
+                user = user_profile.cached_user
             except UserProfile.DoesNotExist:
                 self.handle_completed_failure(
                     msg=f"No user profile for user '{username}' associated with account {account.account_number}."
@@ -137,7 +136,7 @@ class Command(SmarterCommand):
             endpoint may be hosted over https or http.
             """
             client = Client()
-            client.force_login(user)
+            client.force_login(user=user)  # type: ignore
 
             headers = {"Authorization": f"Token {token_key}"}
             http_host = smarter_settings.environment_platform_domain
@@ -159,7 +158,7 @@ class Command(SmarterCommand):
             self.stdout.write("response: " + self.style.SUCCESS(response))
 
         path = reverse(ApiV1CliReverseViews.namespace + "apply_view", kwargs={})
-        get_response(path, manifest=self.data)
+        get_response(path, manifest=self.data)  # type: ignore
 
         # path = reverse("api:v1:cli:deploy_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
         # get_response(path)

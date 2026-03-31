@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib import json
-from smarter.lib.drf.view_helpers import (
+from smarter.lib.drf.views.helpers import (
     SmarterUnauthenticatedAPIListView,
     SmarterUnauthenticatedAPIView,
 )

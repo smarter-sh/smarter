@@ -243,7 +243,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             if present
         ]
         comma_separated = ", ".join(sorted(set(sources)))
-        msg = f"{self.formatted_class_name}.__init__() initializing from {comma_separated}."
+        msg = f"{self.formatted_pluginbase_class_name}.__init__() initializing from {comma_separated}."
         logger.debug(msg)
         self._api_version = api_version or self.api_version
         self._selected = selected
@@ -270,10 +270,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         elif plugin_meta:
             self.id = plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
         elif name and self.user_profile:
-            self._plugin_meta = PluginMeta.get_cached_plugin_by_account_and_name(
-                account=self.user_profile.account,
-                name=name,
-            )
+            self._plugin_meta = PluginMeta.get_cached_object(invalidate=True, account=self.user_profile.cached_account, name=name)  # type: ignore[attr-defined]
 
         #######################################################################
         # Smarter API Manifest based initialization
@@ -281,7 +278,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if manifest:
             if not isinstance(manifest, self.SAMPluginType):
                 raise TypeError(
-                    f"{self.formatted_class_name}__init__() expected manifest of type {self.SAMPluginType.__name__} but received {type(manifest)}."
+                    f"{self.formatted_pluginbase_class_name}__init__() expected manifest of type {self.SAMPluginType.__name__} but received {type(manifest)}."
                 )
 
             # we received a Pydantic model from a manifest broker.
@@ -306,7 +303,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if self.ready:
             return None  # plugin is ready, no further action needed.
         else:
-            logger.warning("%s.__init__() Plugin is not ready. %r", self.formatted_class_name, self)
+            logger.warning("%s.__init__() Plugin is not ready. %r", self.formatted_pluginbase_class_name, self)
 
     def __str__(self) -> str:
         """
@@ -418,6 +415,41 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if not isinstance(other, PluginBase):
             return NotImplemented
         return not self < other
+
+    def cache_invalidations(self) -> None:
+        """
+        Invalidate cached properties related to the plugin.
+
+         This method is used to clear any cached data associated with the plugin instance, such as
+         cached Django ORM model instances or serializers. It ensures that subsequent accesses to these
+         properties will fetch fresh data from the database or re-instantiate serializers as needed.
+
+         The following properties are invalidated:
+
+             - ``user_profile``
+             - ``plugin_meta``
+             - ``plugin_selector``
+             - ``plugin_prompt``
+             - ``plugin_data``
+        """
+
+        logger.debug(
+            "%s.cache_invalidations() called. Invalidating cached properties for plugin: %s",
+            self.formatted_pluginbase_class_name,
+            self,
+        )
+
+        if self.user_profile:
+            UserProfile.get_cached_object(invalidate=True, pk=self.user_profile.id)
+        if self.plugin_meta:
+            PluginMeta.get_cached_object(invalidate=True, pk=self.plugin_meta.id)
+        if self.plugin_selector:
+            PluginSelector.get_cached_object(invalidate=True, pk=self.plugin_selector.id)
+        if self.plugin_prompt:
+            PluginPrompt.get_cached_object(invalidate=True, pk=self.plugin_prompt.id)
+        if self.plugin_data:
+            PluginDataClass = self.plugin_data_class
+            PluginDataClass.get_cached_object(invalidate=True, pk=self.plugin_data.id)
 
     def reinitialize_plugin(self):
         """
@@ -584,15 +616,15 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         """
         if not self.ready:
             raise SmarterPluginError(
-                f"{self.formatted_class_name}.custom_tool() error: {self.name} plugin is not ready."
+                f"{self.formatted_pluginbase_class_name}.custom_tool() error: {self.name} plugin is not ready."
             )
         if not self.plugin_data:
             raise SmarterPluginError(
-                f"{self.formatted_class_name}.custom_tool() error: {self.name} plugin data is not available."
+                f"{self.formatted_pluginbase_class_name}.custom_tool() error: {self.name} plugin data is not available."
             )
         if not isinstance(self.plugin_data.parameters, dict):
             raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.custom_tool() error: {self.name} parameters must be a dictionary."
+                f"{self.formatted_pluginbase_class_name}.custom_tool() error: {self.name} parameters must be a dictionary."
             )
 
         return {
@@ -620,6 +652,16 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
     ###########################################################################
     # Base class properties
     ###########################################################################
+    @property
+    def formatted_pluginbase_class_name(self) -> str:
+        """
+        Return the formatted class name for logging.
+
+        :return: The formatted class name.
+        :rtype: str
+        """
+        return formatted_text(self.__class__.__name__)
+
     @property
     def metadata_class(self) -> Optional[str]:
         """
@@ -760,7 +802,12 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                 "Configuration error: UserProfile must be set before initializing a plugin instance by its ORM model id."
             )
         self.reinitialize_plugin()
-        self._plugin_meta = PluginMeta.get_cached_plugin_by_pk(pk=value)
+        try:
+            self._plugin_meta = PluginMeta.objects.get(id=value)
+        except PluginMeta.DoesNotExist as e:
+            raise SmarterPluginError(
+                f"PluginMeta with id {value} does not exist for plugin {self.formatted_pluginbase_class_name}."
+            ) from e
 
     @property
     def plugin_meta(self) -> Optional[PluginMeta]:
@@ -780,8 +827,8 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if self._plugin_meta:
             return self._plugin_meta
         if self.user_profile and self._manifest:
-            self._plugin_meta = PluginMeta.get_cached_plugin_by_account_and_name(
-                account=self.user_profile.account, name=self.manifest.metadata.name
+            self._plugin_meta = PluginMeta.get_cached_object(
+                invalidate=True, account=self.user_profile.cached_account, name=self.manifest.metadata.name
             )
 
         return self._plugin_meta
@@ -800,7 +847,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             if not self._plugin_meta_serializer:
                 logger.warning(
                     "%s.plugin_meta_serializer() PluginMetaSerializer could not be created.",
-                    self.formatted_class_name,
+                    self.formatted_pluginbase_class_name,
                 )
         return self._plugin_meta_serializer
 
@@ -826,7 +873,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             else:
                 logger.warning(
                     "%s.plugin_meta_django_model() UserProfile or manifest is not set. Cannot construct plugin meta Django model dictionary.",
-                    self.formatted_class_name,
+                    self.formatted_pluginbase_class_name,
                 )
         return self._plugin_meta_django_model
 
@@ -986,7 +1033,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if not self.user_profile:
             logger.warning(
                 "%s.ready() UserProfile is not set.",
-                self.formatted_class_name,
+                self.formatted_pluginbase_class_name,
             )
             return False
 
@@ -1003,7 +1050,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if self._plugin_meta and not isinstance(self.plugin_meta, PluginMeta):
             logger.error(
                 "%s.ready() PluginMeta is not of type PluginMeta.",
-                self.formatted_class_name,
+                self.formatted_pluginbase_class_name,
             )
             return False
 
@@ -1017,7 +1064,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if self._plugin_selector and not isinstance(self.plugin_selector, PluginSelector):
             logger.error(
                 "%s.ready() PluginSelector is not of type PluginSelector.",
-                self.formatted_class_name,
+                self.formatted_pluginbase_class_name,
             )
             return False
 
@@ -1026,7 +1073,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if self._plugin_prompt and not isinstance(self.plugin_prompt, PluginPrompt):
             logger.error(
                 "%s.ready() PluginPrompt is not of type PluginPrompt.",
-                self.formatted_class_name,
+                self.formatted_pluginbase_class_name,
             )
             return False
 
@@ -1035,7 +1082,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if self._plugin_data and not isinstance(self.plugin_data, self.plugin_data_class):
             logger.error(
                 "%s.ready() PluginData is not of type %s.",
-                self.formatted_class_name,
+                self.formatted_pluginbase_class_name,
                 self.plugin_data_class,
             )
             return False
@@ -1154,7 +1201,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                     plugin_selected.send(
                         sender=self.selected,
                         plugin=self,
-                        user=self.user_profile.user if self.user_profile else None,
+                        user=self.user_profile.cached_user if self.user_profile else None,
                         input_text=input_text,
                         search_term=search_term,
                     )
@@ -1264,12 +1311,12 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         """
         if not self.plugin_data:
             raise SmarterPluginError(
-                f"{self.formatted_class_name}.function_parameters() error: {self.name} plugin data is not available."
+                f"{self.formatted_pluginbase_class_name}.function_parameters() error: {self.name} plugin data is not available."
             )
         retval = self.plugin_data.parameters
         if not isinstance(retval, dict):
             raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.function_parameters() error: {self.name} parameters must be a dictionary."
+                f"{self.formatted_pluginbase_class_name}.function_parameters() error: {self.name} parameters must be a dictionary."
             )
 
         if "required" not in retval.keys():
@@ -1288,7 +1335,9 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if not self._manifest:
             raise SmarterPluginError("Plugin manifest is not set.")
 
-        logger.debug("%s.create() creating plugin %s", self.formatted_class_name, self.manifest.metadata.name)
+        logger.debug(
+            "%s.create() creating plugin %s", self.formatted_pluginbase_class_name, self.manifest.metadata.name
+        )
 
         def committed(plugin: PluginMeta):
             plugin_id: int = plugin.id if isinstance(plugin, PluginMeta) else None  # type: ignore[reportOptionalMemberAccess]
@@ -1297,7 +1346,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             plugin_meta = self._plugin_meta
             logger.debug(
                 "%s.create() created and committed plugin %s: %s.",
-                self.formatted_class_name,
+                self.formatted_pluginbase_class_name,
                 self.plugin_meta.name if self.plugin_meta else "Unknown",
                 plugin_meta.id if isinstance(plugin_meta, PluginMeta) else "Unknown",  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             )
@@ -1305,7 +1354,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if self.plugin_meta:
             logger.debug(
                 "%s.create() Plugin %s already exists. Updating plugin %s.",
-                self.formatted_class_name,
+                self.formatted_pluginbase_class_name,
                 self.plugin_meta.name,
                 self.plugin_meta.id,  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             )
@@ -1318,7 +1367,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                 tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
                 plugin_meta.tags.set(tags)
 
-                logger.debug("%s.create() created PluginMeta: %s", self.formatted_class_name, plugin_meta)
+                logger.debug("%s.create() created PluginMeta: %s", self.formatted_pluginbase_class_name, plugin_meta)
 
                 selector = self.plugin_selector_django_model
                 prompt = self.plugin_prompt_django_model
@@ -1333,12 +1382,18 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
 
                 if selector is not None:
                     plugin_selector = PluginSelector.objects.create(**selector)
-                    logger.debug("%s.create() created PluginSelector: %s", self.formatted_class_name, plugin_selector)
+                    logger.debug(
+                        "%s.create() created PluginSelector: %s", self.formatted_pluginbase_class_name, plugin_selector
+                    )
                 if prompt is not None:
                     plugin_prompt = PluginPrompt.objects.create(**prompt)
-                    logger.debug("%s.create() created PluginPrompt: %s", self.formatted_class_name, plugin_prompt)
+                    logger.debug(
+                        "%s.create() created PluginPrompt: %s", self.formatted_pluginbase_class_name, plugin_prompt
+                    )
                 if plugin_data is not None:
-                    logger.debug("%s.create() creating PluginData: %s", self.formatted_class_name, plugin_data)
+                    logger.debug(
+                        "%s.create() creating PluginData: %s", self.formatted_pluginbase_class_name, plugin_data
+                    )
                     self.plugin_data_class.objects.create(**plugin_data)
 
         transaction.on_commit(lambda: committed(plugin=plugin_meta))
@@ -1353,6 +1408,9 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         :rtype: bool
         :raises SmarterPluginError: If the plugin manifest is not set or the plugin does not exist.
         """
+        logger.debug(
+            "%s.update() updating plugin %s: %s", self.formatted_pluginbase_class_name, self.plugin_meta, self.id
+        )
 
         def committed():
             plugin_updated.send(sender=self.__class__, plugin=self)
@@ -1373,6 +1431,8 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         plugin_selector_django_model = self.plugin_selector_django_model
         plugin_prompt_django_model = self.plugin_prompt_django_model
         plugin_data_django_model = self.plugin_data_django_model
+
+        self.cache_invalidations()
 
         with transaction.atomic():
             if isinstance(self.plugin_meta, PluginMeta):
@@ -1403,7 +1463,9 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                     setattr(self.plugin_data, attr, value)
                 self.plugin_data.save()
             else:
-                raise SmarterPluginError("PluginData is not set or is not a PluginData instance.")
+                raise SmarterPluginError(
+                    f"PluginData of type {type(self.plugin_data)} is not {self.plugin_data_class.__class__.__name__}."
+                )
 
         transaction.on_commit(committed)
 
@@ -1423,7 +1485,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             logger.debug("Saved plugin %s: %s.", self.name, self.id)
 
         if not self.ready:
-            logger.warning("%s.save() Plugin is not ready. Cannot save.", self.formatted_class_name)
+            logger.warning("%s.save() Plugin is not ready. Cannot save.", self.formatted_pluginbase_class_name)
             return False
 
         with transaction.atomic():
@@ -1706,10 +1768,10 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                 },
             }
             if not isinstance(retval, dict):
-                raise SmarterConfigurationError(f"{self.formatted_class_name}.to_json() error: {self.name}.")
+                raise SmarterConfigurationError(f"{self.formatted_pluginbase_class_name}.to_json() error: {self.name}.")
             if not isinstance(self.plugin_data_serializer.data, dict):
                 raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}.to_json() error: {self.name} plugin_data_serializer.data is not a dict."
+                    f"{self.formatted_pluginbase_class_name}.to_json() error: {self.name} plugin_data_serializer.data is not a dict."
                 )
             return json.loads(json.dumps(retval))
         raise SmarterPluginError(f"Invalid version: {version}")

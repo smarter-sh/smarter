@@ -5,9 +5,8 @@ import logging
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
-from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings_defaults
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -38,7 +37,12 @@ class Command(SmarterCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("--account_number", type=str, help="The account number for the demo chatbot.")
+        parser.add_argument(
+            "--account_number",
+            type=str,
+            help="The account number for the demo chatbot.",
+            default=SMARTER_ACCOUNT_NUMBER,
+        )
         parser.add_argument("--foreground", action="store_true", help="Run the task in the foreground")
 
     def handle(self, *args, **options):
@@ -47,7 +51,7 @@ class Command(SmarterCommand):
         self.handle_begin()
 
         foreground = options["foreground"]
-        account_number = options.get("account_number") or SMARTER_ACCOUNT_NUMBER
+        account_number = options.get("account_number")
 
         log_prefix = "manage.py deploy_example_chatbot:"
         self.stdout.write(self.style.NOTICE(log_prefix + "Deploying the Smarter demo API..."))
@@ -58,14 +62,14 @@ class Command(SmarterCommand):
             logger.error("Account with account number '%s' does not exist.", account_number)
             self.handle_completed_failure()
             return
-        user = get_cached_admin_user_for_account(account)
+        user = get_cached_admin_user_for_account(account=account)
         user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
         chatbot, _ = ChatBot.objects.get_or_create(user_profile=user_profile, name=SMARTER_EXAMPLE_CHATBOT_NAME)
-        chatbot.provider = SettingsDefaults.LLM_DEFAULT_PROVIDER
-        chatbot.default_model = SettingsDefaults.LLM_DEFAULT_MODEL
-        chatbot.default_system_role = SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE
-        chatbot.default_temperature = SettingsDefaults.LLM_DEFAULT_TEMPERATURE
-        chatbot.default_max_tokens = SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
+        chatbot.provider = settings_defaults.LLM_DEFAULT_PROVIDER
+        chatbot.default_model = settings_defaults.LLM_DEFAULT_MODEL
+        chatbot.default_system_role = settings_defaults.LLM_DEFAULT_SYSTEM_ROLE
+        chatbot.default_temperature = settings_defaults.LLM_DEFAULT_TEMPERATURE
+        chatbot.default_max_tokens = settings_defaults.LLM_DEFAULT_MAX_TOKENS
 
         chatbot.app_name = "Smarter Demo"
         chatbot.app_assistant = "Lawrence"

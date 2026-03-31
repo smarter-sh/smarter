@@ -165,12 +165,44 @@ function applyManifest(overlay, yamlContent) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Get configuration from global variables set in manifest-apply.html template.
+  // --------------------------------------------------------------------------
+  const overlay = document.getElementById("drop-zone-overlay");
+
+  // File-open dialog handler
+  // --------------------------------------------------------------------------
+  const fileInput = document.getElementById("fileInput");
+  if (fileInput) {
+    fileInput.addEventListener("change", function (e) {
+      if (fileInput.files && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        if (file.name.endsWith(".yaml") || file.name.endsWith(".yml")) {
+          const reader = new FileReader();
+          reader.onload = function (evt) {
+            const yamlContent = evt.target.result;
+            try {
+              const parsed = jsyaml.load(yamlContent); // throws if invalid
+              applyManifest(overlay, yamlContent);
+            } catch (e) {
+              alert("Invalid YAML syntax: " + e.message);
+              return;
+            }
+          };
+          reader.readAsText(file);
+        } else {
+          alert("Please select a Smarter YAML manifest file (.yaml or .yml)");
+        }
+        // Reset input so the same file can be selected again if needed
+        fileInput.value = "";
+      }
+    });
+  }
+
+
   // File drop event handlers.
-  // Get configuration from global variables set in the template
-  // (base.html) and/or the DOM
+  // --------------------------------------------------------------------------
   const dropzoneEnabled = window.dropzoneEnabled;
   const apiApplyPath = window.apiApplyPath;
-  const overlay = document.getElementById("drop-zone-overlay");
 
   if (!dropzoneEnabled) {
     debugLog("File drop zone disabled");

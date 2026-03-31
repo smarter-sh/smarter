@@ -15,7 +15,6 @@ from typing import Optional
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Sum
 
-from smarter.apps.account.utils import get_cached_account
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
@@ -27,11 +26,10 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.workers.celery import app
 
 # Account stuff
-from .models import Account, Charge, DailyBillingRecord
+from .models import Account, Charge, DailyBillingRecord, UserProfile
 from .utils import (
     get_cached_admin_user_for_account,
     get_cached_user_for_user_id,
-    get_cached_user_profile,
 )
 
 
@@ -90,17 +88,19 @@ def create_charge(*args, **kwargs):
 
     user_id = kwargs.get("user_id")
     if user_id:
-        user = get_cached_user_for_user_id(user_id)
+        user = get_cached_user_for_user_id(user_id=user_id)
         if user:
-            user_profile = get_cached_user_profile(user=user)
+            user_profile = UserProfile.get_cached_object(user=user)
             if user_profile:
-                account = user_profile.account
+                account = user_profile.cached_account
     else:
         account_id = kwargs.get("account_id")
         if account_id:
-            account = get_cached_account(account_id=account_id)
+            account = Account.get_cached_object(pk=account_id)
             if account:
                 user = get_cached_admin_user_for_account(account=account)
+                if user:
+                    user_profile = UserProfile.get_cached_object(user=user, account=account)
 
     session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
     provider = kwargs.get("provider")

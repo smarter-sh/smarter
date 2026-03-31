@@ -29,7 +29,7 @@ from smarter.lib.django.token_generators import (
     SmarterTokenIntegrityError,
     SmarterTokenParseError,
 )
-from smarter.lib.django.view_helpers import (
+from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
     SmarterNeverCachedWebView,
     redirect_and_expire_cache,

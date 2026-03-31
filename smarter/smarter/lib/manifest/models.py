@@ -277,6 +277,19 @@ class AbstractSAMSpecBase(SmarterBasePydanticModel, abc.ABC):
 class AbstractSAMStatusBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Status base class. Expected to be subclassed by specific manifest classes."""
 
+    recordLocator: Optional[str] = Field(
+        None,
+        description="recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
+    )
+
+    created: datetime.datetime = Field(
+        description="The date in which this resource was created. Read only.",
+    )
+
+    modified: datetime.datetime = Field(
+        description="The date in which this resource was most recently changed. Read only.",
+    )
+
 
 class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
     """

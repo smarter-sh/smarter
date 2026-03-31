@@ -15,6 +15,10 @@
 # - configures the welcome message to be displayed whenever a user connects to
 #   the pod
 # - keeps the pod running indefinitely to allow users to connect and use the shell
+#
+# Important: labels are referenced by other resources, in this repo as well as
+# external repos including https://github.com/smarter-sh/smarter-infrastructure.
+# Do not arbitrarily change labels without updating all references.
 ###############################################################################
 apiVersion: apps/v1
 kind: Deployment
@@ -26,16 +30,20 @@ metadata:
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Chart.Version }}
   labels:
-    App: {{ .Values.app.name }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.app.name }}-bastion"
+    app.kubernetes.io/application-group: {{ .Values.app.name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: "{{ .Values.app.name }}-bastion"
+      app.kubernetes.io/name: "{{ .Values.app.name }}-bastion"
   template:
     metadata:
       labels:
-        app: "{{ .Values.app.name }}-bastion"
+        app.kubernetes.io/name: "{{ .Values.app.name }}-bastion"
+        app.kubernetes.io/application-group: {{ .Values.app.name }}
+        meta.helm.sh/application-version: {{ .Chart.Version }}
     spec:
       affinity:
         {{- toYaml .Values.global.affinity | nindent 8 }}

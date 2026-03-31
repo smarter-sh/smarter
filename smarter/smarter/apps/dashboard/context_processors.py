@@ -3,33 +3,56 @@
 smarter.apps.dashboard.context_processors
 =========================================
 
-This module provides custom Django context processors for the Smarter dashboard application. These context processors are designed to inject additional context variables into templates that inherit from ``base.html``, supporting the dynamic rendering of dashboard and branding information throughout the application.
+This module provides custom Django context processors for the Smarter dashboard
+application. These context processors are designed to inject additional context
+variables into templates that inherit from ``base.html``, supporting the dynamic
+rendering of dashboard and branding information throughout the application.
 
 Overview
 --------
 
 The context processors in this module serve the following purposes:
 
-- **Dashboard Context**: Supplies user-specific and application-wide metadata, such as the current user's email, username, role flags, product version, and resource counts (e.g., chatbots, plugins, API keys, custom domains, connections, and secrets). This enables the dashboard to display personalized and up-to-date information for each authenticated user.
+- **Dashboard Context**: Supplies user-specific and application-wide metadata,
+such as the current user's email, username, role flags, product version, and
+resource counts (e.g., chatbots, plugins, API keys, custom domains, connections,
+and secrets). This enables the dashboard to display personalized and up-to-date
+information for each authenticated user.
 
-- **Branding Context**: Provides organization-specific branding details, including support contact information, corporate name, address, social media links, and copyright notices. This ensures consistent branding and support information across all dashboard templates.
+- **Branding Context**: Provides organization-specific branding details, including
+support contact information, corporate name, address, social media links, and
+copyright notices. This ensures consistent branding and support information
+across all dashboard templates.
 
-- **Cache Busting**: Adds a cache-busting query parameter to static asset URLs during local development, preventing browsers from serving outdated static files.
+- **Cache Busting**: Adds a cache-busting query parameter to static asset URLs
+during local development, preventing browsers from serving outdated static
+files.
 
 Caching
 -------
 
-Many of the resource-counting functions in this module are decorated with a caching mechanism to reduce database load and improve performance. The cache timeout is configurable and set to 60 seconds by default.
+Many of the resource-counting functions in this module are decorated with a
+caching mechanism to reduce database load and improve performance. The cache
+timeout is configurable and set to 60 seconds by default.
+
+cache_invalidations(user_profile) is a utility function provided to invalidate
+all relevant caches when user data changes, ensuring that the dashboard
+reflects the most current information.
 
 Usage
 -----
 
-To use these context processors, add their import paths to the ``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings. This will make the provided context variables available in all templates rendered by Django that inherit from ``base.html``.
+To use these context processors, add their import paths to the
+``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings.
+This will make the provided context variables available in all templates
+rendered by Django that inherit from ``base.html``.
 
 Note
 ----
 
-This module does not document individual function signatures or arguments, as these are automatically included by Sphinx's ``automodule`` directive. For detailed API documentation, refer to the generated documentation for each function.
+This module does not document individual function signatures or arguments, as
+these are automatically included by Sphinx's ``automodule`` directive. For
+detailed API documentation, refer to the generated documentation for each function.
 """
 
 import logging
@@ -38,10 +61,12 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urljoin
 
+from django.test import RequestFactory
 from django.urls import reverse
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
+    Account,
     Secret,
     User,
     UserProfile,
@@ -58,169 +83,254 @@ from smarter.apps.plugin.models import (
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
-from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import smarter_build_absolute_uri
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.lib.cache import cache_results
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
-CACHE_TIMEOUT = 60  # 1 minute
-
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__)
+logger_prefix_cache_invalidations = formatted_text_blue(f"{__name__}.cache_invalidations()")
 
 
-def get_pending_deployments(user_profile: UserProfile) -> int:
+def get_pending_deployments(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the number of chatbot deployments that are pending for the specified user.
 
-    This function queries the database for all chatbot instances associated with the user's account that have not yet been deployed. The result is used to inform users of outstanding deployment actions required on their dashboard.
+    This function queries the database for all chatbot instances associated with the
+    user's account that have not yet been deployed. The result is used to inform users
+    of outstanding deployment actions required on their dashboard.
 
-    The result is cached for a short duration to minimize database load and improve dashboard responsiveness.
+    The result is cached for a short duration to minimize database load and
+    improve dashboard responsiveness.
 
-    :param user: The user whose pending deployments are to be counted.
-    :type user: User
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :param user_profile: UserProfile instance. The user profile whose pending deployments are to be counted.
+    :type user_profile: UserProfile
     :return: The number of pending chatbot deployments for the user.
     :rtype: int
     """
+    logger.debug(
+        "%s.get_pending_deployments() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def _get_pending_deployments(user_profile_id: int) -> int:
-        logger.debug(
-            "%s.get_pending_deployments() Fetching pending deployments for user_profile_id=%s",
-            logger_prefix,
-            user_profile_id,
-        )
         return ChatBot.objects.filter(user_profile__id=user_profile_id, deployed=False).count() or 0
+
+    if not user_profile:
+        logger.warning("%s.get_pending_deployments() called without user_profile. Returning None.", logger_prefix)
+        return 0
+    if invalidate and user_profile:
+        _get_pending_deployments.invalidate(user_profile.id)  # type: ignore
 
     return _get_pending_deployments(user_profile.id)
 
 
-def get_chatbots(user_profile: UserProfile) -> int:
+def get_chatbots(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of chatbots associated with the specified user.
 
-    This function queries the database for all chatbot instances linked to the user's account, regardless of deployment status. The resulting count is used to display the user's available chatbots on the dashboard.
+    This function queries the database for all chatbot instances linked to
+    the user's account, regardless of deployment status. The resulting count
+    is used to display the user's available chatbots on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
-    :param user: The user whose chatbots are to be counted.
-    :type user: User
+    :param user_profile: UserProfile instance. The user profile whose chatbots are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+
     :return: The number of chatbots belonging to the user.
     :rtype: int
     """
+    if not user_profile:
+        logger.warning("%s.get_chatbots() called without user_profile. Returning None.", logger_prefix)
+        return 0
 
-    chatbots = get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id)
+    logger.debug(
+        "%s.get_chatbots() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
+    chatbots = ChatBot.get_cached_objects(invalidate=invalidate, user_profile=user_profile)
     return len(chatbots)
 
 
-def get_plugins(user_profile: UserProfile) -> int:
+def get_plugins(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of plugins associated with the specified user.
 
-    This function queries the database for all plugin metadata records linked to the user's account. The resulting count is used to display the user's available plugins on the dashboard.
+    This function queries the database for all plugin metadata records linked
+    to the user's account. The resulting count is used to display the user's
+    available plugins on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
-    :param user: The user whose plugins are to be counted.
-    :type user: User
+    :param user_profile: UserProfile instance. The user profile whose plugins are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :return: The number of plugins belonging to the user.
     :rtype: int
     """
-
-    retval = PluginMeta.get_cached_plugins_for_user_profile_id(user_profile_id=user_profile.id)
+    logger.debug(
+        "%s.get_plugins() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
+    if not user_profile:
+        logger.warning("%s.get_plugins() called without user_profile. Returning None.", logger_prefix)
+        return 0
+    retval = PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=invalidate, user_profile_id=user_profile.id)
     return len(retval)
 
 
-def get_api_keys(user_profile: UserProfile) -> int:
+def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of API keys associated with the specified user.
 
-    This function queries the database for all API key records linked to chatbots owned by the user's account. The resulting count is used to display the user's available API keys on the dashboard.
+    This function queries the database for all API key records linked to
+    chatbots owned by the user's account. The resulting count is used to
+    display the user's available API keys on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
-    :param user: The user whose API keys are to be counted.
-    :type user: User
+    :param user_profile: UserProfile instance. The user profile whose API keys are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :return: The number of API keys belonging to the user.
     :rtype: int
     """
+    logger.debug(
+        "%s.get_api_keys() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def _get_api_keys(user_profile_id: int) -> int:
-        logger.debug("%s.get_api_keys() Fetching API keys for user_profile_id=%s", logger_prefix, user_profile_id)
         return ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+
+    if not user_profile:
+        logger.warning("%s.get_api_keys() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
+    if invalidate and user_profile:
+        _get_api_keys.invalidate(user_profile.id)  # type: ignore
 
     return _get_api_keys(user_profile.id)
 
 
-def get_custom_domains(user_profile: UserProfile) -> int:
+def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of custom domains associated with the specified user.
 
-    This function queries the database for all custom domain records linked to chatbots owned by the user's account. The resulting count is used to display the user's available custom domains on the dashboard.
+    This function queries the database for all custom domain records linked
+    to chatbots owned by the user's account. The resulting count is used to
+    display the user's available custom domains on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
-    :param user: The user whose custom domains are to be counted.
-    :type user: User
+    :param user_profile: UserProfile instance. The user profile whose custom domains are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :return: The number of custom domains belonging to the user.
     :rtype: int
     """
+    logger.debug(
+        "%s.get_custom_domains() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def _get_custom_domains(user_profile_id: int) -> int:
-        logger.debug(
-            "%s.get_custom_domains() Fetching custom domains for user_profile_id=%s", logger_prefix, user_profile_id
-        )
         return ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+
+    if not user_profile:
+        logger.warning("%s.get_custom_domains() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
+    if invalidate and user_profile:
+        _get_custom_domains.invalidate(user_profile.id)  # type: ignore
 
     return _get_custom_domains(user_profile.id)
 
 
-def get_connections(user_profile: UserProfile) -> int:
+def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of API and SQL connections associated with the specified user.
 
     This function queries the database for all API and SQL connection records linked to the user's account. The resulting count is used to display the user's available connections on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
-    :param user: The user whose connections are to be counted.
-    :type user: User
+    :param user_profile: UserProfile instance. The user profile whose connections are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :return: The number of API and SQL connections belonging to the user.
     :rtype: int
     """
-    retval = ConnectionBase.get_cached_connections_for_user(user_profile.user)
+    if not user_profile:
+        logger.warning("%s.get_connections() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
+    logger.debug(
+        "%s.get_connections() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile,
+    )
+    retval = ConnectionBase.get_cached_connections_for_user(invalidate=invalidate, user=user_profile.cached_user) or []
     return len(retval)
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
-def get_secrets(user_profile: UserProfile) -> int:
+@cache_results()
+def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of secrets associated with the specified user's profile.
 
-    This function queries the database for all secret records linked to the user's profile. The resulting count is used to display the user's available secrets on the dashboard.
+    This function queries the database for all secret records linked to the user's profile.
+    The resulting count is used to display the user's available secrets on the dashboard.
 
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
 
     :param user_profile: The user profile whose secrets are to be counted.
     :type user_profile: UserProfile
     :return: The number of secrets belonging to the user profile.
     :rtype: int
     """
-    logger.debug("%s.get_secrets() Fetching secrets for user_profile_id=%s", logger_prefix, user_profile.id)
-    return Secret.objects.filter(user_profile=user_profile).count() if user_profile else 0
+    if not user_profile:
+        logger.warning("%s.get_secrets() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
+    logger.debug(
+        "%s.get_secrets() called with invalidate=%s for user_profile_id=%s", logger_prefix, invalidate, user_profile.id
+    )
+    return Secret.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
-def get_providers(user_profile: UserProfile) -> int:
+def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of providers associated with the specified user's account.
 
-    This function queries the database for all provider records linked to the user's account. The resulting count is used to display the user's available providers on the dashboard.
+    This function queries the database for all provider records linked to the user's account.
+    The resulting count is used to display the user's available providers on the dashboard.
 
     The result is cached for a short duration to reduce database queries and improve dashboard performance.
 
@@ -229,7 +339,17 @@ def get_providers(user_profile: UserProfile) -> int:
     :return: The number of providers belonging to the user account + those belonging to the official smarter admin.
     :rtype: int
     """
-    retval = Provider.get_cached_providers_for_user(user_profile.user)
+    if not user_profile:
+        logger.warning("%s.get_providers() called without user_profile. Returning 0.", logger_prefix)
+        return 0
+
+    logger.debug(
+        "%s.get_providers() called with invalidate=%s for user_profile_id=%s",
+        logger_prefix,
+        invalidate,
+        user_profile.id,
+    )
+    retval = Provider.get_cached_providers_for_user(invalidate=invalidate, user=user_profile.cached_user) or []
     return len(retval)
 
 
@@ -237,15 +357,18 @@ def file_drop_zone(request: "HttpRequest") -> dict:
     """
     Provides context for enabling file drop zone functionality in the dashboard.
 
-    This context processor injects a variable into the template context that can be used to enable or disable file drop zone features in the dashboard interface. This is useful for enhancing user experience by allowing drag-and-drop file uploads.
+    This context processor injects a variable into the template context that can
+    be used to enable or disable file drop zone features in the dashboard interface.
+    This is useful for enhancing user experience by allowing drag-and-drop file uploads.
 
     :param request: The HTTP request object.
     :type request: "HttpRequest"
     :return: A dictionary containing the file drop zone context variable.
     :rtype: dict
     """
+    logger.debug("%s.file_drop_zone() called.", logger_prefix)
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def get_cached_file_drop_zone_context() -> dict:
         retval = {
             "drop_zone": {
@@ -257,7 +380,6 @@ def file_drop_zone(request: "HttpRequest") -> dict:
                 "provider_list_path": reverse("provider:provider_listview"),
             }
         }
-        logger.debug("%s.file_drop_zone() File drop zone context: %s", logger_prefix, retval)
         return retval
 
     return get_cached_file_drop_zone_context()
@@ -265,31 +387,43 @@ def file_drop_zone(request: "HttpRequest") -> dict:
 
 def base(request: "HttpRequest") -> dict:
     """
-    Provides the base context for all templates inheriting from ``base.html`` in the Smarter dashboard.
+    Provides the base context for all templates inheriting from ``base.html``
+    in the Smarter dashboard.
 
-    This context processor injects a comprehensive set of user-specific and application-wide variables into the template context. These variables include user identity, role flags, product metadata, and resource counts (such as chatbots, plugins, API keys, custom domains, connections, and secrets). The context is used to render the dashboard layout and personalize the user experience.
+    This context processor injects a comprehensive set of user-specific and
+    application-wide variables into the template context. These variables
+    include user identity, role flags, product metadata, and resource counts
+    (such as chatbots, plugins, API keys, custom domains, connections, and
+    secrets). The context is used to render the dashboard layout and
+    personalize the user experience.
 
-    The resource counts are cached for performance, and the context is dynamically constructed based on the authenticated user's account and profile.
+    The resource counts are cached for performance, and the context is dynamically
+    constructed based on the authenticated user's account and profile.
 
     :param request: The HTTP request object.
     :type request: "HttpRequest"
     :return: A dictionary containing the dashboard context variables.
     :rtype: dict
     """
+    logger.debug("%s.base() called.", logger_prefix)
     user = request.user
     resolved_user = get_resolved_user(user)
     user_profile: Optional[UserProfile] = None
     if resolved_user and getattr(resolved_user, "is_authenticated", False):
-        user_profile = UserProfile.objects.filter(user=resolved_user).first()
+        user_profile = UserProfile.get_cached_object(user=resolved_user)  # type: ignore
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def get_cached_context(user: Optional[User]) -> dict:
         """
         Constructs and returns the cached dashboard context for the specified user.
 
-        This helper function assembles a dictionary of dashboard context variables, including user identity, role flags, product metadata, and resource counts. It is decorated with a cache to optimize performance and minimize redundant database queries.
+        This helper function assembles a dictionary of dashboard context variables,
+        including user identity, role flags, product metadata, and resource counts.
+        It is decorated with a cache to optimize performance and minimize redundant
+        database queries.
 
-        The context is tailored to the authenticated user and is used by the main ``base`` context processor to populate the dashboard template.
+        The context is tailored to the authenticated user and is used by the main
+        ``base`` context processor to populate the dashboard template.
 
         :param user: The user for whom the dashboard context is being constructed.
         :type user: Optional[User]
@@ -301,12 +435,12 @@ def base(request: "HttpRequest") -> dict:
         username = "anonymous"
         is_superuser = False
         is_staff = False
-        if user_profile and user_profile.user.is_authenticated:
+        if user_profile and user_profile.cached_user.is_authenticated:
             try:
-                user_email = user_profile.user.email
-                username = user_profile.user.username
-                is_superuser = user_profile.user.is_superuser
-                is_staff = user_profile.user.is_staff
+                user_email = user_profile.cached_user.email
+                username = user_profile.cached_user.username
+                is_superuser = user_profile.cached_user.is_superuser
+                is_staff = user_profile.cached_user.is_staff
             except AttributeError:
                 # technically, this is supposed to be impossible due to the is_authenticated check
                 pass
@@ -321,8 +455,12 @@ def base(request: "HttpRequest") -> dict:
                 "profile_image_url": (
                     user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
                 ),
-                "first_name": user_profile.user.first_name if user_profile and user_profile.user.first_name else "",
-                "last_name": user_profile.user.last_name if user_profile and user_profile.user.last_name else "",
+                "first_name": (
+                    user_profile.cached_user.first_name if user_profile and user_profile.cached_user.first_name else ""
+                ),
+                "last_name": (
+                    user_profile.cached_user.last_name if user_profile and user_profile.cached_user.last_name else ""
+                ),
                 "product_name": SMARTER_PRODUCT_NAME,
                 "company_name": smarter_settings.root_domain,
                 "smarter_version": "v" + __version__,
@@ -339,12 +477,6 @@ def base(request: "HttpRequest") -> dict:
                 "my_resources_providers": get_providers(user_profile=user_profile) if user_profile else 0,
             }
         }
-        logger.debug(
-            "%s.get_cached_context() Dashboard context for user_id=%s: %s",
-            logger_prefix,
-            user_profile.id if user_profile else None,
-            cached_context,
-        )
         return cached_context
 
     context = get_cached_context(user=resolved_user)  # type: ignore[assignment]
@@ -376,8 +508,9 @@ def branding(request: "HttpRequest") -> dict:
 
     This processor is intended to be added to the ``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings, making the ``branding`` context variable available in all templates rendered by Django that inherit from ``base.html``.
     """
+    logger.debug("%s.branding() called.", logger_prefix)
 
-    @cache_results(timeout=CACHE_TIMEOUT)
+    @cache_results()
     def get_cached_context() -> dict:
         current_year = datetime.now().year
         root_url = request.build_absolute_uri("/").rstrip("/")
@@ -427,7 +560,6 @@ def branding(request: "HttpRequest") -> dict:
                 "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
             }
         }
-        logger.debug("%s.get_cached_context() Branding context: %s", logger_prefix, context)
         return context
 
     return get_cached_context()
@@ -437,14 +569,19 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
     """
     Provides organization-specific legal context for dashboard templates.
 
-    This context processor injects legal and compliance-related variables into the template context for all pages inheriting from ``base.html``. These variables ensure that consistent legal information, such as terms of service, privacy policy, and cookie policy URLs, are available throughout the dashboard user interface.
+    This context processor injects legal and compliance-related variables into
+    the template context for all pages inheriting from ``base.html``. These
+    variables ensure that consistent legal information, such as terms of service,
+    privacy policy, and cookie policy URLs, are available throughout the dashboard user interface.
 
     The context includes:
 
     - URLs for the terms of service, privacy policy, and cookie policy documents.
-    - A dynamically generated copyright notice that includes the current year and corporate name.
+    - A dynamically generated copyright notice that includes the current year
+    and corporate name.
 
-    All values are sourced from Django settings, allowing for easy customization and environment-specific overrides.
+    All values are sourced from Django settings, allowing for easy
+    customization and environment-specific overrides.
 
     Example usage in a Django template::
 
@@ -452,7 +589,7 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
         {{ footer.plans_url }}
         {{ footer.contact_url }}
     """
-
+    logger.debug("%s.footer() called.", logger_prefix)
     context = {
         "footer": {
             "about_url": smarter_settings.marketing_site_url,
@@ -469,13 +606,22 @@ def cache_buster(request) -> dict:
     """
     Adds a cache-busting query parameter to static asset URLs during development.
 
-    This context processor is intended for use in local development environments to ensure that browsers do not serve outdated versions of static files (such as JavaScript, CSS, or images) from cache. It injects a ``cache_buster`` variable into the template context, which can be appended as a query parameter to static asset URLs. The value is a version string based on the current timestamp, guaranteeing uniqueness on each page load.
+    This context processor is intended for use in local development environments
+    to ensure that browsers do not serve outdated versions of static files
+    (such as JavaScript, CSS, or images) from cache. It injects a ``cache_buster``
+    variable into the template context, which can be appended as a query parameter
+    to static asset URLs. The value is a version string based on the current
+    timestamp, guaranteeing uniqueness on each page load.
 
     Example usage in a Django template::
 
         <script src="{{ STATIC_URL }}main.js?{{ cache_buster }}"></script>
 
-    This approach is especially useful when making frequent changes to static assets during development, as it forces the browser to fetch the latest version every time the page is reloaded. In production, this processor is typically disabled or omitted to allow for proper static file caching and performance optimization.
+    This approach is especially useful when making frequent changes to static
+    assets during development, as it forces the browser to fetch the latest
+    version every time the page is reloaded. In production, this processor is
+    typically disabled or omitted to allow for proper static file caching and
+    performance optimization.
 
     The ``cache_buster`` variable is a string in the format ``v=<timestamp>``.
     """
@@ -497,4 +643,79 @@ def prompt_list_context(request: "HttpRequest") -> dict:
     DEPRECATED: This context processor is slated for removal in future releases as
     the underlying issues with Wagtail integration are resolved.
     """
+    logger.debug("%s.prompt_list_context() called.", logger_prefix)
     return {"prompt_list": {"smarter_admin": smarter_cached_objects.smarter_admin, "chatbot_helpers": []}}
+
+
+def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
+    """
+    Invalidates caches for all resource-counting context processors. This function is
+    intended to be called after any operation that modifies the underlying user data.
+
+    .. note::
+
+        This is called by signal handlers in the account app, tied to the AbstractBroker.
+
+    .. seealso::
+
+        - :class:`smarter.lib.manifest.broker.AbstractBroker`
+        - :signal:`smarter.apps.account.signals.cache_invalidate`
+    """
+    if not user_profile:
+        logger.warning(
+            "%s.cache_invalidations() called without user_profile. No caches will be invalidated.",
+            logger_prefix_cache_invalidations,
+        )
+        return
+
+    logger.debug("%s called for %s", logger_prefix_cache_invalidations, user_profile)
+
+    ###########################################################################
+    # resource invalidations
+    ###########################################################################
+    if user_profile:
+        Account.get_cached_object(invalidate=True, pk=user_profile.account.id)
+        UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)
+        PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=True, user_profile_id=user_profile.id)
+        get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id, invalidate=True)
+
+    ###########################################################################
+    # context invalidations
+    ###########################################################################
+    get_pending_deployments(invalidate=True, user_profile=user_profile)
+    get_chatbots(invalidate=True, user_profile=user_profile)
+    get_plugins(invalidate=True, user_profile=user_profile)
+    get_api_keys(invalidate=True, user_profile=user_profile)
+    get_custom_domains(invalidate=True, user_profile=user_profile)
+    get_connections(invalidate=True, user_profile=user_profile)
+    get_secrets(invalidate=True, user_profile=user_profile)
+    get_providers(invalidate=True, user_profile=user_profile)
+
+    ###########################################################################
+    # page cache invalidations
+    ###########################################################################
+    factory = RequestFactory()
+    url = reverse("dashboard:dashboard")
+    request = factory.get(url)
+
+    logger.debug(
+        "%s.cache_invalidations() Created invalidation request for URL %s: %s",
+        logger_prefix_cache_invalidations,
+        url,
+        request,
+    )
+    request.user = user_profile.user
+    # pylint: disable=C0415
+    from smarter.apps.dashboard.views.dashboard import DashboardView
+
+    DashboardView.dispatch.invalidate(request)
+
+    url = reverse("prompt_workbench:listview")
+    request = factory.get(url)
+    logger.debug(
+        "%s.cache_invalidations() Created invalidation request for URL %s: %s",
+        logger_prefix_cache_invalidations,
+        url,
+        request,
+    )
+    request.user = user_profile.user

@@ -9,9 +9,8 @@ from django.core.management import CommandError, call_command
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
-    get_cached_account,
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
+    smarter_cached_objects,
 )
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.chatbot.models import ChatBot
@@ -68,7 +67,12 @@ class Command(SmarterCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("--account_number", type=str, help="The Smarter account number to which the user belongs")
+        parser.add_argument(
+            "--account_number",
+            type=str,
+            help="The Smarter account number to which the user belongs",
+            default=smarter_cached_objects.smarter_account.account_number,
+        )
 
     def delete_chatbot(self, name: str):
         """Delete a chatbot by name."""
@@ -135,6 +139,7 @@ class Command(SmarterCommand):
             chatbot = ChatBot.objects.get(user_profile=self.user_profile, name=sam_chatbot.metadata.name)
             chatbot.deployed = True
             chatbot.save()
+            return True
         # pylint: disable=W0718
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Error occurred while deploying chatbot: {e}"))
@@ -149,9 +154,9 @@ class Command(SmarterCommand):
             raise SmarterValueError("You must provide an account number.")
 
         account_number = options["account_number"]
-        self.account = get_cached_account(account_number=account_number)
+        self.account = Account.get_cached_object(invalidate=False, account_number=account_number)  # type: ignore[assignment]
         admin = get_cached_admin_user_for_account(account=self.account)  # type: ignore[assignment]
-        admin_user_profile = get_cached_user_profile(user=admin, account=self.account)  # type: ignore[assignment]
+        admin_user_profile = UserProfile.get_cached_object(user=admin, account=self.account)  # type: ignore[assignment]
         self.user_profile = admin_user_profile  # type: ignore[arg-type]
         self.stdout.write(self.style.NOTICE("=" * 80))
         self.stdout.write(self.style.NOTICE(f"{__file__}"))

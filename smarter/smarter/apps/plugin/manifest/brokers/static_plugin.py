@@ -1,4 +1,4 @@
-# pylint: disable=W0718
+# pylint: disable=W0718,C0302
 """Smarter API StaticPlugin Manifest handler"""
 
 import logging
@@ -35,7 +35,7 @@ from smarter.apps.plugin.models import (
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.signals import broker_ready
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings_defaults
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -632,6 +632,14 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches when the manifest or plugin data changes.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        PluginDataStatic.get_cached_object(invalidate=True, plugin=self.plugin_meta)  # type: ignore
+        return super().cache_invalidations()
+
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example manifest for a static plugin.
@@ -695,11 +703,11 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 ],
             ),
             prompt=SAMPluginCommonSpecPrompt(
-                provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+                provider=settings_defaults.LLM_DEFAULT_PROVIDER,
                 systemRole="You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com). Whenever possible you should defer to the tool calls provided for additional information about everlasting gobstoppers.",
-                model=SettingsDefaults.LLM_DEFAULT_MODEL,
-                temperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-                maxTokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+                model=settings_defaults.LLM_DEFAULT_MODEL,
+                temperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
+                maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
             ),
             data=SAMPluginStaticSpecData(
                 staticData={
@@ -737,6 +745,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         manifest_status = SAMPluginCommonStatus(
             accountNumber="1234-5678-9012",
             username="example_user",
+            recordLocator="abc123def456",
             created=datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
             modified=datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
         )
@@ -900,6 +909,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 self.plugin.save()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
+            self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
         try:
             raise SAMBrokerErrorNotReady(

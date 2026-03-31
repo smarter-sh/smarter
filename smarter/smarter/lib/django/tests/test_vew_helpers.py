@@ -1,4 +1,4 @@
-"""Test the view_helpers."""
+"""Test the views."""
 
 from http import HTTPStatus
 from unittest.mock import MagicMock, Mock, patch
@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.lib.django import view_helpers
+from smarter.lib.django import views
 
 
 class TestViewHelpersBase(TestAccountMixin):
@@ -26,12 +26,12 @@ class TestViewHelpersBase(TestAccountMixin):
 class TestRedirectAndExpireCache(TestViewHelpersBase):
     """Test the redirect_and_expire_cache function."""
 
-    @patch("smarter.lib.django.view_helpers.redirect")
+    @patch("smarter.lib.django.views.redirect")
     def test_redirect_and_expire_cache(self, mock_redirect):
         # Use a real HttpResponse to test header logic
         response = HttpResponse()
         mock_redirect.return_value = response
-        result = view_helpers.redirect_and_expire_cache("/foo/")
+        result = views.redirect_and_expire_cache("/foo/")
         self.assertEqual(result, response)
         self.assertEqual(result["Cache-Control"], "no-store, no-cache, must-revalidate, max-age=0")
         self.assertEqual(result["Pragma"], "no-cache")
@@ -44,7 +44,7 @@ class TestSmarterView(TestViewHelpersBase):
 
     def setUp(self):
         super().setUp()
-        self.view = view_helpers.SmarterView()
+        self.view = views.SmarterView()
 
     def test_remove_comments(self):
         html = "<div><!-- comment -->content<!-- another --></div>"
@@ -57,9 +57,9 @@ class TestSmarterView(TestViewHelpersBase):
         expected_output = "<div></div>"
         self.assertEqual(result, expected_output)
 
-    @patch("smarter.lib.django.view_helpers.render")
-    @patch.object(view_helpers.SmarterView, "remove_comments")
-    @patch.object(view_helpers.SmarterView, "minify_html")
+    @patch("smarter.lib.django.views.render")
+    @patch.object(views.SmarterView, "remove_comments")
+    @patch.object(views.SmarterView, "minify_html")
     def test_render_clean_html(self, mock_minify_html, mock_remove_comments, mock_render):
         mock_response = MagicMock()
         mock_response.content = b"<div>html</div>"
@@ -74,10 +74,10 @@ class TestSmarterView(TestViewHelpersBase):
 class TestSmarterWebTxtView(TestViewHelpersBase):
     """Test the SmarterWebTxtView class."""
 
-    @patch.object(view_helpers.SmarterWebTxtView, "render_clean_html")
+    @patch.object(views.SmarterWebTxtView, "render_clean_html")
     def test_get(self, mock_render_clean_html):
         mock_render_clean_html.return_value = "plain text"
-        view = view_helpers.SmarterWebTxtView()
+        view = views.SmarterWebTxtView()
         request = Mock()
         view.template_path = "foo.txt"
         response = view.get(request)
@@ -89,19 +89,19 @@ class TestSmarterWebTxtView(TestViewHelpersBase):
 class TestSmarterWebHtmlView(TestViewHelpersBase):
     """Test the SmarterWebHtmlView class."""
 
-    @patch.object(view_helpers.SmarterWebHtmlView, "render_clean_html")
+    @patch.object(views.SmarterWebHtmlView, "render_clean_html")
     def test_clean_http_response(self, mock_render_clean_html):
         mock_render_clean_html.return_value = "html"
-        view = view_helpers.SmarterWebHtmlView()
+        view = views.SmarterWebHtmlView()
         response = view.clean_http_response(Mock(), "foo.html")
         self.assertIsInstance(response, HttpResponse)
         self.assertEqual(response.content, b"html")
         self.assertEqual(response["Content-Type"], "text/html")
 
-    @patch.object(view_helpers.SmarterWebHtmlView, "clean_http_response")
+    @patch.object(views.SmarterWebHtmlView, "clean_http_response")
     def test_get(self, mock_clean_http_response):
         mock_clean_http_response.return_value = HttpResponse("ok")
-        view = view_helpers.SmarterWebHtmlView()
+        view = views.SmarterWebHtmlView()
         response = view.get(Mock())
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -110,15 +110,11 @@ class TestSmarterAuthenticatedNeverCachedWebView(TestViewHelpersBase):
     """Test the SmarterAuthenticatedNeverCachedWebView class."""
 
     def test_inheritance(self):
-        self.assertTrue(
-            issubclass(view_helpers.SmarterAuthenticatedNeverCachedWebView, view_helpers.SmarterAuthenticatedWebView)
-        )
+        self.assertTrue(issubclass(views.SmarterAuthenticatedNeverCachedWebView, views.SmarterAuthenticatedWebView))
 
 
 class TestSmarterAdminWebView(TestViewHelpersBase):
     """Test the SmarterAdminWebView class."""
 
     def test_inheritance(self):
-        self.assertTrue(
-            issubclass(view_helpers.SmarterAdminWebView, view_helpers.SmarterAuthenticatedNeverCachedWebView)
-        )
+        self.assertTrue(issubclass(views.SmarterAdminWebView, views.SmarterAuthenticatedNeverCachedWebView))
