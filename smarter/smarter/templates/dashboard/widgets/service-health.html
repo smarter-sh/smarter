@@ -1,0 +1,84 @@
+{% load static %}
+
+          <!--begin::Col-->
+          <div class="col-xl-6 mb-xl-10">
+            <!--begin::Slider Widget 1-->
+            <div id="kt_sliders_widget_1_slider" class="card card-flush carousel carousel-custom carousel-stretch slide h-xl-100" data-bs-ride="carousel" data-bs-interval="5000">
+              <!--begin::Header-->
+              <div class="card-header pt-5">
+                <!--begin::Title-->
+                <h4 class="card-title d-flex align-items-start flex-column">
+                  <span class="card-label fw-bold text-gray-800">Smarter {{ dashboard.smarter_version }}</span>
+                  <span class="text-gray-500 mt-1 fw-bold fs-7">Backend Service Health</span>
+                </h4>
+                <!--end::Title-->
+              </div>
+              <!--end::Header-->
+              <!--begin::Body-->
+              <div class="card-body py-6">
+                  <!--begin::Item-->
+                  <div class="carousel-item active show">
+                    <!--begin::Wrapper-->
+                    <div class="d-flex align-items-center mb-5">
+                      <!--begin::Chart-->
+                      <div class="w-80px flex-shrink-0 me-2">
+                        <div class="min-h-auto ms-n3" id="kt_slider_widget_smarter_health" style="height: 100px;"></div>
+                      </div>
+                      <!--end::Chart-->
+                      <!--begin::Info-->
+                      <div class="m-0">
+                        <!--begin::Subtitle-->
+                        <h4 class="fw-bold text-gray-800 mb-3">Infrastructure</h4>
+                        <!--end::Subtitle-->
+                        <!--begin::Items-->
+                        <div class="d-flex d-grid gap-5">
+                          <!--begin::Item-->
+                          <div class="d-flex flex-column flex-shrink-0 me-4">
+                            <!--begin::Section-->
+                            <span class="d-flex align-items-center fs-7 fw-bold text-gray-500 mb-2">
+                            <i class="smarter-health-checks ki-duotone ki-check fs-6 me-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>Compute</span>
+                            <!--end::Section-->
+                            <!--begin::Section-->
+                            <span class="d-flex align-items-center text-gray-500 fw-bold fs-7">
+                            <i class="smarter-health-checks ki-duotone ki-check fs-6 me-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>Network</span>
+                            <!--end::Section-->
+                          </div>
+                          <!--end::Item-->
+                          <!--begin::Item-->
+                          <div class="d-flex flex-column flex-shrink-0">
+                            <!--begin::Section-->
+                            <span class="d-flex align-items-center fs-7 fw-bold text-gray-500 mb-2">
+                            <i class="smarter-health-checks ki-duotone ki-check fs-6 me-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>Data Storage</span>
+                            <!--end::Section-->
+                            <!--begin::Section-->
+                            <span class="d-flex align-items-center text-gray-500 fw-bold fs-7">
+                            <i class="smarter-health-checks ki-duotone ki-check fs-6 me-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>Ingress</span>
+                            <!--end::Section-->
+                          </div>
+                          <!--end::Item-->
+                        </div>
+                        <!--end::Items-->
+                      </div>
+                      <!--end::Info-->
+                    </div>
+                    <!--end::Wrapper-->
+                  </div>
+                  <!--end::Item-->
+              </div>
+              <!--end::Body-->
+            </div>
+            <!--end::Slider Widget 1-->
+          </div>
+          <!--end::Col-->

@@ -9,25 +9,19 @@ import yaml
 from django.core.management import call_command
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import (
-    get_cached_admin_user_for_account,
-    get_cached_user_profile,
-    smarter_cached_objects,
-)
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .models import PluginMeta
 from .plugin.utils import PluginExamples
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -86,6 +80,7 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             print("Example plugins created successfully.")
 
     """
+    # pylint: disable=W0621
     logger_prefix = formatted_text(f"{__name__}.add_example_plugins()")
     logger.debug("%s.add_example_plugins Adding example plugins for user profile: %s", logger_prefix, user_profile)
 
@@ -93,7 +88,7 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
     data: Optional[dict] = None
     if not isinstance(user_profile, UserProfile):
         raise SmarterValueError("User profile is required to add example plugins.")
-    username: str = user_profile.user.username
+    username: str = user_profile.cached_user.username
     output = io.StringIO()
     error_output = io.StringIO()
 
@@ -129,8 +124,8 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             data = yaml.safe_load(yaml_data)
             plugin_controller = PluginController(
                 user_profile=user_profile,
-                account=user_profile.account,  # type: ignore[arg-type]
-                user=user_profile.user,  # type: ignore[arg-type]
+                account=user_profile.cached_account,  # type: ignore[arg-type]
+                user=user_profile.cached_user,  # type: ignore[arg-type]
                 manifest=data,  # type: ignore[arg-type]
             )
             # we do this to ensure that that plugin can instantiate correctly.

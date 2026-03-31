@@ -19,9 +19,7 @@ from smarter.apps.account.models import AccountContact, User, UserProfile
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import (
-    cache_invalidate,
     get_cached_smarter_admin_user_profile,
-    get_cached_user_profile,
 )
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -311,7 +309,7 @@ class SAMUserBroker(AbstractBroker):
             return None
 
         try:
-            self._brokered_user_profile = get_cached_user_profile(user=self.brokered_user, account=self.account)  # type: ignore
+            self._brokered_user_profile = UserProfile.get_cached_object(user=self.brokered_user, account=self.account)  # type: ignore
             logger.debug(
                 "%s.brokered_user_profile() initialized existing UserProfile: %s",
                 self.formatted_class_name,
@@ -614,7 +612,7 @@ class SAMUserBroker(AbstractBroker):
                     description=self.brokered_user_profile.description or "no description",
                     version=self.brokered_user_profile.version,
                     username=self.brokered_user_profile.user.username,
-                    tags=self.brokered_user_profile.tags.names(),
+                    tags=self.brokered_user_profile.tags_list,
                     annotations=self.brokered_user_profile.annotations,
                 ),
                 spec=SAMUserSpec(
@@ -628,6 +626,7 @@ class SAMUserBroker(AbstractBroker):
                 ),
                 status=SAMUserStatus(
                     account_number=self.account.account_number,
+                    recordLocator=f"user-{self.brokered_user.id}-###-###-###",
                     username=self.brokered_user.username,
                     created=self.brokered_user.date_joined,
                     modified=self.brokered_user.last_login or self.brokered_user.date_joined,
@@ -765,6 +764,15 @@ class SAMUserBroker(AbstractBroker):
         """
         return SAMUser
 
+    def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches for the brokered user.
+        Invalidates the UserProfile cache for the brokered user and account.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        UserProfile.get_cached_object(invalidate=True, user=self.brokered_user, account=self.account)  # type: ignore
+        return super().cache_invalidations()
+
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return the SAM `User` model associated with the Smarter API User manifest.
@@ -831,7 +839,7 @@ class SAMUserBroker(AbstractBroker):
             user_profiles = UserProfile.objects.filter(account=self.account, user__username=name)
         else:
             user_profiles = UserProfile.objects.filter(account=self.account)
-        users = [user_profile.user for user_profile in user_profiles]
+        users = [user_profile.cached_user for user_profile in user_profiles]
 
         model_titles = self.get_model_titles(serializer=UserSerializer())
 
@@ -965,7 +973,6 @@ class SAMUserBroker(AbstractBroker):
                 self.brokered_user.refresh_from_db()
                 self.brokered_user_profile.save()
                 self.brokered_user_profile.refresh_from_db()
-                cache_invalidate(user=self.brokered_user, account=self.account)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             raise SAMUserBrokerError(
@@ -973,6 +980,7 @@ class SAMUserBroker(AbstractBroker):
                 thing=self.kind,
                 command=command,
             ) from e
+        self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1027,7 +1035,7 @@ class SAMUserBroker(AbstractBroker):
             ) from e
 
         try:
-            self._user_profile = get_cached_user_profile(user=self._user, account=self.account)
+            self._user_profile = UserProfile.get_cached_object(user=self._user, account=self.account)
         except UserProfile.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {self.username}. User is not associated with your account",

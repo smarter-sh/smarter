@@ -292,6 +292,11 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
 
         # 2.) next, (and only if a loader is not available) try to initialize
         #     from existing Account model if available
+        if not self.plugin_meta:
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} No plugin metadata found for {self.kind}",
+                thing=self.kind,
+            )
         elif self._plugin_meta:
             metadata = self.plugin_metadata_orm2pydantic()
             status = self.plugin_status_pydantic()
@@ -308,11 +313,10 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                     f"{self.formatted_class_name} No plugin spec found for {self.kind} {self.plugin_meta.name}",
                     thing=self.kind,
                 )
-
-            admin = get_cached_admin_user_for_account(self.plugin_meta.user_profile.account)
+            admin = get_cached_admin_user_for_account(account=self.plugin_meta.user_profile.cached_account)
             if not admin:
                 raise SAMPluginBrokerError(
-                    f"{self.formatted_class_name} No admin user found for account {self.plugin_meta.user_profile.account}",
+                    f"{self.formatted_class_name} No admin user found for account {self.plugin_meta.user_profile.cached_account}",
                     thing=self.kind,
                 )
             self._manifest = SAMApiPlugin(
@@ -453,19 +457,19 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         .. code-block:: json
 
             {
-                'type': 'object',
-                'required': [],
-                'properties': {
-                    'max_cost': {
-                        'type': 'string',
-                        'description': 'A ceiling on the maximum cost of the course.'
+                "type": "object",
+                "required": [],
+                "properties": {
+                    "max_cost": {
+                        "type": "string",
+                        "description": "A ceiling on the maximum cost of the course."
                     },
-                    'description': {
-                        'type': 'string',
-                        'description': 'A keyword to search for in the course description.'
+                    "description": {
+                        "type": "string",
+                        "description": "A keyword to search for in the course description."
                     }
                 },
-                'additionalProperties': False
+                "additionalProperties": false
             }
 
         :return: The plugin data as a Pydantic model.
@@ -587,6 +591,15 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def cache_invalidations(self) -> None:
+        """
+        Handle broker specific cache invalidation logic.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+
+        PluginDataApi.get_cached_object(invalidate=True, plugin=self.plugin)  # type: ignore
+        super().cache_invalidations()
+
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response containing an example API plugin manifest.
@@ -758,6 +771,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                 self.plugin.save()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
+            self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
         try:
             raise SAMBrokerErrorNotReady(

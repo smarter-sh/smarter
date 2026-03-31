@@ -1,3 +1,14 @@
+# -----------------------------------------------------------------------------------
+# ConfigMap Manifest for Debian Setup Script
+#
+# This file defines a ConfigMap containing the install.sh script for setting up
+# a Debian-based Bastion or Job server in the Smarter project.
+#
+# - Maintainer: <your team/contact>
+# - Purpose: Provides a shell script to install required packages and AWS CLI.
+# - Usage: Mounted into Bastion/Job Pods; values are set in values.yaml.
+# - Notes: Update the script as needed for your environment or package requirements.
+# -----------------------------------------------------------------------------------
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,7 +17,9 @@ metadata:
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Chart.Version }}
   labels:
-    App: {{ .Values.app.name }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: {{ .Values.app.name }}
+    app.kubernetes.io/application-group: {{ .Values.app.name }}
   namespace: {{ .Values.namespace }}
   name: debian-setup-script
 data:
@@ -24,13 +37,13 @@ data:
     ################################################################################
     set -e
 
-    echo "Smarter Bastion Server: Installing required packages: mariadb-client, curl, unzip, ca-certificates"
+    echo "Smarter Bastion/Job Server: Installing required packages: mariadb-client, curl, unzip, ca-certificates"
     apt-get update
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       curl unzip ca-certificates less mariadb-client vim \
-      git openssh-client iputils-ping net-tools dnsutils htop lsof tcpdump wget rsync jq nano zip tar sudo procps traceroute socat
+      git openssh-client iputils-ping net-tools dnsutils htop lsof tcpdump wget rsync jq nano zip tar sudo procps traceroute socat iproute2
 
-    echo "Smarter Bastion Server: Installing AWS CLI"
+    echo "Smarter Bastion/Job Server: Installing AWS CLI"
     update-ca-certificates
     curl -fL --retry 3 --retry-delay 2 "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
     unzip awscliv2.zip
@@ -38,4 +51,4 @@ data:
     rm -rf aws awscliv2.zip
     rm -rf /var/lib/apt/lists/*
 
-    echo "Smarter Bastion Server: Setup script completed"
+    echo "Smarter Bastion/Job Server: Setup script completed"

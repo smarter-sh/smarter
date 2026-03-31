@@ -195,10 +195,6 @@ class EmailHelper(metaclass=Singleton):
                 msg["From"],
                 msg["To"],
             )
-            if smarter_settings.developer_mode:
-                raise EmailHelperException(
-                    f"Error sending email with host: {smarter_settings.smtp_host} port: {smarter_settings.smtp_port} username: {smarter_settings.smtp_username.get_secret_value()}: {e}"
-                ) from e
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
@@ -208,10 +204,6 @@ class EmailHelper(metaclass=Singleton):
                 msg["From"],
                 msg["To"],
             )
-            if smarter_settings.developer_mode:
-                raise EmailHelperException(
-                    f"Error sending email with host: {smarter_settings.smtp_host} port: {smarter_settings.smtp_port} username: {smarter_settings.smtp_username.get_secret_value()}: {e}"
-                ) from e
 
 
 email_helper = EmailHelper()

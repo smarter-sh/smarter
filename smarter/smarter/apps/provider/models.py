@@ -12,12 +12,17 @@ import requests
 from django.conf import settings
 from django.db import models
 
-from smarter.apps.account.models import MetaDataWithOwnershipModel, Secret, User
+from smarter.apps.account.models import (
+    Account,
+    MetaDataWithOwnershipModel,
+    Secret,
+    User,
+    UserProfile,
+)
 from smarter.apps.account.utils import (
     get_cached_account_for_user,
     get_cached_admin_user_for_account,
     get_cached_smarter_admin_user_profile,
-    get_cached_user_profile,
     smarter_cached_objects,
 )
 from smarter.common.exceptions import (
@@ -25,6 +30,7 @@ from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterValueError,
 )
+from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -446,16 +452,31 @@ class Provider(MetaDataWithOwnershipModel):
 
     @classmethod
     def get_cached_provider_by_account_id_and_name(
-        cls, account_id: int, name: str, invalidate: bool = False
+        cls, invalidate: Optional[bool] = False, account_id: Optional[int] = None, name: Optional[str] = None
     ) -> Optional["Provider"]:
         """Get a cached provider by account ID and name."""
+
+        logger_prefix = formatted_text(
+            __name__ + "." + Provider.__name__ + ".get_cached_provider_by_account_id_and_name()"
+        )
 
         @cache_results()
         def cached_provider_by_account_id_and_name(account_id: int, name: str) -> Optional["Provider"]:
             try:
-                provider = cls.objects.get(user_profile__account__id=account_id, name=name)
-                return provider
+                logger.debug(
+                    "%s.cached_provider_by_account_id_and_name() cache miss for account_id: %s, name: %s",
+                    logger_prefix,
+                    account_id,
+                    name,
+                )
+                return cls.objects.get(user_profile__account__id=account_id, name=name)
             except cls.DoesNotExist:
+                logger.debug(
+                    "%s.cached_provider_by_account_id_and_name() no provider found for account_id: %s, name: %s",
+                    logger_prefix,
+                    account_id,
+                    name,
+                )
                 return None
 
         if invalidate:
@@ -465,18 +486,39 @@ class Provider(MetaDataWithOwnershipModel):
         return provider
 
     @classmethod
-    def get_cached_providers_for_user(cls, user: User, invalidate: bool = False) -> Sequence["Provider"]:
+    def get_cached_providers_for_user(
+        cls, invalidate: Optional[bool] = False, user: Optional[User] = None
+    ) -> Sequence["Provider"]:
         """Get cached providers for a user."""
 
         @cache_results()
         def cached_providers_by_account_id(account_id: int) -> Sequence["Provider"]:
-            admin_user = get_cached_admin_user_for_account(user_profile.account)
-            admin_user_profile = get_cached_user_profile(admin_user)  # type: ignore[arg-type]
+            if not user_profile:
+                logger.debug(
+                    "%s: No user profile found for user %s, returning empty list", cls.formatted_class_name, user
+                )
+                return []
+            admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore[arg-type]
+            admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore[arg-type]
 
-            account_providers = cls.objects.filter(user_profile=admin_user_profile).order_by("name")
-            smarter_providers = cls.objects.filter(
-                user_profile=smarter_cached_objects.smarter_admin_user_profile
-            ).order_by("name")
+            account_providers = (
+                Provider.objects.filter(user_profile=admin_user_profile)
+                .select_related(
+                    "user_profile",
+                    "user_profile__account",
+                    "user_profile__user",
+                )
+                .order_by("name")
+            )
+            smarter_providers = (
+                Provider.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile)
+                .select_related(
+                    "user_profile",
+                    "user_profile__account",
+                    "user_profile__user",
+                )
+                .order_by("name")
+            )
             retval = list((account_providers | smarter_providers).distinct()) or []
             logger.debug(
                 "%s.cached_providers_by_account_id() retrieved %s providers for account %s",
@@ -486,17 +528,22 @@ class Provider(MetaDataWithOwnershipModel):
             )
             return retval
 
-        user_profile = get_cached_user_profile(user)
+        user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
+        if not user_profile:
+            logger.debug("%s: No user profile found for user %s, returning empty list", cls.formatted_class_name, user)
+            return []
 
-        if invalidate:
+        if invalidate and user_profile and user_profile.account:
             cached_providers_by_account_id.invalidate(user_profile.account.id)
 
-        providers = cached_providers_by_account_id(user_profile.account.id)
-        return list(providers) or []
+        if user_profile and user_profile.account:
+            providers = cached_providers_by_account_id(user_profile.account.id)
+            return list(providers) or []
+        return []
 
     @classmethod
     def get_cached_provider_by_user_and_name(
-        cls, user: User, name: str, invalidate: bool = False
+        cls, invalidate: Optional[bool] = False, user: Optional[User] = None, name: Optional[str] = ""
     ) -> Optional["Provider"]:
         """
         Return a single instance of Provider by name for the given user.
@@ -510,14 +557,13 @@ class Provider(MetaDataWithOwnershipModel):
         :rtype: Optional[Provider]
         """
 
-        account = get_cached_account_for_user(user)
+        account = get_cached_account_for_user(invalidate=invalidate, user=user)
         if not account:
             return None
-        return cls.get_cached_provider_by_account_id_and_name(account.id, name)
+        return cls.get_cached_provider_by_account_id_and_name(invalidate=invalidate, account_id=account.id, name=name)
 
     def validate(self) -> None:
         """Validate the provider before saving."""
-        pass
 
     def __str__(self):
         """String representation of the provider."""
@@ -678,7 +724,9 @@ def get_providers() -> list[Provider]:
     Raises a Smarter error if anything goes wrong.
     """
     try:
-        providers = Provider.objects.filter(is_active=True)
+        providers = Provider.objects.filter(is_active=True).select_related(
+            "user_profile", "user_profile__account", "user_profile__user"
+        )
     except Provider.DoesNotExist as e:
         raise SmarterValueError("No active providers found.") from e
 

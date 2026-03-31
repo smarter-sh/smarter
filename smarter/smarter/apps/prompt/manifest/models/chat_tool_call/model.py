@@ -31,5 +31,4 @@ class SAMChatToolCall(AbstractSAMBase):
     status: Optional[SAMChatToolCallStatus] = Field(
         default=None,
         description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {MANIFEST_KIND}.",
-        exclude=True,
     )

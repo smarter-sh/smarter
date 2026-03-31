@@ -11,19 +11,17 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
 
+from smarter.apps.dashboard.models import EmailContactList
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json
-from smarter.lib.django.view_helpers import (
-    SmarterAuthenticatedNeverCachedWebView,
+from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
     SmarterWebHtmlView,
-    cache_page_by_user,
+    smarter_cache_page_by_user,
 )
 
-from ..models import EmailContactList
-
-DASHBOARD_CACHE_TIMEOUT = 60  # seconds
+DASHBOARD_CACHE_TIMEOUT = 10  # 10 seconds. keeps the dashboard snappy while avoiding appearing stale.
 
 
 # ------------------------------------------------------------------------------
@@ -96,13 +94,15 @@ class NotificationsView(SmarterAuthenticatedWebView):
 
 
 @method_decorator(cache_control(max_age=DASHBOARD_CACHE_TIMEOUT), name="dispatch")
-@method_decorator(cache_page_by_user(DASHBOARD_CACHE_TIMEOUT), name="dispatch")
-class DashboardView(SmarterAuthenticatedNeverCachedWebView):
+@method_decorator(smarter_cache_page_by_user(DASHBOARD_CACHE_TIMEOUT), name="dispatch")
+class DashboardView(SmarterAuthenticatedWebView):
     """Public Access Dashboard view"""
 
     template_path = "dashboard/authenticated.html"
 
     def get(self, request: WSGIRequest, *args, **kwargs):
+        if kwargs.get("invalidate_cache", False):
+            self.invalidate(request=request, *args, **kwargs)
         if is_authenticated_request(request):
             return super().get(request, *args, **kwargs)
         return redirect(reverse("login_view"))

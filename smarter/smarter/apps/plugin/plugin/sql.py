@@ -64,7 +64,7 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings_defaults
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
@@ -236,15 +236,40 @@ class SqlPlugin(PluginBase):
         """
         if self._plugin_data:
             return self._plugin_data
+
+        self._plugin_data = PluginDataSql.get_cached_object(plugin=self.plugin_meta)  # type: ignore[call-arg]
+        if self._plugin_data:
+            logger.debug(
+                "%s.plugin_data() retrieved existing PluginDataSql from database.",
+                self.formatted_class_name,
+            )
+            return self._plugin_data
+        else:
+            logger.debug(
+                "%s.plugin_data() no existing PluginDataSql found in database for plugin_meta: %s",
+                self.formatted_class_name,
+                self.plugin_meta,
+            )
+
         # we only want a preexisting manifest ostensibly sourced
         # from the cli, not a lazy-loaded
         if self._manifest and self.plugin_meta:
             # this is an update scenario. the Plugin exists in the database,
             # AND we've received manifest data from the cli.
             self._plugin_data = PluginDataSql(**self.plugin_data_django_model)  # type: ignore[call-arg]
+            self._plugin_data.save()
+            logger.debug(
+                "%s.plugin_data() created new instance of %s from manifest and plugin metadata.",
+                self.formatted_class_name,
+                self.plugin_data_class.__name__,
+            )
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
+            logger.debug(
+                "%s.plugin_data() retrieving PluginDataSql from database using plugin metadata.",
+                self.formatted_class_name,
+            )
             self._plugin_data = PluginDataSql.get_cached_data_by_plugin(
                 plugin=self.plugin_meta,
             )
@@ -436,8 +461,10 @@ class SqlPlugin(PluginBase):
             return None
 
         if not isinstance(self.plugin_meta, PluginMeta):
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} plugin metadata is not available."
+            logger.debug(
+                "%s.plugin_data_django_model() plugin_meta is not set. plugin_meta: %s",
+                self.formatted_class_name,
+                self.plugin_meta,
             )
 
         if not isinstance(self.manifest, SAMSqlPlugin):
@@ -456,7 +483,7 @@ class SqlPlugin(PluginBase):
         if connection_name:
             # recast the Pydantic model to the PluginDataSql Django ORM model
             try:
-                account = self.user_profile.account if self.user_profile else None
+                account = self.user_profile.cached_account if self.user_profile else None
                 plugin_data_sqlconnection = SqlConnection.objects.get(
                     user_profile__account=account,
                     name=connection_name,
@@ -582,11 +609,11 @@ class SqlPlugin(PluginBase):
             ],
         )
         prompt = SAMPluginCommonSpecPrompt(
-            provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+            provider=settings_defaults.LLM_DEFAULT_PROVIDER,
             systemRole="You are a helpful sales agent for Stackademy. You can provide information about courses available at Stackademy.\n",
-            model=SettingsDefaults.LLM_DEFAULT_MODEL,
-            temperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-            maxTokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+            model=settings_defaults.LLM_DEFAULT_MODEL,
+            temperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
+            maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
         )
         connection = "example_connection"
         sql_data = SqlData(
@@ -631,6 +658,7 @@ class SqlPlugin(PluginBase):
         status = SAMPluginCommonStatus(
             accountNumber="0123456789",
             username=SMARTER_ADMIN_USERNAME,
+            recordLocator="example_record_locator",
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )

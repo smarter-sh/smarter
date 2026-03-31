@@ -70,20 +70,20 @@ from smarter.apps.plugin.manifest.models.common.plugin.status import (
 from smarter.apps.plugin.models import ApiConnection, PluginDataApi, PluginMeta
 from smarter.apps.plugin.serializers import PluginApiSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings_defaults
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
 
 from .base import PluginBase, SmarterPluginError
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -246,10 +246,11 @@ class ApiPlugin(PluginBase):
         api_data = {camel_to_snake(key): value for key, value in api_data.items()}
 
         connection_name = self._manifest.spec.connection if self._manifest and self._manifest.spec else None
+        plugin_data_apiconnection: Optional[ApiConnection] = None
         if connection_name:
             # recast the Pydantic model to the PluginDataApi Django ORM model
             try:
-                account = self.user_profile.account if self.user_profile else None
+                account = self.user_profile.cached_account if self.user_profile else None
                 plugin_data_apiconnection = ApiConnection.objects.get(
                     user_profile__account=account,
                     name=connection_name,
@@ -266,7 +267,7 @@ class ApiPlugin(PluginBase):
                     pass
             if not plugin_data_apiconnection:
                 raise SmarterApiPluginError(
-                    f"{self.formatted_class_name}.plugin_data_django_model() error: ApiConnection {connection_name} does not exist for Plugin {self.plugin_meta.name if self.plugin_meta else "(Missing name)"} in account {account}. Error: {e}"
+                    f"{self.formatted_class_name}.plugin_data_django_model() error: ApiConnection {connection_name} does not exist for Plugin {self.plugin_meta.name if self.plugin_meta else "(Missing name)"} in account {account}"
                 )
 
             api_data["connection"] = plugin_data_apiconnection
@@ -310,22 +311,9 @@ class ApiPlugin(PluginBase):
                     recasted_parameters["required"].append(parameter["name"])
 
             api_data["parameters"] = recasted_parameters
-        else:
+        elif parameters is not None:
             raise SmarterConfigurationError(
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
-            )
-
-        if not isinstance(self.plugin_meta, PluginMeta):
-            raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required plugin_meta."
-            )
-        if not isinstance(self.manifest, SAMApiPlugin):
-            raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required manifest."
-            )
-        if not isinstance(api_data, dict):
-            raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required api_data."
             )
 
         return {
@@ -367,17 +355,17 @@ class ApiPlugin(PluginBase):
             ],
         )
         prompt = SAMPluginCommonSpecPrompt(
-            provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+            provider=settings_defaults.LLM_DEFAULT_PROVIDER,
             systemRole="You are a helpful agent for Stackademy. You provide information on available courses by leveraging the Api.\n",
-            model=SettingsDefaults.LLM_DEFAULT_MODEL,
-            temperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-            maxTokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+            model=settings_defaults.LLM_DEFAULT_MODEL,
+            temperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
+            maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
         )
         connection = "smarter_test_api"
         api_data = ApiData(
             endpoint="/stackademy/course-catalogue/",
             method="GET",
-            url_params=[
+            urlParams=[
                 UrlParam(
                     key="max_cost",
                     value="500.00",
@@ -411,7 +399,7 @@ class ApiPlugin(PluginBase):
                     default="Python",
                 ),
             ],
-            test_values=[
+            testValues=[
                 TestValue(
                     name="username",
                     value=SMARTER_ADMIN_USERNAME,
@@ -433,6 +421,7 @@ class ApiPlugin(PluginBase):
         status = SAMPluginCommonStatus(
             accountNumber="0123456789",
             username=SMARTER_ADMIN_USERNAME,
+            recordLocator="abc123def456",
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )

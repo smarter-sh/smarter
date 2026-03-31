@@ -9,7 +9,6 @@ from django.core.management import CommandError
 from django.test import RequestFactory
 
 from smarter.apps.account.models import User, UserProfile
-from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -144,16 +143,16 @@ class Command(SmarterCommand):
             self.handle_completed_failure(e, msg=f"User '{username}' does not exist.")
             return
 
-        user_profile = get_cached_user_profile(user=self.user)
+        user_profile = UserProfile.get_cached_object(user=self.user)
         if not isinstance(user_profile, UserProfile):
             self.handle_completed_failure(msg="No admin user profile found.")
             return
 
-        # user = user_profile.user
+        # user = user_profile.cached_user
 
         # try:
         #     token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
-        #         account=user_profile.account,
+        #         account=user_profile.cached_account,
         #         name="apply_manifest",
         #         user=user,
         #         description="DELETE ME: single-use key created by manage.py apply_manifest",
@@ -182,7 +181,7 @@ class Command(SmarterCommand):
         loader = SAMLoader(manifest=self.data)
         factory = RequestFactory()
         fake_request = factory.post("/fake-url/", data=loader.manifest, content_type="application/json")
-        fake_request.user = user_profile.user
+        fake_request.user = user_profile.cached_user
 
         if not isinstance(loader.kind, str):
             self.handle_completed_failure(msg="Unable to determine manifest kind.")

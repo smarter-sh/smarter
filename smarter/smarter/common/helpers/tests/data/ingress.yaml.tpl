@@ -10,7 +10,7 @@ metadata:
   name: ${domain}
   namespace: ${environment_namespace}
 spec:
-  ingressClassName: default
+  ingressClassName: traefik
   rules:
     - host: ${domain}
       http:

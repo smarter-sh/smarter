@@ -35,6 +35,10 @@ class Command(SmarterCommand):
     def handle(self, *args, **options):
         self.handle_begin()
 
+        if not aws_helper.ready():
+            self.handle_completed_failure(msg="AWS services are currently unavailable. Please try again later.")
+            return
+
         account_number = options["account_number"]
         domain = options["domain"]
 
@@ -42,7 +46,7 @@ class Command(SmarterCommand):
 
         try:
             domain_name = ChatBotCustomDomain.objects.get(domain_name=domain)
-            if domain_name.account != account:
+            if domain_name.user_profile.account != account:
                 self.handle_completed_failure(msg=f"The domain name {domain} is already registered by another account.")
                 return None
         except ChatBotCustomDomain.DoesNotExist:
@@ -58,5 +62,5 @@ class Command(SmarterCommand):
         custom_domain = ChatBotCustomDomain.objects.get(user_profile__account=account, domain_name=domain)
         ns_records = aws_helper.route53.get_ns_records(hosted_zone_id=custom_domain.aws_hosted_zone_id)
         self.handle_completed_success(
-            msg=f"Successfully registered the domain name {domain} for account {custom_domain.user_profile.account.account_number} {custom_domain.user_profile.account.company_name}. Please begin the domain verification process once you've added these NS records to the root domain's DNS settings: {ns_records}"
+            msg=f"Successfully registered the domain name {domain} for account {custom_domain.user_profile.cached_account.account_number} {custom_domain.user_profile.cached_account.company_name}. Please begin the domain verification process once you've added these NS records to the root domain's DNS settings: {ns_records}"
         )

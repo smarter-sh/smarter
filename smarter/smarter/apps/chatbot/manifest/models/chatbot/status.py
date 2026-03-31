@@ -1,7 +1,6 @@
 """Smarter API Manifest - Plugin.status"""
 
 import os
-from datetime import datetime
 from typing import ClassVar, Optional
 
 from pydantic import Field
@@ -26,13 +25,6 @@ class SAMChatbotStatus(AbstractSAMStatusBase):
         description=f"{class_identifier}.username: The Smarter user who created this {MANIFEST_KIND}. Read only.",
     )
 
-    created: datetime = Field(
-        description=f"{class_identifier}.created: The date in which this {MANIFEST_KIND} was created. Read only.",
-    )
-
-    modified: datetime = Field(
-        description=f"{class_identifier}.modified: The date in which this {MANIFEST_KIND} was most recently changed. Read only.",
-    )
     deployed: bool = Field(
         description=f"{class_identifier}.deployed: Whether this {MANIFEST_KIND} is currently deployed. Read only.",
     )

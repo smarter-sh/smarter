@@ -36,7 +36,7 @@ from smarter.common.helpers.console_helpers import formatted_text, formatted_tex
 from smarter.lib import json
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__ + ".settings.base.py")
+logger_prefix = formatted_text(__name__)
 
 load_dotenv()
 
@@ -423,6 +423,7 @@ if smarter_settings.aws_is_configured:
                 "region_name": smarter_settings.aws_region,
                 "default_acl": "public-read",
                 "querystring_auth": False,
+                "custom_domain": smarter_settings.environment_cdn_domain,
             },
         }
     }
@@ -764,8 +765,6 @@ TEMPLATES = [
                 "smarter.apps.dashboard.context_processors.base",
                 "smarter.apps.dashboard.context_processors.footer",
                 "smarter.apps.dashboard.context_processors.file_drop_zone",
-                # "social_django.context_processors.backends",
-                # "social_django.context_processors.login_redirect",
             ],
         },
     },

@@ -1,11 +1,11 @@
 """Plug helper functions for plugin unit tests."""
 
 from datetime import datetime, timedelta
+from typing import Optional
 
 from smarter.apps.account.models import Account, Secret, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
 )
 from smarter.common.exceptions import SmarterValueError
 
@@ -35,11 +35,11 @@ def secret_factory(user_profile: UserProfile, name: str, value: str) -> Secret:
     return secret
 
 
-def plugin_meta_factory(plugin_class: str, account: Account, user_profile: UserProfile = None) -> PluginMeta:
+def plugin_meta_factory(plugin_class: str, account: Account, user_profile: Optional[UserProfile] = None) -> PluginMeta:
 
     if not user_profile:
         user = get_cached_admin_user_for_account(account=account)
-        user_profile = get_cached_user_profile(user=user)
+        user_profile = UserProfile.get_cached_object(user=user)
 
     if not plugin_class in SAMPluginCommonMetadataClassValues.all_values():
         raise SmarterValueError(

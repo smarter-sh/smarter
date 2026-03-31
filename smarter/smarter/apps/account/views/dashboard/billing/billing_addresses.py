@@ -6,7 +6,7 @@ from http import HTTPStatus
 from django import forms, http
 
 from smarter.apps.account.tests.factories import billing_address_factory
-from smarter.lib.django.view_helpers import SmarterAdminWebView
+from smarter.lib.django.views import SmarterAdminWebView
 
 
 class BillingAddressForm(forms.Form):

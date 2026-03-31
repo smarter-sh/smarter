@@ -9,10 +9,9 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
-from smarter.apps.account.models import User
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
-    get_cached_user_profile,
     smarter_cached_objects,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
@@ -53,6 +52,7 @@ from smarter.lib.manifest.enum import (
 from . import PluginSerializer, SAMPluginBrokerError
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
@@ -140,33 +140,50 @@ class SAMPluginBaseBroker(AbstractBroker):
                 self.name,
                 self.user_profile,
             )
-            self._orm_instance = PluginDataBase.objects.get(plugin=self.plugin_meta)
-            logger.debug(
-                "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",
-                self.formatted_class_name,
-                PluginDataBase.__name__,
-                serializers.serialize("json", [self._orm_instance]),
-                self.name,
-                self.user_profile,
-            )
-            self._orm_meta_instance = self._orm_instance.plugin
-            logger.debug(
-                "%s.orm_instance() - retrieved meta instance %s",
-                self.formatted_class_name,
-                self._orm_meta_instance,
-            )
-            self._plugin_meta = self._orm_meta_instance
-            logger.debug(
-                "%s.orm_instance() - set plugin_meta from self._orm_meta_instance %s",
-                self.formatted_class_name,
-                self._plugin_meta,
-            )
+            if self.plugin_meta:
+                self._orm_instance = PluginDataBase.objects.get(id=self.plugin_meta.id)  # type: ignore
+            if self._orm_instance:
+                logger.debug(
+                    "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",
+                    self.formatted_class_name,
+                    PluginDataBase.__name__,
+                    serializers.serialize("json", [self._orm_instance]),  # type: ignore
+                    self.name,
+                    self.user_profile,
+                )
+            else:
+                logger.debug(
+                    "%s.orm_instance() - no %s instance found for %s owned by %s",
+                    self.formatted_class_name,
+                    PluginDataBase.__name__,
+                    self.name,
+                    self.user_profile,
+                )
+            if self._orm_instance:
+                self._orm_meta_instance = self._orm_instance.plugin
+                logger.debug(
+                    "%s.orm_instance() - retrieved meta instance %s",
+                    self.formatted_class_name,
+                    self._orm_meta_instance,
+                )
+                self._plugin_meta = self._orm_meta_instance
+                logger.debug(
+                    "%s.orm_instance() - set plugin_meta from self._orm_meta_instance %s",
+                    self.formatted_class_name,
+                    self._plugin_meta,
+                )
+            else:
+                logger.debug(
+                    "%s.orm_instance() - no meta instance found for %s",
+                    self.formatted_class_name,
+                    self.name,
+                )
 
             return self._orm_instance
         except PluginDataBase.DoesNotExist:
             # next try with account admin
             account_admin_user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
-            account_admin_user_profile = get_cached_user_profile(user=account_admin_user)  # type: ignore
+            account_admin_user_profile = UserProfile.get_cached_object(user=account_admin_user)  # type: ignore
             try:
                 logger.debug(
                     "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
@@ -175,7 +192,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.name,
                     account_admin_user_profile,
                 )
-                self._orm_instance = PluginDataBase.objects.get(user_profile=account_admin_user_profile, name=self.name)
+                plugin_meta = PluginMeta.objects.get(user_profile=account_admin_user_profile, name=self.name)
+                self._orm_instance = PluginDataBase.objects.get(plugin=plugin_meta)
                 logger.debug(
                     "%s.orm_instance() - retrieved %s for %s owned by %s",
                     self.formatted_class_name,
@@ -183,7 +201,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.name,
                     account_admin_user_profile,
                 )
-            except PluginDataBase.DoesNotExist:
+            except (PluginDataBase.DoesNotExist, PluginMeta.DoesNotExist):
                 # finally try with Smarter platform admin user_profile
                 smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
                 try:
@@ -194,9 +212,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                         self.name,
                         smarter_admin_user_profile,
                     )
-                    self._orm_instance = PluginDataBase.objects.get(
-                        user_profile=smarter_admin_user_profile, name=self.name
-                    )
+                    plugin_meta = PluginMeta.objects.get(user_profile=smarter_admin_user_profile, name=self.name)
+                    self._orm_instance = PluginDataBase.objects.get(plugin=plugin_meta)
                     logger.debug(
                         "%s.orm_instance() - retrieved %s for %s owned by %s",
                         self.formatted_class_name,
@@ -204,7 +221,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                         self.name,
                         smarter_admin_user_profile,
                     )
-                except PluginDataBase.DoesNotExist:
+                except (PluginDataBase.DoesNotExist, PluginMeta.DoesNotExist):
                     logger.warning(
                         "%s.orm_instance() - %s does not exist for %s owned by %s",
                         self.formatted_class_name,
@@ -244,7 +261,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                 PluginDataBase.__name__,
                 self.name,
                 self.user_profile,
-                str(e),
+                e,
+                exc_info=True,
             )
             return None
 
@@ -394,33 +412,25 @@ class SAMPluginBaseBroker(AbstractBroker):
         if self.orm_meta_instance:
             self._plugin_meta = self.orm_meta_instance
             return self._plugin_meta
-        if self.name and self.account:
-            try:
-                logger.debug(
-                    "%s.plugin_meta() - retrieving PluginMeta for name=%s, account=%s",
-                    logger_prefix,
-                    self.name,
-                    self.account,
-                )
-                self._plugin_meta = PluginMeta.objects.get(user_profile__account=self.account, name=self.name)
-            except MultipleObjectsReturned:
-                try:
-                    self._plugin_meta = PluginMeta.objects.get(
-                        user_profile=self.user_profile,
-                        name=self.name,
-                    )
-                except PluginMeta.DoesNotExist:
-                    logger.warning(
-                        "PluginMeta does not exist for name %s and user_profile %s",
-                        self.name,
-                        self.user_profile,
-                    )
-            except PluginMeta.DoesNotExist:
-                logger.warning(
-                    "PluginMeta does not exist for name %s and account %s",
-                    self.name,
-                    self.account,
-                )
+        try:
+            self._plugin_meta = PluginMeta.objects.get(
+                user_profile=self.user_profile,
+                name=self.name,
+            )
+            logger.debug(
+                "%s.plugin_meta() - retrieved %s for name=%s, user_profile=%s",
+                logger_prefix,
+                self._plugin_meta.__class__.__name__,
+                self.name,
+                self.user_profile,
+            )
+        except PluginMeta.DoesNotExist:
+            logger.warning(
+                "%s.plugin_meta() - PluginMeta does not exist for name=%s and user_profile=%s",
+                logger_prefix,
+                self.name,
+                self.user_profile,
+            )
         return self._plugin_meta
 
     @plugin_meta.setter
@@ -441,7 +451,7 @@ class SAMPluginBaseBroker(AbstractBroker):
         self.account = None
         self.user = None
         self.account = value.account
-        self.user = get_cached_admin_user_for_account(value.account)
+        self.user = get_cached_admin_user_for_account(account=value.account)
 
     @property
     def plugin_data(self) -> Optional[PluginDataBase]:
@@ -502,16 +512,17 @@ class SAMPluginBaseBroker(AbstractBroker):
             return self._plugin_status
         if not self.plugin_meta:
             return None
-        admin = get_cached_admin_user_for_account(self.plugin_meta.user_profile.account)
+        admin = get_cached_admin_user_for_account(account=self.plugin_meta.user_profile.cached_account)
         if not admin:
             raise SAMPluginBrokerError(
-                f"No admin user found for account {self.plugin_meta.user_profile.account}",
+                f"No admin user found for account {self.plugin_meta.user_profile.cached_account}",
                 thing=self.kind,
                 command=SmarterJournalCliCommands("describe"),
             )
         self._plugin_status = SAMPluginCommonStatus(
-            accountNumber=self.plugin_meta.user_profile.account.account_number,
+            accountNumber=self.plugin_meta.user_profile.cached_account.account_number,
             username=admin.username,
+            recordLocator=self.plugin_meta.record_locator,
             created=self.plugin_meta.created_at,
             modified=self.plugin_meta.updated_at,
         )
@@ -902,6 +913,15 @@ class SAMPluginBaseBroker(AbstractBroker):
             ) from e
         except Exception as e:
             raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
+
+    def cache_invalidations(self) -> None:
+        """
+        Invalidate relevant cache entries for the plugin metadata and data.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        if self.plugin_meta:
+            PluginMeta.get_cached_object(invalidate=True, pk=self.plugin_meta.id)  # type: ignore
+        return super().cache_invalidations()
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """

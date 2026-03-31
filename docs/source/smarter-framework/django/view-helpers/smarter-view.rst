@@ -2,7 +2,7 @@ Smarter View
 ================
 
 
-.. autoclass:: smarter.lib.django.view_helpers.SmarterView
+.. autoclass:: smarter.lib.django.views.SmarterView
    :members:
    :undoc-members:
    :inherited-members:

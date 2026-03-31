@@ -8,9 +8,11 @@ metadata:
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Chart.Version }}
   labels:
-    App: {{ .Values.app.name }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.app.name }}-mysql-backup"
+    app.kubernetes.io/application-group: {{ .Values.app.name }}
 spec:
-  schedule: "0 2 * * *" # Every day at 2am UTC
+  schedule: {{ .Values.databaseScheduledBackup.schedule | quote }}
   jobTemplate:
     spec:
       ttlSecondsAfterFinished: 86400
