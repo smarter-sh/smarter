@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.211](https://github.com/smarter-sh/smarter/compare/v0.13.210...v0.13.211) (2026-03-31)
+
+### Bug Fixes
+
+* lazy initialization of Plugin* child objects from SAM to ORM ([933fe31](https://github.com/smarter-sh/smarter/commit/933fe312ffb1ef4f93965516c6eb2e75734c8250))
+
 ## [0.13.210](https://github.com/smarter-sh/smarter/compare/v0.13.209...v0.13.210) (2026-03-31)
 
 ### Bug Fixes
