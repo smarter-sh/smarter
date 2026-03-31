@@ -1,7 +1,7 @@
 SmarterAuthenticatedWebView
 ===========================
 
-.. autoclass:: smarter.lib.django.view_helpers.SmarterAuthenticatedWebView
+.. autoclass:: smarter.lib.django.views.SmarterAuthenticatedWebView
    :members:
    :undoc-members:
    :inherited-members:

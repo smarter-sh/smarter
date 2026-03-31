@@ -6,9 +6,9 @@ Celery tasks for the plugin app.
 import logging
 from typing import Optional
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import (
     get_cached_user_for_user_id,
-    get_cached_user_profile,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
@@ -107,8 +107,8 @@ def create_plugin_selector_history(*args, **kwargs):
     user_profile = None
     user_id = kwargs.get("user_id")
     if user_id:
-        user = get_cached_user_for_user_id(user_id)
-        user_profile = get_cached_user_profile(user) if user else None
+        user = get_cached_user_for_user_id(user_id=user_id)
+        user_profile = UserProfile.get_cached_object(user=user) if user else None
 
     plugin_id = kwargs.get("plugin_id")
     plugin_meta = cached_plugin_by_id(plugin_id) if plugin_id else None
@@ -116,7 +116,7 @@ def create_plugin_selector_history(*args, **kwargs):
         # to catch a race situation in unit tests.
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,  # type: ignore[arg-type]
+            account=user_profile.cached_account,  # type: ignore[arg-type]
             user=user,  # type: ignore[arg-type]
             plugin_meta=plugin_meta,
         )

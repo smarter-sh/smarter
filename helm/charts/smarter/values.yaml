@@ -132,7 +132,7 @@ global:
   image:
     pullPolicy: IfNotPresent
     repository: lpm0073/smarter
-    tag: v0.13.209
+    tag: v0.13.210
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -232,7 +232,11 @@ hpa:
 
 # -----------------------------------------------------------------------------
 # Backing Services Configuration
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+databaseScheduledBackup:
+  enabled: true
+  schedule: "0 2 * * *" # Every day at 2am UTC
+
 externalDatabase:
   host: ""        # Will use .Values.env.SMARTER_MYSQL_HOST if empty
   port: 3306      # Will use .Values.env.SMARTER_MYSQL_PORT if empty

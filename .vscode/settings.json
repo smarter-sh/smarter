@@ -20,13 +20,8 @@
     "**/keen_v3.0.6": true,
     "**/staticfiles": true
   },
-  "python.analysis": {
-    "exclude": ["**/migrations/**"],
-    "diagnosticSeverityOverrides": {
-      "reportAttributeAccessIssue": "none",
-      "reportOptionalMemberAccess": "none"
-    }
-  },
+  "python.linting.flake8Enabled": true,
   "python.linting.enabled": true,
-  "python.linting.mypyEnabled": true
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.terminal.useEnvFile": true
 }

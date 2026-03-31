@@ -168,7 +168,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
                 name=self.connection.name,
                 description=self.connection.description,
                 version=self.connection.version,
-                tags=self.connection.tags.names() if self.connection.tags else None,
+                tags=self.connection.tags_list if self.connection.tags else None,
                 annotations=self.connection.annotations,
             )
         return self._sam_connection_metadata
@@ -178,20 +178,41 @@ class SAMConnectionBaseBroker(AbstractBroker):
         Return the common connection status from the manifest.
         """
         if self.connection:
-            admin = get_cached_admin_user_for_account(self.connection.user_profile.account)
+            admin = get_cached_admin_user_for_account(account=self.connection.user_profile.cached_account)
             if not admin:
                 raise SAMBrokerErrorNotReady(
-                    f"Admin user not found for account {self.connection.user_profile.account.account_number}. Cannot retrieve connection status.",
+                    f"Admin user not found for account {self.connection.user_profile.cached_account.account_number}. Cannot retrieve connection status.",
                     thing=self.thing,
                     command=SmarterJournalCliCommands.GET,
                 )
             self._sam_connection_status = SAMConnectionCommonStatus(
-                account_number=self.connection.user_profile.account.account_number,
+                account_number=self.connection.user_profile.cached_account.account_number,
                 username=admin.username,
+                recordLocator=self.connection.record_locator,
                 created=self.connection.created_at,
                 modified=self.connection.updated_at,
             )
         return self._sam_connection_status
+
+    def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches after applying changes to the connection.
+
+         This method should be called after any updates to the connection model to ensure that cached data is refreshed. Subclasses can override this method to add additional cache invalidation logic specific to their implementation.
+
+         :return: None
+         :rtype: None
+
+         .. seealso::
+
+             :class:`SAMConnectionBaseBroker`
+             :meth:`SAMConnectionBaseBroker.apply`
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        if self.connection:
+            ModelClass = self.ORMMetaModelClass
+            ModelClass.get_cached_object(invalidate=True, pk=self.connection.id)  # type: ignore
+        return super().cache_invalidations()
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
@@ -271,6 +292,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
                     updated = True
         if updated:
             self.connection.save()
+            self.cache_invalidations()
 
         if tags is not None:
             self.connection.tags.set(tags)

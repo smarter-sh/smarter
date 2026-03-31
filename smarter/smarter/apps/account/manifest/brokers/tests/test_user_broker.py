@@ -375,7 +375,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         django_orm_tags = None
         if isinstance(self.broker.brokered_user_profile.tags, TaggableManager):
             django_orm_tags = (
-                set(self.broker.brokered_user_profile.tags.names()) if self.broker.brokered_user_profile.tags else set()
+                set(self.broker.brokered_user_profile.tags_list) if self.broker.brokered_user_profile.tags else set()
             )
         elif isinstance(self.broker.brokered_user_profile.tags, set):
             django_orm_tags = self.broker.brokered_user_profile.tags

@@ -36,6 +36,8 @@ class Command(SmarterCommand):
         account, created = Account.objects.get_or_create(
             account_number=SMARTER_ACCOUNT_NUMBER,
         )
+        account.name = f"{smarter_settings.platform_name} Admin Account"
+        account.description = f"automatically-generated {smarter_settings.platform_name} Admin account"
         account.company_name = smarter_settings.branding_corporate_name
         account.is_default_account = True
         account.phone_number = smarter_settings.branding_support_phone_number
@@ -73,7 +75,7 @@ class Command(SmarterCommand):
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
         if created:
             self.handle_completed_success(
-                msg=f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}"
+                msg=f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.cached_account.company_name}"
             )
 
         account_contact, created = AccountContact.objects.get_or_create(
@@ -91,7 +93,8 @@ class Command(SmarterCommand):
             )
 
         # ensure that the Smarter admin user has at least one auth token (api key)
-        if not SmarterAuthToken.objects.filter(user=user).exists():
+        smarterauthtoken = SmarterAuthToken.get_cached_objects(user=user)
+        if not smarterauthtoken.exists():
             _, token_key = SmarterAuthToken.objects.create(
                 user_profile=user_profile, name="smarter-admin-key", user=user, description="created by manage.py"
             )  # type: ignore[assignment]

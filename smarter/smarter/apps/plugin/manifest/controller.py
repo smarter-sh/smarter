@@ -56,6 +56,7 @@ SAM_MAP: dict[str, SAMPluginType] = {
 }
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -103,7 +104,7 @@ class PluginController(AbstractController):
     .. code-block:: python
 
         # Initialize a PluginController with manifest data
-        my_user_profile = get_cached_user_profile(admin_user)
+        my_user_profile = UserProfile.get_cached_object(user=admin_user)
         controller = PluginController(
             account=my_account,
             user=admin_user,
@@ -230,22 +231,33 @@ class PluginController(AbstractController):
 
     @property
     def plugin_meta(self) -> Optional[PluginMeta]:
-        if not self._plugin_meta and self.account and self.name and self.manifest:
+        if not self._plugin_meta and self.user_profile and self.name and self.manifest:
             try:
                 plugin_meta = PluginMeta.objects.get(
-                    user_profile__account=self.account,
-                    name=self.name,
-                    plugin_class=self.plugin_class,
+                    user_profile=self.user_profile, name=self.name, plugin_class=self.plugin_class
                 )
+                if not plugin_meta:
+                    logger.debug(
+                        "%s.plugin_meta: No PluginMeta found for user_profile %s, name %s, plugin_class %s",
+                        self.formatted_class_name,
+                        self.user_profile,
+                        self.name,
+                        self.plugin_class,
+                    )
+                    return None
                 if plugin_meta.user_profile not in valid_resource_owners_for_user(self.user_profile):
+                    logger.warning(
+                        "%s.plugin_meta: PluginMeta %s does not belong to a valid resource owner for user_profile %s",
+                        self.formatted_class_name,
+                        plugin_meta,
+                        self.user_profile,
+                    )
                     return None
                 self._plugin_meta = plugin_meta
                 logger.debug("%s retrieved plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
             except MultipleObjectsReturned:
                 self._plugin_meta = PluginMeta.objects.get(
-                    user_profile=self.user_profile,
-                    name=self.name,
-                    plugin_class=self.plugin_class,
+                    user_profile=self.user_profile, name=self.name, plugin_class=self.plugin_class
                 )
             except PluginMeta.DoesNotExist:
                 pass

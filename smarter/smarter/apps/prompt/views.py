@@ -1,4 +1,4 @@
-# pylint: disable=W0613
+# pylint: disable=W0613,C0302
 """
 Views for the React chat component used in the Smarter web application.
 """
@@ -22,6 +22,7 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.chatbot.models import (
@@ -48,7 +49,6 @@ from smarter.apps.prompt.models import Chat, ChatHelper
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
-    SMARTER_IS_INTERNAL_API_REQUEST,
     SmarterHttpMethods,
 )
 from smarter.common.exceptions import (
@@ -64,12 +64,13 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
-from smarter.lib.django.view_helpers import (
+from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
-    cache_page_by_user,
+    SmarterAuthenticatedWebView,
+    smarter_cache_page_by_user,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.drf.view_helpers import UnauthenticatedPermissionClass
+from smarter.lib.drf.views.helpers import UnauthenticatedPermissionClass
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
@@ -80,7 +81,8 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .signals import chat_config_invoked, chat_session_invoked
 
 MAX_RETURNED_PLUGINS = 10
-PROMPT_LIST_CACHE_TIMEOUT = 15
+PROMPT_LIST_CACHE_TIMEOUT = smarter_settings.cache_expiration
+WORKBENCH_CACHE_TIMEOUT = 10  # 10 seconds. keeps the workbench snappy while avoiding appearing stale.
 
 
 def should_log(level):
@@ -90,6 +92,14 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+
+def should_log_verbose(level):
+    """Check if logging should be done based on the waffle switch."""
+    return smarter_settings.verbose_logging
+
+
+verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
 
 
 class SmarterChatappViewError(SmarterException):
@@ -113,7 +123,9 @@ class SmarterChatSession(SmarterHelperMixin):
 
     def __init__(self, request: HttpRequest, session_key: str, *args, chatbot: Optional[ChatBot] = None, **kwargs):
         super().__init__()
-        logger.debug("SmarterChatSession().__init__() called with session_key=%s, chatbot=%s", session_key, chatbot)
+        verbose_logger.debug(
+            "SmarterChatSession().__init__() called with session_key=%s, chatbot=%s", session_key, chatbot
+        )
         self.request = request
         if not isinstance(session_key, str):
             logger.error("%s - session_key is not a string: %s", self.formatted_class_name, type(session_key))
@@ -130,7 +142,7 @@ class SmarterChatSession(SmarterHelperMixin):
         self._chat_helper = ChatHelper(request, *args, session_key=self.session_key, chatbot=self.chatbot, **kwargs)
         self._chat = self._chat_helper.chat
 
-        logger.debug("%s - session established: %s", self.formatted_class_name, self.session_key)
+        verbose_logger.debug("%s - session established: %s", self.formatted_class_name, self.session_key)
 
         chat_session_invoked.send(sender=self.__class__, instance=self, request=request)
 
@@ -176,6 +188,18 @@ class SmarterChatSession(SmarterHelperMixin):
         if retval.endswith("/config/"):
             retval = retval[:-8]
         return retval
+
+
+class ManifestDropZoneView(SmarterAuthenticatedNeverCachedWebView):
+    """
+    A simple view that renders a page with a manifest drop zone
+    for plugin development.
+    """
+
+    template_path = "prompt/manifest-apply.html"
+
+    def get(self, request: HttpRequest, *args, **kwargs):
+        return render(request, self.template_path, context={})
 
 
 class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
@@ -282,10 +306,10 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
             self.account = self._chatbot_helper.account
             self.user = self._chatbot_helper.user
             self.user_profile = self._chatbot_helper.user_profile
-            logger.debug("%s - chatbot_helper() setter chatbot=%s", self.formatted_class_name, self.chatbot)
+            verbose_logger.debug("%s - chatbot_helper() setter chatbot=%s", self.formatted_class_name, self.chatbot)
         else:
             self._chatbot = None
-            logger.debug("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
+            verbose_logger.debug("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
 
     def clean_url(self, url: str) -> str:
         """
@@ -494,16 +518,16 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
 
         if chatbot_id is not None:
             try:
-                self._chatbot = ChatBot.objects.get(id=chatbot_id)
+                self._chatbot = ChatBot.get_cached_object(pk=chatbot_id)
                 self.chatbot_name = self._chatbot.name
-                logger.debug(
+                verbose_logger.debug(
                     "%s.dispatch() - set chatbot=%s from chatbot_id=%s",
                     self.formatted_class_name,
                     self._chatbot,
                     chatbot_id,
                 )
             except ChatBot.DoesNotExist:
-                logger.error(
+                verbose_logger.error(
                     "%s.dispatch() - ChatBot with id=%s does not exist. Returning 404.",
                     self.formatted_class_name,
                     chatbot_id,
@@ -514,7 +538,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
             try:
                 self._chatbot = get_cached_chatbot_by_request(request=request)
                 if not self._chatbot:
-                    logger.debug(
+                    verbose_logger.debug(
                         "%s.dispatch() - get_cached_chatbot_by_request() returned None. Attempting to instantiate ChatBotHelper with additional info",
                         self.formatted_class_name,
                     )
@@ -553,7 +577,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
                 "Authentication failed. Are you logged in? Smarter sessions automatically expire after 24 hours.",
             )
 
-        logger.debug(
+        verbose_logger.debug(
             "%s - chatbot=%s - chatbot_helper=%s", self.formatted_class_name, self.chatbot, self.chatbot_helper
         )
 
@@ -563,7 +587,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
         self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
 
-        logger.debug(
+        verbose_logger.debug(
             "%s.dispatch() completed with chatbot=%s, session_key=%s",
             self.formatted_class_name,
             self.chatbot,
@@ -706,6 +730,12 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         --------
         ChatConfigView : The endpoint that provides configuration data to the React app.
         """
+        if not self.user_profile:
+            logger.error(
+                "%s.dispatch() - user_profile is None. This should not happen. Returning 403.",
+                self.formatted_class_name,
+            )
+            return SmarterHttpResponseForbidden(request=request, error_message="Authentication required")
         retval = super().dispatch(request, *args, **kwargs)
         if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
@@ -713,14 +743,14 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
         if session_key is not None:
             self._session_key = session_key
-            logger.debug(
+            verbose_logger.debug(
                 "%s.dispatch() - setting session_key=%s from kwargs",
                 self.formatted_class_name,
                 self.session_key,
             )
 
         try:
-            logger.debug(
+            verbose_logger.debug(
                 "%s.dispatch() - url=%s, account=%s, user=%s",
                 self.formatted_class_name,
                 self.url,
@@ -740,7 +770,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 )
                 self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
             if self.chatbot:
-                logger.debug(
+                verbose_logger.debug(
                     "%s.dispatch() - set chatbot=%s from self.chatbot_helper",
                     self.formatted_class_name,
                     self.chatbot,
@@ -771,7 +801,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             "chatapp_workbench": {
                 "div_id": smarter_settings.smarter_reactjs_root_div_id,
                 "app_loader_url": self.reactjs_loader_url,
-                "chatbot_api_url": self.chatbot.url,
+                "chatbot_api_url": self.chatbot.sandbox_url,
                 "toggle_metadata": True,
                 "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
                 "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter chat session, not the Django session.
@@ -780,7 +810,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
             }
         }
-        logger.debug(
+        verbose_logger.debug(
             "%s.dispatch() - rendering template %s with context: %s",
             self.formatted_class_name,
             self.template_path,
@@ -833,52 +863,64 @@ class PromptManifestView(DocsBaseView):
 
     """
 
-    template_path = "prompt/manifest_detail.html"
+    template_path = "prompt/manifest-detail.html"
 
     chatbot: Optional[ChatBot] = None
     chatbot_helper: Optional[ChatBotHelper] = None
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
-        Dispatch method to handle the request for the manifest detail page.
+        Handle GET requests to render the chatbot manifest detail view.
+        This method processes the incoming request to retrieve the
+        specified chatbot's manifest details and renders them in a
+        user-friendly format. It performs validation on the provided chatbot
+        name and kind, retrieves the chatbot metadata, and handles any
+        errors that may arise during this process.
 
-        This method is called from an action button in PromptListView,
-        which importantly, contains chatbots that are owned not only by
-        the authenticated user, but also chatbots owned by the user's
-        account, and also owned by the Smarter admin user. We therefore
-        generate this view from the actual chatbot ID, rather than
-        by name and kind, and this is ambiguous in the context of
-        shared chatbots.
+        Process:
+        1. Extract and validate 'name' and 'kind' from kwargs.
+        2. Retrieve the chatbot metadata using the provided name and user context.
+        3. If the chatbot is found, call the API view to get the chatbot details
+        4. Convert the JSON response to YAML format for better readability.
+        5. Render the chatbot manifest detail template with the retrieved data.
+        6. Handle any errors that occur during the process and return appropriate error responses.
 
-        **Key Features:**
+        :param request: Django HTTP request object.
+        :type request: WSGIRequest
+        :param args: Additional positional arguments.
+        :type args: tuple
+        :param kwargs: Keyword arguments, must include 'name' (chatbot name) and 'kind' (chatbot type).
+        :type kwargs: dict
 
-        - **Authentication Protected:**
-          Requires the user to be authenticated. If the user is not authenticated, access is denied.
-
-
-        Parameters
-        ----------
-        request : HttpRequest
-            The incoming HTTP request object.
-        *args
-            Additional positional arguments.
-        **kwargs
-            Additional keyword arguments.
-
-        Returns
-        -------
-        HttpResponse
-            Renders the Django template for the manifest detail page, displaying chatbot manifest details in YAML format.
+        :returns: Rendered HTML page with chatbot manifest details, or an error response if the chatbot is not found or parameters are invalid.
+        :rtype: HttpResponse
         """
-        retval = super().dispatch(request, *args, **kwargs)
-        if retval.status_code >= HTTPStatus.BAD_REQUEST:
-            return retval
+        logger.debug(
+            "%s.dispatch() called with request=%s, args=%s, kwargs=%s",
+            self.formatted_class_name,
+            request.build_absolute_uri(),
+            args,
+            kwargs,
+        )
 
         hashed_id = kwargs.pop("hashed_id", None)
         chatbot_id = ChatBot.id_from_hashed_id(hashed_id) if hashed_id else None
         try:
-            self.chatbot = ChatBot.objects.get(id=chatbot_id)
+            self.chatbot = ChatBot.get_cached_object(pk=chatbot_id)
+
+            if not isinstance(self.chatbot, ChatBot):
+                raise ChatBot.DoesNotExist(
+                    f"ChatBot with id {chatbot_id} does not exist. Received {type(self.chatbot)} {self.chatbot}"
+                )
             self.chatbot_helper = ChatBotHelper(request=request, chatbot=self.chatbot)
+
+            # we'll pass the chatbot name as a kwarge to the APICli
+            # along with ownership info which we'll set below.
+            kwargs["name"] = self.chatbot.name
+
+            # there are many ways that we could do this, but using the system
+            # const is easiest.
+            self.kind = SAMKinds.CHATBOT
         except ChatBot.DoesNotExist:
             return SmarterHttpResponseNotFound(request=request, error_message=f"ChatBot with id {chatbot_id} not found")
 
@@ -898,12 +940,13 @@ class PromptManifestView(DocsBaseView):
         # that is not necessarily the same as the authenticated user, we need
         # to spoof the request user to be the owner of the chatbot for the
         # purposes of generating the manifest.
-        self.kind = SAMKinds.CHATBOT
-        kwargs["name"] = self.chatbot.name
-        orginal_user = getattr(request, "user", None)
+        #
+        # things we know:
+        # - request.user was validated in the base classes.
+        # - self.chatbot.user_profile was validated in ChatBotHelper
+        # - user_profile always has a valid user.
         request.user = self.chatbot.user_profile.user
 
-        setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, True)
         logger.debug(
             "%s.dispatch() - rendering template %s with kwargs: %s",
             self.formatted_class_name,
@@ -916,28 +959,51 @@ class PromptManifestView(DocsBaseView):
         from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
         from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 
+        # build the relative url path to the API CLI end point.
+        reverse_name = str(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe).lower()
         view = ApiV1CliDescribeApiView.as_view()
         json_response = self.get_brokered_json_response(
-            reverse_name=str(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe).lower(),
+            reverse_name=reverse_name,
             view=view,
             request=request,
             *args,
             **kwargs,
         )
 
-        yaml_response = yaml.dump(json_response, default_flow_style=False)
+        try:
+            yaml_response = yaml.dump(json_response, default_flow_style=False)
+        except yaml.YAMLError as e:
+            logger.error(
+                "%s.dispatch() - Error converting JSON response to YAML: %s. JSON response: %s",
+                self.formatted_class_name,
+                str(e),
+                formatted_json(json_response),
+            )
+            return SmarterHttpResponseServerError(request=request, error_message="Error converting manifest to YAML")
+
         context = {
             "manifest": yaml_response,
             "page_title": self.chatbot.name,
             "owner": self.chatbot.user_profile,
         }
-        request.user = orginal_user
-        return render(request, self.template_path, context=context)  # type: ignore
+        try:
+            response = render(request, self.template_path, context=context)  # type: ignore
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.dispatch() - Error rendering template: %s. context: %s",
+                self.formatted_class_name,
+                str(e),
+                formatted_json(context),
+                exec_info=True,
+            )
+            return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
+        return response
 
 
-@method_decorator(cache_control(max_age=PROMPT_LIST_CACHE_TIMEOUT), name="dispatch")
-@method_decorator(cache_page_by_user(PROMPT_LIST_CACHE_TIMEOUT), name="dispatch")
-class PromptListView(SmarterAuthenticatedNeverCachedWebView):
+@method_decorator(cache_control(max_age=WORKBENCH_CACHE_TIMEOUT), name="dispatch")
+@method_decorator(smarter_cache_page_by_user(WORKBENCH_CACHE_TIMEOUT), name="dispatch")
+class PromptListView(SmarterAuthenticatedWebView):
     """
     list view for smarter workbench web console. This view is protected and
     requires the user to be authenticated. It generates cards for each
@@ -950,6 +1016,13 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         # pylint: disable=C0415
+        if not isinstance(self.user_profile, UserProfile):
+            logger.error(
+                "%s.dispatch() - user_profile is not set or not an instance of UserProfile. This should not happen. Returning 403.",
+                self.formatted_class_name,
+            )
+            return SmarterHttpResponseForbidden(request=request, error_message="Authentication required")
+
         from smarter.apps.prompt.urls import PromptReverseViews
 
         logger.debug(
@@ -959,17 +1032,17 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
         if response.status_code >= 300:
             return response
 
-        self.chatbot_helpers = get_cached_chatbots_for_user_profile(self.user_profile.id)
+        self.chatbot_helpers = get_cached_chatbots_for_user_profile(user_profile_id=self.user_profile.id)  # type: ignore
 
         user_chatbots = [
             chatbot_helper
             for chatbot_helper in self.chatbot_helpers
-            if chatbot_helper.chatbot.user_profile == self.user_profile
+            if chatbot_helper.chatbot.user_profile == self.user_profile  # type: ignore
         ]
         shared_chatbots = [
             chatbot_helper
             for chatbot_helper in self.chatbot_helpers
-            if chatbot_helper.chatbot.user_profile != self.user_profile
+            if chatbot_helper.chatbot.user_profile != self.user_profile  # type: ignore
         ]
 
         smarter_admin = get_cached_smarter_admin_user_profile()
@@ -986,7 +1059,7 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
                 "config": f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_config_by_hashed_id}",
             },
         }
-        logger.debug(
+        verbose_logger.debug(
             "%s.dispatch() rendering template %s with context: %s",
             self.formatted_class_name,
             self.template_path,

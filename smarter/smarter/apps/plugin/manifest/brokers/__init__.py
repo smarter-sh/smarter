@@ -25,7 +25,7 @@ class PluginSerializer(SmarterCamelCaseSerializer):
     def get_email(self, obj: PluginMeta):
         if obj.user_profile:
             user_profile = UserProfile.objects.get(id=obj.user_profile_id)  # type: ignore[union-attr]
-            return user_profile.user.email if user_profile.user else None
+            return user_profile.cached_user.email if user_profile.cached_user else None
         return None
 
     # pylint: disable=C0115

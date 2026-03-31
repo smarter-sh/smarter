@@ -1184,7 +1184,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
             plugin_id = int(function_name[-4:])
             try:
-                plugin_meta = PluginMeta.objects.get(id=plugin_id)
+                plugin_meta = PluginMeta.get_cached_object(pk=plugin_id)
             except PluginMeta.DoesNotExist as e:
                 raise SmarterConfigurationError(
                     f"{self.formatted_class_name}: plugin with id {plugin_id} not found. This is a bug."

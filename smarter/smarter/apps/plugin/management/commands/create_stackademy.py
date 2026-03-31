@@ -2,16 +2,16 @@
 Command to create the Stackademy AI resources.
 """
 
-import io
 import logging
 
 from django.core.management import CommandError
 
+from smarter.apps.account.models import Account
 from smarter.apps.account.utils import (
-    get_cached_account,
     get_cached_admin_user_for_account,
 )
 from smarter.apps.api.utils import apply_manifest_v2
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -47,25 +47,24 @@ class Command(SmarterCommand):
             "--account_number",
             type=str,
             help="The account number that will own the remote Api connection. Defaults to smarter_test_api",
+            default=SMARTER_ACCOUNT_NUMBER,
         )
 
     def handle(self, *args, **options):
         """Create the Stackademy ApiPlugin."""
         self.handle_begin()
 
-        output = io.StringIO()
-        error_output = io.StringIO()
         account_number = options.get("account_number")
         if not account_number:
             logger.error("%s - account number is required.", logger_prefix)
             self.handle_completed_failure(msg="account number is required.")
             return
-        account = get_cached_account(account_number=account_number)
+        account = Account.get_cached_object(invalidate=False, account_number=account_number)
         if not account:
             logger.error("%s - Account with account number %s does not exist.", logger_prefix, account_number)
             self.handle_completed_failure(msg=f"Account with account number {account_number} does not exist.")
             return
-        admin_user = get_cached_admin_user_for_account(account)
+        admin_user = get_cached_admin_user_for_account(account=account)
         if not admin_user:
             logger.error("%s - No admin user found for account %s.", logger_prefix, account_number)
             self.handle_completed_failure(msg=f"No admin user found for account {account_number}.")

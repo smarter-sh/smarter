@@ -25,8 +25,9 @@ from smarter.apps.plugin.manifest.models.common.connection.metadata import (
 from smarter.apps.plugin.manifest.models.common.connection.status import (
     SAMConnectionCommonStatus,
 )
-from smarter.apps.plugin.models import ApiConnection, ConnectionBase
+from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.plugin.serializers import ApiConnectionSerializer
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -336,7 +337,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             spec = SAMApiConnectionSpec(
                 connection=connection,
             )
-            admin = get_cached_admin_user_for_account(self.account)  # type: ignore
+            admin = get_cached_admin_user_for_account(account=self.account)  # type: ignore
             if not admin:
                 raise SAMBrokerErrorNotReady(
                     f"Admin user not found for account {self.account}. Cannot build manifest.",
@@ -422,31 +423,31 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             )
 
         # retrieve the apiKey Secret
-        api_key_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value)
+        api_key_name = str(camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value))
         if api_key_name:
             try:
                 secret = Secret.objects.get(name=api_key_name, user_profile=self.user_profile)
-                config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = secret.id  # type: ignore[assignment]
+                config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = secret.id if secret else None  # type: ignore[assignment]
             except Secret.DoesNotExist:
                 logger.warning(
                     "%s.manifest_to_django_orm() api key Secret %s not found for user %s",
                     self.formatted_class_name,
                     api_key_name,
-                    self.user_profile.user.username,
+                    self.user_profile.cached_user.username,
                 )
 
         # retrieve the proxyUsername Secret, if it exists
-        proxy_password_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
+        proxy_password_name = str(camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value))
         if proxy_password_name:
             try:
                 secret = Secret.objects.get(name=proxy_password_name, user_profile=self.user_profile)
-                config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = secret.id  # type: ignore[assignment]
+                config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = secret.id if secret else None  # type: ignore[assignment]
             except Secret.DoesNotExist:
                 logger.warning(
                     "%s.manifest_to_django_orm() proxy password Secret %s not found for user %s",
                     self.formatted_class_name,
                     proxy_password_name,
-                    self.user_profile.user.username,
+                    self.user_profile.cached_user.username,
                 )
 
         return {**metadata, **config_dump}
@@ -486,10 +487,8 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 if self.manifest and self.manifest.spec
                 else self.connection.api_key.name if self.connection and self.connection.api_key else None
             )
-            self._api_key_secret = Secret.objects.get(
-                user_profile=self.user_profile,
-                name=name,
-            )
+
+            self._api_key_secret = Secret.objects.get(name=name, user_profile=self.user_profile)
             return self._api_key_secret
         except Secret.DoesNotExist:
             logger.warning(
@@ -537,10 +536,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     self.connection.proxy_password.name if self.connection and self.connection.proxy_password else None
                 )
             )
-            self._proxy_password_secret = Secret.objects.get(
-                user_profile=self.user_profile,
-                name=name,
-            )
+            self._proxy_password_secret = Secret.objects.get(name=name, user_profile=self.user_profile)
             return self._proxy_password_secret
         except Secret.DoesNotExist:
             logger.warning(
@@ -586,19 +582,43 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         if self._connection:
             return self._connection
 
+        name = str(self.camel_to_snake(self.name))  # type: ignore
+        if not name:
+            raise SmarterValueError(
+                f"Connection name is required to retrieve or create ApiConnection for {self.user_profile}"
+            )
         try:
-            name = self.camel_to_snake(self.name)  # type: ignore
-            self._connection = ApiConnection.objects.get(user_profile__account=self.account, name=name)
+            logger.debug(
+                "%s.connection() attempting ApiConnection with account %s and name %s",
+                self.formatted_class_name,
+                self.account,
+                name,
+            )
+            self._connection = ApiConnection.objects.get(user_profile=self.user_profile, name=name)
         except MultipleObjectsReturned:
+            logger.debug(
+                "%s.connection() multiple ApiConnection objects found for %s and name %s",
+                self.formatted_class_name,
+                self.account,
+                name,
+            )
             try:
-                self._connection = ApiConnection.objects.get(
-                    user_profile=self.user_profile,
-                    name=name,
-                )
+                self._connection = ApiConnection.objects.get(user_profile=self.user_profile, name=name)
             except ApiConnection.DoesNotExist:
-                pass
+                logger.debug(
+                    "%s.connection() no ApiConnection found for user profile %s and name %s",
+                    self.formatted_class_name,
+                    self.user_profile,
+                    name,
+                )
+
         except ApiConnection.DoesNotExist:
-            pass
+            logger.debug(
+                "%s.connection() no ApiConnection found for account %s and name %s",
+                self.formatted_class_name,
+                self.account,
+                name,
+            )
 
         if not self._connection:
             if self._manifest:
@@ -629,14 +649,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 self._connection.save()
                 self._created = True
                 logger.info(
-                    "%s created ApiConnection %s for account %s",
+                    "%s.connection() created ApiConnection %s for account %s",
                     self.formatted_class_name,
                     self.name or "(name is missing)",
                     self.account or "(account is missing)",
                 )
             else:
                 logger.error(
-                    "%s ApiConnection %s not found for account %s",
+                    "%s.connection() ApiConnection %s not found for account %s",
                     self.formatted_class_name,
                     self.name or "(name is missing)",
                     self.account or "(account is missing)",
@@ -713,6 +733,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         status = SAMConnectionCommonStatus(
             account_number="2194-1233-0815",
             username="admin_user",
+            recordLocator="abc123def456",
             created=datetime.now(),
             modified=datetime.now(),
         )
@@ -730,6 +751,16 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches when the manifest or connection data changes.
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+
+        if self.connection:
+            ApiConnection.get_cached_object(invalidate=True, pk=self.connection.id)
+        super().cache_invalidations()
+
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve a list of ApiConnection objects as a journaled JSON response.
@@ -926,6 +957,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+        self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:

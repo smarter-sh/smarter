@@ -9,6 +9,8 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
+from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.dashboard.context_processors import cache_invalidations
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -28,7 +30,7 @@ from .signals import (
     secret_saved,
     secret_updated,
 )
-from .utils import cache_invalidate, get_cached_default_account, get_cached_user_profile
+from .utils import get_cached_default_account
 
 
 def should_log(level):
@@ -51,25 +53,30 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
       if not, create one with the default account.
     """
     logger.info("%s User logged in: %s", formatted_text(f"{module_prefix}.user_logged_in()"), user)
-    if not get_cached_user_profile(user=user):
+    user_profile = UserProfile.get_cached_object(user=user)
+    if not user_profile:
         logger.warning("User profile not found for user: %s", user)
         account = get_cached_default_account()
-        UserProfile.objects.create(name=user.username, user=user, account=account)
+        user_profile = UserProfile.objects.create(name=user.username, user=user, account=account)
         logger.info("Created UserProfile for user: %s with default account: %s", user, account)
 
 
 @receiver(post_save, sender=User)
 def user_post_save(sender: User, instance: User, created, **kwargs):
-    """Signal receiver for created/saved of User model."""
+    """
+    Signal receiver for created/saved of User model.
+    Assumed to be called on all logins since Django's
+    default behavior is to update the last_login field on
+    each login, which triggers a save.
+    """
     logger.info(
         "%s User post_save: %s, created: %s",
         formatted_text(f"{module_prefix}.user_post_save()"),
         instance,
         created,
     )
-    if not created:
-        logger.info("%s invalidating cache for User: %s", formatted_text(f"{module_prefix}.user_post_save()"), instance)
-        cache_invalidate(user=instance)
+    user_profile = UserProfile.get_cached_object(user=instance)
+    cache_invalidations(user_profile=user_profile)
 
 
 @receiver(post_delete, sender=User)
@@ -92,13 +99,6 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
         instance,
         created,
     )
-    if not created:
-        logger.info(
-            "%s invalidating cache for UserProfile: %s",
-            formatted_text(f"{module_prefix}.user_profile_post_save()"),
-            instance,
-        )
-        cache_invalidate(user=instance.user, account=instance.account)
 
 
 @receiver(post_delete, sender=UserProfile)
@@ -124,7 +124,6 @@ def account_post_save(sender: Account, instance: Account, created, **kwargs):
         logger.info(
             "%s invalidating cache for Account: %s", formatted_text(f"{module_prefix}.account_post_save()"), instance
         )
-        cache_invalidate(account=instance)
 
 
 @receiver(post_delete, sender=Account)
@@ -257,7 +256,7 @@ def secret_saved_receiver(sender, secret: SecretTransformer, user_profile: UserP
         raise ValueError("secret.secret is None in secret_saved_receiver")
 
     json_data = serializers.serialize("json", [secret.secret])
-    tags = list(secret.secret.tags.names()) if secret and hasattr(secret.secret, "tags") else []
+    tags = list(secret.secret.tags_list) if secret and hasattr(secret.secret, "tags") else []
 
     logger.info(
         "%s.%s Secret: %s, id: %s, user_profile: %s, dump: %s, tags: %s",
@@ -278,7 +277,7 @@ def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: Use
         raise ValueError("secret.secret is None in secret_updated_receiver")
 
     json_data = serializers.serialize("json", [secret.secret])
-    tags = list(secret.secret.tags.names()) if secret and hasattr(secret.secret, "tags") else []
+    tags = list(secret.secret.tags_list) if secret and hasattr(secret.secret, "tags") else []
 
     logger.info(
         "%s.%s secret_updated signal received. instance: %s, id: %s, user_profile: %s, dump: %s, tags: %s",

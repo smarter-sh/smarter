@@ -208,7 +208,7 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
         # verify that user_profile.tags (TaggableManager) contains the same tags.
         manifest_tags = set(self.broker.manifest.metadata.tags or [])
-        django_orm_tags = set(self.broker.secret.tags.names()) if self.broker.secret.tags else set()
+        django_orm_tags = set(self.broker.secret.tags_list) if self.broker.secret.tags else set()
         self.assertEqual(manifest_tags, django_orm_tags)
 
         # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.

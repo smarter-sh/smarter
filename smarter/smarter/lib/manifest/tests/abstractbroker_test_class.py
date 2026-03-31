@@ -4,6 +4,7 @@
 import logging
 from typing import Optional, Type
 
+from django.core import serializers
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
@@ -198,7 +199,7 @@ class SAMTestBroker(AbstractBroker):
         self.account = None
         self.user = None
         self.account = value.account
-        self.user = get_cached_admin_user_for_account(value.account)
+        self.user = get_cached_admin_user_for_account(account=value.account)
 
     @property
     def formatted_class_name(self) -> str:

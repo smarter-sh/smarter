@@ -258,7 +258,7 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         manifest_tags = set(self.broker.manifest.metadata.tags or [])
         django_orm_tags = None
         if isinstance(self.broker.plugin_meta.tags, (TaggableManager, _TaggableManager)):
-            django_orm_tags = set(self.broker.plugin_meta.tags.names()) if self.broker.plugin_meta.tags else set()
+            django_orm_tags = set(self.broker.plugin_meta.tags_list) if self.broker.plugin_meta.tags else set()
         elif isinstance(self.broker.plugin_meta.tags, set):
             django_orm_tags = self.broker.plugin_meta.tags
         else:
