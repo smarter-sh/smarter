@@ -101,6 +101,9 @@ Usage
    smarter-resources
    smarter-framework
    adr
+   :caption: Pair Programming with Claude on Smarter
+
+   smarter-claude
 
 .. toctree::
    :maxdepth: 1
