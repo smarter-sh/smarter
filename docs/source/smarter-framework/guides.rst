@@ -12,4 +12,5 @@ Developer Guides
    guides/semantic-versioning
    guides/openai-api-getting-started-guide
    guides/claude-code-getting-started-guide
+   guides/napl-grid-maintenance-assistant
    guides/openai-json-examples
