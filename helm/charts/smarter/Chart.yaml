@@ -45,7 +45,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: prometheus.enabled
   - name: redis
-    version: 25.2.0
+    version: 25.3.9
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
 icon: https://cdn.smarter.sh/images/logo/smarter-crop.png
