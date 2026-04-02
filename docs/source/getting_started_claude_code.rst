@@ -322,3 +322,5 @@ Your work is now synchronized with your remote repository on GitHub.
    - `Smarter Technical Documentation <https://docs.smarter.sh/>`_
    - `Anthropic Claude Code Documentation <https://docs.anthropic.com/en/docs/claude-code>`_
    - `Smarter CLI Repository <https://github.com/smarter-sh/smarter-cli>`_
+
+*Created with help from ClaudeAI*
