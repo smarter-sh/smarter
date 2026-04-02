@@ -1,5 +1,4 @@
 SHELL := /bin/bash
-include .env
 export PATH := /usr/local/bin:$(PATH)
 export
 
@@ -13,6 +12,7 @@ endif
 PIP := $(PYTHON) -m pip
 
 ifneq ("$(wildcard .env)","")
+    include .env
 else
     $(shell cp .env.example .env)
 endif
