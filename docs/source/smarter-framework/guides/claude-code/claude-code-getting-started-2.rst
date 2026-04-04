@@ -64,19 +64,19 @@ Key attributes:
 - provider name: Anthropic
 
 Step 2: Define Claude Model Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create a model entry describing Claude capabilities.
 
 The following example shows a minimal provider-model configuration:
 
-.. literalinclude:: ../_examples/anthropic_provider_example.json
+.. literalinclude:: ./_data/anthropic_provider_example.json
    :language: json
    :caption: Example Anthropic provider-model configuration
    :linenos:
 
 Step 3: Load Configuration into Smarter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Depending on your environment, configuration may be loaded through:
 
@@ -90,7 +90,7 @@ Once loaded, Smarter will register:
 - the associated model (Claude)
 
 Step 4: Verify Model Availability
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Smarter includes a provider verification mechanism.
 
@@ -103,7 +103,7 @@ Verification typically checks:
 Successful verification confirms the model is ready for use.
 
 Step 5: Use Claude for Coding Tasks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Navigate to Smarter’s interface and select the configured Claude model.
 
@@ -138,25 +138,25 @@ Troubleshooting
 ---------------
 
 Provider Not Found
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 - Ensure provider configuration is loaded correctly
 - Verify base_url and provider name
 
 Authentication Errors
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 - Confirm API key is valid
 - Check environment variables or configuration source
 
 Model Not Responding
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 - Ensure model capabilities match request type
 - Verify endpoint compatibility with Smarter
 
 Verification Failures
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 - Check request/response format compatibility
 - Ensure required capabilities are enabled
@@ -179,9 +179,4 @@ improving productivity and code quality.
    :maxdepth: 1
    :caption: External Resources
 
-   ../../external-links/claude-reference
-   ../../external-links/support-smarter
-   ../../external-links/swagger
-   ../../external-links/manifest-reference
-   ../../external-links/json-schemas
-   ../../external-links/youtube
+   ../../../external-links/claude-reference
