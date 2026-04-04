@@ -102,7 +102,7 @@ Already onboarded? Jump straight to what you need. New here? Start at
 
 Goal
 ----
- 
+
 We will use **Claude** with the **Smarter** platform to create a set of
 virtual CoPilot coding agents — each with a focused role — that you can
 talk to directly from your terminal using the Smarter CLI. No additional

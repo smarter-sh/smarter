@@ -82,7 +82,7 @@ Usage
      <video src="https://cdn.smarter.sh/videos/read-the-docs2.mp4"
             autoplay loop muted playsinline
             style="width: 100%; height: auto; display: block; margin: 0; border-radius: 0;">
-       Sorry, your browser doesn't support embedded videos.  
+       Sorry, your browser doesn't support embedded videos.
      </video>
      <div style="font-size: 0.95em; color: #666; margin-top: 0.5em;">
        <em>Smarter Prompt Engineering Workbench Demo</em>
@@ -100,7 +100,6 @@ Usage
    smarter-platform
    smarter-resources
    smarter-framework
-   smarter-coding-assistants
    adr
    :caption: Pair Programming with Claude on Smarter
 
