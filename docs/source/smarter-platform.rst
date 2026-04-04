@@ -36,6 +36,7 @@ The Smarter platform's fundamental building blocks to this extent are:
    smarter-platform/user-management
    smarter-platform/cli
    smarter-platform/api-keys
+   smarter-platform/adding-an-llm-provider
    smarter-platform/cost-accounting
    smarter-platform/smarter-journal
    smarter-platform/configuration
