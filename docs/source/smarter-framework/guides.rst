@@ -13,3 +13,4 @@ Developer Guides
    guides/openai-api-getting-started-guide
    guides/openai-json-examples
    guides/claude-code/claude-code-getting-started
+   guides/claude-code/getting-started-with-claude-code
