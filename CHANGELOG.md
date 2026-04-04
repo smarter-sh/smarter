@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.212](https://github.com/smarter-sh/smarter/compare/v0.13.211...v0.13.212) (2026-04-04)
+
+### Bug Fixes
+
+* resolve Windows Git Bash path separator in ACTIVATE_VENV and replace hardcoded admin email with SMARTER_ROOT_DOMAIN ([5da6724](https://github.com/smarter-sh/smarter/commit/5da672494ac601a01cfe2a3131de9134a07ee5f6))
+
 ## [0.13.211](https://github.com/smarter-sh/smarter/compare/v0.13.210...v0.13.211) (2026-03-31)
 
 ### Bug Fixes
