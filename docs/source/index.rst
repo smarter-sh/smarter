@@ -33,7 +33,7 @@ Smarter |project_version| Documentation
 
 A :doc:`declarative <smarter-framework/pydantic/smarter-manifests>` AI :doc:`resource management <smarter-resources>` :doc:`platform <smarter-platform>` and :doc:`developer framework <smarter-framework>`.
 
-- **From scratch** | :doc:`smarter-platform/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | :doc:`smarter-platform/tutorial`
+- **From scratch** | :doc:`smarter-platform/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://platform.smarter.sh/docs/learn/>`__
 - **Platform**
 
   - Helps you manage all your :doc:`AI resources <smarter-resources>` using easy :doc:`YAML files <smarter-framework/pydantic/smarter-manifests>` (like how `Kubernetes <https://kubernetes.io/>`_ works).
@@ -100,6 +100,7 @@ Usage
    smarter-platform
    smarter-resources
    smarter-framework
+   smarter-coding-assistants
    adr
 
 .. toctree::
