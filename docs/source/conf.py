@@ -19,20 +19,20 @@ sys.path.insert(0, SMARTER_ROOT)
 # Smarter setup
 ###############################################################################
 from smarter.__version__ import __version__  # noqa: F401
-# from smarter.common.conf import smarter_settings
-# from smarter.common.const import SMARTER_PRODUCT_NAME
+from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_PRODUCT_NAME
 
-# if not smarter_settings.environment:
-#     raise RuntimeError("The 'smarter_settings.environment' variable is not set.")
+if not smarter_settings.environment:
+    raise RuntimeError("The 'smarter_settings.environment' variable is not set.")
 
 ###############################################################################
 # Django setup
 ###############################################################################
-# os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.local"
+os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.local"
 
-# import django
+import django
 
-# django.setup()
+django.setup()
 
 
 project = "Smarter Documentation"
@@ -56,23 +56,23 @@ last_updated = datetime.now().strftime("%Y-%m-%d")
 html_context = {
     "commit": commit,
     "last_updated": last_updated,
-    "branding_company_name": "NAPL",
-    "branding_smarter_product_name": "Smarter",
+    "branding_company_name": smarter_settings.branding_corporate_name,
+    "branding_smarter_product_name": SMARTER_PRODUCT_NAME,
 }
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     "sphinx.ext.autodoc",
-    #"sphinxcontrib_django",
+    "sphinxcontrib_django",
     "sphinx.ext.viewcode",
-    #"sphinx_copybutton",
-    #"sphinx_autodoc_typehints",
-    #"sphinx_design",
+    "sphinx_copybutton",
+    "sphinx_autodoc_typehints",
+    "sphinx_design",
     "sphinx.ext.todo",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
-    #"sphinxcontrib.autodoc_pydantic",
+    "sphinxcontrib.autodoc_pydantic",
     "sphinx_rtd_theme",
 ]
 
@@ -99,7 +99,6 @@ html_static_path = ["_static"]
 html_css_files = [
     "custom.css",
 ]
-# autodoc_mock_imports = ["taggit", "smarter.common.exceptions", "smarter.lib.django.validators", "smarter.lib.json"]
 autodoc_mock_imports = [
     "taggit",
     "cryptography.fernet",
