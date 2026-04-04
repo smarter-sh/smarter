@@ -74,7 +74,7 @@ Create a model entry describing Claude capabilities.
 
 The following example shows a minimal provider-model configuration:
 
-.. literalinclude:: ../_examples/anthropic_provider_example.json
+.. literalinclude:: ./_data/anthropic_provider_example.json
    :language: json
    :caption: Example Anthropic provider-model configuration
    :linenos:
