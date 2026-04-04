@@ -11,22 +11,24 @@ rendering of dashboard and branding information throughout the application.
 Overview
 --------
 
+
 The context processors in this module serve the following purposes:
 
 - **Dashboard Context**: Supplies user-specific and application-wide metadata,
-such as the current user's email, username, role flags, product version, and
-resource counts (e.g., chatbots, plugins, API keys, custom domains, connections,
-and secrets). This enables the dashboard to display personalized and up-to-date
-information for each authenticated user.
+    such as the current user's email, username, role flags, product version, and
+    resource counts (e.g., chatbots, plugins, API keys, custom domains, connections,
+    and secrets). This enables the dashboard to display personalized and up-to-date
+    information for each authenticated user.
 
 - **Branding Context**: Provides organization-specific branding details, including
-support contact information, corporate name, address, social media links, and
-copyright notices. This ensures consistent branding and support information
-across all dashboard templates.
+    support contact information, corporate name, address, social media links, and
+    copyright notices. This ensures consistent branding and support information
+    across all dashboard templates.
 
 - **Cache Busting**: Adds a cache-busting query parameter to static asset URLs
-during local development, preventing browsers from serving outdated static
-files.
+    during local development, preventing browsers from serving outdated static
+    files.
+
 
 Caching
 -------
@@ -659,7 +661,7 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     .. seealso::
 
         - :class:`smarter.lib.manifest.broker.AbstractBroker`
-        - :signal:`smarter.apps.account.signals.cache_invalidate`
+        - ``smarter.apps.account.signals.cache_invalidate``
     """
     if not user_profile:
         logger.warning(
