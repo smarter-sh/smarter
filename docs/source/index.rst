@@ -100,6 +100,7 @@ Usage
    smarter-platform
    smarter-resources
    smarter-framework
+   smarter-coding-assistants
    adr
 
 .. toctree::
