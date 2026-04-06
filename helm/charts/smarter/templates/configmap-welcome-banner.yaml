@@ -8,6 +8,12 @@
 # - Purpose: Provides a shell script to display a welcome banner on login.
 # - Usage: Mounted into Bastion Pods; values are set in values.yaml.
 # - Notes: Update the banner message or script as needed for your environment.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
 apiVersion: v1
 kind: ConfigMap
