@@ -59,7 +59,7 @@ spec:
               python manage.py add_plugin_examples
               python manage.py deploy_example_chatbot
               python manage.py deploy_builtin_chatbots --account_number 3141-5926-5359
-              python manage.py create_stackacademy
+              python manage.py create_stackademy
 
           command:
             - /bin/sh
