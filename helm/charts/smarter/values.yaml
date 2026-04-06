@@ -129,6 +129,7 @@ env:
 # Global Configuration
 # -----------------------------------------------------------------------------
 global:
+  appName: smarter
   image:
     pullPolicy: IfNotPresent
     repository: lpm0073/smarter
@@ -156,7 +157,7 @@ global:
 
 # -----------------------------------------------------------------------------
 # Smarter Application Configuration
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 app:
   name: smarter
   replicaCount: 1
@@ -292,7 +293,7 @@ mariadb:
   primary:
     metadata:
       podLabels:
-        app.kubernetes.io/application-group: "{{ .Values.app.name }}"
+        app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     resources:
       requests:
         cpu: 500m
@@ -341,7 +342,7 @@ redis:
   architecture: standalone
   master:
     podLabels:
-      app.kubernetes.io/application-group: "{{ .Values.app.name }}"
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     containerSecurityContext:
       enabled: true
     persistence:
@@ -362,7 +363,7 @@ redis:
         sessionAffinity: None
   replica:
     podLabels:
-      app.kubernetes.io/application-group: "{{ .Values.app.name }}"
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 
 
 # ----------------------------------------------------------------------------
@@ -373,14 +374,14 @@ prometheus:
   enabled: false
   server:
     podLabels:
-      app.kubernetes.io/application-group: "{{ .Values.app.name }}"
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     persistentVolume:
       enabled: false  # For demo/dev. Set to true and configure storage for production.
 
 grafana:
   enabled: false
   podLabels:
-    app.kubernetes.io/application-group: "{{ .Values.app.name }}"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
   adminPassword: "admin"  # Change for production!
   persistence:
     enabled: false  # For demo/dev. Set to true and configure storage for production.
@@ -400,6 +401,6 @@ grafana:
 loki:
   enabled: false
   podLabels:
-      app.kubernetes.io/application-group: "{{ .Values.app.name }}"
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
   persistence:
     enabled: false  # For demo/dev. Set to true and configure storage for production.

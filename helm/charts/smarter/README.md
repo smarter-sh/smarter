@@ -32,7 +32,7 @@ to manage sensitive values like passwords and API keys.
 
 ## Prerequisites
 
-- Kubernetes >=1.28.0
+- Kubernetes >=1.31.0
 - Helm 3.8+
 
 ## Installation
