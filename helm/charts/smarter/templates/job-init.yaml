@@ -30,6 +30,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: "{{ .Values.global.appName }}-job-init"
+        app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
         jobTimestamp: "{{ now | unixEpoch }}"
     spec:
       affinity:
