@@ -290,6 +290,9 @@ mysql:
 mariadb:
   enabled: true
   primary:
+    metadata:
+      podLabels:
+        app.kubernetes.io/application-group: {{ .Values.app.name }}
     resources:
       requests:
         cpu: 500m
@@ -337,6 +340,8 @@ redis:
     password: "smarter"
   architecture: standalone
   master:
+    podLabels:
+      app.kubernetes.io/application-group: {{ .Values.app.name }}
     containerSecurityContext:
       enabled: true
     persistence:
@@ -355,6 +360,9 @@ redis:
     service:
       headless:
         sessionAffinity: None
+  replica:
+    podLabels:
+      app.kubernetes.io/application-group: {{ .Values.app.name }}
 
 
 # ----------------------------------------------------------------------------
@@ -364,11 +372,15 @@ redis:
 prometheus:
   enabled: false
   server:
+    podLabels:
+      app.kubernetes.io/application-group: {{ .Values.app.name }}
     persistentVolume:
       enabled: false  # For demo/dev. Set to true and configure storage for production.
 
 grafana:
   enabled: false
+  podLabels:
+    app.kubernetes.io/application-group: {{ .Values.app.name }}
   adminPassword: "admin"  # Change for production!
   persistence:
     enabled: false  # For demo/dev. Set to true and configure storage for production.
@@ -387,5 +399,7 @@ grafana:
 
 loki:
   enabled: false
+  podLabels:
+      app.kubernetes.io/application-group: {{ .Values.app.name }}
   persistence:
     enabled: false  # For demo/dev. Set to true and configure storage for production.
