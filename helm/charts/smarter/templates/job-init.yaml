@@ -7,6 +7,12 @@
 # - Purpose: Creates the database if it does not exist, typically run as a Helm hook.
 # - Usage: Only rendered if databaseScheduledBackup.enabled is set in values.yaml.
 # - Notes: Update resource requests/limits and SQL logic as needed for your environment.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
 {{- if .Values.databaseScheduledBackup.enabled }}
 apiVersion: batch/v1

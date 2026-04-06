@@ -7,6 +7,12 @@
 # - Purpose: Provides SQL scripts to initialize the MySQL database on startup.
 # - Usage: Only rendered if mysql.enabled and mysql.initdbScripts are set in values.yaml.
 # - Notes: Update or add scripts in values.yaml as needed for your environment.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
 {{- if and .Values.mysql.enabled .Values.mysql.initdbScripts }}
 apiVersion: v1

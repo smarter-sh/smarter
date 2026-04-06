@@ -21,6 +21,12 @@
 #   helm upgrade smarter . -f values.yaml
 #
 # Documentation: https://github.com/smarter-sh/smarter
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
 # ==============================================================================
 
 # -----------------------------------------------------------------------------
