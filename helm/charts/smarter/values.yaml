@@ -291,9 +291,8 @@ mysql:
 mariadb:
   enabled: true
   primary:
-    metadata:
-      podLabels:
-        app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+    podLabels:
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     resources:
       requests:
         cpu: 500m
