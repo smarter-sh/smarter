@@ -16,14 +16,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    meta.helm.sh/release-name: "{{ .Values.app.name }}-worker"
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}-worker"
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Chart.Version }}
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.app.name }}-worker"
-    app.kubernetes.io/application-group: {{ .Values.app.name }}
-  name: "{{ .Values.app.name }}-worker"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-worker"
+    app.kubernetes.io/application-group: {{ .Values.global.appName }}
+  name: "{{ .Values.global.appName }}-worker"
   namespace: {{ .Values.namespace }}
 spec:
   progressDeadlineSeconds: 600
@@ -31,7 +31,7 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: "{{ .Values.app.name }}-worker"
+      app.kubernetes.io/name: "{{ .Values.global.appName }}-worker"
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -40,8 +40,8 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: "{{ .Values.app.name }}-worker"
-        app.kubernetes.io/application-group: {{ .Values.app.name }}
+        app.kubernetes.io/name: "{{ .Values.global.appName }}-worker"
+        app.kubernetes.io/application-group: {{ .Values.global.appName }}
         deploymentTimestamp: "{{ now | unixEpoch }}"
         meta.helm.sh/application-version: {{ .Chart.Version }}
     spec:
@@ -50,7 +50,7 @@ spec:
       tolerations:
         {{- toYaml .Values.global.tolerations | nindent 8 }}
       containers:
-        - name: "{{ .Values.app.name }}-worker"
+        - name: "{{ .Values.global.appName }}-worker"
           image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
           command: ["celery", "-A", "smarter.workers.celery.app", "worker", "--concurrency=5", "--loglevel=info", "-Q", "default_celery_task_queue", "-E"]
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}

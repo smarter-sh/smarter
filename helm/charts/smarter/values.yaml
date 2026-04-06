@@ -159,8 +159,7 @@ global:
 # Smarter Application Configuration
 # -----------------------------------------------------------------------------
 app:
-  name: "{{ .Values.global.appName }}"
-  replicaCount: 1
+  replicaCount: 2
   resources:
     requests:
       cpu: "500m"

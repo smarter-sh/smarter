@@ -13,13 +13,13 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   annotations:
-    meta.helm.sh/release-name: {{ .Values.app.name }}
+    meta.helm.sh/release-name: {{ .Values.global.appName }}
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Chart.Version }}
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: {{ .Values.app.name }}
-    app.kubernetes.io/application-group: {{ .Values.app.name }}
+    app.kubernetes.io/name: {{ .Values.global.appName }}
+    app.kubernetes.io/application-group: {{ .Values.global.appName }}
   namespace: {{ .Values.namespace }}
   name: debian-welcome-banner
 data:
