@@ -159,7 +159,7 @@ global:
 # Smarter Application Configuration
 # -----------------------------------------------------------------------------
 app:
-  name: smarter
+  name: "{{ .Values.global.appName }}"
   replicaCount: 1
   resources:
     requests:
