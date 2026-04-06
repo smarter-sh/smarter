@@ -17,14 +17,14 @@ kind: Deployment
 metadata:
   annotations:
     meta.helm.sh/release-name: "{{ .Values.global.appName }}-beat"
-    meta.helm.sh/release-namespace: {{ .Values.namespace }}
-    meta.helm.sh/application-version: {{ .Chart.Version }}
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     app.kubernetes.io/name: "{{ .Values.global.appName }}-beat"
-    app.kubernetes.io/application-group: {{ .Values.global.appName }}
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
   name: "{{ .Values.global.appName }}-beat"
-  namespace: {{ .Values.namespace }}
+  namespace: "{{ .Values.namespace }}"
 spec:
   progressDeadlineSeconds: 600
   replicas: {{ .Values.beat.replicaCount }}
@@ -41,8 +41,8 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: "{{ .Values.global.appName }}-beat"
-        app.kubernetes.io/application-group: {{ .Values.global.appName }}
-        meta.helm.sh/application-version: {{ .Chart.Version }}
+        app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+        meta.helm.sh/application-version: "{{ .Chart.Version }}"
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
       affinity:

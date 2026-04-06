@@ -22,7 +22,7 @@ metadata:
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     app.kubernetes.io/name: "{{ .Values.global.appName }}-worker"
-    app.kubernetes.io/application-group: {{ .Values.global.appName }}
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
   name: "{{ .Values.global.appName }}-worker"
   namespace: {{ .Values.namespace }}
 spec:
@@ -41,7 +41,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: "{{ .Values.global.appName }}-worker"
-        app.kubernetes.io/application-group: {{ .Values.global.appName }}
+        app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
         deploymentTimestamp: "{{ now | unixEpoch }}"
         meta.helm.sh/application-version: {{ .Chart.Version }}
     spec:

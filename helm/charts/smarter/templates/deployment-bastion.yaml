@@ -26,13 +26,13 @@ metadata:
   name: "{{ .Values.global.appName }}-bastion"
   namespace: "{{ .Values.namespace }}"
   annotations:
-    meta.helm.sh/release-name: {{ .Values.global.appName }}
-    meta.helm.sh/release-namespace: {{ .Values.namespace }}
-    meta.helm.sh/application-version: {{ .Chart.Version }}
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     app.kubernetes.io/name: "{{ .Values.global.appName }}-bastion"
-    app.kubernetes.io/application-group: {{ .Values.global.appName }}
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 spec:
   replicas: 1
   selector:
@@ -42,8 +42,8 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: "{{ .Values.global.appName }}-bastion"
-        app.kubernetes.io/application-group: {{ .Values.global.appName }}
-        meta.helm.sh/application-version: {{ .Chart.Version }}
+        app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+        meta.helm.sh/application-version: "{{ .Chart.Version }}"
     spec:
       affinity:
         {{- toYaml .Values.global.affinity | nindent 8 }}

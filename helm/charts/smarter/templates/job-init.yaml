@@ -13,17 +13,17 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: "{{ .Release.Name }}-smarter-job-db-init-{{ now | unixEpoch }}"
-  namespace: {{ .Values.namespace }}
+  namespace: "{{ .Values.namespace }}"
   annotations:
-    meta.helm.sh/release-name: {{ .Values.global.appName }}
-    meta.helm.sh/release-namespace: {{ .Values.namespace }}
-    meta.helm.sh/application-version: {{ .Chart.Version }}
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
     "helm.sh/hook": post-upgrade,post-install
     "helm.sh/hook-delete-policy": hook-succeeded
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     app.kubernetes.io/name: "{{ .Values.global.appName }}-job-init"
-    app.kubernetes.io/application-group: {{ .Values.global.appName }}
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 spec:
   ttlSecondsAfterFinished: 3600
   template:
