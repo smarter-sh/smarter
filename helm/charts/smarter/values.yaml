@@ -292,7 +292,7 @@ mariadb:
   primary:
     metadata:
       podLabels:
-        app.kubernetes.io/application-group: {{ .Values.app.name }}
+        app.kubernetes.io/application-group: "{{ .Values.app.name }}"
     resources:
       requests:
         cpu: 500m
@@ -341,7 +341,7 @@ redis:
   architecture: standalone
   master:
     podLabels:
-      app.kubernetes.io/application-group: {{ .Values.app.name }}
+      app.kubernetes.io/application-group: "{{ .Values.app.name }}"
     containerSecurityContext:
       enabled: true
     persistence:
@@ -362,7 +362,7 @@ redis:
         sessionAffinity: None
   replica:
     podLabels:
-      app.kubernetes.io/application-group: {{ .Values.app.name }}
+      app.kubernetes.io/application-group: "{{ .Values.app.name }}"
 
 
 # ----------------------------------------------------------------------------
@@ -373,14 +373,14 @@ prometheus:
   enabled: false
   server:
     podLabels:
-      app.kubernetes.io/application-group: {{ .Values.app.name }}
+      app.kubernetes.io/application-group: "{{ .Values.app.name }}"
     persistentVolume:
       enabled: false  # For demo/dev. Set to true and configure storage for production.
 
 grafana:
   enabled: false
   podLabels:
-    app.kubernetes.io/application-group: {{ .Values.app.name }}
+    app.kubernetes.io/application-group: "{{ .Values.app.name }}"
   adminPassword: "admin"  # Change for production!
   persistence:
     enabled: false  # For demo/dev. Set to true and configure storage for production.
@@ -400,6 +400,6 @@ grafana:
 loki:
   enabled: false
   podLabels:
-      app.kubernetes.io/application-group: {{ .Values.app.name }}
+      app.kubernetes.io/application-group: "{{ .Values.app.name }}"
   persistence:
     enabled: false  # For demo/dev. Set to true and configure storage for production.
