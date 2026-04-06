@@ -7,12 +7,18 @@ from functools import lru_cache  # utility for caching function/method results
 from typing import List, Tuple, Union  # type hint utilities
 
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
-from botocore.exceptions import NoCredentialsError, ProfileNotFound
+from botocore.exceptions import (
+    EndpointConnectionError,
+    NoCredentialsError,
+    ProfileNotFound,
+)
 
 from smarter.common.conf.const import get_env
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.helpers.console_helpers import formatted_text
 
 logger = logging.getLogger(__name__)
+logger_prefix = formatted_text(f"{__name__}.Services")
 
 
 class Services:
@@ -38,11 +44,39 @@ class Services:
     AWS_DYNAMODB = ("dynamodb", False)
 
     @classmethod
-    def is_connected_to_aws(cls):
-        retval = bool(boto3.Session().get_credentials())
-        if not retval:
-            logger.warning("AWS is not configured properly. Credentials are invalid, or no credentials were found.")
-        return retval
+    def is_connected_to_aws(cls) -> bool:
+
+        try:
+            logger.debug(
+                "%s.is_connected_to_aws(): Checking if AWS credentials are available and valid.", logger_prefix
+            )
+            retval = bool(boto3.Session().get_credentials())
+            if not retval:
+                logger.warning(
+                    "%s.is_connected_to_aws(): AWS is not configured properly. Credentials are invalid, or no credentials were found.",
+                    logger_prefix,
+                )
+                return False
+
+            logger.debug("%s.is_connected_to_aws(): Attempting to connect to AWS using boto3", logger_prefix)
+            session = boto3.Session()
+            sts = session.client("sts")
+            logger.debug(
+                "%s.is_connected_to_aws(): Checking AWS connectivity by calling sts.get_caller_identity()",
+                logger_prefix,
+            )
+            sts.get_caller_identity()
+            return True
+        except (NoCredentialsError, ProfileNotFound, EndpointConnectionError):
+            logger.warning(
+                "%s.is_connected_to_aws(): AWS is not configured properly. Credentials are invalid, or no credentials were found.",
+                logger_prefix,
+            )
+            return False
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.warning("%s.is_connected_to_aws(): Failed to connect to AWS: %s", logger_prefix, e)
+            return False
 
     @classmethod
     def enabled(cls, service: Union[str, Tuple[str, bool]]) -> bool:

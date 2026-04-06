@@ -1,5 +1,7 @@
 """This module verifies AWS Route53 DNS resources required by the Smarter platform."""
 
+import logging
+
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
@@ -7,6 +9,8 @@ from smarter.common.helpers.aws.route53 import AWSRoute53
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.management.base import SmarterCommand
+
+logger = logging.getLogger(__name__)
 
 
 class Command(SmarterCommand):
@@ -111,6 +115,13 @@ class Command(SmarterCommand):
 
         log_prefix = self.log_prefix + ".verify_domain_delegated_from_parent()"
         self.stdout.write(f"{log_prefix} - {child_domain} delegated from parent domain: {parent_domain}")
+        if not isinstance(aws_helper.route53, AWSRoute53):
+            logger.warning(
+                "%s AWS Route53 helper is not initialized. Skipping DNS verification for %s.",
+                log_prefix,
+                child_domain,
+            )
+            return
 
         parent_domain_hosted_zone_id, _ = aws_helper.route53.get_or_create_hosted_zone(domain_name=parent_domain)
         parent_domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=parent_domain_hosted_zone_id)
@@ -193,6 +204,13 @@ class Command(SmarterCommand):
                 f"{log_prefix} verify that a hosted zone exists for the root domain: {smarter_settings.root_domain}"
             )
         )
+        if not isinstance(aws_helper.route53, AWSRoute53):
+            logger.warning(
+                "%s AWS Route53 helper is not initialized. Skipping root domain DNS verification for %s.",
+                log_prefix,
+                smarter_settings.root_domain,
+            )
+            return
         if not aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=smarter_settings.root_domain):
             raise SmarterConfigurationError(
                 f"{self.log_prefix} AWS Route53 hosted zone for root domain: {smarter_settings.root_domain} does not exist. Cannot proceed."

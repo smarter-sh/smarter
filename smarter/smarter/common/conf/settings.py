@@ -629,6 +629,7 @@ class Settings(BaseSettings):
 
         :type: bool
         """
+        logger.debug("Checking if AWS is configured with aws_profile, or aws_access_key_id and aws_secret_access_key.")
         return services.is_connected_to_aws()
 
     aws_eks_cluster_name: str = Field(
