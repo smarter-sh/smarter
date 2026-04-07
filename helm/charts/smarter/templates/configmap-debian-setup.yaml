@@ -8,18 +8,24 @@
 # - Purpose: Provides a shell script to install required packages and AWS CLI.
 # - Usage: Mounted into Bastion/Job Pods; values are set in values.yaml.
 # - Notes: Update the script as needed for your environment or package requirements.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
 apiVersion: v1
 kind: ConfigMap
 metadata:
   annotations:
-    meta.helm.sh/release-name: {{ .Values.app.name }}
-    meta.helm.sh/release-namespace: {{ .Values.namespace }}
-    meta.helm.sh/application-version: {{ .Chart.Version }}
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: {{ .Values.app.name }}
-    app.kubernetes.io/application-group: {{ .Values.app.name }}
+    app.kubernetes.io/name: "{{ .Values.global.appName }}"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
   namespace: {{ .Values.namespace }}
   name: debian-setup-script
 data:

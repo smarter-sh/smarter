@@ -7,19 +7,25 @@
 # - Purpose: Provides a shell script to back up the MySQL database and upload it to S3.
 # - Usage: Mounted into backup Jobs or Pods; values are set in values.yaml.
 # - Notes: Update the script or S3 path as needed for your environment.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication between this ConfigMap and other resources.
 # -----------------------------------------------------------------------------------
 apiVersion: v1
 kind: ConfigMap
 metadata:
   annotations:
-    meta.helm.sh/release-name: {{ .Values.app.name }}
-    meta.helm.sh/release-namespace: {{ .Values.namespace }}
-    meta.helm.sh/application-version: {{ .Chart.Version }}
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: {{ .Values.app.name }}
-    app.kubernetes.io/application-group: {{ .Values.app.name }}
-  namespace: {{ .Values.namespace }}
+    app.kubernetes.io/name: "{{ .Values.global.appName }}"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+  namespace: "{{ .Values.namespace }}"
   name: mysql-backup-script
 data:
   backup-to-s3.sh: |

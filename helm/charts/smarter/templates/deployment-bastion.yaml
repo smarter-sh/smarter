@@ -19,31 +19,37 @@
 # Important: labels are referenced by other resources, in this repo as well as
 # external repos including https://github.com/smarter-sh/smarter-infrastructure.
 # Do not arbitrarily change labels without updating all references.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
 ###############################################################################
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ .Values.app.name }}-bastion"
+  name: "{{ .Values.global.appName }}-bastion"
   namespace: "{{ .Values.namespace }}"
   annotations:
-    meta.helm.sh/release-name: {{ .Values.app.name }}
-    meta.helm.sh/release-namespace: {{ .Values.namespace }}
-    meta.helm.sh/application-version: {{ .Chart.Version }}
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.app.name }}-bastion"
-    app.kubernetes.io/application-group: {{ .Values.app.name }}
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-bastion"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: "{{ .Values.app.name }}-bastion"
+      app.kubernetes.io/name: "{{ .Values.global.appName }}-bastion"
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: "{{ .Values.app.name }}-bastion"
-        app.kubernetes.io/application-group: {{ .Values.app.name }}
-        meta.helm.sh/application-version: {{ .Chart.Version }}
+        app.kubernetes.io/name: "{{ .Values.global.appName }}-bastion"
+        app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+        meta.helm.sh/application-version: "{{ .Chart.Version }}"
     spec:
       affinity:
         {{- toYaml .Values.global.affinity | nindent 8 }}
@@ -63,7 +69,7 @@ spec:
             name: mysql-backup-script
             defaultMode: 0755
       containers:
-        - name: "{{ .Values.app.name }}-bastion"
+        - name: "{{ .Values.global.appName }}-bastion"
           image: ubuntu:latest
           workingDir: /home/
           command:

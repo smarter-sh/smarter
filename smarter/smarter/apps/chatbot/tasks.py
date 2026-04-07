@@ -863,6 +863,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     else:
         logger.info("%s verifying/creating ingress manifest for %s task_id: %s", fn_name, domain_name, task_id)
         ingress_values = {
+            "app_name": smarter_settings.platform_name,
             "cluster_issuer": smarter_settings.environment_api_domain,
             "environment_namespace": smarter_settings.environment_namespace,
             "domain": domain_name,

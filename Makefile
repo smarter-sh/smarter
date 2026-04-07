@@ -4,7 +4,7 @@ export
 
 ifeq ($(OS),Windows_NT)
     PYTHON := python.exe
-    ACTIVATE_VENV := venv\Scripts\activate
+    ACTIVATE_VENV := venv/Scripts/activate
 else
     PYTHON := python3.13
     ACTIVATE_VENV := source venv/bin/activate
@@ -48,7 +48,7 @@ init:
 	@echo ""
 	@echo "The application is served at http://localhost:9357/ with the following credentials:"
 	@echo "    Username: admin"
-	@echo "    Email: admin@smarter.sh"
+	@echo "    Email: admin@$(or $(SMARTER_ROOT_DOMAIN),example.com)"
 	@echo "    Password: smarter"
 	@echo ""
 	@echo "The database is accessible at localhost:3306 with the following credentials:"
