@@ -14,3 +14,5 @@ work as represented in the documentation listed below, and is subject to change 
    claude-code/napl-grid-maintenance-assistant
    claude-code/smarter-claude
    claude-code/tutorial
+   claude-code/napl-adding-llm-provider
+   claude-code/napl-getting-started
