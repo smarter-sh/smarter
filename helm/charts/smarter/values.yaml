@@ -21,6 +21,12 @@
 #   helm upgrade smarter . -f values.yaml
 #
 # Documentation: https://github.com/smarter-sh/smarter
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
 # ==============================================================================
 
 # -----------------------------------------------------------------------------
@@ -129,10 +135,11 @@ env:
 # Global Configuration
 # -----------------------------------------------------------------------------
 global:
+  appName: smarter
   image:
     pullPolicy: IfNotPresent
     repository: lpm0073/smarter
-    tag: v0.13.211
+    tag: v0.13.214
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -156,10 +163,9 @@ global:
 
 # -----------------------------------------------------------------------------
 # Smarter Application Configuration
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 app:
-  name: smarter
-  replicaCount: 1
+  replicaCount: 2
   resources:
     requests:
       cpu: "500m"
@@ -290,6 +296,8 @@ mysql:
 mariadb:
   enabled: true
   primary:
+    podLabels:
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     resources:
       requests:
         cpu: 500m
@@ -337,6 +345,8 @@ redis:
     password: "smarter"
   architecture: standalone
   master:
+    podLabels:
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     containerSecurityContext:
       enabled: true
     persistence:
@@ -355,6 +365,9 @@ redis:
     service:
       headless:
         sessionAffinity: None
+  replica:
+    podLabels:
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 
 
 # ----------------------------------------------------------------------------
@@ -364,11 +377,15 @@ redis:
 prometheus:
   enabled: false
   server:
+    podLabels:
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     persistentVolume:
       enabled: false  # For demo/dev. Set to true and configure storage for production.
 
 grafana:
   enabled: false
+  podLabels:
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
   adminPassword: "admin"  # Change for production!
   persistence:
     enabled: false  # For demo/dev. Set to true and configure storage for production.
@@ -387,5 +404,7 @@ grafana:
 
 loki:
   enabled: false
+  podLabels:
+      app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
   persistence:
     enabled: false  # For demo/dev. Set to true and configure storage for production.

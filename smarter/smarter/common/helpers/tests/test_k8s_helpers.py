@@ -229,6 +229,7 @@ class Testk8sHelpers(SmarterTestBase):
         """
         bad_hostname = f"test_k8s_helpers.{self.account_number}.{self.cluster_issuer}"
         ingress_values = {
+            "app_name": smarter_settings.platform_name,
             "cluster_issuer": self.cluster_issuer,
             "environment_namespace": self.namespace,
             "domain": bad_hostname,

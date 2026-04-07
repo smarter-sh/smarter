@@ -158,7 +158,7 @@ class AccountMixin(SmarterHelperMixin):
                     verbose_logger.debug(
                         "%s.__init__(): found API token in Authorization header of request object %s. This will take precedence over other information.",
                         self.account_mixin_logger_prefix,
-                        mask_string(api_token.decode()),
+                        mask_string(api_token.decode()) if isinstance(api_token, (bytes, bytearray)) else None,
                     )
             if not api_token and hasattr(request, "user") and not isinstance(request.user, AnonymousUser):
                 user = request.user  # type: ignore[union-attr]
@@ -177,7 +177,7 @@ class AccountMixin(SmarterHelperMixin):
         verbose_logger.debug(
             "%s.__init__(): resolved api_token=%s, account_number=%s, account=%s, user=%s, user_profile=%s",
             self.account_mixin_logger_prefix,
-            mask_string(api_token.decode()) if api_token else None,
+            mask_string(api_token.decode()) if isinstance(api_token, (bytes, bytearray)) else None,
             account_number,
             account,
             user,
@@ -347,34 +347,52 @@ class AccountMixin(SmarterHelperMixin):
         :return: The account for the current user.
         :rtype: Account or None
         """
-        if self._account:
-            return self._account
-        if isinstance(self._user_profile, UserProfile):
-            self._account = self._user_profile.account
-            verbose_logger.debug(
-                "%s.account() set _account to %s based on user_profile %s",
-                self.account_mixin_logger_prefix,
-                self._account,
-                self._user_profile,
-            )
-            return self._account
-        if self._user:
-            self._account = get_cached_account_for_user(invalidate=False, user=self._user)  # type: ignore[assignment]
+        try:
             if self._account:
+                return self._account
+            if isinstance(self._user_profile, UserProfile):
+                self._account = self._user_profile.account
                 verbose_logger.debug(
-                    "%s.account() set _account to %s based on user %s",
+                    "%s.account() set _account to %s based on user_profile %s",
                     self.account_mixin_logger_prefix,
                     self._account,
-                    self._user,
+                    self._user_profile,
                 )
-            return self._account
-        logger.debug(
-            "%s.account() could not initialize _account for user: %s, user_profile: %s",
-            self.account_mixin_logger_prefix,
-            self._user,
-            self._user_profile,
-        )
-        return None
+                return self._account
+            if self._user:
+                self._account = get_cached_account_for_user(invalidate=False, user=self._user)  # type: ignore[assignment]
+                if self._account:
+                    verbose_logger.debug(
+                        "%s.account() set _account to %s based on user %s",
+                        self.account_mixin_logger_prefix,
+                        self._account,
+                        self._user,
+                    )
+                return self._account
+            logger.debug(
+                "%s.account() could not initialize _account for user: %s, user_profile: %s",
+                self.account_mixin_logger_prefix,
+                self._user,
+                self._user_profile,
+            )
+            return None
+        except AttributeError as e:
+            logger.error(
+                "%s.account() AccountMixin appears to be only partially initialized: %s",
+                self.account_mixin_logger_prefix,
+                e,
+                exc_info=True,
+            )
+            return None
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.account() encountered an error while trying to resolve account: %s",
+                self.account_mixin_logger_prefix,
+                e,
+                exc_info=True,
+            )
+            return None
 
     @account.setter
     def account(self, account: Optional[Account]):
@@ -453,18 +471,36 @@ class AccountMixin(SmarterHelperMixin):
         :return: The user for the current user.
         :rtype: User or None
         """
-        if self._user:
-            return self._user
+        try:
+            if self._user:
+                return self._user
 
-        if self._user_profile:
-            self._user = self._user_profile.user
-            verbose_logger.debug(
-                "%s.user() set _user to %s based on user_profile %s",
+            if self._user_profile:
+                self._user = self._user_profile.user
+                verbose_logger.debug(
+                    "%s.user() set _user to %s based on user_profile %s",
+                    self.account_mixin_logger_prefix,
+                    self._user,
+                    self._user_profile,
+                )
+            return self._user
+        except AttributeError as e:
+            logger.error(
+                "%s.account() AccountMixin appears to be only partially initialized: %s",
                 self.account_mixin_logger_prefix,
-                self._user,
-                self._user_profile,
+                e,
+                exc_info=True,
             )
-        return self._user
+            return None
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.user() encountered an error while trying to resolve user: %s",
+                self.account_mixin_logger_prefix,
+                e,
+                exc_info=True,
+            )
+            return None
 
     @user.setter
     def user(self, user: UserType):
@@ -494,30 +530,48 @@ class AccountMixin(SmarterHelperMixin):
         :return: The user_profile for the current user.
         :rtype: UserProfile or None
         """
-        if self._user_profile:
-            return self._user_profile
-        # note that we have to use property references here in order to trigger
-        # the property setters.
-        if self._account and isinstance(self._user, User):
-            try:
-                self._user_profile = UserProfile.get_cached_object(user=self._user, account=self._account)
+        try:
+            if self._user_profile:
                 return self._user_profile
-            except UserProfile.DoesNotExist as e:
-                raise SmarterBusinessRuleViolation(
-                    f"User {self._user} does not belong to the account {self._account.account_number}."
-                ) from e
-        if isinstance(self._user, User):
-            self._user_profile = UserProfile.get_cached_object(user=self._user)
-        if not self._user_profile:
-            logger.debug(
-                "%s: user_profile() could not initialize _user_profile for user: %s, account: %s",
+            # note that we have to use property references here in order to trigger
+            # the property setters.
+            if self._account and isinstance(self._user, User):
+                try:
+                    self._user_profile = UserProfile.get_cached_object(user=self._user, account=self._account)
+                    return self._user_profile
+                except UserProfile.DoesNotExist as e:
+                    raise SmarterBusinessRuleViolation(
+                        f"User {self._user} does not belong to the account {self._account.account_number}."
+                    ) from e
+            if isinstance(self._user, User):
+                self._user_profile = UserProfile.get_cached_object(user=self._user)
+            if not self._user_profile:
+                logger.debug(
+                    "%s: user_profile() could not initialize _user_profile for user: %s, account: %s",
+                    self.account_mixin_logger_prefix,
+                    self._user,
+                    self._account,
+                )
+            else:
+                self.log_account_mixin_ready_status()
+            return self._user_profile
+        except AttributeError as e:
+            logger.error(
+                "%s.account() AccountMixin appears to be only partially initialized: %s",
                 self.account_mixin_logger_prefix,
-                self._user,
-                self._account,
+                e,
+                exc_info=True,
             )
-        else:
-            self.log_account_mixin_ready_status()
-        return self._user_profile
+            return None
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.user_profile() encountered an error while trying to resolve user_profile: %s",
+                self.account_mixin_logger_prefix,
+                e,
+                exc_info=True,
+            )
+            return None
 
     @user_profile.setter
     def user_profile(self, user_profile: Optional[UserProfile]):
@@ -564,26 +618,44 @@ class AccountMixin(SmarterHelperMixin):
         :return: True if the AccountMixin is ready to be used.
         :rtype: bool
         """
-        if not isinstance(self.user_profile, UserProfile):
-            verbose_logger.debug(
-                "%s.is_accountmixin_ready() returning false because user_profile is not initialized.",
+        try:
+            if not isinstance(self.user_profile, UserProfile):
+                verbose_logger.debug(
+                    "%s.is_accountmixin_ready() returning false because user_profile is not initialized.",
+                    self.account_mixin_logger_prefix,
+                )
+                return False
+            if not isinstance(self.user, User):
+                verbose_logger.debug(
+                    "%s.is_accountmixin_ready() had to initialize user from user_profile. This is a bug.",
+                    self.account_mixin_logger_prefix,
+                )
+                self._user = self.user_profile.cached_user
+            if not isinstance(self.account, Account):
+                verbose_logger.debug(
+                    "%s.is_accountmixin_ready() had to initialize account from user_profile. This is a bug.",
+                    self.account_mixin_logger_prefix,
+                )
+                self._account = self.user_profile.cached_account
+            verbose_logger.debug("%s.is_accountmixin_ready() returning true.", self.account_mixin_logger_prefix)
+            return True
+        except AttributeError as e:
+            logger.error(
+                "%s.account() AccountMixin appears to be only partially initialized: %s",
                 self.account_mixin_logger_prefix,
+                e,
+                exc_info=True,
             )
             return False
-        if not isinstance(self.user, User):
-            verbose_logger.debug(
-                "%s.is_accountmixin_ready() had to initialize user from user_profile. This is a bug.",
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.is_accountmixin_ready() encountered an error while checking ready state: %s",
                 self.account_mixin_logger_prefix,
+                e,
+                exc_info=True,
             )
-            self._user = self.user_profile.cached_user
-        if not isinstance(self.account, Account):
-            verbose_logger.debug(
-                "%s.is_accountmixin_ready() had to initialize account from user_profile. This is a bug.",
-                self.account_mixin_logger_prefix,
-            )
-            self._account = self.user_profile.cached_account
-        verbose_logger.debug("%s.is_accountmixin_ready() returning true.", self.account_mixin_logger_prefix)
-        return True
+            return False
 
     @property
     def accountmixin_ready_state(self) -> str:

@@ -293,7 +293,17 @@ class SmarterRequestMixin(AccountMixin):
         :return: True if the instance is ready, False otherwise.
         :rtype: bool
         """
-        return self.is_requestmixin_ready
+        try:
+            return self.is_requestmixin_ready
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.__bool__() - encountered an error while checking is_requestmixin_ready: %s",
+                self.request_mixin_logger_prefix,
+                e,
+                exc_info=True,
+            )
+            return False
 
     def __hash__(self) -> int:
         """
@@ -1142,7 +1152,8 @@ class SmarterRequestMixin(AccountMixin):
                     body,
                 )
             try:
-                body_str = body.decode("utf-8").strip()
+                if isinstance(body, (bytearray, bytes)):
+                    body_str = body.decode("utf-8").strip()
             except (AttributeError, UnicodeDecodeError):
                 logger.warning(
                     "%s.data() - request body could not be decoded as utf-8: %s", self.request_mixin_logger_prefix, body
@@ -1155,7 +1166,7 @@ class SmarterRequestMixin(AccountMixin):
                     body_str
                     if isinstance(body_str, (dict, list))
                     else json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
-                )
+                )  # type: ignore
                 verbose_logger.debug(
                     "%s.data() - initialized json from request body: %s",
                     self.request_mixin_logger_prefix,
@@ -1337,7 +1348,7 @@ class SmarterRequestMixin(AccountMixin):
                     self.url_path_parts[-1],
                 )
                 return False
-            if "/dashboard/" not in self.parsed_url.path:
+            if self.parsed_url and "/dashboard/" not in self.parsed_url.path:
                 verbose_logger.debug(
                     "%s.is_dashboard() - '/dashboard/' not in url path: %s",
                     self.request_mixin_logger_prefix,
@@ -1373,7 +1384,7 @@ class SmarterRequestMixin(AccountMixin):
                     self.url_path_parts[-1],
                 )
                 return False
-            if "/workbench/" not in self.parsed_url.path:
+            if self.parsed_url and "/workbench/" not in self.parsed_url.path:
                 verbose_logger.debug(
                     "%s.is_workbench() - '/workbench/' not in url path: %s",
                     self.request_mixin_logger_prefix,
@@ -1852,9 +1863,9 @@ class SmarterRequestMixin(AccountMixin):
         if not self.smarter_request:
             verbose_logger.debug("%s.path() - request is None. Cannot extract path.", self.request_mixin_logger_prefix)
             return None
-        if self.parsed_url.path == "":
+        if self.parsed_url and self.parsed_url.path == "":
             return "/"
-        return self.parsed_url.path
+        return self.parsed_url.path if self.parsed_url else None
 
     @cached_property
     def root_domain(self) -> Optional[str]:
@@ -2119,7 +2130,7 @@ class SmarterRequestMixin(AccountMixin):
             )
 
         # this is our expected case. we look for the session key in the parsed url.
-        session_key = session_key_from_url(self.url)
+        session_key = session_key_from_url(self.url) if self.url else None
         if session_key:
             session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
@@ -2349,11 +2360,12 @@ class SmarterRequestMixin(AccountMixin):
         """
 
         # Django Rest Framework's Request object
+        # pylint: disable=W0212
         if (
             hasattr(self.smarter_request, "_user")
-            and self.smarter_request._user
-            and hasattr(self.smarter_request._user, "is_authenticated")
-            and self.smarter_request._user.is_authenticated
+            and self.smarter_request._user  # type: ignore
+            and hasattr(self.smarter_request._user, "is_authenticated")  # type: ignore
+            and self.smarter_request._user.is_authenticated  # type: ignore
         ):
             return True
 
