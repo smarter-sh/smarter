@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.214](https://github.com/smarter-sh/smarter/compare/v0.13.213...v0.13.214) (2026-04-07)
+
+### Bug Fixes
+
+* from scratch init w/o aws ([1c48204](https://github.com/smarter-sh/smarter/commit/1c48204ce7303856af6edeea483fd629abeaf89a))
+
 ## [0.13.213](https://github.com/smarter-sh/smarter/compare/v0.13.212...v0.13.213) (2026-04-06)
 
 ### Bug Fixes
