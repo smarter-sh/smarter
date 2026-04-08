@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.215](https://github.com/smarter-sh/smarter/compare/v0.13.214...v0.13.215) (2026-04-08)
+
+### Bug Fixes
+
+* UserProfile.DoesNotExist exception in user receiver ([aae27ac](https://github.com/smarter-sh/smarter/commit/aae27ac4ac5c9bc3a5f9679caf20dd9be3df95e0))
+
 ## [0.13.214](https://github.com/smarter-sh/smarter/compare/v0.13.213...v0.13.214) (2026-04-07)
 
 ### Bug Fixes
