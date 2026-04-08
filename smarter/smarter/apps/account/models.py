@@ -998,9 +998,7 @@ class UserProfile(MetaDataModel):
                     user.email,
                     account,
                 )
-                raise UserProfile.DoesNotExist(
-                    f"No UserProfile found for user {user.email} and account {account}"
-                ) from e
+                raise UserProfile.DoesNotExist(f"No UserProfile found for user {user} and account {account}") from e
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_user(user: User, class_name: str) -> "UserProfile":
@@ -1022,7 +1020,7 @@ class UserProfile(MetaDataModel):
                     UserProfile.__name__,
                     user.email,
                 )
-                raise UserProfile.DoesNotExist(f"No UserProfile found for user {user.email}") from e
+                raise UserProfile.DoesNotExist(f"No UserProfile found for user {user} and account {account}") from e
             except UserProfile.MultipleObjectsReturned as e:
                 logger.error(
                     "%s.get_cached_object() Multiple UserProfiles found for user %s. Defaulting to first result.",
@@ -1037,7 +1035,7 @@ class UserProfile(MetaDataModel):
                 )
                 if not retval:
                     raise UserProfile.DoesNotExist(
-                        f"No UserProfile found for user {user.email} after MultipleObjectsReturned exception."
+                        f"No UserProfile found for user {user} and account {account} after MultipleObjectsReturned exception."
                     ) from e
                 return retval
 
