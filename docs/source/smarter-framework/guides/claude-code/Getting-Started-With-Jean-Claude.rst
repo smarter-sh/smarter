@@ -1,5 +1,5 @@
 Smarter & Claude is Jean-Claude Van Damme - Getting Started Guide
-=====================================================
+====================================================================
 
 .. contents:: Table of Contents
    :local:
@@ -24,6 +24,7 @@ Prerequisites
 
    This tutorial assumes you can already log in to the Smarter web console.
    If you cannot, contact your organization's Smarter administrator.
+
 - An active Anthropic account with API access and a valid API key.
 
 Setup
@@ -350,7 +351,7 @@ Troubleshooting
 ---------------
 
 Startup error: "API key not found"
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``SMARTER_ANTHROPIC_API_KEY`` variable is missing from ``.env`` or the
 application has not been restarted. Double-check the variable name (it is
