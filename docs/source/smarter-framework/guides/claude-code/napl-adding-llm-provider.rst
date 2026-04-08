@@ -40,16 +40,55 @@ Before you begin, confirm that you have:
 Setup
 =====
 
-Smarter supports two categories of LLM providers:
+Smarter supports two categories of LLM providers.
 
-- **Built-in providers** (OpenAI, GoogleAI, MetaAI) are initialized
-  automatically during deployment. They only require an API key in the
-  ``.env`` file.
-- **Additional providers** (Anthropic, Cohere, Fireworks, Mistral, TogetherAI)
-  require both an API key in ``.env`` **and** one or more Provider manifests
-  applied through the CLI.
+**Built-in providers** are pre-initialized automatically during deployment
+and only require an API key in ``.env``:
 
-Anthropic is an *additional* provider, so both steps are required.
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40 40
+
+   * - Provider
+     - Environment Variable
+     - API Key Console
+   * - OpenAI *(required)*
+     - ``SMARTER_OPENAI_API_KEY``
+     - `platform.openai.com/api-keys <https://platform.openai.com/api-keys>`_
+   * - GoogleAI
+     - ``SMARTER_GEMINI_API_KEY``
+     - `aistudio.google.com/app/apikey <https://aistudio.google.com/app/apikey>`_
+   * - MetaAI
+     - ``SMARTER_LLAMA_API_KEY``
+     - `console.apillm.com <https://console.apillm.com/en/dashboard/api-token>`_
+
+**Additional providers** require both an API key in ``.env`` **and** a
+Provider manifest applied via the CLI:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40 40
+
+   * - Provider
+     - Environment Variable
+     - API Key Console
+   * - **Anthropic**
+     - ``SMARTER_ANTHROPIC_API_KEY``
+     - `console.anthropic.com <https://console.anthropic.com/>`_
+   * - Cohere
+     - ``SMARTER_COHERE_API_KEY``
+     - `dashboard.cohere.com/api-keys <https://dashboard.cohere.com/api-keys>`_
+   * - Fireworks
+     - ``SMARTER_FIREWORKS_API_KEY``
+     - `fireworks.ai/api-keys <https://fireworks.ai/api-keys/>`_
+   * - Mistral
+     - ``SMARTER_MISTRAL_API_KEY``
+     - `console.mistral.ai/api-keys <https://console.mistral.ai/api-keys/>`_
+   * - TogetherAI
+     - ``SMARTER_TOGETHERAI_API_KEY``
+     - `together.ai/settings/api-keys <https://together.ai/settings/api-keys>`_
+
+This tutorial walks through adding **Anthropic** as an additional provider.
 
 Concept Overview
 ================
@@ -247,9 +286,21 @@ Troubleshooting
    Refresh the browser. If it still does not appear, confirm that your
    Smarter account has administrator privileges.
 
+**"billing_not_active" or rate limit errors**
+   Your Anthropic account does not have billing configured, or the API key
+   belongs to a free-tier account that has exhausted its quota. Add a payment
+   method at
+   `console.anthropic.com/settings/billing <https://console.anthropic.com/settings/billing>`_.
+
+**API key starts with ``sk-ant-oat01-``**
+   OAuth tokens (``sk-ant-oat01-``) are not valid for direct API calls.
+   Ensure the key starts with ``sk-ant-api03-``. Generate a standard API key
+   from the Anthropic console.
+
 .. seealso::
 
    - :doc:`/smarter-resources/smarter-provider` — Provider technical reference
    - :doc:`/smarter-resources/provider/sam` — SAM manifest field reference
    - :doc:`/smarter-resources/provider/api` — Provider REST API
    - `Anthropic API Documentation <https://docs.anthropic.com/>`_
+   - `Anthropic Model List <https://docs.anthropic.com/en/docs/about-claude/models>`_

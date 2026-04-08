@@ -23,13 +23,35 @@ pipe source code to Claude for review directly from your terminal.
 Prerequisites
 =============
 
-This tutorial assumes you already have:
+You are a working programmer at Northern Aurora Power & Light (NAPL). You
+already have a Smarter account and know how to log in. You are also expected
+to be comfortable with:
 
-- An **active Smarter account**. Your administrator has already provisioned
-  your credentials — you know how to log in.
-- Comfort working in a **terminal** (bash, zsh, or PowerShell).
-- A **code editor** installed (VS Code, JetBrains, or similar).
-- Basic familiarity with **YAML** syntax (indentation, key-value pairs).
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Topic
+     - What you need to know
+   * - Terminal
+     - Comfortable with a Unix/macOS terminal or Windows PowerShell;
+       able to set environment variables and edit configuration files.
+   * - YAML
+     - Able to read and write basic YAML — indentation, key-value pairs.
+   * - Node.js / npm
+     - Able to install a global npm package (``npm install -g``).
+   * - Code editor
+     - VS Code, JetBrains, or similar installed.
+   * - Smarter account
+     - You have been provisioned a Smarter account and can log in to
+       the web console.
+
+Verify your Node.js version before proceeding:
+
+.. code-block:: bash
+
+   node --version
+   # Expected: v18.x.x or higher
 
 .. note::
 
@@ -100,6 +122,59 @@ Verify the connection:
 A successful response confirms the platform is reachable and your
 credentials are valid.
 
+Step 4: Install Claude Code
+-----------------------------
+
+Claude Code is distributed as a global npm package:
+
+.. code-block:: bash
+
+   npm install -g @anthropic-ai/claude-code
+
+Verify the installation:
+
+.. code-block:: bash
+
+   claude --version
+
+Step 5: Configure Claude Code to Use the Smarter Gateway
+----------------------------------------------------------
+
+Claude Code must be redirected from Anthropic's public API to the Smarter
+gateway. Create or edit ``~/.claude/settings.json``:
+
+.. code-block:: json
+
+   {
+     "env": {
+       "ANTHROPIC_BASE_URL": "https://smarter.internal",
+       "ANTHROPIC_AUTH_TOKEN": "<YOUR_SMARTER_API_KEY>"
+     }
+   }
+
+Replace ``<YOUR_SMARTER_API_KEY>`` with the key you created in Step 2.
+
+.. important::
+
+   ``ANTHROPIC_AUTH_TOKEN`` here is your **Smarter API key** — not an
+   Anthropic key. Smarter exposes an Anthropic-compatible API surface;
+   Claude Code sends your Smarter token as its bearer credential, and the
+   gateway uses its own centrally managed Anthropic key upstream. You never
+   possess or manage an Anthropic credential.
+
+Step 6: Pre-accept the Claude Code Onboarding
+------------------------------------------------
+
+When Claude Code detects a custom ``ANTHROPIC_BASE_URL`` it may stall on
+the first-run wizard. Pre-mark onboarding as complete by creating or
+editing ``~/.claude.json``:
+
+.. code-block:: json
+
+   {
+     "hasCompletedOnboarding": true
+   }
+
 Concept Overview
 ================
 
@@ -123,14 +198,62 @@ with daily:
    this way. You will author chatbot manifests to customize your own
    coding assistants.
 
+The Smarter Gateway
+~~~~~~~~~~~~~~~~~~~~
+
+Smarter acts as a managed proxy between developer tools and upstream LLM
+providers. Every prompt flows through the gateway:
+
+.. code-block:: text
+
+   Developer Workstation
+       |
+       |  claude (Claude Code CLI)
+       |  ANTHROPIC_BASE_URL  -> https://smarter.internal
+       |  ANTHROPIC_AUTH_TOKEN -> <your Smarter API key>
+       v
+   Smarter Gateway (on-premise)
+       |  1. Authenticates your Smarter API key
+       |  2. Assigns cost-accounting code
+       |  3. Writes audit log entry
+       |  4. Substitutes platform-level Anthropic key
+       |  5. Forwards request to Anthropic
+       v
+   Anthropic API (api.anthropic.com)
+       |  Claude processes the request
+       v
+   Response flows back the same path
+
+Common CLI Commands
+~~~~~~~~~~~~~~~~~~~~
+
+You interact with Smarter resources through the CLI:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Command
+     - What it does
+   * - ``smarter apply -f <file.yml>``
+     - Creates or updates a resource
+   * - ``smarter get <kind>``
+     - Lists resources of a given kind
+   * - ``smarter describe <kind> <name>``
+     - Returns the live manifest including status
+   * - ``smarter delete <kind> <name>``
+     - Removes a resource
+   * - ``smarter manifest <kind> -o yaml``
+     - Prints an example manifest template
+
 The flow is simple: your administrator sets up **providers**, you create
 **chatbots** that reference those providers, and you interact with chatbots
-through the CLI or the web console.
+through the CLI, the web console, or Claude Code.
 
 Step-by-Step: Your First Claude Code Session
 =============================================
 
-Step 4: Discover Available Chatbots
+Step 7: Discover Available Chatbots
 -------------------------------------
 
 .. code-block:: bash
@@ -147,7 +270,7 @@ To see which provider and model a chatbot uses:
 
    smarter describe chatbot <chatbot-name>
 
-Step 5: Chat from the Terminal
+Step 8: Chat from the Terminal
 --------------------------------
 
 .. code-block:: bash
@@ -164,7 +287,7 @@ and press Enter. For example:
 Claude will respond with a complete implementation. Type ``exit`` or press
 ``Ctrl+C`` to end the session.
 
-Step 6: Chat from the Workbench
+Step 9: Chat from the Workbench
 ----------------------------------
 
 The Prompt Engineer Workbench is a browser-based interface for interacting
@@ -180,7 +303,7 @@ The Workbench lets you adjust **temperature**, **max tokens**, and the
 **system prompt** in real time — useful for experimenting before you commit
 to a configuration.
 
-Step 7: Pipe Code to Claude from Your Terminal
+Step 10: Pipe Code to Claude from Your Terminal
 -------------------------------------------------
 
 You can send source files directly to Claude for review, refactoring
@@ -196,7 +319,7 @@ Or ask Claude to explain unfamiliar code:
 
    cat legacy_module.py | smarter chat <chatbot-name> --prompt "Explain what this code does, section by section"
 
-Step 8: Create Your Own Custom Chatbot (Optional)
+Step 11: Create Your Own Custom Chatbot (Optional)
 ---------------------------------------------------
 
 Power users can define their own chatbot with a tailored system prompt.
@@ -238,7 +361,43 @@ Apply and start using it:
 Proof of Concept
 ================
 
-Run this sequence end to end to confirm your setup is complete:
+Create a file called ``power_utils.py`` with the following NAPL-relevant code:
+
+.. code-block:: python
+
+   import math
+
+   def calculate_reactive_power(apparent_power_kva: float,
+                                 power_factor: float) -> float:
+       """Calculate reactive power (kVAR) from apparent power and power factor.
+
+       Uses the AC power triangle: Q = S * sin(arccos(PF))
+       """
+       if apparent_power_kva <= 0:
+           raise ValueError(f"apparent_power_kva must be > 0; got {apparent_power_kva}")
+       if not 0.0 <= power_factor <= 1.0:
+           raise ValueError(f"power_factor must be in [0, 1]; got {power_factor}")
+       return apparent_power_kva * math.sin(math.acos(power_factor))
+
+Navigate to the directory containing the file and start Claude Code:
+
+.. code-block:: bash
+
+   cd /path/to/power_utils.py
+   claude
+
+At the prompt, type:
+
+.. code-block:: text
+
+   Explain the calculate_reactive_power function, including the math
+   and a worked example with 100 kVA at 0.85 power factor.
+
+**Expected result**: Claude responds with a clear explanation of the AC
+power triangle, the relationship Q = S * sin(arccos(PF)), and a worked
+example showing approximately 52.68 kVAR.
+
+You can also verify the full pipeline from the CLI:
 
 .. code-block:: bash
 
@@ -248,34 +407,20 @@ Run this sequence end to end to confirm your setup is complete:
    # 2. Confirm Anthropic provider is active
    smarter get providers
 
-   # 3. List your chatbots
-   smarter get chatbots
+   # 3. Confirm Claude Code is pointing at Smarter
+   claude
+   /status
+   # Endpoint must show https://smarter.internal
 
-   # 4. Start an interactive session
-   smarter chat <chatbot-name>
+If Claude returns a substantive analysis of the power utility code, your
+setup is working end-to-end:
 
-In the chat session, type:
+- Claude Code is routing through the Smarter gateway.
+- The gateway is authenticating your Smarter API key.
+- The gateway is forwarding to Anthropic using the platform credential.
+- The response is returned through the same path.
 
-.. code-block:: text
-
-   Explain the difference between a Python list and a tuple in two sentences.
-
-Expected response (approximate):
-
-.. code-block:: text
-
-   A Python list is a mutable, ordered collection that can be changed after
-   creation, while a tuple is immutable and cannot be modified once defined.
-   Tuples are generally faster and used for fixed data, whereas lists are
-   preferred when the collection needs to change.
-
-A clear, accurate response within a few seconds confirms that:
-
-- Your CLI is authenticated and connected.
-- The Anthropic provider is active and verified.
-- Claude is processing requests through Smarter.
-
-You are ready to use Claude Code as your virtual CoPilot.
+**You are fully onboarded.**
 
 Troubleshooting
 ===============
@@ -287,7 +432,7 @@ Troubleshooting
 **"No chatbots found"**
    Your administrator has not yet assigned a chatbot to your account, or you
    have not created one yourself. Ask your administrator for access, or
-   create your own chatbot using the manifest in Step 8.
+   create your own chatbot using the manifest in Step 11.
 
 **Slow or timed-out responses**
    Run ``smarter status`` to check platform health. If the platform is
@@ -309,6 +454,26 @@ Troubleshooting
    Also check the ``temperature`` setting. Values above 0.5 increase
    creativity but reduce consistency.
 
+**Claude Code shows ``api.anthropic.com`` in ``/status``**
+   The ``~/.claude/settings.json`` file was not saved correctly, or the
+   terminal session predates its creation. Validate the JSON:
+
+   .. code-block:: bash
+
+      python3 -m json.tool ~/.claude/settings.json
+
+   Close all terminals and open a fresh one before running ``claude``.
+
+**Claude Code returns a 401 error**
+   The ``ANTHROPIC_AUTH_TOKEN`` does not match an active Smarter API key.
+   Run ``smarter get apikeys`` to confirm the key exists, then check
+   ``~/.claude/settings.json`` for extra whitespace around the token value.
+
+**Claude Code returns a 403 or "Model not available" error**
+   The requested model is not configured at the platform level, or your
+   account does not have access to it. Use ``/model`` inside Claude Code to
+   check the active model. Contact NAPL IT to request access.
+
 **YAML errors when creating a chatbot manifest**
    YAML requires spaces (not tabs) for indentation. Use 2-space indentation
    consistently. Run ``smarter manifest chatbot`` to see a valid template.
@@ -320,3 +485,4 @@ Troubleshooting
    - :doc:`/smarter-platform/adding-an-llm-provider` — How providers are configured
    - :doc:`/smarter-resources/smarter-provider` — Provider technical reference
    - `Anthropic Claude Documentation <https://docs.anthropic.com/>`_
+   - `Claude Code Overview <https://docs.anthropic.com/en/docs/claude-code/overview>`_
