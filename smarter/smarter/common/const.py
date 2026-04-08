@@ -24,6 +24,8 @@ SMARTER_CONTACT_EMAIL = "lpm0073@gmail.com"
 SMARTER_CUSTOMER_SUPPORT_PHONE = "+1 (617) 834-6172"
 SMARTER_PROJECT_ROOT_DOMAIN = "smarter.sh"
 SMARTER_PROJECT_WEBSITE_URL = f"https://{SMARTER_PROJECT_ROOT_DOMAIN}"
+SMARTER_ORGANIZATION_WEBSITE_URL = "https://lawrencemcdaniel.com"  # FIX NOTE: set this to the non-profit organization website URL when that is set up. For now, it points to my personal website.
+SMARTER_ORGANIZATION_NAME = "Lawrence P. McDaniel"  # FIX NOTE: set this to the non-profit organization website URL when that is set up. For now, it points to my personal website.
 SMARTER_PROJECT_CDN_URL = f"https://cdn.{SMARTER_PROJECT_ROOT_DOMAIN}"
 SMARTER_PROJECT_DOCS_URL = f"https://docs.{SMARTER_PROJECT_ROOT_DOMAIN}"
 SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
@@ -62,7 +64,7 @@ IS_USING_TFVARS = False
 
 try:
     with open(TERRAFORM_TFVARS, encoding="utf-8") as f:
-        TFVARS = hcl2.load(f)
+        TFVARS = hcl2.load(f)  # type: ignore
     IS_USING_TFVARS = True
 except FileNotFoundError:
     logger.debug("No terraform.tfvars file found. Using default values.")
