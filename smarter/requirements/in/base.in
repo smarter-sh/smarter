@@ -32,7 +32,7 @@ pycountry                               # ISO country, subdivision, language, cu
 
 # Django
 # ------------
-Django~=5.0
+Django~=5.2
 django-debug-toolbar                    # a configurable set of panels that display various debug information about the current request/response.
                                         # We need this in base so that we can toggle DEBUG_MODE.
 django-redis~=6.0                       # object caching

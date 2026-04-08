@@ -127,7 +127,7 @@ distro==1.9.0
     # via
     #   google-genai
     #   openai
-django==5.2.10
+django==5.2.13
     # via
     #   -r smarter/requirements/in/base.in
     #   django-celery-beat
