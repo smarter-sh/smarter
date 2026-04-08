@@ -31,6 +31,7 @@ class Command(SmarterCommand):
         else:
             account, created = Account.objects.get_or_create(company_name=company_name)
         if created:
+            Account.get_cached_object(invalidate=True, pk=account.pk)  # prime the cache
             self.handle_completed_success(msg=f"Created account: {account.account_number} {account.company_name}")
         else:
             self.handle_completed_success(
