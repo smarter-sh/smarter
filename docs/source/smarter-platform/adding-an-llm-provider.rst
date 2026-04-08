@@ -286,5 +286,4 @@ Troubleshooting
    - :doc:`/smarter-resources/smarter-provider`
    - :doc:`/smarter-resources/provider/api`
    - :doc:`/smarter-resources/provider/sam`
-   - :doc:`/smarter-framework/guides/claude-code-getting-started-guide`
    - `Anthropic API Documentation <https://docs.anthropic.com/>`_
