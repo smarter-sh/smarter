@@ -9,7 +9,7 @@ from smarter.apps.vectorstore.views.vectorstores import (
     VectorstoreListView,
     VectorstoreManifestView,
 )
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import camel_case_object_name
 
 from .api.const import namespace as api_namespace
 from .const import namespace
@@ -51,27 +51,16 @@ class VectorstoreReverseViews:
 
     namespace = namespace
 
-    @staticmethod
-    def camel_case(obj) -> str:
-        """
-        Convert CamelCase to snake_case for URL naming.
-
-        :param name: The CamelCase string to convert.
-        :return: The converted snake_case string.
-        :rtype: str
-        """
-        return str(camel_to_snake(obj.__name__))
-
-    vectorstore_detail = camel_case(VectorstoreManifestView)
-    vectorstore_list = camel_case(VectorstoreListView)
+    vectorstore_manifest_view = camel_case_object_name(VectorstoreManifestView)
+    vectorstore_list_view = camel_case_object_name(VectorstoreListView)
 
 
 urlpatterns = [
-    path("", VectorstoreListView.as_view(), name="listview"),
+    path("", VectorstoreListView.as_view(), name=VectorstoreReverseViews.vectorstore_list_view),
     path("api/", include(api_urls, namespace=api_namespace)),
     path(
-        "vectorstores/<str:name>/<str:backend>/manifest/",
+        "vectorstores/<str:backend>/<str:name>/manifest/",
         VectorstoreManifestView.as_view(),
-        name=VectorstoreReverseViews.vectorstore_detail,
+        name=VectorstoreReverseViews.vectorstore_manifest_view,
     ),
 ]

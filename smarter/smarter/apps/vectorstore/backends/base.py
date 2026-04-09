@@ -12,15 +12,45 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from smarter.apps.vectorstore.models import VectorDatabase
+from smarter.apps.vectorstore.signals import connected
+from smarter.common.exceptions import SmarterException
+from smarter.common.mixins import SmarterHelperMixin
 
 
-class VectorStoreBackendConnection:
+class VectorStoreBackendError(SmarterException):
+    """
+    Exception raised when there is an error with the vector store backend.
+    """
+
+
+class VectorStoreBackendConnectionError(SmarterException):
+    """
+    Exception raised when there is an error with the vector store backend connection.
+    """
+
+
+class VectorStoreBackendConnection(SmarterHelperMixin):
     """
     Represents a connection to a vector store backend.
     """
 
+    _connection: Optional[object]
 
-class BaseBackend(ABC):
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the connection is ready for operations.
+        """
+        return super().ready
+
+    def connect(self):
+        """
+        Establish the connection to the vector store backend.
+        """
+        connected.send(sender=self.__class__, instance=self, connection=self._connection)
+
+
+class BaseBackend(ABC, SmarterHelperMixin):
     """
     Base class for vector store backends. All backends should inherit from this
     class and implement the required methods.
@@ -31,6 +61,7 @@ class BaseBackend(ABC):
     db: VectorDatabase
 
     def __init__(self, db: VectorDatabase):
+        SmarterHelperMixin.__init__(self)
         self.db = db
         self._connection = None
 
@@ -83,6 +114,13 @@ class BaseBackend(ABC):
         """
         raise NotImplementedError("Disconnect method not implemented for this backend")
 
+    @abstractmethod
+    def load(self, filepath: str, filespec: Optional[dict] = None):
+        """
+        Load vectors into the vector database from a file.
+        """
+        raise NotImplementedError("Load method not implemented for this backend")
+
     @property
     def connection(self) -> VectorStoreBackendConnection:
         """
@@ -93,9 +131,16 @@ class BaseBackend(ABC):
             self._connection = self.connect()
         return self._connection
 
-    @abstractmethod
-    def load(self, filepath: str, filespec: Optional[dict] = None):
+    @property
+    def is_connected(self) -> bool:
         """
-        Load vectors into the vector database from a file.
+        Check if there is an active connection to the vector database in the backend.
         """
-        raise NotImplementedError("Load method not implemented for this backend")
+        return self._connection is not None and self._connection.ready
+
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the backend is ready for operations.
+        """
+        return super().ready and self.is_connected

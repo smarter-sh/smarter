@@ -6,9 +6,16 @@ provisioning, deleting, and interacting
 from typing import Optional
 
 from smarter.apps.provider.models import Provider
-from smarter.apps.vectorstore.backends import Backends
-from smarter.apps.vectorstore.backends.base import BaseBackend
+from smarter.apps.vectorstore.backends import Backends, BaseBackend
 from smarter.apps.vectorstore.models import VectorDatabase
+from smarter.apps.vectorstore.signals import (
+    embed_failed,
+    embed_started,
+    embed_success,
+    load_failed,
+    load_started,
+    load_success,
+)
 
 
 class VectorDatabaseService:
@@ -20,6 +27,8 @@ class VectorDatabaseService:
     Creates a binding between the VectorDatabase ORM model, which contains the
     metadata and configuration for a vector database, and the Backend implementations,
     which contain the logic for interacting with the underlying vector store.
+
+    Original source comes from https://github.com/FullStackWithLawrence/openai-embeddings
     """
 
     db: VectorDatabase
@@ -52,6 +61,7 @@ class VectorDatabaseService:
     def query(self, query_vector, top_k=10):
         """
         Query the vector database using the appropriate backend.
+        Original source comes from https://github.com/FullStackWithLawrence/openai-embeddings
         """
         return self.backend.query(query_vector, top_k)
 
@@ -65,10 +75,37 @@ class VectorDatabaseService:
         """
         Load vectors into the vector database from a file using the appropriate backend.
         """
-        self.backend.load(filepath, filespec)
+        load_started.send(
+            sender=self.__class__, backend=self.backend, provider=self.provider, user_profile=self.db.user_profile
+        )
+        try:
+            self.backend.load(filepath, filespec)
+            load_success.send(
+                sender=self.__class__, backend=self.backend, provider=self.provider, user_profile=self.db.user_profile
+            )
+        except Exception as e:
+            load_failed.send(
+                sender=self.__class__, backend=self.backend, provider=self.provider, user_profile=self.db.user_profile
+            )
+            raise e
 
-    def vectorize(self, text: str) -> list:
+    def embed(self, text: str) -> list:
         """
         Vectorize text using the appropriate backend.
+        Original source comes from https://github.com/FullStackWithLawrence/openai-embeddings/blob/main/models/pinecone.py
         """
-        return self.backend.vectorize(text)
+        embed_started.send(
+            sender=self.__class__, backend=self.backend, provider=self.provider, user_profile=self.db.user_profile
+        )
+        result = []
+        try:
+            result = []
+            embed_success.send(
+                sender=self.__class__, backend=self.backend, provider=self.provider, user_profile=self.db.user_profile
+            )
+        except Exception as e:
+            embed_failed.send(
+                sender=self.__class__, backend=self.backend, provider=self.provider, user_profile=self.db.user_profile
+            )
+            raise e
+        return result

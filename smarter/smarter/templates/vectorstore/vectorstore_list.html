@@ -1,7 +1,7 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
 
-{% block title %}<h2>Connections</h2>{% endblock %}
+{% block title %}<h2>Vectorstores</h2>{% endblock %}
 
 {% block body_class %}
 {{ block.super }}
@@ -84,7 +84,7 @@
         <div class="row g-5 g-xl-10">
           <div class="col-xl-12 mb-5 mb-xl-10">
             <div class="mt-15">
-              <h3 class="text-center">Connections</h3>
+              <h3 class="text-center">Vectorstores</h3>
             </div>
             <div class="table-responsive">
               <table class="table table-striped table-hover align-middle">
@@ -102,7 +102,7 @@
                   {% for vectorstore in vectorstores %}
                   <tr>
                     <td class="name-col p-3 min-width-250">
-                      <a href="{% url 'vectorstore:vectorstore_by_name' vectorstore.backend vectorstore.name %}">
+                      <a href="{% url 'vectorstore:vectorstore_manifest_view' vectorstore.backend vectorstore.name %}">
                         {{ vectorstore.name }}{% if vectorstore.version %} v{{ vectorstore.version }}{% endif %}
                       </a>
                     </td>
@@ -111,7 +111,7 @@
                     <td class="width-150">{{ vectorstore.updated_at|date:'Y-m-d H:i' }}</td>
                     <td>{% if vectorstore.description %}{{ vectorstore.description }}{% endif %}</td>
                     <td class="p-3">
-                      <a href="{% url 'vectorstore:vectorstore_by_name' vectorstore.backend vectorstore.name %}" class="btn btn-sm btn-primary">Manifest</a>
+                      <a href="{% url 'vectorstore:vectorstore_manifest_view' vectorstore.backend vectorstore.name %}" class="btn btn-sm btn-primary">Manifest</a>
                     </td>
                   </tr>
                   {% endfor %}
@@ -135,7 +135,7 @@
               <!--begin::Col Connection Card-->
               <article class="col-12 mt-1 p-2">
                 <!--begin::vectorstore card-->
-                <a href="{% url 'vectorstore:vectorstore_by_name' vectorstore.backend vectorstore.name %}">
+                <a href="{% url 'vectorstore:vectorstore_manifest_view' vectorstore.backend vectorstore.name %}">
                   <div id="connection_id_{{ vectorstore.id }}" class="card card-flush h-xl-100 vectorstore-card {% if vectorstore.user_profile.account.id == 1 %}smarter-vectorstore-card{% else %}user-vectorstore-card{% endif %}">
                     <!--begin::Header-->
                     <div class="p-5">

@@ -22,8 +22,19 @@ from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-logger = logging.getLogger(__name__)
+
+# pylint: disable=unused-argument
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.VECTORSTORE_LOGGING)
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class VectorDatabaseBackendKind(models.TextChoices):
@@ -227,8 +238,6 @@ class VectorDatabase(MetaDataWithOwnershipModel):
 
         See also:
 
-        - :class:`SqlConnection`
-        - :class:`ApiConnection`
         - :func:`smarter.apps.account.utils.get_cached_account_for_user`
         """
 
@@ -240,23 +249,42 @@ class VectorDatabase(MetaDataWithOwnershipModel):
         admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore
         instances = []
 
-        # create querysets for user_profile, account and smarter account.
-        # FIX NOTE: WE STILL NEED TO PREFETCH AND CACHE.
-        user_profile_qs = cls.objects.filter(user_profile=user_profile)
-        user_account_qs = cls.objects.filter(user_profile=admin_user_profile)  # type: ignore
-        smarter_account_qs = cls.objects.filter(user_profile__account=SmarterCachedObjects.smarter_admin_user_profile)  # type: ignore
-        instances.extend(user_profile_qs)
-        instances.extend(user_account_qs)
-        instances.extend(smarter_account_qs)
+        @cache_results()
+        def get_cached_vectorstores_for_user_profile_id(pk: int) -> list["VectorDatabase"]:
+            # create querysets for user_profile, account and smarter account.
+            user_profile_qs = (
+                cls.objects.filter(user_profile=user_profile)
+                .prefetch_related("tags")
+                .select_related("user_profile", "user_profile__account", "user_profile__user")
+            )
+            instances.extend(user_profile_qs)
 
-        logger.debug(
-            "%s.get_cached_connections_for_user: Found these connections %s for user %s",
-            cls.formatted_class_name,
-            instances,
-            user,
-        )
-        unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
-        return list(unique_instances)
+            user_account_qs = (
+                cls.objects.filter(user_profile=admin_user_profile)
+                .prefetch_related("tags")
+                .select_related("user_profile", "user_profile__account", "user_profile__user")
+            )
+            instances.extend(user_account_qs)
+
+            smarter_account_qs = (
+                cls.objects.filter(user_profile__account=SmarterCachedObjects.smarter_admin_user_profile)
+                .prefetch_related("tags")
+                .select_related("user_profile", "user_profile__account", "user_profile__user")
+            )
+            instances.extend(smarter_account_qs)
+
+            logger.debug(
+                "%s.get_cached_vectorstores_for_user: Found these vector stores %s for user %s",
+                cls.formatted_class_name,
+                instances,
+                user,
+            )
+            unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
+            return list(unique_instances)
+
+        if invalidate:
+            get_cached_vectorstores_for_user_profile_id.invalidate(pk=user_profile.id)  # type: ignore
+        return get_cached_vectorstores_for_user_profile_id(pk=user_profile.id)  # type: ignore
 
     def __str__(self):
         return f"{self.id} - {self.name} ({self.backend}) - {self.user_profile}"  # type: ignore

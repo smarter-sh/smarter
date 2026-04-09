@@ -9,7 +9,7 @@ how we got here:
 
 from django.urls import include, path
 
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import camel_case_object_name
 
 from .api.const import namespace as api_namespace
 from .const import namespace
@@ -59,21 +59,10 @@ class PromptReverseViews:
 
     namespace = namespace
 
-    @staticmethod
-    def camel_case(obj) -> str:
-        """
-        Convert CamelCase to snake_case for URL naming.
-
-        :param name: The CamelCase string to convert.
-        :return: The converted snake_case string.
-        :rtype: str
-        """
-        return str(camel_to_snake(obj.__name__))
-
-    prompt_manifest_by_hashed_id = camel_case(PromptManifestView)
-    prompt_chat_by_hashed_id = camel_case(ChatAppWorkbenchView)
-    prompt_config_by_hashed_id = camel_case(ChatConfigView)
-    prompt_landing_by_hashed_id = camel_case(PromptLandingView)
+    prompt_manifest_by_hashed_id = camel_case_object_name(PromptManifestView)
+    prompt_chat_by_hashed_id = camel_case_object_name(ChatAppWorkbenchView)
+    prompt_config_by_hashed_id = camel_case_object_name(ChatConfigView)
+    prompt_landing_by_hashed_id = camel_case_object_name(PromptLandingView)
     apply = "apply"
 
 

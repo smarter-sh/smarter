@@ -153,6 +153,9 @@ class SmarterWaffleSwitches:
     CHATBOT_HELPER_LOGGING = "log_chatbothelper"
     """Enables logging within the smarter.apps.chatbot.model.ChatBotHelper class."""
 
+    VECTORSTORE_LOGGING = "log_vectorstore"
+    """Enables logging throughout the smarter.app.vectorstore namespace."""
+
     CSRF_SUPPRESS_FOR_CHATBOTS = "disable_csrf_middleware_for_chatbots"
     """Disables CSRF middleware checks for chat completion endpoints."""
 
