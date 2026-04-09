@@ -30,6 +30,7 @@ self-onboard their models to your Smarter installation.
 
     - :doc:`Smarter Installation Guide <../smarter-platform/installation>`
     - :doc:`OpenAI Getting Started Guide <../smarter-framework/guides/openai-api-getting-started-guide>`
+    - :doc:`Adding an LLM Provider <../smarter-platform/adding-an-llm-provider>`
 
 Technical Reference
 -------------------

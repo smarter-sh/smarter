@@ -1,21 +1,20 @@
 SHELL := /bin/bash
-include .env
 export PATH := /usr/local/bin:$(PATH)
 export
 
 ifeq ($(OS),Windows_NT)
     PYTHON := python.exe
-    ACTIVATE_VENV := venv\Scripts\activate
+    ACTIVATE_VENV := venv/Scripts/activate
 else
     PYTHON := python3.13
     ACTIVATE_VENV := source venv/bin/activate
 endif
 PIP := $(PYTHON) -m pip
 
-ifneq ("$(wildcard .env)","")
-else
+ifeq ("$(wildcard .env)","")
     $(shell cp .env.example .env)
 endif
+include .env
 
 .PHONY: init activate build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release docker-init docker-build docker-run docker-test python-init python-lint python-clean python-requirements keen-init keen-build keen-server helm change-log help
 
@@ -31,12 +30,13 @@ init:
 	@echo "build the Docker containers, initialize the MySQL database, and create example users,"
 	@echo "prompts and AI resources. This may take up to 20 minutes..."
 	@echo "==============================================================================="
-	make check-python		# verify Python 3.13 is installed
-	make docker-check		# verify Docker is installed and running
-	make python-init		# create/replace Python virtual environment and install dependencies
-	make build			    # build the Smarter Docker container
-	make docker-init		# initialize MySQL and create the smarter database
-	make pre-commit-init	# install and configure pre-commit
+	make check-python							# verify Python 3.13 is installed
+	make docker-check							# verify Docker is installed and running
+	make python-init							# create/replace Python virtual environment and install dependencies
+	smarter/manage.py collectstatic --noinput	# collect static files for the Django admin interface and other components
+	make build			    					# build the Smarter Docker container
+	make docker-init							# initialize MySQL and create the smarter database
+	make pre-commit-init						# install and configure pre-commit
 	@echo ""
 	@echo ""
 	@echo "==============================================================================="
@@ -48,7 +48,7 @@ init:
 	@echo ""
 	@echo "The application is served at http://localhost:9357/ with the following credentials:"
 	@echo "    Username: admin"
-	@echo "    Email: admin@smarter.sh"
+	@echo "    Email: admin@$(or $(SMARTER_ROOT_DOMAIN),example.com)"
 	@echo "    Password: smarter"
 	@echo ""
 	@echo "The database is accessible at localhost:3306 with the following credentials:"

@@ -101,6 +101,7 @@ class AWSBase(SmarterHelperMixin):
         debug_mode: bool = False,
         init_info: Optional[str] = None,
     ):
+        super().__init__()
         services.raise_error_on_disabled(services.AWS_CLI)
         logger.debug("%s.__init__() initializing", self.formatted_class_name)
 
@@ -194,6 +195,11 @@ class AWSBase(SmarterHelperMixin):
             return None
         try:
             logger.debug("%s.client() creating AWS %s client", self.formatted_class_name, self.client_type.upper())
+            if not isinstance(self.aws_session, boto3.Session):
+                logger.error(
+                    "%s.client() AWS session is not available. Cannot create client.", self.formatted_class_name
+                )
+                return None
             self._client = self.aws_session.client(self.client_type)
             msg = f"{self.formatted_class_name}.client() {formatted_text_green(f'AWS Boto {type(self._client).__name__} client created')}."
             logger.debug(msg)

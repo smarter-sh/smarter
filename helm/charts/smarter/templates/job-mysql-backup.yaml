@@ -1,16 +1,30 @@
+# -----------------------------------------------------------------------------------
+# Purpose: CronJob to perform scheduled MySQL database backups to S3.
+#
+# This file defines a Kubernetes CronJob that runs a backup script
+# to back up the MySQL database. The backup script is stored in a
+# ConfigMap and mounted into the Job. The Job runs on a Debian image,
+# installs necessary tools, and executes the backup script.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
+# -----------------------------------------------------------------------------------
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: "{{ .Values.app.name }}-mysql-backup"
+  name: "{{ .Values.global.appName }}-mysql-backup"
   namespace: "{{ .Values.namespace }}"
   annotations:
-    meta.helm.sh/release-name: {{ .Values.app.name }}
-    meta.helm.sh/release-namespace: {{ .Values.namespace }}
-    meta.helm.sh/application-version: {{ .Chart.Version }}
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.app.name }}-mysql-backup"
-    app.kubernetes.io/application-group: {{ .Values.app.name }}
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-mysql-backup"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 spec:
   schedule: {{ .Values.databaseScheduledBackup.schedule | quote }}
   jobTemplate:
