@@ -44,6 +44,9 @@ from smarter.apps.prompt.manifest.models.chat_tool_call.const import (
 from smarter.apps.provider.manifest.models.provider.const import (
     MANIFEST_KIND as PROVIDER_MANIFEST_KIND,
 )
+from smarter.apps.vectorstore.manifest.models.vectorstore.const import (
+    MANIFEST_KIND as VECTORSTORE_MANIFEST_KIND,
+)
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -130,6 +133,9 @@ class SAMKinds(SmarterEnumAbstract):
 
     # provider resources
     PROVIDER = PROVIDER_MANIFEST_KIND
+
+    # vectorstore resources
+    VECTORSTORE = VECTORSTORE_MANIFEST_KIND
 
     @classmethod
     def str_to_kind(cls, kind_str: str) -> "SAMKinds":
