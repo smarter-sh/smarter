@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API Provider Manifest handler"""
+"""Smarter API User Manifest handler"""
 
 import datetime
 import logging
@@ -7,18 +7,22 @@ from typing import Optional, Type
 
 from django.http import HttpRequest
 
+from smarter.apps.account.models import User
 from smarter.apps.account.utils import valid_resource_owners_for_user
-from smarter.apps.provider.manifest.enum import SAMProviderSpecKeys
-from smarter.apps.provider.manifest.models.provider.const import MANIFEST_KIND
-from smarter.apps.provider.manifest.models.provider.metadata import SAMProviderMetadata
-from smarter.apps.provider.manifest.models.provider.model import SAMProvider
-from smarter.apps.provider.manifest.models.provider.spec import (
-    SAMProviderSpec,
-    SAMProviderSpecProvider,
+from smarter.apps.vectorstore.manifest.models.vectorstore.const import MANIFEST_KIND
+from smarter.apps.vectorstore.manifest.models.vectorstore.metadata import (
+    SAMVectorstoreMetadata,
 )
-from smarter.apps.provider.manifest.models.provider.status import SAMProviderStatus
-from smarter.apps.provider.models import Provider
-from smarter.apps.provider.serializers import ProviderSerializer
+from smarter.apps.vectorstore.manifest.models.vectorstore.model import SAMVectorstore
+from smarter.apps.vectorstore.manifest.models.vectorstore.spec import (
+    SAMVectorstoreORMSpec,
+    SAMVectorstoreSpec,
+)
+from smarter.apps.vectorstore.manifest.models.vectorstore.status import (
+    SAMVectorstoreStatus,
+)
+from smarter.apps.vectorstore.models import VectorDatabase
+from smarter.apps.vectorstore.serializers import VectorstoreSerializer
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -42,7 +46,7 @@ from smarter.lib.manifest.enum import (
 # pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
+    return waffle.switch_is_active(SmarterWaffleSwitches.VECTORSTORE_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -57,23 +61,23 @@ TODO: Make this configurable via smarter_settings.
 """
 
 
-class SAMProviderBrokerError(SAMBrokerError):
-    """Base exception for Smarter API Provider Broker handling."""
+class SAMVectorstoreBrokerError(SAMBrokerError):
+    """Base exception for Smarter API Vectorstore Broker handling."""
 
     @property
     def get_formatted_err_message(self):
-        return "Smarter API Provider Manifest Broker Error"
+        return "Smarter API Vectorstore Manifest Broker Error"
 
 
-class SAMProviderBroker(AbstractBroker):
+class SAMVectorstoreBroker(AbstractBroker):
     """
-    Smarter API Provider Manifest Broker
+    Smarter API Vectorstore Manifest Broker
 
-    This class manages the lifecycle of Smarter API Provider manifests, including loading, validating, parsing, and mapping them to Django ORM models and Pydantic models for serialization and deserialization.
+    This class manages the lifecycle of Smarter API Vectorstore manifests, including loading, validating, parsing, and mapping them to Django ORM models and Pydantic models for serialization and deserialization.
     **Responsibilities:**
-      - Load and validate Smarter API YAML Provider manifests.
-      - Parse manifests and initialize the corresponding Pydantic model (`SAMProvider`).
-      - Interact with Django ORM models representing provider manifests.
+      - Load and validate Smarter API YAML Vectorstore manifests.
+      - Parse manifests and initialize the corresponding Pydantic model (`SAMVectorstore`).
+      - Interact with Django ORM models representing vectorstore manifests.
       - Create, update, delete, and query Django ORM models.
       - Transform Django ORM models into Pydantic models for serialization/deserialization.
 
@@ -81,7 +85,7 @@ class SAMProviderBroker(AbstractBroker):
 
       .. code-block:: python
 
-         broker = SAMProviderBroker()
+         broker = SAMVectorstoreBroker()
          manifest = broker.manifest
          if manifest:
              print(manifest.apiVersion, manifest.kind)
@@ -92,8 +96,8 @@ class SAMProviderBroker(AbstractBroker):
 
     .. seealso::
 
-       - `SAMProvider` (Pydantic model)
-       - Django ORM models: `smarter.apps.provider.models.Provider`
+       - `SAMVectorstore` (Pydantic model)
+       - Django ORM models: `smarter.apps.vectorstore.models.Vectorstore`
 
     .. todo::
 
@@ -101,35 +105,35 @@ class SAMProviderBroker(AbstractBroker):
 
     """
 
-    # override the base abstract manifest model with the Provider model
-    _manifest: Optional[SAMProvider] = None
-    _pydantic_model: Type[SAMProvider] = SAMProvider
-    _provider: Optional[Provider] = None
+    # override the base abstract manifest model with the Vectorstore model
+    _manifest: Optional[SAMVectorstore] = None
+    _pydantic_model: Type[SAMVectorstore] = SAMVectorstore
+    _vectorstore: Optional[VectorDatabase] = None
 
     @property
-    def provider(self) -> Optional[Provider]:
+    def vectorstore(self) -> Optional[VectorDatabase]:
         """
-        Return the Provider associated with this broker, if available.
+        Return the VectorDatabase associated with this broker, if available.
 
-        :returns: The `Provider` instance, or `None` if not set.
+        :returns: The `VectorDatabase` instance, or `None` if not set.
 
         **Example usage:**
 
         .. code-block:: python
 
-           provider = broker.provider
-           if provider:
-               print(f"Provider name: {provider.name}")
+           vectorstore = broker.vectorstore
+           if vectorstore:
+               print(f"VectorDatabase name: {vectorstore.name}")
 
         See Also:
 
-           - :class:`smarter.apps.provider.models.Provider`
+           - :class:`smarter.apps.vectorstore.models.VectorDatabase`
         """
-        return self._provider
+        return self._vectordatabase
 
     def manifest_to_django_orm(self) -> dict:
         """
-        Convert the Smarter API Provider manifest (Pydantic model) into a dictionary suitable for Django ORM operations.
+        Convert the Smarter API Vectorstore manifest (Pydantic model) into a dictionary suitable for Django ORM operations.
 
         :returns: A dictionary with keys and values formatted for Django ORM model assignment.
 
@@ -154,33 +158,33 @@ class SAMProviderBroker(AbstractBroker):
         See Also:
 
            - :meth:`django_orm_to_manifest_dict`
-           - :class:`smarter.apps.account.models.Provider`
+           - :class:`smarter.apps.vectorstore.models.VectorDatabase`
 
         """
         metadata = super().manifest_to_django_orm()
-        dump = self.manifest.spec.provider.model_dump()  # type: ignore[return-value]
+        dump = self.manifest.spec.vectorstore.model_dump()  # type: ignore[return-value]
         dump = self.camel_to_snake(dump)
-        if not isinstance(self.manifest, SAMProvider):
-            raise SAMProviderBrokerError(
+        if not isinstance(self.manifest, SAMVectorstore):
+            raise SAMVectorstoreBrokerError(
                 f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}", thing=self.kind
             )
         if not isinstance(dump, dict):
-            raise SAMProviderBrokerError(
-                f"Failed to convert {self.kind} {self.manifest.metadata.name} provider spec to dict", thing=self.kind
+            raise SAMVectorstoreBrokerError(
+                f"Failed to convert {self.kind} {self.manifest.metadata.name} vectorstore spec to dict", thing=self.kind
             )
         return {**metadata, **dump}
 
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
-        Convert a Django ORM `Provider` model instance into a dictionary formatted for Pydantic manifest consumption.
+        Convert a Django ORM `Vectorstore` model instance into a dictionary formatted for Pydantic manifest consumption.
 
-        :returns: A dictionary representing the Smarter API Provider manifest, or `None` if the user is not set.
+        :returns: A dictionary representing the Smarter API Vectorstore manifest, or `None` if the user is not set.
 
         .. note::
 
            Field names are automatically converted from snake_case to camelCase for compatibility with Pydantic models.
 
-        :raises: :class:`SAMProviderBrokerError` if `self.user` is not set.
+        :raises: :class:`SAMVectorstoreBrokerError` if `self.user` is not set.
 
         **Example usage:**
 
@@ -193,59 +197,49 @@ class SAMProviderBroker(AbstractBroker):
         See Also:
 
            - :meth:`manifest_to_django_orm`
-           - :class:`SAMProvider`
-           - :class:`smarter.apps.account.models.Provider`
+           - :class:`SAMVectorstore`
+           - :class:`smarter.apps.account.models.Vectorstore`
            - :class:`smarter.lib.manifest.enum.SamKeys`
            - :class:`smarter.lib.manifest.enumSAMMetadataKeys`
-           - :class:`smarter.lib.manifest.enumSAMProviderSpecKeys`
+           - :class:`smarter.lib.manifest.enumSAMVectorstoreSpecKeys`
 
         """
-        if not isinstance(self.provider, Provider):
-            raise SAMProviderBrokerError(f"Expected type Provider but got {type(self.provider)}", thing=self.kind)
+        if not isinstance(self.vectorstore, VectorDatabase):
+            raise SAMVectorstoreBrokerError(
+                f"Expected type VectorDatabase but got {type(self.vectorstore)}", thing=self.kind
+            )
 
-        metadata = SAMProviderMetadata(
-            name=self.provider.name,
-            description=self.provider.description,
+        metadata = SAMVectorstoreMetadata(
+            name=self.vectorstore.name,
+            description=self.vectorstore.description,
             version="1.0.0",
-            tags=["example", "provider", "smarter-api"],
+            tags=["example", "vectorstore", "smarter-api"],
             annotations=[
-                {"smarter.sh/provider": self.provider.name},
+                {"smarter.sh/vectorstore": self.vectorstore.name},
                 {"smarter.sh/created_by": "smarter_provider_broker"},
             ],
         )
-        spec_provider = SAMProviderSpecProvider(
-            name=self.provider.name,
-            description=self.provider.description,
-            base_url=self.provider.base_url,
-            api_key="*****" if self.provider.api_key else None,
-            connectivity_test_path=self.provider.connectivity_test_path,
-            logo=self.provider.logo.url if self.provider.logo else None,
-            website_url=self.provider.website_url,
-            contact_email=self.provider.contact_email,
-            support_email=self.provider.support_email,
-            terms_of_service_url=self.provider.terms_of_service_url,
-            docs_url=self.provider.docs_url,
-            privacy_policy_url=self.provider.privacy_policy_url,
+        spec_provider = SAMVectorstoreORMSpec(
+            name=self.vectorstore.name,
+            description=self.vectorstore.description,
+            backend=self.vectorstore.backend,
+            host=self.vectorstore.host,
+            port=self.vectorstore.port,
+            auth_config=self.vectorstore.auth_config,
+            password=self.vectorstore.password.name if self.vectorstore.password else "missing",
+            config=self.vectorstore.config,
+            is_active=self.vectorstore.is_active,
+            provider=self.vectorstore.provider.name if self.vectorstore.provider else "missing",
+            provider_model=self.vectorstore.provider_model.name if self.vectorstore.provider_model else "missing",
         )
-        spec = SAMProviderSpec(provider=spec_provider)
-        status = SAMProviderStatus(
-            recordLocator=self.provider.record_locator,
-            created=self.provider.created_at,
-            modified=self.provider.updated_at,
-            is_active=self.provider.is_active,
-            is_flagged=self.provider.is_flagged,
-            is_deprecated=self.provider.is_deprecated,
-            is_suspended=self.provider.is_suspended,
-            is_verified=self.provider.is_verified,
-            ownership_requested=self.provider.ownership_requested if self.provider.ownership_requested else None,
-            contact_email_verified=self.provider.contact_email_verified,
-            support_email_verified=self.provider.support_email_verified,
-            tos_accepted_at=self.provider.tos_accepted_at,
-            tos_accepted_by=self.provider.tos_accepted_by.email if self.provider.tos_accepted_by else None,
-            can_activate=True,
+        spec = SAMVectorstoreSpec(vectorstore=spec_provider)
+        status = SAMVectorstoreStatus(
+            recordLocator=self.vectorstore.record_locator,
+            created=self.vectorstore.created_at,
+            modified=self.vectorstore.updated_at,
         )
 
-        provider_model = SAMProvider(
+        provider_model = SAMVectorstore(
             apiVersion=self.api_version,
             kind=self.kind,
             metadata=metadata,
@@ -259,14 +253,14 @@ class SAMProviderBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
-    def SerializerClass(self) -> Type[ProviderSerializer]:
+    def SerializerClass(self) -> Type[VectorstoreSerializer]:
         """
-        Get the Django REST Framework serializer class for the Smarter API Provider.
+        Get the Django REST Framework serializer class for the Smarter API Vectorstore.
 
-        :returns: The `ProviderSerializer` class.
+        :returns: The `VectorstoreSerializer` class.
         :rtype: Type[ModelSerializer]
         """
-        return ProviderSerializer
+        return VectorstoreSerializer
 
     @property
     def formatted_class_name(self) -> str:
@@ -283,35 +277,35 @@ class SAMProviderBroker(AbstractBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{SAMProviderBroker.__name__}[{id(self)}]"
+        return f"{parent_class}.{SAMVectorstoreBroker.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:
         """
-        Return the manifest kind string for the Smarter API Provider.
+        Return the manifest kind string for the Smarter API Vectorstore.
 
-        :returns: The manifest kind as a string (e.g., ``"Provider"``).
+        :returns: The manifest kind as a string (e.g., ``"Vectorstore"``).
 
         **Example usage:**
 
         .. code-block:: python
 
-           if broker.kind == "Provider":
-               print("This broker handles Provider manifests.")
+           if broker.kind == "Vectorstore":
+               print("This broker handles Vectorstore manifests.")
 
         """
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> Optional[SAMProvider]:
+    def manifest(self) -> Optional[SAMVectorstore]:
         """
-        Get the manifest for the Smarter API Provider as a Pydantic model.
+        Get the manifest for the Smarter API Vectorstore as a Pydantic model.
 
-        :returns: A `SAMProvider` Pydantic model instance representing the Smarter API Provider manifest, or None if not initialized.
+        :returns: A `SAMVectorstore` Pydantic model instance representing the Smarter API Vectorstore manifest, or None if not initialized.
 
         .. note::
 
-           The top-level manifest model (`SAMProvider`) must be explicitly initialized with manifest data, typically using ``**data`` from the manifest loader.
+           The top-level manifest model (`SAMVectorstore`) must be explicitly initialized with manifest data, typically using ``**data`` from the manifest loader.
 
         .. warning::
 
@@ -325,18 +319,18 @@ class SAMProviderBroker(AbstractBroker):
                 print(manifest.apiVersion, manifest.kind)
         """
         if self._manifest:
-            if not isinstance(self._manifest, SAMProvider):
-                raise SAMProviderBrokerError(
+            if not isinstance(self._manifest, SAMVectorstore):
+                raise SAMVectorstoreBrokerError(
                     f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
                     thing=self.kind,
                 )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMProvider(
+            self._manifest = SAMVectorstore(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMProviderMetadata(**self.loader.manifest_metadata),
-                spec=SAMProviderSpec(**self.loader.manifest_spec),
+                metadata=SAMVectorstoreMetadata(**self.loader.manifest_metadata),
+                spec=SAMVectorstoreSpec(**self.loader.manifest_spec),
             )
         return self._manifest
 
@@ -344,21 +338,21 @@ class SAMProviderBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def ORMMetaModelClass(self) -> Type[Provider]:
+    def ORMMetaModelClass(self) -> Type[VectorDatabase]:
         """
         Return the Django ORM meta model class for the broker.
 
         :return: The Django ORM meta model class definition for the broker.
-        :rtype: Type[Provider]
+        :rtype: Type[VectorDatabase]
         """
-        return Provider
+        return VectorDatabase
 
     @property
-    def ORMModelClass(self) -> Type[Provider]:
+    def ORMModelClass(self) -> Type[VectorDatabase]:
         """
-        Return the model class associated with the Smarter API Provider.
+        Return the model class associated with the Smarter API Vectorstore.
 
-        :returns: The `Provider` model class.
+        :returns: The `VectorDatabase` model class.
 
         **Example usage:**
 
@@ -369,15 +363,15 @@ class SAMProviderBroker(AbstractBroker):
 
         .. seealso::
 
-           - :class:`smarter.apps.provider.models.Provider`
+           - :class:`smarter.apps.vectorstore.models.VectorDatabase`
         """
-        return Provider
+        return VectorDatabase
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Return the Django model class associated with the Smarter API Provider manifest.
+        Return the Django model class associated with the Smarter API Vectorstore manifest.
 
-        :returns: The Django `Provider` model class.
+        :returns: The Django `VectorDatabase` model class.
 
         **Example usage:**
 
@@ -388,60 +382,53 @@ class SAMProviderBroker(AbstractBroker):
 
         .. seealso::
 
-           - :class:`smarter.apps.account.models.Provider`
+           - :class:`smarter.apps.account.models.VectorDatabase`
            - :meth:`manifest_to_django_orm`
            - :meth:`django_orm_to_manifest_dict`
            - :class:`smarter.apps.SamKeys`
            - :class:`SAMMetadataKeys`
-           - :class:`SAMProviderSpecKeys`
+           - :class:`SAMVectorstoreSpecKeys`
 
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
 
-        metadata = SAMProviderMetadata(
+        from smarter.apps.provider.models import Provider, ProviderModel
+
+        provider = Provider.objects.filter(name="ExampleProvider").first()
+        provider_model = ProviderModel.objects.filter(provider=provider).first()
+
+        metadata = SAMVectorstoreMetadata(
             name="acme_llm_company",
-            description="an example provider manifest for the Smarter API Provider",
+            description="an example vectorstore manifest for the Smarter API Vectorstore",
             version="1.0.0",
-            tags=["example", "provider", "smarter-api"],
+            tags=["example", "vectorstore", "smarter-api"],
             annotations=[
-                {"smarter.sh/provider": "example_provider"},
+                {"smarter.sh/vectorstore": "example_provider"},
                 {"smarter.sh/created_by": "smarter_provider_broker"},
             ],
         )
-        spec_provider = SAMProviderSpecProvider(
-            name="AcmeLLM",
-            description="Leading provider of innovative LLM solutions.",
-            base_url="https://api.acme-llm.com",
-            api_key="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-            connectivity_test_path="https://api.acme-llm.com/api/v1/ping",
-            logo="https://www.acme-llm.com/assets/logo.png",
-            website_url="https://www.acme-llm.com",
-            contact_email="contact@acme-llm.com",
-            support_email="support@acme-llm.com",
-            terms_of_service_url="https://www.acme-llm.com/terms",
-            docs_url="https://docs.acme-llm.com",
-            privacy_policy_url="https://www.acme-llm.com/privacy",
+        spec_provider = SAMVectorstoreORMSpec(
+            name="AcmeVectorStore",
+            description="A leading vectorstore of innovative AI solutions.",
+            backend="pinecone",
+            host="https://example-vectorstore.com",
+            port=443,
+            auth_config={"api_key": "example_api_key"},
+            password="example_password",
+            config={"region": "us-west1", "index_name": "example_index"},
+            is_active=True,
+            provider=provider.name if provider else "acme_llm_provider",
+            provider_model=provider_model.name if provider_model else "super_duper_llm_model",
         )
-        spec = SAMProviderSpec(provider=spec_provider)
-        status = SAMProviderStatus(
+        spec = SAMVectorstoreSpec(vectorstore=spec_provider)
+        status = SAMVectorstoreStatus(
             recordLocator="example_record_locator",
             created=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
             modified=datetime.datetime(2024, 1, 15, 12, 0, 0, tzinfo=datetime.timezone.utc),
-            is_active=True,
-            is_flagged=False,
-            is_deprecated=False,
-            is_suspended=False,
-            is_verified=True,
-            ownership_requested="ceo@acme-llm.com",
-            contact_email_verified=datetime.datetime(2024, 1, 2, 0, 0, 0, tzinfo=datetime.timezone.utc),
-            support_email_verified=datetime.datetime(2024, 1, 2, 0, 0, 0, tzinfo=datetime.timezone.utc),
-            tos_accepted_at=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
-            tos_accepted_by="ceo@acme-llm.com",
-            can_activate=True,
         )
 
-        provider_model = SAMProvider(
+        provider_model = SAMVectorstore(
             apiVersion=self.api_version,
             kind=self.kind,
             metadata=metadata,
@@ -453,7 +440,7 @@ class SAMProviderBroker(AbstractBroker):
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Retrieve Smarter API Provider manifests as a list of serialized Pydantic models.
+        Retrieve Smarter API Vectorstore manifests as a list of serialized Pydantic models.
 
         :param request: The Django `HttpRequest` object.
         :param args: Additional positional arguments.
@@ -463,10 +450,10 @@ class SAMProviderBroker(AbstractBroker):
 
         .. note::
 
-           If a provider name is provided in `kwargs`, only manifests for that provider are returned; otherwise, all manifests for the account are listed.
+           If a vectorstore name is provided in `kwargs`, only manifests for that vectorstore are returned; otherwise, all manifests for the account are listed.
 
-        :raises: :class:`SAMProviderBrokerError`
-           If serialization fails for any provider
+        :raises: :class:`SAMVectorstoreBrokerError`
+           If serialization fails for any vectorstore
 
         **Example usage:**
 
@@ -477,7 +464,7 @@ class SAMProviderBroker(AbstractBroker):
 
         See Also:
 
-           - :class:`smarter.apps.provider.serializers.ProviderSerializer`
+           - :class:`smarter.apps.vectorstore.serializers.VectorstoreSerializer`
            - :meth:`django_orm_to_manifest_dict`
            - :class:`smarter.lib.manifest.response.SmarterJournaledJsonResponse`
            - :class:`smarter.lib.manifest.enum.SamKeys`
@@ -491,25 +478,25 @@ class SAMProviderBroker(AbstractBroker):
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
         if name:
-            providers = Provider.objects.filter(user_profile__account=self.account, name=name)
+            providers = VectorDatabase.objects.filter(user_profile__account=self.account, name=name)
         else:
-            providers = Provider.objects.filter(user_profile__account=self.account)
-        providers = [provider for provider in providers]
+            providers = VectorDatabase.objects.filter(user_profile__account=self.account)
+        providers = [vectorstore for vectorstore in providers]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
-        for provider in providers:
-            if provider.user_profile in valid_resource_owners_for_user(self.user_profile):
+        for vectorstore in providers:
+            if vectorstore.user_profile in valid_resource_owners_for_user(self.user_profile):
                 try:
-                    self._provider = provider
+                    self._vectordatabase = vectorstore
                     model_dump = self.django_orm_to_manifest_dict()
                     if not model_dump:
-                        raise SAMProviderBrokerError(
-                            f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
+                        raise SAMVectorstoreBrokerError(
+                            f"Model dump failed for {self.kind} {vectorstore.name}", thing=self.kind, command=command
                         )
                     data.append(model_dump)
                 except Exception as e:
-                    raise SAMProviderBrokerError(
-                        f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
+                    raise SAMVectorstoreBrokerError(
+                        f"Model dump failed for {self.kind} {vectorstore.name}", thing=self.kind, command=command
                     ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -517,7 +504,7 @@ class SAMProviderBroker(AbstractBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: self.params,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=ProviderSerializer()),
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=VectorstoreSerializer()),
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
@@ -525,7 +512,7 @@ class SAMProviderBroker(AbstractBroker):
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Apply the manifest data to the Django ORM `Provider` model and persist changes to the database.
+        Apply the manifest data to the Django ORM `Vectorstore` model and persist changes to the database.
 
 
         .. note::
@@ -547,7 +534,7 @@ class SAMProviderBroker(AbstractBroker):
 
            Fields in the manifest that are not editable (e.g., ``id``, ``date_joined``, ``last_login``, ``username``, ``is_superuser``) are removed before saving to the ORM model.
 
-        :raises: :class:`SAMProviderBrokerError`
+        :raises: :class:`SAMVectorstoreBrokerError`
            If the user instance is not set or is invalid
 
 
@@ -561,22 +548,20 @@ class SAMProviderBroker(AbstractBroker):
         See Also:
 
            - :meth:`manifest_to_django_orm`
-           - :class:`smarter.apps.provider.models.Provider`
-           - :class:`SAMProviderBrokerError`
+           - :class:`smarter.apps.vectorstore.models.Vectorstore`
+           - :class:`SAMVectorstoreBrokerError`
 
         """
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
-        if not self.user:
-            raise SAMProviderBrokerError(
-                message="User must be set to apply provider manifest.",
-                thing=self.kind,
-                command=command,
-            )
+
+        if not isinstance(self.user, User):
+            raise SAMVectorstoreBrokerError("User is not set or invalid", thing=self.kind, command=command)
+
         if not self.user.is_staff:
-            raise SAMProviderBrokerError(
-                message="Only account admins can apply provider manifests.",
+            raise SAMVectorstoreBrokerError(
+                message="Only account admins can apply vectorstore manifests.",
                 thing=self.kind,
                 command=command,
             )
@@ -585,15 +570,6 @@ class SAMProviderBroker(AbstractBroker):
             "id",
             "account",
             "owner",
-            SAMProviderSpecKeys.STATUS.value,
-            SAMProviderSpecKeys.IS_ACTIVE.value,
-            SAMProviderSpecKeys.IS_VERIFIED.value,
-            SAMProviderSpecKeys.IS_FEATURED.value,
-            SAMProviderSpecKeys.IS_DEPRECATED.value,
-            SAMProviderSpecKeys.IS_FLAGGED.value,
-            SAMProviderSpecKeys.IS_SUSPENDED.value,
-            SAMProviderSpecKeys.TOS_ACCEPTED_AT.value,
-            SAMProviderSpecKeys.TOS_ACCEPTED_BY.value,
             "tags",
         ]
         try:
@@ -602,14 +578,14 @@ class SAMProviderBroker(AbstractBroker):
             for field in readonly_fields:
                 data.pop(field, None)
             for key, value in data.items():
-                setattr(self.provider, key, value)
-            if not isinstance(self.provider, Provider):
-                raise SAMProviderBrokerError("Provider is not set", thing=self.kind, command=command)
-            self.provider.save()
-            self.provider.tags.set(tags)
+                setattr(self.vectorstore, key, value)
+            if not isinstance(self.vectorstore, VectorDatabase):
+                raise SAMVectorstoreBrokerError("Vectorstore is not set", thing=self.kind, command=command)
+            self.vectorstore.save()
+            self.vectorstore.tags.set(tags)
         except Exception as e:
-            raise SAMProviderBrokerError(
-                f"Failed to apply {self.kind} {self.provider if isinstance(self.provider, Provider) else None}",
+            raise SAMVectorstoreBrokerError(
+                f"Failed to apply {self.kind} {self.vectorstore if isinstance(self.vectorstore, VectorDatabase) else None}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -621,7 +597,7 @@ class SAMProviderBroker(AbstractBroker):
 
         .. attention::
 
-            this is not implemented for the Smarter API Provider manifest.
+            this is not implemented for the Smarter API Vectorstore manifest.
 
         :raises: :class:`SAMBrokerErrorNotImplemented`
             Always raised to indicate that the chat operation is not implemented for this manifest type.
@@ -638,7 +614,7 @@ class SAMProviderBroker(AbstractBroker):
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Describe the Smarter API Provider manifest by retrieving the corresponding Django ORM `Provider` model instance.
+        Describe the Smarter API Vectorstore manifest by retrieving the corresponding Django ORM `Vectorstore` model instance.
 
         :param request: The Django `HttpRequest` object.
         :param args: Additional positional arguments.
@@ -647,9 +623,9 @@ class SAMProviderBroker(AbstractBroker):
         :returns: A `SmarterJournaledJsonResponse` containing the user manifest data.
 
         :raises: :class:`SAMBrokerErrorNotFound`
-           If the provider with the specified name does not exist or is not associated with the account.
-        :raises: :class:`SAMProviderBrokerError`
-           If serialization fails for the provider.
+           If the vectorstore with the specified name does not exist or is not associated with the account.
+        :raises: :class:`SAMVectorstoreBrokerError`
+           If serialization fails for the vectorstore.
 
         """
         command = self.describe.__name__
@@ -657,25 +633,25 @@ class SAMProviderBroker(AbstractBroker):
 
         name = kwargs.get("name")
         try:
-            self._provider = Provider.objects.get(user_profile__account=self.account, name=name)
-        except Provider.DoesNotExist as e:
+            self._vectordatabase = VectorDatabase.objects.get(user_profile__account=self.account, name=name)
+        except VectorDatabase.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {name}. Not found", thing=self.kind, command=command
             ) from e
 
-        if self.provider:
+        if self.vectorstore:
             try:
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
-                raise SAMProviderBrokerError(
-                    f"Failed to describe {self.kind} {self.provider.name}", thing=self.kind, command=command
+                raise SAMVectorstoreBrokerError(
+                    f"Failed to describe {self.kind} {self.vectorstore.name}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Delete the Smarter API Provider manifest by removing the corresponding Django ORM `Provider` model instance.
+        Delete the Smarter API Vectorstore manifest by removing the corresponding Django ORM `Vectorstore` model instance.
 
         :param request: The Django `HttpRequest` object.
         :param args: Additional positional arguments.
@@ -684,22 +660,19 @@ class SAMProviderBroker(AbstractBroker):
         :returns: A `SmarterJournaledJsonResponse` indicating the result of the delete operation.
 
         :raises: :class:`SAMBrokerErrorNotFound`
-           If the provider with the specified name does not exist.
-        :raises: :class:`SAMProviderBrokerError`
-           If deletion fails for the provider.
+           If the vectorstore with the specified name does not exist.
+        :raises: :class:`SAMVectorstoreBrokerError`
+           If deletion fails for the vectorstore.
 
         """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
 
-        if not self.user:
-            raise SAMProviderBrokerError(
-                message="User must be set to delete provider.",
-                thing=self.kind,
-                command=command,
-            )
+        if not isinstance(self.user, User):
+            raise SAMVectorstoreBrokerError("User is not set or invalid", thing=self.kind, command=command)
+
         if not self.user.is_staff:
-            raise SAMProviderBrokerError(
+            raise SAMVectorstoreBrokerError(
                 message="Only account admins can delete providers.",
                 thing=self.kind,
                 command=command,
@@ -709,57 +682,90 @@ class SAMProviderBroker(AbstractBroker):
             raise SAMBrokerErrorNotImplemented(message="Params must be a dictionary", thing=self.kind, command=command)
         name = self.params.get("name")
         try:
-            provider = Provider.objects.get(user_profile=self.user_profile, name=name)
-        except Provider.DoesNotExist as e:
+            vectorstore = VectorDatabase.objects.get(user_profile=self.user_profile, name=name)
+        except VectorDatabase.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to delete {self.kind} {name}. Not found", thing=self.kind, command=command
             ) from e
 
-        if provider:
+        if vectorstore:
             try:
-                provider.delete()
+                vectorstore.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                raise SAMProviderBrokerError(
-                    f"Failed to delete {self.kind} {provider.name}", thing=self.kind, command=command
+                raise SAMVectorstoreBrokerError(
+                    f"Failed to delete {self.kind} {vectorstore.name}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Deploy the Smarter API Provider manifest by activating the corresponding Django ORM `Provider` model instance.
+        Deploy the Smarter API Vectorstore manifest by activating the corresponding Django ORM `Vectorstore` model instance.
 
         :param request: The Django `HttpRequest` object.
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
-        :raises: :class:`SAMProviderBrokerError`
+        :raises: :class:`SAMVectorstoreBrokerError`
            If deployment fails for the user.
 
         :returns: A `SmarterJournaledJsonResponse` indicating the result of the deploy operation.
         """
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
+
+        if not isinstance(self.user, User):
+            raise SAMVectorstoreBrokerError("User is not set or invalid", thing=self.kind, command=command)
+
+        if not isinstance(self.vectorstore, VectorDatabase):
+            raise SAMVectorstoreBrokerError("Vectorstore is not set or invalid", thing=self.kind, command=command)
+
+        try:
+            self.vectorstore.is_active = True
+            self.vectorstore.save()
+            data = self.django_orm_to_manifest_dict()
+            return self.json_response_ok(command=command, data=data)
+        except Exception as e:
+            raise SAMVectorstoreBrokerError(
+                f"Failed to deploy {self.kind} {self.vectorstore.name if self.vectorstore else 'unknown'}",
+                thing=self.kind,
+                command=command,
+            ) from e
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Undeploy the Smarter API Provider manifest by deactivating the corresponding Django ORM `Provider` model instance.
+        Undeploy the Smarter API Vectorstore manifest by deactivating the corresponding Django ORM `Vectorstore` model instance.
 
         :param request: The Django `HttpRequest` object.
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
-        :raises: :class:`SAMProviderBrokerError`
+        :raises: :class:`SAMVectorstoreBrokerError`
            If undeployment fails for the user.
         """
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
+        if not isinstance(self.user, User):
+            raise SAMVectorstoreBrokerError("User is not set or invalid", thing=self.kind, command=command)
+
+        if not isinstance(self.vectorstore, VectorDatabase):
+            raise SAMVectorstoreBrokerError("Vectorstore is not set or invalid", thing=self.kind, command=command)
+
+        try:
+            self.vectorstore.is_active = False
+            self.vectorstore.save()
+            data = self.django_orm_to_manifest_dict()
+            return self.json_response_ok(command=command, data=data)
+        except Exception as e:
+            raise SAMVectorstoreBrokerError(
+                f"Failed to undeploy {self.kind} {self.vectorstore.name if self.vectorstore else 'unknown'}",
+                thing=self.kind,
+                command=command,
+            ) from e
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Retrieve logs related to the Smarter API Provider manifest.
+        Retrieve logs related to the Smarter API Vectorstore manifest.
 
         :param request: The Django `HttpRequest` object.
         :param args: Additional positional arguments.

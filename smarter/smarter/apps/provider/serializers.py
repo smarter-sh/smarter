@@ -37,7 +37,7 @@ class ProviderSerializer(MetaDataWithOwnershipModelSerializer):
         read_only_fields = ["created_at", "updated_at", "owner", "account"]
 
     def get_queryset(self):
-        name = self.request.GET.get("name")
+        name = self.request.GET.get("name")  # type: ignore
         if name:
             provider = get_provider(provider_name=name)
             return Provider.objects.filter(pk=provider.pk)
@@ -64,8 +64,8 @@ class ProviderModelSerializer(MetaDataWithOwnershipModelSerializer):
 
     def get_queryset(self):
 
-        name = self.request.GET.get("name")
-        model_name = self.request.GET.get("model_name")
+        name = self.request.GET.get("name")  # type: ignore
+        model_name = self.request.GET.get("model_name")  # type: ignore
 
         if name and model_name:
             try:
@@ -98,8 +98,8 @@ class ProviderVerificationSerializer(SmarterCamelCaseSerializer):
         read_only_fields = ["created_at", "updated_at", "provider"]
 
     def get_queryset(self):
-        name = self.request.GET.get("name")
-        verification_type = self.request.GET.get("verification_type")
+        name = self.request.GET.get("name")  # type: ignore
+        verification_type = self.request.GET.get("verification_type")  # type: ignore
 
         if name:
             try:
@@ -128,13 +128,13 @@ class ProviderModelVerificationSerializer(SmarterCamelCaseSerializer):
     def get_queryset(self):
         try:
             provider_model = get_model_for_provider(
-                provider_name=self.request.GET.get("name"), model_name=self.request.GET.get("model_name")
+                provider_name=self.request.GET.get("name"), model_name=self.request.GET.get("model_name")  # type: ignore
             )
         except SmarterException:
             return ProviderModelVerification.objects.none()
 
         queryset = ProviderModelVerification.objects.filter(provider_model=provider_model)
-        verification_type = self.request.GET.get("verification_type")
+        verification_type = self.request.GET.get("verification_type")  # type: ignore
         if verification_type:
             queryset = queryset.filter(verification_type__iexact=verification_type)
         return queryset
