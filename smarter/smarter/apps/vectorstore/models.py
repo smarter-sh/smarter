@@ -288,3 +288,6 @@ class VectorDatabase(MetaDataWithOwnershipModel):
 
     def __str__(self):
         return f"{self.id} - {self.name} ({self.backend}) - {self.user_profile}"  # type: ignore
+
+
+__all__ = ["VectorDatabase", "VectorDatabaseBackendKind", "VectorDatabaseStatus"]
