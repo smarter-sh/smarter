@@ -650,6 +650,7 @@ INSTALLED_APPS = [
     "smarter.apps.docs",
     "smarter.apps.plugin",
     "smarter.apps.provider",
+    "smarter.apps.vectorstore",
     # 3rd party apps
     # -------------------------------
     "rest_framework",

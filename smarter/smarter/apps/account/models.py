@@ -1163,7 +1163,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         user_profile: Optional[UserProfile] = None,
         username: Optional[str] = None,
         account: Optional[Account] = None,
-    ) -> Optional[models.Model]:
+    ) -> models.Model:
         """
         Retrieve a model instance using caching to optimize performance.
 
@@ -1187,8 +1187,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :param account: The account associated with the model instance.
         :param invalidate: Whether to invalidate the cache for this retrieval.
 
-        :returns: The model instance if found, otherwise None.
-        :rtype: Optional[models.Model]
+        :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
+        :rtype: models.Model
         """
         logger_prefix = formatted_text(cls.__name__ + ".get_cached_object()")
         logger.debug(
