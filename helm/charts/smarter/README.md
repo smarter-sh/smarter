@@ -12,7 +12,7 @@ AI resource management and orchestration platform.
 
 ```bash
 helm upgrade --install --force smarter oci://ghcr.io/smarter-sh/charts/smarter \
-  --version 0.13.211 \
+  --version 0.13.215 \
   --timeout 900s \
   --namespace smarter-prod \
   --create-namespace \
@@ -32,7 +32,7 @@ to manage sensitive values like passwords and API keys.
 
 ## Prerequisites
 
-- Kubernetes >=1.28.0
+- Kubernetes >=1.31.0
 - Helm 3.8+
 
 ## Installation

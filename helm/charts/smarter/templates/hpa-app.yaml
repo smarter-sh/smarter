@@ -11,25 +11,31 @@
 # Important: labels are referenced by other resources, in this repo as well as
 # external repos including https://github.com/smarter-sh/smarter-infrastructure.
 # Do not arbitrarily change labels without updating all references.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources in order to allow pod-level communication
+# between backing services. If the label is missing then the network policies are
+# assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ .Values.app.name }}
-  namespace: {{ .Values.namespace }}
+  name: "{{ .Values.global.appName }}"
+  namespace: "{{ .Values.namespace }}"
   annotations:
-    meta.helm.sh/release-name: {{ .Values.app.name }}
-    meta.helm.sh/release-namespace: {{ .Values.namespace }}
-    meta.helm.sh/application-version: {{ .Chart.Version }}
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
+    meta.helm.sh/application-version: "{{ .Chart.Version }}"
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.app.name }}-worker"
-    app.kubernetes.io/application-group: {{ .Values.app.name }}
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-worker"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .Values.app.name }}
+    name: "{{ .Values.global.appName }}"
   minReplicas: {{ .Values.hpa.minReplicas | default 2 }}
   maxReplicas: {{ .Values.hpa.maxReplicas | default 25 }}
   metrics:

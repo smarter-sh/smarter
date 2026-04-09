@@ -12,3 +12,4 @@ Developer Guides
    guides/semantic-versioning
    guides/openai-api-getting-started-guide
    guides/openai-json-examples
+   guides/claude-code

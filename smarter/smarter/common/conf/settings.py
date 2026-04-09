@@ -230,18 +230,20 @@ class Settings(BaseSettings):
 
     anthropic_api_key: SecretStr = Field(
         settings_defaults.ANTHROPIC_API_KEY,
-        description="The API key for Anthropic services. Masked by pydantic SecretStr.",
-        examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
+        description="API key for Anthropic services. Masked by pydantic SecretStr.",
+        examples=["sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
         title="Anthropic API Key",
     )
     """
-    The API key for Anthropic services. Masked by pydantic SecretStr.
-    This setting provides the API key used to authenticate with Anthropic services.
-    It is required for accessing Anthropic's APIs and services.
+    API key for Anthropic services, used to authenticate requests to the Anthropic API.
+    Required when registering Anthropic as a provider via a Provider manifest.
+
+    Set via the ``SMARTER_ANTHROPIC_API_KEY`` environment variable in ``.env``.
+    Obtain a key at https://console.anthropic.com/ under Settings → API Keys.
 
     :type: SecretStr
     :default: Value from ``settings_defaults.ANTHROPIC_API_KEY``
-    :raises SmarterConfigurationError: If the value is not a valid API key.
+    :raises SmarterConfigurationError: If the value is not a valid SecretStr.
     """
 
     @before_field_validator("anthropic_api_key")
@@ -627,6 +629,7 @@ class Settings(BaseSettings):
 
         :type: bool
         """
+        logger.debug("Checking if AWS is configured with aws_profile, or aws_access_key_id and aws_secret_access_key.")
         return services.is_connected_to_aws()
 
     aws_eks_cluster_name: str = Field(

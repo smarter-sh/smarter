@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.215](https://github.com/smarter-sh/smarter/compare/v0.13.214...v0.13.215) (2026-04-08)
+
+### Bug Fixes
+
+* UserProfile.DoesNotExist exception in user receiver ([aae27ac](https://github.com/smarter-sh/smarter/commit/aae27ac4ac5c9bc3a5f9679caf20dd9be3df95e0))
+
+## [0.13.214](https://github.com/smarter-sh/smarter/compare/v0.13.213...v0.13.214) (2026-04-07)
+
+### Bug Fixes
+
+* from scratch init w/o aws ([1c48204](https://github.com/smarter-sh/smarter/commit/1c48204ce7303856af6edeea483fd629abeaf89a))
+
+## [0.13.213](https://github.com/smarter-sh/smarter/compare/v0.13.212...v0.13.213) (2026-04-06)
+
+### Bug Fixes
+
+* force a new release ([2b13f4b](https://github.com/smarter-sh/smarter/commit/2b13f4b41ce8c60252d3585f94b131e670cf5ec3))
+
+## [0.13.212](https://github.com/smarter-sh/smarter/compare/v0.13.211...v0.13.212) (2026-04-04)
+
+### Bug Fixes
+
+* resolve Windows Git Bash path separator in ACTIVATE_VENV and replace hardcoded admin email with SMARTER_ROOT_DOMAIN ([5da6724](https://github.com/smarter-sh/smarter/commit/5da672494ac601a01cfe2a3131de9134a07ee5f6))
+
 ## [0.13.211](https://github.com/smarter-sh/smarter/compare/v0.13.210...v0.13.211) (2026-03-31)
 
 ### Bug Fixes

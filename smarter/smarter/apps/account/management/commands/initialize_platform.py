@@ -1,10 +1,14 @@
 """Django manage.py initialize_platform command."""
 
+import logging
+
 from django.core.management import call_command
 
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.lib.django.management.base import SmarterCommand
+
+logger = logging.getLogger(__name__)
 
 
 class Command(SmarterCommand):
@@ -92,10 +96,24 @@ class Command(SmarterCommand):
 
         # Initialize Smarter platform components.
         # ---------------------------------------------------------------------
-        call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
-        call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
-        call_command(
-            "verify_dns_configuration"
-        )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records
+        try:
+            call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("Failed to initialize Waffle switches: %s", e)
+
+        try:
+            call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("Failed to initialize providers: %s", e)
+
+        try:
+            call_command(
+                "verify_dns_configuration"
+            )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("Failed to verify DNS configuration: %s", e)
 
         self.handle_completed_success()
