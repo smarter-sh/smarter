@@ -117,6 +117,9 @@ class SmarterJournalThings(SmarterEnumAbstract):
     SECRET = "Secret"
     """Smarter Secret resource. A Django ORM model instance."""
 
+    VECTORSTORE = "Vectorstore"
+    """Smarter Vectorstore resource. A Django ORM model instance."""
+
     @classmethod
     def choices(cls) -> list[tuple[str, str]]:
         """Django model choices for SmarterJournalThings."""
@@ -137,6 +140,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.CHATBOT.value, cls.CHATBOT.value),
             (cls.PROVIDER.value, cls.PROVIDER.value),
             (cls.SECRET.value, cls.SECRET.value),
+            (cls.VECTORSTORE.value, cls.VECTORSTORE.value),
         ]
 
 

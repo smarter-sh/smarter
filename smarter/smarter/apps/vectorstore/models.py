@@ -7,7 +7,16 @@ from typing import Optional
 
 from django.db import models
 
-from smarter.apps.account.models import MetaDataWithOwnershipModel, Secret
+from smarter.apps.account.models import (
+    MetaDataWithOwnershipModel,
+    Secret,
+    User,
+    UserProfile,
+)
+from smarter.apps.account.utils import (
+    SmarterCachedObjects,
+    get_cached_admin_user_for_account,
+)
 from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.common.exceptions import SmarterValueError
@@ -195,6 +204,59 @@ class VectorDatabase(MetaDataWithOwnershipModel):
             return _get_object_by_name_and_backend(name=name, backend=backend)
 
         return super().get_cached_object(*args, **kwargs)  # type: ignore
+
+    @classmethod
+    def get_cached_vectorstores_for_user(cls, user: User, invalidate: bool = False) -> list["VectorDatabase"]:
+        """
+        Return a list of all instances of :class:`VectorDatabase`.
+
+        This method retrieves all vector store objects associated with the user's account.
+        It is useful for enumerating all available vector stores for a given user.
+
+        :param user: The user whose vector stores should be retrieved.
+        :type user: User
+        :return: A list of all vector store instances for the user's account.
+        :rtype: list[VectorDatabase]
+
+        **Example:**
+
+        .. code-block:: python
+
+            vectorstores = VectorDatabase.get_cached_vectorstores_for_user(user)
+            # returns [<VectorDatabase ...>, <VectorDatabase ...>, ...]
+
+        See also:
+
+        - :class:`SqlConnection`
+        - :class:`ApiConnection`
+        - :func:`smarter.apps.account.utils.get_cached_account_for_user`
+        """
+
+        if user is None:
+            logger.warning("%s.get_cached_vectorstores_for_user: user is None", cls.formatted_class_name)
+            return []
+        user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
+        admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore
+        admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore
+        instances = []
+
+        # create querysets for user_profile, account and smarter account.
+        # FIX NOTE: WE STILL NEED TO PREFETCH AND CACHE.
+        user_profile_qs = cls.objects.filter(user_profile=user_profile)
+        user_account_qs = cls.objects.filter(user_profile=admin_user_profile)  # type: ignore
+        smarter_account_qs = cls.objects.filter(user_profile__account=SmarterCachedObjects.smarter_admin_user_profile)  # type: ignore
+        instances.extend(user_profile_qs)
+        instances.extend(user_account_qs)
+        instances.extend(smarter_account_qs)
+
+        logger.debug(
+            "%s.get_cached_connections_for_user: Found these connections %s for user %s",
+            cls.formatted_class_name,
+            instances,
+            user,
+        )
+        unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
+        return list(unique_instances)
 
     def __str__(self):
         return f"{self.id} - {self.name} ({self.backend}) - {self.user_profile}"  # type: ignore
