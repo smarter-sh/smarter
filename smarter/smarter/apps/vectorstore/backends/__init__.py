@@ -10,6 +10,9 @@ from urllib.parse import urlparse
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.apps.vectorstore.models import VectorDatabase
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # Smarter VectorStore backends
 from .base import BaseBackend
@@ -17,7 +20,15 @@ from .pinecode import PineconeBackend
 from .qdrant import QdrantBackend
 from .weaviate import WeaviateBackend
 
-logger = logging.getLogger(__name__)
+
+# pylint: disable=unused-argument
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.VECTORSTORE_LOGGING)
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class Backends:

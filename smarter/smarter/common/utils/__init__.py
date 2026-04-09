@@ -13,6 +13,7 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 
 from smarter.common.utils.utils import (
     bool_environment_variable,
+    camel_case_object_name,
     camel_to_snake,
     camel_to_snake_dict,
     dict_is_contained_in,
@@ -38,6 +39,7 @@ from .version import get_semantic_version
 __all__ = [
     "bool_environment_variable",
     "camel_to_snake",
+    "camel_case_object_name",
     "camel_to_snake_dict",
     "dict_is_contained_in",
     "dict_is_subset",

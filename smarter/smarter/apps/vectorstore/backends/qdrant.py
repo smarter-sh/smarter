@@ -3,7 +3,11 @@ Backend implementation for the Qdrant vectorstore.
 see: https://qdrant.tech/
 """
 
-from .base import BaseBackend
+from .base import (
+    BaseBackend,
+    VectorStoreBackendConnectionError,
+    VectorStoreBackendError,
+)
 
 
 class QdrantBackend(BaseBackend):

@@ -13,7 +13,6 @@ from django.conf import settings
 from django.db import models
 
 from smarter.apps.account.models import (
-    Account,
     MetaDataWithOwnershipModel,
     Secret,
     User,
@@ -503,6 +502,7 @@ class Provider(MetaDataWithOwnershipModel):
 
             account_providers = (
                 Provider.objects.filter(user_profile=admin_user_profile)
+                .prefetch_related("tags")
                 .select_related(
                     "user_profile",
                     "user_profile__account",
@@ -512,6 +512,7 @@ class Provider(MetaDataWithOwnershipModel):
             )
             smarter_providers = (
                 Provider.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile)
+                .prefetch_related("tags")
                 .select_related(
                     "user_profile",
                     "user_profile__account",
@@ -560,7 +561,7 @@ class Provider(MetaDataWithOwnershipModel):
         account = get_cached_account_for_user(invalidate=invalidate, user=user)
         if not account:
             return None
-        return cls.get_cached_provider_by_account_id_and_name(invalidate=invalidate, account_id=account.id, name=name)
+        return cls.get_cached_provider_by_account_id_and_name(invalidate=invalidate, account_id=account.id, name=name)  # type: ignore
 
     def validate(self) -> None:
         """Validate the provider before saving."""
@@ -706,8 +707,10 @@ def get_provider(provider_name: str) -> Provider:
     except Provider.DoesNotExist as e:
         raise SmarterValueError(f"Provider {provider_name} does not exist.") from e
 
-    if not provider.account.is_active:
-        raise SmarterBusinessRuleViolation(f"Provider account {provider.account.account_number} is not active.")
+    if not provider.user_profile.account.is_active:
+        raise SmarterBusinessRuleViolation(
+            f"Provider account {provider.user_profile.account.account_number} is not active."
+        )
 
     # the Provider might be inactive for a variety of reasons: suspended, flagged, deprecated, or something else.
     # We don't care why we just want to know if it is active or not.
