@@ -9,6 +9,7 @@ from django.http import HttpRequest
 
 from smarter.apps.account.models import User
 from smarter.apps.account.utils import valid_resource_owners_for_user
+from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.apps.vectorstore.manifest.models.vectorstore.const import MANIFEST_KIND
 from smarter.apps.vectorstore.manifest.models.vectorstore.metadata import (
     SAMVectorstoreMetadata,
@@ -108,10 +109,10 @@ class SAMVectorstoreBroker(AbstractBroker):
     # override the base abstract manifest model with the Vectorstore model
     _manifest: Optional[SAMVectorstore] = None
     _pydantic_model: Type[SAMVectorstore] = SAMVectorstore
-    _vectorstore: Optional[VectorDatabase] = None
+    _vectordatabase: Optional[VectorDatabase] = None
 
     @property
-    def vectorstore(self) -> Optional[VectorDatabase]:
+    def vectordatabase(self) -> Optional[VectorDatabase]:
         """
         Return the VectorDatabase associated with this broker, if available.
 
@@ -121,9 +122,9 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         .. code-block:: python
 
-           vectorstore = broker.vectorstore
-           if vectorstore:
-               print(f"VectorDatabase name: {vectorstore.name}")
+           vectordatabase = broker.vectordatabase
+           if vectordatabase:
+               print(f"VectorDatabase name: {vectordatabase.name}")
 
         See Also:
 
@@ -204,39 +205,39 @@ class SAMVectorstoreBroker(AbstractBroker):
            - :class:`smarter.lib.manifest.enumSAMVectorstoreSpecKeys`
 
         """
-        if not isinstance(self.vectorstore, VectorDatabase):
+        if not isinstance(self.vectordatabase, VectorDatabase):
             raise SAMVectorstoreBrokerError(
-                f"Expected type VectorDatabase but got {type(self.vectorstore)}", thing=self.kind
+                f"Expected type VectorDatabase but got {type(self.vectordatabase)}", thing=self.kind
             )
 
         metadata = SAMVectorstoreMetadata(
-            name=self.vectorstore.name,
-            description=self.vectorstore.description,
+            name=self.vectordatabase.name,
+            description=self.vectordatabase.description,
             version="1.0.0",
             tags=["example", "vectorstore", "smarter-api"],
             annotations=[
-                {"smarter.sh/vectorstore": self.vectorstore.name},
+                {"smarter.sh/vectorstore": self.vectordatabase.name},
                 {"smarter.sh/created_by": "smarter_provider_broker"},
             ],
         )
         spec_provider = SAMVectorstoreORMSpec(
-            name=self.vectorstore.name,
-            description=self.vectorstore.description,
-            backend=self.vectorstore.backend,
-            host=self.vectorstore.host,
-            port=self.vectorstore.port,
-            auth_config=self.vectorstore.auth_config,
-            password=self.vectorstore.password.name if self.vectorstore.password else "missing",
-            config=self.vectorstore.config,
-            is_active=self.vectorstore.is_active,
-            provider=self.vectorstore.provider.name if self.vectorstore.provider else "missing",
-            provider_model=self.vectorstore.provider_model.name if self.vectorstore.provider_model else "missing",
+            name=self.vectordatabase.name,
+            description=self.vectordatabase.description,
+            backend=self.vectordatabase.backend,
+            host=self.vectordatabase.host,
+            port=self.vectordatabase.port,
+            auth_config=self.vectordatabase.auth_config,
+            password=self.vectordatabase.password.name if self.vectordatabase.password else "missing",
+            config=self.vectordatabase.config,
+            is_active=self.vectordatabase.is_active,
+            provider=self.vectordatabase.provider.name if self.vectordatabase.provider else "missing",
+            provider_model=self.vectordatabase.provider_model.name if self.vectordatabase.provider_model else "missing",
         )
         spec = SAMVectorstoreSpec(vectorstore=spec_provider)
         status = SAMVectorstoreStatus(
-            recordLocator=self.vectorstore.record_locator,
-            created=self.vectorstore.created_at,
-            modified=self.vectorstore.updated_at,
+            recordLocator=self.vectordatabase.record_locator,
+            created=self.vectordatabase.created_at,
+            modified=self.vectordatabase.updated_at,
         )
 
         provider_model = SAMVectorstore(
@@ -392,8 +393,6 @@ class SAMVectorstoreBroker(AbstractBroker):
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-
-        from smarter.apps.provider.models import Provider, ProviderModel
 
         provider = Provider.objects.filter(name="ExampleProvider").first()
         provider_model = ProviderModel.objects.filter(provider=provider).first()
@@ -578,14 +577,14 @@ class SAMVectorstoreBroker(AbstractBroker):
             for field in readonly_fields:
                 data.pop(field, None)
             for key, value in data.items():
-                setattr(self.vectorstore, key, value)
-            if not isinstance(self.vectorstore, VectorDatabase):
+                setattr(self.vectordatabase, key, value)
+            if not isinstance(self.vectordatabase, VectorDatabase):
                 raise SAMVectorstoreBrokerError("Vectorstore is not set", thing=self.kind, command=command)
-            self.vectorstore.save()
-            self.vectorstore.tags.set(tags)
+            self.vectordatabase.save()
+            self.vectordatabase.tags.set(tags)
         except Exception as e:
             raise SAMVectorstoreBrokerError(
-                f"Failed to apply {self.kind} {self.vectorstore if isinstance(self.vectorstore, VectorDatabase) else None}",
+                f"Failed to apply {self.kind} {self.vectordatabase if isinstance(self.vectordatabase, VectorDatabase) else None}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -639,13 +638,13 @@ class SAMVectorstoreBroker(AbstractBroker):
                 f"Failed to describe {self.kind} {name}. Not found", thing=self.kind, command=command
             ) from e
 
-        if self.vectorstore:
+        if self.vectordatabase:
             try:
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMVectorstoreBrokerError(
-                    f"Failed to describe {self.kind} {self.vectorstore.name}", thing=self.kind, command=command
+                    f"Failed to describe {self.kind} {self.vectordatabase.name}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
@@ -717,17 +716,17 @@ class SAMVectorstoreBroker(AbstractBroker):
         if not isinstance(self.user, User):
             raise SAMVectorstoreBrokerError("User is not set or invalid", thing=self.kind, command=command)
 
-        if not isinstance(self.vectorstore, VectorDatabase):
+        if not isinstance(self.vectordatabase, VectorDatabase):
             raise SAMVectorstoreBrokerError("Vectorstore is not set or invalid", thing=self.kind, command=command)
 
         try:
-            self.vectorstore.is_active = True
-            self.vectorstore.save()
+            self.vectordatabase.is_active = True
+            self.vectordatabase.save()
             data = self.django_orm_to_manifest_dict()
             return self.json_response_ok(command=command, data=data)
         except Exception as e:
             raise SAMVectorstoreBrokerError(
-                f"Failed to deploy {self.kind} {self.vectorstore.name if self.vectorstore else 'unknown'}",
+                f"Failed to deploy {self.kind} {self.vectordatabase.name if self.vectordatabase else 'unknown'}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -748,17 +747,17 @@ class SAMVectorstoreBroker(AbstractBroker):
         if not isinstance(self.user, User):
             raise SAMVectorstoreBrokerError("User is not set or invalid", thing=self.kind, command=command)
 
-        if not isinstance(self.vectorstore, VectorDatabase):
+        if not isinstance(self.vectordatabase, VectorDatabase):
             raise SAMVectorstoreBrokerError("Vectorstore is not set or invalid", thing=self.kind, command=command)
 
         try:
-            self.vectorstore.is_active = False
-            self.vectorstore.save()
+            self.vectordatabase.is_active = False
+            self.vectordatabase.save()
             data = self.django_orm_to_manifest_dict()
             return self.json_response_ok(command=command, data=data)
         except Exception as e:
             raise SAMVectorstoreBrokerError(
-                f"Failed to undeploy {self.kind} {self.vectorstore.name if self.vectorstore else 'unknown'}",
+                f"Failed to undeploy {self.kind} {self.vectordatabase.name if self.vectordatabase else 'unknown'}",
                 thing=self.kind,
                 command=command,
             ) from e
