@@ -1,4 +1,4 @@
-"""Smarter API Manifest - User.metadata"""
+"""Smarter API Manifest - Vectorstore.metadata"""
 
 import os
 from typing import ClassVar
@@ -11,7 +11,7 @@ filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
-class SAMProviderMetadata(AbstractSAMMetadataBase):
-    """Smarter API Provider Manifest - Metadata class."""
+class SAMVectorstoreMetadata(AbstractSAMMetadataBase):
+    """Smarter API Vectorstore Manifest - Metadata class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
