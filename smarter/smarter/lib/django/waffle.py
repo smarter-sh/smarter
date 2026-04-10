@@ -58,11 +58,11 @@ try:
 except ImportError:
     MySQLdbOperationalError = None
 
-from smarter.common.helpers.console_helpers import formatted_text_green
+from smarter.common.helpers.console_helpers import formatted_text
 
 logger = logging.getLogger(__name__)
-prefix = formatted_text_green(f"{__name__}.switch_is_active()")
-cache_prefix = f"{__name__}"
+prefix = f"{formatted_text(__name__)}.switch_is_active()"
+cache_prefix = __name__
 
 
 # pylint: disable=C0115
