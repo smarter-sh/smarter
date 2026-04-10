@@ -5,6 +5,7 @@ Developer Guides
    :maxdepth: 1
 
    guides/contributing
+   guides/developer-feature-checklist
    guides/documentation
    guides/12-factor-app
    guides/code-of-conduct
