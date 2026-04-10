@@ -16,6 +16,7 @@
     "**/.tox": true,
     "**/.terraform": true,
     "**/dist": true,
+    "**/venv": true,
     "**/keen_v3.0.6": true,
     "**/staticfiles": true
   },
