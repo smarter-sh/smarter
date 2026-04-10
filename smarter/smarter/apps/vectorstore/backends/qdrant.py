@@ -4,13 +4,13 @@ see: https://qdrant.tech/
 """
 
 from .base import (
-    BaseBackend,
+    SmarterVectorstoreBackend,
     VectorStoreBackendConnectionError,
     VectorStoreBackendError,
 )
 
 
-class QdrantBackend(BaseBackend):
+class QdrantBackend(SmarterVectorstoreBackend):
     """
     Backend implementation for the Qdrant vectorstore.
     """

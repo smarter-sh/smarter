@@ -7,6 +7,9 @@ import logging
 from typing import Dict, Optional, Type
 from urllib.parse import urlparse
 
+from langchain_core.embeddings.embeddings import Embeddings
+from langchain_core.vectorstores import VectorStore
+
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.apps.vectorstore.models import VectorDatabase
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
@@ -15,7 +18,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # Smarter VectorStore backends
-from .base import BaseBackend
+from .base import SmarterVectorstoreBackend
 from .pinecode import PineconeBackend
 from .qdrant import QdrantBackend
 from .weaviate import WeaviateBackend
@@ -71,21 +74,27 @@ class Backends:
 
     """
 
-    _backends: Dict[str, Type[BaseBackend]] = {
+    _backends: Dict[str, Type[SmarterVectorstoreBackend]] = {
         SmarterVectorStoreBackends.QDRANT.value: QdrantBackend,
         SmarterVectorStoreBackends.WEAVIATE.value: WeaviateBackend,
         SmarterVectorStoreBackends.PINECONE.value: PineconeBackend,
     }
 
     @classmethod
-    def get_backend(cls, name: str, backend: str) -> BaseBackend:
+    def get_backend(
+        cls,
+        name: str,
+        backend: str,
+        embeddings: Optional[Embeddings] = None,
+        vector_store: Optional[VectorStore] = None,
+    ) -> SmarterVectorstoreBackend:
         """Case insensitive backend getter."""
         backend = backend.lower()
         if backend not in SmarterVectorStoreBackends.all():
             raise SmarterValueError(f"Unsupported backend backend: {backend}")
         BackendClass = cls._backends[backend]
         db = VectorDatabase.get_cached_object(name=name, backend=backend)
-        return BackendClass(db)  # type: ignore
+        return BackendClass(db, embeddings=embeddings, vector_store=vector_store)  # type: ignore
 
     @classmethod
     def snake_to_camel(cls, snake_str):

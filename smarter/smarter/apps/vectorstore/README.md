@@ -10,4 +10,4 @@
 1. add to .enum.SmarterVectorStoreBackends
 2. add to .models.VectorDatabaseBackendKind
 3. add to .backends.Backends._backends
-4. create a new class in .backends that descends from BaseBackend
+4. create a new class in .backends that descends from SmarterVectorstoreBackend
