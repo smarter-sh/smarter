@@ -35,28 +35,28 @@ class TestChatProviders(SmarterTestBase):
     def verify_providers_name_readonly(self):
         """Test that chat provider names are read-only."""
         with self.assertRaises(AttributeError):
-            chat_providers.openai.provider = "new_name"
+            chat_providers.openai.provider = "new_name"  # type: ignore
 
         with self.assertRaises(AttributeError):
-            chat_providers.googleai.provider = "new_name"
+            chat_providers.googleai.provider = "new_name"  # type: ignore
 
         with self.assertRaises(AttributeError):
-            chat_providers.metaai.provider = "new_name"
+            chat_providers.metaai.provider = "new_name"  # type: ignore
 
     def verify_providers_get_handler(self):
         """Test provider get_handler()."""
 
         handler = chat_providers.get_handler(provider=chat_providers.openai.provider)
-        self.assertIsInstance(handler, Callable)
+        self.assertEqual(handler, type(Callable))
 
         handler = chat_providers.get_handler(provider=chat_providers.googleai.provider)
-        self.assertIsInstance(handler, Callable)
+        self.assertEqual(handler, type(Callable))
 
         handler = chat_providers.get_handler(provider=chat_providers.metaai.provider)
-        self.assertIsInstance(handler, Callable)
+        self.assertEqual(handler, type(Callable))
 
         handler = chat_providers.get_handler()
-        self.assertIsInstance(handler, Callable)
+        self.assertEqual(handler, type(Callable))
 
     def verify_providers_all(self):
         """Test provider all()."""

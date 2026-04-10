@@ -4,13 +4,13 @@ see: https://weaviate.io/
 """
 
 from .base import (
-    BaseBackend,
+    SmarterVectorstoreBackend,
     VectorStoreBackendConnectionError,
     VectorStoreBackendError,
 )
 
 
-class WeaviateBackend(BaseBackend):
+class WeaviateBackend(SmarterVectorstoreBackend):
     """
     Backend implementation for the Weaviate vectorstore.
     """

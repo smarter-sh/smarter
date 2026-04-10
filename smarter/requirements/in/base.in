@@ -56,7 +56,13 @@ email-validator                         # Pydantic email validator for EmailStr
 
 # LLM support
 # ------------
+langchain                               # -----------------------------
+langchain_community                     # for pinecone vectorstore backend
+langchain_openai                        #
+langchain_pinecone                      #
+langchain-text-splitters                # -----------------------------
 openai~=1.0                             # OpenAI API
+pinecone                                # Pinecone vector database support
 google-genai                            # Google Generative AI API
 llamaai                                 # Llama AI API
 googlemaps~=4.0                         # Google Maps API for weather function calling feature

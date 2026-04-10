@@ -287,7 +287,7 @@ class VectorDatabase(MetaDataWithOwnershipModel):
         return get_cached_vectorstores_for_user_profile_id(pk=user_profile.id)  # type: ignore
 
     def __str__(self):
-        return f"{self.id} - {self.name} ({self.backend}) - {self.user_profile}"  # type: ignore
+        return f"{self.id}: {self.name}({self.backend}) - {self.user_profile}"  # type: ignore
 
 
 __all__ = ["VectorDatabase", "VectorDatabaseBackendKind", "VectorDatabaseStatus"]
