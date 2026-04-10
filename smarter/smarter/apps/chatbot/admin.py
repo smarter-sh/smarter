@@ -1,7 +1,7 @@
 # pylint: disable=W0212
 """Admin configuration for the chatbot app."""
 
-from smarter.apps.account.models import get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
     smarter_filter_queryset_for_user,
@@ -106,6 +106,8 @@ class ChatBotCustomDomainAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
         if user.is_authenticated:
             return qs
         else:
@@ -129,6 +131,9 @@ class ChatBotCustomDomainDNSAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
+
         if user.is_authenticated:
             return qs
         else:
@@ -152,6 +157,8 @@ class ChatBotAPIKeyAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
         if user.is_authenticated:
             return qs
         else:

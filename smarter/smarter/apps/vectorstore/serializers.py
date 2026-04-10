@@ -23,7 +23,7 @@ class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
 
     owner = UserMiniSerializer(read_only=True)
     account = AccountMiniSerializer(read_only=True)
-    api_key = SecretSerializer(read_only=True)
+    password = SecretSerializer(read_only=True)
     provider = ProviderSerializer(read_only=True)
     provider_model = ProviderModelSerializer(read_only=True)
 
