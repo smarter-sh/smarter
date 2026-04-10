@@ -318,11 +318,13 @@ class Account(MetaDataModel):
     @classmethod
     def get_cached_object(
         cls,
+        *args,
         invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         account_number: Optional[str] = None,
         company_name: Optional[str] = None,
+        **kwargs,
     ) -> Optional["Account"]:
         """
         Retrieve an Account instance by account number with caching.
@@ -404,7 +406,7 @@ class Account(MetaDataModel):
         if company_name:
             return _get_account_by_company_name(company_name=company_name, class_name=Account.__name__)
 
-        return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
+        return super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, **kwargs)  # type: ignore[return-value]
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -933,12 +935,14 @@ class UserProfile(MetaDataModel):
     @classmethod
     def get_cached_object(
         cls,
+        *args,
         invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         user: Optional[User] = None,
         username: Optional[str] = None,
         account: Optional[Account] = None,
+        **kwargs,
     ) -> "UserProfile":
         """
         Retrieve a model instance by primary key or name, using caching to
@@ -1107,7 +1111,7 @@ class UserProfile(MetaDataModel):
             if account:
                 return _get_object_by_account(account=account, class_name=UserProfile.__name__)
 
-        return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
+        return super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, **kwargs)  # type: ignore[return-value]
 
     def __str__(self):
         try:
@@ -1156,6 +1160,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
     @classmethod
     def get_cached_object(
         cls,
+        *args,
         invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
@@ -1163,6 +1168,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         user_profile: Optional[UserProfile] = None,
         username: Optional[str] = None,
         account: Optional[Account] = None,
+        **kwargs,
     ) -> models.Model:
         """
         Retrieve a model instance using caching to optimize performance.
@@ -1382,7 +1388,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             return _get_object_by_name_and_account(name=name, account=account, class_name=cls.__name__)
 
         # no ownership info provided, so fall back to the super().
-        return super().get_cached_object(invalidate=invalidate, pk=pk, name=name)  # type: ignore[return-value]
+        return super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, **kwargs)  # type: ignore[return-value]
 
     @classmethod
     def get_cached_objects(
@@ -1910,12 +1916,14 @@ class Secret(MetaDataWithOwnershipModel):
     @classmethod
     def get_cached_object(
         cls,
+        *args,
         invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         user: Optional[User] = None,
         user_profile: Optional[UserProfile] = None,
         account: Optional[Account] = None,
+        **kwargs,
     ) -> Optional["Secret"]:
         """
         Retrieve a model instance using caching to optimize performance.
@@ -1955,7 +1963,14 @@ class Secret(MetaDataWithOwnershipModel):
         )
 
         retval = super().get_cached_object(
-            invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account
+            *args,
+            invalidate=invalidate,
+            pk=pk,
+            name=name,
+            user=user,
+            user_profile=user_profile,
+            account=account,
+            **kwargs,
         )
         if isinstance(retval, Secret):
             return retval

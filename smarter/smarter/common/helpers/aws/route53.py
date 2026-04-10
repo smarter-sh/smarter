@@ -80,7 +80,7 @@ class AWSRoute53(AWSBase):
         """
         logger.debug("%s.get_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
-        response = self.client.list_hosted_zones()
+        response = self.client.list_hosted_zones()  # type: ignore
         for hosted_zone in response["HostedZones"]:
             if hosted_zone["Name"] == domain_name or hosted_zone["Name"] == f"{domain_name}.":
                 return hosted_zone
@@ -135,7 +135,7 @@ class AWSRoute53(AWSBase):
         if isinstance(hosted_zone, dict):
             return (hosted_zone, False)
 
-        self.client.create_hosted_zone(
+        self.client.create_hosted_zone(  # type: ignore
             Name=domain_name,
             CallerReference=str(time.time()),  # Unique string used to identify the request
             HostedZoneConfig={"Comment": "Managed by Smarter", "PrivateZone": False},
@@ -249,7 +249,7 @@ class AWSRoute53(AWSBase):
         hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name)
 
         # Get all record sets
-        paginator = self.client.get_paginator("list_resource_record_sets")
+        paginator = self.client.get_paginator("list_resource_record_sets")  # type: ignore
         record_sets = []
         for page in paginator.paginate(HostedZoneId=hosted_zone_id):
             for record_set in page["ResourceRecordSets"]:
@@ -258,13 +258,13 @@ class AWSRoute53(AWSBase):
 
         # Delete all record sets
         for record_set in record_sets:
-            self.client.change_resource_record_sets(
+            self.client.change_resource_record_sets(  # type: ignore
                 HostedZoneId=hosted_zone_id,
                 ChangeBatch={"Changes": [{"Action": "DELETE", "ResourceRecordSet": record_set}]},
             )
 
         # Delete the hosted zone
-        self.client.delete_hosted_zone(Id=hosted_zone_id)
+        self.client.delete_hosted_zone(Id=hosted_zone_id)  # type: ignore
 
     def get_dns_record(self, hosted_zone_id: str, record_name: str, record_type: str) -> Optional[dict]:
         """
@@ -309,7 +309,7 @@ class AWSRoute53(AWSBase):
         def name_match(record_name, record) -> bool:
             return record["Name"] == record_name or record["Name"] == f"{record_name}."
 
-        paginator = self.client.get_paginator("list_resource_record_sets")
+        paginator = self.client.get_paginator("list_resource_record_sets")  # type: ignore
         for page in paginator.paginate(HostedZoneId=hosted_zone_id):
             for record in page["ResourceRecordSets"]:
                 if (
@@ -353,7 +353,7 @@ class AWSRoute53(AWSBase):
         :rtype: list
         """
         logger.debug("%s.get_ns_records() hosted_zone_id: %s", self.formatted_class_name, hosted_zone_id)
-        response = self.client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
+        response = self.client.list_resource_record_sets(HostedZoneId=hosted_zone_id)  # type: ignore
         retval = []
         for record in response["ResourceRecordSets"]:
             if record["Type"] == "NS":
@@ -465,7 +465,7 @@ class AWSRoute53(AWSBase):
             change_batch["Changes"][0]["ResourceRecordSet"]["TTL"] = record_ttl
 
         try:
-            self.client.change_resource_record_sets(
+            self.client.change_resource_record_sets(  # type: ignore
                 HostedZoneId=hosted_zone_id,
                 ChangeBatch=change_batch,
             )
@@ -560,7 +560,7 @@ class AWSRoute53(AWSBase):
                 ]
 
         print("change_batch", change_batch)
-        self.client.change_resource_record_sets(
+        self.client.change_resource_record_sets(  # type: ignore
             HostedZoneId=hosted_zone_id,
             ChangeBatch=change_batch,
         )

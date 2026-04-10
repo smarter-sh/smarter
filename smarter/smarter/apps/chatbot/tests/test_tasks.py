@@ -35,8 +35,8 @@ class TestChatBotTasks(TestAccountMixin):
         # same account number for DNS verifications in local.api.smarter.sh in
         # AWS Route53
         cls.smarter_account = smarter_cached_objects.smarter_account
-        cls.smarter_user_profile = smarter_cached_objects.smarter_user_profile
-        cls.smarter_admin_user = smarter_cached_objects.smarter_admin_user
+        cls.smarter_user_profile = smarter_cached_objects.smarter_admin_user_profile
+        cls.smarter_admin_user = smarter_cached_objects.smarter_admin
 
     def setUp(self):
         """Set up test fixtures."""
@@ -44,9 +44,9 @@ class TestChatBotTasks(TestAccountMixin):
         common_name = "test-chatbot-tasks"
 
         self.domain_name = f"{common_name}.{aws_helper.aws.environment_api_domain}"
-        self.hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=self.domain_name)
+        self.hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=self.domain_name)  # type: ignore
         if self.hosted_zone:
-            aws_helper.route53.delete_hosted_zone(domain_name=self.domain_name)
+            aws_helper.route53.delete_hosted_zone(domain_name=self.domain_name)  # type: ignore
 
         self.chatbot, _ = ChatBot.objects.get_or_create(
             user_profile=self.smarter_user_profile,
@@ -68,28 +68,28 @@ class TestChatBotTasks(TestAccountMixin):
             pass
 
         try:
-            self.hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=self.domain_name)
+            self.hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=self.domain_name)  # type: ignore
             if self.hosted_zone:
-                aws_helper.route53.delete_hosted_zone(domain_name=self.domain_name)
-            certificate_arn = aws_helper.acm.get_certificate_arn(domain_name=self.domain_name)
+                aws_helper.route53.delete_hosted_zone(domain_name=self.domain_name)  # type: ignore
+            certificate_arn = aws_helper.acm.get_certificate_arn(domain_name=self.domain_name)  # type: ignore
             if certificate_arn:
-                aws_helper.acm.delete_certificate(certificate_arn=certificate_arn)
+                aws_helper.acm.delete_certificate(certificate_arn=certificate_arn)  # type: ignore
         # pylint: disable=W0718
         except Exception:
             pass
         super().tearDown()
 
     def test_create_hosted_zone(self):
-        self.hosted_zone = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=self.domain_name)
+        self.hosted_zone = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=self.domain_name)  # type: ignore
         self.assertIsNotNone(self.hosted_zone)
-        aws_helper.route53.delete_hosted_zone(domain_name=self.domain_name)
+        aws_helper.route53.delete_hosted_zone(domain_name=self.domain_name)  # type: ignore
 
     def test_create_custom_domain_dns_record(self):
         """Test that we can create a DNS record for a custom domain."""
 
         print("test_create_custom_domain_dns_record()")
         resolved_domain = aws_helper.aws.domain_resolver(self.domain_name)
-        hosted_zone = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=resolved_domain)
+        hosted_zone = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=resolved_domain)  # type: ignore
         self.assertIsNotNone(hosted_zone)
 
         custom_domain, _ = ChatBotCustomDomain.objects.get_or_create(
@@ -99,16 +99,16 @@ class TestChatBotTasks(TestAccountMixin):
         )
 
         create_custom_domain_dns_record(
-            chatbot_custom_domain_id=custom_domain.id,
+            chatbot_custom_domain_id=custom_domain.id,  # type: ignore
             record_name=resolved_domain,
             record_type="TXT",
             record_value="test",
             record_ttl=600,
         )
 
-        dns_record = aws_helper.route53.get_dns_record(
+        dns_record = aws_helper.route53.get_dns_record(  # type: ignore
             hosted_zone_id=custom_domain.aws_hosted_zone_id, record_name=resolved_domain, record_type="TXT"
-        )
+        )  # type: ignore
         if not isinstance(dns_record, dict):
             self.fail(f"Expected dns_record to be a dict, got {type(dns_record)}: {dns_record}")
         self.assertIsNotNone(dns_record)
@@ -118,7 +118,7 @@ class TestChatBotTasks(TestAccountMixin):
 
     def test_verify_domain(self):
         """Test that we can verify a domain."""
-        hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=smarter_settings.root_domain)
+        hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=smarter_settings.root_domain)  # type: ignore
         is_verified = verify_domain(
             domain_name=smarter_settings.root_domain, record_type="NS", hosted_zone_id=hosted_zone_id
         )
@@ -128,20 +128,20 @@ class TestChatBotTasks(TestAccountMixin):
         """Test that we can create an A record for a domain."""
 
         resolved_domain = aws_helper.aws.domain_resolver(self.domain_name)
-        hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=aws_helper.aws.environment_api_domain)
-        hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=hosted_zone)
+        hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=aws_helper.aws.environment_api_domain)  # type: ignore
+        hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=hosted_zone)  # type: ignore
 
         print("resolved_domain", resolved_domain)
         print("hosted_zone", hosted_zone)
         print("hosted_zone_id", hosted_zone_id)
-        dns_record = aws_helper.route53.create_domain_a_record(
+        dns_record = aws_helper.route53.create_domain_a_record(  # type: ignore
             hostname=resolved_domain, api_host_domain=aws_helper.aws.environment_api_domain
-        )
+        )  # type: ignore
 
         print("dns_record", dns_record)
-        dns_record = aws_helper.route53.get_dns_record(
+        dns_record = aws_helper.route53.get_dns_record(  # type: ignore
             hosted_zone_id=hosted_zone_id, record_name=resolved_domain, record_type="A"
-        )
+        )  # type: ignore
         print("dns_record (queried)", dns_record)
         # mcdaniel: 2021-09-29: This test is failing even though the the record is being created.
         # aws_helper.route53.get_dns_record() weirdly returns None even though the record is there.
@@ -157,7 +157,7 @@ class TestChatBotTasks(TestAccountMixin):
     def test_deploy_default_api(self):
         """Test that we can deploy the default API."""
 
-        deploy_default_api(chatbot_id=self.chatbot.id, with_domain_verification=False)
+        deploy_default_api(chatbot_id=self.chatbot.id, with_domain_verification=False)  # type: ignore
 
         logger.debug("self.chatbot.default_host: %s", self.chatbot.default_host)
         self.assertTrue(SmarterValidator.is_valid_hostname(self.chatbot.default_host))
@@ -190,13 +190,13 @@ class TestChatBotTasks(TestAccountMixin):
         logger.debug("self.chatbot.mode(self.chatbot.url): %s", self.chatbot.mode(self.chatbot.url))
         self.assertEqual(self.chatbot.mode(self.chatbot.url), "sandbox")
 
-        hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(
+        hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(  # type: ignore
             domain_name=aws_helper.aws.environment_api_domain
         )
         a_record = None
         retries = 5
         while retries > 0 and a_record is None:
-            a_record = aws_helper.route53.get_dns_record(
+            a_record = aws_helper.route53.get_dns_record(  # type: ignore
                 hosted_zone_id=hosted_zone_id, record_name=self.chatbot.default_host, record_type="A"
             )
             if a_record is None:
@@ -231,8 +231,8 @@ class TestChatBotTasks(TestAccountMixin):
 
     def test_undeploy_default_api(self):
         """Test that we can undeploy the default API."""
-        deploy_default_api(chatbot_id=self.chatbot.id, with_domain_verification=False)
-        undeploy_default_api(chatbot_id=self.chatbot.id)
+        deploy_default_api(chatbot_id=self.chatbot.id, with_domain_verification=False)  # type: ignore
+        undeploy_default_api(chatbot_id=self.chatbot.id)  # type: ignore
 
         self.assertFalse(self.chatbot.deployed)
 

@@ -156,7 +156,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: Hashed ID string (URL-safe, no padding)
         :rtype: str
         """
-        id_value = int(self.id) + self.HASH_FLOOR
+        id_value = int(self.id) + self.HASH_FLOOR  # type: ignore[union-attr]
         encoded = str(base64.urlsafe_b64encode(str(id_value).encode()).decode().rstrip("="))
         padded_encoded = f"{self.HASH_PREFIX}{encoded}{self.HASH_SUFFIX}"
         return padded_encoded
@@ -217,7 +217,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                 retval,
             )
             return retval
-        except (base64.binascii.Error, ValueError) as e:
+        except (base64.binascii.Error, ValueError) as e:  # type: ignore[name-defined]
             logger.error(
                 "%s.id_from_hashed_id() - Failed to decode hashed_id '%s': %s",
                 cls.formatted_class_name,
@@ -706,7 +706,7 @@ class MetaDataModel(TimestampedModel):
 
     @classmethod
     def get_cached_object(
-        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, name: Optional[str] = None
+        cls, *args, invalidate: Optional[bool] = False, pk: Optional[int] = None, name: Optional[str] = None, **kwargs
     ) -> Optional["MetaDataModel"]:
         """
         Retrieve a model instance by primary key or name, using caching to
@@ -779,7 +779,7 @@ class MetaDataModel(TimestampedModel):
         if name:
             return _get_object_by_name(name)
 
-        return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
+        return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
     @classmethod
     def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["MetaDataModel"]:
