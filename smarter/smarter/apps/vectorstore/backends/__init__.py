@@ -47,7 +47,6 @@ class Backends:
         - ``delete``
         - ``upsert``
         - ``query``
-        - ``get_stats``
 
     Each Backend is responsible for brokering the correct implementation class
     for a given operation by analyzing the manifest's ``Kind`` field. This
