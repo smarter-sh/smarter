@@ -21,12 +21,12 @@ these rules will save you time and improve the quality of your code.
     - get_cached_object() and get_cached_objects() class methods on SAM ORM models
     - :func:`smarter.lib.cache.cache_results` decorator
 3. Add your documentation to docs/source and test with make sphinx-docs
-4. Ensure that your logging entries conform to the Smarter logging style guidelines.
+4. Ensure that your logging entries conform to the `Smarter logging style guidelines <../smarter-logging.html>`__
 5. Ensure that your unit test coverage ratio is at least 85% for any new code you add.
 6. Register the Django app in the `INSTALLED_APPS` list in `settings.py`.
 7. Add your app's top-level urls.py to smarter/urls/.
 8. Ensure that your Django models inherit from smarter.lib.django.models.
-9. Include database migrations for any new models.
+9.  Include database migrations for any new models.
 10. Include serializers for all models
 11. Add API views and viewsets, and ensure they cover all models
 12. Add Django admin classes for all models using smarter.apps.dashboard.admin.SmarterCustomerModelAdmin
