@@ -579,8 +579,7 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
     The context includes:
 
     - URLs for the terms of service, privacy policy, and cookie policy documents.
-    - A dynamically generated copyright notice that includes the current year
-    and corporate name.
+    - A dynamically generated copyright notice that includes the current year and corporate name.
 
     All values are sourced from Django settings, allowing for easy
     customization and environment-specific overrides.

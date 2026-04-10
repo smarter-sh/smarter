@@ -23,14 +23,14 @@ these rules will save you time and improve the quality of your code.
 3. Add your documentation to docs/source and test with make sphinx-docs
 4. Ensure that your logging entries conform to the `Smarter logging style guidelines <../smarter-logging.html>`__
 5. Ensure that your unit test coverage ratio is at least 85% for any new code you add.
-6. Register the Django app in the `INSTALLED_APPS` list in `settings.py`.
+6. Register your Django app in `smarter.settings.base.INSTALLED_APPS`.
 7. Add your app's top-level urls.py to smarter/urls/.
 8. Ensure that your Django models inherit from smarter.lib.django.models.
 9.  Include database migrations for any new models.
 10. Include serializers for all models
 11. Add API views and viewsets, and ensure they cover all models
 12. Add Django admin classes for all models using smarter.apps.dashboard.admin.SmarterCustomerModelAdmin
-13. Add your new settings to smarter.common.conf.SmarterSettings and include sensible defaults and documentation for each setting.
+13. Add your new settings to :class:`smarter.common.conf.settings.SmarterSettings` and include sensible defaults and documentation for each setting.
 14. Include a tasks module
 15. Include a management commands module
 16. Include signals and receivers modules.
