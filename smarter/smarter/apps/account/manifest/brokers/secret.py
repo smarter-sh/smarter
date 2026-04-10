@@ -1,4 +1,4 @@
-# pylint: disable=W0718
+# pylint: disable=W0718,C0302
 """Smarter API User Manifest handler"""
 
 import logging
@@ -22,7 +22,7 @@ from smarter.apps.account.manifest.models.secret.spec import (
 )
 from smarter.apps.account.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
-from smarter.apps.account.models import Secret
+from smarter.apps.account.models import Account, Secret, User, UserProfile
 from smarter.apps.account.signals import broker_ready
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.lib import json
@@ -321,6 +321,11 @@ class SAMSecretBroker(AbstractBroker):
            :class:`Secret`
            :meth:`django_orm_to_manifest_dict`
         """
+        if not isinstance(self.manifest, SAMSecret):
+            raise SAMSecretBrokerError(
+                f"Manifest must be of type {SAMSecret.__name__} to convert to Django ORM dict, got {type(self.manifest)}: {self.manifest}",
+                thing=self.kind,
+            )
         metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
@@ -367,6 +372,17 @@ class SAMSecretBroker(AbstractBroker):
             return None
         secret_dict: dict
 
+        if not isinstance(self.account, Account):
+            raise SAMSecretBrokerError(
+                message="Account not set for broker. Cannot convert to manifest dict.",
+                thing=self.kind,
+            )
+        if not isinstance(self.user_profile, UserProfile):
+            raise SAMSecretBrokerError(
+                message="User profile not set for broker. Cannot convert to manifest dict.",
+                thing=self.kind,
+            )
+
         try:
             secret_dict = model_to_dict(self.secret)
             secret_dict = self.snake_to_camel(secret_dict)  # type: ignore[assignment]
@@ -396,7 +412,7 @@ class SAMSecretBroker(AbstractBroker):
             ),
             status=SAMSecretStatus(
                 accountNumber=self.account.account_number,
-                username=self.user_profile.cached_user.username,
+                username=self.user_profile.user.username,
                 recordLocator=self.secret.record_locator,
                 created=self.secret.created_at,
                 modified=self.secret.updated_at,
@@ -538,7 +554,7 @@ class SAMSecretBroker(AbstractBroker):
                 ),
                 status=SAMSecretStatus(
                     accountNumber=self.account.account_number,
-                    username=self.user_profile.cached_user.username,
+                    username=self.user_profile.user.username,
                     recordLocator=self.secret.record_locator,
                     created=self.secret.created_at,
                     modified=self.secret.updated_at,
@@ -680,6 +696,13 @@ class SAMSecretBroker(AbstractBroker):
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
 
+        if not isinstance(self.manifest, SAMSecret):
+            raise SAMSecretBrokerError(
+                f"Manifest must be of type {SAMSecret.__name__} to get data, got {type(self.manifest)}: {self.manifest}",
+                thing=self.kind,
+                command=command,
+            )
+
         if name:
             secrets = Secret.objects.filter(user_profile=self.user_profile, name=name)
         else:
@@ -689,14 +712,14 @@ class SAMSecretBroker(AbstractBroker):
         for secret in secrets:
             try:
                 self.init_secret()
-                if not self.user_profile:
+                if not isinstance(self.user_profile, UserProfile):
                     raise SAMSecretBrokerError(
-                        "User profile is not set. Cannot create SecretTransformer.",
+                        message="User profile not set for broker. Cannot create SecretTransformer.",
                         thing=self.kind,
                         command=command,
                     )
                 self._secret_transformer = SecretTransformer(
-                    user_profile=self.user_profile, name=secret.name, secret_id=secret.id, secret=secret
+                    user_profile=self.user_profile, name=secret.name, secret_id=secret.id, secret=secret  # type: ignore
                 )
                 model_dump = self.manifest.model_dump()
                 if not model_dump:
@@ -765,6 +788,13 @@ class SAMSecretBroker(AbstractBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
+        if not isinstance(self.user, User):
+            raise SAMSecretBrokerError(
+                message="User not set for broker. Cannot apply manifest.",
+                thing=self.kind,
+                command=command,
+            )
+
         if not self.user.is_staff:
             raise SAMSecretBrokerError(
                 message="Only account admin can apply secret manifests.",
@@ -779,6 +809,13 @@ class SAMSecretBroker(AbstractBroker):
                 command=command,
             )
 
+        if not isinstance(self.secret_transformer, SecretTransformer):
+            raise SAMSecretBrokerError(
+                message="Secret transformer not properly initialized. Cannot apply manifest.",
+                thing=self.kind,
+                command=command,
+            )
+
         if not self.secret:
             self.secret_transformer.secret = Secret()
 
@@ -790,6 +827,12 @@ class SAMSecretBroker(AbstractBroker):
         if self.secret_transformer.ready:
             try:
                 self.secret_transformer.save()
+                if not isinstance(self.secret, Secret):
+                    raise SAMSecretBrokerError(
+                        message="Secret not properly initialized after save. Manifest may not have been applied correctly.",
+                        thing=self.kind,
+                        command=command,
+                    )
                 self.secret.refresh_from_db()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
@@ -859,9 +902,21 @@ class SAMSecretBroker(AbstractBroker):
         self._name = secret_name
 
         self._secret_transformer = SecretTransformer(name=secret_name, user_profile=self.user_profile)
+        if not isinstance(self.secret_transformer, SecretTransformer):
+            raise SAMSecretBrokerError(
+                message="Secret transformer not properly initialized. Cannot describe manifest.",
+                thing=self.kind,
+                command=command,
+            )
         if not self.secret_transformer.secret:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {secret_name} belonging to {self.user_profile}. Not found",
+                thing=self.kind,
+                command=command,
+            )
+        if not isinstance(self.manifest, SAMSecret):
+            raise SAMSecretBrokerError(
+                f"Manifest must be of type {SAMSecret.__name__} to describe, got {type(self.manifest)}: {self.manifest}",
                 thing=self.kind,
                 command=command,
             )
@@ -899,6 +954,13 @@ class SAMSecretBroker(AbstractBroker):
         logger.debug("%s.delete() called", self.formatted_class_name)
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not isinstance(self.user, User):
+            raise SAMSecretBrokerError(
+                message="User not set for broker. Cannot delete manifest.",
+                thing=self.kind,
+                command=command,
+            )
 
         if not self.user.is_staff:
             raise SAMSecretBrokerError(
