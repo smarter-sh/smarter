@@ -19,7 +19,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # Smarter VectorStore backends
 from .base import SmarterVectorstoreBackend
-from .pinecode import PineconeBackend
+from .pinecone import PineconeBackend
 from .qdrant import QdrantBackend
 from .weaviate import WeaviateBackend
 

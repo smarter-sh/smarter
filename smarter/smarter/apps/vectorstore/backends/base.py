@@ -10,7 +10,7 @@ based on the specific vector store being used (e.g., Pinecone, Weaviate, etc.).
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from langchain_core.documents import Document
 from langchain_core.embeddings.embeddings import Embeddings

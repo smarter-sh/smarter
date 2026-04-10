@@ -1278,9 +1278,14 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "timestamped",
         },
+        "redis": {
+            "level": smarter_settings.log_level_name,
+            "class": "smarter.lib.logging.RedisLogHandler",
+            "formatter": "timestamped",
+        },
     },
     "root": {
-        "handlers": ["default"],
+        "handlers": ["default", "redis"],
         "level": smarter_settings.log_level_name,
     },
     "loggers": {
