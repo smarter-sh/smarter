@@ -7,12 +7,14 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.admin.exceptions import AlreadyRegistered
+from django.contrib.admindocs import urls as admindocs_urls
 from django.http import JsonResponse
 from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 from django.views.static import serve
 from waffle import get_waffle_switch_model
 
+from smarter.apps.account import urls as account_urls
 from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.urls import AccountNamedUrls
 from smarter.apps.account.views.authentication import (
@@ -25,13 +27,16 @@ from smarter.apps.account.views.password_management import (
     PasswordResetRequestView,
     PasswordResetView,
 )
+from smarter.apps.api import urls as api_urls
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
+from smarter.apps.dashboard import urls as dashboard_urls
 from smarter.apps.dashboard.admin import (
     SmarterSuperUserOnlyModelAdmin,
     smarter_restricted_admin_site,
 )
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
+from smarter.apps.docs import urls as docs_urls
 from smarter.apps.docs.const import namespace as docs_namespace
 from smarter.apps.docs.views.webserver import (
     FaviconView,
@@ -40,10 +45,15 @@ from smarter.apps.docs.views.webserver import (
     RobotsTxtView,
     SitemapXmlView,
 )
+from smarter.apps.plugin import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
+from smarter.apps.prompt import urls as prompt_urls
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
+from smarter.apps.provider import urls as provider_urls
 from smarter.apps.provider.const import namespace as provider_namespace
+from smarter.apps.vectorstore import urls as vectorstore_urls
+from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
 from smarter.lib.django.waffle import SmarterSwitchAdmin
 
@@ -88,6 +98,7 @@ SMARTER_APP_LABELS = [
     "plugin",
     "prompt",
     "provider",
+    "vectorstore",
 ]
 """
 app labels that are independently registered at the app level
@@ -132,19 +143,20 @@ urlpatterns = [
     # -----------------------------------
     # root paths
     # -----------------------------------
-    path("account/", include("smarter.apps.account.urls", namespace=account_namespace)),
-    path("admin/docs/", include("django.contrib.admindocs.urls")),
+    path("account/", include(account_urls, namespace=account_namespace)),
+    path("admin/docs/", include(admindocs_urls)),
     path("admin/", admin.site.urls, name="django_admin"),
-    path("api/", include("smarter.apps.api.urls", namespace=api_namespace)),
-    path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
-    path("docs/", include("smarter.apps.docs.urls", namespace=docs_namespace)),
+    path("api/", include(api_urls, namespace=api_namespace)),
+    path("dashboard/", include(dashboard_urls, namespace=dashboard_namespace)),
+    path("docs/", include(docs_urls, namespace=docs_namespace)),
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
-    path("plugin/", include("smarter.apps.plugin.urls", namespace=plugin_namespace)),
-    path("provider/", include("smarter.apps.provider.urls", namespace=provider_namespace)),
+    path("plugin/", include(plugin_urls, namespace=plugin_namespace)),
+    path("provider/", include(provider_urls, namespace=provider_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
     path("session-test/", session_test_view, name="session_test"),
-    path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
+    path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
+    path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     # -----------------------------------
     # Chatbots.
     # mcdaniel: 2026-01-31: are these even reachable anymore?
