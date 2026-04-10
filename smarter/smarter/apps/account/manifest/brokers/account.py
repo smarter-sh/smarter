@@ -16,7 +16,7 @@ from smarter.apps.account.manifest.models.account.spec import (
     SAMAccountSpecConfig,
 )
 from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import (
     smarter_cached_objects,
@@ -128,6 +128,7 @@ class SAMAccountBroker(AbstractBroker):
     _pydantic_model: Type[SAMAccount] = SAMAccount
     _brokered_account: Optional[Account] = None
     _orm_instance: Optional[Account] = None
+    _orm_meta_instance: Optional[Account] = None
 
     def __init__(self, *args, **kwargs):
         """
@@ -404,6 +405,12 @@ class SAMAccountBroker(AbstractBroker):
         """
         Transform the Smarter API Account manifest into a Django ORM model.
         """
+        if not isinstance(self.manifest, SAMAccount):
+            raise SAMAccountBrokerError(
+                message=f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
         metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
@@ -509,7 +516,7 @@ class SAMAccountBroker(AbstractBroker):
         if self._orm_instance:
             return self._orm_instance
         if self.orm_meta_instance:
-            self._orm_instance = self.orm_meta_instance
+            self._orm_instance = self.orm_meta_instance  # type: ignore
             return self._orm_instance
 
         try:
@@ -556,7 +563,7 @@ class SAMAccountBroker(AbstractBroker):
                 "%s.orm_meta_instance_setter() ORM instance is already set. Setting ORM meta instance to ORM instance.",
                 self.formatted_class_name,
             )
-            self._orm_meta_instance = self._orm_instance
+            self._orm_meta_instance = self._orm_instance  # type: ignore
             return
 
         if not self.name:
@@ -627,6 +634,13 @@ class SAMAccountBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.example_manifest() called", self.formatted_class_name)
 
+        if not isinstance(self.manifest, SAMAccount):
+            raise SAMAccountBrokerError(
+                message=f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}",
+                thing=self.kind,
+                command=command,
+            )
+
         self.user = None
         self.brokered_account = smarter_cached_objects.smarter_account
         if not self.brokered_account:
@@ -658,6 +672,13 @@ class SAMAccountBroker(AbstractBroker):
         logger.debug("%s.get() called", self.formatted_class_name)
         data = []
 
+        if not isinstance(self.user, User):
+            raise SAMAccountBrokerError(
+                message="User not set for broker. Cannot get.",
+                thing=self.kind,
+                command=command,
+            )
+
         if not self.user.is_superuser:
             raise SAMAccountBrokerError(
                 message="Only superusers can view accounts.",
@@ -682,7 +703,7 @@ class SAMAccountBroker(AbstractBroker):
         model_titles = self.get_model_titles(serializer=AccountSerializer())
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
-        account = Account.get_cached_object(pk=self.brokered_account.id)
+        account = Account.get_cached_object(pk=self.brokered_account.id)  # type: ignore
         accounts = [account] if account else []
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
@@ -753,6 +774,13 @@ class SAMAccountBroker(AbstractBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
+        if not isinstance(self.user, User):
+            raise SAMAccountBrokerError(
+                message="User not set for broker. Cannot apply.",
+                thing=self.kind,
+                command=command,
+            )
+
         if not self.user.is_superuser:
             raise SAMAccountBrokerError(
                 message="Only superusers can apply account manifests.",
@@ -799,7 +827,7 @@ class SAMAccountBroker(AbstractBroker):
                 "%s.apply() Saved %s with ID %s: %s",
                 self.formatted_class_name,
                 self.brokered_account,
-                self.brokered_account.id,
+                self.brokered_account.id,  # type: ignore
                 serializers.serialize("json", [self.brokered_account]),
             )
         except Exception as e:
@@ -844,6 +872,13 @@ class SAMAccountBroker(AbstractBroker):
         command = command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.describe() called for %s", self.formatted_class_name, self.name)
+
+        if not isinstance(self.user, User):
+            raise SAMAccountBrokerError(
+                message="User not set for broker. Cannot describe.",
+                thing=self.kind,
+                command=command,
+            )
 
         if not self.user.is_superuser:
             raise SAMAccountBrokerError(
