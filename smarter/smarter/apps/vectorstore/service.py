@@ -118,7 +118,7 @@ class VectorstoreService(SmarterHelperMixin):
         """
         Check if the vector database backend is ready for operations.
         """
-        return self.backend.ready
+        return self.backend.ready and self.embedding_service.ready
 
     @property
     def text_splitter(self) -> RecursiveCharacterTextSplitter:
@@ -139,24 +139,12 @@ class VectorstoreService(SmarterHelperMixin):
         """
         self.backend.delete()
 
-    def upsert(self, vectors):
-        """
-        Upsert vectors into the vector database using the appropriate backend.
-        """
-        self.backend.upsert(vectors)
-
     def query(self, query_vector, top_k=10):
         """
         Query the vector database using the appropriate backend.
         Original source comes from https://github.com/FullStackWithLawrence/openai-embeddings
         """
         return self.backend.query(query_vector, top_k)
-
-    def get_stats(self):
-        """
-        Get statistics of the vector database using the appropriate backend.
-        """
-        return self.backend.get_stats()
 
     def pdf_loader(self, filepath: str):
         """

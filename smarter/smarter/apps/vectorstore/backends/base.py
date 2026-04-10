@@ -100,8 +100,6 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
         Upsert vectors into the vector database in the backend.
     query(query_vector, top_k=10)
         Query the vector database in the backend.
-    get_stats()
-        Get statistics about the vector database in the backend.
     connect()
         Establish a connection to the vector database in the backend.
     disconnect()
@@ -206,11 +204,11 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
         raise NotImplementedError("Add documents method not implemented for this backend")
 
     @abstractmethod
-    def initialize(self):
+    def connect(self) -> VectorStoreBackendConnection:
         """
-        Initialize the backend, setting up any necessary connections or configurations.
+        Establish a connection to the vector database in the backend.
         """
-        raise NotImplementedError("Initialize method not implemented for this backend")
+        raise NotImplementedError("Connect method not implemented for this backend")
 
     @abstractmethod
     def create(self):
@@ -227,34 +225,6 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
         raise NotImplementedError("Delete method not implemented for this backend")
 
     @abstractmethod
-    def upsert(self, vectors: list[Any]):
-        """
-        Upsert vectors into the vector database in the backend.
-        """
-        raise NotImplementedError("Upsert method not implemented for this backend")
-
-    @abstractmethod
-    def query(self, query_vector: Any, top_k: int = 10):
-        """
-        Query the vector database in the backend.
-        """
-        raise NotImplementedError("Query method not implemented for this backend")
-
-    @abstractmethod
-    def get_stats(self):
-        """
-        Get statistics about the vector database in the backend.
-        """
-        raise NotImplementedError("Get stats method not implemented for this backend")
-
-    @abstractmethod
-    def connect(self) -> VectorStoreBackendConnection:
-        """
-        Establish a connection to the vector database in the backend.
-        """
-        raise NotImplementedError("Connect method not implemented for this backend")
-
-    @abstractmethod
     def disconnect(self) -> None:
         """
         Disconnect from the vector database in the backend.
@@ -262,8 +232,15 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
         raise NotImplementedError("Disconnect method not implemented for this backend")
 
     @abstractmethod
-    def load(self, embeddings: List[Any]):
+    def initialize(self):
         """
-        Load vectors into the vector database from a list of embeddings.
+        Initialize the backend, setting up any necessary connections or configurations.
         """
-        raise NotImplementedError("Load method not implemented for this backend")
+        raise NotImplementedError("Initialize method not implemented for this backend")
+
+    @abstractmethod
+    def query(self, query_vector: Any, top_k: int = 10):
+        """
+        Query the vector database in the backend.
+        """
+        raise NotImplementedError("Query method not implemented for this backend")
