@@ -28,6 +28,49 @@ Example Usage
 
 .. code-block:: python
 
+        #
+        # configure the Django logging to use the RedisLogHandler
+        #
+        LOGGING = {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "formatters": {
+                "timestamped": {
+                    "format": "%(asctime)s - %(levelname)s - %(processName)s - %(message)s",
+                    "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
+                },
+            },
+            "handlers": {
+                "default": {
+                    "level": smarter_settings.log_level_name,
+                    "class": "logging.StreamHandler",
+                    "formatter": "timestamped",
+                },
+                "redis": {
+                    "level": smarter_settings.log_level_name,
+                    "class": "smarter.lib.logging.RedisLogHandler",  # <--- Use the RedisLogHandler
+                    "formatter": "timestamped",
+                },
+            },
+            "root": {
+                "handlers": ["default", "redis"],  # <--- Add the RedisLogHandler to the root logger
+                "level": smarter_settings.log_level_name,
+            },
+
+.. attention::
+
+    The following is technically possible but not a recommended practice.
+    It demonstrates how to manually configure logging to use the RedisLogHandler
+    outside of a Django settings context, such as in a standalone script or a
+    Celery task. In most cases, it's better to configure logging through the
+    Django settings for consistency and maintainability.
+
+.. code-block:: python
+
+    #
+    # manually configure logging to use RedisLogHandler
+    # NOTE: this is technically possible but not a great idea.
+    #
     import logging
     from smarter.lib.logging.redis_log_handler import RedisLogHandler, current_job_id, job_id_factory
 
@@ -199,41 +242,8 @@ class RedisLogHandler(logging.Handler):
     by a background worker thread for efficiency and non-blocking behavior.
 
     If the internal log queue is full, log records may be dropped. The number of dropped logs is tracked by
-    the class variable :attr:`dropped_logs`, and a message is printed every 100 dropped logs.
+    the class variable dropped_logs, and a message is printed every 100 dropped logs.
 
-    Example::
-
-        LOGGING = {
-            "version": 1,
-            "disable_existing_loggers": False,
-            "formatters": {
-                "timestamped": {
-                    "format": "%(asctime)s - %(levelname)s - %(processName)s - %(message)s",
-                    "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
-                },
-            },
-            "handlers": {
-                "default": {
-                    "level": smarter_settings.log_level_name,
-                    "class": "logging.StreamHandler",
-                    "formatter": "timestamped",
-                },
-                "redis": {
-                    "level": smarter_settings.log_level_name,
-                    "class": "smarter.lib.logging.RedisLogHandler",
-                    "formatter": "timestamped",
-                },
-            },
-            "root": {
-                "handlers": ["default", "redis"],
-                "level": smarter_settings.log_level_name,
-            },
-
-
-    Attributes
-    ----------
-    dropped_logs : int
-            The number of log records dropped due to a full queue.
 
     See Also
     --------
