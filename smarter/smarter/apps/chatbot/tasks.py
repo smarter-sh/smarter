@@ -271,7 +271,7 @@ def register_custom_domain(account_id: int, domain_name: str):
     try:
         # verify that the domain is available to register.
         domain_record = ChatBotCustomDomain.objects.get(domain_name=domain_name)
-        err = f"{logger_prefix}.register_custom_domain() - Account {account.company_name} attempted to register {domain_name} but it is already registered to {domain_record.account.company_name} task_id: {task_id}"
+        err = f"{logger_prefix}.register_custom_domain() - Account {account.company_name} attempted to register {domain_name} but it is already registered to {domain_record.user_profile.account.company_name} task_id: {task_id}"
         logger.error(err)
         raise ChatBotCustomDomainExists(err)
     except ChatBotCustomDomain.DoesNotExist:
@@ -503,7 +503,7 @@ def verify_custom_domain(
                 Your custom domain is now active and ready to use with your ChatBot.
                 If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."""
                 try:
-                    account = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id).account
+                    account = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id).user_profile.account
                     AccountContact.send_email_to_account(account=account, subject=subject, body=body)
                     msg = f"{fn_name} - Domain {domain_name} has been verified for account {account.company_name} {account.account_number} task_id: {task_id}"
                     logger.info(msg)
@@ -529,7 +529,7 @@ def verify_custom_domain(
     body = f"""We were unable to verify your domain {domain_name}.\n\n
     We made {max_attempts} attempts over a period of {HOURS} hours to verify the domain.
     If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."""
-    account = ChatBotCustomDomain.objects.get(hosted_zone_id=hosted_zone_id).account
+    account = ChatBotCustomDomain.objects.get(hosted_zone_id=hosted_zone_id).user_profile.account
     AccountContact.send_email_to_account(account=account, subject=subject, body=body)
     msg = f"{fn_name} - Domain verification failed for domain {domain_name} for account {account.company_name} {account.account_number} task_id: {task_id}"
     logger.error(msg)
@@ -619,7 +619,7 @@ def verify_domain(
                     chatbot_dns_failed.send(
                         sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
                     )
-                    chatbot.dns_verification_status = ChatBot.DNS_VERIFICATION_FAILED
+                    chatbot.dns_verification_status = ChatBot.DnsVerificationStatusChoices.FAILED
                     chatbot.save(asynchronous=True)
                 post_verify_domain.send(
                     sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id
@@ -1122,7 +1122,7 @@ def deploy_custom_api(chatbot_id: int):
         logger.warning(
             "%s Custom domain is missing or is not yet validated for %s chatbot %s task_id: %s. Nothing to do, returning.",
             prefix,
-            chatbot.account.company_name,
+            chatbot.user_profile.account.company_name,
             chatbot.name,
             task_id,
         )

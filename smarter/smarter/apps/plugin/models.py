@@ -477,6 +477,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     @classmethod
     def get_cached_object(
         cls,
+        *args,
         invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
@@ -485,6 +486,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         username: Optional[str] = None,
         account: Optional[Account] = None,
         plugin_class: Optional[str] = None,
+        **kwargs,
     ) -> Optional["PluginMeta"]:
         """
         Return a single instance of PluginMeta by primary key or by name and user.
@@ -559,11 +561,18 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             _get_model_by_name_and_userprofile_and_plugin_class.invalidate(name, user_profile.id, plugin_class)  # type: ignore[union-attr]
 
         if pk:
-            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
+            return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
         if not plugin_class:
             retval = super().get_cached_object(
-                invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account
+                *args,
+                invalidate=invalidate,
+                pk=pk,
+                name=name,
+                user=user,
+                user_profile=user_profile,
+                account=account,
+                **kwargs,
             )
             if isinstance(retval, PluginMeta):
                 return retval
@@ -571,7 +580,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         if plugin_class:
             return _get_model_by_name_and_userprofile_and_plugin_class(name, user_profile.id, plugin_class)  # type: ignore[return-value]
-        retval = super().get_cached_object(invalidate=invalidate, name=name, user_profile=user_profile)
+        retval = super().get_cached_object(*args, invalidate=invalidate, name=name, user_profile=user_profile, **kwargs)
         if isinstance(retval, PluginMeta):
             return retval
 
@@ -1266,7 +1275,12 @@ class PluginDataStatic(PluginDataBase):
     # pylint: disable=W0221
     @classmethod
     def get_cached_object(
-        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None
+        cls,
+        *args,
+        invalidate: Optional[bool] = False,
+        pk: Optional[int] = None,
+        plugin: Optional[PluginMeta] = None,
+        **kwargs,
     ) -> Optional["PluginDataBase"]:
         """
         Retrieve a model instance by primary key, using caching to
@@ -1321,7 +1335,7 @@ class PluginDataStatic(PluginDataBase):
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
 
         if pk:
-            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
+            return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
         if plugin:
             return _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
@@ -2470,7 +2484,12 @@ class PluginDataSql(PluginDataBase):
     # pylint: disable=W0221
     @classmethod
     def get_cached_object(
-        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None
+        cls,
+        *args,
+        invalidate: Optional[bool] = False,
+        pk: Optional[int] = None,
+        plugin: Optional[PluginMeta] = None,
+        **kwargs,
     ) -> Optional["PluginDataBase"]:
         """
         Retrieve a model instance by primary key, using caching to
@@ -2525,7 +2544,7 @@ class PluginDataSql(PluginDataBase):
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
 
         if pk:
-            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
+            return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
         if plugin:
             return _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
@@ -3039,7 +3058,12 @@ class PluginDataApi(PluginDataBase):
     # pylint: disable=W0221
     @classmethod
     def get_cached_object(
-        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, plugin: Optional[PluginMeta] = None
+        cls,
+        *args,
+        invalidate: Optional[bool] = False,
+        pk: Optional[int] = None,
+        plugin: Optional[PluginMeta] = None,
+        **kwargs,
     ) -> Optional["PluginDataBase"]:
         """
         Retrieve a model instance by primary key, using caching to
@@ -3094,7 +3118,7 @@ class PluginDataApi(PluginDataBase):
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
 
         if pk:
-            return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return-value]
+            return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
         if plugin:
             return _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]

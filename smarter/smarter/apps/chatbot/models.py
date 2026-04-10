@@ -914,12 +914,14 @@ class ChatBot(MetaDataWithOwnershipModel):
     @classmethod
     def get_cached_object(
         cls,
+        *args,
         invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         user: Optional[User] = None,
         user_profile: Optional[UserProfile] = None,
         account: Optional[Account] = None,
+        **kwargs,
     ) -> "ChatBot":
         """
         Retrieve a model instance using caching to optimize performance.
@@ -957,7 +959,7 @@ class ChatBot(MetaDataWithOwnershipModel):
             invalidate,
         )
 
-        retval = super().get_cached_object(invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account)  # type: ignore[assignment]
+        retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account, **kwargs)  # type: ignore[assignment]
         if retval is None:
             raise ChatBot.DoesNotExist(f"{cls.__name__} matching query does not exist.")
         return retval  # type: ignore[return-value]
