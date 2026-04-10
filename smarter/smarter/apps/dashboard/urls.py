@@ -5,6 +5,7 @@ from django.views.generic.base import RedirectView
 
 from .const import namespace
 from .views.dashboard import ChangeLogView, DashboardView, EmailAdded, NotificationsView
+from .views.server_logs import stream_global_logs
 
 app_name = namespace
 
@@ -18,4 +19,5 @@ urlpatterns = [
     path("changelog/", ChangeLogView.as_view(), name="changelog"),
     path("notifications/", NotificationsView.as_view(), name="notifications"),
     path("email-added/", EmailAdded.as_view(), name="email-added"),
+    path("logs/", stream_global_logs, name="stream_global_logs"),
 ]

@@ -627,6 +627,14 @@ times when deploying ChatBots/Agents.
 See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#std:setting-task_time_limit
 """
 
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+"""
+A Celery setting that prevents Celery workers from hijacking the root logger. This is set to False
+to allow Celery logs to be integrated with the overall Smarter logging configuration without interference.
+
+See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#std:setting-worker_hijack_root_logger
+"""
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -1268,7 +1276,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "timestamped": {
-            "format": "%(asctime)s - %(levelname)s - %(message)s",
+            "format": "%(asctime)s - %(levelname)s - %(processName)s - %(message)s",
             "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
         },
     },
@@ -1289,42 +1297,17 @@ LOGGING = {
         "level": smarter_settings.log_level_name,
     },
     "loggers": {
-        "django": {
-            "handlers": ["default"],
+        "celery": {
             "level": smarter_settings.log_level_name,
             "propagate": True,
-        },
-        "django_hosts": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-        },
-        "django.security.DisallowedHost": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-            "propagate": False,
-        },
-        "django.template": {
-            "handlers": ["default"],
-            "level": "ERROR",
-            "propagate": False,
-        },
-        "celery": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-            "propagate": False,
         },
         "celery.task": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-            "propagate": True,
-        },
-        "celery.beat": {
-            "handlers": ["default"],
             "level": smarter_settings.log_level_name,
             "propagate": True,
         },
     },
 }
+
 logging.config.dictConfig(LOGGING)
 
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
