@@ -287,7 +287,7 @@ class SAMVectorstoreBroker(AbstractBroker):
             modified=self.vectordatabase.updated_at,
         )
 
-        provider_model = SAMVectorstore(
+        model = SAMVectorstore(
             apiVersion=self.api_version,
             kind=self.kind,
             metadata=metadata,
@@ -295,7 +295,7 @@ class SAMVectorstoreBroker(AbstractBroker):
             status=status,
         )
 
-        return provider_model.model_dump()
+        return model.model_dump()
 
     ###########################################################################
     # Smarter abstract property implementations
