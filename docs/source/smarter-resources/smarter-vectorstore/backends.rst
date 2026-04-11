@@ -1,9 +1,6 @@
 Vectorstore Backends
 ========================
 
-Vectorstore Technical References
----------------------------------
-
 .. toctree::
    :maxdepth: 1
    :caption: Technical Reference

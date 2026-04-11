@@ -88,7 +88,7 @@ Related API endpoints
 Manifest Spec
 -------------
 
-See :doc:`Smarter Manifest Specification <pydantic/smarter-manifests>`
+See :doc:`Smarter Manifest Specification <smarter-manifests>`
 
 
 Kind
