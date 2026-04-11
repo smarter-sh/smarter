@@ -514,7 +514,7 @@ class SAMVectorstoreBroker(AbstractBroker):
             modified=datetime.datetime(2024, 1, 15, 12, 0, 0, tzinfo=datetime.timezone.utc),
         )
 
-        provider_model = SAMVectorstore(
+        model = SAMVectorstore(
             apiVersion=self.api_version,
             kind=self.kind,
             metadata=metadata,
@@ -522,7 +522,7 @@ class SAMVectorstoreBroker(AbstractBroker):
             status=status,
         )
 
-        return self.json_response_ok(command=command, data=provider_model.model_dump())
+        return self.json_response_ok(command=command, data=model.model_dump())
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
