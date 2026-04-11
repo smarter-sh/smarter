@@ -6,6 +6,8 @@ import logging
 from typing import Optional, Type
 
 from django.http import HttpRequest
+from langchain_community.vectorstores.utils import DistanceStrategy
+from pinecone.db_control.enums import DeletionProtection, Metric, VectorType
 
 from smarter.apps.account.models import User
 from smarter.apps.account.utils import valid_resource_owners_for_user
@@ -16,7 +18,9 @@ from smarter.apps.vectorstore.manifest.models.vectorstore.metadata import (
 )
 from smarter.apps.vectorstore.manifest.models.vectorstore.model import SAMVectorstore
 from smarter.apps.vectorstore.manifest.models.vectorstore.spec import (
-    SAMVectorstoreORMSpec,
+    SAMEmbeddingsInterface,
+    SAMIndexModelInterface,
+    SAMVectorstoreInterface,
     SAMVectorstoreSpec,
 )
 from smarter.apps.vectorstore.manifest.models.vectorstore.status import (
@@ -220,20 +224,63 @@ class SAMVectorstoreBroker(AbstractBroker):
                 {"smarter.sh/created_by": "smarter_provider_broker"},
             ],
         )
-        spec_provider = SAMVectorstoreORMSpec(
+
+        # see langchain_core.vectorstores.base.VectorStoreRetriever and
+        # langchain_core.embeddings.openai.OpenAIEmbeddings for
+        # inspiration on how to structure these interfaces
+        vector_interface = SAMVectorstoreInterface(
             name=self.vectordatabase.name,
             description=self.vectordatabase.description,
             backend=self.vectordatabase.backend,
             host=self.vectordatabase.host,
             port=self.vectordatabase.port,
-            auth_config=self.vectordatabase.auth_config,
+            authConfig=self.vectordatabase.auth_config,
             password=self.vectordatabase.password.name if self.vectordatabase.password else "missing",
             config=self.vectordatabase.config,
-            is_active=self.vectordatabase.is_active,
+            isActive=self.vectordatabase.is_active,
             provider=self.vectordatabase.provider.name if self.vectordatabase.provider else "missing",
-            provider_model=self.vectordatabase.provider_model.name if self.vectordatabase.provider_model else "missing",
+            providerModel=self.vectordatabase.provider_model.name if self.vectordatabase.provider_model else "missing",
+            textKey="",
+            namespace="",
+            distanceStrategy=None,
         )
-        spec = SAMVectorstoreSpec(vectorstore=spec_provider)
+
+        # see langchain_core.vectorstores.base.VectorStoreRetriever and
+        # langchain_core.embeddings.openai.OpenAIEmbeddings
+        embeddings = SAMEmbeddingsInterface(
+            model="text-embedding-ada-002",
+            dimensions=None,
+            deployment=None,
+            apiVersion=None,
+            baseUrl=None,
+            openaiApiType=None,
+            openaiProxy=None,
+            embeddingCtxLength=8191,
+            apiKey=None,
+            organization=None,
+            allowedSpecial=None,
+            disallowedSpecial=None,
+            chunkSize=1000,
+            maxRetries=2,
+            timeout=None,
+            headers=None,
+            tiktokenEnabled=True,
+            tiktokenModelName=None,
+            showProgressBar=False,
+            modelKwargs={},
+            skipEmpty=False,
+            defaultHeaders=None,
+            defaultQuery=None,
+            retryMinSeconds=4,
+            retryMaxSeconds=20,
+            checkEmbeddingCtxLength=True,
+        )
+
+        # see pinecone.db_control.models.IndexModel
+        index_model = SAMIndexModelInterface(
+            spec=None, dimension=None, metric=None, timeout=None, deletionProtection=None, vectorType=None
+        )
+        spec = SAMVectorstoreSpec(vectorstore=vector_interface, embeddings=embeddings, indexModel=index_model)
         status = SAMVectorstoreStatus(
             recordLocator=self.vectordatabase.record_locator,
             created=self.vectordatabase.created_at,
@@ -407,20 +454,60 @@ class SAMVectorstoreBroker(AbstractBroker):
                 {"smarter.sh/created_by": "smarter_provider_broker"},
             ],
         )
-        spec_provider = SAMVectorstoreORMSpec(
+        spec_provider = SAMVectorstoreInterface(
             name="AcmeVectorStore",
             description="A leading vectorstore of innovative AI solutions.",
             backend="pinecone",
             host="https://example-vectorstore.com",
             port=443,
-            auth_config={"api_key": "example_api_key"},
+            authConfig={"api_key": "example_api_key"},
             password="example_password",
             config={"region": "us-west1", "index_name": "example_index"},
-            is_active=True,
+            isActive=True,
             provider=provider.name if provider else "acme_llm_provider",
-            provider_model=provider_model.name if provider_model else "super_duper_llm_model",
+            providerModel=provider_model.name if provider_model else "super_duper_llm_model",
+            textKey="example_key_id",
+            namespace="example_namespace",
+            distanceStrategy=DistanceStrategy.COSINE.value,
         )
-        spec = SAMVectorstoreSpec(vectorstore=spec_provider)
+        embeddings = SAMEmbeddingsInterface(
+            model="text-embedding-ada-002",
+            dimensions=1536,
+            deployment="example_deployment",
+            apiVersion="2024-01-01",
+            baseUrl="https://api.example-embeddings.com",
+            openaiApiType="example_api_type",
+            openaiProxy="https://proxy.example.com",
+            embeddingCtxLength=8191,
+            apiKey="example_api_key",
+            organization="example_org",
+            allowedSpecial={"<special1>", "<special2>"},
+            disallowedSpecial={"<disallowed1>", "<disallowed2>"},
+            chunkSize=1000,
+            maxRetries=2,
+            timeout=30,
+            headers={"Custom-Header": "Value"},
+            tiktokenEnabled=True,
+            tiktokenModelName="example-tiktoken-model",
+            showProgressBar=False,
+            modelKwargs={"param1": "value1", "param2": "value2"},
+            skipEmpty=False,
+            defaultHeaders={"Default-Header": "DefaultValue"},
+            defaultQuery={"default_param": "default_value"},
+            retryMinSeconds=4,
+            retryMaxSeconds=20,
+            checkEmbeddingCtxLength=True,
+        )
+
+        index_model = SAMIndexModelInterface(
+            spec={"index_type": "example_index_type", "pod_type": "example_pod_type"},
+            dimension=1536,
+            metric=Metric.COSINE.value,
+            timeout=30,
+            deletionProtection=DeletionProtection.DISABLED.value,
+            vectorType=VectorType.SPARSE.value,
+        )
+        spec = SAMVectorstoreSpec(vectorstore=spec_provider, embeddings=embeddings, indexModel=index_model)
         status = SAMVectorstoreStatus(
             recordLocator="example_record_locator",
             created=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
