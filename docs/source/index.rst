@@ -31,12 +31,12 @@ Smarter |project_version| Documentation
    :alt: AGPL-3 License
 
 
-A :doc:`declarative <smarter-framework/pydantic/smarter-manifests>` AI :doc:`resource management <smarter-resources>` :doc:`platform <smarter-platform>` and :doc:`developer framework <smarter-framework>`.
+A :doc:`declarative <smarter-framework/smarter-manifests>` AI :doc:`resource management <smarter-resources>` :doc:`platform <smarter-platform>` and :doc:`developer framework <smarter-framework>`.
 
 - **From scratch** | :doc:`smarter-platform/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://platform.smarter.sh/docs/learn/>`__
 - **Platform**
 
-  - Helps you manage all your :doc:`AI resources <smarter-resources>` using easy :doc:`YAML files <smarter-framework/pydantic/smarter-manifests>` (like how `Kubernetes <https://kubernetes.io/>`_ works).
+  - Helps you manage all your :doc:`AI resources <smarter-resources>` using easy :doc:`YAML files <smarter-framework/smarter-manifests>` (like how `Kubernetes <https://kubernetes.io/>`_ works).
   - Simple `Docker <https://hub.docker.com/r/mcdaniel0073/smarter>`_ installation. Run on Kubernetes with the `Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`_.
   - Manage AI resources with the :doc:`web dashboard <smarter-framework/smarter-react-ui>`, the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`command-line interface <smarter-platform/cli>`.
   - Keeps track of :doc:`logs <smarter-framework/smarter-journal>`, safety checks, :doc:`costs <smarter-platform/cost-accounting>`, and :doc:`security <smarter-platform/security>` so nothing gets lost or misused.

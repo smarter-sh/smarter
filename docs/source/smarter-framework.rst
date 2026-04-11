@@ -18,6 +18,7 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    :caption: Technical Reference
 
    smarter-framework/getting-started
+   smarter-framework/smarter-manifests
    smarter-framework/guides
    smarter-framework/aws
    smarter-framework/docker
@@ -40,5 +41,4 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    smarter-framework/smarter-settings
    smarter-framework/smarter-waffle
    smarter-framework/smarter-utils
-   smarter-framework/smarter-vectorstore
    smarter-framework/vs-code-extension

@@ -6,7 +6,7 @@ Smarter Resources are a combination of :doc:`LLM Provider APIs <smarter-resource
 that work in concert to provide configurable, secure, scalable and performant AI-powered building blocks for
 developers, data scientists and prompt engineers.
 
-Smarter Resources are declared using :doc:`Smarter Application Manifests (SAM) <smarter-framework/pydantic/smarter-manifests>`, which are `YAML <https://en.wikipedia.org/wiki/YAML>`__ files
+Smarter Resources are declared using :doc:`Smarter Application Manifests (SAM) <smarter-framework/smarter-manifests>`, which are `YAML <https://en.wikipedia.org/wiki/YAML>`__ files
 that define the desired state of each resource. Smarter's declarative approach allows for easy versioning, change management, and collaboration among team members.
 And importantly, SAM files are human-readable, infrastructure-as-code documents that can be reviewed and understood by non-developers,
 like business analysts and product managers.
@@ -25,7 +25,7 @@ Smarter considers the entire lifecycle of an AI resource, from declaration throu
 deployment, scaling, monitoring, maintenance, change management, and its eventual sunsetting. Smarter considers the technical
 capabilities of the various team member roles, and provides usable tools and abstractions for each.
 
-- Prompt engineers work with Smarter  :doc:`YAML manifests <smarter-framework/pydantic/smarter-manifests>` and the :doc:`Smarter CLI <smarter-platform/cli>`.
+- Prompt engineers work with Smarter  :doc:`YAML manifests <smarter-framework/smarter-manifests>` and the :doc:`Smarter CLI <smarter-platform/cli>`.
 - Business Process Analysts work with Smarter's MySQL database and reporting tools.
 - Application developers work with Python and the :doc:`Smarter Application Framework <smarter-framework>`, and it's built-in :doc:`REST APIs <smarter-framework/smarter-api>`.
 - Data scientists work with Python
@@ -42,3 +42,4 @@ capabilities of the various team member roles, and provides usable tools and abs
    smarter-resources/smarter-provider
    smarter-resources/smarter-plugin
    smarter-resources/smarter-prompt
+   smarter-resources/smarter-vectorstore

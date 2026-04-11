@@ -12,10 +12,3 @@ robust foundation for scalable and maintainable data validation.
 
 For more information about Pydantic,
 see the `official Pydantic documentation <https://docs.pydantic.dev/>`_.
-
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Smarter Pydantic Models
-
-   pydantic/smarter-manifests
