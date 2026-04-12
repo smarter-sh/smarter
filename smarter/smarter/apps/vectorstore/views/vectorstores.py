@@ -223,3 +223,6 @@ class VectorstoreListView(SmarterAuthenticatedNeverCachedWebView):
             "vectorstores": self.vectorstores,
         }
         return self.clean_http_response(request=request, template_path=self.template_path, context=context)
+
+
+__all__ = ["VectorstoreManifestView", "VectorstoreListView"]

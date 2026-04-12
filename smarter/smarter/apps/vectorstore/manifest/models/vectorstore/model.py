@@ -32,3 +32,6 @@ class SAMVectorstore(AbstractSAMBase):
         default=None,
         description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {MANIFEST_KIND}.",
     )
+
+
+__all__ = ["SAMVectorstore"]

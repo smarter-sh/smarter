@@ -185,3 +185,6 @@ class VectorstoreService(SmarterHelperMixin):
                 self.backend.add_documents(documents=documents, embeddings=embeddings)
 
         logger.debug("%s.pdf_loader() Finished loading PDFs. \n%s", self.formatted_class_name, self.backend.index_stats)
+
+
+__all__ = ["VectorstoreService"]
