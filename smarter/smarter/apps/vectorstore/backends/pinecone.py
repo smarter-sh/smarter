@@ -210,7 +210,7 @@ class PineconeBackend(SmarterVectorstoreBackend):
             self._vector_store = PineconeVectorStore(
                 index=self.index,
                 embedding=self.embeddings,
-                text_key="lc_id",
+                text_key="lc_id",  # FIX NOTE: I LIVE IN A DATABASE TABLE
             )
         return self._vector_store
 
