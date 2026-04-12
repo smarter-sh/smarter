@@ -16,7 +16,7 @@ from smarter.apps.account.utils import (
     SmarterCachedObjects,
     get_cached_admin_user_for_account,
 )
-from smarter.apps.plugin.models import ApiConnection
+from smarter.apps.connection.models import ApiConnection
 from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.common.exceptions import SmarterValueError

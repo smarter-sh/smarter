@@ -141,6 +141,9 @@ class SmarterWaffleSwitches:
     CACHE_LOGGING = "log_caching"
     """Enables detailed logging for caching operations including cache hits, misses, and errors."""
 
+    CONNECTION_LOGGING = "log_connection"
+    """Enables logging throughout the smarter.app.connection namespace."""
+
     PROMPT_LOGGING = "log_prompt"
     """Enables logging throughout the smarter.app.prompt namespace."""
 
