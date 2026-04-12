@@ -11,6 +11,7 @@ from pinecone.db_control.enums import DeletionProtection, Metric, VectorType
 
 from smarter.apps.account.models import User
 from smarter.apps.account.utils import valid_resource_owners_for_user
+from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.apps.vectorstore.manifest.models.vectorstore.const import MANIFEST_KIND
 from smarter.apps.vectorstore.manifest.models.vectorstore.metadata import (
@@ -214,6 +215,33 @@ class SAMVectorstoreBroker(AbstractBroker):
                 f"Expected type VectorDatabase but got {type(self.vectordatabase)}", thing=self.kind
             )
 
+        if not isinstance(self.vectordatabase.connection, ApiConnection):
+            raise SAMVectorstoreBrokerError(
+                f"Expected type ApiConnection for connection but got {type(self.vectordatabase.connection)}",
+                thing=self.kind,
+            )
+        if not isinstance(self.vectordatabase.connection.name, str):
+            raise SAMVectorstoreBrokerError(
+                f"Expected type str for connection.name but got {type(self.vectordatabase.connection.name)}",
+                thing=self.kind,
+            )
+
+        if not isinstance(self.vectordatabase.embeddings_provider, Provider):
+            raise SAMVectorstoreBrokerError(
+                f"Expected type Provider for embeddings_provider but got {type(self.vectordatabase.embeddings_provider)}",
+                thing=self.kind,
+            )
+        if not isinstance(self.vectordatabase.embeddings_provider_model, ProviderModel):
+            raise SAMVectorstoreBrokerError(
+                f"Expected type ProviderModel for embeddings_provider_model but got {type(self.vectordatabase.embeddings_provider_model)}",
+                thing=self.kind,
+            )
+        if not isinstance(self.vectordatabase.backend, str):
+            raise SAMVectorstoreBrokerError(
+                f"Expected type str for backend but got {type(self.vectordatabase.backend)}",
+                thing=self.kind,
+            )
+
         metadata = SAMVectorstoreMetadata(
             name=self.vectordatabase.name,
             description=self.vectordatabase.description,
@@ -229,17 +257,6 @@ class SAMVectorstoreBroker(AbstractBroker):
         # langchain_core.embeddings.openai.OpenAIEmbeddings for
         # inspiration on how to structure these interfaces
         vector_interface = SAMVectorstoreInterface(
-            name=self.vectordatabase.name,
-            description=self.vectordatabase.description,
-            backend=self.vectordatabase.backend,
-            host=self.vectordatabase.host,
-            port=self.vectordatabase.port,
-            authConfig=self.vectordatabase.auth_config,
-            password=self.vectordatabase.password.name if self.vectordatabase.password else "missing",
-            config=self.vectordatabase.config,
-            isActive=self.vectordatabase.is_active,
-            provider=self.vectordatabase.provider.name if self.vectordatabase.provider else "missing",
-            providerModel=self.vectordatabase.provider_model.name if self.vectordatabase.provider_model else "missing",
             textKey="",
             namespace="",
             distanceStrategy=None,
@@ -248,7 +265,8 @@ class SAMVectorstoreBroker(AbstractBroker):
         # see langchain_core.vectorstores.base.VectorStoreRetriever and
         # langchain_core.embeddings.openai.OpenAIEmbeddings
         embeddings = SAMEmbeddingsInterface(
-            model="text-embedding-ada-002",
+            provider=self.vectordatabase.embeddings_provider.name,
+            providerModel=self.vectordatabase.embeddings_provider_model.name,
             dimensions=None,
             deployment=None,
             apiVersion=None,
@@ -280,7 +298,13 @@ class SAMVectorstoreBroker(AbstractBroker):
         index_model = SAMIndexModelInterface(
             spec=None, dimension=None, metric=None, timeout=None, deletionProtection=None, vectorType=None
         )
-        spec = SAMVectorstoreSpec(vectorstore=vector_interface, embeddings=embeddings, indexModel=index_model)
+        spec = SAMVectorstoreSpec(
+            connection=self.vectordatabase.connection.name,
+            backend=self.vectordatabase.backend,
+            vectorstore=vector_interface,
+            embeddings=embeddings,
+            indexModel=index_model,
+        )
         status = SAMVectorstoreStatus(
             recordLocator=self.vectordatabase.record_locator,
             created=self.vectordatabase.created_at,
@@ -455,23 +479,13 @@ class SAMVectorstoreBroker(AbstractBroker):
             ],
         )
         spec_provider = SAMVectorstoreInterface(
-            name="AcmeVectorStore",
-            description="A leading vectorstore of innovative AI solutions.",
-            backend="pinecone",
-            host="https://example-vectorstore.com",
-            port=443,
-            authConfig={"api_key": "example_api_key"},
-            password="example_password",
-            config={"region": "us-west1", "index_name": "example_index"},
-            isActive=True,
-            provider=provider.name if provider else "acme_llm_provider",
-            providerModel=provider_model.name if provider_model else "super_duper_llm_model",
             textKey="example_key_id",
             namespace="example_namespace",
             distanceStrategy=DistanceStrategy.COSINE.value,
         )
         embeddings = SAMEmbeddingsInterface(
-            model="text-embedding-ada-002",
+            provider="example_provider",
+            providerModel="text-embedding-ada-002",
             dimensions=1536,
             deployment="example_deployment",
             apiVersion="2024-01-01",
@@ -507,7 +521,14 @@ class SAMVectorstoreBroker(AbstractBroker):
             deletionProtection=DeletionProtection.DISABLED.value,
             vectorType=VectorType.SPARSE.value,
         )
-        spec = SAMVectorstoreSpec(vectorstore=spec_provider, embeddings=embeddings, indexModel=index_model)
+        spec = SAMVectorstoreSpec(
+            connection="example_api_connection",
+            backend="pinecone",
+            isActive=True,
+            vectorstore=spec_provider,
+            embeddings=embeddings,
+            indexModel=index_model,
+        )
         status = SAMVectorstoreStatus(
             recordLocator="example_record_locator",
             created=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
