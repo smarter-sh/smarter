@@ -23,7 +23,7 @@ from django.utils.functional import SimpleLazyObject
 
 # our stuff
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_ADMIN_USERNAME
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
@@ -100,6 +100,22 @@ def welcome_email_context(first_name: str) -> dict:
     retval["environment_platform_domain"] = smarter_settings.environment_url.rstrip("/")
     retval["send_password_email"] = waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_NEW_USER_PASSWORD_EMAIL)
     return retval
+
+
+def is_authenticated_user(user: object) -> bool:
+    """
+    Check if the given user-like object is an authenticated Django user.
+
+    This function attempts to determine if the provided object represents an authenticated user by checking for
+    the `is_authenticated` attribute, which is standard for Django's User and AnonymousUser models. It also
+    handles edge cases such as lazy objects and test mocks.
+
+    :param user: The user-like object to check.
+    :returns: True if the object is an authenticated user, False otherwise.
+    """
+    if hasattr(user, "is_authenticated"):
+        return bool(user.is_authenticated)  # type: ignore
+    return False
 
 
 def get_resolved_user(
@@ -1156,6 +1172,106 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="%(class)ss")
 
+    def is_readable_by(self, user: "User") -> bool:
+        """
+        Check if the authenticated user in the given request has permission to read this resource.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+
+        :returns: bool
+
+            True if the user is authenticated and any of the following is true:
+
+            - user is superuser, or the owner of the resource;
+            - user belongs to the same account as the resource owner;
+            - the resource is owned by the Smarter admin account; False otherwise.
+
+        .. attention::
+
+            Only users with staff or superuser status, or the owner of the resource, are permitted to read this resource.
+
+        .. warning::
+
+            If the request does not contain a valid user, or the user lacks required privileges, permission is denied.
+
+        **Example usage**::
+
+            if resource.is_readable_by(request):
+                # Allow resource access
+                pass
+
+        .. seealso::
+
+            :meth:`get_resolved_user` -- Resolves the user from the request.
+        """
+
+        if not is_authenticated_user(user):
+            return False
+        request_user_profile = UserProfile.get_cached_object(user=user)  # type: ignore[return-value]
+        if not request_user_profile:
+            return False
+
+        # superusers have permission to read all resources
+        if request_user_profile.user.is_superuser:
+            return True
+
+        # resource owned by Smarter admin account is readable by anyone authenticated
+        smarter_account = Account.get_cached_object(account_number=SMARTER_ACCOUNT_NUMBER)
+        if self.user_profile.account == smarter_account:
+            return True
+
+        # authenticated user is the owner of the resource
+        if self.user_profile == request_user_profile:
+            return True
+
+        # authenticated user belongs to the same account as the resource owner
+        if self.user_profile.account == request_user_profile.account:
+            return True
+
+        return False
+
+    def has_all_permission(self, request: "WSGIRequest") -> bool:
+        """
+        Check if the authenticated user in the given request has permission to
+        fully manage this resource.
+
+        :param request: :class:`django.core.handlers.wsgi.WSGIRequest`
+            The HTTP request containing the user to check.
+
+        :returns: bool
+
+            True if the user is authenticated and is either staff or superuser; False otherwise.
+
+        .. attention::
+
+            Only users with staff or superuser status are permitted to manage resources.
+
+        .. warning::
+
+            If the request does not contain a valid user, or the user lacks required privileges, permission is denied.
+
+        **Example usage**::
+
+            if resource.has_all_permission(request):
+                # Allow resource management
+                pass
+
+        .. seealso::
+
+            :meth:`get_resolved_user` -- Resolves the user from the request.
+        """
+        if not hasattr(request, "user"):
+            return False
+        user = get_resolved_user(request.user)
+        if not isinstance(user, User):
+            return False
+        if not hasattr(user, "is_authenticated") or not user.is_authenticated:
+            return False
+        if not hasattr(user, "is_staff") or not hasattr(user, "is_superuser"):
+            return False
+        return user.is_staff or user.is_superuser
+
     # pylint: disable=W0221
     @classmethod
     def get_cached_object(
@@ -1794,46 +1910,6 @@ class Secret(MetaDataWithOwnershipModel):
             return False
         expiration = timezone.make_aware(self.expires_at) if timezone.is_naive(self.expires_at) else self.expires_at
         return timezone.now() > expiration
-
-    def has_permissions(self, request: "WSGIRequest") -> bool:
-        """
-        Check if the authenticated user in the given request has permission to manage this secret.
-
-        :param request: :class:`django.core.handlers.wsgi.WSGIRequest`
-            The HTTP request containing the user to check.
-
-        :returns: bool
-
-            True if the user is authenticated and is either staff or superuser; False otherwise.
-
-        .. attention::
-
-            Only users with staff or superuser status are permitted to manage secrets.
-
-        .. warning::
-
-            If the request does not contain a valid user, or the user lacks required privileges, permission is denied.
-
-        **Example usage**::
-
-            if secret.has_permissions(request):
-                # Allow secret management
-                pass
-
-        .. seealso::
-
-            :meth:`get_resolved_user` -- Resolves the user from the request.
-        """
-        if not hasattr(request, "user"):
-            return False
-        user = get_resolved_user(request.user)
-        if not isinstance(user, User):
-            return False
-        if not hasattr(user, "is_authenticated") or not user.is_authenticated:
-            return False
-        if not hasattr(user, "is_staff") or not hasattr(user, "is_superuser"):
-            return False
-        return user.is_staff or user.is_superuser
 
     def __str__(self):
         return str(self.name) or "no name" + " - " + str(self.user_profile) or "no user profile"

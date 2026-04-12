@@ -408,7 +408,7 @@ class RestrictedAdminSite(admin.AdminSite):
     and modifies the admin console header title.
     """
 
-    def has_permission(self, request):
+    def has_all_permission(self, request):
         return request.user.is_authenticated
 
     role: str = "customer"

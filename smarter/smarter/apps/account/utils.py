@@ -20,7 +20,6 @@ Two caching strategies are used:
 
 import logging
 import re
-import uuid
 from typing import Optional
 
 from smarter.apps.account.models import (
@@ -151,7 +150,8 @@ class SmarterCachedObjects:
 
         @cache_results()
         def _requery_admin_user(class_name=SmarterCachedObjects.__name__) -> None:
-            self._admin_user.refresh_from_db()
+            if self._admin_user:
+                self._admin_user.refresh_from_db()
             logger.debug(
                 "%s re-queried %s",
                 formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.admin_user()"),
@@ -589,12 +589,12 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
     Get a list of valid owners for the given user profile.
 
     This function retrieves all user profiles associated with the same account as the provided user profile.
-    These profiles are considered valid owners for plugins created by the user.
+    These profiles are considered valid owners for ORM resources created by the user.
 
     :param user_profile: The `UserProfile` instance representing the user.
     :type user_profile: UserProfile
 
-    :return: A list of `UserProfile` instances that are valid plugin owners.
+    :return: A list of `UserProfile` instances that are valid ORM resource owners.
     :rtype: list[UserProfile]
 
     .. seealso::
