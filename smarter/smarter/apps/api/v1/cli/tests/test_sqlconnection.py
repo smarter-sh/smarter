@@ -11,12 +11,14 @@ from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.factories import secret_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.plugin.manifest.models.sql_connection.enum import (
+from smarter.apps.connection.manifest.models.sql_connection.enum import (
     DbEngines,
     DBMSAuthenticationMethods,
 )
-from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
-from smarter.apps.plugin.models import SqlConnection
+from smarter.apps.connection.manifest.models.sql_connection.model import (
+    SAMSqlConnection,
+)
+from smarter.apps.connection.models import SqlConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib import json
 from smarter.lib.django import waffle

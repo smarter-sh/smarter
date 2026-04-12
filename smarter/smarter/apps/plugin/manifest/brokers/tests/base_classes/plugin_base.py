@@ -5,8 +5,8 @@ import logging
 import os
 
 from smarter.apps.api.utils import apply_manifest
+from smarter.apps.connection.models import SqlConnection
 from smarter.apps.plugin.const import DATA_PATH as PLUGIN_DATA_PATH
-from smarter.apps.plugin.models import SqlConnection
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.manifest.loader import SAMLoader
