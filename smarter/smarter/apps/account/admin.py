@@ -193,13 +193,13 @@ class SecretAdminForm(forms.ModelForm):
                 field.disabled = True
             return
 
-        def has_permission():
+        def has_all_permission():
             return False
 
         if self.instance and self.instance.pk:
             logger.debug("%s Initializing SecretAdminForm for existing Secret: %s", self.logger_prefix, self.instance)
             try:
-                if has_permission():
+                if has_all_permission():
                     instance: Secret = self.instance
                     self.fields["value"].initial = instance.get_secret(update_last_accessed=False)
                 else:
@@ -278,7 +278,7 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
         permission to view it.
         """
 
-        def has_permission() -> bool:
+        def has_all_permission() -> bool:
             """
             Determine if the current user has permission to view the Secret value.
              - Superusers can view all secrets.
@@ -286,21 +286,21 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
              - All other users cannot view the secret value.
             """
             logger.debug(
-                "%s.has_permission() Checking permissions for user %s to view Secret %s",
+                "%s.has_all_permission() Checking permissions for user %s to view Secret %s",
                 self.logger_prefix,
                 self.user,
                 str(obj),
             )
             if not isinstance(obj, Secret):
                 logger.error(
-                    "%s.has_permission() called with an object that is not a Secret instance: %s",
+                    "%s.has_all_permission() called with an object that is not a Secret instance: %s",
                     self.logger_prefix,
                     obj,
                 )
                 return False
             if not self.user.is_authenticated:
                 logger.debug(
-                    "%s.has_permission() User %s is not authenticated and does not have permission to view the Secret value.",
+                    "%s.has_all_permission() User %s is not authenticated and does not have permission to view the Secret value.",
                     self.logger_prefix,
                     self.user,
                 )
@@ -308,20 +308,20 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
             obj_user_profile: UserProfile = obj.user_profile
             if self.user.is_superuser:
                 logger.debug(
-                    "%s.has_permission() User %s is a superuser and has permission to view the Secret value.",
+                    "%s.has_all_permission() User %s is a superuser and has permission to view the Secret value.",
                     self.logger_prefix,
                     self.user,
                 )
                 return True
             if obj_user_profile.user == self.user:
                 logger.debug(
-                    "%s.has_permission() User %s is the owner of the Secret and has permission to view the Secret value.",
+                    "%s.has_all_permission() User %s is the owner of the Secret and has permission to view the Secret value.",
                     self.logger_prefix,
                     self.user,
                 )
                 return True
             logger.debug(
-                "%s.has_permission() User %s does not have permission to view the Secret value.",
+                "%s.has_all_permission() User %s does not have permission to view the Secret value.",
                 self.logger_prefix,
                 self.user,
             )
@@ -354,7 +354,7 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
             self.mask_string(retval),
         )
 
-        if has_permission():
+        if has_all_permission():
             logger.debug(
                 "%s.display_value() User %s has permission to view the Secret value. Displaying actual value.",
                 self.logger_prefix,

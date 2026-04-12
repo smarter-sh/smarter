@@ -88,7 +88,7 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
     data: Optional[dict] = None
     if not isinstance(user_profile, UserProfile):
         raise SmarterValueError("User profile is required to add example plugins.")
-    username: str = user_profile.cached_user.username
+    username: str = user_profile.user.username
     output = io.StringIO()
     error_output = io.StringIO()
 

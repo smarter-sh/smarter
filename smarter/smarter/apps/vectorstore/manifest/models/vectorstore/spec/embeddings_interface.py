@@ -103,14 +103,23 @@ class SAMEmbeddingsInterface(SmarterBasePydanticModel):
         """
         Validate that the provider value is a non-empty string if provided and that
         at least 1 record exists in the Provider table with the given name.
+
+        If the model includes an authenticated user then also validate that at
+        least 1 record exists in the Provider table with the given name
+        that is accessible by the authenticated user.
         """
         v = str(v).strip()
         if not v:
             raise SAMValidationError("Vectorstore provider must not be empty.")
-        try:
-            Provider.objects.get(name=v)
-        except Provider.DoesNotExist as e:
-            raise SAMValidationError(f"Vectorstore provider '{v}' does not exist or is not accessible.") from e
+        providers = Provider.objects.filter(name=v)
+        if not providers.exists():
+            raise SAMValidationError(f"Vectorstore provider '{v}' does not exist or is not accessible.")
+        if cls.user:
+            for provider in providers:
+                if provider.is_readable_by(cls.user):
+                    break
+            else:
+                raise SAMValidationError(f"No Vectorstore provider '{v}' is accessible by the authenticated user.")
         return v
 
     @field_validator("provider_model")
@@ -119,15 +128,26 @@ class SAMEmbeddingsInterface(SmarterBasePydanticModel):
         Validate that the provider_model value is a non-empty string if
         provided and that at least 1 record exists in the ProviderModel
         table with the given name and provider.
+
+        If the model includes an authenticated user then also validate that at
+        least 1 record exists in the ProviderModel table with the given name and
+        provider that is accessible by the authenticated user.
         """
         if v is not None:
             v = str(v).strip()
             if not v:
                 raise SAMValidationError("Vectorstore provider_model must not be empty if provided.")
-        try:
-            ProviderModel.objects.get(name=v, provider__name=cls.provider)
-        except ProviderModel.DoesNotExist as e:
-            raise SAMValidationError(f"Vectorstore provider_model '{v}' does not exist or is not accessible.") from e
+        provider_models = ProviderModel.objects.filter(name=v, provider__name=cls.provider)
+        if not provider_models.exists():
+            raise SAMValidationError(f"Vectorstore provider_model '{v}' does not exist or is not accessible.")
+        if cls.user:
+            for provider_model in provider_models:
+                if provider_model.provider.is_readable_by(cls.user):
+                    break
+            else:
+                raise SAMValidationError(
+                    f"No Vectorstore provider_model '{v}' is accessible by the authenticated user."
+                )
         return v
 
 

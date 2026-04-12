@@ -112,7 +112,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     .. warning::
 
         - Ensure that API keys are managed securely. Deactivated keys cannot be used for authentication.
-        - The `has_permissions` method checks if a user is staff or superuser before allowing management actions.
+        - The `has_all_permission` method checks if a user is staff or superuser before allowing management actions.
 
     Related Models
     --------------
@@ -144,7 +144,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
             self.created = timezone.now()
         super().save(*args, **kwargs)
 
-    def has_permissions(self, user) -> bool:
+    def has_all_permission(self, user) -> bool:
         """Determine if the authenticated user has permissions to manage this key."""
         if not hasattr(user, "is_authenticated") or not user.is_authenticated:
             return False

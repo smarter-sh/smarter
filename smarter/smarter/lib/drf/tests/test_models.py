@@ -54,15 +54,15 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
 
     def test_has_permissions(self):
         user = Mock(is_authenticated=True, is_staff=True, is_superuser=False)
-        self.assertTrue(self.auth_token.has_permissions(user))
+        self.assertTrue(self.auth_token.has_all_permission(user))
         user = Mock(is_authenticated=True, is_staff=False, is_superuser=True)
-        self.assertTrue(self.auth_token.has_permissions(user))
+        self.assertTrue(self.auth_token.has_all_permission(user))
         user = Mock(is_authenticated=True, is_staff=False, is_superuser=False)
-        self.assertFalse(self.auth_token.has_permissions(user))
+        self.assertFalse(self.auth_token.has_all_permission(user))
         user = Mock(is_authenticated=False, is_staff=True, is_superuser=True)
-        self.assertFalse(self.auth_token.has_permissions(user))
+        self.assertFalse(self.auth_token.has_all_permission(user))
         user = object()
-        self.assertFalse(self.auth_token.has_permissions(user))
+        self.assertFalse(self.auth_token.has_all_permission(user))
 
     def test_activate_deactivate_toggle(self):
         with patch.object(self.auth_token, "save") as mock_save:
