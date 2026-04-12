@@ -3,7 +3,7 @@
 import os
 from typing import ClassVar, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
@@ -46,20 +46,25 @@ class SAMVectorstoreSpec(AbstractSAMSpecBase):
         ..., description=f"{class_identifier}.selector[obj]: the spec for the {MANIFEST_KIND} index model configuration"
     )
 
-    @field_validator("connection")
-    def validate_connection(cls, v):
+    @model_validator(mode="after")
+    def validate_connection(self):
         """
         Validate that the connection value is a non-empty string if provided.
         """
+        v = self.connection
         if v is not None:
             v = str(v).strip()
             if not v:
                 raise SAMValidationError("Vectorstore connection must not be empty if provided.")
-        try:
-            ApiConnection.objects.get(name=v)
-        except ApiConnection.DoesNotExist as e:
-            raise SAMValidationError(f"Vectorstore connection '{v}' does not exist or is not accessible.") from e
-        return v
+            api_connections = ApiConnection.objects.filter(name=v)
+            if not api_connections.exists():
+                raise SAMValidationError(f"Vectorstore connection '{v}' does not exist.")
+            if self.user:
+                for api_connection in api_connections:
+                    if api_connection.is_readable_by(self.user):
+                        return self
+                raise SAMValidationError(f"Vectorstore connection '{v}' is not accessible by {self.user}.")
+        return self
 
     @field_validator("backend")
     def validate_backend(cls, v):

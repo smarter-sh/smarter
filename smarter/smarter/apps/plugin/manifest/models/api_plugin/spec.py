@@ -4,7 +4,7 @@ import logging
 import os
 from typing import Any, ClassVar, List, Optional, Union
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.plugin.manifest.models.api_plugin.const import MANIFEST_KIND
@@ -114,8 +114,8 @@ class SAMApiPluginSpec(SAMPluginCommonSpec):
         ..., description=f"{class_identifier}.selector[obj]: the ApiData to use for the {MANIFEST_KIND}"
     )
 
-    @field_validator("connection")
-    def validate_limit(cls, v):
+    @model_validator(mode="after")
+    def validate_connection(self):
         """
         Validate that the connection value is a valid cleanstring and that at
         least 1 record exists in the ApiConnection table with the given name.
@@ -124,16 +124,16 @@ class SAMApiPluginSpec(SAMPluginCommonSpec):
         least 1 record exists in the ApiConnection table with the given name that
         is accessible by the authenticated user.
         """
-
+        v = self.connection
         if not SmarterValidator.is_valid_cleanstring(v):
             raise SAMValidationError(f"connection '{v}' must be a valid cleanstring with no illegal characters.")
         api_connections = ApiConnection.objects.filter(name=v)
         if not api_connections.exists():
             raise SAMValidationError(f"connection '{v}' does not exist or is not accessible.")
-        if cls.user:
+        if self.user:
             for api_connection in api_connections:
-                if api_connection.is_readable_by(cls.user):
+                if api_connection.is_readable_by(self.user):
                     break
             else:
-                raise SAMValidationError(f"No connection '{v}' is accessible by the authenticated user.")
-        return v
+                raise SAMValidationError(f"No connection '{v}' is accessible by {self.user}.")
+        return self
