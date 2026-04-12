@@ -18,7 +18,12 @@ from pydantic import (
     model_validator,
 )
 
-from smarter.apps.account.models import User, get_resolved_user, is_authenticated_user
+from smarter.apps.account.models import (
+    User,
+    UserProfile,
+    get_resolved_user,
+    is_authenticated_user,
+)
 from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
@@ -55,6 +60,7 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
     """Smarter API Base Pydantic Model."""
 
     _user: Optional[User] = PrivateAttr(default=None)
+    _user_profile: Optional[UserProfile] = PrivateAttr(default=None)
 
     model_config = ConfigDict(
         from_attributes=True,  # allow model to be initialized from class attributes
@@ -67,13 +73,32 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
         Add support for passing a 'user' argument when initializing the model,
         which will be stored in a private attribute.
         """
-        user = data.pop("user", None)
-        super().__init__(**data)
-        if user is not None:
-            user = get_resolved_user(user)
-            if is_authenticated_user(user):  # type: ignore
-                self._user = user  # type: ignore
-                logger.debug("%s initialized with user: %s", logger_prefix + f".{self.__class__.__name__}", user)
+        user_profile = data.pop("user_profile", None)
+        if isinstance(user_profile, UserProfile):
+            self._user_profile = user_profile
+            logger.debug(
+                "%s initialized with user_profile: %s", logger_prefix + f".{self.__class__.__name__}", user_profile
+            )
+            self._user = user_profile.user
+            logger.debug("%s user set from user_profile: %s", logger_prefix + f".{self.__class__.__name__}", self._user)
+        else:
+            user = data.pop("user", None)
+            super().__init__(**data)
+            if user is not None:
+                user = get_resolved_user(user)
+                if is_authenticated_user(user):  # type: ignore
+                    self._user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
+                    if isinstance(self._user_profile, UserProfile):
+                        logger.debug(
+                            "%s initialized with user: %s, resolved user_profile: %s",
+                            logger_prefix + f".{self.__class__.__name__}",
+                            user,
+                            self._user_profile,
+                        )
+                        self._user = user_profile.user
+                        logger.debug(
+                            "%s initialized with user: %s", logger_prefix + f".{self.__class__.__name__}", user
+                        )
 
     @model_validator(mode="before")
     def coerce_none_strings(cls, data):
@@ -87,6 +112,11 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
     def user(self) -> Optional[User]:
         """Get the user associated with this manifest, if any."""
         return self._user
+
+    @property
+    def user_profile(self) -> Optional[UserProfile]:
+        """Get the user profile associated with this manifest, if any."""
+        return self._user_profile
 
 
 class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
