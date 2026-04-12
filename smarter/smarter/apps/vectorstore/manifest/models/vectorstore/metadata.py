@@ -15,3 +15,6 @@ class SAMVectorstoreMetadata(AbstractSAMMetadataBase):
     """Smarter API Vectorstore Manifest - Metadata class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
+
+
+__all__ = ["SAMVectorstoreMetadata"]

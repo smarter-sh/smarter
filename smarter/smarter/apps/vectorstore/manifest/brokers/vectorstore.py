@@ -29,6 +29,7 @@ from smarter.apps.vectorstore.manifest.models.vectorstore.status import (
 )
 from smarter.apps.vectorstore.models import VectorDatabase
 from smarter.apps.vectorstore.serializers import VectorstoreSerializer
+from smarter.common.conf.settings import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -465,26 +466,23 @@ class SAMVectorstoreBroker(AbstractBroker):
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
 
-        provider = Provider.objects.filter(name="ExampleProvider").first()
-        provider_model = ProviderModel.objects.filter(provider=provider).first()
-
         metadata = SAMVectorstoreMetadata(
             name="acme_llm_company",
             description="an example vectorstore manifest for the Smarter API Vectorstore",
             version="1.0.0",
             tags=["example", "vectorstore", "smarter-api"],
             annotations=[
-                {"smarter.sh/vectorstore": "example_provider"},
-                {"smarter.sh/created_by": "smarter_provider_broker"},
+                {f"{smarter_settings.root_domain}/vectorstore": "example_provider"},
+                {f"{smarter_settings.root_domain}/created_by": "smarter_provider_broker"},
             ],
         )
-        spec_provider = SAMVectorstoreInterface(
+        spec_vectorstore_interface = SAMVectorstoreInterface(
             textKey="example_key_id",
             namespace="example_namespace",
             distanceStrategy=DistanceStrategy.COSINE.value,
         )
-        embeddings = SAMEmbeddingsInterface(
-            provider="example_provider",
+        spec_embeddings_interface = SAMEmbeddingsInterface(
+            provider="openai",
             providerModel="text-embedding-ada-002",
             dimensions=1536,
             deployment="example_deployment",
@@ -513,8 +511,8 @@ class SAMVectorstoreBroker(AbstractBroker):
             checkEmbeddingCtxLength=True,
         )
 
-        index_model = SAMIndexModelInterface(
-            spec={"index_type": "example_index_type", "pod_type": "example_pod_type"},
+        spec_index_model = SAMIndexModelInterface(
+            spec={"custom_index_type": "example_index_type", "very_unorthodox_pod_type": "example_pod_type"},
             dimension=1536,
             metric=Metric.COSINE.value,
             timeout=30,
@@ -525,9 +523,9 @@ class SAMVectorstoreBroker(AbstractBroker):
             connection="example_api_connection",
             backend="pinecone",
             isActive=True,
-            vectorstore=spec_provider,
-            embeddings=embeddings,
-            indexModel=index_model,
+            vectorstore=spec_vectorstore_interface,
+            embeddings=spec_embeddings_interface,
+            indexModel=spec_index_model,
         )
         status = SAMVectorstoreStatus(
             recordLocator="example_record_locator",
@@ -884,3 +882,6 @@ class SAMVectorstoreBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         data = {}
         return self.json_response_ok(command=command, data=data)
+
+
+__all__ = ["SAMVectorstoreBroker", "SAMVectorstoreBrokerError"]

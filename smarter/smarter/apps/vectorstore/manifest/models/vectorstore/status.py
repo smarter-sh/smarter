@@ -14,3 +14,6 @@ class SAMVectorstoreStatus(AbstractSAMStatusBase):
     """Smarter API Vectorstore Manifest - Status class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
+
+
+__all__ = ["SAMVectorstoreStatus"]

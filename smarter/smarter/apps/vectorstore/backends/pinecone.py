@@ -13,16 +13,18 @@ from pinecone import Pinecone
 from pinecone.core.openapi.db_data.models import (
     IndexDescription as PineconeIndexDescription,
 )
-from pinecone.db_control.enums import AwsRegion, CloudProvider, Metric, VectorType
+from pinecone.db_control.enums import AwsRegion, CloudProvider
 from pinecone.db_control.models import IndexList, ServerlessSpec
 from pinecone.db_data import Index
 from pinecone.exceptions import PineconeApiException
 from pydantic import SecretStr
 
+from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.provider.models import Provider
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.apps.vectorstore.models import VectorDatabase
 from smarter.apps.vectorstore.signals import load_failed, load_started, load_success
+from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -81,12 +83,12 @@ class PineconeBackend(SmarterVectorstoreBackend):
             raise VectorStoreBackendError(f"Invalid backend for PineconeBackend: {db.backend}")
 
         # unpack some of the db fields for easier access.
-        if not isinstance(db.provider, Provider):
-            raise VectorStoreBackendError(f"Invalid provider for PineconeBackend: {db.provider}")
+        if not isinstance(db.embeddings_provider, Provider):
+            raise VectorStoreBackendError(f"Invalid provider for PineconeBackend: {db.embeddings_provider}")
 
-        if not isinstance(db.password, SecretStr):
-            raise VectorStoreBackendError(f"Invalid password for PineconeBackend: {db.password}")
-        self.pinecone_api_key = db.password
+        if not isinstance(db.connection, ApiConnection):
+            raise VectorStoreBackendError(f"Invalid connection for PineconeBackend: {db.connection}")
+        self.pinecone_api_key = db.connection.api_key
 
         self.index_name = db.name
         if self.ready:
@@ -210,7 +212,9 @@ class PineconeBackend(SmarterVectorstoreBackend):
             self._vector_store = PineconeVectorStore(
                 index=self.index,
                 embedding=self.embeddings,
-                text_key="lc_id",  # FIX NOTE: I LIVE IN A DATABASE TABLE
+                text_key=self.db.vectorstore_text_key,
+                namespace=self.db.vectorstore_namespace,
+                distance_strategy=self.db.vectorstore_distance_strategy,
             )
         return self._vector_store
 
@@ -301,17 +305,26 @@ class PineconeBackend(SmarterVectorstoreBackend):
         """
         try:
             load_started.send(
-                sender=self.__class__, backend=self, provider=self.db.provider, user_profile=self.db.user_profile
+                sender=self.__class__,
+                backend=self,
+                provider=self.db.embeddings_provider,
+                user_profile=self.db.user_profile,
             )
             self.vector_store.add_documents(documents=documents, embeddings=embeddings)
             load_success.send(
-                sender=self.__class__, backend=self, provider=self.db.provider, user_profile=self.db.user_profile
+                sender=self.__class__,
+                backend=self,
+                provider=self.db.embeddings_provider,
+                user_profile=self.db.user_profile,
             )
             return True
         except Exception as e:
             logger.error("%s.add_documents() Error adding documents: %s", self.formatted_class_name, str(e))
             load_failed.send(
-                sender=self.__class__, backend=self, provider=self.db.provider, user_profile=self.db.user_profile
+                sender=self.__class__,
+                backend=self,
+                provider=self.db.embeddings_provider,
+                user_profile=self.db.user_profile,
             )
             raise VectorStoreBackendError(f"Error adding documents: {str(e)}") from e
 
@@ -345,10 +358,13 @@ class PineconeBackend(SmarterVectorstoreBackend):
             logging.debug("%s.create() Creating index. This may take a few minutes...", self.formatted_class_name)
             self.pinecone.create_index(
                 name=self.index_name,
-                dimension=1536,
-                metric=Metric.DOTPRODUCT,
                 spec=serverless_spec,
-                vector_type=VectorType.DENSE,
+                dimension=self.db.index_model_dimension,
+                metric=self.db.index_model_metric,
+                timeout=self.db.index_model_timeout,
+                deletion_protection=self.db.index_model_deletion_protection,
+                vector_type=self.db.index_model_vector_type,
+                tags={"created_by": f"{smarter_settings.platform_name}", "db_id": str(self.db.id)},  # type: ignore
             )
             logging.debug("%s.create() Index created: %s", self.formatted_class_name, self.index_name)
         except PineconeApiException as e:

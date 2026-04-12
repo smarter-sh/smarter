@@ -154,6 +154,7 @@ class VectorDatabase(MetaDataWithOwnershipModel):
     )
     index_model_dimension = models.IntegerField(
         help_text="Number of dimensions for the index. Must be between 1 and 20,000, or None. Example: 1536.",
+        default=None,
         blank=True,
         null=True,
     )
@@ -166,20 +167,21 @@ class VectorDatabase(MetaDataWithOwnershipModel):
     )
     index_model_timeout = models.IntegerField(
         help_text="Timeout in seconds for index operations. Must be greater than zero or None.",
+        default=None,
         blank=True,
         null=True,
     )
     index_model_deletion_protection = models.CharField(
         help_text="Deletion protection setting. Accepts DeletionProtection enum or string. Default: 'disabled'.",
         max_length=50,
-        default="disabled",
+        default=None,
         blank=True,
         null=True,
     )
     index_model_vector_type = models.CharField(
         help_text="Type of vector. Accepts VectorType enum or string. Default: 'dense'.",
         max_length=50,
-        default="dense",
+        default=None,
         blank=True,
         null=True,
     )
