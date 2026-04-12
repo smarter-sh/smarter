@@ -30,7 +30,7 @@ class VectorDatabaseAdmin(SmarterCustomerModelAdmin):
         "name",
         "user_profile",
         "backend",
-        "host",
+        "connection",
         "status",
         "provider",
         "provider_model",
