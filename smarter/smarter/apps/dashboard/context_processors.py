@@ -78,8 +78,8 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
+from smarter.apps.connection.models import ConnectionBase
 from smarter.apps.plugin.models import (
-    ConnectionBase,
     PluginMeta,
 )
 from smarter.apps.provider.models import Provider

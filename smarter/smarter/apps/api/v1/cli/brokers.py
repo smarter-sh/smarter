@@ -24,9 +24,13 @@ from smarter.apps.account.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
-from smarter.apps.plugin.manifest.brokers.api_connection import SAMApiConnectionBroker
+from smarter.apps.connection.manifest.brokers.api_connection import (
+    SAMApiConnectionBroker,
+)
+from smarter.apps.connection.manifest.brokers.sql_connection import (
+    SAMSqlConnectionBroker,
+)
 from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
-from smarter.apps.plugin.manifest.brokers.sql_connection import SAMSqlConnectionBroker
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
 from smarter.apps.prompt.manifest.brokers.chat import SAMChatBroker
