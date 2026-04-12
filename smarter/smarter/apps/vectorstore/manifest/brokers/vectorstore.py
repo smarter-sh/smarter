@@ -11,7 +11,7 @@ from pinecone.db_control.enums import DeletionProtection, Metric, VectorType
 
 from smarter.apps.account.models import User
 from smarter.apps.account.utils import valid_resource_owners_for_user
-from smarter.apps.plugin.models import ApiConnection
+from smarter.apps.connection.models import ApiConnection
 from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.apps.vectorstore.manifest.models.vectorstore.const import MANIFEST_KIND
 from smarter.apps.vectorstore.manifest.models.vectorstore.metadata import (

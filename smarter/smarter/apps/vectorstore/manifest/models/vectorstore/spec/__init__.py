@@ -5,7 +5,7 @@ from typing import ClassVar, Optional
 
 from pydantic import Field, field_validator
 
-from smarter.apps.plugin.models import ApiConnection
+from smarter.apps.connection.models import ApiConnection
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.manifest.exceptions import SAMValidationError

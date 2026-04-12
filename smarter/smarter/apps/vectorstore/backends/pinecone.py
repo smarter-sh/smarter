@@ -19,7 +19,7 @@ from pinecone.db_data import Index
 from pinecone.exceptions import PineconeApiException
 from pydantic import SecretStr
 
-from smarter.apps.plugin.models import ApiConnection
+from smarter.apps.connection.models import ApiConnection
 from smarter.apps.provider.models import Provider
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.apps.vectorstore.models import VectorDatabase

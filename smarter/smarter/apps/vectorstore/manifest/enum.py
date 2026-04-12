@@ -23,3 +23,6 @@ class SAMVectorstoreSpecKeys(SmarterEnumAbstract):
     STATUS = "status"
     PROVIDER = "provider"
     PROVIDER_MODEL = "provider_model"
+
+
+__all__ = ["VectorstoreModelEnum", "SAMVectorstoreSpecKeys"]

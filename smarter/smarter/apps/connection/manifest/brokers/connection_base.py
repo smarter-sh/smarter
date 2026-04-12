@@ -1,0 +1,298 @@
+# pylint: disable=W0718
+"""Smarter Api ApiConnection Manifest handler"""
+
+import logging
+from typing import Optional, Type
+
+from django.http import HttpRequest
+
+from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.connection.manifest.models.common.connection.metadata import (
+    SAMConnectionCommonMetadata,
+)
+from smarter.apps.connection.manifest.models.common.connection.status import (
+    SAMConnectionCommonStatus,
+)
+from smarter.apps.connection.models import ConnectionBase
+from smarter.apps.connection.signals import broker_ready
+from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import smarter_build_absolute_uri
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotReady,
+)
+
+
+# pylint: disable=W0613
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.CONNECTION_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+
+class SAMConnectionBaseBroker(AbstractBroker):
+    """
+    Smarter API Connection Base Manifest Broker.
+
+    This abstract base class provides common functionality for API connection brokers, including shared logic for applying manifest data to Django ORM models. Subclasses must implement the `ORMModelClass` and `connection` properties to specify the concrete connection model and instance.
+
+    Responsibilities include:
+
+      - Handling common tasks for connection brokers, such as updating metadata fields.
+      - Providing a standardized `apply()` method to copy manifest data to the database, with validation and logging.
+      - Managing read-only fields and ensuring only editable fields are persisted.
+
+    :param ORMModelClass: The Django ORM model class for the connection. Must be implemented by subclasses.
+    :type ORMModelClass: Type[ConnectionBase]
+    :param connection: The connection model instance. Must be implemented by subclasses.
+    :type connection: Optional[ConnectionBase]
+
+    .. seealso::
+
+        :class:`AbstractBroker`
+        :class:`ConnectionBase`
+        :meth:`SAMConnectionBaseBroker.apply`
+
+    **Example usage**::
+
+        class MyConnectionBroker(SAMConnectionBaseBroker):
+            @property
+            def ORMModelClass(self):
+                return MyConnectionModel
+
+            @property
+            def connection(self):
+                return MyConnectionModel.objects.get(...)
+
+        broker = MyConnectionBroker(...)
+        broker.apply(request, manifest_data=manifest_dict)
+
+    """
+
+    _connection: Optional[ConnectionBase] = None
+    _sam_connection_metadata: Optional[SAMConnectionCommonMetadata] = None
+    _sam_connection_status: Optional[SAMConnectionCommonStatus] = None
+
+    def connection_init(self) -> None:
+        """Initialize the connection model instance."""
+        self._connection = None
+        self._sam_connection_metadata = None
+        self._sam_connection_status = None
+
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Return the formatted class name for logging purposes.
+
+        :return: The formatted class name.
+        :rtype: str
+        """
+        return formatted_text(f"{__name__}.{SAMConnectionBaseBroker.__name__}[{id(self)}]")
+
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the broker is ready for operations.
+
+        This property determines whether the broker has been properly initialized
+        and is ready to perform its functions. A broker is considered ready if
+        it has a valid manifest loaded, either from raw data, a loader, or
+        existing Django ORM models.
+
+        :returns: ``True`` if the broker is ready, ``False`` otherwise.
+        :rtype: bool
+        """
+        retval = super().ready
+        if not retval:
+            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
+            return False
+        retval = self.manifest is not None or self.connection is not None
+        logger.debug(
+            "%s.ready() manifest presence indicates ready=%s for %s",
+            self.formatted_class_name,
+            retval,
+            self.kind,
+        )
+        if retval:
+            broker_ready.send(sender=self.__class__, broker=self)
+        return retval
+
+    @property
+    def ORMModelClass(self) -> Type[ConnectionBase]:
+        raise NotImplementedError(f"{self.formatted_class_name}.ORMModelClass must be implemented in the subclass.")
+
+    @property
+    def connection(self) -> Optional[ConnectionBase]:
+        """Return the connection model instance."""
+        raise NotImplementedError(f"{self.formatted_class_name}.connection must be implemented in the subclass.")
+
+    @connection.setter
+    def connection(self, value: ConnectionBase) -> None:
+        """Set the connection model instance."""
+        self._connection = value
+        self._sam_connection_metadata = None
+        self._sam_connection_status = None
+
+    def sam_connection_metadata(self) -> Optional[SAMConnectionCommonMetadata]:
+        """
+        Return the common connection metadata from the manifest.
+
+        :return: The connection metadata.
+        :rtype: SAMConnectionCommonMetadata
+
+        :raises NotImplementedError:
+            If the manifest does not have connection metadata.
+
+        .. seealso::
+
+            :class:`SAMConnectionCommonMetadata`
+
+        **Example usage**::
+
+            metadata = broker.sam_connection_metadata()
+
+        """
+        if self.connection:
+            self._sam_connection_metadata = SAMConnectionCommonMetadata(
+                name=self.connection.name,
+                description=self.connection.description,
+                version=self.connection.version,
+                tags=self.connection.tags_list if self.connection.tags else None,
+                annotations=self.connection.annotations,
+            )
+        return self._sam_connection_metadata
+
+    def sam_connection_status(self) -> Optional[SAMConnectionCommonStatus]:
+        """
+        Return the common connection status from the manifest.
+        """
+        if self.connection:
+            admin = get_cached_admin_user_for_account(account=self.connection.user_profile.cached_account)
+            if not admin:
+                raise SAMBrokerErrorNotReady(
+                    f"Admin user not found for account {self.connection.user_profile.cached_account.account_number}. Cannot retrieve connection status.",
+                    thing=self.thing,
+                    command=SmarterJournalCliCommands.GET,
+                )
+            self._sam_connection_status = SAMConnectionCommonStatus(
+                account_number=self.connection.user_profile.cached_account.account_number,
+                username=admin.username,
+                recordLocator=self.connection.record_locator,
+                created=self.connection.created_at,
+                modified=self.connection.updated_at,
+            )
+        return self._sam_connection_status
+
+    def cache_invalidations(self) -> None:
+        """
+        Invalidate any relevant caches after applying changes to the connection.
+
+         This method should be called after any updates to the connection model to ensure that cached data is refreshed. Subclasses can override this method to add additional cache invalidation logic specific to their implementation.
+
+         :return: None
+         :rtype: None
+
+         .. seealso::
+
+             :class:`SAMConnectionBaseBroker`
+             :meth:`SAMConnectionBaseBroker.apply`
+        """
+        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        if self.connection:
+            ModelClass = self.ORMMetaModelClass
+            ModelClass.get_cached_object(invalidate=True, pk=self.connection.id)  # type: ignore
+        return super().cache_invalidations()
+
+    def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
+        """
+        Apply the manifest by copying its metadata to the Django ORM model and saving it to the database.
+
+        This method ensures the manifest is loaded and validated (via `super().apply`) before updating the database. Only editable fields from the manifest metadata are updated; read-only fields are excluded. All changes are logged, and the connection is saved if any updates occur.
+
+        .. note::
+
+            tags are handled separately because they are of type TaggableManager and
+            require a different method to set them.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments containing manifest data.
+        :type kwargs: dict
+        :return: Optionally returns a journaled JSON response, depending on subclass implementation.
+        :rtype: Optional[SmarterJournaledJsonResponse]
+
+        :raises SAMBrokerErrorNotReady:
+            If the manifest is not ready or the connection instance is missing.
+
+        .. error::
+
+            Any error during manifest application or database update is logged and may raise an exception.
+
+        .. seealso::
+
+            :class:`ConnectionBase`
+            :class:`SAMBrokerErrorNotReady`
+            :meth:`SAMConnectionBaseBroker.apply`
+
+        **Example usage**::
+
+            broker.apply(request, manifest_data=manifest_dict)
+
+        """
+        logger.info(
+            "%s.apply() called with request: %s", self.formatted_class_name, smarter_build_absolute_uri(request=request)
+        )
+        super().apply(request, kwargs)
+
+        if not self.user.is_staff:
+            raise SAMBrokerError(
+                message="Only account admins can apply connection manifests.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+
+        # update the common meta fields
+        data = self.manifest.metadata.model_dump() if self.manifest else None
+        data = self.camel_to_snake(data) if data else None
+        if not isinstance(data, dict):
+            raise SAMBrokerErrorNotReady(
+                f"Manifest is not ready for {self.kind} broker. Cannot apply. manifest: {self.manifest.model_dump() if self.manifest else None}",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+        tags = data.pop("tags", None)
+
+        if self.connection is None:
+            raise SAMBrokerErrorNotReady(
+                f"Connection not found for {self.kind} broker. Cannot apply.",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+
+        # Update metadata fields if they exist in data
+        # {'name': 'test4818ca5097adb299', 'description': 'new description', 'version': '1.0.0', 'tags': None, 'annotations': None}
+        updated = False
+        for key, value in data.items():
+            if hasattr(self.connection, key):
+                if getattr(self.connection, key) != value:
+                    setattr(self.connection, key, value)
+                    logger.info("%s.apply() updating %s to %s", self.formatted_class_name, key, value)
+                    updated = True
+        if updated:
+            self.connection.save()
+            self.cache_invalidations()
+
+        if tags is not None:
+            self.connection.tags.set(tags)

@@ -7,10 +7,7 @@ from typing import Optional, Union
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
-from requests import Response
 
-from smarter.common.conf import smarter_settings
-from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -19,7 +16,6 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import AbstractBroker
 
 from .models import (
-    ApiConnection,
     PluginDataApi,
     PluginDataSql,
     PluginDataStatic,
@@ -27,17 +23,10 @@ from .models import (
     PluginPrompt,
     PluginSelector,
     PluginSelectorHistory,
-    SqlConnection,
 )
 from .plugin.static import PluginBase
-from .signals import (  # plugin signals; sql_connection signals; api_connection signals
+from .signals import (
     broker_ready,
-    plugin_api_connection_attempted,
-    plugin_api_connection_failed,
-    plugin_api_connection_query_attempted,
-    plugin_api_connection_query_failed,
-    plugin_api_connection_query_success,
-    plugin_api_connection_success,
     plugin_called,
     plugin_cloned,
     plugin_created,
@@ -46,13 +35,6 @@ from .signals import (  # plugin signals; sql_connection signals; api_connection
     plugin_ready,
     plugin_responded,
     plugin_selected,
-    plugin_sql_connection_attempted,
-    plugin_sql_connection_failed,
-    plugin_sql_connection_query_attempted,
-    plugin_sql_connection_query_failed,
-    plugin_sql_connection_query_success,
-    plugin_sql_connection_success,
-    plugin_sql_connection_validated,
     plugin_updated,
 )
 from .tasks import create_plugin_selector_history
@@ -264,45 +246,6 @@ def handle_plugin_selector_history_saved(sender, instance, created, **kwargs):
         )
 
 
-@receiver(post_save, sender=ApiConnection)
-def handle_api_connection_saved(sender, instance, created, **kwargs):
-    """Handle API connection saved signal."""
-
-    if created:
-        logger.info(
-            "%s - %s",
-            formatted_text(prefix + "post_save() ApiConnection() created"),
-            formatted_json(model_to_dict(instance)),
-        )
-    else:
-        logger.info(
-            "%s - %s",
-            formatted_text(prefix + "post_save() ApiConnection() updated"),
-            formatted_json(model_to_dict(instance)),
-        )
-
-
-@receiver(post_save, sender=SqlConnection)
-def handle_sql_connection_saved(sender, instance: SqlConnection, created, **kwargs):
-    """Handle SQL connection saved signal."""
-
-    user_profile = str(instance.user_profile) if instance.user_profile else "(user_profile is missing)"
-    if created:
-        logger.info(
-            "%s - %s %s",
-            formatted_text(prefix + "post_save() SqlConnection() created"),
-            user_profile,
-            formatted_json(model_to_dict(instance)),
-        )
-    else:
-        logger.info(
-            "%s - %s %s",
-            formatted_text(prefix + "post_save() SqlConnection() updated"),
-            user_profile,
-            formatted_json(model_to_dict(instance)),
-        )
-
-
 @receiver(post_save, sender=PluginDataApi)
 def handle_plugin_data_api_saved(sender, instance, created, **kwargs):
     """Handle plugin data API saved signal."""
@@ -340,187 +283,7 @@ def handle_plugin_data_sql_saved(sender, instance, created, **kwargs):
 
 
 # ------------------------------------------------------------------------------
-# plugin sql connection signals.
-# ------------------------------------------------------------------------------
-def masked_dict(dic: dict) -> dict:
-    """Mask sensitive data in a dictionary."""
-    masked = dic.copy()
-    if "PASSWORD" in masked:
-        masked["PASSWORD"] = "********"
-    return masked
-
-
-@receiver(plugin_sql_connection_attempted, dispatch_uid="plugin_sql_connection_attempted")
-def handle_plugin_sql_connection_attempted(sender, connection: SqlConnection, **kwargs):
-    """Handle plugin SQL connection attempted signal."""
-
-    logger.info(
-        "%s - %s",
-        formatted_text(prefix + "plugin_sql_connection_attempted()"),
-        connection.get_connection_string(),
-    )
-
-
-@receiver(plugin_sql_connection_success, dispatch_uid="plugin_sql_connection_success")
-def handle_plugin_sql_connection_success(sender, connection: SqlConnection, **kwargs):
-    """Handle plugin SQL connection success signal."""
-
-    logger.info(
-        "%s - %s",
-        formatted_text(prefix + "plugin_sql_connection_success()"),
-        connection.get_connection_string(),
-    )
-
-
-@receiver(plugin_sql_connection_validated, dispatch_uid="plugin_sql_connection_validated")
-def handle_plugin_sql_connection_validated(sender, connection: SqlConnection, **kwargs):
-    """Handle plugin SQL connection validated signal."""
-
-    logger.info(
-        "%s - %s",
-        formatted_text(prefix + "plugin_sql_connection_validated()"),
-        connection.get_connection_string(),
-    )
-
-
-@receiver(plugin_sql_connection_failed, dispatch_uid="plugin_sql_connection_failed")
-def handle_plugin_sql_connection_failed(sender, connection: SqlConnection, error: str, **kwargs):
-    """Handle plugin SQL connection failed signal."""
-
-    logger.error(
-        "%s - %s - error: %s",
-        formatted_text(prefix + "plugin_sql_connection_failed()"),
-        connection.get_connection_string(masked=not smarter_settings.debug_mode),
-        error,
-    )
-
-    raise SmarterConfigurationError(
-        f"Remote SQL Connection {connection.get_connection_string(masked=not smarter_settings.debug_mode)} failed: {error}"
-    ) from None
-
-
-@receiver(plugin_sql_connection_query_attempted, dispatch_uid="plugin_sql_connection_query_attempted")
-def handle_plugin_sql_connection_query_attempted(sender, connection: SqlConnection, sql: str, limit: int, **kwargs):
-    """Handle plugin SQL connection query attempted signal."""
-
-    logger.info(
-        "%s - %s - sql: %s - limit: %s",
-        formatted_text(prefix + "plugin_sql_connection_query_attempted()"),
-        connection.get_connection_string(),
-        sql,
-        limit,
-    )
-
-
-@receiver(plugin_sql_connection_query_success, dispatch_uid="plugin_sql_connection_query_success")
-def handle_plugin_sql_connection_query_success(sender, connection: SqlConnection, sql: str, limit: int, **kwargs):
-    """Handle plugin SQL connection query success signal."""
-
-    logger.info(
-        "%s - %s - sql: %s - limit: %s",
-        formatted_text(prefix + "plugin_sql_connection_query_success()"),
-        connection.get_connection_string(),
-        sql,
-        limit,
-    )
-
-
-@receiver(plugin_sql_connection_query_failed, dispatch_uid="plugin_sql_connection_query_failed")
-def handle_plugin_sql_connection_query_failed(
-    sender, connection: SqlConnection, sql: str, limit: int, error: str, **kwargs
-):
-    """Handle plugin SQL connection query failed signal."""
-
-    logger.info(
-        "%s - %s - sql: %s - limit: %s - error: %s",
-        formatted_text(prefix + "plugin_sql_connection_query_failed()"),
-        connection.get_connection_string(),
-        sql,
-        limit,
-        error,
-    )
-
-    raise SmarterConfigurationError(
-        f"Remote SQL {connection.get_connection_string()} query execution failed {sql}: {error}"
-    )
-
-
-@receiver(plugin_api_connection_attempted, dispatch_uid="plugin_api_connection_attempted")
-def handle_plugin_api_connection_attempted(sender, connection: ApiConnection, **kwargs):
-    """Handle plugin API connection attempted signal."""
-
-    logger.info(
-        "%s - %s",
-        formatted_text(prefix + "plugin_api_connection_attempted()"),
-        connection.get_connection_string(),
-    )
-
-
-@receiver(plugin_api_connection_success, dispatch_uid="plugin_api_connection_success")
-def handle_plugin_api_connection_success(sender, connection: ApiConnection, **kwargs):
-    """Handle plugin API connection success signal."""
-
-    logger.info(
-        "%s - %s",
-        formatted_text(prefix + "plugin_api_connection_success()"),
-        connection.get_connection_string(),
-    )
-
-
-@receiver(plugin_api_connection_failed, dispatch_uid="plugin_api_connection_failed")
-def handle_plugin_api_connection_failed(sender, connection: ApiConnection, error: Optional[Exception] = None, **kwargs):
-    """Handle plugin API connection failed signal."""
-
-    logger.info(
-        "%s - %s",
-        formatted_text(prefix + "plugin_api_connection_failed()"),
-        connection.get_connection_string(),
-    )
-
-
-@receiver(plugin_api_connection_query_attempted, dispatch_uid="plugin_api_connection_query_attempted")
-def handle_plugin_api_connection_query_attempted(sender, connection: ApiConnection, **kwargs):
-    """Handle plugin API connection query attempted signal."""
-
-    logger.info(
-        "%s - %s",
-        formatted_text(prefix + "plugin_api_connection_query_attempted()"),
-        connection.get_connection_string(),
-    )
-
-
-@receiver(plugin_api_connection_query_success, dispatch_uid="plugin_api_connection_query_success")
-def handle_plugin_api_connection_query_success(
-    sender, connection: ApiConnection, response: Optional[Response] = None, **kwargs
-):
-    """Handle plugin API connection query success signal."""
-
-    logger.info(
-        "%s - %s - response: %s",
-        formatted_text(prefix + "plugin_api_connection_query_success()"),
-        connection.get_connection_string(),
-        formatted_json(response.json()) if response else None,
-    )
-
-
-@receiver(plugin_api_connection_query_failed, dispatch_uid="plugin_api_connection_query_failed")
-def handle_plugin_api_connection_query_failed(
-    sender, connection: ApiConnection, response: Optional[Response] = None, error: Optional[Exception] = None, **kwargs
-):
-    """Handle plugin API connection query failed signal."""
-
-    logger.info(
-        "%s - %s - response: %s - error: %s",
-        formatted_text(prefix + "plugin_api_connection_query_failed()"),
-        connection.get_connection_string(),
-        formatted_json(response.json()) if response else None,
-        error,
-    )
-
-
-# ------------------------------------------------------------------------------
 # pre_delete signals for
-#    ApiConnection,
 #    PluginDataApi,
 #    PluginDataSql,
 #    PluginDataStatic,
@@ -528,30 +291,7 @@ def handle_plugin_api_connection_query_failed(
 #    PluginPrompt,
 #    PluginSelector,
 #    PluginSelectorHistory,
-#    SqlConnection,
 # ------------------------------------------------------------------------------
-
-
-@receiver(pre_delete, sender=ApiConnection)
-def handle_api_connection_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for ApiConnection."""
-    logger.info(
-        "%s - %s deleting.",
-        formatted_text(prefix + "ApiConnection().pre_delete()"),
-        instance,
-    )
-
-
-@receiver(pre_delete, sender=SqlConnection)
-def handle_sql_connection_pre_delete(sender, instance, **kwargs):
-    """Handle pre-delete signal for SqlConnection."""
-    logger.info(
-        "%s - %s deleting.",
-        formatted_text(prefix + "SqlConnection().pre_delete()"),
-        instance,
-    )
-
-
 @receiver(pre_delete, sender=PluginDataApi)
 def handle_plugin_data_api_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for PluginDataApi."""
