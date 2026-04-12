@@ -107,8 +107,8 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             os.path.join(
                 "smarter", "apps", "account", "data", "example-manifests", "secret-smarter-test-db-proxy-password.yaml"
             ),
-            os.path.join("smarter", "apps", "plugin", "data", "sample-connections", "smarter-test-db.yaml"),
-            os.path.join("smarter", "apps", "plugin", "data", "sample-connections", "smarter-test-api.yaml"),
+            os.path.join("smarter", "apps", "connection", "data", "sample-connections", "smarter-test-db.yaml"),
+            os.path.join("smarter", "apps", "connection", "data", "sample-connections", "smarter-test-api.yaml"),
         ]
         for file_path in file_paths:
             apply(file_path)

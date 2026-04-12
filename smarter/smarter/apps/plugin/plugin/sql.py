@@ -17,7 +17,7 @@ A PLugin that uses a remote SQL database server to retrieve its return data
     :language: yaml
     :caption: 1.) Example Smarter Secret Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-db.yaml
     :language: yaml
     :caption: 2.) Example Smarter SQL Connection Manifest
 
