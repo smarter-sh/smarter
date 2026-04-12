@@ -653,10 +653,11 @@ INSTALLED_APPS = [
     "smarter.apps.account",
     "smarter.apps.api",
     "smarter.apps.chatbot",
-    "smarter.apps.prompt",
+    "smarter.apps.connection",
     "smarter.apps.dashboard",
     "smarter.apps.docs",
     "smarter.apps.plugin",
+    "smarter.apps.prompt",
     "smarter.apps.provider",
     "smarter.apps.vectorstore",
     # 3rd party apps

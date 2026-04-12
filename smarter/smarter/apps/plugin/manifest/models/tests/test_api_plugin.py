@@ -17,10 +17,19 @@ from pydantic_core import ValidationError as PydanticValidationError
 from smarter.apps.account.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
 from smarter.apps.account.models import Secret
+from smarter.apps.connection.manifest.brokers.api_connection import (
+    SAMApiConnectionBroker,
+)
+from smarter.apps.connection.manifest.models.api_connection.model import (
+    SAMApiConnection,
+)
+from smarter.apps.connection.models import ApiConnection
+from smarter.apps.connection.tests.mixins import (
+    ApiConnectionTestMixin,
+    AuthenticatedRequestMixin,
+)
 from smarter.apps.plugin.const import DATA_PATH as PLUGIN_DATA_PATH
-from smarter.apps.plugin.manifest.brokers.api_connection import SAMApiConnectionBroker
 from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
-from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.manifest.models.api_plugin.spec import SAMApiPluginSpec
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
@@ -29,12 +38,8 @@ from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
 from smarter.apps.plugin.manifest.models.common.plugin.status import (
     SAMPluginCommonStatus,
 )
-from smarter.apps.plugin.models import ApiConnection, PluginDataApi, PluginMeta
+from smarter.apps.plugin.models import PluginDataApi, PluginMeta
 from smarter.apps.plugin.tests.base_classes import ManifestTestsMixin, TestPluginBase
-from smarter.apps.plugin.tests.mixins import (
-    ApiConnectionTestMixin,
-    AuthenticatedRequestMixin,
-)
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.journal.enum import SmarterJournalThings
