@@ -91,7 +91,7 @@ class Command(SmarterCommand):
             "--filespec",
             type=str,
             nargs="?",
-            help="relative path a Smarter manifest file (e.g. smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml).",
+            help="relative path a Smarter manifest file (e.g. smarter/apps/connection/data/sample-connections/smarter-test-db.yaml).",
         )
         parser.add_argument(
             "--manifest",

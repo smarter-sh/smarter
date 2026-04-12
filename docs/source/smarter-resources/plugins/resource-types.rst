@@ -1,4 +1,4 @@
-Plugin & Connection Reference
+Connection Reference
 =======================================
 
 
@@ -14,10 +14,10 @@ Plugin & Connection Reference
    plugin/api
    plugin/utils
 
-.. literalinclude:: ../../../../smarter/smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml
+.. literalinclude:: ../../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-db.yaml
     :language: yaml
     :caption: Example Smarter SQL Connection Manifest
 
-.. literalinclude:: ../../../../smarter/smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml
+.. literalinclude:: ../../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-db.yaml
     :language: yaml
     :caption: Example SQL Plugin Manifest
