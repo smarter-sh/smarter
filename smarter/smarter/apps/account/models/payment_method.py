@@ -1,7 +1,4 @@
-# pylint: disable=C0302
 """Account PaymentMethod model."""
-
-# pylint: disable=missing-class-docstring
 
 import logging
 
