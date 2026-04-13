@@ -21,6 +21,7 @@ from django.template.loader import render_to_string
 from django.test.client import RequestFactory
 from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
+from typing_extensions import deprecated
 
 # our stuff
 from smarter.common.conf import smarter_settings
@@ -1249,6 +1250,9 @@ class MetaDataWithOwnershipModelManager(Manager[_MT]):
     def get_queryset(self) -> SmarterQuerySetWithPermissions[_MT]:
         return SmarterQuerySetWithPermissions(self.model, using=self._db)
 
+    def filter(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().filter(*args, **kwargs)
+
     def with_read_permission_for(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
         """
         A custom Smarter pipeline for filtering any MetaDataWithOwnership
@@ -1328,6 +1332,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="%(class)ss")
 
+    @deprecated(
+        "Use model.objects.with_ownership_permission_for(user=user) on the queryset instead for more efficient permission checks."
+    )
     def has_all_permission(self, request: "WSGIRequest") -> bool:
         """
         Check if the authenticated user in the given request has permission to
@@ -1893,6 +1900,8 @@ class Secret(MetaDataWithOwnershipModel):
         verbose_name = "Secret"
         verbose_name_plural = "Secrets"
         unique_together = ("user_profile", "name")
+
+    objects: MetaDataWithOwnershipModelManager["Secret"] = MetaDataWithOwnershipModelManager()
 
     last_accessed = models.DateTimeField(
         blank=True, editable=False, null=True, help_text="Timestamp of the last time the secret was accessed."

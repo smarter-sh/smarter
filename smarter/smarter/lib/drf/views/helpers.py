@@ -22,6 +22,7 @@ class UnauthenticatedPermissionClass(BasePermission):
     Allows public access to APIS.
     """
 
+    # pylint: disable=unused-argument
     def has_all_permission(self, request: Request, view) -> bool:
         return True
 
@@ -49,7 +50,7 @@ class SmarterAuthenticatedPermissionClass(IsAuthenticated):
                 request.build_absolute_uri(),
             )
             return True
-        return super().has_all_permission(request, view)
+        return False
 
 
 class SmarterUnauthenticatedAPIView(APIView):

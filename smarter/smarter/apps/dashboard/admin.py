@@ -5,7 +5,7 @@ import logging
 from typing import Optional
 
 from django.contrib import admin
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import FieldError
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
@@ -198,6 +198,9 @@ def smarter_has_read_permission(request: HttpRequest, obj=None) -> bool:
                 obj_user,
             )
             return True
+        if not isinstance(obj_user, User):
+            logger.debug("%s: Object user %s is not a valid User instance", logger_prefix, obj_user)
+            return False
         elif not user.is_staff and obj_user.is_superuser:
             logger.debug(
                 "%s: User %s is a customer but object user %s is a superuser in the same account, granting read permission",
@@ -230,7 +233,7 @@ def smarter_has_ud_permission(request: HttpRequest, obj=None) -> bool:
         return True
     # customers can only change objects that they explicitly own.
     if hasattr(obj, "user"):
-        obj_user = obj.user
+        obj_user = obj.user  # type: ignore
     else:
         obj_user = None
     if obj_user == user:
@@ -250,9 +253,9 @@ def smarter_has_ud_permission(request: HttpRequest, obj=None) -> bool:
         return False
     if user_profile.cached_account == obj_user_profile.cached_account:
         return True
-    if hasattr(obj, "account") and obj.account == user_profile.cached_account:
+    if hasattr(obj, "account") and obj.account == user_profile.cached_account:  # type: ignore
         return True
-    if hasattr(obj, "user_profile") and obj.user_profile.cached_account == user_profile.cached_account:
+    if hasattr(obj, "user_profile") and obj.user_profile.cached_account == user_profile.cached_account:  # type: ignore
         return True
     logger.debug("%s: User %s does not have permission to access object %s", logger_prefix, user, obj)
     return False
@@ -266,6 +269,9 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request: HttpRequest) -> bool:
         user = get_resolved_user(request.user)  # type: ignore
+        if not isinstance(user, User):
+            logger.warning("Unexpected user type in SmarterCustomerModelAdmin: %s", type(user))
+            return False
         if not user.is_authenticated:
             return False
         return True
@@ -286,6 +292,9 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
         permission is granted to superusers only.
         """
         user = get_resolved_user(request.user)  # type: ignore
+        if not isinstance(user, User):
+            logger.warning("Unexpected user type in SmarterCustomerModelAdmin: %s", type(user))
+            return False
         return user.is_superuser
 
     def has_change_permission(self, request: HttpRequest, obj=None) -> bool:
@@ -335,6 +344,9 @@ class SmarterStaffOnlyModelAdmin(admin.ModelAdmin):
         to superusers only.
         """
         user = get_resolved_user(request.user)  # type: ignore
+        if not isinstance(user, User):
+            logger.warning("Unexpected user type in SmarterStaffOnlyModelAdmin: %s", type(user))
+            return False
         return user.is_superuser
 
     def has_change_permission(self, request: HttpRequest, obj=None) -> bool:
@@ -369,7 +381,7 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         """
         if not request.user.is_authenticated:
             return False
-        return request.user.is_superuser
+        return request.user.is_superuser  # type: ignore
 
     def has_view_permission(self, request, obj=None):
         """
@@ -377,6 +389,9 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         to superusers only.
         """
         user = get_resolved_user(request.user)  # type: ignore
+        if not isinstance(user, User):
+            logger.warning("Unexpected user type in SmarterSuperUserOnlyModelAdmin: %s", type(user))
+            return False
         return user.is_superuser
 
     def has_add_permission(self, request: HttpRequest, obj=None) -> bool:
@@ -385,6 +400,9 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         to superusers only.
         """
         user = get_resolved_user(request.user)  # type: ignore
+        if not isinstance(user, User):
+            logger.warning("Unexpected user type in SmarterSuperUserOnlyModelAdmin: %s", type(user))
+            return False
         return user.is_superuser
 
     def has_change_permission(self, request: HttpRequest, obj=None) -> bool:
@@ -393,6 +411,9 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         to superusers only.
         """
         user = get_resolved_user(request.user)  # type: ignore
+        if not isinstance(user, User):
+            logger.warning("Unexpected user type in SmarterSuperUserOnlyModelAdmin: %s", type(user))
+            return False
         return user.is_superuser
 
     def has_delete_permission(self, request: HttpRequest, obj=None) -> bool:
@@ -401,6 +422,9 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         to superusers only.
         """
         user = get_resolved_user(request.user)  # type: ignore
+        if not isinstance(user, User):
+            logger.warning("Unexpected user type in SmarterSuperUserOnlyModelAdmin: %s", type(user))
+            return False
         return user.is_superuser
 
 
@@ -420,6 +444,10 @@ class RestrictedAdminSite(admin.AdminSite):
         user = get_resolved_user(request.user)  # type: ignore
         if isinstance(user, AnonymousUser) or not getattr(user, "is_authenticated", False):
             self.role = "guest"
+            return super().each_context(request)
+        if not isinstance(user, User):
+            logger.warning("Unexpected user type in RestrictedAdminSite.each_context: %s", type(user))
+            self.role = "unknown"
             return super().each_context(request)
         if user.is_superuser:
             self.role = "superuser"

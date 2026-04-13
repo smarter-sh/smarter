@@ -57,11 +57,9 @@ class SAMVectorstoreSpec(AbstractSAMSpecBase):
             v = str(v).strip()
             if not v:
                 raise SAMValidationError("Vectorstore connection must not be empty if provided.")
-            api_connections = (
-                ApiConnection.objects.with_read_permission_for(user=self.user)
-                if self.user
-                else ApiConnection.objects.filter(name=v).filter(name=v)
-            )
+            api_connections = ApiConnection.objects.filter(name=v)
+            if self.user:
+                api_connections = api_connections.with_read_permission_for(user=self.user)
             if not api_connections.exists():
                 raise SAMValidationError(f"Vectorstore connection '{v}' does not exist.")
         return self

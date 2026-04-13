@@ -6,6 +6,7 @@ from logging import getLogger
 from typing import Optional
 
 from django.db import models
+from django.http import HttpRequest
 from django.utils import timezone
 from knox import crypto
 from knox.models import AuthToken, AuthTokenManager
@@ -15,6 +16,7 @@ from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
     User,
     UserProfile,
+    get_resolved_user,
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
@@ -112,7 +114,6 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     .. warning::
 
         - Ensure that API keys are managed securely. Deactivated keys cannot be used for authentication.
-        - The `has_all_permission` method checks if a user is staff or superuser before allowing management actions.
 
     Related Models
     --------------
@@ -143,14 +144,6 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         if self.created is None:
             self.created = timezone.now()
         super().save(*args, **kwargs)
-
-    def has_all_permission(self, user) -> bool:
-        """Determine if the authenticated user has permissions to manage this key."""
-        if not hasattr(user, "is_authenticated") or not user.is_authenticated:
-            return False
-        if not hasattr(user, "is_staff") or not hasattr(user, "is_superuser"):
-            return False
-        return user.is_staff or user.is_superuser
 
     def activate(self):
         """Activate the API key."""

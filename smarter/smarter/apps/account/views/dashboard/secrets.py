@@ -147,7 +147,7 @@ class SecretView(SmarterAdminWebView):
                 self.secret = Secret.objects.get(pk=secret_id, user_profile=self.user_profile)
             except Secret.DoesNotExist:
                 return SmarterHttpResponseNotFound(request=request, error_message="Secret not found")
-            if not self.secret or self.secret.has_all_permission(request=request):
+            if not self.secret or not Secret.objects.filter(pk=secret_id, user_profile=self.user_profile).with_ownership_permission_for(user=request.user).exists():  # type: ignore
                 return http.JsonResponse(
                     status=HTTPStatus.FORBIDDEN.value, data={"error": "You are not allowed to view this secret"}
                 )
@@ -200,7 +200,7 @@ class SecretView(SmarterAdminWebView):
             secret = Secret.objects.get(pk=secret_id)
         except Secret.DoesNotExist:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "Secret not found"})
-        if not secret.has_all_permission(request=request):
+        if not request or not hasattr(request, "user") or not Secret.objects.filter(pk=secret_id, user_profile=self.user_profile).with_ownership_permission_for(user=request.user).exists():  # type: ignore
             return SmarterHttpResponseForbidden(
                 request=request, error_message="You are not allowed to delete this secret"
             )
