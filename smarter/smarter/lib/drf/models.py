@@ -6,17 +6,18 @@ from logging import getLogger
 from typing import Optional
 
 from django.db import models
-from django.http import HttpRequest
 from django.utils import timezone
 from knox import crypto
-from knox.models import AuthToken, AuthTokenManager
+from knox.models import AuthToken
 from knox.settings import CONSTANTS
+from taggit.managers import TaggableManager
+from taggit.models import TaggedItemBase
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
     User,
     UserProfile,
-    get_resolved_user,
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
@@ -24,12 +25,26 @@ from smarter.lib.cache import cache_results
 
 logger = getLogger(__name__)
 
-
 ###############################################################################
 # API Key Management
 ###############################################################################
-class SmarterAuthTokenManager(AuthTokenManager, models.Manager):
-    """API Key manager."""
+
+
+class StringPKTaggedItem(TaggedItemBase):
+    """
+    Custom TaggedItemBase with a string primary key for object_id.
+    """
+
+    object_id = models.CharField(max_length=128, db_index=True)
+
+
+class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
+    """
+    API Key manager. This is a custom manager derived from a combination of
+    Knox's AuthTokenManager and and Smarter's SmarterQuerySetWithPermissions
+    Queryset to provide both knox token management functionality as well as
+    Smarter's permission-based querying behavior.
+    """
 
     def create(
         self,
@@ -133,6 +148,11 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     key_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     last_used_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    tags = TaggableManager(
+        blank=True,
+        help_text="Tags for categorizing and organizing this resource.",
+        through=StringPKTaggedItem,
+    )
 
     @property
     def identifier(self):

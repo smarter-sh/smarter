@@ -968,7 +968,9 @@ class MetaDataModel(TimestampedModel):
             - If you override this method in a subclass, always call ``super().save(*args, **kwargs)`` to retain validation and timestamp functionality.
             - If validation fails, no data will be saved to the database.
         """
+        is_new = self.pk is None
         super().save(*args, **kwargs)
-        MetaDataModel.get_cached_object(invalidate=True, pk=self.pk)  # type: ignore
-        MetaDataModel.get_cached_object(invalidate=True, name=self.name)  # type: ignore
-        MetaDataModel.get_cached_objects(invalidate=True)  # type: ignore
+        if not is_new and type(self).__bases__[0] == MetaDataModel:
+            self.__class__.get_cached_object(invalidate=True, pk=self.pk)  # type: ignore
+            self.__class__.get_cached_object(invalidate=True, name=self.name)  # type: ignore
+            self.__class__.get_cached_objects(invalidate=True)  # type: ignore

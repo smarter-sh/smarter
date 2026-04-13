@@ -54,7 +54,10 @@ class TestUserProfile(TestAccountMixin):
         self.user_profile.add_to_account_contacts()
 
         try:
-            AccountContact.objects.get(account=self.account, user=self.user_profile.user)
+            AccountContact.objects.get(
+                account=self.account,
+                email=self.admin_user.email,
+            )
         except AccountContact.DoesNotExist:
             self.fail("UserProfile was not added to AccountContact as expected.")
 

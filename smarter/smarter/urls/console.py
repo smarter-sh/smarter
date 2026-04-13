@@ -2,6 +2,9 @@
 URLs for Smarter web console.
 """
 
+import logging
+import sys
+
 from django.apps import apps
 from django.conf import settings
 from django.conf.urls.static import static
@@ -57,7 +60,10 @@ from smarter.apps.provider.const import namespace as provider_namespace
 from smarter.apps.vectorstore import urls as vectorstore_urls
 from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
+from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.lib.django.waffle import SmarterSwitchAdmin
+
+logger = logging.getLogger(__name__)
 
 
 def session_test_view(request):
@@ -214,7 +220,7 @@ urlpatterns = [
 urlpatterns += list(static(settings.STATIC_URL, document_root=settings.STATIC_ROOT))
 
 # question: should this be limited to localhost only?
-if smarter_settings.debug_mode:
+if smarter_settings.debug_mode and not "test" in sys.argv:
     # debug_model == True does not not guarantee that the debug toolbar is actually installed
     try:
         import debug_toolbar
@@ -222,8 +228,15 @@ if smarter_settings.debug_mode:
         urlpatterns += [
             path("__debug__/", include(debug_toolbar.urls)),
         ]
+        logger.debug(
+            "%s Debug mode is enabled, and debug_toolbar is installed. Added debug_toolbar URLs to urlpatterns.",
+            formatted_text(__name__),
+        )
     except ImportError:
-        pass
+        logger.warning(
+            "%s Debug mode is enabled, but debug_toolbar is not installed. Install debug_toolbar to use the Django Debug Toolbar.",
+            formatted_text(__name__),
+        )
 
 
 __all__ = ["urlpatterns"]

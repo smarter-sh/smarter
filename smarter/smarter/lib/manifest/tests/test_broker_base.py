@@ -291,7 +291,13 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
         # Validate that the response has HTTP 200 OK status
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertIsInstance(response.to_json(), dict, msg="Response to_json() is not a dict")
+
+        try:
+            json_obj = json.loads(response.content.decode("utf-8"))
+        except json.JSONDecodeError as e:
+            self.fail(f"Response content is not valid JSON. Error: {e}. Response content: {response.content}")
+
+        self.assertIsInstance(json_obj, dict, msg="Response to_json() is not a dict")
 
         # Validate that the response content can be
         # properly decoded to a dict

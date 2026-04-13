@@ -21,15 +21,13 @@ class TestMetaDataWithOwnershipModel(TestAccountMixin):
         super().setUpClass()
         cls.secret1 = Secret.objects.create(
             name="Test Secret 1",
-            value="supersecret1",
+            encrypted_value=Secret.encrypt("supersecret1"),
             user_profile=cls.user_profile,
-            account=cls.account,
         )
         cls.secret2 = Secret.objects.create(
             name="Test Secret 2",
-            value="supersecret2",
+            encrypted_value=Secret.encrypt("supersecret2"),
             user_profile=cls.user_profile,
-            account=cls.account,
         )
         cls.secrets = [cls.secret1, cls.secret2]
         logger.debug("%s Created secrets for testing: %s", cls.logger_prefix, [secret.name for secret in cls.secrets])

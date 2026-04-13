@@ -12,6 +12,7 @@ from typing_extensions import deprecated
 
 # our stuff
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -337,6 +338,10 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :returns: The model instance if found, otherwise None.
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
+            if not isinstance(pk, int):
+                raise SmarterValueError(
+                    f"{formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()")} invalid pk value: {pk}. Expected an integer."
+                )
             try:
                 retval = (
                     cls.objects.prefetch_related("tags")
@@ -565,15 +570,17 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :param args: Positional arguments for the save method.
         :param kwargs: Keyword arguments for the save method.
         """
+        is_new = self.pk is None
         super().save(*args, **kwargs)
-        MetaDataWithOwnershipModel.get_cached_object(pk=self.pk, class_name=self.__class__.__name__, invalidate=True)
-        MetaDataWithOwnershipModel.get_cached_object(
-            name=self.name, user_profile=self.user_profile, class_name=self.__class__.__name__, invalidate=True
-        )
-        MetaDataWithOwnershipModel.get_cached_object(
-            name=self.name, account=self.user_profile.account, class_name=self.__class__.__name__, invalidate=True
-        )
-        MetaDataWithOwnershipModel.get_cached_objects(invalidate=True, user_profile=self.user_profile)
+        if not is_new and type(self).__bases__[0] == MetaDataWithOwnershipModel:
+            self.__class__.get_cached_object(pk=self.pk, class_name=self.__class__.__name__, invalidate=True)
+            self.__class__.get_cached_object(
+                name=self.name, user_profile=self.user_profile, class_name=self.__class__.__name__, invalidate=True
+            )
+            self.__class__.get_cached_object(
+                name=self.name, account=self.user_profile.account, class_name=self.__class__.__name__, invalidate=True
+            )
+            self.__class__.get_cached_objects(invalidate=True, user_profile=self.user_profile)
 
 
 __all__ = ["MetaDataWithOwnershipModel", "MetaDataWithOwnershipModelManager", "SmarterQuerySetWithPermissions"]

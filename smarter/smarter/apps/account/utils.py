@@ -22,6 +22,8 @@ import logging
 import re
 from typing import Optional
 
+from django.db.models import Q
+
 from smarter.apps.account.models import (
     Account,
     User,
@@ -122,7 +124,9 @@ class SmarterCachedObjects:
 
         if not self._smarter_admin_user_profile:
             try:
-                user_profile = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first()
+                user_profile = (
+                    UserProfile.objects.filter(account=self.smarter_account).filter(user__is_superuser=True).first()
+                )
                 self._smarter_admin_user_profile = user_profile
                 logger.debug(
                     "%s initialized %s",
@@ -425,14 +429,16 @@ def get_cached_admin_user_for_account(
     @cache_results()
     def _admin_user_for_account_number(account_number: str, class_name=User.__name__) -> User:
         # reinstantiate the account
-        account = Account.get_cached_object(account_number=account_number)
-        if not account:
+        try:
+            account = Account.objects.get(account_number=account_number)
+        except Account.DoesNotExist as e:
             raise SmarterConfigurationError(
                 f"Failed to retrieve account with number {account_number}. Please ensure the account exists and is configured correctly."
-            )
+            ) from e
         console_prefix = formatted_text(f"{__name__}.get_cached_admin_user_for_account()")
         user_profile = (
-            UserProfile.objects.filter(account=account, user__is_staff=True)
+            UserProfile.objects.filter(account=account)
+            .filter(Q(user__is_staff=True) | Q(user__is_superuser=True))
             .select_related("user", "account")
             .order_by("pk")
             .first()

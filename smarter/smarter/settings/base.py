@@ -728,10 +728,12 @@ if smarter_settings.debug_mode and not "test" in sys.argv:
     INSTALLED_APPS += [
         "debug_toolbar",
     ]
+    logger.debug(formatted_text_green("Debug mode is ON. debug_toolbar is added to INSTALLED_APPS."))
 
     MIDDLEWARE += [
         "debug_toolbar.middleware.DebugToolbarMiddleware",
     ]
+    logger.debug(formatted_text_green("Debug mode is ON. debug_toolbar middleware is enabled."))
 
 
 ROOT_HOSTCONF = "smarter.hosts"
