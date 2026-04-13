@@ -6,7 +6,7 @@
 import logging
 import os
 import random
-from typing import TYPE_CHECKING, Generic, Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Optional, TypeVar, Union
 
 # 3rd party stuff
 from cryptography.fernet import Fernet
@@ -17,7 +17,6 @@ from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Manager, QuerySet
-from django.db.models.base import Model
 from django.template.loader import render_to_string
 from django.test.client import RequestFactory
 from django.utils import timezone
@@ -1151,6 +1150,17 @@ _MT = TypeVar("_MT", bound="MetaDataWithOwnershipModel")
 
 
 class SmarterQuerySetWithPermissions(QuerySet[_MT]):
+    """
+    Custom queryset for permission-based resource filtering by user profile.
+
+    This queryset adds permission-aware filtering for resources owned by a specific user profile.
+
+    .. seealso::
+
+    Django: Creating a manager with QuerySet methods <https://docs.djangoproject.com/en/6.0/topics/db/managers/#creating-a-manager-with-queryset-methods>_
+    django-stubs: Custom QuerySets <https://github.com/typeddjango/django-stubs>_
+
+    """
 
     def with_read_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
         """
@@ -1185,16 +1195,47 @@ class SmarterQuerySetWithPermissions(QuerySet[_MT]):
         return self.filter(
             models.Q(user_profile__account=smarter_account)
             | models.Q(user_profile=request_user_profile)
-            | models.Q(user_profile__account=request_user_profile.account)
+            | models.Q(user_profile__account=request_user_profile.account, user_profile__user__is_staff=True)
         )
 
 
 class MetaDataWithOwnershipModelManager(Manager[_MT]):
+    """
+    Custom manager for MetaDataWithOwnershipModel that returns a
+    SmarterQuerySetWithPermissions to enable permission-based filtering by
+    user_profile.
+    """
 
     def get_queryset(self) -> SmarterQuerySetWithPermissions[_MT]:
         return SmarterQuerySetWithPermissions(self.model, using=self._db)
 
     def with_read_permission_for(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
+        """
+        A custom Smarter pipeline for filtering any MetaDataWithOwnership
+        queryset based on the Smarter permissions scheme for the authenticated user in
+        the given request.
+
+        Returns a queryset of the resource if the user has permission to read it,
+        or an empty queryset if not.
+
+        Permission logic:
+
+        - If the user is not authenticated, they have no access.
+        - If the user is a superuser, they have access to all resources.
+        - If the user is a regular authenticated user, they have access to resources that are:
+            - Owned by their UserProfile, OR
+            - Owned by their Account admin UserProfile, OR
+            - Owned by the Smarter admin UserProfile.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+        :param queryset: Optional[:class:`django.db.models.QuerySet`]
+            An optional queryset to filter. If not provided, the method will default to filtering all instances
+
+        :returns: :class:`django.db.models.QuerySet`
+            A queryset of this resource if the user has permission to read it, or an empty queryset
+            if not.
+        """
         return self.get_queryset().with_read_permission_for(user)
 
 
@@ -2052,3 +2093,16 @@ class Secret(MetaDataWithOwnershipModel):
             type(retval),
         )
         return None
+
+
+__all__ = [
+    "Account",
+    "UserProfile",
+    "PaymentMethod",
+    "LLMPrices",
+    "Charge",
+    "DailyBillingRecord",
+    "Secret",
+    "MetaDataWithOwnershipModel",
+    "MetaDataWithOwnershipModelManager",
+]
