@@ -1147,6 +1147,14 @@ class UserProfile(MetaDataModel):
 
 
 _MT = TypeVar("_MT", bound="MetaDataWithOwnershipModel")
+"""
+Type variable for MetaDataWithOwnershipModel. Used for type hinting in the
+custom queryset and manager to ensure methods return the correct model type.
+
+.. seealso::
+
+    - django-stubs: Custom QuerySets <https://github.com/typeddjango/django-stubs>_
+"""
 
 
 class SmarterQuerySetWithPermissions(QuerySet[_MT]):
@@ -1157,8 +1165,8 @@ class SmarterQuerySetWithPermissions(QuerySet[_MT]):
 
     .. seealso::
 
-    Django: Creating a manager with QuerySet methods <https://docs.djangoproject.com/en/6.0/topics/db/managers/#creating-a-manager-with-queryset-methods>_
-    django-stubs: Custom QuerySets <https://github.com/typeddjango/django-stubs>_
+        - Django: Creating a manager with QuerySet methods <https://docs.djangoproject.com/en/6.0/topics/db/managers/#creating-a-manager-with-queryset-methods>_
+        - django-stubs: Custom QuerySets <https://github.com/typeddjango/django-stubs>_
 
     """
 
@@ -1197,6 +1205,38 @@ class SmarterQuerySetWithPermissions(QuerySet[_MT]):
             | models.Q(user_profile=request_user_profile)
             | models.Q(user_profile__account=request_user_profile.account, user_profile__user__is_staff=True)
         )
+
+    def with_ownership_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
+        """
+        Returns a queryset of resources that the authenticated user in the given request has full management (ownership) permission for.
+
+        Only users with staff or superuser status are permitted to manage resources.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+        :returns: :class:`django.db.models.QuerySet`
+            A queryset of this resource if the user has permission to fully manage it, or an empty queryset if not.
+        """
+        if not isinstance(user, User):
+            return self.none()
+        if not is_authenticated_user(user):
+            return self.none()
+
+        # superusers have ownership permission for all resources
+        if user.is_superuser:
+            return self.all()
+        user_profile = UserProfile.get_cached_object(user=user)
+        if not user_profile:
+            return self.none()
+
+        # staff users have ownership permission for resources owned within their account, or owned by themselves
+        if user.is_staff:
+            return self.filter(
+                models.Q(user_profile=user_profile) | models.Q(user_profile__account=user_profile.account)
+            )
+
+        # regular authenticated users have ownership permission only for resources they own
+        return self.filter(user_profile=user_profile)
 
 
 class MetaDataWithOwnershipModelManager(Manager[_MT]):
@@ -1237,6 +1277,26 @@ class MetaDataWithOwnershipModelManager(Manager[_MT]):
             if not.
         """
         return self.get_queryset().with_read_permission_for(user)
+
+    def with_ownership_permission_for(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
+        """
+        Returns a queryset of resources that the authenticated user in the given request has full management (ownership) permission for.
+
+        Permission logic:
+
+        - If the user is not authenticated, they have no access.
+        - If the user is a superuser, they have ownership permission for all resources.
+        - If the user is a staff user, they have ownership permission for resources that are:
+            - Owned by their UserProfile, OR
+            - Owned by any UserProfile within their Account.
+        - If the user is a regular authenticated user, they have ownership permission only for resources they own.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+        :returns: :class:`django.db.models.QuerySet`
+            A queryset of this resource if the user has permission to fully manage it, or an empty queryset if not.
+        """
+        return self.get_queryset().with_ownership_permission_for(user)
 
 
 class MetaDataWithOwnershipModel(MetaDataModel):
