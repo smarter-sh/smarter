@@ -23,6 +23,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
@@ -37,7 +38,7 @@ class SecretsView(SmarterAdminWebView):
 
     template_path = "account/dashboard/secrets.html"
 
-    def get(self, request: WSGIRequest):
+    def get(self, request: WSGIRequest, *args, **kwargs):
         logger.debug("%s.get() user: %s", self.formatted_class_name, self.user_profile)
         secrets = Secret.objects.filter(user_profile=self.user_profile).only(
             "id", "name", "description", "created_at", "updated_at", "last_accessed", "expires_at"
@@ -54,7 +55,7 @@ class SecretView(SmarterAdminWebView):
     """detail View for secret management."""
 
     template_path = "account/dashboard/secret.html"
-    secret: Secret = None
+    secret: Optional[Secret] = None
 
     def _handle_multipart_form(self, request: WSGIRequest):
         """
@@ -106,7 +107,7 @@ class SecretView(SmarterAdminWebView):
             "%s._handle_json() %s is editing secret: %s", self.formatted_class_name, self.user_profile, self.secret
         )
         data: dict = json.loads(request.body)
-        data["user_profile"] = self.user_profile.pk
+        data["user_profile"] = self.user_profile.pk  # type: ignore
         secret_form = SecretForm(data, instance=self.secret)
         if not secret_form.is_valid():
             logger.debug("%s._handle_json() form data is not valid %s", self.formatted_class_name, secret_form.errors)
@@ -146,14 +147,14 @@ class SecretView(SmarterAdminWebView):
                 self.secret = Secret.objects.get(pk=secret_id, user_profile=self.user_profile)
             except Secret.DoesNotExist:
                 return SmarterHttpResponseNotFound(request=request, error_message="Secret not found")
-            if not self.secret.has_all_permission(request=request):
+            if not self.secret or self.secret.has_all_permission(request=request):
                 return http.JsonResponse(
                     status=HTTPStatus.FORBIDDEN.value, data={"error": "You are not allowed to view this secret"}
                 )
         else:
             logger.debug("%s.setup() with no secret_id", self.formatted_class_name)
 
-    def get(self, request: WSGIRequest, secret_id: int = None):
+    def get(self, request: WSGIRequest, *args, secret_id: Optional[int] = None, **kwargs):
         """
         Get, edit, or create a secret.
         """
@@ -184,14 +185,14 @@ class SecretView(SmarterAdminWebView):
         return self._handle_multipart_form(request)
 
     # pylint: disable=W0613
-    def patch(self, request: WSGIRequest, secret_id: int = None):
+    def patch(self, request: WSGIRequest, *args, secret_id: Optional[int] = None, **kwargs):
         """
         Edit/Create
         """
         logger.debug("%s.patch() %s patching secret: %s", self.formatted_class_name, self.user_profile, secret_id)
         return self._handle_write_request(request)
 
-    def delete(self, request: WSGIRequest, secret_id):
+    def delete(self, request: WSGIRequest, *args, secret_id: Optional[int] = None, **kwargs):
         if not self.secret:
             return SmarterHttpResponseNotFound(request=request, error_message="Secret not found")
         logger.debug("%s.delete() received DELETE request: %s", self.formatted_class_name, request)
