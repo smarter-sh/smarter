@@ -16,6 +16,12 @@ work as represented in the documentation listed below, and is subject to change 
    claude-code/tutorial
    claude-code/getting-started-claude-code
    claude-code/claude-code-with-smarter
-   claude-code/getting-started-with-jean-claude
+   claude-code/Getting-Started-With-Jean-Claude
    claude-code/getting-started-with-claude-code-2
+   claude-code/getting-started-claude-code-with-smarter
+   claude-code/adding-anthropic-provider
+   claude-code/getting-started-claude-code-mtran
+   claude-code/smarter-claude-plugin
+   claude-code/napl-adding-llm-provider
+   claude-code/napl-getting-started
    claude-code/getting-started-claude-code-as-coding-assistant
