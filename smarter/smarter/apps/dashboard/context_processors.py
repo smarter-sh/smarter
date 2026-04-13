@@ -131,7 +131,7 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
     if invalidate and user_profile:
         _get_pending_deployments.invalidate(user_profile.id)  # type: ignore
 
-    return _get_pending_deployments(user_profile.id)
+    return _get_pending_deployments(user_profile.id)  # type: ignore
 
 
 def get_chatbots(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
@@ -192,7 +192,7 @@ def get_plugins(invalidate: bool = False, user_profile: Optional[UserProfile] = 
     if not user_profile:
         logger.warning("%s.get_plugins() called without user_profile. Returning None.", logger_prefix)
         return 0
-    retval = PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=invalidate, user_profile_id=user_profile.id)
+    retval = PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=invalidate, user_profile_id=user_profile.id)  # type: ignore
     return len(retval)
 
 
@@ -231,7 +231,7 @@ def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] =
     if invalidate and user_profile:
         _get_api_keys.invalidate(user_profile.id)  # type: ignore
 
-    return _get_api_keys(user_profile.id)
+    return _get_api_keys(user_profile.id)  # type: ignore
 
 
 def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
@@ -269,7 +269,7 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
     if invalidate and user_profile:
         _get_custom_domains.invalidate(user_profile.id)  # type: ignore
 
-    return _get_custom_domains(user_profile.id)
+    return _get_custom_domains(user_profile.id)  # type: ignore
 
 
 def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
@@ -297,7 +297,7 @@ def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile
         invalidate,
         user_profile,
     )
-    retval = ConnectionBase.get_cached_connections_for_user(invalidate=invalidate, user=user_profile.cached_user) or []
+    retval = ConnectionBase.get_cached_connections_for_user(invalidate=invalidate, user=user_profile.user) or []
     return len(retval)
 
 
@@ -322,7 +322,7 @@ def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = 
         return 0
 
     logger.debug(
-        "%s.get_secrets() called with invalidate=%s for user_profile_id=%s", logger_prefix, invalidate, user_profile.id
+        "%s.get_secrets() called with invalidate=%s for user_profile_id=%s", logger_prefix, invalidate, user_profile.id  # type: ignore
     )
     return Secret.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
 
@@ -349,9 +349,9 @@ def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] 
         "%s.get_providers() called with invalidate=%s for user_profile_id=%s",
         logger_prefix,
         invalidate,
-        user_profile.id,
+        user_profile.id,  # type: ignore
     )
-    retval = Provider.get_cached_providers_for_user(invalidate=invalidate, user=user_profile.cached_user) or []
+    retval = Provider.get_cached_providers_for_user(invalidate=invalidate, user=user_profile.user) or []
     return len(retval)
 
 
@@ -378,7 +378,7 @@ def file_drop_zone(request: "HttpRequest") -> dict:
                 "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
                 "workbench_list_path": reverse("prompt_workbench:listview"),
                 "plugin_list_path": reverse("plugin:plugin_listview"),
-                "connection_list_path": reverse("plugin:connection_listview"),
+                "connection_list_path": reverse("connection:connection_listview"),
                 "provider_list_path": reverse("provider:provider_listview"),
             }
         }
@@ -437,12 +437,12 @@ def base(request: "HttpRequest") -> dict:
         username = "anonymous"
         is_superuser = False
         is_staff = False
-        if user_profile and user_profile.cached_user.is_authenticated:
+        if user_profile and user_profile.user.is_authenticated:
             try:
-                user_email = user_profile.cached_user.email
-                username = user_profile.cached_user.username
-                is_superuser = user_profile.cached_user.is_superuser
-                is_staff = user_profile.cached_user.is_staff
+                user_email = user_profile.user.email
+                username = user_profile.user.username
+                is_superuser = user_profile.user.is_superuser
+                is_staff = user_profile.user.is_staff
             except AttributeError:
                 # technically, this is supposed to be impossible due to the is_authenticated check
                 pass
@@ -457,12 +457,8 @@ def base(request: "HttpRequest") -> dict:
                 "profile_image_url": (
                     user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
                 ),
-                "first_name": (
-                    user_profile.cached_user.first_name if user_profile and user_profile.cached_user.first_name else ""
-                ),
-                "last_name": (
-                    user_profile.cached_user.last_name if user_profile and user_profile.cached_user.last_name else ""
-                ),
+                "first_name": (user_profile.user.first_name if user_profile and user_profile.user.first_name else ""),
+                "last_name": (user_profile.user.last_name if user_profile and user_profile.user.last_name else ""),
                 "product_name": SMARTER_PRODUCT_NAME,
                 "company_name": smarter_settings.root_domain,
                 "smarter_version": "v" + __version__,
@@ -676,9 +672,9 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     ###########################################################################
     if user_profile:
         Account.get_cached_object(invalidate=True, pk=user_profile.account.id)
-        UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)
-        PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=True, user_profile_id=user_profile.id)
-        get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id, invalidate=True)
+        UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)  # type: ignore
+        PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=True, user_profile_id=user_profile.id)  # type: ignore
+        get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id, invalidate=True)  # type: ignore
 
     ###########################################################################
     # context invalidations

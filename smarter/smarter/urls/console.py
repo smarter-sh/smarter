@@ -30,6 +30,8 @@ from smarter.apps.account.views.password_management import (
 from smarter.apps.api import urls as api_urls
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
+from smarter.apps.connection import urls as connection_urls
+from smarter.apps.connection.const import namespace as connection_namespace
 from smarter.apps.dashboard import urls as dashboard_urls
 from smarter.apps.dashboard.admin import (
     SmarterSuperUserOnlyModelAdmin,
@@ -147,6 +149,7 @@ urlpatterns = [
     path("admin/docs/", include(admindocs_urls)),
     path("admin/", admin.site.urls, name="django_admin"),
     path("api/", include(api_urls, namespace=api_namespace)),
+    path("connection/", include(connection_urls, namespace=connection_namespace)),
     path("dashboard/", include(dashboard_urls, namespace=dashboard_namespace)),
     path("docs/", include(docs_urls, namespace=docs_namespace)),
     path("login/", LoginView.as_view(), name="login_view"),
