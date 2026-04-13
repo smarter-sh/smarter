@@ -1,7 +1,7 @@
 Smarter Claude Code Plugin
 =========================================
 
-This tutorial helps you quickly onboard by configuring **Claude Code** as an LLM provider in **Smarter**. It enables you to build features, fix bugs, and automate development tasks by understanding your entire codebase. You’ll also learn how to set up **Claude Code** and :doc:`API Keys <../smarter-platform/api-keys>` within the **Smarter** platform.
+This tutorial helps you quickly onboard by configuring **Claude Code** as an LLM provider in **Smarter**. It enables you to build features, fix bugs, and automate development tasks by understanding your entire codebase. You’ll also learn how to set up **Claude Code** and API Keys within the **Smarter** platform.
 
 .. note::
    You should complete this tutorial for a smooth development experience. Proper configuration of **LLM providers** and **API keys** is essential for Smarter to function correctly. By following the steps outlined in this tutorial, your development environment will be fully prepared to use **Claude Code** for prompt generation, testing, and feature development within **Smarter**.
@@ -10,7 +10,6 @@ This tutorial helps you quickly onboard by configuring **Claude Code** as an LLM
    :local:
    :depth: 2
 
-.. _goal:
 
 Goal
 -----------------------------------------
@@ -24,7 +23,6 @@ By the end of this tutorial you will have:
 - A local development environment configured to use the Claude provider for prompt generation and testing.
 - A live, publicly accessible ChatBot framework through Smarter platform returning Claude Code responses.
 
-.. _prerequisites:
 
 Prerequisites
 -----------------------------------------
@@ -38,11 +36,11 @@ Before you start with setting up the Claude code plugin, ensure you have the fol
    * - Functional Areas
      - Requirements
    * - System Requirements
-     - A compatible operating system (Linux, macOS, or Windows with WSL2) and necessary permissions to install software and set environment variables. Please refer :doc:`System Requirements <../smarter-platform/prerequisites>`.
+     - A compatible operating system (Linux, macOS, or Windows with WSL2) and necessary permissions to install software and set environment variables. Please refer System Requirements.
    * - Smarter Platform
-     - Set smarter development environment by following steps in :doc:`Getting Started with Smarter Development Environment <../smarter-platform/quick-start>`.
+     - Set smarter development environment by following steps in Getting Started with Smarter Development Environment.
    * - API Keys
-     - Valid API keys for both Smarter and Claude Code. You will need these to authenticate and access the respective services. Follow instructions in :doc:`API Keys <../smarter-platform/api-keys>` to generate and manage your smarter API keys, and obtain your Claude Code API key from the `Claude Code API Key <https://code.claude.com/docs/en/overview>`__.
+     - Valid API keys for both Smarter and Claude Code. You will need these to authenticate and access the respective services. Follow instructions in API Keys to generate and manage your smarter API keys, and obtain your Claude Code API key from the `Claude Code API Key <https://code.claude.com/docs/en/overview>`__.
    * - REST API Validation Tool
      - Install ``postman`` client if you would like to test claude code with GUI otherwise you should be comfortable using ``curl`` terminal command to verify claude code API responses.
    * - Proxy Setting
@@ -61,7 +59,6 @@ Before you start with setting up the Claude code plugin, ensure you have the fol
     - A Smarter account with appropriate permissions to create providers and manage API keys.
     - Access to the Smarter documentation for reference during setup and troubleshooting.
 
-.. _setup:
 
 Setup
 -------
@@ -70,7 +67,7 @@ Step 1 — Install the Smarter CLI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Smarter CLI is a Go binary — no runtime dependencies. Download the appropriate binary for your platform from smarter platform website.
-The cli implements a set of verbs for working with Smarter resources. Refer to the :doc:`Smarter CLI Reference <smarter-cli>` for detailed command usage and examples.
+The cli implements a set of verbs for working with Smarter resources. Refer to the Smarter CLI Reference for detailed command usage and examples.
 
 .. code-block:: text
 
@@ -262,7 +259,6 @@ If successful, Claude will return a response, confirming that the integration is
     - The development environment is ready to use Claude for prompt generation, testing, and feature development.
 
 
-.. _concept-overview:
 
 Integration Concept Overview
 -----------------------------------------
@@ -395,7 +391,6 @@ The **Smarter CLI** (``smarter``) is a statically compiled Go binary that provid
 The CLI communicates with the Smarter platform API using the credentials stored in ``$HOME/.smarter/config.yaml``. All manifest operations are idempotent — running ``smarter apply`` on an existing resource updates it rather than creating a duplicate.
 
 
-.. _step-by-step:
 
 Step-by-Step guide
 --------------------------
@@ -930,9 +925,6 @@ The PoC is complete when all four criteria are met:
 
    Save the ``curl`` response as your PoC artefact for stakeholder review.
 
-.. admonition:: See Also
-
-   - :doc:`LLM Providers <../smarter-platform/adding-an-llm-provider>` — Configuring providers in Smarter.
 
 .. _troubleshooting-claude-code-in-smarter:
 
@@ -1226,9 +1218,3 @@ Escalation Path
      - Anthropic Support — ``support.anthropic.com``
    * - Manifest and deployment questions
      - ``docs.smarter.sh``
-
-.. admonition:: See Also
-
-   - :doc:`API Keys <../smarter-platform/api-keys>` — Learn how to manage API keys in Smarter.
-   - :doc:`ChatBots <../smarter-resources/smarter-chatbot>` — Explore how to create and manage ChatBots in Smarter.
-   - :doc:`LLM Providers <../smarter-platform/adding-an-llm-provider>` — Understand how to configure and use different LLM providers in Smarter.

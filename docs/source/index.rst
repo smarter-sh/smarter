@@ -100,7 +100,6 @@ Usage
    smarter-platform
    smarter-resources
    smarter-framework
-   getting_started_claude_code
    adr
 
 .. toctree::
