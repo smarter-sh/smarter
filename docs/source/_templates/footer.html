@@ -40,14 +40,20 @@
       {%- if show_copyright %} {%- if hasdoc('copyright') %} {%- trans
       path=pathto('copyright'), copyright=copyright|e %}&#169;
       <a href="{{ path }}">Copyright</a> {{ copyright }}.{% endtrans %} {%- else
-      %} {%- trans copyright=copyright|e %}&#169; Copyright {{ copyright }},
+      %} {%- trans copyright=copyright|e %}&#169; Copyright {{ copyright }}
       <a
-        href="https://lawrencemcdaniel.com"
+        href="{{ smarter_organization_web_site_url }}"
         target="_blank"
         rel="noopener noreferrer"
         >{{ branding_company_name }}</a
-      >, {{ branding_smarter_product_name }}.{% endtrans %} {%- endif %} {%-
-      endif %} {%- if build_id and build_url %}
+      >.
+      <a
+        href="{{ smarter_project_web_site_url }}"
+        target="_blank"
+        rel="noopener noreferrer"
+        >{{ branding_smarter_product_name }}</a
+      >.{% endtrans %} {%- endif %} {%- endif %} {%- if build_id and build_url
+      %}
       <span class="build">
         {#- Translators: Build is a noun, not a verb -#} {%- trans %}Build{%
         endtrans -%}

@@ -141,7 +141,9 @@ def apply_manifest(
             user=user,
             description="DELETE ME: single-use key created by smarter.apps.api.utils.apply_manifest()",
         )
-        logger.debug("%s Created single-use API token for user '%s'.", logger_prefix, user.username)
+        logger.debug(
+            "%s Created single-use API token for user '%s'.", logger_prefix, user.username if user else "unknown"
+        )
     # pylint: disable=W0718
     except Exception:
         return False
@@ -154,7 +156,7 @@ def apply_manifest(
         "%s - Applying manifest via api endpoint %s as user %s (verbose=%s)",
         logger_prefix,
         url,
-        user.username,
+        user.username if user else "unknown",
         verbose,
     )
     if verbose:
@@ -262,7 +264,7 @@ def apply_manifest_v2(
     loader = SAMLoader(manifest=data)
     factory = RequestFactory()
     fake_request = factory.post("/fake-url/", data=loader.manifest, content_type="application/json")
-    fake_request.user = user_profile.cached_user
+    fake_request.user = user_profile.user
 
     if not isinstance(loader.kind, str):
         return False
@@ -272,12 +274,12 @@ def apply_manifest_v2(
 
     broker = BrokerClass(request=fake_request, loader=loader, user_profile=user_profile)
     response_content = broker.apply(request=fake_request)
+    if response_content is None:
+        logger.error("%s - broker.apply() returned None", logger_prefix)
+        return False
 
     if response_content.status_code == 200:
-        if verbose:
-            logger.debug("%s - manifest applied successfully", logger_prefix)
-        else:
-            logger.debug("%s - manifest applied successfully", logger_prefix)
+        logger.debug("%s - manifest applied successfully", logger_prefix)
     else:
         logger.error("%s - manifest: %s", logger_prefix, data)
         logger.error("%s - response: %s", logger_prefix, response_content.content)
