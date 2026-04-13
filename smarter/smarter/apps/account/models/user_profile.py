@@ -236,7 +236,7 @@ class UserProfile(MetaDataModel):
             logger.error(
                 "%s.admin_for_account() No user for account %s", formatted_text(__name__ + ".UserProfile()"), account
             )
-            admin_user = cls.objects.get_or_create(username=SMARTER_ADMIN_USERNAME)
+            admin_user, _ = User.objects.get_or_create(username=SMARTER_ADMIN_USERNAME)
             user_profile = cls.objects.create(user=admin_user, account=account)
             logger.warning(
                 "%s.admin_for_account() Created admin user for account %s. Use manage.py to set the password",

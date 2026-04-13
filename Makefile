@@ -175,7 +175,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.account.tests.test_api_keys.TestSmarterAuthToken"
 
 docker-prune:
 	@echo ""

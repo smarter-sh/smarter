@@ -21,8 +21,8 @@ class TestDailyBillingRecord(TestAccountMixin):
 
     @classmethod
     def setUpClass(cls):
-        cls.provider = Provider.objects.create(name="Test Provider", slug="test-provider")
         super().setUpClass()
+        cls.provider = Provider.objects.create(name="Test Provider", user_profile=cls.user_profile)
         logger.debug("%s Created provider: %s", cls.logger_prefix, cls.provider)
 
     @classmethod

@@ -40,29 +40,25 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
 
         cls.account1_secret1 = Secret.objects.create(
             name="Secret 1",
-            value="Value 1",
-            account=cls.account,
-            created_by=cls.admin_user,
+            encrypted_value=Secret.encrypt("supersecret1"),
+            user_profile=cls.user_profile,
         )
         cls.account1_secret2 = Secret.objects.create(
             name="Secret 2",
-            value="Value 2",
-            account=cls.account,
-            created_by=cls.non_admin_user,
+            encrypted_value=Secret.encrypt("supersecret2"),
+            user_profile=cls.user_profile,
         )
 
         cls.account2_secret1 = Secret.objects.create(
             name="Secret 3",
-            value="Value 3",
-            account=cls.unrelated_account,
-            created_by=cls.unrelated_non_admin_user,
+            encrypted_value=Secret.encrypt("supersecret3"),
+            user_profile=cls.unrelated_non_admin_user_profile,
         )
 
         cls.account2_secret2 = Secret.objects.create(
             name="Secret 4",
-            value="Value 4",
-            account=cls.unrelated_account,
-            created_by=cls.unrelated_non_admin_user,
+            encrypted_value=Secret.encrypt("supersecret4"),
+            user_profile=cls.unrelated_non_admin_user_profile,
         )
         cls.test_secrets = [cls.account1_secret1, cls.account1_secret2, cls.account2_secret1, cls.account2_secret2]
 
@@ -124,7 +120,7 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
         # and Secret is the most convenient.
         self.queryset = SmarterQuerySetWithPermissions(model=Secret, using="default")
         self.queryset = self.queryset.filter(
-            account=self.account
+            user_profile=self.user_profile
         )  # Start with a queryset that has our two test records
         self.control_count = self.queryset.count()  # This should be 4, since we created four secrets in setUpClass()
 
@@ -178,7 +174,7 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
             self.assertEqual(result.count(), 2)
 
             for secret in result:
-                self.assertEqual(secret.account, self.non_admin_user_profile.account)
+                self.assertEqual(secret.user_profile, self.non_admin_user_profile)
         # pylint: disable=broad-except
         except Exception as e:
             self.fail(f"with_read_permission_for() raised an exception for staff user: {e}")
@@ -226,7 +222,7 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
             self.assertEqual(result.count(), 2)
 
             for secret in result:
-                self.assertEqual(secret.account, self.non_admin_user_profile.account)
+                self.assertEqual(secret.user_profile, self.non_admin_user_profile)
         # pylint: disable=broad-except
         except Exception as e:
             self.fail(f"with_ownership_permission_for() raised an exception for staff user: {e}")

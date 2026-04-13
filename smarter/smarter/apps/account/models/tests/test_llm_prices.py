@@ -19,8 +19,8 @@ class TestLLMPrices(TestAccountMixin):
 
     @classmethod
     def setUpClass(cls):
-        cls.provider = Provider.objects.create(name="Test Provider", slug="test-provider")
         super().setUpClass()
+        cls.provider = Provider.objects.create(name="Test Provider", user_profile=cls.user_profile)
         logger.debug("%s Created provider: %s", cls.logger_prefix, cls.provider)
 
     @classmethod
@@ -39,24 +39,33 @@ class TestLLMPrices(TestAccountMixin):
         Test that we can do all crud.
 
         """
-
+        provider_name = "test-provider" + self.hash_suffix
+        model_name = "test-model" + self.hash_suffix
         LLMPrices.objects.create(
             charge_type=CHARGE_TYPES[0][0],
-            provider="test-provider",
-            model="test-model",
+            provider=provider_name,
+            model=model_name,
             price=1.25125,
         )
 
-        record = LLMPrices.objects.get(charge_type=CHARGE_TYPES[0][0], provider="test-provider", model="test-model")
+        try:
+            record = LLMPrices.objects.get(charge_type=CHARGE_TYPES[0][0], provider=provider_name, model=model_name)
 
-        self.assertEqual(record.provider, "test-provider")
-        self.assertEqual(record.charge_type, CHARGE_TYPES[0][0])
-        self.assertEqual(record.model, "test-model")
-        self.assertEqual(record.price, 1.25125)
+            self.assertEqual(record.provider, provider_name)
+            self.assertEqual(record.charge_type, CHARGE_TYPES[0][0])
+            self.assertEqual(record.model, model_name)
+            self.assertEqual(record.price, 1.25125)
 
-        record.price = 2.5025
-        record.save()
+            record.price = 2.5025
+            record.save()
 
-        self.assertEqual(record.price, 2.5025)
-
-        record.delete()
+            self.assertEqual(record.price, 2.5025)
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.fail(f"Error during CRUD operations: {e}")
+        finally:
+            try:
+                record.delete()
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("%s Error deleting record: %s", self.logger_prefix, e)
