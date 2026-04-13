@@ -555,5 +555,25 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
 
+    def save(self, *args, **kwargs):
+        """
+        Override save method to invalidate cache for this instance upon saving.
+
+        This ensures that any updates to the instance are reflected in subsequent
+        retrievals using the caching mechanism.
+
+        :param args: Positional arguments for the save method.
+        :param kwargs: Keyword arguments for the save method.
+        """
+        super().save(*args, **kwargs)
+        MetaDataWithOwnershipModel.get_cached_object(pk=self.pk, class_name=self.__class__.__name__, invalidate=True)
+        MetaDataWithOwnershipModel.get_cached_object(
+            name=self.name, user_profile=self.user_profile, class_name=self.__class__.__name__, invalidate=True
+        )
+        MetaDataWithOwnershipModel.get_cached_object(
+            name=self.name, account=self.user_profile.account, class_name=self.__class__.__name__, invalidate=True
+        )
+        MetaDataWithOwnershipModel.get_cached_objects(invalidate=True, user_profile=self.user_profile)
+
 
 __all__ = ["MetaDataWithOwnershipModel", "MetaDataWithOwnershipModelManager", "SmarterQuerySetWithPermissions"]

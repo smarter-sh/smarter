@@ -935,3 +935,40 @@ class MetaDataModel(TimestampedModel):
             pass
 
         return super().get_cached_objects(invalidate=invalidate)  # type: ignore
+
+    def save(self, *args, **kwargs):
+        """
+        Save the model instance to the database, performing validation before the actual save.
+
+        This method overrides the default ``save()`` behavior of Django models to ensure that
+        the model is validated by calling :meth:`validate` before any data is written to the database.
+        If validation fails, a :exc:`django.core.exceptions.ValidationError` is raised with detailed
+        information about the error, the arguments passed, the model class, and the current field values.
+
+        Parameters
+        ----------
+        *args
+            Positional arguments passed to the parent ``save()`` method. These are forwarded to Django's ORM.
+        **kwargs
+            Keyword arguments passed to the parent ``save()`` method. These are forwarded to Django's ORM.
+
+        Examples
+        --------
+        .. code-block:: python
+
+            obj = MyModel(name="Example")
+            obj.save()  # Will call validate() before saving
+        .. note::
+
+            - The :meth:`validate` method is intended to be overridden in subclasses to provide custom validation logic.
+            - If :meth:`validate` raises a :exc:`ValidationError`, the save operation is aborted and the error is propagated.
+            - The error message includes the arguments, keyword arguments, model class, and current field values for easier debugging.
+        .. important::
+
+            - If you override this method in a subclass, always call ``super().save(*args, **kwargs)`` to retain validation and timestamp functionality.
+            - If validation fails, no data will be saved to the database.
+        """
+        super().save(*args, **kwargs)
+        MetaDataModel.get_cached_object(invalidate=True, pk=self.pk)  # type: ignore
+        MetaDataModel.get_cached_object(invalidate=True, name=self.name)  # type: ignore
+        MetaDataModel.get_cached_objects(invalidate=True)  # type: ignore

@@ -15,13 +15,13 @@ logger = logging.getLogger(__name__)
 class TestAccount(SmarterTestBase):
     """Test Account model"""
 
-    test_account_logger_prefix = formatted_text(f"{__name__}.TestAccount()")
+    logger_prefix = formatted_text(f"{__name__}.TestAccount()")
 
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.test_account_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.logger_prefix)
         hashed_slug = hash_factory()
         username = cls.name
         email = f"test-{hashed_slug}@mail.com"
@@ -35,7 +35,7 @@ class TestAccount(SmarterTestBase):
     @classmethod
     def tearDownClass(cls):
         """Clean up test fixtures."""
-        logger.debug("%s.tearDownClass()", cls.test_account_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.logger_prefix)
         cls.user.delete()
         super().tearDownClass()
 

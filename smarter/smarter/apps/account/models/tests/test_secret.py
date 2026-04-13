@@ -6,9 +6,8 @@ from datetime import datetime, timedelta
 from django.utils.timezone import now
 
 from smarter.apps.account.models import Secret
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.exceptions import SmarterValueError
-
-from .mixins import TestAccountMixin
 
 
 class TestSmarterSecretDjangoModel(TestAccountMixin):

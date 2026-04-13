@@ -5,13 +5,11 @@ from typing import Optional
 
 # 3rd party stuff
 from cryptography.fernet import Fernet
-
-# django stuff
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 
-# our stuff
+# smarter stuff
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -19,6 +17,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
+# smarter - account stuff
 from ..signals import (
     secret_accessed,
     secret_created,
