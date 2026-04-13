@@ -1,4 +1,4 @@
-.. _napl-getting-started-claude-code:
+.. _getting-started-with-claude-code-napl:
 
 ================================================================
 Getting Started: Using Claude Code with Smarter for Programmers
