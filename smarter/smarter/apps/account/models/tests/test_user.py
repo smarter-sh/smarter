@@ -1,10 +1,10 @@
 # pylint: disable=wrong-import-position
 """Test User."""
 
+from smarter.apps.account.models import Account, UserProfile
+
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
-
-from ..models import Account, UserProfile
 
 
 class TestAccount(TestAccountMixin):
@@ -53,7 +53,7 @@ class TestAccount(TestAccountMixin):
             postal_code="12345",
         )
 
-        account_to_update = Account.objects.get(id=account.id)
+        account_to_update = Account.objects.get(id=account.id)  # type: ignore[assignment]
         account_to_update.company_name = "New Company"
         account_to_update.save()
 
