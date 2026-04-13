@@ -49,19 +49,6 @@ class VectorstoreService(SmarterHelperMixin):
 
     **Original source:** https://github.com/FullStackWithLawrence/openai-embeddings
 
-    Attributes
-    ----------
-    db : VectorDatabase
-        The ORM model instance containing metadata and configuration for the vector database.
-    backend : SmarterVectorstoreBackend
-        The backend implementation for interacting with the vector store.
-    provider : Provider
-        The provider company (e.g., OpenAI, Cohere, etc.).
-    provider_model : ProviderModel
-        The specific model used for embeddings (e.g., gpt-4o-mini).
-    embedding_service : SmarterEmbeddingServiceInterface
-        The service for generating embeddings using the provider and model.
-
     """
 
     _text_splitter: Optional[RecursiveCharacterTextSplitter] = None

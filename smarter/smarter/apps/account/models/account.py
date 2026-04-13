@@ -9,7 +9,7 @@ import random
 from typing import TYPE_CHECKING, Optional, Union
 
 # django stuff
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser, AnonymousUser, User
 from django.core.validators import RegexValidator
 from django.db import models
 from django.template.loader import render_to_string
@@ -30,13 +30,13 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 if TYPE_CHECKING:
     try:
-        from django.contrib.auth.models import AbstractUser, AnonymousUser, _AnyUser
+        from django.contrib.auth.models import _AnyUser
 
     except ImportError:
         _AnyUser = Union[object]  # fallback for Sphinx/type checkers
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-ResolvedUserType = Optional[Union["User", "AbstractUser", "AnonymousUser"]]
+ResolvedUserType = Optional[Union[User, AbstractUser, AnonymousUser]]
 
 
 # pylint: disable=W0613
