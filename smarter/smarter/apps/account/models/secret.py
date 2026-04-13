@@ -1,7 +1,4 @@
-# pylint: disable=C0302
 """Account Secret model."""
-
-# pylint: disable=missing-class-docstring
 
 import logging
 from typing import Optional
@@ -72,6 +69,7 @@ class Secret(MetaDataWithOwnershipModel):
         to ensure sensitive data is only saved in encrypted form.
     """
 
+    # pylint: disable=missing-class-docstring
     class Meta:
         verbose_name = "Secret"
         verbose_name_plural = "Secrets"

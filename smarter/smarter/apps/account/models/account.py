@@ -1,7 +1,4 @@
-# pylint: disable=C0302
 """Account models."""
-
-# pylint: disable=missing-class-docstring
 
 import logging
 import os
@@ -83,7 +80,7 @@ def is_authenticated_user(user: object) -> bool:
 
 
 def get_resolved_user(
-    user: Union[User, "AbstractUser", "AnonymousUser", SimpleLazyObject, "_AnyUser"],
+    user: Union[User, AbstractUser, AnonymousUser, SimpleLazyObject, "_AnyUser"],
 ) -> ResolvedUserType:
     """
     Resolve and return a Django user object from a user-like instance.
@@ -121,9 +118,6 @@ def get_resolved_user(
     logger.debug("%s called for user type: %s", formatted_text(__name__) + ".get_resolved_user()", type(user))
     if user is None:
         return None
-
-    # pylint: disable=import-outside-toplevel
-    from django.contrib.auth.models import AbstractUser, AnonymousUser
 
     # this is the expected case
     if isinstance(user, Union[User, AnonymousUser, AbstractUser]):

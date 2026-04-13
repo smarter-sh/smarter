@@ -1,7 +1,4 @@
-# pylint: disable=C0302
 """Account MetaDataWithOwnership model."""
-
-# pylint: disable=missing-class-docstring
 
 import logging
 from typing import Optional, TypeVar
