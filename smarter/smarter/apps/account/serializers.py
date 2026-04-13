@@ -3,12 +3,12 @@
 from smarter.apps.account.models import (
     Account,
     AccountContact,
-    MetaDataModel,
     PaymentMethod,
     Secret,
     User,
     UserProfile,
 )
+from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.serializers import MetaDataModelSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
