@@ -32,16 +32,6 @@ self-onboard their models to your Smarter installation.
     - :doc:`OpenAI Getting Started Guide <../smarter-framework/guides/openai-api-getting-started-guide>`
     - :doc:`Adding an LLM Provider <../smarter-platform/adding-an-llm-provider>`
 
-Adding an LLM Provider
--------------------------
-
-The following guides describe how to integrate specific LLM providers into the Smarter platform.
-
-.. toctree::
-   :maxdepth: 1
-
-   provider/adding-anthropic-provider
-
 Technical Reference
 -------------------
 
