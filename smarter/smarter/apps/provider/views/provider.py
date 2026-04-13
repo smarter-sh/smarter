@@ -70,7 +70,7 @@ class ProviderDetailView(DocsBaseView):
 
     """
 
-    template_path = "provider/manifest_detail.html"
+    template_path = "common/manifest_detail.html"
     provider: Optional[Provider] = None
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
