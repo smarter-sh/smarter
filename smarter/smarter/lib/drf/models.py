@@ -211,6 +211,9 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         @cache_results(cls.cache_expiration)
         def _get_cached_objects_for_user_profile(user_profile_id: int) -> models.QuerySet["SmarterAuthToken"]:
 
+            if not user_profile:
+                return cls.objects.none()
+
             try:
                 queryset = cls.objects.select_related(
                     "user_profile", "user_profile__account", "user_profile__user"
@@ -245,6 +248,9 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
             :returns: A queryset of SmarterAuthToken objects matching the criteria.
             :rtype: QuerySet[SmarterAuthToken]
             """
+            if not user_profile:
+                return cls.objects.none()
+
             try:
                 queryset = cls.objects.select_related(
                     "user_profile", "user_profile__account", "user_profile__user"
@@ -263,18 +269,18 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
 
         if invalidate:
             # Invalidate the cache for both functions
-            _get_cached_objects_for_user_profile.invalidate(user_profile_id=user_profile.id if user_profile else None)
+            _get_cached_objects_for_user_profile.invalidate(user_profile_id=user_profile.id if user_profile else None)  # type: ignore
             _get_cached_objects_for_user_profile_and_name.invalidate(
-                user_profile_id=user_profile.id if user_profile else None, name=name
+                user_profile_id=user_profile.id if user_profile else None, name=name  # type: ignore
             )
 
         if not user_profile and user:
             user_profile = UserProfile.get_cached_object(user=user)
 
         if user_profile and name:
-            return _get_cached_objects_for_user_profile_and_name(user_profile.id, name)
+            return _get_cached_objects_for_user_profile_and_name(user_profile.id, name)  # type: ignore
         elif user_profile:
-            return _get_cached_objects_for_user_profile(user_profile.id)
+            return _get_cached_objects_for_user_profile(user_profile.id)  # type: ignore
         else:
             return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate)  # type: ignore
 

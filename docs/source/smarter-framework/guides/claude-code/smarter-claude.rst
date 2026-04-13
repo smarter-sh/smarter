@@ -299,6 +299,9 @@ Everything else is identical.
 
 .. _agent-copilot:
 
+Agent CoPilot
+----------------
+
 **Pair Programmer** — ``napl-copilot.yaml``
 
 .. code-block:: yaml
@@ -342,6 +345,9 @@ Everything else is identical.
      plugins: []
 
 .. _agent-reviewer:
+
+Agent Reviewer
+----------------
 
 **Code Reviewer** — ``napl-reviewer.yaml``
 
@@ -389,6 +395,9 @@ Everything else is identical.
 
 .. _agent-tester:
 
+Agent Tester
+----------------
+
 **Test Writer** — ``napl-tester.yaml``
 
 .. code-block:: yaml
@@ -434,6 +443,9 @@ Everything else is identical.
      plugins: []
 
 .. _agent-debugger:
+
+Agent Debugger
+----------------
 
 **Debugger** — ``napl-debugger.yaml``
 
@@ -486,6 +498,9 @@ Everything else is identical.
      plugins: []
 
 .. _agent-docwriter:
+
+Agent Doc Writer
+----------------
 
 **Documentation Writer** — ``napl-docwriter.yaml``
 
@@ -762,8 +777,8 @@ Running multiple agents at the same time
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Open additional terminal panels in VS Code by clicking the **+** icon
-in the terminal toolbar, or pressing ``Ctrl+Shift+`` ` ``. Start a
-different agent in each panel:
+in the terminal toolbar, or pressing ``Ctrl+Shift+`` ``. Start a
+different agent in each panel:``
 
 .. code-block:: text
 

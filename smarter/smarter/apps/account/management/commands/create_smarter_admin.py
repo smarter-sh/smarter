@@ -75,8 +75,13 @@ class Command(SmarterCommand):
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
         if created:
             self.handle_completed_success(
-                msg=f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.cached_account.company_name}"
+                msg=f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account}"
             )
+        else:
+            self.handle_completed_success(
+                msg=f"User profile already exists for {user_profile.user}, account {user_profile.account}"
+            )
+        UserProfile.get_cached_object(invalidate=True, pk=user_profile.pk)  # prime the cache
 
         account_contact, created = AccountContact.objects.get_or_create(
             account=account,

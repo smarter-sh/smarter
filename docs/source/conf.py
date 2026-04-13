@@ -20,7 +20,11 @@ sys.path.insert(0, SMARTER_ROOT)
 ###############################################################################
 from smarter.__version__ import __version__  # noqa: F401
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_PRODUCT_NAME
+from smarter.common.const import (
+    SMARTER_ORGANIZATION_WEBSITE_URL,
+    SMARTER_PRODUCT_NAME,
+    SMARTER_PROJECT_WEBSITE_URL,
+)
 
 if not smarter_settings.environment:
     raise RuntimeError("The 'smarter_settings.environment' variable is not set.")
@@ -58,6 +62,8 @@ html_context = {
     "last_updated": last_updated,
     "branding_company_name": smarter_settings.branding_corporate_name,
     "branding_smarter_product_name": SMARTER_PRODUCT_NAME,
+    "smarter_project_web_site_url": SMARTER_PROJECT_WEBSITE_URL,
+    "smarter_organization_web_site_url": SMARTER_ORGANIZATION_WEBSITE_URL,
 }
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
