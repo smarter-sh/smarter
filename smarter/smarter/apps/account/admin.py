@@ -285,46 +285,8 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
              - The owner of the secret can view it.
              - All other users cannot view the secret value.
             """
-            logger.debug(
-                "%s.has_all_permission() Checking permissions for user %s to view Secret %s",
-                self.logger_prefix,
-                self.user,
-                str(obj),
-            )
-            if not isinstance(obj, Secret):
-                logger.error(
-                    "%s.has_all_permission() called with an object that is not a Secret instance: %s",
-                    self.logger_prefix,
-                    obj,
-                )
-                return False
-            if not self.user.is_authenticated:
-                logger.debug(
-                    "%s.has_all_permission() User %s is not authenticated and does not have permission to view the Secret value.",
-                    self.logger_prefix,
-                    self.user,
-                )
-                return False
-            obj_user_profile: UserProfile = obj.user_profile
-            if self.user.is_superuser:
-                logger.debug(
-                    "%s.has_all_permission() User %s is a superuser and has permission to view the Secret value.",
-                    self.logger_prefix,
-                    self.user,
-                )
+            if Secret.objects.filter(pk=obj.pk).with_ownership_permission_for(user=self.user).exists():
                 return True
-            if obj_user_profile.user == self.user:
-                logger.debug(
-                    "%s.has_all_permission() User %s is the owner of the Secret and has permission to view the Secret value.",
-                    self.logger_prefix,
-                    self.user,
-                )
-                return True
-            logger.debug(
-                "%s.has_all_permission() User %s does not have permission to view the Secret value.",
-                self.logger_prefix,
-                self.user,
-            )
             return False
 
         logger.debug("%s.display_value() called for Secret: %s", self.logger_prefix, str(obj))
@@ -343,7 +305,7 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
             )
             return "********"
 
-        self.user = self.request.user
+        self.user = self.request.user  # type: ignore
         self.user_profile = UserProfile.get_cached_object(user=self.user)  # type: ignore
         retval = obj.get_secret(update_last_accessed=False)
         logger.debug(
@@ -447,6 +409,9 @@ class RestrictedUserAdmin(UserAdmin):
         """
         if not hasattr(request, "user") or not request.user.is_authenticated:
             return False
+        if not isinstance(request.user, User):
+            logger.warning("Unexpected user type in RestrictedUserAdmin.has_delete_permission: %s", type(request.user))
+            return False
         if request.user.is_superuser:
             return True
         return False
@@ -456,7 +421,12 @@ class RestrictedUserAdmin(UserAdmin):
         Allow change permissions for superusers and to
         staff users if they are changing a user within their own account.
         """
-        if not hasattr(request, "user") or not request.user.is_authenticated:
+        if not hasattr(request, "user"):
+            return False
+        if not isinstance(request.user, User):
+            logger.warning("Unexpected user type in RestrictedUserAdmin.has_change_permission: %s", type(request.user))
+            return False
+        if not request.user.is_authenticated:
             return False
         if request.user.is_superuser:
             return True
@@ -539,6 +509,12 @@ class RestrictedUserProfileAdmin(SmarterSuperUserOnlyModelAdmin):
     # permission is limited to superusers.
     def get_queryset(self, request: HttpRequest):
         qs = super().get_queryset(request)
+        if not isinstance(request.user, User):
+            logger.warning("Unexpected user type in RestrictedUserProfileAdmin.get_queryset: %s", type(request.user))
+            return qs.none()
+        if not request.user.is_authenticated:
+            return qs.none()
+
         if request.user.is_superuser:
             return qs
         return qs.none()

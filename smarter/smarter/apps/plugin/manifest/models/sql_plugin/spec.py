@@ -81,11 +81,9 @@ class SAMSqlPluginSpec(SAMPluginCommonSpec):
         v = self.connection
         if not SmarterValidator.is_valid_cleanstring(v):
             raise SAMValidationError(f"connection '{v}' must be a valid cleanstring with no illegal characters.")
-        sql_connections = (
-            SqlConnection.objects.with_read_permission_for(user=self.user)
-            if self.user
-            else SqlConnection.objects.filter(name=v).filter(name=v)
-        )
+        sql_connections = SqlConnection.objects.filter(name=v)
+        if self.user:
+            sql_connections = sql_connections.with_read_permission_for(user=self.user)
         if not sql_connections.exists():
             raise SAMValidationError(f"connection '{v}' does not exist or is not accessible.")
         return self
