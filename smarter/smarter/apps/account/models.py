@@ -6,7 +6,7 @@
 import logging
 import os
 import random
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Generic, Optional, TypeVar, Union, cast
 
 # 3rd party stuff
 from cryptography.fernet import Fernet
@@ -16,6 +16,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models import Manager, QuerySet
+from django.db.models.base import Model
 from django.template.loader import render_to_string
 from django.test.client import RequestFactory
 from django.utils import timezone
@@ -1145,6 +1147,57 @@ class UserProfile(MetaDataModel):
         return self.__str__()
 
 
+_MT = TypeVar("_MT", bound="MetaDataWithOwnershipModel")
+
+
+class SmarterQuerySetWithPermissions(QuerySet[_MT]):
+
+    def with_read_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
+        """
+        A pipeline for filtering a queryset of this resource based on the
+        permissions of the authenticated user in the given request.
+
+        Return a queryset of this resource if the user has permission to read it,
+        or an empty queryset if not.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+        :param queryset: Optional[:class:`django.db.models.QuerySet`]
+            An optional queryset to filter. If not provided, the method will default to filtering all instances
+
+        :returns: :class:`django.db.models.QuerySet`
+            A queryset of this resource if the user has permission to read it, or an empty queryset
+            if not.
+        """
+        logger.debug(
+            "%s.with_read_permission_for() called for user: %s",
+            formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+            user,
+        )
+        if not is_authenticated_user(user):
+            return self.none()
+        request_user_profile = UserProfile.get_cached_object(user=user)
+        if not request_user_profile:
+            return self.none()
+        if request_user_profile.user.is_superuser:
+            return self.all()
+        smarter_account = Account.get_cached_object(account_number=SMARTER_ACCOUNT_NUMBER)
+        return self.filter(
+            models.Q(user_profile__account=smarter_account)
+            | models.Q(user_profile=request_user_profile)
+            | models.Q(user_profile__account=request_user_profile.account)
+        )
+
+
+class MetaDataWithOwnershipModelManager(Manager[_MT]):
+
+    def get_queryset(self) -> SmarterQuerySetWithPermissions[_MT]:
+        return SmarterQuerySetWithPermissions(self.model, using=self._db)
+
+    def with_read_permission_for(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().with_read_permission_for(user)
+
+
 class MetaDataWithOwnershipModel(MetaDataModel):
     """
     Abstract Django ORM base model that adds Account and
@@ -1170,66 +1223,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             "name",
         )
 
+    objects: MetaDataWithOwnershipModelManager = MetaDataWithOwnershipModelManager()
+
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="%(class)ss")
-
-    def is_readable_by(self, user: "User") -> bool:
-        """
-        Check if the authenticated user in the given request has permission to read this resource.
-
-        :param user: :class:`django.contrib.auth.models.User`
-            The user to check.
-
-        :returns: bool
-
-            True if the user is authenticated and any of the following is true:
-
-            - user is superuser, or the owner of the resource;
-            - user belongs to the same account as the resource owner;
-            - the resource is owned by the Smarter admin account; False otherwise.
-
-        .. attention::
-
-            Only users with staff or superuser status, or the owner of the resource, are permitted to read this resource.
-
-        .. warning::
-
-            If the request does not contain a valid user, or the user lacks required privileges, permission is denied.
-
-        **Example usage**::
-
-            if resource.is_readable_by(request):
-                # Allow resource access
-                pass
-
-        .. seealso::
-
-            :meth:`get_resolved_user` -- Resolves the user from the request.
-        """
-
-        if not is_authenticated_user(user):
-            return False
-        request_user_profile = UserProfile.get_cached_object(user=user)  # type: ignore[return-value]
-        if not request_user_profile:
-            return False
-
-        # superusers have permission to read all resources
-        if request_user_profile.user.is_superuser:
-            return True
-
-        # resource owned by Smarter admin account is readable by anyone authenticated
-        smarter_account = Account.get_cached_object(account_number=SMARTER_ACCOUNT_NUMBER)
-        if self.user_profile.account == smarter_account:
-            return True
-
-        # authenticated user is the owner of the resource
-        if self.user_profile == request_user_profile:
-            return True
-
-        # authenticated user belongs to the same account as the resource owner
-        if self.user_profile.account == request_user_profile.account:
-            return True
-
-        return False
 
     def has_all_permission(self, request: "WSGIRequest") -> bool:
         """

@@ -14,6 +14,7 @@ from django.db import models
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
     Secret,
     User,
     UserProfile,
@@ -130,11 +131,13 @@ class ProviderModelVerificationTypes(models.TextChoices):
 
 
 class Provider(MetaDataWithOwnershipModel):
-    """Chat model."""
+    """Provider model."""
 
     class Meta:
         verbose_name = "Provider"
         verbose_name_plural = "Providers"
+
+    objects: MetaDataWithOwnershipModelManager["Provider"] = MetaDataWithOwnershipModelManager()
 
     status = models.CharField(
         max_length=32,
