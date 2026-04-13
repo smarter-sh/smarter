@@ -127,13 +127,11 @@ class SAMApiPluginSpec(SAMPluginCommonSpec):
         v = self.connection
         if not SmarterValidator.is_valid_cleanstring(v):
             raise SAMValidationError(f"connection '{v}' must be a valid cleanstring with no illegal characters.")
-        api_connections = ApiConnection.objects.filter(name=v)
+        api_connections = (
+            ApiConnection.objects.with_read_permission_for(user=self.user)
+            if self.user
+            else ApiConnection.objects.filter(name=v).filter(name=v)
+        )
         if not api_connections.exists():
             raise SAMValidationError(f"connection '{v}' does not exist or is not accessible.")
-        if self.user:
-            for api_connection in api_connections:
-                if api_connection.is_readable_by(self.user):
-                    break
-            else:
-                raise SAMValidationError(f"No connection '{v}' is accessible by {self.user}.")
         return self

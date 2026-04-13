@@ -9,6 +9,7 @@ from django.db import models
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
     User,
     UserProfile,
 )
@@ -87,6 +88,13 @@ class VectorDatabase(MetaDataWithOwnershipModel):
     """
     Model representing a vector database.
     """
+
+    # pylint: disable=C0115
+    class Meta:
+        verbose_name = "Vectorstore Metadata"
+        verbose_name_plural = "Vectorstore Metadata"
+
+    objects: MetaDataWithOwnershipModelManager["VectorDatabase"] = MetaDataWithOwnershipModelManager()
 
     # --------------------------------------------------------------------------
     # Vectorstore Interface fields

@@ -23,6 +23,7 @@ from django.db.utils import ConnectionHandler
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
     Secret,
     User,
     UserProfile,
@@ -309,6 +310,8 @@ class SqlConnection(ConnectionBase):
             "user_profile",
             "name",
         )
+
+    objects: MetaDataWithOwnershipModelManager["SqlConnection"] = MetaDataWithOwnershipModelManager()
 
     _connection: Optional[BaseDatabaseWrapper] = None
 
@@ -1058,6 +1061,8 @@ class ApiConnection(ConnectionBase):
             "user_profile",
             "name",
         )
+
+    objects: MetaDataWithOwnershipModelManager["ApiConnection"] = MetaDataWithOwnershipModelManager()
 
     AUTH_METHOD_CHOICES = [
         ("none", "None"),

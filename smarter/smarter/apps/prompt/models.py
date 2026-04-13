@@ -10,7 +10,10 @@ from django.db.utils import IntegrityError
 from django.http import HttpRequest
 from rest_framework import serializers
 
-from smarter.apps.account.models import MetaDataWithOwnershipModel
+from smarter.apps.account.models import (
+    MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
+)
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import smarter_settings
@@ -40,6 +43,8 @@ class Chat(MetaDataWithOwnershipModel):
     class Meta:
         verbose_name_plural = "Chats"
         unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
+
+    objects: MetaDataWithOwnershipModelManager["Chat"] = MetaDataWithOwnershipModelManager()
 
     session_key = models.CharField(max_length=255, blank=False, null=False, unique=True)
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE, blank=False, null=False)

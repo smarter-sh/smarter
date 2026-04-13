@@ -33,6 +33,8 @@ def smarter_filter_queryset_for_user(
     of the objects in the queryset. Queryset is assumed to have a user_profile
     field that is a foreign key to the UserProfile model.
 
+    FIX NOTE: refactor this to use SmarterQuerySetWithPermissions()
+
     .. warning::
 
         This function only works for models that inherit from

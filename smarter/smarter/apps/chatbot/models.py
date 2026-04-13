@@ -17,6 +17,7 @@ from rest_framework import serializers
 from smarter.apps.account.models import (
     Account,
     MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
     User,
     UserProfile,
 )
@@ -148,6 +149,8 @@ class ChatBotCustomDomain(MetaDataWithOwnershipModel):
 
     class Meta:
         verbose_name_plural = "ChatBot Custom Domains"
+
+    objects: MetaDataWithOwnershipModelManager["ChatBotCustomDomain"] = MetaDataWithOwnershipModelManager()
 
     #: The AWS Hosted Zone ID associated with this custom domain. This ID is used for DNS management via AWS Route 53.
     #: Example: "Z1234567890ABCDEF"
@@ -389,6 +392,8 @@ class ChatBot(MetaDataWithOwnershipModel):
         REQUESTED = "Requested", "Requested"
         ISSUED = "Issued", "Issued"
         FAILED = "Failed", "Failed"
+
+    objects: MetaDataWithOwnershipModelManager["ChatBot"] = MetaDataWithOwnershipModelManager()
 
     #: The subdomain DNS record associated with this ChatBot.
     #: Example: ChatBotCustomDomainDNS(id=1, domain="my-chatbot.example.com")

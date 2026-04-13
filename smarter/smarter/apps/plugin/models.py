@@ -24,6 +24,7 @@ from rest_framework import serializers
 from smarter.apps.account.models import (
     Account,
     MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
     User,
     UserProfile,
 )
@@ -211,6 +212,8 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         verbose_name = "Plugin"
         verbose_name_plural = "Plugins"
         unique_together = ("user_profile", "name")
+
+    objects: MetaDataWithOwnershipModelManager["PluginMeta"] = MetaDataWithOwnershipModelManager()
 
     PLUGIN_CLASSES = [
         (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),

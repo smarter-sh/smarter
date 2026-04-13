@@ -1,10 +1,11 @@
 """Smarter API Manifest - Plugin.spec"""
 
 import os
-from typing import ClassVar, Optional
+from typing import ClassVar, Optional, cast
 
 from pydantic import Field, field_validator, model_validator
 
+from smarter.apps.account.models import SmarterQuerySetWithPermissions
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.common.helpers.console_helpers import formatted_text
@@ -56,14 +57,13 @@ class SAMVectorstoreSpec(AbstractSAMSpecBase):
             v = str(v).strip()
             if not v:
                 raise SAMValidationError("Vectorstore connection must not be empty if provided.")
-            api_connections = ApiConnection.objects.filter(name=v)
+            api_connections = (
+                ApiConnection.objects.with_read_permission_for(user=self.user)
+                if self.user
+                else ApiConnection.objects.filter(name=v).filter(name=v)
+            )
             if not api_connections.exists():
                 raise SAMValidationError(f"Vectorstore connection '{v}' does not exist.")
-            if self.user:
-                for api_connection in api_connections:
-                    if api_connection.is_readable_by(self.user):
-                        return self
-                raise SAMValidationError(f"Vectorstore connection '{v}' is not accessible by {self.user}.")
         return self
 
     @field_validator("backend")
