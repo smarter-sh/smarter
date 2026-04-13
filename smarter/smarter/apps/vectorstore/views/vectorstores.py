@@ -72,7 +72,7 @@ class VectorstoreManifestView(DocsBaseView):
 
     """
 
-    template_path = "plugin/manifest_detail.html"
+    template_path = "common/manifest_detail.html"
     vectorstore: Optional[VectorDatabase] = None
     backend: str
 

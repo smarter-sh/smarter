@@ -71,7 +71,7 @@ class ConnectionDetailView(DocsBaseView):
 
     """
 
-    template_path = "connection/manifest_detail.html"
+    template_path = "common/manifest_detail.html"
     connection: Optional[ConnectionBase] = None
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
