@@ -41,3 +41,6 @@ these rules will save you time and improve the quality of your code.
 21. Add waffle logging and feature switches as necessary to :class:`smarter.lib.django.waffle.SmarterWaffleSwitches`
 22. Ensure that your UI includes anchors as necessary in :file:`smarter/templates/dashboard/authenticated.html`
 23. Ensure that exceptions are properly handled and that you have inherited from :class:`smarter.common.exceptions.SmarterException`
+24. Add your feature's JSON schema view to smarter.apps.docs.views.json_schema and register it in smarter.apps.docs.urls
+25. Add your feature's example manifest view to smarter.apps.docs.views.manifest and register it in smarter.apps.docs.urls
+26. Add your feature's Broker to smarter.apps.api.v1.cli.brokers.Brokers

@@ -11,11 +11,6 @@ from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
     MetaDataWithOwnershipModelManager,
     User,
-    UserProfile,
-)
-from smarter.apps.account.utils import (
-    SmarterCachedObjects,
-    get_cached_admin_user_for_account,
 )
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.provider.models import Provider, ProviderModel
@@ -472,51 +467,26 @@ class VectorDatabase(MetaDataWithOwnershipModel):
 
         - :func:`smarter.apps.account.utils.get_cached_account_for_user`
         """
+        logger_prefix = formatted_text(f"{__name__}.{VectorDatabase.__name__}.get_cached_vectorstores_for_user()")
+        logger.debug("%s called with user: %s and invalidate: %s", logger_prefix, user, invalidate)
 
         if user is None:
-            logger.warning("%s.get_cached_vectorstores_for_user: user is None", cls.formatted_class_name)
+            logger.warning("%s.get_cached_vectorstores_for_user: user is None", logger_prefix)
             return []
-        user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
-        admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore
-        admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore
-        instances = []
 
         @cache_results()
-        def get_cached_vectorstores_for_user_profile_id(pk: int) -> list["VectorDatabase"]:
-            # create querysets for user_profile, account and smarter account.
-            user_profile_qs = (
-                cls.objects.filter(user_profile=user_profile)
-                .prefetch_related("tags")
-                .select_related("user_profile", "user_profile__account", "user_profile__user")
-            )
-            instances.extend(user_profile_qs)
-
-            user_account_qs = (
-                cls.objects.filter(user_profile=admin_user_profile)
-                .prefetch_related("tags")
-                .select_related("user_profile", "user_profile__account", "user_profile__user")
-            )
-            instances.extend(user_account_qs)
-
-            smarter_account_qs = (
-                cls.objects.filter(user_profile__account=SmarterCachedObjects.smarter_admin_user_profile)
-                .prefetch_related("tags")
-                .select_related("user_profile", "user_profile__account", "user_profile__user")
-            )
-            instances.extend(smarter_account_qs)
-
+        def get_cached_vectorstores_for_user_id(user_id: int) -> list["VectorDatabase"]:
             logger.debug(
-                "%s.get_cached_vectorstores_for_user: Found these vector stores %s for user %s",
-                cls.formatted_class_name,
-                instances,
+                "%s.get_cached_vectorstores_for_user_id() fetching vector stores for user: %s",
+                logger_prefix,
                 user,
             )
-            unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
-            return list(unique_instances)
+            retval = VectorDatabase.objects.with_read_permission_for(user)
+            return list(retval)
 
         if invalidate:
-            get_cached_vectorstores_for_user_profile_id.invalidate(pk=user_profile.id)  # type: ignore
-        return get_cached_vectorstores_for_user_profile_id(pk=user_profile.id)  # type: ignore
+            get_cached_vectorstores_for_user_id.invalidate(user_id=user.id)  # type: ignore
+        return get_cached_vectorstores_for_user_id(user_id=user.id)  # type: ignore
 
     def __str__(self):
         return f"{self.id}: {self.name}({self.backend}) - {self.user_profile}"  # type: ignore

@@ -36,7 +36,7 @@ class WaffleSwitchedLoggerWrapper:
         self._logger = logger
         self._condition_func = condition_func
 
-    def _should_log(self, level: int = logging.DEBUG) -> bool:
+    def should_log(self, level: int = logging.DEBUG) -> bool:
         """Check if we should log based on custom conditions."""
         if not self._logger.isEnabledFor(level):
             return False
@@ -47,23 +47,23 @@ class WaffleSwitchedLoggerWrapper:
         return True
 
     def debug(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.DEBUG) or logging.DEBUG >= self.REQUIRED_LOG_LEVEL:
+        if self.should_log(logging.DEBUG) or logging.DEBUG >= self.REQUIRED_LOG_LEVEL:
             self._logger.debug(msg, *args, **kwargs)
 
     def info(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.INFO) or logging.INFO >= self.REQUIRED_LOG_LEVEL:
+        if self.should_log(logging.INFO) or logging.INFO >= self.REQUIRED_LOG_LEVEL:
             self._logger.info(msg, *args, **kwargs)
 
     def warning(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.WARNING) or logging.WARNING >= self.REQUIRED_LOG_LEVEL:
+        if self.should_log(logging.WARNING) or logging.WARNING >= self.REQUIRED_LOG_LEVEL:
             self._logger.warning(msg, *args, **kwargs)
 
     def error(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.ERROR) or logging.ERROR >= self.REQUIRED_LOG_LEVEL:
+        if self.should_log(logging.ERROR) or logging.ERROR >= self.REQUIRED_LOG_LEVEL:
             self._logger.error(msg, *args, **kwargs)
 
     def critical(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.CRITICAL) or logging.CRITICAL >= self.REQUIRED_LOG_LEVEL:
+        if self.should_log(logging.CRITICAL) or logging.CRITICAL >= self.REQUIRED_LOG_LEVEL:
             self._logger.critical(msg, *args, **kwargs)
 
     def set_condition(self, condition_func: Callable):

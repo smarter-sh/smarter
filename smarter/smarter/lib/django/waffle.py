@@ -302,6 +302,11 @@ class SmarterWaffleSwitches:
             comment="Enables the Smarter Journal feature.",
             default=False,
         ),
+        ENABLE_LOG_VIEW_IN_BROWSER: SmarterWaffleSwitch(
+            name=ENABLE_LOG_VIEW_IN_BROWSER,
+            comment="Enables the 'View Logs in Browser' feature for easier access to log files during development and debugging.",
+            default=False,
+        ),
         ENABLE_OAUTH2: SmarterWaffleSwitch(
             name=ENABLE_OAUTH2,
             comment="Enables OAuth2 authentication support.",
@@ -390,7 +395,7 @@ class SmarterWaffleSwitches:
         TASK_LOGGING: SmarterWaffleSwitch(
             name=TASK_LOGGING,
             comment="Enables logging in all Celery tasks throughout the Smarter codebase.",
-            default=False,
+            default=True,
         ),
         VALIDATOR_LOGGING: SmarterWaffleSwitch(
             name=VALIDATOR_LOGGING,

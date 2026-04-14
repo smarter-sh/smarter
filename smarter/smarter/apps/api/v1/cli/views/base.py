@@ -72,6 +72,7 @@ from smarter.lib.manifest.loader import SAMLoader
 from .swagger import BUG_REPORT
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
@@ -719,7 +720,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 self.logger_prefix,
                 request,
             )
-            request._dont_enforce_csrf_checks = True
+            setattr(request, "_dont_enforce_csrf_checks", True)
 
         self.smarter_request = request
         response = None

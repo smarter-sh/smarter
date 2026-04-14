@@ -40,6 +40,7 @@ from smarter.apps.prompt.manifest.brokers.chat_plugin_usage import (
 )
 from smarter.apps.prompt.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
+from smarter.apps.vectorstore.manifest.brokers.vectorstore import SAMVectorstoreBroker
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -119,6 +120,7 @@ class Brokers:
         SAMKinds.USER.value: SAMUserBroker,
         SAMKinds.SECRET.value: SAMSecretBroker,
         SAMKinds.PROVIDER.value: SAMProviderBroker,
+        SAMKinds.VECTORSTORE.value: SAMVectorstoreBroker,
     }
 
     @classmethod

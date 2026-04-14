@@ -111,15 +111,6 @@ class SAMEmbeddingsInterface(SmarterBasePydanticModel):
         v = str(v).strip()
         if not v:
             raise SAMValidationError("Vectorstore provider must not be empty.")
-        providers = Provider.objects.filter(name=v)
-        if not providers.exists():
-            raise SAMValidationError(f"Vectorstore provider '{v}' does not exist or is not accessible.")
-        if cls.user:
-            for provider in providers:
-                if provider.is_readable_by(cls.user):
-                    break
-            else:
-                raise SAMValidationError(f"No Vectorstore provider '{v}' is accessible by the authenticated user.")
         return v
 
     @field_validator("provider_model")
@@ -137,17 +128,6 @@ class SAMEmbeddingsInterface(SmarterBasePydanticModel):
             v = str(v).strip()
             if not v:
                 raise SAMValidationError("Vectorstore provider_model must not be empty if provided.")
-        provider_models = ProviderModel.objects.filter(name=v, provider__name=cls.provider)
-        if not provider_models.exists():
-            raise SAMValidationError(f"Vectorstore provider_model '{v}' does not exist or is not accessible.")
-        if cls.user:
-            for provider_model in provider_models:
-                if provider_model.provider.is_readable_by(cls.user):
-                    break
-            else:
-                raise SAMValidationError(
-                    f"No Vectorstore provider_model '{v}' is accessible by the authenticated user."
-                )
         return v
 
 
