@@ -577,9 +577,9 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
             :type kwargs: dict
             """
             logger.debug(
-                "%s -> %s().invalidate() called with args: %s kwargs: %s",
-                logger_prefix_normal,
-                func.__name__,
+                "%s -> %s called with args: %s kwargs: %s",
+                logger_prefix_blue,
+                formatted_text_blue(func.__name__ + "().invalidate()"),
                 args,
                 kwargs,
             )
@@ -591,16 +591,16 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
                 cached_value = lazy_cache.get(cache_key)
                 lazy_cache.delete(cache_key)
                 logger.info(
-                    "%s.invalidate() - invalidated %s - %s: %s",
-                    logger_prefix_blue,
+                    "%s - invalidated %s - %s: %s",
+                    logger_prefix_green + formatted_text_green(func.__name__ + "().invalidate()"),
                     type(cached_value).__name__,
                     cache_key,
                     str(cached_value),
                 )
             else:
                 logger.debug(
-                    "%s.invalidate() - no cache entry found for %s (nothing to invalidate)",
-                    logger_prefix_normal,
+                    "%s - no cache entry found for %s (nothing to invalidate)",
+                    logger_prefix_red + formatted_text_red(func.__name__ + "().invalidate()"),
                     cache_key,
                 )
 

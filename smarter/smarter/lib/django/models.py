@@ -974,3 +974,9 @@ class MetaDataModel(TimestampedModel):
             self.__class__.get_cached_object(invalidate=True, pk=self.pk)  # type: ignore
             self.__class__.get_cached_object(invalidate=True, name=self.name)  # type: ignore
             self.__class__.get_cached_objects(invalidate=True)  # type: ignore
+
+    def __str__(self):
+        return f"{self.pk} {self.name}"
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={getattr(self, 'id', None)} name={self.name} created_at={self.created_at} updated_at={self.updated_at}>"

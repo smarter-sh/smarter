@@ -93,7 +93,7 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
 
 def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Account, UserProfile]:
     hashed_slug = hash_factory()
-    username = str(camel_to_snake(f"testAdminUser_{hashed_slug}"))
+    username = str(camel_to_snake(f"testMortalUser_{hashed_slug}"))
     email = f"test-mortal-{hashed_slug}@mail.com"
     first_name = f"TestMortalFirstName_{hashed_slug}"
     last_name = f"TestMortalLastName_{hashed_slug}"
