@@ -40,8 +40,8 @@ class TestUrls(TestAccountMixin):
         verify_response(f"{namespace}:account_register", 200)
 
         # these were moved to the console root in v0.13.210
-        verify_response("root:account_password_reset_request", 200)
-        verify_response("root:account_password_confirm", 200)
+        verify_response("account_password_reset_request", 200)
+        verify_response("account_password_confirm", 200)
 
         if not self.client:
             self.fail("Client is not initialized.")

@@ -1,8 +1,10 @@
 # pylint: disable=wrong-import-position
 """Test LLMPrices model."""
 
-# our stuff
 import logging
+
+# our stuff
+from decimal import Decimal
 
 from smarter.apps.account.models import CHARGE_TYPES, LLMPrices
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -41,11 +43,13 @@ class TestLLMPrices(TestAccountMixin):
         """
         provider_name = "test-provider" + self.hash_suffix
         model_name = "test-model" + self.hash_suffix
+        price = Decimal(1.25125)
+        price_precision = 6
         LLMPrices.objects.create(
             charge_type=CHARGE_TYPES[0][0],
             provider=provider_name,
             model=model_name,
-            price=1.25125,
+            price=price,
         )
 
         try:
@@ -54,12 +58,14 @@ class TestLLMPrices(TestAccountMixin):
             self.assertEqual(record.provider, provider_name)
             self.assertEqual(record.charge_type, CHARGE_TYPES[0][0])
             self.assertEqual(record.model, model_name)
-            self.assertEqual(record.price, 1.25125)
+            self.assertEqual(round(record.price, price_precision), round(price, price_precision))
 
-            record.price = 2.5025
+            price = Decimal(1.75375)
+
+            record.price = price
             record.save()
 
-            self.assertEqual(record.price, 2.5025)
+            self.assertEqual(round(record.price, price_precision), round(price, price_precision))
         # pylint: disable=broad-except
         except Exception as e:
             self.fail(f"Error during CRUD operations: {e}")

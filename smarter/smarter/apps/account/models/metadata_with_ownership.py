@@ -81,17 +81,41 @@ class SmarterQuerySetWithPermissions(QuerySet[_MT]):
             user,
         )
         if not is_authenticated_user(user):
+            logger.debug(
+                "%s.with_read_permission_for() user is not authenticated: %s",
+                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+                user,
+            )
             return self.none()
-        request_user_profile = UserProfile.get_cached_object(user=user)
-        if not request_user_profile:
+        try:
+            request_user_profile = UserProfile.get_cached_object(user=user)
+        except UserProfile.DoesNotExist:
+            logger.debug(
+                "%s.with_read_permission_for() no UserProfile found for user: %s",
+                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+                user,
+            )
             return self.none()
         if request_user_profile.user.is_superuser:
+            logger.debug(
+                "%s.with_read_permission_for() user is superuser, returning all resources",
+                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+            )
             return self.all()
-        smarter_account = Account.get_cached_object(account_number=SMARTER_ACCOUNT_NUMBER)
+        try:
+            smarter_account = Account.get_cached_object(account_number=SMARTER_ACCOUNT_NUMBER)
+        except Account.DoesNotExist:
+            logger.debug(
+                "%s.with_read_permission_for() no smarter account found with account number: %s",
+                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+                SMARTER_ACCOUNT_NUMBER,
+            )
+            return self.none()
+
         return self.filter(
-            models.Q(user_profile__account=smarter_account)
-            | models.Q(user_profile=request_user_profile)
+            models.Q(user_profile=request_user_profile)
             | models.Q(user_profile__account=request_user_profile.account, user_profile__user__is_staff=True)
+            | models.Q(user_profile__account=smarter_account)
         )
 
     def with_ownership_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
@@ -105,20 +129,50 @@ class SmarterQuerySetWithPermissions(QuerySet[_MT]):
         :returns: :class:`django.db.models.QuerySet`
             A queryset of this resource if the user has permission to fully manage it, or an empty queryset if not.
         """
+        logger.debug(
+            "%s.with_ownership_permission_for() called for user: %s",
+            formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+            user,
+        )
         if not isinstance(user, User):
+            logger.debug(
+                "%s.with_ownership_permission_for() user is not an instance of User: %s",
+                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+                user,
+            )
             return self.none()
         if not is_authenticated_user(user):
+            logger.debug(
+                "%s.with_ownership_permission_for() user is not authenticated: %s",
+                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+                user,
+            )
             return self.none()
 
         # superusers have ownership permission for all resources
         if user.is_superuser:
+            logger.debug(
+                "%s.with_ownership_permission_for() user is superuser, returning all resources",
+                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+            )
             return self.all()
-        user_profile = UserProfile.get_cached_object(user=user)
-        if not user_profile:
+        try:
+            user_profile = UserProfile.get_cached_object(user=user)
+        except UserProfile.DoesNotExist:
+            logger.debug(
+                "%s.with_ownership_permission_for() no UserProfile found for user: %s",
+                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+                user,
+            )
             return self.none()
 
         # staff users have ownership permission for resources owned within their account, or owned by themselves
         if user.is_staff:
+            logger.debug(
+                "%s.with_ownership_permission_for() called for staff user: %s",
+                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+                user,
+            )
             return self.filter(
                 models.Q(user_profile=user_profile) | models.Q(user_profile__account=user_profile.account)
             )
@@ -581,6 +635,12 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 name=self.name, account=self.user_profile.account, class_name=self.__class__.__name__, invalidate=True
             )
             self.__class__.get_cached_objects(invalidate=True, user_profile=self.user_profile)
+
+    def __str__(self):
+        return f"{self.pk} {self.name} (owned by {self.user_profile})"
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} pk={self.pk} name={self.name} user_profile={self.user_profile}>"
 
 
 __all__ = ["MetaDataWithOwnershipModel", "MetaDataWithOwnershipModelManager", "SmarterQuerySetWithPermissions"]

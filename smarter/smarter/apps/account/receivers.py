@@ -52,12 +52,15 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
       if not, create one with the default account.
     """
     logger.info("%s User logged in: %s", formatted_text(f"{module_prefix}.user_logged_in()"), user)
-    user_profile = UserProfile.get_cached_object(user=user)
-    if not user_profile:
-        logger.warning("User profile not found for user: %s", user)
+    try:
+        UserProfile.objects.get(user=user)
+    except UserProfile.DoesNotExist:
         account = get_cached_default_account()
-        user_profile = UserProfile.objects.create(name=user.username, user=user, account=account)
+        UserProfile.objects.create(name=user.username, user=user, account=account)
         logger.info("Created UserProfile for user: %s with default account: %s", user, account)
+    except UserProfile.MultipleObjectsReturned:
+        # this is fine. the same user can have multiple UserProfiles if they belong to multiple accounts
+        pass
 
 
 @receiver(post_save, sender=User)
@@ -78,6 +81,9 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
         user_profile = UserProfile.get_cached_object(user=instance)
         cache_invalidations(user_profile=user_profile)
     except UserProfile.DoesNotExist:
+        pass
+    except UserProfile.MultipleObjectsReturned:
+        # this is fine. the same user can have multiple UserProfiles if they belong to multiple accounts
         pass
 
 

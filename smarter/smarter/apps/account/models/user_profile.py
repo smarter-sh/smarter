@@ -292,7 +292,9 @@ class UserProfile(MetaDataModel):
         )
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_user_and_account(user: User, account: Account, class_name: str) -> "UserProfile":
+        def _get_object_by_user_and_account(
+            user: User, account: Account, class_name: str = cls.__name__
+        ) -> "UserProfile":
             try:
                 retval = (
                     UserProfile.objects.prefetch_related("tags")
@@ -320,7 +322,7 @@ class UserProfile(MetaDataModel):
                 raise UserProfile.DoesNotExist(f"No UserProfile found for user {user} and account {account}") from e
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_user(user: User, class_name: str) -> "UserProfile":
+        def _get_object_by_user(user: User, class_name: str = cls.__name__) -> "UserProfile":
             try:
                 retval = UserProfile.objects.prefetch_related("tags").select_related("user", "account").get(user=user)
                 logger.debug(
@@ -359,7 +361,7 @@ class UserProfile(MetaDataModel):
                 return retval
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_account(account: Account, class_name: str) -> Optional["UserProfile"]:
+        def _get_object_by_account(account: Account, class_name: str = cls.__name__) -> Optional["UserProfile"]:
             try:
                 user = UserProfile.admin_for_account(account)
                 retval = (
