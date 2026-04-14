@@ -172,6 +172,7 @@ class LazyCache:
         :rtype: module
         """
         if self._waffle is None:
+            # pylint: disable=import-outside-toplevel
             from smarter.lib.django import waffle
 
             self._waffle = waffle
@@ -512,7 +513,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
                 result = (
                     None if isinstance(cached_result, str) and cached_result == CACHE_NONE_SENTINEL else cached_result
                 )
-                if logging_enabled and lazy_cache.verbose_logging:
+                if logging_enabled or lazy_cache.verbose_logging:
                     class_name = kwargs.get("class_name", "")
                     class_name = f"{class_name} - " if class_name else ""
                     logger.info(
@@ -524,7 +525,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
                         args,
                         kwargs,
                     )
-                elif logging_enabled and lazy_cache.cache_logging:
+                elif logging_enabled or lazy_cache.cache_logging:
                     class_name = kwargs.get("class_name", "")
                     class_name = f"{class_name} - " if class_name else ""
                     logger.info(
@@ -540,7 +541,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
                 result = func(*args, **kwargs)
                 cache_value = CACHE_NONE_SENTINEL if result is None else result
                 lazy_cache.set(cache_key, cache_value, timeout)
-                if logging_enabled and lazy_cache.verbose_logging:
+                if logging_enabled or lazy_cache.verbose_logging:
                     logger.info(
                         "%s caching %s - %s, with timeout %s args: %s kwargs: %s for %s",
                         logger_prefix_red,
