@@ -175,7 +175,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.lib.django.tests.test_request_mixin.TestSmarterRequestMixin"
+	docker exec smarter-app bash -c "python manage.py test smarter.lib.django"
 
 docker-prune:
 	@echo ""
