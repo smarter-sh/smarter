@@ -408,14 +408,20 @@ def base(request: "HttpRequest") -> dict:
     :rtype: dict
     """
     logger.debug("%s.base() called.", logger_prefix)
-    user = request.user
-    resolved_user = get_resolved_user(user)
-    user_profile: Optional[UserProfile] = None
-    if resolved_user and getattr(resolved_user, "is_authenticated", False):
-        user_profile = UserProfile.get_cached_object(user=resolved_user)  # type: ignore
+    user = None
+    user_profile = None
+    resolved_user = None
+    if hasattr(request, "user"):
+        user = request.user
+        resolved_user = get_resolved_user(user)
+        user_profile: Optional[UserProfile] = None
+        if resolved_user and getattr(resolved_user, "is_authenticated", False):
+            user_profile = UserProfile.get_cached_object(user=resolved_user)  # type: ignore
+        else:
+            user = None
 
     @cache_results()
-    def get_cached_context(user: Optional[User]) -> dict:
+    def get_cached_context(username: Optional[str]) -> dict:
         """
         Constructs and returns the cached dashboard context for the specified user.
 
@@ -432,6 +438,7 @@ def base(request: "HttpRequest") -> dict:
         :return: A dictionary containing the dashboard context variables for the user.
         :rtype: dict
         """
+        user = resolved_user
         current_year = datetime.now().year
         user_email = "anonymous@mail.edu"
         username = "anonymous"
@@ -477,7 +484,7 @@ def base(request: "HttpRequest") -> dict:
         }
         return cached_context
 
-    context = get_cached_context(user=resolved_user)  # type: ignore[assignment]
+    context = get_cached_context(username=resolved_user.username if resolved_user else "missing")  # type: ignore[assignment]
     return context
 
 

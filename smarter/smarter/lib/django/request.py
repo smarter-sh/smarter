@@ -1256,7 +1256,7 @@ class SmarterRequestMixin(AccountMixin):
             return self.smarter_request.META.get("REMOTE_ADDR", "") or "ip_address"
         return None
 
-    @cached_property
+    @property
     def user_agent(self) -> Optional[str]:
         """
         Get the client's user agent string from the request object.
