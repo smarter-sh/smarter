@@ -8,6 +8,7 @@ from typing import Optional, Type
 from django.http import HttpRequest
 from langchain_community.vectorstores.utils import DistanceStrategy
 from pinecone.db_control.enums import DeletionProtection, Metric, VectorType
+from pinecone.db_control.models import ServerlessSpec
 
 from smarter.apps.account.models import User
 from smarter.apps.account.utils import valid_resource_owners_for_user
@@ -510,9 +511,12 @@ class SAMVectorstoreBroker(AbstractBroker):
             retryMaxSeconds=20,
             checkEmbeddingCtxLength=True,
         )
-
+        spec = ServerlessSpec(
+            cloud="AWS",
+            region="us-east-1",
+        ).asdict()
         spec_index_model = SAMIndexModelInterface(
-            spec={"custom_index_type": "example_index_type", "very_unorthodox_pod_type": "example_pod_type"},
+            spec=spec.get("serverless"),
             dimension=1536,
             metric=Metric.COSINE.value,
             timeout=30,

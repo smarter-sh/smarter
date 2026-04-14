@@ -143,3 +143,9 @@ class DocsExampleManifestProviderView(DocsExampleManifestBaseView):
     """Provider JSON Schema view"""
 
     kind = SAMKinds(SAMKinds.PROVIDER)
+
+
+class DocsExampleManifestVectorstoreView(DocsExampleManifestBaseView):
+    """Vectorstore JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.VECTORSTORE)
