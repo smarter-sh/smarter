@@ -57,7 +57,7 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
         # object that is not a User should not have permissions
         user = object()
         self.assertFalse(
-            SmarterAuthToken.objects.filter(pk=self.auth_token.pk).with_ownership_permission_for(user).exists()
+            SmarterAuthToken.objects.filter(pk=self.auth_token.pk).with_ownership_permission_for(user).exists()  # type: ignore
         )
 
         # superuser should have permissions to anything
