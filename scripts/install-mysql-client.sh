@@ -22,7 +22,7 @@ echo "==> Updating Homebrew..."
 brew update
 
 echo "==> Installing mysql-client..."
-brew install mysql-client
+brew install zstd mysql-client
 
 # Determine shell config file (default to zsh)
 SHELL_RC="$HOME/.zshrc"
