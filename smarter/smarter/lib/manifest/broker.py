@@ -281,7 +281,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         f"file_path will override loader."
                     )
                 self.loader = SAMLoader(file_path=file_path)
-                if self._loader.ready:
+                if self._loader and self._loader.ready:
                     self.kind_setter(self._loader.manifest_kind)
                     name = self._loader.manifest_metadata.get("name")
                     self.name_cached_property_setter(name)  # type: ignore
@@ -293,7 +293,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         if not self._manifest and not self._loader:
             self.orm_meta_instance_setter()
 
-        self._validated = bool(self._manifest) or bool(self._loader and self.loader.ready) or bool(self._orm_instance)
+        self._validated = bool(self._manifest) or bool(self._loader and self._loader.ready) or bool(self._orm_instance)
 
         # ----------------------------------------------------------------------
         # log initialization state.
@@ -713,8 +713,8 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         if self._name:
             return self._name
         logger.debug("%s.name() name is not cached. Attempting to retrieve name.", self.abstract_broker_logger_prefix)
-        if self._manifest:
-            self._name = self.manifest.metadata.name
+        if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
+            self._name = self._manifest.metadata.name
             logger.debug(
                 "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
             )
@@ -726,7 +726,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 "%s.name() found a SAMLoader. Attempting to initialize the manifest.",
                 self.abstract_broker_logger_prefix,
             )
-            if self.manifest:
+            if isinstance(self.manifest, AbstractSAMBase) and self.manifest.metadata and self.manifest.metadata.name:
                 self._name = self.manifest.metadata.name
                 logger.debug(
                     "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
@@ -773,7 +773,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :raises SAMBrokerErrorNotReady: If the manifest is not loaded or cannot be found.
         :raises SAMChatbotBrokerError: If the manifest metadata cannot be converted to a dictionary.
         """
-        if not self.manifest:
+        if not isinstance(self.manifest, AbstractSAMBase):
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind)
         if self.user_profile is None:
             raise SAMBrokerErrorNotReady(
@@ -783,6 +783,12 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             )
         metadata = self.manifest.metadata.model_dump()
         metadata = self.camel_to_snake(metadata)
+        if not isinstance(metadata, dict):
+            raise SAMBrokerError(
+                message="Manifest metadata could not be converted to a dictionary",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
         retval = {
             "user_profile": self.user_profile,
             **metadata,
@@ -990,7 +996,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             self.user_profile,
         )
         try:
-            self._orm_meta_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)
+            self._orm_meta_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)  # type: ignore
             if self._orm_meta_instance:
                 logger.debug(
                     "%s.orm_meta_instance_setter() - Successfully initialized %s: %s",
@@ -1018,7 +1024,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                     self.name,
                     account_admin_user_profile,
                 )
-                self._orm_meta_instance = ModelClass.get_cached_object(
+                self._orm_meta_instance = ModelClass.get_cached_object(  # type: ignore
                     name=self.name, user_profile=account_admin_user_profile
                 )
                 logger.debug(
@@ -1048,7 +1054,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         self.name,
                         smarter_admin_user_profile,
                     )
-                    self._orm_meta_instance = ModelClass.get_cached_object(
+                    self._orm_meta_instance = ModelClass.get_cached_object(  # type: ignore
                         name=self.name, user_profile=smarter_admin_user_profile
                     )
                     logger.debug(
@@ -1153,7 +1159,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.name,
                 self.user_profile,
             )
-            self._orm_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)
+            self._orm_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)  # type: ignore
             logger.debug(
                 "%s.orm_instance() - retrieved %s for %s owned by %s",
                 self.abstract_broker_logger_prefix,
@@ -1182,7 +1188,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                     self.name,
                     account_admin_user_profile,
                 )
-                self._orm_instance = ModelClass.get_cached_object(
+                self._orm_instance = ModelClass.get_cached_object(  # type: ignore
                     name=self.name, user_profile=account_admin_user_profile
                 )
                 logger.debug(
@@ -1212,7 +1218,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                         self.name,
                         smarter_admin_user_profile,
                     )
-                    self._orm_instance = ModelClass.get_cached_object(
+                    self._orm_instance = ModelClass.get_cached_object(  # type: ignore
                         name=self.name, user_profile=smarter_admin_user_profile
                     )
                     logger.debug(
@@ -1364,12 +1370,14 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.abstract_broker_logger_prefix,
             )
             self.loader = SAMLoader(manifest=value)
+            if not isinstance(self._loader, SAMLoader):
+                raise SmarterValueError("loader must be a SAMLoader instance after setting manifest from dict")
             logger.debug(
                 "%s.manifest() setter initialized SAMLoader from dict. Loader ready: %s",
                 self.abstract_broker_logger_prefix,
-                self.loader.ready,
+                self._loader.ready,
             )
-            if self.loader.ready and self.manifest:
+            if self._loader.ready and self.manifest:
                 logger.debug(
                     "%s.manifest() setter set manifest from SAMLoader",
                     self.abstract_broker_logger_prefix,
@@ -1378,20 +1386,20 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 logger.warning(
                     "%s.manifest() setter - manifest is not ready after lazy load attempt from SAMLoader. Loader ready: %s, manifest initialized: %s",
                     self.abstract_broker_logger_prefix,
-                    self.loader.ready,
+                    self._loader.ready,
                     self.ready,
                 )
-            if not self.loader.ready:
+            if not self._loader.ready:
                 raise SmarterValueError("cannot set manifest from dict: SAMLoader could not load manifest")
-            if self.loader.kind != self.kind:
+            if self._loader.kind != self.kind:
                 raise SmarterValueError(
-                    f"cannot set manifest from dict: manifest kind '{self.loader.kind}' does not match broker kind '{self.kind}'"
+                    f"cannot set manifest from dict: manifest kind '{self._loader.kind}' does not match broker kind '{self.kind}'"
                 )
-            if self.api_version != self.loader.api_version:
+            if self.api_version != self._loader.api_version:
                 raise SmarterValueError(
-                    f"cannot set manifest from dict: manifest apiVersion '{self.loader.api_version}' does not match broker apiVersion '{self.api_version}'"
+                    f"cannot set manifest from dict: manifest apiVersion '{self._loader.api_version}' does not match broker apiVersion '{self.api_version}'"
                 )
-            if not isinstance(self.loader.json_data, dict):
+            if not isinstance(self._loader.json_data, dict):
                 raise SmarterValueError("cannot set manifest from dict: loader json_data is not a dict")
 
             logger.debug(

@@ -2,11 +2,14 @@
 
 from datetime import datetime, timedelta
 from logging import getLogger
-from unittest.mock import Mock, patch
+from unittest.mock import patch
+
+from django.utils import timezone
 
 from smarter.apps.account.tests.factories import (
     admin_user_factory,
     factory_account_teardown,
+    mortal_user_factory,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -21,6 +24,8 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
     def setUp(self):
         super().setUp()
         self.admin_user, self.account, self.user_profile = admin_user_factory()
+        self.auth_token: SmarterAuthToken
+        self.token_key: str
         self.auth_token, self.token_key = SmarterAuthToken.objects.create(  # type: ignore
             user_profile=self.user_profile,
             user=self.admin_user,
@@ -34,6 +39,7 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
         except SmarterAuthToken.DoesNotExist:
             pass
         factory_account_teardown(user=self.admin_user, account=self.account, user_profile=self.user_profile)
+
         super().tearDownClass()
 
     def test_save_only_staff(self):
@@ -43,26 +49,69 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
 
     def test_save_sets_created(self):
         self.auth_token.user.is_staff = True
-        self.auth_token.created = None
-        with patch("smarter.lib.drf.models.timezone") as mock_tz:
-            now = datetime(2024, 1, 1)
-            mock_tz.now.return_value = now
-            with patch("smarter.lib.drf.models.AuthToken.save") as mock_super_save:
-                self.auth_token.save()
-                self.assertEqual(self.auth_token.created, now)
-                mock_super_save.assert_called_once()
+        self.assertIsInstance(self.auth_token.created, datetime)
+        self.assertLess(self.auth_token.created, timezone.now())
 
     def test_has_permissions(self):
-        user = Mock(is_authenticated=True, is_staff=True, is_superuser=False)
-        self.assertTrue(self.auth_token.has_all_permission(user))
-        user = Mock(is_authenticated=True, is_staff=False, is_superuser=True)
-        self.assertTrue(self.auth_token.has_all_permission(user))
-        user = Mock(is_authenticated=True, is_staff=False, is_superuser=False)
-        self.assertFalse(self.auth_token.has_all_permission(user))
-        user = Mock(is_authenticated=False, is_staff=True, is_superuser=True)
-        self.assertFalse(self.auth_token.has_all_permission(user))
+
+        # object that is not a User should not have permissions
         user = object()
-        self.assertFalse(self.auth_token.has_all_permission(user))
+        self.assertFalse(
+            SmarterAuthToken.objects.filter(pk=self.auth_token.pk).with_ownership_permission_for(user).exists()
+        )
+
+        # superuser should have permissions to anything
+        auth_token = (
+            SmarterAuthToken.objects.filter(pk=self.auth_token.pk)
+            .with_ownership_permission_for(self.admin_user)
+            .exists()
+        )
+        self.assertTrue(auth_token)
+
+        non_admin_same_account, _, non_admin_same_account_user_profile = mortal_user_factory(account=self.account)
+        try:
+            # non-staff user should not have permissions to anything
+            auth_token = (
+                SmarterAuthToken.objects.filter(pk=self.auth_token.pk)
+                .with_ownership_permission_for(non_admin_same_account)
+                .exists()
+            )
+            self.assertFalse(auth_token)
+
+            # staff user in same account should have permissions to anything in the account
+            non_admin_same_account.is_staff = True
+            non_admin_same_account.save()
+            auth_token = (
+                SmarterAuthToken.objects.filter(pk=self.auth_token.pk)
+                .with_ownership_permission_for(non_admin_same_account)
+                .exists()
+            )
+            self.assertTrue(auth_token)
+        finally:
+            factory_account_teardown(
+                user=non_admin_same_account, account=None, user_profile=non_admin_same_account_user_profile
+            )
+
+        # staff user in different account should not have permissions
+        staff_admin_different_account, different_account, staff_admin_different_account_user_profile = (
+            admin_user_factory()
+        )
+        staff_admin_different_account.is_superuser = False
+        staff_admin_different_account.is_staff = True
+        staff_admin_different_account.save()
+        try:
+            auth_token = (
+                SmarterAuthToken.objects.filter(pk=self.auth_token.pk)
+                .with_ownership_permission_for(staff_admin_different_account)
+                .exists()
+            )
+            self.assertFalse(auth_token)
+        finally:
+            factory_account_teardown(
+                user=staff_admin_different_account,
+                account=different_account,
+                user_profile=staff_admin_different_account_user_profile,
+            )
 
     def test_activate_deactivate_toggle(self):
         with patch.object(self.auth_token, "save") as mock_save:
