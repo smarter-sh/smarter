@@ -70,7 +70,6 @@ from smarter.__version__ import __version__
 from smarter.apps.account.models import (
     Account,
     Secret,
-    User,
     UserProfile,
     get_resolved_user,
 )
@@ -438,7 +437,6 @@ def base(request: "HttpRequest") -> dict:
         :return: A dictionary containing the dashboard context variables for the user.
         :rtype: dict
         """
-        user = resolved_user
         current_year = datetime.now().year
         user_email = "anonymous@mail.edu"
         username = "anonymous"

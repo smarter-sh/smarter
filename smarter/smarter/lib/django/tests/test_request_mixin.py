@@ -1,4 +1,4 @@
-# pylint: disable=W0212
+# pylint: disable=W0212,C0302
 """Test SmarterRequestMixin."""
 
 from datetime import datetime
@@ -63,12 +63,11 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def setUp(self):
         super().setUp()
         self.session_key = "1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a"
-        self.client = Client()
+        self.client: Client = Client()
 
     def tearDown(self):
         try:
             self.client.logout()
-            self.client = None
         # pylint: disable=W0718
         except Exception:
             pass
@@ -99,7 +98,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
             logger.error("Failed to authenticate smarter admin user for testing.")
             self.fail("Authentication failed")
         request.user = user
-        middleware = SessionMiddleware(lambda request: None)
+        middleware = SessionMiddleware(lambda request: None)  # type: ignore
         middleware.process_request(request)
         request.session.save()
 
@@ -362,7 +361,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("not a very good url")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._url = "ftp:// be.bop a loo bop. not a very \ngood url----"
+        mixin._url = "ftp:// be.bop a loo bop. not a very \ngood url----"  # type: ignore
         self.assertIsNone(mixin.url)
 
     def test_url_property_logs_and_raises_if_url_not_set(self):
@@ -459,6 +458,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
 
+        if not isinstance(mixin.smarter_request_chatbot_name, str):
+            self.fail(
+                f"Expected smarter_request_chatbot_name to be a string but got {type(mixin.smarter_request_chatbot_name)}"
+            )
         self.assertTrue(mixin.smarter_request_chatbot_name.startswith("example"))
 
     @patch.object(SmarterRequestMixin, "is_chatbot_sandbox_url", new=property(lambda self: True))
@@ -469,7 +472,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._parse_result = None
+        mixin._parse_result = None  # type: ignore
 
         try:
             del mixin.__dict__["smarter_request_chatbot_name"]
@@ -488,7 +491,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._parse_result = None
+        mixin._parse_result = None  # type: ignore
 
         try:
             del mixin.__dict__["smarter_request_chatbot_name"]
@@ -975,7 +978,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._smarter_request.META = None  # Will cause AttributeError
+        mixin._smarter_request.META = None  # type: ignore
         mixin._params = None
         with self.assertLogs("smarter.lib.django.request", level="WARNING"):
             result = mixin.params
@@ -1099,7 +1102,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._smarter_request.META.pop("REMOTE_ADDR", None)
+        mixin._smarter_request.META.pop("REMOTE_ADDR", None)  # type: ignore
         try:
             del mixin.__dict__["ip_address"]
         except KeyError:
@@ -1130,7 +1133,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._smarter_request.META.pop("HTTP_USER_AGENT", None)
+        mixin._smarter_request.META.pop("HTTP_USER_AGENT", None)  # type: ignore
         self.assertEqual(mixin.user_agent, "user_agent")
 
     def test_user_agent_returns_none(self):
