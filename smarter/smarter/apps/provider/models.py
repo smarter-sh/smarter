@@ -492,57 +492,31 @@ class Provider(MetaDataWithOwnershipModel):
         cls, invalidate: Optional[bool] = False, user: Optional[User] = None
     ) -> Sequence["Provider"]:
         """Get cached providers for a user."""
+        logger_prefix = formatted_text(__name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()")
+
+        logger.debug("%s.get_cached_providers_for_user() called with %s", logger_prefix, user)
 
         @cache_results()
-        def cached_providers_by_account_id(account_id: int) -> Sequence["Provider"]:
-            if not user_profile:
-                logger.debug(
-                    "%s: No user profile found for user %s, returning empty list", cls.formatted_class_name, user
-                )
-                return []
-            admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore[arg-type]
-            admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore[arg-type]
+        def cached_providers_by_user_id(user_id: int) -> Sequence["Provider"]:
+            logger.debug("%s.cached_providers_by_user_id() cache miss for user_id: %s", logger_prefix, user_id)
+            retval = Provider.objects.with_read_permission_for(user_profile.user)
+            return list(retval) if retval else []
 
-            account_providers = (
-                Provider.objects.filter(user_profile=admin_user_profile)
-                .prefetch_related("tags")
-                .select_related(
-                    "user_profile",
-                    "user_profile__account",
-                    "user_profile__user",
-                )
-                .order_by("name")
+        try:
+            user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
+        except UserProfile.DoesNotExist:
+            logger.error(
+                "%s.get_cached_providers_for_user() UserProfile does not exist for user: %s. This is a bug.",
+                logger_prefix,
+                user,
             )
-            smarter_providers = (
-                Provider.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile)
-                .prefetch_related("tags")
-                .select_related(
-                    "user_profile",
-                    "user_profile__account",
-                    "user_profile__user",
-                )
-                .order_by("name")
-            )
-            retval = list((account_providers | smarter_providers).distinct()) or []
-            logger.debug(
-                "%s.cached_providers_by_account_id() retrieved %s providers for account %s",
-                cls.formatted_class_name,
-                retval,
-                user_profile.account,
-            )
-            return retval
-
-        user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
-        if not user_profile:
-            logger.debug("%s: No user profile found for user %s, returning empty list", cls.formatted_class_name, user)
             return []
 
         if invalidate and user_profile and user_profile.account:
-            cached_providers_by_account_id.invalidate(user_profile.account.id)
+            cached_providers_by_user_id.invalidate(user_profile.account.id)
 
-        if user_profile and user_profile.account:
-            providers = cached_providers_by_account_id(user_profile.account.id)
-            return list(providers) or []
+        if user_profile:
+            return cached_providers_by_user_id(user_profile.user.id)
         return []
 
     @classmethod

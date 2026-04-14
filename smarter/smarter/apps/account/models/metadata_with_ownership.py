@@ -98,8 +98,9 @@ class SmarterQuerySetWithPermissions(QuerySet[_MT]):
             return self.none()
         if request_user_profile.user.is_superuser:
             logger.debug(
-                "%s.with_read_permission_for() user is superuser, returning all resources",
+                "%s.with_read_permission_for() user is superuser, returning all resources. count: %s",
                 formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+                self.count(),
             )
             return self.all()
         try:
@@ -112,11 +113,18 @@ class SmarterQuerySetWithPermissions(QuerySet[_MT]):
             )
             return self.none()
 
-        return self.filter(
+        retval = self.filter(
             models.Q(user_profile=request_user_profile)
             | models.Q(user_profile__account=request_user_profile.account, user_profile__user__is_staff=True)
             | models.Q(user_profile__account=smarter_account)
         )
+        logger.debug(
+            "%s.with_read_permission_for() called for user: %s, returning resources. count: %s",
+            formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+            user,
+            retval.count(),
+        )
+        return retval
 
     def with_ownership_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
         """
@@ -152,8 +160,9 @@ class SmarterQuerySetWithPermissions(QuerySet[_MT]):
         # superusers have ownership permission for all resources
         if user.is_superuser:
             logger.debug(
-                "%s.with_ownership_permission_for() user is superuser, returning all resources",
+                "%s.with_ownership_permission_for() user is superuser, returning all resources. count: %s",
                 formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+                self.count(),
             )
             return self.all()
         try:
@@ -168,17 +177,26 @@ class SmarterQuerySetWithPermissions(QuerySet[_MT]):
 
         # staff users have ownership permission for resources owned within their account, or owned by themselves
         if user.is_staff:
-            logger.debug(
-                "%s.with_ownership_permission_for() called for staff user: %s",
-                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
-                user,
-            )
-            return self.filter(
+            retval = self.filter(
                 models.Q(user_profile=user_profile) | models.Q(user_profile__account=user_profile.account)
             )
+            logger.debug(
+                "%s.with_ownership_permission_for() called for staff user: %s, returning resources. count: %s",
+                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+                user,
+                retval.count(),
+            )
+            return retval
 
         # regular authenticated users have ownership permission only for resources they own
-        return self.filter(user_profile=user_profile)
+        retval = self.filter(user_profile=user_profile)
+        logger.debug(
+            "%s.with_ownership_permission_for() called for regular user: %s, returning resources. count: %s",
+            formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+            user,
+            retval.count(),
+        )
+        return retval
 
 
 class MetaDataWithOwnershipModelManager(Manager[_MT]):

@@ -17,7 +17,7 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.provider.models import Provider
-from smarter.common.helpers.logger_helpers import formatted_json
+from smarter.common.helpers.logger_helpers import formatted_json, formatted_text
 from smarter.common.utils import rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
@@ -32,7 +32,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 # pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -192,6 +192,13 @@ class ProviderListView(SmarterAuthenticatedNeverCachedWebView):
     providers: Sequence[Provider]
 
     def get(self, request: WSGIRequest, *args, **kwargs):
+        """
+        Handle GET requests to render the provider list view.
+        This method retrieves all providers available to the authenticated user and renders them in a card-based layout
+        """
+
+        logger.debug("%s.get() called with args=%s, kwargs=%s", self.formatted_class_name, args, kwargs)
+
         self.smarter_request = request
         if not isinstance(request.user, User):
             logger.error(
