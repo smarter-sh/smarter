@@ -520,10 +520,9 @@ class AccountContact(TimestampedModel):
         context = welcome_email_context(first_name=self.first_name)
         html_template = render_to_string("account/email/welcome.html", context)
         logger.debug(
-            "%s.send_welcome_email() Sending welcome email to %s with content: %s",
+            "%s.send_welcome_email() Sending welcome email to %s",
             formatted_text(__name__ + ".AccountContact.send_welcome_email()"),
             self.email,
-            html_template,
         )
 
         subject = "Welcome to Smarter!"
