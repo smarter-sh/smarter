@@ -111,6 +111,12 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         """
         if self._smarter_auth_token:
             return self._smarter_auth_token
+        if not self._manifest or not self._name:
+            logger.debug(
+                "%s.smarter_auth_token() Manifest or name not set. Cannot retrieve SmarterAuthToken.",
+                self.formatted_class_name,
+            )
+            return None
 
         if not self._manifest:
             logger.debug(
@@ -127,13 +133,13 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 self.name,
             )
             self._smarter_auth_token = SmarterAuthToken.objects.get(
-                user__username=self.manifest.spec.config.username, name=self.name
+                user__username=self._manifest.spec.config.username, name=self.name
             )
         except SmarterAuthToken.DoesNotExist:
             logger.debug(
                 "%s.smarter_auth_token() SmarterAuthToken for user %s with name %s does not exist.",
                 self.formatted_class_name,
-                self.manifest.spec.config.username,
+                self._manifest.spec.config.username,
                 self.name,
             )
         return self._smarter_auth_token
@@ -165,6 +171,12 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         Transform the Smarter API SAMSmarterAuthToken manifest into a Django ORM model.
         """
         logger.debug("%s.manifest_to_django_orm() called", self.formatted_class_name)
+        if not isinstance(self.manifest, SAMSmarterAuthToken):
+            raise SAMSmarterAuthTokenBrokerError(
+                f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
         metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
@@ -273,7 +285,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 name=str(self.smarter_auth_token.name),
                 description=self.smarter_auth_token.description,
                 version=self.smarter_auth_token.version,
-                tags=self.smarter_auth_token.tags,
+                tags=self.smarter_auth_token.tags_list,
                 annotations=self.smarter_auth_token.annotations,
             )
             spec = SAMSmarterAuthTokenSpec(
@@ -343,10 +355,10 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         if self._orm_instance:
             return self._orm_instance
         if self.orm_meta_instance:
-            self._orm_instance = self.orm_meta_instance
+            self._orm_instance = self.orm_meta_instance  # type: ignore
             return self._orm_instance
 
-        if not self._manifest:
+        if not self.manifest:
             logger.debug(
                 "%s.orm_instance() - manifest is not set. Cannot retrieve %s instance.",
                 self.formatted_class_name,
@@ -365,12 +377,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 user__username=self.manifest.spec.config.username, name=self.name
             )
             logger.debug(
-                "%s.orm_instance() - retrieved %s for %s owned by %s: %s",
+                "%s.orm_instance() - retrieved %s for %s owned by %s",
                 self.formatted_class_name,
                 SmarterAuthToken.__name__,
                 self.name,
                 self.user_profile,
-                serializers.serialize("json", [self._orm_instance]),
             )
             return self._orm_instance
         except SmarterAuthToken.DoesNotExist:
@@ -394,6 +405,13 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             )
             self._orm_meta_instance = self._orm_instance
             return
+        if not self._manifest:
+            logger.debug(
+                "%s.orm_meta_instance_setter() - manifest is not set. Cannot retrieve ORM meta instance for %s.",
+                self.formatted_class_name,
+                SmarterAuthToken.__name__,
+            )
+            return
 
         if not self.name:
             logger.debug(
@@ -406,7 +424,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         self._orm_meta_instance = None
         try:
             self._orm_meta_instance = SmarterAuthToken.objects.get(
-                user__username=self.manifest.spec.config.username, name=self.name
+                user__username=self._manifest.spec.config.username, name=self.name
             )
             logger.debug(
                 "%s.orm_meta_instance_setter() - initialized ORM meta: %s",
@@ -526,6 +544,13 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             "token_key",
             "tags",
         ]
+
+        if not isinstance(self.user, User):
+            raise SAMSmarterAuthTokenBrokerError(
+                f"Invalid user type: {type(self.user)}. User must be an instance of User.",
+                thing=self.kind,
+                command=command,
+            )
 
         if not self.user.is_staff:
             raise SAMSmarterAuthTokenBrokerError(
@@ -647,6 +672,13 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
 
+        if not isinstance(self.user, User):
+            raise SAMSmarterAuthTokenBrokerError(
+                f"Invalid user type: {type(self.user)}. User must be an instance of User.",
+                thing=self.kind,
+                command=command,
+            )
+
         if not self.user.is_staff:
             raise SAMSmarterAuthTokenBrokerError(
                 message="Only account admins can delete auth tokens.",
@@ -672,23 +704,17 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
 
-        if not self.smarter_auth_token:
-            self.apply(request, *args, **kwargs)
-
-        if self.smarter_auth_token:
-            if not self.smarter_auth_token.is_active:
-                self.smarter_auth_token.is_active = True
-                self.smarter_auth_token.save()
-        else:
-            logger.error(
-                "%s.deploy() - %s %s is not ready after apply(). manifest: %s, loader: %s",
-                self.formatted_class_name,
-                self.kind,
-                self.name,
-                self.manifest,
-                self.loader,
+        if not self.manifest:
+            raise SAMBrokerErrorNotReady(
+                f"{self.kind} {self.name} manifest is not ready", thing=self.kind, command=command
             )
+
+        if self.smarter_auth_token and not self.smarter_auth_token.is_active:
+            self.smarter_auth_token.is_active = True
+            self.smarter_auth_token.save()
+        else:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
+
         return self.json_response_ok(command=command, data=self.to_json())
 
     def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

@@ -4,9 +4,8 @@ from unittest.mock import Mock
 
 from rest_framework.views import APIView
 
+from smarter.lib.drf.views.helpers import UnauthenticatedPermissionClass
 from smarter.lib.unittest.base_classes import SmarterTestBase
-
-from ..views import UnauthenticatedPermissionClass
 
 
 class TestUnauthenticatedPermissionClass(SmarterTestBase):

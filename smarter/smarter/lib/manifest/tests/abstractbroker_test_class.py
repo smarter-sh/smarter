@@ -102,6 +102,10 @@ class SAMTestBroker(AbstractBroker):
         return ModelSerializer
 
     @property
+    def ORMMetaModelClass(self) -> type[PluginMeta]:
+        return PluginMeta
+
+    @property
     def ORMModelClass(self) -> Type[PluginDataStatic]:
         return PluginDataStatic
 
@@ -198,8 +202,8 @@ class SAMTestBroker(AbstractBroker):
         self.user_profile = None
         self.account = None
         self.user = None
-        self.account = value.account
-        self.user = get_cached_admin_user_for_account(account=value.account)
+        self.user_profile = value.user_profile
+        self.user = get_cached_admin_user_for_account(account=value.user_profile.account)
 
     @property
     def formatted_class_name(self) -> str:

@@ -4,6 +4,7 @@ Module: smarter.common.utils.smarter_build_absolute_uri
 
 import logging
 from typing import Optional
+from unittest.mock import Mock
 
 from django.http import HttpRequest
 
@@ -111,8 +112,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         )
         return retval
 
-    # If it's a unittest.mock.Mock, synthesize a fake URL for testing
-    if hasattr(request, "__class__") and request.__class__.__name__ == "Mock":
+    if isinstance(request, Mock):
         retval = "http://testserver/mockpath/"
         logger.debug(
             "%s.smarter_build_absolute_uri() called with Mock request; returning fake test URL: %s",
