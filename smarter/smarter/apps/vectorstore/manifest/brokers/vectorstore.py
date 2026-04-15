@@ -28,7 +28,7 @@ from smarter.apps.vectorstore.manifest.models.vectorstore.spec import (
 from smarter.apps.vectorstore.manifest.models.vectorstore.status import (
     SAMVectorstoreStatus,
 )
-from smarter.apps.vectorstore.models import VectorDatabase
+from smarter.apps.vectorstore.models import VectorestoreMeta
 from smarter.apps.vectorstore.serializers import VectorstoreSerializer
 from smarter.common.conf.settings import smarter_settings
 from smarter.lib.django import waffle
@@ -116,14 +116,14 @@ class SAMVectorstoreBroker(AbstractBroker):
     # override the base abstract manifest model with the Vectorstore model
     _manifest: Optional[SAMVectorstore] = None
     _pydantic_model: Type[SAMVectorstore] = SAMVectorstore
-    _vectordatabase: Optional[VectorDatabase] = None
+    _vectordatabase: Optional[VectorestoreMeta] = None
 
     @property
-    def vectordatabase(self) -> Optional[VectorDatabase]:
+    def vectordatabase(self) -> Optional[VectorestoreMeta]:
         """
-        Return the VectorDatabase associated with this broker, if available.
+        Return the VectorestoreMeta associated with this broker, if available.
 
-        :returns: The `VectorDatabase` instance, or `None` if not set.
+        :returns: The `VectorestoreMeta` instance, or `None` if not set.
 
         **Example usage:**
 
@@ -131,11 +131,11 @@ class SAMVectorstoreBroker(AbstractBroker):
 
            vectordatabase = broker.vectordatabase
            if vectordatabase:
-               print(f"VectorDatabase name: {vectordatabase.name}")
+               print(f"VectorestoreMeta name: {vectordatabase.name}")
 
         See Also:
 
-           - :class:`smarter.apps.vectorstore.models.VectorDatabase`
+           - :class:`smarter.apps.vectorstore.models.VectorestoreMeta`
         """
         return self._vectordatabase
 
@@ -166,7 +166,7 @@ class SAMVectorstoreBroker(AbstractBroker):
         See Also:
 
            - :meth:`django_orm_to_manifest_dict`
-           - :class:`smarter.apps.vectorstore.models.VectorDatabase`
+           - :class:`smarter.apps.vectorstore.models.VectorestoreMeta`
 
         """
         metadata = super().manifest_to_django_orm()
@@ -212,9 +212,9 @@ class SAMVectorstoreBroker(AbstractBroker):
            - :class:`smarter.lib.manifest.enumSAMVectorstoreSpecKeys`
 
         """
-        if not isinstance(self.vectordatabase, VectorDatabase):
+        if not isinstance(self.vectordatabase, VectorestoreMeta):
             raise SAMVectorstoreBrokerError(
-                f"Expected type VectorDatabase but got {type(self.vectordatabase)}", thing=self.kind
+                f"Expected type VectorestoreMeta but got {type(self.vectordatabase)}", thing=self.kind
             )
 
         if not isinstance(self.vectordatabase.connection, ApiConnection):
@@ -412,21 +412,21 @@ class SAMVectorstoreBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def ORMMetaModelClass(self) -> Type[VectorDatabase]:
+    def ORMMetaModelClass(self) -> Type[VectorestoreMeta]:
         """
         Return the Django ORM meta model class for the broker.
 
         :return: The Django ORM meta model class definition for the broker.
-        :rtype: Type[VectorDatabase]
+        :rtype: Type[VectorestoreMeta]
         """
-        return VectorDatabase
+        return VectorestoreMeta
 
     @property
-    def ORMModelClass(self) -> Type[VectorDatabase]:
+    def ORMModelClass(self) -> Type[VectorestoreMeta]:
         """
         Return the model class associated with the Smarter API Vectorstore.
 
-        :returns: The `VectorDatabase` model class.
+        :returns: The `VectorestoreMeta` model class.
 
         **Example usage:**
 
@@ -437,15 +437,15 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         .. seealso::
 
-           - :class:`smarter.apps.vectorstore.models.VectorDatabase`
+           - :class:`smarter.apps.vectorstore.models.VectorestoreMeta`
         """
-        return VectorDatabase
+        return VectorestoreMeta
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return the Django model class associated with the Smarter API Vectorstore manifest.
 
-        :returns: The Django `VectorDatabase` model class.
+        :returns: The Django `VectorestoreMeta` model class.
 
         **Example usage:**
 
@@ -456,7 +456,7 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         .. seealso::
 
-           - :class:`smarter.apps.account.models.VectorDatabase`
+           - :class:`smarter.apps.account.models.VectorestoreMeta`
            - :meth:`manifest_to_django_orm`
            - :meth:`django_orm_to_manifest_dict`
            - :class:`smarter.apps.SamKeys`
@@ -587,9 +587,9 @@ class SAMVectorstoreBroker(AbstractBroker):
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
         if name:
-            providers = VectorDatabase.objects.filter(user_profile__account=self.account, name=name)
+            providers = VectorestoreMeta.objects.filter(user_profile__account=self.account, name=name)
         else:
-            providers = VectorDatabase.objects.filter(user_profile__account=self.account)
+            providers = VectorestoreMeta.objects.filter(user_profile__account=self.account)
         providers = [vectorstore for vectorstore in providers]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
@@ -688,13 +688,13 @@ class SAMVectorstoreBroker(AbstractBroker):
                 data.pop(field, None)
             for key, value in data.items():
                 setattr(self.vectordatabase, key, value)
-            if not isinstance(self.vectordatabase, VectorDatabase):
+            if not isinstance(self.vectordatabase, VectorestoreMeta):
                 raise SAMVectorstoreBrokerError("Vectorstore is not set", thing=self.kind, command=command)
             self.vectordatabase.save()
             self.vectordatabase.tags.set(tags)
         except Exception as e:
             raise SAMVectorstoreBrokerError(
-                f"Failed to apply {self.kind} {self.vectordatabase if isinstance(self.vectordatabase, VectorDatabase) else None}",
+                f"Failed to apply {self.kind} {self.vectordatabase if isinstance(self.vectordatabase, VectorestoreMeta) else None}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -742,8 +742,8 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         name = kwargs.get("name")
         try:
-            self._vectordatabase = VectorDatabase.objects.get(user_profile__account=self.account, name=name)
-        except VectorDatabase.DoesNotExist as e:
+            self._vectordatabase = VectorestoreMeta.objects.get(user_profile__account=self.account, name=name)
+        except VectorestoreMeta.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {name}. Not found", thing=self.kind, command=command
             ) from e
@@ -791,8 +791,8 @@ class SAMVectorstoreBroker(AbstractBroker):
             raise SAMBrokerErrorNotImplemented(message="Params must be a dictionary", thing=self.kind, command=command)
         name = self.params.get("name")
         try:
-            vectorstore = VectorDatabase.objects.get(user_profile=self.user_profile, name=name)
-        except VectorDatabase.DoesNotExist as e:
+            vectorstore = VectorestoreMeta.objects.get(user_profile=self.user_profile, name=name)
+        except VectorestoreMeta.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to delete {self.kind} {name}. Not found", thing=self.kind, command=command
             ) from e
@@ -826,7 +826,7 @@ class SAMVectorstoreBroker(AbstractBroker):
         if not isinstance(self.user, User):
             raise SAMVectorstoreBrokerError("User is not set or invalid", thing=self.kind, command=command)
 
-        if not isinstance(self.vectordatabase, VectorDatabase):
+        if not isinstance(self.vectordatabase, VectorestoreMeta):
             raise SAMVectorstoreBrokerError("Vectorstore is not set or invalid", thing=self.kind, command=command)
 
         try:
@@ -857,7 +857,7 @@ class SAMVectorstoreBroker(AbstractBroker):
         if not isinstance(self.user, User):
             raise SAMVectorstoreBrokerError("User is not set or invalid", thing=self.kind, command=command)
 
-        if not isinstance(self.vectordatabase, VectorDatabase):
+        if not isinstance(self.vectordatabase, VectorestoreMeta):
             raise SAMVectorstoreBrokerError("Vectorstore is not set or invalid", thing=self.kind, command=command)
 
         try:

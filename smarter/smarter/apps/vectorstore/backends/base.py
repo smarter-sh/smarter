@@ -16,7 +16,7 @@ from langchain_core.documents import Document
 from langchain_core.embeddings.embeddings import Embeddings
 from langchain_core.vectorstores import VectorStore
 
-from smarter.apps.vectorstore.models import VectorDatabase
+from smarter.apps.vectorstore.models import VectorestoreMeta
 from smarter.apps.vectorstore.signals import connected
 from smarter.common.exceptions import SmarterException
 from smarter.common.mixins import SmarterHelperMixin
@@ -79,7 +79,7 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
 
     Parameters
     ----------
-    db : VectorDatabase
+    db : VectorestoreMeta
         The vector database instance to use.
     embeddings : Optional[Embeddings], optional
         The embeddings model to use for vectorization (default is None).
@@ -128,12 +128,12 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
     _embeddings: Optional[Embeddings] = None
     _vector_store: Optional[VectorStore] = None
 
-    db: VectorDatabase
+    db: VectorestoreMeta
 
     def __init__(
         self,
         *args,
-        db: VectorDatabase,
+        db: VectorestoreMeta,
         embeddings: Optional[Embeddings] = None,
         vector_store: Optional[VectorStore] = None,
         **kwargs,

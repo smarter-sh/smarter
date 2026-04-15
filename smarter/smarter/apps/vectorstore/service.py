@@ -17,7 +17,7 @@ from smarter.apps.provider.services import (
     get_embedding_service,
 )
 from smarter.apps.vectorstore.backends import Backends, SmarterVectorstoreBackend
-from smarter.apps.vectorstore.models import VectorDatabase
+from smarter.apps.vectorstore.models import VectorestoreMeta
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -40,7 +40,7 @@ class VectorstoreService(SmarterHelperMixin):
 
     This class provides service layer abstractions for provisioning, deleting, and interacting with
     vector databases using the appropriate backend implementations. It creates a binding between the
-    :class:`smarter.apps.vectorstore.models.VectorDatabase` ORM model, which contains the metadata and
+    :class:`smarter.apps.vectorstore.models.VectorestoreMeta` ORM model, which contains the metadata and
     configuration for a vector database, and the backend implementations, which contain the logic for
     interacting with the underlying vector store.
 
@@ -54,7 +54,7 @@ class VectorstoreService(SmarterHelperMixin):
     _text_splitter: Optional[RecursiveCharacterTextSplitter] = None
 
     # Vector metadata and backend implementation
-    db: VectorDatabase  # the VectorDatabase ORM model instance containing metadata and configuration for the vector database
+    db: VectorestoreMeta  # the VectorestoreMeta ORM model instance containing metadata and configuration for the vector database
     backend: SmarterVectorstoreBackend  # the backend implementation for interacting with the vector store
 
     # LLM provider models and services
@@ -64,10 +64,10 @@ class VectorstoreService(SmarterHelperMixin):
         SmarterEmbeddingServiceInterface  # the service for generating embeddings using the provider and model
     )
 
-    def __init__(self, db: VectorDatabase):
+    def __init__(self, db: VectorestoreMeta):
         super().__init__()
 
-        # 1.) start with the vectorstore metadata from the VectorDatabase ORM model instance
+        # 1.) start with the vectorstore metadata from the VectorestoreMeta ORM model instance
         self.db = db
 
         # 2.) get the LLM provider metadata

@@ -15,7 +15,7 @@ from smarter.apps.provider.serializers import (
     ProviderSerializer,
 )
 
-from .models import VectorDatabase
+from .models import VectorestoreMeta
 
 
 class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
@@ -28,7 +28,7 @@ class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
     provider_model = ProviderModelSerializer(read_only=True)
 
     class Meta:
-        model = VectorDatabase
+        model = VectorestoreMeta
         fields = "__all__"
         read_only_fields = ["created_at", "updated_at", "owner", "account"]
 
@@ -38,5 +38,5 @@ class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
         user = self.request.user if hasattr(self.request, "user") else None  # type: ignore
         if name and isinstance(user, User) and user.is_authenticated:
             user_profile = UserProfile.get_cached_object(user=user)
-            return VectorDatabase.get_cached_object(name=name, user_profile=user_profile, backend=backend)
-        return VectorDatabase.objects.none()
+            return VectorestoreMeta.get_cached_object(name=name, user_profile=user_profile, backend=backend)
+        return VectorestoreMeta.objects.none()

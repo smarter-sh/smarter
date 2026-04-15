@@ -17,7 +17,7 @@ from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
-from smarter.apps.vectorstore.models import VectorDatabase
+from smarter.apps.vectorstore.models import VectorestoreMeta
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.utils.request import is_authenticated_request
@@ -63,7 +63,7 @@ class VectorstoreManifestView(DocsBaseView):
 
     .. seealso::
 
-        :class:`VectorDatabase` for vectorstore metadata retrieval.
+        :class:`VectorestoreMeta` for vectorstore metadata retrieval.
         :class:`ApiV1CliDescribeApiView` for API details.
 
     **Example usage**::
@@ -73,7 +73,7 @@ class VectorstoreManifestView(DocsBaseView):
     """
 
     template_path = "common/manifest_detail.html"
-    vectorstore: Optional[VectorDatabase] = None
+    vectorstore: Optional[VectorestoreMeta] = None
     backend: str
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
@@ -124,7 +124,7 @@ class VectorstoreManifestView(DocsBaseView):
         if not is_authenticated_request(request):
             logger.error("%s.setup() User is not authenticated.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.vectorstore = VectorDatabase.get_cached_object(
+        self.vectorstore = VectorestoreMeta.get_cached_object(
             user=request.user, kind=self.kind, name=self.name, backend=self.backend  # type: ignore[arg-type]
         )
         if not self.vectorstore:
@@ -203,7 +203,7 @@ class VectorstoreListView(SmarterAuthenticatedNeverCachedWebView):
 
     .. seealso::
 
-        :class:`VectorDatabase` for vectorstore metadata and retrieval.
+        :class:`VectorestoreMeta` for vectorstore metadata and retrieval.
 
     **Example usage**::
 
@@ -212,13 +212,13 @@ class VectorstoreListView(SmarterAuthenticatedNeverCachedWebView):
     """
 
     template_path = "vectorstore/vectorstore_list.html"
-    vectorstores: list[VectorDatabase] = []
+    vectorstores: list[VectorestoreMeta] = []
 
     def get(self, request: WSGIRequest, *args, **kwargs):
         if request.user is None:
             logger.error("%s.get() Request user is None. This should not happen.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.vectorstores = VectorDatabase.get_cached_vectorstores_for_user(request.user)  # type: ignore
+        self.vectorstores = VectorestoreMeta.get_cached_vectorstores_for_user(request.user)  # type: ignore
         context = {
             "vectorstores": self.vectorstores,
         }
