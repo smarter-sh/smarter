@@ -14,24 +14,12 @@ spec:
   backend: pinecone
   connection: pinecone
   embeddings:
-    allowed_special:
-    - <special2>
-    - <special1>
-    api_key: example_api_key
-    base_url: https://api.example-embeddings.com
+    api_key: pinecone
     dimensions: 1536
-    openai_api_type: example_api_type
-    openai_proxy: https://proxy.example.com
-    organization: example_org
     provider: openai
     provider_model: text-embedding-ada-002
   indexModel:
-    deletion_protection: disabled
     dimension: 1536
-    metric: cosine
-    vector_type: sparse
-  is_active: true
   vectorstore:
-    distance_strategy: COSINE
     namespace: pinecone_example
     text_key: key_id

@@ -185,6 +185,11 @@ class UserProfile(MetaDataModel):
                 self.user.email,
             )
             new_user_created.send(sender=self.__class__, user_profile=self)
+        else:
+            # if account or user is updated, raise an error since that should not happen.
+            orig = UserProfile.objects.get(pk=self.pk)
+            if orig.account != self.account or orig.user != self.user:
+                raise SmarterValueError("Cannot change the account or user of an existing UserProfile")
 
     @classmethod
     def admin_for_account(cls, account: Account) -> User:
