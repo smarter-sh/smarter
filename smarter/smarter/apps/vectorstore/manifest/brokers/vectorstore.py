@@ -633,6 +633,8 @@ class SAMVectorstoreBroker(AbstractBroker):
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
 
+        logger.debug("%s.example_manifest() called", self.formatted_class_name)
+
         metadata = SAMVectorstoreMetadata(
             name="acme_llm_company",
             description="an example vectorstore manifest for the Smarter API Vectorstore",
@@ -752,6 +754,9 @@ class SAMVectorstoreBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
+
+        logger.debug("%s.get() called with name: %s %s", self.formatted_class_name, name, self.user_profile)
+
         if not isinstance(self.user_profile, UserProfile):
             raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
 
@@ -833,6 +838,8 @@ class SAMVectorstoreBroker(AbstractBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+
+        logger.debug("%s.apply() called with: %s %s", self.formatted_class_name, self.name, self.user_profile)
 
         if not isinstance(self._manifest, SAMVectorstore):
             raise SAMVectorstoreBrokerError(
@@ -1132,7 +1139,9 @@ class SAMVectorstoreBroker(AbstractBroker):
         if not isinstance(self.user_profile, UserProfile):
             raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
 
-        self._name = kwargs.get("name")
+        self._name = kwargs.get("name") or self.params.get("name") if isinstance(self.params, dict) else None
+
+        logger.debug("%s.describe() called with name: %s %s", self.formatted_class_name, self.name, self.user_profile)
 
         if not isinstance(self.vectorstore_meta, VectorestoreMeta) or self.vectorstore_meta.name != self.name:
             raise SAMBrokerErrorNotFound(
@@ -1172,6 +1181,9 @@ class SAMVectorstoreBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
 
         self._name = kwargs.get("name") or self.params.get("name") if isinstance(self.params, dict) else None
+
+        logger.debug("%s.delete() called with name: %s %s", self.formatted_class_name, self.name, self.user_profile)
+
         if not self.name:
             raise SAMVectorstoreBrokerError(
                 "Name parameter is required for delete operation", thing=self.kind, command=command
@@ -1223,6 +1235,8 @@ class SAMVectorstoreBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         self._name = kwargs.get("name") or self.params.get("name") if isinstance(self.params, dict) else None
 
+        logger.debug("%s.deploy() called with name: %s %s", self.formatted_class_name, self.name, self.user_profile)
+
         if not isinstance(self.user_profile, UserProfile):
             raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
         if not isinstance(self.vectorstore_meta, VectorestoreMeta):
@@ -1256,6 +1270,8 @@ class SAMVectorstoreBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         self._name = kwargs.get("name") or self.params.get("name") if isinstance(self.params, dict) else None
 
+        logger.debug("%s.undeploy() called with name: %s %s", self.formatted_class_name, self.name, self.user_profile)
+
         if not isinstance(self.user_profile, UserProfile):
             raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
         if not isinstance(self.vectorstore_meta, VectorestoreMeta):
@@ -1287,6 +1303,9 @@ class SAMVectorstoreBroker(AbstractBroker):
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         data = {}
+
+        logger.debug("%s.logs() called with name: %s %s", self.formatted_class_name, self.name, self.user_profile)
+
         return self.json_response_ok(command=command, data=data)
 
 

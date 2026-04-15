@@ -42,8 +42,14 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
+def should_verbose_log(level):
+    """Check if verbose logging should be done based on the waffle switch."""
+    return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
+
+
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_verbose_log)
 
 
 def welcome_email_context(first_name: str) -> dict:
@@ -74,6 +80,9 @@ def is_authenticated_user(user: object) -> bool:
     :param user: The user-like object to check.
     :returns: True if the object is an authenticated user, False otherwise.
     """
+    verbose_logger.debug(
+        "%s called for user type: %s", formatted_text(__name__) + ".is_authenticated_user()", type(user)
+    )
     if hasattr(user, "is_authenticated"):
         return bool(user.is_authenticated)  # type: ignore
     return False
@@ -115,13 +124,13 @@ def get_resolved_user(
             :class:`django.utils.functional.SimpleLazyObject`
 
     """
-    logger.debug("%s called for user type: %s", formatted_text(__name__) + ".get_resolved_user()", type(user))
+    verbose_logger.debug("%s called for user type: %s", formatted_text(__name__) + ".get_resolved_user()", type(user))
     if user is None:
         return None
 
     # this is the expected case
     if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
-        logger.debug(
+        verbose_logger.debug(
             "%s - user is instance of expected type: %s",
             formatted_text(__name__) + ".get_resolved_user()",
             type(user),
@@ -133,9 +142,19 @@ def get_resolved_user(
 
     # pylint: disable=W0212
     if isinstance(user, SimpleLazyObject):
+        verbose_logger.debug(
+            "%s - user is instance of SimpleLazyObject, returning wrapped user: %s",
+            formatted_text(__name__) + ".get_resolved_user()",
+            type(user._wrapped),
+        )
         return user._wrapped
     # Allow unittest.mock.MagicMock or Mock for testing
     if hasattr(user, "__class__") and user.__class__.__name__ in ("MagicMock", "Mock"):
+        verbose_logger.debug(
+            "%s - user is instance of test mock: %s",
+            formatted_text(__name__) + ".get_resolved_user()",
+            type(user),
+        )
         return user  # type: ignore[return-value]
     raise SmarterConfigurationError(
         f"Unexpected user type: {type(user)}. Expected Django User, AnonymousUser, SimpleLazyObject, or a test mock."
@@ -267,6 +286,11 @@ class Account(MetaDataModel):
             account.save()  # Ensures account_number is unique and valid
 
         """
+        if self.pk is not None:
+            # check if account_number is being changed on updated, if so raise error.
+            orig = Account.objects.get(pk=self.pk)
+            if orig.account_number != self.account_number:
+                raise SmarterValueError("Account number cannot be changed once set.")
         if self.account_number == "9999-9999-9999":
             self.account_number = self.randomized_account_number()
 
