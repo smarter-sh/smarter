@@ -92,19 +92,19 @@ class EmbeddingsInterface(TimestampedModel):
         blank=True,
         null=True,
     )
-    api_type = models.CharField(
+    openai_api_type = models.CharField(
         help_text="OpenAI API type.",
         max_length=50,
         blank=True,
         null=True,
     )
-    proxy = models.CharField(
+    openai_api_proxy = models.CharField(
         help_text="Proxy URL for OpenAI API.",
         max_length=255,
         blank=True,
         null=True,
     )
-    ctx_length = models.IntegerField(
+    embedding_ctx_length = models.IntegerField(
         help_text="Embedding context length.",
         default=8191,
         blank=True,

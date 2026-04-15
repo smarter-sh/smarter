@@ -15,5 +15,7 @@ class SAMVectorstoreStatus(AbstractSAMStatusBase):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
+    vectorstore_status: str = "unknown"
+
 
 __all__ = ["SAMVectorstoreStatus"]

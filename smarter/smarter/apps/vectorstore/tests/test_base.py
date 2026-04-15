@@ -8,9 +8,9 @@ from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.apps.vectorstore.models import (
-    VectorDatabaseBackendKind,
-    VectorDatabaseStatus,
     VectorestoreMeta,
+    VectorstoreBackendKind,
+    VectorstoreStatus,
 )
 from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.common.conf.settings import smarter_settings
@@ -78,14 +78,14 @@ class VectorstoreTestBase(TestAccountMixin):
             name="test_vector_database",
             description="A test vector database",
             user_profile=cls.user_profile,
-            backend=VectorDatabaseBackendKind.PINECONE,
+            backend=VectorstoreBackendKind.PINECONE,
             host="test-pinecone-host",
             port=1234,
             auth_config={},
             password=cls.password,
             config={},
             is_active=True,
-            status=VectorDatabaseStatus.PROVISIONING,
+            status=VectorstoreStatus.PROVISIONING,
             provider=cls.provider,
             provider_model=cls.provider_model,
         )

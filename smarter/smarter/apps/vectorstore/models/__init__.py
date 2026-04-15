@@ -6,9 +6,9 @@ from .embeddings_interface import EmbeddingsInterface
 from .index_model import IndexModelInterface
 from .vectorstore_interface import VectorstoreInterface
 from .vectorstore_meta import (
-    VectorDatabaseBackendKind,
-    VectorDatabaseStatus,
     VectorestoreMeta,
+    VectorstoreBackendKind,
+    VectorstoreStatus,
 )
 
 __all__ = [
@@ -16,6 +16,6 @@ __all__ = [
     "IndexModelInterface",
     "VectorstoreInterface",
     "VectorestoreMeta",
-    "VectorDatabaseBackendKind",
-    "VectorDatabaseStatus",
+    "VectorstoreBackendKind",
+    "VectorstoreStatus",
 ]
