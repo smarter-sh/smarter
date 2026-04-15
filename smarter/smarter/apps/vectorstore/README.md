@@ -8,6 +8,6 @@
 ## Register New Vectorstore
 
 1. add to .enum.SmarterVectorStoreBackends
-2. add to .models.VectorDatabaseBackendKind
+2. add to .models.VectorstoreBackendKind
 3. add to .backends.Backends._backends
 4. create a new class in .backends that descends from SmarterVectorstoreBackend

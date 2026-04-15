@@ -31,7 +31,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class VectorDatabaseBackendKind(models.TextChoices):
+class VectorstoreBackendKind(models.TextChoices):
     """
     Enum representing the supported backend kinds for the vector database.
     """
@@ -41,7 +41,7 @@ class VectorDatabaseBackendKind(models.TextChoices):
     PINECONE = (SmarterVectorStoreBackends.PINECONE.value, SmarterVectorStoreBackends.PINECONE.value)
 
 
-class VectorDatabaseStatus(models.TextChoices):
+class VectorstoreStatus(models.TextChoices):
     """
     Enum representing the possible statuses of the vector database.
     """
@@ -75,7 +75,7 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
     backend = models.CharField(
         help_text="The backend type for the vector database (e.g., qdrant, weaviate, pinecone).",
         max_length=50,
-        choices=VectorDatabaseBackendKind.choices,
+        choices=VectorstoreBackendKind.choices,
         blank=False,
         null=False,
     )
@@ -88,8 +88,8 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
     status = models.CharField(
         help_text="The current status of the vector database (e.g., provisioning, ready, failed, deleting).",
         max_length=50,
-        choices=VectorDatabaseStatus.choices,
-        default=VectorDatabaseStatus.PROVISIONING,
+        choices=VectorstoreStatus.choices,
+        default=VectorstoreStatus.PROVISIONING,
         blank=False,
         null=False,
     )
@@ -200,4 +200,4 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
         return f"{self.id}: {self.name}({self.backend}) - {self.user_profile}"  # type: ignore
 
 
-__all__ = ["VectorestoreMeta", "VectorDatabaseBackendKind", "VectorDatabaseStatus"]
+__all__ = ["VectorestoreMeta", "VectorstoreBackendKind", "VectorstoreStatus"]
