@@ -11,8 +11,8 @@ class Command(SmarterCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("--company_name", type=str, help="The company name for the new account")
         parser.add_argument("--account_number", type=str, help="The account number for the new account")
+        parser.add_argument("--company_name", type=str, help="The company name for the new account", required=False)
 
     def handle(self, *args, **options):
         """Create the Account."""
@@ -29,6 +29,9 @@ class Command(SmarterCommand):
                 account.description = f"Account for {company_name}"
             account.save()
         else:
+            if not company_name:
+                self.handle_completed_failure(msg="company_name must be provided when creating an account.")
+                return
             account, created = Account.objects.get_or_create(company_name=company_name)
         if created:
             Account.get_cached_object(invalidate=True, pk=account.pk)  # prime the cache
