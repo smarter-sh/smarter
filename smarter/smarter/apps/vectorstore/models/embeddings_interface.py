@@ -37,37 +37,25 @@ class EmbeddingsInterface(TimestampedModel):
         on_delete=models.CASCADE,
         related_name="embeddings_interface",
     )
-    provider = models.CharField(
-        help_text="The name of a Smarter provider associated with this vector database and owned by the authenticated API user.",
-        max_length=255,
-        blank=False,
-        null=False,
-    )
-    provider_model = models.CharField(
-        help_text="The name of a Smarter provider model related to the Smarter Provider. Example: 'text-embedding-ada-002'",
-        max_length=255,
-        blank=True,
-        null=True,
-    )
-    config = models.JSONField(
-        help_text="Additional configuration settings for the embeddings interface.",
-        default=dict,
-        blank=True,
-        null=True,
-    )
     provider = models.ForeignKey(
         Provider,
         help_text="The provider associated with this vector database.",
         on_delete=models.CASCADE,
         related_name="vector_databases",
     )
-    model = models.ForeignKey(
+    provider_model = models.ForeignKey(
         ProviderModel,
         help_text="The provider model associated with this vector database.",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="vector_databases",
+    )
+    config = models.JSONField(
+        help_text="Additional configuration settings for the embeddings interface.",
+        default=dict,
+        blank=True,
+        null=True,
     )
     dimensions = models.IntegerField(
         help_text="Number of embedding dimensions.",
