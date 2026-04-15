@@ -467,6 +467,8 @@ def base(request: "HttpRequest") -> dict:
                 "product_name": SMARTER_PRODUCT_NAME,
                 "company_name": smarter_settings.root_domain,
                 "smarter_version": "v" + __version__,
+                "python_version": smarter_settings.python_version,
+                "django_version": smarter_settings.django_version,
                 "current_year": current_year,
                 "my_resources_pending_deployments": (
                     get_pending_deployments(user_profile=user_profile) if user_profile else 0
