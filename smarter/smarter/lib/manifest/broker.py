@@ -139,6 +139,20 @@ class SAMBrokerErrorNotFound(SAMBrokerError):
         return msg
 
 
+class SAMBrokerInternalError(SAMBrokerError):
+    """
+    Error for broker operations that result in an internal error,
+    such as trying to create a resource that already exists.
+    """
+
+    @property
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() internal error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
+
+
 class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
     """
     Abstract base class for the Smarter Broker Model.

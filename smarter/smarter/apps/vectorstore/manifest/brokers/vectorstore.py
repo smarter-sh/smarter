@@ -1,4 +1,4 @@
-# pylint: disable=W0718
+# pylint: disable=C0302,W0718
 """Smarter API User Manifest handler"""
 
 import datetime
@@ -48,6 +48,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
+    SAMBrokerInternalError,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -122,6 +123,8 @@ class SAMVectorstoreBroker(AbstractBroker):
     # override the base abstract manifest model with the Vectorstore model
     _manifest: Optional[SAMVectorstore] = None
     _pydantic_model: Type[SAMVectorstore] = SAMVectorstore
+
+    # our ORM models.
     _vectorstore_meta: Optional[VectorestoreMeta] = None
     _index_model_interface: Optional[IndexModelInterface] = None
     _vectorstore_interface: Optional[VectorstoreInterface] = None
@@ -152,14 +155,13 @@ class SAMVectorstoreBroker(AbstractBroker):
                 try:
                     self._vectorstore_meta = VectorestoreMeta.objects.get(user_profile=self.user_profile, name=name)
                 except VectorestoreMeta.DoesNotExist:
-                    return (
-                        self._vectorstore_meta
-                    )  # It's possible the manifest exists but the corresponding database entry does not, so we return None in that case
+                    # It's possible the manifest exists but the corresponding database entry does not, so we return None in that case
+                    return self._vectorstore_meta
 
                 try:
                     self._index_model_interface = IndexModelInterface.objects.get(vectorstore=self._vectorstore_meta)
                 except IndexModelInterface.DoesNotExist as e:
-                    raise SAMBrokerErrorNotFound(
+                    raise SAMBrokerInternalError(
                         f"Failed to describe {self.kind} {name}. IndexModelInterface not found",
                         thing=self.kind,
                         command=None,
@@ -168,7 +170,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                 try:
                     self._vectorstore_interface = VectorstoreInterface.objects.get(vectorstore=self._vectorstore_meta)
                 except VectorstoreInterface.DoesNotExist as e:
-                    raise SAMBrokerErrorNotFound(
+                    raise SAMBrokerInternalError(
                         f"Failed to describe {self.kind} {name}. VectorstoreInterface not found",
                         thing=self.kind,
                         command=None,
@@ -177,7 +179,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                 try:
                     self._embeddings_interface = EmbeddingsInterface.objects.get(vectorstore=self._vectorstore_meta)
                 except EmbeddingsInterface.DoesNotExist as e:
-                    raise SAMBrokerErrorNotFound(
+                    raise SAMBrokerInternalError(
                         f"Failed to describe {self.kind} {name}. EmbeddingsInterface not found",
                         thing=self.kind,
                         command=None,
@@ -255,9 +257,27 @@ class SAMVectorstoreBroker(AbstractBroker):
         return self._embeddings_interface
 
     def manifest_to_django_orm(self) -> dict:
-        raise NotImplementedError("manifest_to_django_orm is not implemented yet for SAMVectorstoreBroker")
+        raise NotImplementedError(
+            "manifest_to_django_orm is not implemented for SAMVectorstoreBroker. Use django_meta_orm_to_manifest.model_dump() instead."
+        )
 
     def django_meta_orm_to_manifest(self) -> SAMVectorstoreMetadata:
+        """
+        Convert the Django ORM `VectorestoreMeta` model instance into a
+        `SAMVectorstoreMetadata` Pydantic model for manifest serialization.
+
+        :raises: :class:`SAMVectorstoreBrokerError`
+              If `self.vectorstore_meta` is not set or is not an instance of `VectorestoreMeta`.
+
+        :returns: A `SAMVectorstoreMetadata` instance representing the manifest metadata.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+            metadata = broker.django_meta_orm_to_manifest()
+            print(metadata.name, metadata.description)
+        """
 
         if not isinstance(self.vectorstore_meta, VectorestoreMeta):
             raise SAMVectorstoreBrokerError(
@@ -273,6 +293,22 @@ class SAMVectorstoreBroker(AbstractBroker):
         )
 
     def django_vector_interface_to_manifest(self) -> SAMVectorstoreInterface:
+        """
+        Convert the Django ORM `VectorstoreInterface` model instance into a
+        `SAMVectorstoreInterface` Pydantic model for manifest serialization.
+
+        :raises: :class:`SAMVectorstoreBrokerError`
+              If `self.vectorstore_interface` is not set or is not an instance of `VectorstoreInterface`.
+
+        :returns: A `SAMVectorstoreInterface` instance representing the manifest interface.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+            interface = broker.django_vector_interface_to_manifest()
+            print(interface.textKey, interface.namespace)
+        """
 
         if not isinstance(self.vectorstore_interface, VectorstoreInterface):
             raise SAMVectorstoreBrokerError(
@@ -290,7 +326,22 @@ class SAMVectorstoreBroker(AbstractBroker):
         )
 
     def django_embeddings_interface_to_manifest(self) -> SAMEmbeddingsInterface:
+        """
+        Convert the Django ORM `EmbeddingsInterface` model instance into a
+        `SAMEmbeddingsInterface` Pydantic model for manifest serialization.
 
+        :raises: :class:`SAMVectorstoreBrokerError`
+              If `self.embeddings_interface` is not set or is not an instance of `EmbeddingsInterface`.
+
+        :returns: A `SAMEmbeddingsInterface` instance representing the manifest interface.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+            embeddings = broker.django_embeddings_interface_to_manifest()
+            print(embeddings.provider, embeddings.providerModel)
+        """
         if not isinstance(self.embeddings_interface, EmbeddingsInterface):
             raise SAMVectorstoreBrokerError(
                 f"Expected type EmbeddingsInterface for embeddings_interface but got {type(self._embeddings_interface)}",
@@ -331,6 +382,22 @@ class SAMVectorstoreBroker(AbstractBroker):
         )
 
     def django_index_model_to_manifest(self) -> SAMIndexModelInterface:
+        """
+        Convert the Django ORM `IndexModelInterface` model instance into a
+        `SAMIndexModelInterface` Pydantic model for manifest serialization.
+
+        :raises: :class:`SAMVectorstoreBrokerError`
+              If `self.index_model_interface` is not set or is not an instance of `IndexModelInterface`.
+
+        :returns: A `SAMIndexModelInterface` instance representing the manifest interface.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+            index_model = broker.django_index_model_to_manifest()
+            print(index_model.spec, index_model.dimension)
+        """
         if not isinstance(self.index_model_interface, IndexModelInterface):
             raise SAMVectorstoreBrokerError(
                 f"Expected type IndexModelInterface for index_model_interface but got {type(self._index_model_interface)}",
@@ -369,7 +436,6 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         See Also:
 
-           - :meth:`manifest_to_django_orm`
            - :class:`SAMVectorstore`
            - :class:`smarter.apps.account.models.Vectorstore`
            - :class:`smarter.lib.manifest.enum.SamKeys`
@@ -398,16 +464,13 @@ class SAMVectorstoreBroker(AbstractBroker):
             )
 
         metadata = self.django_meta_orm_to_manifest()
-        vectorstore_interface = self.django_vector_interface_to_manifest()
-        embeddings = self.django_embeddings_interface_to_manifest()
-        index_model = self.django_index_model_to_manifest()
 
         spec = SAMVectorstoreSpec(
             connection=self.vectorstore_meta.connection.name,
             backend=self.vectorstore_meta.backend,
-            vectorstore=vectorstore_interface,
-            embeddings=embeddings,
-            indexModel=index_model,
+            vectorstore=self.django_vector_interface_to_manifest(),
+            embeddings=self.django_embeddings_interface_to_manifest(),
+            indexModel=self.django_index_model_to_manifest(),
         )
         status = SAMVectorstoreStatus(
             recordLocator=self.vectorstore_meta.record_locator,
@@ -560,7 +623,6 @@ class SAMVectorstoreBroker(AbstractBroker):
         .. seealso::
 
            - :class:`smarter.apps.account.models.VectorestoreMeta`
-           - :meth:`manifest_to_django_orm`
            - :meth:`django_orm_to_manifest`
            - :class:`smarter.apps.SamKeys`
            - :class:`SAMMetadataKeys`
@@ -763,7 +825,6 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         See Also:
 
-           - :meth:`manifest_to_django_orm`
            - :class:`smarter.apps.vectorstore.models.Vectorstore`
            - :class:`SAMVectorstoreBrokerError`
 
@@ -849,18 +910,18 @@ class SAMVectorstoreBroker(AbstractBroker):
                 dump = self.manifest.spec.indexModel.model_dump()  # type: ignore[return-value]
                 dump = self.camel_to_snake(dump)
                 if not isinstance(dump, dict):
-                    raise SAMVectorstoreBrokerError(
+                    raise SAMBrokerInternalError(
                         f"Expected dump to be a dictionary for {self.kind} {name}", thing=self.kind, command=command
                     )
                 data = {**dump}
                 self._index_model_interface = map_fields(data, self._index_model_interface)  # type: ignore
                 if not isinstance(self._index_model_interface, IndexModelInterface):
-                    raise SAMVectorstoreBrokerError(
+                    raise SAMBrokerInternalError(
                         f"IndexModelInterface is not set for {self.kind} {name}", thing=self.kind, command=command
                     )
                 self._index_model_interface.save()
             except Exception as e:
-                raise SAMVectorstoreBrokerError(
+                raise SAMBrokerInternalError(
                     f"Failed to apply {IndexModelInterface.__class__.__name__} for {self.kind} {name}",
                     thing=self.kind,
                     command=command,
@@ -873,18 +934,18 @@ class SAMVectorstoreBroker(AbstractBroker):
                 dump = self._manifest.spec.vectorstore.model_dump()  # type: ignore[return-value]
                 dump = self.camel_to_snake(dump)
                 if not isinstance(dump, dict):
-                    raise SAMVectorstoreBrokerError(
+                    raise SAMBrokerInternalError(
                         f"Expected dump to be a dictionary for {self.kind} {name}", thing=self.kind, command=command
                     )
                 data = {**dump}
                 self._vectorstore_interface = map_fields(data, self._vectorstore_interface)  # type: ignore
                 if not isinstance(self._vectorstore_interface, VectorstoreInterface):
-                    raise SAMVectorstoreBrokerError(
+                    raise SAMBrokerInternalError(
                         f"VectorstoreInterface is not set for {self.kind} {name}", thing=self.kind, command=command
                     )
                 self._vectorstore_interface.save()
             except Exception as e:
-                raise SAMVectorstoreBrokerError(
+                raise SAMBrokerInternalError(
                     f"Failed to apply {VectorstoreInterface.__class__.__name__} for {self.kind} {name}",
                     thing=self.kind,
                     command=command,
@@ -897,18 +958,18 @@ class SAMVectorstoreBroker(AbstractBroker):
                 dump = self._manifest.spec.embeddings.model_dump()  # type: ignore[return-value]
                 dump = self.camel_to_snake(dump)
                 if not isinstance(dump, dict):
-                    raise SAMVectorstoreBrokerError(
+                    raise SAMBrokerInternalError(
                         f"Expected dump to be a dictionary for {self.kind} {name}", thing=self.kind, command=command
                     )
                 data = {**dump}
                 self._embeddings_interface = map_fields(data, self._embeddings_interface)  # type: ignore
                 if not isinstance(self._embeddings_interface, EmbeddingsInterface):
-                    raise SAMVectorstoreBrokerError(
+                    raise SAMBrokerInternalError(
                         f"EmbeddingsInterface is not set for {self.kind} {name}", thing=self.kind, command=command
                     )
                 self._embeddings_interface.save()
             except Exception as e:
-                raise SAMVectorstoreBrokerError(
+                raise SAMBrokerInternalError(
                     f"Failed to apply {EmbeddingsInterface.__class__.__name__} for {self.kind} {name}",
                     thing=self.kind,
                     command=command,
