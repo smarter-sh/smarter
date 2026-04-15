@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="VectorDatabase",
+            name="VectorestoreMeta",
             fields=[
                 (
                     "id",

@@ -10,17 +10,17 @@ from smarter.apps.dashboard.admin import (
     smarter_restricted_admin_site,
 )
 
-from .models import VectorDatabase
+from .models import VectorestoreMeta
 
 
 class VectorDatabaseAdmin(SmarterCustomerModelAdmin):
     """
-    VectorDatabase model admin. This is a primary
+    VectorestoreMeta model admin. This is a primary
     Smarter resource, that descends directly from MetaDataWithOwnershipModel.
     Visibility of VectorDatabases is determined by ownership and role.
     """
 
-    model = VectorDatabase
+    model = VectorestoreMeta
 
     readonly_fields = (
         "created_at",
@@ -60,4 +60,4 @@ class VectorDatabaseAdmin(SmarterCustomerModelAdmin):
         return smarter_filter_queryset_for_user(user=user, qs=qs)
 
 
-smarter_restricted_admin_site.register(VectorDatabase, VectorDatabaseAdmin)
+smarter_restricted_admin_site.register(VectorestoreMeta, VectorDatabaseAdmin)

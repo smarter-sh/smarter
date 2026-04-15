@@ -5,7 +5,7 @@ Celery tasks for the vectorstore app.
 import logging
 import os
 
-from smarter.apps.vectorstore.models import VectorDatabase
+from smarter.apps.vectorstore.models import VectorestoreMeta
 from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
@@ -46,7 +46,7 @@ def embed_and_load_pdf(self) -> bool:
     token = current_job_id.set(job_id)
 
     try:
-        db = VectorDatabase.objects.first()
+        db = VectorestoreMeta.objects.first()
         if not db:
             logger.error(f"{logger_prefix} No vector database found.")
             return False

@@ -11,7 +11,7 @@ from langchain_core.embeddings.embeddings import Embeddings
 from langchain_core.vectorstores import VectorStore
 
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
-from smarter.apps.vectorstore.models import VectorDatabase
+from smarter.apps.vectorstore.models import VectorestoreMeta
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -92,7 +92,7 @@ class Backends:
         if backend not in SmarterVectorStoreBackends.all():
             raise SmarterValueError(f"Unsupported backend backend: {backend}")
         BackendClass = cls._backends[backend]
-        db = VectorDatabase.get_cached_object(name=name, backend=backend)
+        db = VectorestoreMeta.get_cached_object(name=name, backend=backend)
         return BackendClass(db, embeddings=embeddings, vector_store=vector_store)  # type: ignore
 
     @classmethod

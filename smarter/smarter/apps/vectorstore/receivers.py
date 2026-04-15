@@ -10,7 +10,7 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
-from smarter.apps.vectorstore.models import VectorDatabase
+from smarter.apps.vectorstore.models import VectorestoreMeta
 from smarter.apps.vectorstore.signals import (
     load_failed,
     load_started,
@@ -33,35 +33,35 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 module_prefix = f"{__name__}"
 
 
-@receiver(post_save, sender=VectorDatabase)
-def account_post_save(sender: VectorDatabase, instance: VectorDatabase, created, **kwargs):
-    """Signal receiver for created/saved of VectorDatabase model."""
+@receiver(post_save, sender=VectorestoreMeta)
+def account_post_save(sender: VectorestoreMeta, instance: VectorestoreMeta, created, **kwargs):
+    """Signal receiver for created/saved of VectorestoreMeta model."""
     model_prefix = formatted_text(f"{module_prefix}.account_post_save()")
     account_json = json.dumps(model_to_dict(instance))
     if created:
-        logger.info("%s VectorDatabase created: %s", model_prefix, account_json)
+        logger.info("%s VectorestoreMeta created: %s", model_prefix, account_json)
     else:
-        logger.info("%s VectorDatabase updated: %s", model_prefix, account_json)
+        logger.info("%s VectorestoreMeta updated: %s", model_prefix, account_json)
         logger.info(
-            "%s invalidating cache for VectorDatabase: %s",
+            "%s invalidating cache for VectorestoreMeta: %s",
             formatted_text(f"{module_prefix}.account_post_save()"),
             instance,
         )
-        VectorDatabase.get_cached_object(invalidate=True, pk=instance.pk)
+        VectorestoreMeta.get_cached_object(invalidate=True, pk=instance.pk)
 
 
-@receiver(post_delete, sender=VectorDatabase)
-def account_post_delete(sender: VectorDatabase, instance: VectorDatabase, **kwargs):
-    """Signal receiver for deleted of VectorDatabase model."""
+@receiver(post_delete, sender=VectorestoreMeta)
+def account_post_delete(sender: VectorestoreMeta, instance: VectorestoreMeta, **kwargs):
+    """Signal receiver for deleted of VectorestoreMeta model."""
     model_prefix = formatted_text(f"{module_prefix}.account_post_delete()")
     account_json = json.dumps(model_to_dict(instance))
-    logger.info("%s VectorDatabase deleted: %s", model_prefix, account_json)
+    logger.info("%s VectorestoreMeta deleted: %s", model_prefix, account_json)
     logger.info(
-        "%s invalidating cache for deleted VectorDatabase: %s",
+        "%s invalidating cache for deleted VectorestoreMeta: %s",
         formatted_text(f"{module_prefix}.account_post_delete()"),
         instance,
     )
-    VectorDatabase.get_cached_object(invalidate=True, pk=instance.pk)
+    VectorestoreMeta.get_cached_object(invalidate=True, pk=instance.pk)
 
 
 @receiver(load_started)

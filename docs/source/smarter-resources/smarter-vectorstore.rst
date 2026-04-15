@@ -10,7 +10,7 @@ The Smarter Vectorstore Django app provides a robust service layer for managing
 vector databases, abstracting the complexities of provisioning, deleting, and
 interacting with various vector store backends. At its core is the
 :doc:`VectorstoreService <smarter-vectorstore/services>` class, which acts as a
-bridge between the ORM model (:doc:`VectorDatabase <smarter-vectorstore/models>`)
+bridge between the ORM model (:doc:`VectorestoreMeta <smarter-vectorstore/models>`)
 and the backend implementations that handle the actual
 storage and retrieval of vector data. This service is designed to be
 backend-agnostic, allowing seamless integration with different vector store

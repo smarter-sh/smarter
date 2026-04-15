@@ -8,9 +8,9 @@ from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.apps.vectorstore.models import (
-    VectorDatabase,
     VectorDatabaseBackendKind,
     VectorDatabaseStatus,
+    VectorestoreMeta,
 )
 from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.common.conf.settings import smarter_settings
@@ -27,17 +27,17 @@ class VectorstoreTestBase(TestAccountMixin):
     password: Secret
     provider: Provider
     provider_model: ProviderModel
-    vector_database: VectorDatabase
+    vector_database: VectorestoreMeta
     vectorstore_service: VectorstoreService
 
     @classmethod
     def setUpClass(cls):
         """
         Setup the test class with common resources for all unit tests:
-        - test VectorDatabase instance with Pinecone backend
+        - test VectorestoreMeta instance with Pinecone backend
         - test Secret instance for the vector database password
         - active OpenAI provider and a random active LLM with embedding support
-        - VectorstoreService instance using the test VectorDatabase
+        - VectorstoreService instance using the test VectorestoreMeta
         - connect the VectorstoreService backend to ensure it's ready for testing
         """
         super().setUpClass()
@@ -74,7 +74,7 @@ class VectorstoreTestBase(TestAccountMixin):
 
         logger.debug("%s.setUpClass() Created test password secret: %s", logger_prefix, cls.password)
 
-        cls.vector_database = VectorDatabase.objects.create(
+        cls.vector_database = VectorestoreMeta.objects.create(
             name="test_vector_database",
             description="A test vector database",
             user_profile=cls.user_profile,

@@ -22,7 +22,7 @@ from pydantic import SecretStr
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.provider.models import Provider
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
-from smarter.apps.vectorstore.models import VectorDatabase
+from smarter.apps.vectorstore.models import VectorestoreMeta
 from smarter.apps.vectorstore.signals import load_failed, load_started, load_success
 from smarter.common.conf import smarter_settings
 from smarter.lib import json
@@ -62,16 +62,16 @@ class PineconeBackend(SmarterVectorstoreBackend):
     # validated fields initialized in __init__
     pinecone_api_key: SecretStr
 
-    def __init__(self, db: VectorDatabase):
+    def __init__(self, db: VectorestoreMeta):
         """
         Initialize the PineconeBackend instance.
 
-        Sets up the Pinecone backend using the provided VectorDatabase
+        Sets up the Pinecone backend using the provided VectorestoreMeta
         configuration. Validates the backend type, provider, and API keys,
         then initializes the backend state and index name.
 
-        :param db: The VectorDatabase configuration object.
-        :type db: VectorDatabase
+        :param db: The VectorestoreMeta configuration object.
+        :type db: VectorestoreMeta
 
         :raises VectorStoreBackendError: If the backend type, provider, or API keys are invalid.
         """
