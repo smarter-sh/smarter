@@ -14,6 +14,7 @@ from pinecone.db_control.models import ServerlessSpec
 from smarter.apps.account.models import User
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.connection.models import ApiConnection
+from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.apps.vectorstore.manifest.models.vectorstore.const import MANIFEST_KIND
 from smarter.apps.vectorstore.manifest.models.vectorstore.metadata import (
     SAMVectorstoreMetadata,
@@ -852,21 +853,43 @@ class SAMVectorstoreBroker(AbstractBroker):
             )
 
         name = self._manifest.metadata.name
+        readonly_fields = [
+            "id",
+            "user_profile",
+        ]
         logger.debug("%s.apply() called with manifest: %s %s", self.formatted_class_name, name, self.user_profile)
 
-        def map_fields(data: dict, instance: VectorestoreMeta) -> TimestampedModel:
-            for field in readonly_fields:
+        def _map_fields(
+            data: dict, instance: VectorestoreMeta, exclusions: Optional[list[str]] = None
+        ) -> TimestampedModel:
+            """
+            Map fields from a dictionary to a Django ORM model instance, excluding read-only fields and any additional specified exclusions.
+
+            :param data: A dictionary of field names and values to map to the model instance.
+            :param instance: The Django ORM model instance to update.
+            :param exclusions: An optional list of additional field names to exclude from mapping.
+
+            :returns: The updated model instance with fields mapped from the data dictionary.
+            """
+            for field in readonly_fields + (exclusions or []):
                 data.pop(field, None)
             for key, value in data.items():
                 setattr(instance, key, value)
             return instance
 
-        readonly_fields = [
-            "id",
-            "user_profile",
-        ]
+        def _apply_vectorstore_meta():
+            """
+            Apply the vectorstore metadata from the manifest to the Django ORM model instance.
 
-        with transaction.atomic():
+            :raises: :class:`SAMVectorstoreBrokerError`
+                If the manifest type is invalid or if there is an error applying the metadata.
+            """
+            if not isinstance(self._manifest, SAMVectorstore):
+                raise SAMVectorstoreBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                    command=command,
+                )
             try:
                 self._vectorstore_meta, created = VectorestoreMeta.objects.get_or_create(
                     user_profile=self.user_profile, name=self._manifest.metadata.name
@@ -889,7 +912,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                 data = {**metadata, **dump}
 
                 tags = data.get("tags", [])
-                self._vectorstore_meta = map_fields(data, self._vectorstore_meta)  # type: ignore
+                self._vectorstore_meta = _map_fields(data, self._vectorstore_meta)  # type: ignore
                 if not isinstance(self.vectorstore_meta, VectorestoreMeta):
                     raise SAMVectorstoreBrokerError(
                         f"Vectorstore is not set for {self.kind} {name}", thing=self.kind, command=command
@@ -903,6 +926,13 @@ class SAMVectorstoreBroker(AbstractBroker):
                     command=command,
                 ) from e
 
+        def _apply_index_model_interface():
+            """
+            Apply the index model interface from the manifest to the Django ORM model instance.
+
+            :raises: :class:`SAMBrokerInternalError`
+                If there is an error applying the index model interface.
+            """
             try:
                 self._index_model_interface, _ = IndexModelInterface.objects.get_or_create(
                     vectorstore=self._vectorstore_meta
@@ -914,7 +944,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                         f"Expected dump to be a dictionary for {self.kind} {name}", thing=self.kind, command=command
                     )
                 data = {**dump}
-                self._index_model_interface = map_fields(data, self._index_model_interface)  # type: ignore
+                self._index_model_interface = _map_fields(data, self._index_model_interface)  # type: ignore
                 if not isinstance(self._index_model_interface, IndexModelInterface):
                     raise SAMBrokerInternalError(
                         f"IndexModelInterface is not set for {self.kind} {name}", thing=self.kind, command=command
@@ -927,6 +957,13 @@ class SAMVectorstoreBroker(AbstractBroker):
                     command=command,
                 ) from e
 
+        def _apply_vectorstore_interface():
+            """
+            Apply the vectorstore interface from the manifest to the Django ORM model instance.
+
+            :raises: :class:`SAMBrokerInternalError`
+                If there is an error applying the vectorstore interface.
+            """
             try:
                 self._vectorstore_interface, _ = VectorstoreInterface.objects.get_or_create(
                     vectorstore=self._vectorstore_meta
@@ -938,7 +975,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                         f"Expected dump to be a dictionary for {self.kind} {name}", thing=self.kind, command=command
                     )
                 data = {**dump}
-                self._vectorstore_interface = map_fields(data, self._vectorstore_interface)  # type: ignore
+                self._vectorstore_interface = _map_fields(data, self._vectorstore_interface)  # type: ignore
                 if not isinstance(self._vectorstore_interface, VectorstoreInterface):
                     raise SAMBrokerInternalError(
                         f"VectorstoreInterface is not set for {self.kind} {name}", thing=self.kind, command=command
@@ -951,6 +988,29 @@ class SAMVectorstoreBroker(AbstractBroker):
                     command=command,
                 ) from e
 
+        def _apply_embeddings_interface():
+            """
+            Apply the embeddings interface from the manifest to the Django ORM model instance.
+            - get the EmbeddingsInterface instance associated with the vectorstore, or create it if it doesn't exist
+            - map the fields from the manifest to the EmbeddingsInterface instance, excluding read-only fields and
+                foreign key relationships (provider and provider_model).
+            - set the provider foreign key relationship based on the provider field in the manifest.
+            - set the provider_model foreign key relationship based on the provider_model field in the manifest, if it is provided.
+
+            :raises: :class:`SAMBrokerInternalError`
+                If there is an error applying the embeddings interface.
+            """
+            if not isinstance(self._manifest, SAMVectorstore):
+                raise SAMVectorstoreBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                    command=command,
+                )
+
+            # get an instance of the EmbeddingsInterface associated with the
+            # vectorstore, or create it if it doesn't exist. Then map the
+            # fields from the manifest to the instance, excluding read-only
+            # fields and foreign key relationships (provider and provider_model).
             try:
                 self._embeddings_interface, _ = EmbeddingsInterface.objects.get_or_create(
                     vectorstore=self._vectorstore_meta
@@ -962,18 +1022,66 @@ class SAMVectorstoreBroker(AbstractBroker):
                         f"Expected dump to be a dictionary for {self.kind} {name}", thing=self.kind, command=command
                     )
                 data = {**dump}
-                self._embeddings_interface = map_fields(data, self._embeddings_interface)  # type: ignore
+                exclusions = ["provider", "provider_model"]  # these fields are foreign key relationships and
+                self._embeddings_interface = _map_fields(data, self._embeddings_interface, exclusions=exclusions)  # type: ignore
+                # should not be set directly on the EmbeddingsInterface model
                 if not isinstance(self._embeddings_interface, EmbeddingsInterface):
                     raise SAMBrokerInternalError(
-                        f"EmbeddingsInterface is not set for {self.kind} {name}", thing=self.kind, command=command
+                        f"Expected type EmbeddingsInterface for embeddings_interface but got {type(self._embeddings_interface)}",
+                        thing=self.kind,
+                        command=command,
                     )
-                self._embeddings_interface.save()
             except Exception as e:
                 raise SAMBrokerInternalError(
                     f"Failed to apply {EmbeddingsInterface.__class__.__name__} for {self.kind} {name}",
                     thing=self.kind,
                     command=command,
                 ) from e
+
+            # set the provider foreign key relationship based on the provider
+            # field in the manifest.
+            try:
+                provider = Provider.objects.get(
+                    name=self._manifest.spec.embeddings.provider, user_profile=self.user_profile
+                )
+                self._embeddings_interface.provider = provider
+            except Provider.DoesNotExist as e:
+                raise SAMBrokerInternalError(
+                    f"Provider '{self._manifest.spec.embeddings.provider}' not found for {self.kind} {name}",
+                    thing=self.kind,
+                    command=command,
+                ) from e
+            if not isinstance(self._embeddings_interface, EmbeddingsInterface):
+                raise SAMBrokerInternalError(
+                    f"EmbeddingsInterface is not set for {self.kind} {name}", thing=self.kind, command=command
+                )
+
+            # set the provider_model foreign key relationship based on the
+            # provider_model field in the manifest, if it is provided.
+            if self._manifest.spec.embeddings.provider_model:
+                try:
+                    provider_model = ProviderModel.objects.get(
+                        name=self._manifest.spec.embeddings.provider_model, user_profile=self.user_profile
+                    )
+                    self._embeddings_interface.provider_model = provider_model
+                except ProviderModel.DoesNotExist as e:
+                    raise SAMBrokerInternalError(
+                        f"ProviderModel '{self._manifest.spec.embeddings.provider_model}' not found for {self.kind} {name}",
+                        thing=self.kind,
+                        command=command,
+                    ) from e
+
+            if not isinstance(self._embeddings_interface, EmbeddingsInterface):
+                raise SAMBrokerInternalError(
+                    f"EmbeddingsInterface is not set for {self.kind} {name}", thing=self.kind, command=command
+                )
+            self._embeddings_interface.save()
+
+        with transaction.atomic():
+            _apply_vectorstore_meta()
+            _apply_index_model_interface()
+            _apply_vectorstore_interface()
+            _apply_embeddings_interface()
 
         logger.debug("%s.apply() successfully applied manifest for %s '%s'", self.formatted_class_name, self.kind, name)
 
@@ -1063,28 +1171,23 @@ class SAMVectorstoreBroker(AbstractBroker):
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
 
+        self._name = kwargs.get("name") or self.params.get("name") if isinstance(self.params, dict) else None
+        if not self.name:
+            raise SAMVectorstoreBrokerError(
+                "Name parameter is required for delete operation", thing=self.kind, command=command
+            )
         if not isinstance(self.user_profile, UserProfile):
             raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
-
-        if not self.user_profile.user.is_staff or self.user_profile.user.is_superuser:
+        if not (self.user_profile.user.is_staff or self.user_profile.user.is_superuser):
             raise SAMVectorstoreBrokerError(
                 message="Only account admins can delete providers.",
                 thing=self.kind,
                 command=command,
             )
 
-        if not isinstance(self.params, dict):
-            raise SAMBrokerErrorNotImplemented(message="Params must be a dictionary", thing=self.kind, command=command)
-
-        self._name = self.params.get("name")
-        self._vectorstore_meta = None
-        self._index_model_interface = None
-        self._vectorstore_interface = None
-        self._embeddings_interface = None
-
         if not isinstance(self.vectorstore_meta, VectorestoreMeta):
             raise SAMBrokerErrorNotFound(
-                f"Failed to delete {self.kind} {self.name}. Not found or not associated with account",
+                f"Failed to delete {self.kind} {self.name} {self.user_profile}. Not found or not associated with account",
                 thing=self.kind,
                 command=command,
             )
@@ -1118,8 +1221,25 @@ class SAMVectorstoreBroker(AbstractBroker):
         """
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
+        self._name = kwargs.get("name") or self.params.get("name") if isinstance(self.params, dict) else None
 
-        raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
+        if not isinstance(self.user_profile, UserProfile):
+            raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
+        if not isinstance(self.vectorstore_meta, VectorestoreMeta):
+            raise SAMBrokerErrorNotFound(
+                f"Failed to deploy {self.kind} {self.name} {self.user_profile}. Not found or not associated with account",
+                thing=self.kind,
+                command=command,
+            )
+
+        try:
+            self.vectorstore_meta.is_active = True
+            self.vectorstore_meta.save()
+            return self.json_response_ok(command=command, data={})
+        except Exception as e:
+            raise SAMVectorstoreBrokerError(
+                f"Failed to deploy {self.kind} {self.name}", thing=self.kind, command=command
+            ) from e
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -1134,8 +1254,25 @@ class SAMVectorstoreBroker(AbstractBroker):
         """
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
+        self._name = kwargs.get("name") or self.params.get("name") if isinstance(self.params, dict) else None
 
-        raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
+        if not isinstance(self.user_profile, UserProfile):
+            raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
+        if not isinstance(self.vectorstore_meta, VectorestoreMeta):
+            raise SAMBrokerErrorNotFound(
+                f"Failed to undeploy {self.kind} {self.name} {self.user_profile}. Not found or not associated with account",
+                thing=self.kind,
+                command=command,
+            )
+
+        try:
+            self.vectorstore_meta.is_active = False
+            self.vectorstore_meta.save()
+            return self.json_response_ok(command=command, data={})
+        except Exception as e:
+            raise SAMVectorstoreBrokerError(
+                f"Failed to undeploy {self.kind} {self.name}", thing=self.kind, command=command
+            ) from e
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
