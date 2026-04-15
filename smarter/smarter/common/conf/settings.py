@@ -37,6 +37,7 @@ import os  # library for interacting with the operating system
 import re  # library for regular expressions
 import warnings  # library for issuing warning messages
 from functools import cached_property, lru_cache
+from sys import platform
 from typing import Any, List, Optional, Pattern, Union  # type hint utilities
 from urllib.parse import urljoin, urlparse  # library for URL manipulation
 
@@ -4167,6 +4168,44 @@ class Settings(BaseSettings):
             See https://github.com/smarter-sh/smarter/blob/main/docs/legacy/SEMANTIC_VERSIONING.md for more information.
         """
         return get_semantic_version()
+
+    @cached_property
+    def python_version(self) -> str:
+        """
+        Current version of Python running the Smarter platform codebase.
+
+        Example:
+            >>> print(smarter_settings.python_version)
+            '3.10.12'
+        """
+        try:
+            # pylint: disable=import-outside-toplevel
+            import platform as sys_platform
+
+            return sys_platform.python_version()
+        # pylint: disable=broad-except
+        except Exception:  # catch broad exceptions to avoid any issues with retrieving Python version
+            return "Unknown Python version"
+
+    @cached_property
+    def django_version(self) -> str:
+        """
+        Current version of Django installed in the Smarter platform codebase.
+
+        Example:
+            >>> print(smarter_settings.django_version)
+            '4.2.7'
+        """
+        try:
+            # pylint: disable=import-outside-toplevel
+            import django
+
+            return django.get_version()
+        # pylint: disable=broad-except
+        except ImportError:
+            return "Django not installed"
+        except Exception:  # catch broad exceptions to avoid any issues with retrieving Django version
+            return "Unknown Django version"
 
     def to_json(self) -> dict[str, Any]:
         """
