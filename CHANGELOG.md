@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.219](https://github.com/smarter-sh/smarter/compare/v0.13.218...v0.13.219) (2026-04-16)
+
+### Bug Fixes
+
+* give the cache a filename ([b95cfdb](https://github.com/smarter-sh/smarter/commit/b95cfdb07866ac013ea80721b086106f9a5e56aa))
+
+## [0.13.218](https://github.com/smarter-sh/smarter/compare/v0.13.217...v0.13.218) (2026-04-16)
+
+### Bug Fixes
+
+* AttributeError: 'NoneType' object has no attribute 'validate' ([2c1820c](https://github.com/smarter-sh/smarter/commit/2c1820c42406311ad0074d1e33044b1929be7f4a))
+
+## [0.13.217](https://github.com/smarter-sh/smarter/compare/v0.13.216...v0.13.217) (2026-04-16)
+
+### Bug Fixes
+
+* requests cache path ([52e55da](https://github.com/smarter-sh/smarter/commit/52e55da18dd49db7653dc0e70c2ef1dd49c6d180))
+
+## [0.13.216](https://github.com/smarter-sh/smarter/compare/v0.13.215...v0.13.216) (2026-04-15)
+
+### Bug Fixes
+
+* misc post-deployment bugs ([a7e6b52](https://github.com/smarter-sh/smarter/commit/a7e6b520f452885dcb91bd2419113dd8d53f866d))
+
 ## [0.13.215](https://github.com/smarter-sh/smarter/compare/v0.13.214...v0.13.215) (2026-04-08)
 
 ### Bug Fixes
