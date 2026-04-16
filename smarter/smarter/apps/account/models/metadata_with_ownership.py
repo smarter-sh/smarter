@@ -1,13 +1,15 @@
 """Account MetaDataWithOwnership model."""
 
 import logging
-from typing import Optional, TypeVar
+from typing import Any, Optional, TypeVar, overload
 
 # django stuff
 from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
 from django.db.models import Manager, QuerySet
+from django.db.models.expressions import Combinable
+from django.db.models.query import Prefetch
 from typing_extensions import deprecated
 
 # our stuff
@@ -237,6 +239,36 @@ class MetaDataWithOwnershipModelManager(Manager[_MT]):
     def select_for_update(self, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
         return self.get_queryset().select_for_update(**kwargs)
 
+    @overload
+    def select_related(self, clear: None, /) -> SmarterQuerySetWithPermissions[_MT]: ...
+    @overload
+    def select_related(self, *fields: str) -> SmarterQuerySetWithPermissions[_MT]: ...
+    def select_related(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().select_related(*args, **kwargs)
+
+    @overload
+    def prefetch_related(self, clear: None, /) -> SmarterQuerySetWithPermissions[_MT]: ...
+    @overload
+    def prefetch_related(self, *lookups: str | Prefetch) -> SmarterQuerySetWithPermissions[_MT]: ...
+    def prefetch_related(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().prefetch_related(*args, **kwargs)
+
+    def annotate(self, *args: Any, **kwargs: Any) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().annotate(*args, **kwargs)
+
+    def alias(self, *args: Any, **kwargs: Any) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().alias(*args, **kwargs)
+
+    def order_by(self, *field_names: str | Combinable) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().order_by(*field_names)
+
+    def distinct(self, *field_names: str) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().distinct(*field_names)
+
+    # --------------------------------------------------------------------------
+    # Custom permission-based queryset methods for filtering by user_profile
+    # read and ownership permissions.
+    # --------------------------------------------------------------------------
     def with_read_permission_for(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
         """
         A custom Smarter pipeline for filtering any MetaDataWithOwnership
