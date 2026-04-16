@@ -30,6 +30,7 @@ import googlemaps
 import openmeteo_requests
 import pandas as pd
 import requests_cache
+from django_redis import get_redis_connection
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
@@ -72,10 +73,30 @@ except Exception as value_error:
         f"{logger_prefix} Could not initialize Google Maps API. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview. Add your GOOGLE_MAPS_API_KEY to .env: {value_error}"
     )
 
+
+def get_session():
+    """
+    Returns a cached session for making HTTP requests, using Redis as the backend.
+    """
+    # pylint: disable=global-statement
+    _session = None
+    if _session is None:
+        _redis_client = get_redis_connection("default")
+
+        _session = requests_cache.CachedSession(
+            backend="redis",
+            connection=_redis_client,
+            expire_after=300,
+            key_prefix="http_cache:",
+        )
+    return _session
+
+
+session = get_session()
+
 WEATHER_API_URL = "https://api.open-meteo.com/v1/forecast"
-weather_cache = urljoin(smarter_settings.cache_path, "weather_api_cache")
-WEATHER_API_CACHE_SESSION = requests_cache.CachedSession(weather_cache, expire_after=3600)  # nosec
-WEATHER_API_RETRY_SESSION = retry(WEATHER_API_CACHE_SESSION, retries=5, backoff_factor=0.2)
+redis_client = get_redis_connection("default")
+WEATHER_API_RETRY_SESSION = retry(session, retries=5, backoff_factor=0.2)
 openmeteo = openmeteo_requests.Client(session=WEATHER_API_RETRY_SESSION)  # type: ignore
 
 
