@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.219](https://github.com/smarter-sh/smarter/compare/v0.13.218...v0.13.219) (2026-04-16)
+
+### Bug Fixes
+
+* give the cache a filename ([b95cfdb](https://github.com/smarter-sh/smarter/commit/b95cfdb07866ac013ea80721b086106f9a5e56aa))
+
 ## [0.13.218](https://github.com/smarter-sh/smarter/compare/v0.13.217...v0.13.218) (2026-04-16)
 
 ### Bug Fixes
