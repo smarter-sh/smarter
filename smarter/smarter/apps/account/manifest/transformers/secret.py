@@ -30,9 +30,6 @@ from smarter.apps.account.signals import (
     secret_saved,
     secret_updated,
 )
-from smarter.apps.account.utils import (
-    get_user_profiles_for_account,
-)
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterException
 from smarter.common.mixins import SmarterHelperMixin
@@ -269,7 +266,11 @@ class SecretTransformer(SmarterHelperMixin):
                 expiration_date=self.secret.expires_at if self.secret.expires_at else None,
             )
             status = SAMSecretStatus(
-                accountNumber=self.secret.account.account_number if self.secret.account else "missing",
+                accountNumber=(
+                    self.secret.user_profile.account.account_number
+                    if self.secret.user_profile and self.secret.user_profile.account
+                    else "missing"
+                ),
                 username=self.secret.user_profile.cached_user.username if self.secret.user_profile else "missing",
                 recordLocator=self.secret.record_locator,
                 created=self.secret.created_at,
@@ -413,8 +414,8 @@ class SecretTransformer(SmarterHelperMixin):
             logger.warning("%s.secret() User profile is not set.", self.formatted_class_name)
             return None
 
-        self._secret = Secret.get_cached_object(name=self.name, user_profile=self.user_profile)
-        if self._secret:
+        try:
+            self._secret = Secret.get_cached_object(name=self.name, user_profile=self.user_profile)
             logger.debug(
                 "%s.secret() initialized Django ORM Secret %s for user profile %s.",
                 self.formatted_class_name,
@@ -422,41 +423,15 @@ class SecretTransformer(SmarterHelperMixin):
                 self.user_profile,
             )
             return self._secret
-
-        logger.warning(
-            "%s.secret() Django ORM Secret %s does not exist for user profile %s.",
-            self.formatted_class_name,
-            self.name,
-            self.user_profile,
-        )
-        # if the secret does not exist for the user profile, then we still need to check
-        # if the secret exists for the account, and if so, whether self.user_profile
-        # is at least a staff user. otherwise, we raise an error.
-        other_user_profiles = (
-            get_user_profiles_for_account(account=self.user_profile.account) if self.user_profile else None
-        )
-        secret = Secret.objects.filter(user_profile__in=other_user_profiles, name=self.name).first()
-        if secret:
-            if self.user_profile and not self.user_profile.user.is_staff and not self.user_profile.user.is_superuser:
-                raise SmarterSecretTransformerError(
-                    f"Secret {self.name} exists for user profile {secret.user_profile.cached_user.username} "
-                    f"but not for user profile {self.user_profile.user.username}."
-                )
-            self._secret = secret
-            logger.debug(
-                "%s.secret() initialized Django ORM Secret %s for user profile %s from account-level access.",
-                self.formatted_class_name,
-                self.name,
-                self.user_profile,
-            )
-
-        if not self._secret:
+        except Secret.DoesNotExist:
             logger.warning(
-                "%s.secret() could not initialize Django ORM Secret %s for user_profile %s.",
+                "%s.secret() Django ORM Secret with name %s does not exist for user profile %s.",
                 self.formatted_class_name,
                 self.name,
                 self.user_profile,
             )
+            self._secret = None
+
         return self._secret
 
     @secret.setter
@@ -605,7 +580,7 @@ class SecretTransformer(SmarterHelperMixin):
             logger.warning("%s.create() Secret manifest is not set. Cannot create secret.", self.formatted_class_name)
             return False
 
-        if self._secret and self._secret.id:
+        if self._secret and self._secret.id:  # type: ignore[union-attr]
             self.id = self.secret.id  # type: ignore[assignment]
             logger.debug(
                 "%s.create() Secret %s already exists. Updating secret %s instead.",
@@ -688,6 +663,8 @@ class SecretTransformer(SmarterHelperMixin):
         Serialize a secret in JSON format that is importable by Pydantic.
         """
         if not self.ready:
+            return None
+        if not self.manifest:
             return None
 
         if version == "v1":

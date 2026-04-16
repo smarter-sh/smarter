@@ -40,7 +40,9 @@ class SecretsView(SmarterAdminWebView):
 
     def get(self, request: WSGIRequest, *args, **kwargs):
         logger.debug("%s.get() user: %s", self.formatted_class_name, self.user_profile)
-        secrets = Secret.objects.filter(user_profile=self.user_profile).only(
+        if not self.user_profile:
+            return SmarterHttpResponseForbidden(request=request, error_message="User not found")
+        secrets = Secret.objects.with_read_permission_for(self.user_profile.user).only(
             "id", "name", "description", "created_at", "updated_at", "last_accessed", "expires_at"
         )
         context = {
@@ -200,7 +202,7 @@ class SecretView(SmarterAdminWebView):
             secret = Secret.objects.get(pk=secret_id)
         except Secret.DoesNotExist:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "Secret not found"})
-        if not request or not hasattr(request, "user") or not Secret.objects.filter(pk=secret_id, user_profile=self.user_profile).with_ownership_permission_for(user=request.user).exists():  # type: ignore
+        if not request or not hasattr(request, "user") or not Secret.objects.filter(pk=secret_id).with_ownership_permission_for(user=request.user).exists():  # type: ignore
             return SmarterHttpResponseForbidden(
                 request=request, error_message="You are not allowed to delete this secret"
             )

@@ -130,7 +130,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self._manifest.metadata.name,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:
@@ -369,6 +369,12 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                     thing=self.kind,
                     command=SmarterJournalCliCommands.APPLY,
                 )
+            if self.connection is None:
+                raise SAMBrokerErrorNotReady(
+                    f"{self.formatted_class_name} manifest cannot be constructed without connection.",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.APPLY,
+                )
             spec = SAMSqlConnectionSpec(
                 connection=PydanticSqlConnection(
                     dbEngine=self.connection.db_engine,
@@ -491,10 +497,10 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         # retrieve the proxyUsername Secret, if it exists
         proxy_password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
-        if connection.get(proxy_password_name):
+        if isinstance(connection.get(proxy_password_name), str):
             connection[proxy_password_name] = self.get_or_create_secret(
                 user_profile=self.user_profile,  # type: ignore
-                name=connection.get(proxy_password_name),
+                name=connection.get(proxy_password_name),  # type: ignore
             )
 
         return {**metadata, **connection}
@@ -701,9 +707,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             if not isinstance(model_dump, dict):
                 model_dump = json.loads(json.dumps(model_dump))
             # model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
-            model_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
-            model_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
-            model_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
+            model_dump[SAMMetadataKeys.NAME.value] = self._manifest.metadata.name
+            model_dump[SAMMetadataKeys.VERSION.value] = self._manifest.metadata.version
+            model_dump[SAMMetadataKeys.DESCRIPTION.value] = self._manifest.metadata.description
             model_dump[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.password_secret
             model_dump[SAMKeys.KIND.value] = self.kind
             model_dump["user_profile"] = self.user_profile
@@ -942,9 +948,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         # generate a QuerySet of SqlConnection objects that match our search criteria
         if name:
-            sql_connections = SqlConnection.objects.filter(user_profile__account=self.account, name=name)
+            sql_connections = SqlConnection.objects.filter(name=name).with_read_permission_for(self.user)  # type: ignore
         else:
-            sql_connections = SqlConnection.objects.filter(user_profile__account=self.account)
+            sql_connections = SqlConnection.objects.with_read_permission_for(self.user)  # type: ignore
 
         model_titles = self.get_model_titles(serializer=self.SerializerClass())
 

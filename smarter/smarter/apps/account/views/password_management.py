@@ -67,6 +67,10 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
         except User.DoesNotExist:
             # Do not reveal if the email is not in the system.
             return HttpResponse("", status=HTTPStatus.OK.value)
+        except User.MultipleObjectsReturned:
+            # In the rare case that multiple users have the same email, we can still send the reset email to one of them.
+            logger.warning("Multiple users found with email %s. Sending password reset email to one of them.", email)
+            user = User.objects.filter(email=email).first()
 
         password_reset_link = self.expiring_token.encode_link(
             request=request, user=user, reverse_link=AccountNamedUrls.PASSWORD_RESET_LINK

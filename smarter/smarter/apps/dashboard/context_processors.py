@@ -122,7 +122,7 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
 
     @cache_results()
     def _get_pending_deployments(user_profile_id: int) -> int:
-        return ChatBot.objects.filter(user_profile__id=user_profile_id, deployed=False).count() or 0
+        return ChatBot.objects.filter(deployed=False).with_ownership_permission_for(user=user_profile.user).count() or 0  # type: ignore
 
     if not user_profile:
         logger.warning("%s.get_pending_deployments() called without user_profile. Returning None.", logger_prefix)

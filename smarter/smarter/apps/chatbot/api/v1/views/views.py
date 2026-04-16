@@ -171,11 +171,11 @@ class ChatbotListView(ListViewBase):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code > 299:
             return response
-        self.chatbots = ChatBot.objects.filter(user_profile__account=self.account)
+        self.chatbots = ChatBot.objects.with_read_permission_for(user=request.user)
         return response
 
     def get_queryset(self, *args, **kwargs):
-        return ChatBot.objects.filter(user_profile__account=self.account)
+        return ChatBot.objects.with_read_permission_for(user=self.user)  # type: ignore[return-value]
 
 
 class ChatBotDeployView(ViewBase):
