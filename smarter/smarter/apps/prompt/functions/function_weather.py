@@ -72,9 +72,9 @@ except Exception as value_error:
     )
 
 WEATHER_API_URL = "https://api.open-meteo.com/v1/forecast"
-WEATHER_API_CACHE_SESSION = requests_cache.CachedSession("/tmp/.cache", expire_after=3600)  # nosec
+WEATHER_API_CACHE_SESSION = requests_cache.CachedSession(smarter_settings.cache_path, expire_after=3600)  # nosec
 WEATHER_API_RETRY_SESSION = retry(WEATHER_API_CACHE_SESSION, retries=5, backoff_factor=0.2)
-openmeteo = openmeteo_requests.Client(session=WEATHER_API_RETRY_SESSION)
+openmeteo = openmeteo_requests.Client(session=WEATHER_API_RETRY_SESSION)  # type: ignore
 
 
 class WeatherParameters(SmarterEnum):
@@ -172,7 +172,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list:
 
     # Geocode location
     try:
-        geocode_result = gmaps.geocode(location)
+        geocode_result = gmaps.geocode(location)  # type: ignore
         if not geocode_result or "geometry" not in geocode_result[0] or "location" not in geocode_result[0]["geometry"]:
             logger.error(f"{logger_prefix} Geocoding failed for location: {location}")
             return [{"error": f"Could not geocode location: {location}"}]
@@ -197,8 +197,11 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list:
         responses = openmeteo.weather_api(WEATHER_API_URL, params=params)
         response = responses[0]
         hourly = response.Hourly()
-        hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
-        hourly_precipitation_2m = hourly.Variables(1).ValuesAsNumpy()
+        if not hourly:
+            logger.error(f"{logger_prefix} Weather API response missing hourly data for location: {location}")
+            return [{"error": f"Weather API response missing hourly data for location: {location}"}]
+        hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()  # type: ignore
+        hourly_precipitation_2m = hourly.Variables(1).ValuesAsNumpy()  # type: ignore
         if unit == WeatherUnits.USCS:
             hourly_temperature_2m = hourly_temperature_2m * 9 / 5 + 32
             hourly_precipitation_2m = hourly_precipitation_2m / 2.54
