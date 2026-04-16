@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.217](https://github.com/smarter-sh/smarter/compare/v0.13.216...v0.13.217) (2026-04-16)
+
+### Bug Fixes
+
+* requests cache path ([52e55da](https://github.com/smarter-sh/smarter/commit/52e55da18dd49db7653dc0e70c2ef1dd49c6d180))
+
 ## [0.13.216](https://github.com/smarter-sh/smarter/compare/v0.13.215...v0.13.216) (2026-04-15)
 
 ### Bug Fixes
