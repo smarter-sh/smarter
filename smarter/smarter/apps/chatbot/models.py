@@ -999,9 +999,9 @@ class ChatBot(MetaDataWithOwnershipModel):
             user_profile_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["ChatBot"]:
             return (
-                cls.objects.prefetch_related("tags")
+                cls.objects.with_read_permission_for(user=user_profile.user)  # type: ignore
+                .prefetch_related("tags")
                 .select_related("user_profile", "user_profile__account", "user_profile__user")
-                .filter(user_profile_id=user_profile_id)
             )
 
         if invalidate and user_profile:

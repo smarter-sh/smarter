@@ -23,6 +23,7 @@ import re
 from typing import Optional
 
 from django.db.models import Q
+from typing_extensions import deprecated
 
 from smarter.apps.account.models import (
     Account,
@@ -590,6 +591,9 @@ def get_user_profiles_for_account(account: Account) -> Optional[list[UserProfile
     return list(user_profiles)
 
 
+@deprecated(
+    "This function is deprecated and may be removed in a future release. Please use with_ownership_permission_for() instead."
+)
 def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[UserProfile]:
     """
     Get a list of valid owners for the given user profile.

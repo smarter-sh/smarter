@@ -191,6 +191,8 @@ def update_payment_method(request: WSGIRequest):
         for key, value in data.items():
             if hasattr(payment_method_to_update, key):
                 setattr(payment_method_to_update, key, value)
+        if not isinstance(payment_method_to_update, PaymentMethod):
+            return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND.value)
         payment_method_to_update.save()
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
@@ -221,6 +223,8 @@ def delete_payment_method(request: WSGIRequest, payment_method_id: Optional[int]
 
     try:
         with transaction.atomic():
+            if not isinstance(account, Account):
+                return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND.value)
             account.delete()
             UserProfile.objects.get(user=request.user).delete()
     except Exception as e:

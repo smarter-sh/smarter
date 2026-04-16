@@ -128,7 +128,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self._manifest.metadata.name,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:
@@ -435,7 +435,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     "%s.manifest_to_django_orm() api key Secret %s not found for user %s",
                     self.formatted_class_name,
                     api_key_name,
-                    self.user_profile.cached_user.username,
+                    self.user_profile.user.username,
                 )
 
         # retrieve the proxyUsername Secret, if it exists
@@ -449,7 +449,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     "%s.manifest_to_django_orm() proxy password Secret %s not found for user %s",
                     self.formatted_class_name,
                     proxy_password_name,
-                    self.user_profile.cached_user.username,
+                    self.user_profile.user.username,
                 )
 
         return {**metadata, **config_dump}
@@ -760,7 +760,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
 
         if self.connection:
-            ApiConnection.get_cached_object(invalidate=True, pk=self.connection.id)
+            ApiConnection.get_cached_object(invalidate=True, pk=self.connection.id)  # type: ignore
         super().cache_invalidations()
 
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -810,9 +810,9 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         # generate a QuerySet of ApiConnection objects that match our search criteria
         if name:
-            api_connections = ApiConnection.objects.filter(user_profile__account=self.account, name=name)
+            api_connections = ApiConnection.objects.filter(name=name).with_read_permission_for(user=self.user)  # type: ignore
         else:
-            api_connections = ApiConnection.objects.filter(user_profile__account=self.account)
+            api_connections = ApiConnection.objects.with_read_permission_for(user=self.user)  # type: ignore
 
         model_titles = self.get_model_titles(serializer=self.SerializerClass())
 
@@ -912,7 +912,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at", "tags"]
 
-        if not self.user.is_staff:
+        if not self.user or not self.user.is_staff:
             raise SAMConnectionBrokerError(
                 message="Only account admins can apply api connection manifests.",
                 thing=self.kind,
@@ -1101,7 +1101,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
 
-        if not self.user.is_staff:
+        if not self.user or not self.user.is_staff:
             raise SAMConnectionBrokerError(
                 message="Only account admins can delete api connection manifests.",
                 thing=self.kind,
