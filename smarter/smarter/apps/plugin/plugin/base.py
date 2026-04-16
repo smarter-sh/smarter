@@ -440,16 +440,16 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         )
 
         if self.user_profile:
-            UserProfile.get_cached_object(invalidate=True, pk=self.user_profile.id)
+            UserProfile.get_cached_object(invalidate=True, pk=self.user_profile.id)  # type: ignore
         if self.plugin_meta:
-            PluginMeta.get_cached_object(invalidate=True, pk=self.plugin_meta.id)
+            PluginMeta.get_cached_object(invalidate=True, pk=self.plugin_meta.id)  # type: ignore
         if self.plugin_selector:
-            PluginSelector.get_cached_object(invalidate=True, pk=self.plugin_selector.id)
+            PluginSelector.get_cached_object(invalidate=True, pk=self.plugin_selector.id)  # type: ignore
         if self.plugin_prompt:
-            PluginPrompt.get_cached_object(invalidate=True, pk=self.plugin_prompt.id)
+            PluginPrompt.get_cached_object(invalidate=True, pk=self.plugin_prompt.id)  # type: ignore
         if self.plugin_data:
             PluginDataClass = self.plugin_data_class
-            PluginDataClass.get_cached_object(invalidate=True, pk=self.plugin_data.id)
+            PluginDataClass.get_cached_object(invalidate=True, pk=self.plugin_data.id)  # type: ignore
 
     def reinitialize_plugin(self):
         """
@@ -1094,7 +1094,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             # Plugin doesn't exist in Django ORM, so we're done.
             return True
 
-        if self._plugin_selector and not isinstance(self.plugin_selector, PluginSelector):
+        if not isinstance(self.plugin_selector, PluginSelector):
             logger.error(
                 "%s.ready() PluginSelector is not of type PluginSelector.",
                 self.formatted_pluginbase_class_name,
@@ -1103,7 +1103,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
 
         self.plugin_selector.validate()
 
-        if self._plugin_prompt and not isinstance(self.plugin_prompt, PluginPrompt):
+        if not isinstance(self.plugin_prompt, PluginPrompt):
             logger.error(
                 "%s.ready() PluginPrompt is not of type PluginPrompt.",
                 self.formatted_pluginbase_class_name,
@@ -1217,6 +1217,8 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
 
         if not self.ready:
             return False
+        if not self.plugin_selector:
+            return False
         if self._selected:
             return True
 
@@ -1272,6 +1274,8 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             raise SmarterPluginError("Plugin is not ready.")
         if not messages:
             raise SmarterValueError("Messages is empty.")
+        if not self.plugin_prompt or not self.plugin_prompt.system_role:
+            raise SmarterPluginError("Plugin prompt or system role is not set.")
 
         messages_copy = messages.copy()
         for i, message in enumerate(messages_copy):
