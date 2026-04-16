@@ -4207,6 +4207,23 @@ class Settings(BaseSettings):
         except Exception:  # catch broad exceptions to avoid any issues with retrieving Django version
             return "Unknown Django version"
 
+    @property
+    def cache_path(self) -> str:
+        """
+        Return the path to the cache directory.
+
+        Example:
+            >>> print(smarter_settings.cache_path)
+            '/home/smarter_user/.cache'
+
+        Note:
+            This is based on the Dockerfile located in the root of the repository.
+            Settings are `chmod -R 700 /home/smarter_user/.cache`
+            See ./Dockerfile for more information.
+
+        """
+        return "/home/smarter_user/.cache"
+
     def to_json(self) -> dict[str, Any]:
         """
         Dump all settings. Useful for debugging and logging.
