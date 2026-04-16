@@ -206,11 +206,36 @@ class MetaDataWithOwnershipModelManager(Manager[_MT]):
     user_profile.
     """
 
+    # --------------------------------------------------------------------------
+    # Override base Manager methods to return SmarterQuerySetWithPermissions
+    # to ensure all queries go through the permission-aware queryset.
+    # --------------------------------------------------------------------------
     def get_queryset(self) -> SmarterQuerySetWithPermissions[_MT]:
         return SmarterQuerySetWithPermissions(self.model, using=self._db)
 
     def filter(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
         return self.get_queryset().filter(*args, **kwargs)
+
+    def exclude(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().exclude(*args, **kwargs)
+
+    def none(self) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().none()
+
+    def complex_filter(self, filter_obj) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().complex_filter(filter_obj)
+
+    def union(self, *other_qs, all=False) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().union(*other_qs, all=all)
+
+    def intersection(self, *other_qs) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().intersection(*other_qs)
+
+    def difference(self, *other_qs) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().difference(*other_qs)
+
+    def select_for_update(self, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
+        return self.get_queryset().select_for_update(**kwargs)
 
     def with_read_permission_for(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
         """
