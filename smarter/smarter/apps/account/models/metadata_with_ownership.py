@@ -213,30 +213,45 @@ class MetaDataWithOwnershipModelManager(Manager[_MT]):
     # to ensure all queries go through the permission-aware queryset.
     # --------------------------------------------------------------------------
     def get_queryset(self) -> SmarterQuerySetWithPermissions[_MT]:
+        """
+        Returns a SmarterQuerySetWithPermissions for the model.
+        """
         return SmarterQuerySetWithPermissions(self.model, using=self._db)
 
     def filter(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
+        """
+        Returns a SmarterQuerySetWithPermissions with the applied filter.
+        """
         return self.get_queryset().filter(*args, **kwargs)
 
     def exclude(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
+        """
+        Returns a SmarterQuerySetWithPermissions with the applied exclusion.
+        """
         return self.get_queryset().exclude(*args, **kwargs)
 
     def none(self) -> SmarterQuerySetWithPermissions[_MT]:
+        """Returns an empty SmarterQuerySetWithPermissions."""
         return self.get_queryset().none()
 
     def complex_filter(self, filter_obj) -> SmarterQuerySetWithPermissions[_MT]:
+        """Returns a SmarterQuerySetWithPermissions with the applied complex filter."""
         return self.get_queryset().complex_filter(filter_obj)
 
     def union(self, *other_qs, all=False) -> SmarterQuerySetWithPermissions[_MT]:
+        """Returns a SmarterQuerySetWithPermissions representing the union of querysets."""
         return self.get_queryset().union(*other_qs, all=all)
 
     def intersection(self, *other_qs) -> SmarterQuerySetWithPermissions[_MT]:
+        """Returns a SmarterQuerySetWithPermissions representing the intersection of querysets."""
         return self.get_queryset().intersection(*other_qs)
 
     def difference(self, *other_qs) -> SmarterQuerySetWithPermissions[_MT]:
+        """Returns a SmarterQuerySetWithPermissions representing the difference of querysets."""
         return self.get_queryset().difference(*other_qs)
 
     def select_for_update(self, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
+        """Returns a SmarterQuerySetWithPermissions with select_for_update applied."""
         return self.get_queryset().select_for_update(**kwargs)
 
     @overload
@@ -244,6 +259,7 @@ class MetaDataWithOwnershipModelManager(Manager[_MT]):
     @overload
     def select_related(self, *fields: str) -> SmarterQuerySetWithPermissions[_MT]: ...
     def select_related(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
+        """Returns a SmarterQuerySetWithPermissions with select_related applied."""
         return self.get_queryset().select_related(*args, **kwargs)
 
     @overload
@@ -251,18 +267,25 @@ class MetaDataWithOwnershipModelManager(Manager[_MT]):
     @overload
     def prefetch_related(self, *lookups: str | Prefetch) -> SmarterQuerySetWithPermissions[_MT]: ...
     def prefetch_related(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
+        """
+        Returns a SmarterQuerySetWithPermissions with prefetch_related applied.
+        """
         return self.get_queryset().prefetch_related(*args, **kwargs)
 
     def annotate(self, *args: Any, **kwargs: Any) -> SmarterQuerySetWithPermissions[_MT]:
+        """Returns a SmarterQuerySetWithPermissions with annotate applied."""
         return self.get_queryset().annotate(*args, **kwargs)
 
     def alias(self, *args: Any, **kwargs: Any) -> SmarterQuerySetWithPermissions[_MT]:
+        """Returns a SmarterQuerySetWithPermissions with alias applied."""
         return self.get_queryset().alias(*args, **kwargs)
 
     def order_by(self, *field_names: str | Combinable) -> SmarterQuerySetWithPermissions[_MT]:
+        """Returns a SmarterQuerySetWithPermissions with order_by applied."""
         return self.get_queryset().order_by(*field_names)
 
     def distinct(self, *field_names: str) -> SmarterQuerySetWithPermissions[_MT]:
+        """Returns a SmarterQuerySetWithPermissions with distinct applied."""
         return self.get_queryset().distinct(*field_names)
 
     # --------------------------------------------------------------------------
