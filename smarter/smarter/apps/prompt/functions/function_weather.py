@@ -24,6 +24,7 @@ Signals
 
 import logging
 from typing import Optional
+from urllib.parse import urljoin
 
 import googlemaps
 import openmeteo_requests
@@ -72,7 +73,8 @@ except Exception as value_error:
     )
 
 WEATHER_API_URL = "https://api.open-meteo.com/v1/forecast"
-WEATHER_API_CACHE_SESSION = requests_cache.CachedSession(smarter_settings.cache_path, expire_after=3600)  # nosec
+weather_cache = urljoin(smarter_settings.cache_path, "weather_api_cache")
+WEATHER_API_CACHE_SESSION = requests_cache.CachedSession(weather_cache, expire_after=3600)  # nosec
 WEATHER_API_RETRY_SESSION = retry(WEATHER_API_CACHE_SESSION, retries=5, backoff_factor=0.2)
 openmeteo = openmeteo_requests.Client(session=WEATHER_API_RETRY_SESSION)  # type: ignore
 
