@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.218](https://github.com/smarter-sh/smarter/compare/v0.13.217...v0.13.218) (2026-04-16)
+
+### Bug Fixes
+
+* AttributeError: 'NoneType' object has no attribute 'validate' ([2c1820c](https://github.com/smarter-sh/smarter/commit/2c1820c42406311ad0074d1e33044b1929be7f4a))
+
 ## [0.13.217](https://github.com/smarter-sh/smarter/compare/v0.13.216...v0.13.217) (2026-04-16)
 
 ### Bug Fixes
