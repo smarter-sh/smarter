@@ -5,7 +5,6 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.connection.manifest.models.common.connection.metadata import (
     SAMConnectionCommonMetadata,
 )
@@ -670,37 +669,19 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         if not name:
             return None
 
-        try:
-            self._connection = SqlConnection.objects.get(user_profile=self.user_profile, name=name)
+        self._connection = SqlConnection.objects.filter(name=name).with_read_permission_for(self.user).first()  # type: ignore
+        if self._connection:
             logger.debug(
-                "%s found %s - %s for account %s",
+                "%s.connection() %s found for %s",
                 self.formatted_class_name,
-                type(self._connection).__name__,
-                self.name or "(name is missing)",
-                self.user_profile or "(user_profile is missing)",
+                self._connection.name,
+                self._connection.user_profile,
             )
-        except SqlConnection.DoesNotExist:
-            try:
-                if self.user_profile:
-                    self._connection = SqlConnection.objects.get(
-                        user_profile__account=self.user_profile.account, name=name
-                    )
-            except SqlConnection.DoesNotExist:
-                try:
-                    self._connection = SqlConnection.objects.get(
-                        name=name, account=smarter_cached_objects.smarter_account
-                    )
-                except SqlConnection.DoesNotExist:
-                    logger.debug(
-                        "%s SqlConnection %s not found for %s",
-                        self.formatted_class_name,
-                        self.name or "(name is missing)",
-                        self.user_profile or "(user_profile is missing)",
-                    )
+            return self._connection
 
         if not self._connection:
             logger.warning(
-                "%s SqlConnection %s not found for account %s",
+                "%s.connection() %s not found for %s",
                 self.formatted_class_name,
                 self.name or "(name is missing)",
                 self.user_profile or "(user_profile is missing)",
