@@ -7,8 +7,10 @@ from typing import TYPE_CHECKING, Optional, Type
 
 from django.core.exceptions import MultipleObjectsReturned
 
-from smarter.apps.account.utils import get_cached_admin_user_for_account
-from smarter.apps.connection.manifest.enum import SAMApiConnectionSpecConnectionKeys
+from smarter.apps.account.utils import (
+    get_cached_admin_user_for_account,
+    smarter_cached_objects,
+)
 from smarter.apps.connection.manifest.models.api_connection.const import MANIFEST_KIND
 from smarter.apps.connection.manifest.models.api_connection.enum import AuthMethods
 from smarter.apps.connection.manifest.models.api_connection.model import (
@@ -28,8 +30,8 @@ from smarter.apps.connection.manifest.models.common.connection.status import (
 )
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.connection.serializers import ApiConnectionSerializer
+from smarter.apps.plugin.manifest.enum import SAMApiConnectionSpecConnectionKeys
 from smarter.apps.secret.models import Secret
-from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -613,12 +615,23 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
 
         except ApiConnection.DoesNotExist:
-            logger.debug(
-                "%s.connection() no ApiConnection found for account %s and name %s",
-                self.formatted_class_name,
-                self.account,
-                name,
-            )
+            try:
+                if self.user_profile:
+                    self._connection = ApiConnection.objects.get(
+                        user_profile__account=self.user_profile.account, name=name
+                    )
+            except ApiConnection.DoesNotExist:
+                try:
+                    self._connection = ApiConnection.objects.get(
+                        user_profile__account=smarter_cached_objects.smarter_account, name=name
+                    )
+                except ApiConnection.DoesNotExist:
+                    logger.debug(
+                        "%s.connection() no ApiConnection found for account %s and name %s",
+                        self.formatted_class_name,
+                        self.account,
+                        name,
+                    )
 
         if not self._connection:
             if self._manifest:
