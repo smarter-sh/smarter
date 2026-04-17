@@ -4,10 +4,10 @@ from smarter.apps.account.models import (
     Account,
     AccountContact,
     PaymentMethod,
-    Secret,
     User,
     UserProfile,
 )
+from smarter.apps.secret.models import Secret
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.serializers import MetaDataModelSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer

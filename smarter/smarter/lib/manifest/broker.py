@@ -21,7 +21,6 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.account.models import (
     Account,
     MetaDataWithOwnershipModel,
-    Secret,
     User,
     UserProfile,
 )
@@ -30,6 +29,7 @@ from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
     smarter_cached_objects,
 )
+from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue

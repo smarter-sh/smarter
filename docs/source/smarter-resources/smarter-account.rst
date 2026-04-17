@@ -10,7 +10,7 @@ It enables organizations to create and manage accounts, users, and secure storag
 - :doc:`Smarter Account <account/account>`: An organizational unit for grouping users and resources. An account can represent
     a company, department, team, or project.
 - :doc:`Smarter User <account/user>`: A Django user that belongs to a Smarter Account.
-- :doc:`Smarter Secret <account/secret>`: A Django ORM-based secure storage for sensitive information like SQL connection strings and API keys.
+- :doc:`Smarter Secret <secret/secret>`: A Django ORM-based secure storage for sensitive information like SQL connection strings and API keys.
     Secrets are used by other Smarter resources to provide authentication credentials for remote services.
 
 Usage
@@ -23,7 +23,7 @@ Usage
 
 .. seealso::
 
-  - :doc:`Example Manifests <account/sam/example-manifests>`: An example manifest for creating a Smarter Secret using SAM.
+  - :doc:`Example Manifests <secret/sam/example-manifests>`: An example manifest for creating a Smarter Secret using SAM.
 
 Technical Reference
 -------------------
@@ -33,7 +33,7 @@ Technical Reference
 
    account/account
    account/user
-   account/secret
+   secret/secret
    account/api
    account/models
    account/sam

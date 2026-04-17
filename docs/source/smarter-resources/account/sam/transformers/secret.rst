@@ -1,7 +1,7 @@
 Secret
 =======
 
-.. automodule:: smarter.apps.account.manifest.transformers.secret
+.. automodule:: smarter.apps.secret.manifest.transformers.secret
     :members:
     :undoc-members:
     :show-inheritance:

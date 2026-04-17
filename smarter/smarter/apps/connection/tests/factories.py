@@ -2,7 +2,8 @@
 
 from datetime import datetime, timedelta
 
-from smarter.apps.account.models import Secret, UserProfile
+from smarter.apps.account.models import UserProfile
+from smarter.apps.secret.models import Secret
 
 
 def secret_factory(user_profile: UserProfile, name: str, value: str) -> Secret:

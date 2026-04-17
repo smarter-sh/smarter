@@ -8,7 +8,7 @@ into lightweight structured data models that can be used for initializing SAM Py
 Usage:
   .. code-block:: python
 
-    from smarter.apps.account.manifest.models.secret.model import (
+    from smarter.apps.secret.manifest.models.secret.model import (
         SAMSecret,
         SAMSecretMetadata,
         SAMSecretSpec,

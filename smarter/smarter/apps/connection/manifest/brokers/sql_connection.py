@@ -5,7 +5,6 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
-from smarter.apps.account.models import Secret
 from smarter.apps.connection.manifest.enum import (
     SAMSqlConnectionSpecConnectionKeys,
 )
@@ -31,6 +30,7 @@ from smarter.apps.connection.manifest.models.sql_connection.spec import (
 )
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.connection.serializers import SqlConnectionSerializer
+from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 from smarter.lib.django import waffle

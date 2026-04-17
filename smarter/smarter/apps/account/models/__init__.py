@@ -28,7 +28,6 @@ from .metadata_with_ownership import (
     SmarterQuerySetWithPermissions,
 )
 from .payment_method import PaymentMethod
-from .secret import Secret
 from .user_profile import UserProfile
 
 __all__ = [
@@ -50,7 +49,6 @@ __all__ = [
     "MetaDataWithOwnershipModel",
     "MetaDataWithOwnershipModelManager",
     "SmarterQuerySetWithPermissions",
-    "Secret",
     "User",
     "welcome_email_context",
 ]

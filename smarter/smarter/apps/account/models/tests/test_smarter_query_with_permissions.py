@@ -6,7 +6,6 @@ import logging
 
 from django.test import Client
 
-from smarter.apps.account.models import Secret, SmarterQuerySetWithPermissions
 from smarter.apps.account.tests.factories import (
     admin_user_factory,
     factory_account_teardown,
@@ -14,6 +13,7 @@ from smarter.apps.account.tests.factories import (
 )
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.secret.models import Secret, SmarterQuerySetWithPermissions
 from smarter.common.helpers.console_helpers import formatted_text
 
 logger = logging.getLogger(__name__)

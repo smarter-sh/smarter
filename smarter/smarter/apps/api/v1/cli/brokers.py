@@ -20,7 +20,6 @@ from typing import Dict, Optional, Type
 from urllib.parse import urlparse
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
-from smarter.apps.account.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
@@ -40,6 +39,7 @@ from smarter.apps.prompt.manifest.brokers.chat_plugin_usage import (
 )
 from smarter.apps.prompt.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
+from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.vectorstore.manifest.brokers.vectorstore import SAMVectorstoreBroker
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.django import waffle

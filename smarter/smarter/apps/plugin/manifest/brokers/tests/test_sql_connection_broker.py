@@ -8,7 +8,6 @@ from django.http import HttpRequest
 from pydantic_core import ValidationError
 from taggit.managers import TaggableManager, _TaggableManager
 
-from smarter.apps.account.models import Secret
 from smarter.apps.connection.manifest.brokers.sql_connection import (
     SAMSqlConnectionBroker,
 )
@@ -22,6 +21,7 @@ from smarter.apps.connection.manifest.models.sql_connection.spec import (
     SAMSqlConnectionSpec,
 )
 from smarter.apps.connection.models import SqlConnection
+from smarter.apps.secret.models import Secret
 from smarter.lib import json
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,

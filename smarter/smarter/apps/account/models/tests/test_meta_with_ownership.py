@@ -4,8 +4,8 @@
 # our stuff
 import logging
 
-from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.secret.models import Secret
 from smarter.common.helpers.console_helpers import formatted_text
 
 logger = logging.getLogger(__name__)

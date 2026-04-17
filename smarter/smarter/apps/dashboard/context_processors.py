@@ -69,7 +69,6 @@ from django.urls import reverse
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
     Account,
-    Secret,
     UserProfile,
     get_resolved_user,
 )
@@ -82,6 +81,7 @@ from smarter.apps.plugin.models import (
     PluginMeta,
 )
 from smarter.apps.provider.models import Provider
+from smarter.apps.secret.models import Secret
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue

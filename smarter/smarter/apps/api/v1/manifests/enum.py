@@ -5,9 +5,6 @@ import logging
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
 )
-from smarter.apps.account.manifest.models.secret.const import (
-    MANIFEST_KIND as SECRET_MANIFEST_KIND,
-)
 from smarter.apps.account.manifest.models.user.const import (
     MANIFEST_KIND as USER_MANIFEST_KIND,
 )
@@ -43,6 +40,9 @@ from smarter.apps.prompt.manifest.models.chat_tool_call.const import (
 )
 from smarter.apps.provider.manifest.models.provider.const import (
     MANIFEST_KIND as PROVIDER_MANIFEST_KIND,
+)
+from smarter.apps.secret.manifest.models.secret.const import (
+    MANIFEST_KIND as SECRET_MANIFEST_KIND,
 )
 from smarter.apps.vectorstore.manifest.models.vectorstore.const import (
     MANIFEST_KIND as VECTORSTORE_MANIFEST_KIND,

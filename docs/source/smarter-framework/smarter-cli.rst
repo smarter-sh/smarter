@@ -105,7 +105,7 @@ Kind
 - `SqlConnection <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
 - `ApiConnection <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
 - `User <../smarter/smarter/apps/account/api/v1/manifests/>`__
-- `Secret <../smarter/smarter/apps/account/api/v1/manifests/>`__
+- `Secret <../smarter/smarter/apps/secret/api/v1/manifests/>`__
 
 Broker Model
 ~~~~~~~~~~~~
