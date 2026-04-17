@@ -586,9 +586,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         name = str(self.camel_to_snake(self.name))  # type: ignore
         if not name:
-            raise SmarterValueError(
-                f"Connection name is required to retrieve or create ApiConnection for {self.user_profile}"
-            )
+            return None
         try:
             logger.debug(
                 "%s.connection() attempting ApiConnection with account %s and name %s",

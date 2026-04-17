@@ -668,9 +668,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         name = self.camel_to_snake(self.name)  # type: ignore
         if not name:
-            raise SmarterValueError(
-                f"{self.formatted_class_name} connection name is required to retrieve or create connection."
-            )
+            return None
 
         try:
             self._connection = SqlConnection.objects.get(user_profile=self.user_profile, name=name)
