@@ -38,6 +38,8 @@ from smarter.apps.prompt.api.v1 import urls as prompt_urls
 from smarter.apps.prompt.const import namespace as prompt_namespace
 from smarter.apps.provider.api.v1 import urls as provider_urls
 from smarter.apps.provider.const import namespace as provider_namespace
+from smarter.apps.secret.api.v1 import urls as secret_urls
+from smarter.apps.secret.const import namespace as secret_namespace
 from smarter.apps.vectorstore.api.v1 import urls as vectorstore_urls
 
 from .cli.const import namespace as cli_namespace
@@ -60,5 +62,6 @@ urlpatterns = [
     path("prompts/", include(prompt_urls, namespace=prompt_namespace)),
     path("providers/", include(provider_urls, namespace=provider_namespace)),
     path("tests/", include(tests_urls, namespace="tests")),
+    path("secrets/", include(secret_urls, namespace=secret_namespace)),
     path("vectorstores/", include(vectorstore_urls, namespace="vectorstore")),
 ]

@@ -156,6 +156,9 @@ class SmarterWaffleSwitches:
     CHATBOT_HELPER_LOGGING = "log_chatbothelper"
     """Enables logging within the smarter.apps.chatbot.model.ChatBotHelper class."""
 
+    SECRET_LOGGING = "log_secret"
+    """Enables logging throughout the smarter.app.secret namespace."""
+
     VECTORSTORE_LOGGING = "log_vectorstore"
     """Enables logging throughout the smarter.app.vectorstore namespace."""
 
@@ -275,6 +278,11 @@ class SmarterWaffleSwitches:
         CONNECTION_LOGGING: SmarterWaffleSwitch(
             name=CONNECTION_LOGGING,
             comment="Enables logging throughout the smarter.app.connection namespace.",
+            default=True,
+        ),
+        SECRET_LOGGING: SmarterWaffleSwitch(
+            name=SECRET_LOGGING,
+            comment="Enables logging throughout the smarter.app.secret namespace.",
             default=True,
         ),
         VECTORSTORE_LOGGING: SmarterWaffleSwitch(
