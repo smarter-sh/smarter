@@ -15,6 +15,7 @@ from django.http import JsonResponse
 from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 from django.views.static import serve
+from social_django import urls as social_django_urls
 from waffle import get_waffle_switch_model
 
 from smarter.apps.account import urls as account_urls
@@ -214,7 +215,7 @@ urlpatterns = [
     # -----------------------------------
     # routes for 3rd party apps
     # -----------------------------------
-    path("social-auth/", include("social_django.urls", namespace="social_auth")),
+    path("social-auth/", include(social_django_urls, namespace="social_auth")),
 ]
 
 # mcdaniel 2026-01-20: converting static() to list(static(...)) to fix
