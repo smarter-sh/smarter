@@ -5,7 +5,6 @@ import logging
 from typing import Any, Optional, Type
 
 from django.core import serializers
-from django.core.exceptions import MultipleObjectsReturned
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
@@ -166,7 +165,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.formatted_class_name,
                     self._orm_meta_instance,
                 )
-                self._plugin_meta = self._orm_meta_instance
+                self._plugin_meta = self._orm_meta_instance  # type: ignore
                 logger.debug(
                     "%s.orm_instance() - set plugin_meta from self._orm_meta_instance %s",
                     self.formatted_class_name,
@@ -412,46 +411,25 @@ class SAMPluginBaseBroker(AbstractBroker):
         if self.orm_meta_instance:
             self._plugin_meta = self.orm_meta_instance  # type: ignore
             return self._plugin_meta
-        try:
-            self._plugin_meta = PluginMeta.objects.get(
-                user_profile=self.user_profile,
-                name=self.name,
-            )
+        self._plugin_meta = PluginMeta.objects.filter(name=self.name).with_read_permission_for(self.user).first()  # type: ignore
+        if self._plugin_meta:
             logger.debug(
-                "%s.plugin_meta() - retrieved %s for name=%s, user_profile=%s",
+                "%s.plugin_meta() %s found for %s",
+                self.formatted_class_name,
+                self._plugin_meta.name,
+                self._plugin_meta.user_profile,
+            )
+            return self._plugin_meta
+
+        if self._manifest:
+            logger.warning(
+                "%s.plugin_meta() - created ORM instance from manifest for name=%s, user_profile=%s. This should be done elsewhere.",
                 logger_prefix,
-                self._plugin_meta.__class__.__name__,
                 self.name,
                 self.user_profile,
             )
-        except PluginMeta.DoesNotExist:
-            try:
-                self._plugin_meta = PluginMeta.objects.get(
-                    user_profile__account=self.account,
-                    name=self.name,
-                )
-            except PluginMeta.DoesNotExist:
-                try:
-                    self._plugin_meta = PluginMeta.objects.get(
-                        user_profile__account=smarter_cached_objects.smarter_account,
-                        name=self.name,
-                    )
-                except PluginMeta.DoesNotExist:
-                    logger.debug(
-                        "%s.plugin_meta() - PluginMeta does not exist for name=%s and user_profile=%s",
-                        logger_prefix,
-                        self.name,
-                        self.user_profile,
-                    )
-            if self._manifest:
-                logger.warning(
-                    "%s.plugin_meta() - created ORM instance from manifest for name=%s, user_profile=%s. This should be done elsewhere.",
-                    logger_prefix,
-                    self.name,
-                    self.user_profile,
-                )
-                self._plugin_meta = PluginMeta(**self.manifest_to_django_orm())
-                self._plugin_meta.save()
+            self._plugin_meta = PluginMeta(**self.manifest_to_django_orm())
+            self._plugin_meta.save()
         return self._plugin_meta
 
     @plugin_meta.setter
