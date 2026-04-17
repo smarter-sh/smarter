@@ -6,9 +6,9 @@ Serializer classes for the Provider app.
 from smarter.apps.account.serializers import (
     AccountMiniSerializer,
     MetaDataWithOwnershipModelSerializer,
-    SecretSerializer,
     UserMiniSerializer,
 )
+from smarter.apps.secret.serializers import SecretSerializer
 from smarter.common.exceptions import SmarterException
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 

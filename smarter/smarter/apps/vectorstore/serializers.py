@@ -7,13 +7,13 @@ from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.serializers import (
     AccountMiniSerializer,
     MetaDataWithOwnershipModelSerializer,
-    SecretSerializer,
     UserMiniSerializer,
 )
 from smarter.apps.provider.serializers import (
     ProviderModelSerializer,
     ProviderSerializer,
 )
+from smarter.apps.secret.serializers import SecretSerializer
 
 from .models import VectorestoreMeta
 

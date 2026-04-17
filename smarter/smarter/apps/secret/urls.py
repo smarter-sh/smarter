@@ -2,6 +2,7 @@
 
 from django.urls import include, path
 
+from smarter.apps.secret.api import urls as api_urls
 from smarter.apps.secret.views.dashboard import urls as dashboard_urls
 
 from .const import namespace
@@ -29,4 +30,5 @@ app_name = namespace
 
 urlpatterns = [
     path("", include(dashboard_urls)),
+    path("api/", include(api_urls)),
 ]
