@@ -8,7 +8,10 @@ from typing import TYPE_CHECKING, Optional, Type
 from django.core.exceptions import MultipleObjectsReturned
 
 from smarter.apps.account.models import Secret
-from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.account.utils import (
+    get_cached_admin_user_for_account,
+    smarter_cached_objects,
+)
 from smarter.apps.plugin.manifest.enum import SAMApiConnectionSpecConnectionKeys
 from smarter.apps.plugin.manifest.models.api_connection.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.api_connection.enum import AuthMethods
@@ -613,12 +616,23 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
 
         except ApiConnection.DoesNotExist:
-            logger.debug(
-                "%s.connection() no ApiConnection found for account %s and name %s",
-                self.formatted_class_name,
-                self.account,
-                name,
-            )
+            try:
+                if self.user_profile:
+                    self._connection = ApiConnection.objects.get(
+                        user_profile__account=self.user_profile.account, name=name
+                    )
+            except ApiConnection.DoesNotExist:
+                try:
+                    self._connection = ApiConnection.objects.get(
+                        user_profile__account=smarter_cached_objects.smarter_account, name=name
+                    )
+                except ApiConnection.DoesNotExist:
+                    logger.debug(
+                        "%s.connection() no ApiConnection found for account %s and name %s",
+                        self.formatted_class_name,
+                        self.account,
+                        name,
+                    )
 
         if not self._connection:
             if self._manifest:
