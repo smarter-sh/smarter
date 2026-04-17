@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.222](https://github.com/smarter-sh/smarter/compare/v0.13.221...v0.13.222) (2026-04-17)
+
+### Bug Fixes
+
+* monkey patch def secret() until v0.14 is released ([e63651a](https://github.com/smarter-sh/smarter/commit/e63651a378ec9890b9bef11199318992b5dcf943))
+
 ## [0.13.221](https://github.com/smarter-sh/smarter/compare/v0.13.220...v0.13.221) (2026-04-17)
 
 ### Bug Fixes
