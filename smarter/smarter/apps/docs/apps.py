@@ -4,12 +4,14 @@ from logging import getLogger
 
 from django.apps import AppConfig
 
+from smarter.common.mixins import SmarterHelperMixin
+
 from .const import namespace as app_name
 
 logger = getLogger(__name__)
 
 
-class ApiConfig(AppConfig):
+class ApiConfig(AppConfig, SmarterHelperMixin):
     """AdminConfig class. This class is used to configure the Smarter docs app."""
 
     default_auto_field = "django.db.models.BigAutoField"
@@ -19,4 +21,4 @@ class ApiConfig(AppConfig):
     def ready(self):
         """Import signals."""
 
-        logger.debug("Docs app ready: signals and receivers imported")
+        logger.debug("%s app is %s", app_name.capitalize(), self.formatted_state_ready)

@@ -4,12 +4,14 @@ import logging
 
 from django.apps import AppConfig
 
+from smarter.common.mixins import SmarterHelperMixin
+
 from .const import namespace as app_name
 
 logger = logging.getLogger(__name__)
 
 
-class WebPlatformConfig(AppConfig):
+class WebPlatformConfig(AppConfig, SmarterHelperMixin):
     """Django app configuration for the dashboard app."""
 
     default_auto_field = "django.db.models.BigAutoField"
@@ -22,4 +24,4 @@ class WebPlatformConfig(AppConfig):
         from . import receivers  # noqa: F401
         from . import signals  # noqa: F401
 
-        logger.debug("Dashboard app ready: signals and receivers imported")
+        logger.debug("%s app is %s", app_name.capitalize(), self.formatted_state_ready)

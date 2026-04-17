@@ -4,14 +4,18 @@ import logging
 
 from django.apps import AppConfig
 
+from smarter.common.mixins import SmarterHelperMixin
+
+from .const import namespace as app_name
+
 logger = logging.getLogger(__name__)
 
 
-class ProviderConfig(AppConfig):
+class ProviderConfig(AppConfig, SmarterHelperMixin):
     """Django Config for the Provider app."""
 
     default_auto_field = "django.db.models.BigAutoField"
-    name = "smarter.apps.provider"
+    name = f"smarter.apps.{app_name}"
     verbose_name = "Smarter Provider"
 
     # pylint: disable=C0415,W0611
@@ -20,4 +24,4 @@ class ProviderConfig(AppConfig):
         from . import receivers  # noqa
         from . import signals  # noqa
 
-        logger.debug("Provider app ready: signals and receivers imported")
+        logger.debug("%s app is %s", app_name.capitalize(), self.formatted_state_ready)
