@@ -360,7 +360,7 @@ class ProviderBaseClass(TestAccountMixin):
 
         # test url api endpoint for chat history
         chat = ChatHistory.objects.order_by("-id").first()
-        url = reverse("prompt_workbench:api:v1:chathistory", kwargs={"pk": chat.id if chat else 1})
+        url = reverse("prompt:api:v1:chathistory", kwargs={"pk": chat.id if chat else 1})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)

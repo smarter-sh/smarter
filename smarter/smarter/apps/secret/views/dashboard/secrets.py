@@ -10,7 +10,7 @@ from django import http
 from django.core.handlers.wsgi import WSGIRequest
 
 # our stuff
-from smarter.apps.account.admin import SecretAdminForm as SecretForm
+from smarter.apps.secret.admin import SecretAdminForm as SecretForm
 from smarter.apps.secret.models import Secret
 from smarter.lib import json
 from smarter.lib.django import waffle

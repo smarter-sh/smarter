@@ -3,6 +3,8 @@
 from django.urls import include, path
 from django.views.generic.base import RedirectView
 
+from smarter.apps.account.api import urls as account_api_urls
+from smarter.apps.account.views.dashboard import urls as account_dashboard_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 
@@ -66,12 +68,12 @@ urlpatterns = [
         RedirectView.as_view(url="/dashboard/account/dashboard/", permanent=False),
         name="dashboard_account_dashboard",
     ),
-    path("api/", include("smarter.apps.account.api.urls", namespace=namespace)),
+    path("api/", include(account_api_urls, namespace=namespace)),
     path("api-keys/", APIKeyListView.as_view(), name=AccountNamedUrls.API_KEYS_LIST),
     path("login/", LoginView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGIN),
     path("logout/", LogoutView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGOUT),
     path("inactive/", AccountInactiveView.as_view(), name=AccountNamedUrls.ACCOUNT_INACTIVE),
-    path("dashboard/", include("smarter.apps.account.views.dashboard.urls")),
+    path("dashboard/", include(account_dashboard_urls)),
     # account lifecycle
     path("register/", AccountRegisterView.as_view(), name=AccountNamedUrls.ACCOUNT_REGISTER),
     path("activation/", AccountActivationEmailView.as_view(), name=AccountNamedUrls.ACCOUNT_ACTIVATION),
