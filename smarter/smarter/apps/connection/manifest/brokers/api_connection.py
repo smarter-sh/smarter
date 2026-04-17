@@ -425,7 +425,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         api_key_name = str(camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value))
         if api_key_name:
             try:
-                secret = Secret.objects.get(name=api_key_name, user_profile=self.user_profile)
+                secret = (
+                    Secret.objects.filter(name=api_key_name).with_read_permission_for(self.user_profile.user).first()
+                )
+                if not secret:
+                    raise Secret.DoesNotExist()
                 config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = secret.id if secret else None  # type: ignore[assignment]
             except Secret.DoesNotExist:
                 logger.warning(
@@ -439,7 +443,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         proxy_password_name = str(camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value))
         if proxy_password_name:
             try:
-                secret = Secret.objects.get(name=proxy_password_name, user_profile=self.user_profile)
+                secret = (
+                    Secret.objects.filter(name=proxy_password_name)
+                    .with_read_permission_for(self.user_profile.user)
+                    .first()
+                )
+                if not secret:
+                    raise Secret.DoesNotExist()
                 config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = secret.id if secret else None  # type: ignore[assignment]
             except Secret.DoesNotExist:
                 logger.warning(
@@ -486,8 +496,12 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 if self.manifest and self.manifest.spec
                 else self.connection.api_key.name if self.connection and self.connection.api_key else None
             )
-
-            self._api_key_secret = Secret.objects.get(name=name, user_profile=self.user_profile)
+            if self.user_profile:
+                self._api_key_secret = (
+                    Secret.objects.filter(name=name).with_read_permission_for(self.user_profile.user).first()
+                )
+            if not self._api_key_secret:
+                raise Secret.DoesNotExist()
             return self._api_key_secret
         except Secret.DoesNotExist:
             logger.warning(
@@ -535,7 +549,12 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     self.connection.proxy_password.name if self.connection and self.connection.proxy_password else None
                 )
             )
-            self._proxy_password_secret = Secret.objects.get(name=name, user_profile=self.user_profile)
+            if self.user_profile:
+                self._proxy_password_secret = (
+                    Secret.objects.filter(name=name).with_read_permission_for(self.user_profile.user).first()
+                )
+            if not self._proxy_password_secret:
+                raise Secret.DoesNotExist()
             return self._proxy_password_secret
         except Secret.DoesNotExist:
             logger.warning(

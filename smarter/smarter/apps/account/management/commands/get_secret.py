@@ -1,5 +1,7 @@
 """This module is used to update the encrypted value of a Secret."""
 
+from venv import logger
+
 from smarter.apps.secret.models import Secret, User, UserProfile
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -46,7 +48,10 @@ class Command(SmarterCommand):
             return
 
         try:
-            secret = Secret.objects.get(name=name, user_profile=user_profile)
+            secret = Secret.objects.filter(name=name).with_read_permission_for(user_profile.user).first()
+            if not secret:
+                raise Secret.DoesNotExist()
+            logger.info(f"Retrieved Secret '{name}' for '{secret.user_profile}'.")
             decrypted_value = secret.get_secret(update_last_accessed=False)
             self.stdout.write(self.style.SUCCESS(f"Secret '{name}' for user '{username}': {decrypted_value}"))
         except Secret.DoesNotExist:

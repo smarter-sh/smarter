@@ -36,7 +36,7 @@ class Command(SmarterCommand):
         parser.add_argument("--name", type=str, help="The name (ie subdomain) of the chatbot")
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Associate an API key with a chatbot based on the provided account number, API key ID, and chatbot name."""
         self.handle_begin()
 
         account_number = options["account_number"]

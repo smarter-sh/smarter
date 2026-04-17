@@ -549,10 +549,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 if self.manifest
                 else self.connection.password.name if self.connection else None
             )
-            self._password_secret = Secret.objects.get(
-                user_profile=self.user_profile,
-                name=name,
-            )
+            self._password_secret = Secret.objects.filter(name=name).with_read_permission_for(self.user).first()
+            if not self._password_secret:
+                raise Secret.DoesNotExist()
             return self._password_secret
         except Secret.DoesNotExist:
             logger.warning(

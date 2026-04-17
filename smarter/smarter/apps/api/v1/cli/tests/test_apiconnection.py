@@ -8,7 +8,6 @@ from urllib.parse import urlencode
 import yaml
 from django.urls import reverse
 
-from smarter.apps.account.tests.factories import secret_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.connection.models import ApiConnection
@@ -17,6 +16,7 @@ from smarter.apps.plugin.manifest.enum import (
     SAMApiConnectionSpecKeys,
 )
 from smarter.apps.secret.models import Secret
+from smarter.apps.secret.tests.factories import secret_factory
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -374,7 +374,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
 
         # verify the apiconnection was deleted
         try:
-            ApiConnection.objects.get(name=self.name)
+            ApiConnection.objects.get(name=self.name, user_profile=self.user_profile)
             self.fail("ApiConnection was not deleted")
         except ApiConnection.DoesNotExist:
             pass

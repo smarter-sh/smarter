@@ -52,7 +52,7 @@ class Command(SmarterCommand):
 
         if username:
             user_profile = UserProfile.objects.get(user__username=username)
-            email = user_profile.cached_user.email
+            email = user_profile.user.email
 
         account_contact, created = AccountContact.objects.get_or_create(
             account=account,

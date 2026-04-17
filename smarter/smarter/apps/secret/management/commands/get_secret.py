@@ -46,7 +46,9 @@ class Command(SmarterCommand):
             return
 
         try:
-            secret = Secret.objects.get(name=name, user_profile=user_profile)
+            secret = Secret.objects.filter(name=name).with_read_permission_for(user).first()
+            if not secret:
+                raise Secret.DoesNotExist()
             decrypted_value = secret.get_secret(update_last_accessed=False)
             self.stdout.write(self.style.SUCCESS(f"Secret '{name}' for user '{username}': {decrypted_value}"))
         except Secret.DoesNotExist:
