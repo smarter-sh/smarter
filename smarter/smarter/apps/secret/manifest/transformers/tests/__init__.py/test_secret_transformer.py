@@ -57,7 +57,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         self.assertEqual(secret_transformer.kind, MANIFEST_KIND)
         self.assertEqual(secret_transformer.kind, manifest.kind)
 
-        django_model_dict = secret_transformer.secret_django_model
+        django_model_dict = secret_transformer.manifest_to_django_orm()
         self.assertEqual(secret_transformer.value, "test-password", "Value should match the manifest value")
         self.assertNotEqual(
             secret_transformer.encrypted_value,
@@ -76,6 +76,8 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         self.assertIsInstance(secret_transformer.data, dict, "Secret manager data should be a dictionary")
         self.assertIsInstance(secret_transformer.yaml, str, "Secret manager yaml should exist and be a string")
         try:
+            if not isinstance(secret_transformer.yaml, str):
+                raise ValueError("YAML should be a string")
             yaml.safe_load(secret_transformer.yaml)
         except yaml.YAMLError as exc:
             self.fail(f"secret_transformer.yaml generated invalid YAML:\n{yaml}\n{exc}")

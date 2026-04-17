@@ -4,12 +4,14 @@ import logging
 
 from django.apps import AppConfig
 
+from smarter.common.mixins import SmarterHelperMixin
+
 from .const import namespace as app_name
 
 logger = logging.getLogger(__name__)
 
 
-class ConnectionConfig(AppConfig):
+class ConnectionConfig(AppConfig, SmarterHelperMixin):
     """Connection app configuration."""
 
     default_auto_field = "django.db.models.BigAutoField"
@@ -22,4 +24,4 @@ class ConnectionConfig(AppConfig):
         from . import receivers  # noqa
         from . import signals  # noqa
 
-        logger.debug("Connection app ready: signals and receivers imported")
+        logger.debug("%s app is %s", app_name.capitalize(), self.formatted_state_ready)
