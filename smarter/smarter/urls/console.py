@@ -57,6 +57,8 @@ from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.apps.provider import urls as provider_urls
 from smarter.apps.provider.const import namespace as provider_namespace
+from smarter.apps.secret import urls as secret_urls
+from smarter.apps.secret.const import namespace as secret_namespace
 from smarter.apps.vectorstore import urls as vectorstore_urls
 from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
@@ -166,6 +168,7 @@ urlpatterns = [
     path("session-test/", session_test_view, name="session_test"),
     path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
     path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
+    path("secret/", include(secret_urls, namespace=secret_namespace)),
     # -----------------------------------
     # Chatbots.
     # mcdaniel: 2026-01-31: are these even reachable anymore?

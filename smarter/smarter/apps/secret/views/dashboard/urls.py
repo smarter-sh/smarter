@@ -20,13 +20,13 @@ class DashboardNamedUrls:
 
     """
 
-    SECRETS = "dashboard_account_secrets"
-    SECRET = "dashboard_account_secret"
-    SECRET_NEW = "dashboard_account_secret_new"
+    SECRETS = "dashboard_secrets"
+    SECRET = "dashboard_secret"
+    SECRET_NEW = "dashboard_secret_new"
 
 
 urlpatterns = [
-    path("secrets/", SecretsView.as_view(), name=DashboardNamedUrls.SECRETS),
-    path("secrets/new/", SecretView.as_view(), name=DashboardNamedUrls.SECRET_NEW),
-    path("secrets/<int:secret_id>/", SecretView.as_view(), name=DashboardNamedUrls.SECRET),
+    path("", SecretsView.as_view(), name=DashboardNamedUrls.SECRETS),
+    path("new/", SecretView.as_view(), name=DashboardNamedUrls.SECRET_NEW),
+    path("<int:secret_id>/", SecretView.as_view(), name=DashboardNamedUrls.SECRET),
 ]
