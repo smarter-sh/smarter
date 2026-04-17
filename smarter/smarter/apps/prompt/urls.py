@@ -9,6 +9,7 @@ how we got here:
 
 from django.urls import include, path
 
+from smarter.apps.prompt.api import urls as prompt_api_urls
 from smarter.common.utils import camel_case_object_name
 
 from .api.const import namespace as api_namespace
@@ -68,7 +69,7 @@ class PromptReverseViews:
 
 urlpatterns = [
     path("", PromptListView.as_view(), name="listview"),
-    path("api/", include("smarter.apps.prompt.api.urls", namespace=api_namespace)),
+    path("api/", include(prompt_api_urls, namespace=api_namespace)),
     path("chatbots/<str:hashed_id>/", PromptLandingView.as_view(), name=PromptReverseViews.prompt_landing_by_hashed_id),
     path(
         "chatbots/<str:hashed_id>/manifest/",
