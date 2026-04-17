@@ -5,9 +5,7 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
-from smarter.apps.connection.manifest.enum import (
-    SAMSqlConnectionSpecConnectionKeys,
-)
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.connection.manifest.models.common.connection.metadata import (
     SAMConnectionCommonMetadata,
 )
@@ -30,8 +28,10 @@ from smarter.apps.connection.manifest.models.sql_connection.spec import (
 )
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.connection.serializers import SqlConnectionSerializer
+from smarter.apps.plugin.manifest.enum import (
+    SAMSqlConnectionSpecConnectionKeys,
+)
 from smarter.apps.secret.models import Secret
-from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -680,12 +680,23 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 self.user_profile or "(user_profile is missing)",
             )
         except SqlConnection.DoesNotExist:
-            logger.debug(
-                "%s SqlConnection %s not found for %s",
-                self.formatted_class_name,
-                self.name or "(name is missing)",
-                self.user_profile or "(user_profile is missing)",
-            )
+            try:
+                if self.user_profile:
+                    self._connection = SqlConnection.objects.get(
+                        user_profile__account=self.user_profile.account, name=name
+                    )
+            except SqlConnection.DoesNotExist:
+                try:
+                    self._connection = SqlConnection.objects.get(
+                        name=name, account=smarter_cached_objects.smarter_account
+                    )
+                except SqlConnection.DoesNotExist:
+                    logger.debug(
+                        "%s SqlConnection %s not found for %s",
+                        self.formatted_class_name,
+                        self.name or "(name is missing)",
+                        self.user_profile or "(user_profile is missing)",
+                    )
 
         if not self._connection:
             logger.warning(

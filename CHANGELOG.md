@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.13.221](https://github.com/smarter-sh/smarter/compare/v0.13.220...v0.13.221) (2026-04-17)
+
+### Bug Fixes
+
+- temporary monkey patch until v0.14 is released ([ba51ec6](https://github.com/smarter-sh/smarter/commit/ba51ec6b234cc05c41359b1790feed0468ea63b9))
+
+## [0.13.220](https://github.com/smarter-sh/smarter/compare/v0.13.219...v0.13.220) (2026-04-16)
+
+### Bug Fixes
+
+- switch to redis cache ([0261451](https://github.com/smarter-sh/smarter/commit/0261451a096b6e64208db46de99a338f109c9354))
+
 ## [0.13.219](https://github.com/smarter-sh/smarter/compare/v0.13.218...v0.13.219) (2026-04-16)
 
 ### Bug Fixes
