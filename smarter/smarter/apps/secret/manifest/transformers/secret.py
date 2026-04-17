@@ -12,6 +12,10 @@ from rest_framework import serializers
 
 from smarter.apps.account.manifest.enum import SAMSecretSpecKeys
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.utils import (
+    get_user_profiles_for_account,
+    smarter_cached_objects,
+)
 from smarter.apps.secret.manifest.models.secret.const import MANIFEST_KIND
 from smarter.apps.secret.manifest.models.secret.metadata import SAMSecretMetadata
 
@@ -415,24 +419,14 @@ class SecretTransformer(SmarterHelperMixin):
             logger.warning("%s.secret() User profile is not set.", self.formatted_class_name)
             return None
 
-        try:
-            self._secret = Secret.get_cached_object(name=self.name, user_profile=self.user_profile)
+        self._secret = Secret.objects.filter(name=self.name).with_read_permission_for(self.user_profile.user).first()
+        if self._secret:
             logger.debug(
                 "%s.secret() initialized Django ORM Secret %s for user profile %s.",
                 self.formatted_class_name,
-                self.name,
-                self.user_profile,
+                self._secret.name,
+                self._secret.user_profile,
             )
-            return self._secret
-        except Secret.DoesNotExist:
-            logger.warning(
-                "%s.secret() Django ORM Secret with name %s does not exist for user profile %s.",
-                self.formatted_class_name,
-                self.name,
-                self.user_profile,
-            )
-            self._secret = None
-
         return self._secret
 
     @secret.setter
