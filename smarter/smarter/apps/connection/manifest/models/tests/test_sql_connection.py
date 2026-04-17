@@ -14,7 +14,6 @@ from typing import Optional
 
 from pydantic_core import ValidationError as PydanticValidationError
 
-from smarter.apps.account.models import Secret
 from smarter.apps.connection.const import DATA_PATH
 from smarter.apps.connection.manifest.models.common.connection.metadata import (
     SAMConnectionCommonMetadata,
@@ -32,6 +31,7 @@ from smarter.apps.connection.manifest.models.sql_connection.spec import (
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.connection.tests.base_classes import TestConnectionBase
 from smarter.apps.connection.tests.factories import secret_factory
+from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake, camel_to_snake_dict

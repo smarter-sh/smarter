@@ -12,8 +12,6 @@ from typing import Optional
 
 from pydantic_core import ValidationError as PydanticValidationError
 
-from smarter.apps.account.manifest.brokers.secret import SAMSecretBroker
-from smarter.apps.account.manifest.models.secret.model import SAMSecret
 from smarter.apps.connection.manifest.brokers.sql_connection import (
     SAMSqlConnectionBroker,
 )
@@ -36,6 +34,8 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import SAMSqlPluginSpec
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.sql import SqlPlugin
 from smarter.apps.plugin.tests.base_classes import ManifestTestsMixin, TestPluginBase
+from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
+from smarter.apps.secret.manifest.models.secret.model import SAMSecret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.manifest.exceptions import SAMValidationError

@@ -9,7 +9,6 @@ from typing import Optional
 from smarter.apps.account.models import (
     Account,
     PaymentMethod,
-    Secret,
     User,
     UserProfile,
 )
@@ -221,44 +220,4 @@ def payment_method_factory_teardown(payment_method: PaymentMethod):
         pass
     except Exception as e:
         logger.error("%s.payment_method_factory_teardown() Error deleting payment method: %s", HERE, e)
-        raise
-
-
-def secret_factory(
-    user_profile: UserProfile, name: str, description: str, value: str, expiration: Optional[datetime] = None
-) -> Secret:
-    """
-    Create a Secret object for testing.
-
-    Args:
-        user_profile (UserProfile): The UserProfile associated with the secret.
-        name (str): The name of the secret.
-        description (str): A description of the secret.
-        value (str): The value of the secret.
-
-    Returns:
-        Secret: The created Secret object.
-    """
-    encrypted_value = Secret.encrypt(value)
-    secret = Secret.objects.create(
-        user_profile=user_profile,
-        name=camel_to_snake(name),
-        description=description,
-        encrypted_value=encrypted_value,
-        expires_at=expiration,
-    )
-    logger.debug("%s.secret_factory() Created secret: %s", HERE, secret)
-    return secret
-
-
-def factory_secret_teardown(secret: Secret):
-    try:
-        if secret:
-            lbl = str(secret)
-            secret.delete()
-            logger.debug("%s.factory_secret_teardown() Deleted secret: %s", HERE, lbl)
-    except Secret.DoesNotExist:
-        pass
-    except Exception as e:
-        logger.error("%s.factory_secret_teardown() Error deleting secret: %s", HERE, e)
         raise

@@ -15,16 +15,14 @@ from django.db import models
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
     MetaDataWithOwnershipModelManager,
-    Secret,
     User,
     UserProfile,
 )
 from smarter.apps.account.utils import (
     get_cached_account_for_user,
-    get_cached_admin_user_for_account,
     get_cached_smarter_admin_user_profile,
-    smarter_cached_objects,
 )
+from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,

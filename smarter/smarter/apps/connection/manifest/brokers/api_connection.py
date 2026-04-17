@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Optional, Type
 
 from django.core.exceptions import MultipleObjectsReturned
 
-from smarter.apps.account.models import Secret
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.connection.manifest.enum import SAMApiConnectionSpecConnectionKeys
 from smarter.apps.connection.manifest.models.api_connection.const import MANIFEST_KIND
@@ -29,6 +28,7 @@ from smarter.apps.connection.manifest.models.common.connection.status import (
 )
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.connection.serializers import ApiConnectionSerializer
+from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json

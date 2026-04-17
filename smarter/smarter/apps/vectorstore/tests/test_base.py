@@ -4,9 +4,9 @@
 # python stuff
 import logging
 
-from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider, ProviderModel
+from smarter.apps.secret.models import Secret
 from smarter.apps.vectorstore.models import (
     VectorestoreMeta,
     VectorstoreBackendKind,

@@ -13,7 +13,6 @@ from typing import Optional
 from django.core.exceptions import ValidationError as DjangoValidationError
 from pydantic_core import ValidationError as PydanticValidationError
 
-from smarter.apps.account.models import Secret
 from smarter.apps.connection.const import DATA_PATH
 from smarter.apps.connection.manifest.models.api_connection.enum import AuthMethods
 from smarter.apps.connection.manifest.models.api_connection.model import (
@@ -31,6 +30,7 @@ from smarter.apps.connection.manifest.models.common.connection.status import (
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.connection.tests.base_classes import TestConnectionBase
 from smarter.apps.connection.tests.factories import secret_factory
+from smarter.apps.secret.models import Secret
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake, camel_to_snake_dict
 from smarter.lib.manifest.exceptions import SAMValidationError

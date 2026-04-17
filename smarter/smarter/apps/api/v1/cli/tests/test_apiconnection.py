@@ -8,7 +8,6 @@ from urllib.parse import urlencode
 import yaml
 from django.urls import reverse
 
-from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.factories import secret_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -17,6 +16,7 @@ from smarter.apps.plugin.manifest.enum import (
     SAMApiConnectionSpecConnectionKeys,
     SAMApiConnectionSpecKeys,
 )
+from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

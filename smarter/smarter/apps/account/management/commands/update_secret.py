@@ -2,7 +2,7 @@
 
 import getpass
 
-from smarter.apps.account.models import Secret, User, UserProfile
+from smarter.apps.secret.models import Secret, User, UserProfile
 from smarter.lib.django.management.base import SmarterCommand
 
 

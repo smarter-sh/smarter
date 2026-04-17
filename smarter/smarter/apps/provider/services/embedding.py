@@ -9,8 +9,8 @@ from langchain_core.embeddings import Embeddings
 from langchain_openai import OpenAIEmbeddings
 from pydantic import SecretStr
 
-from smarter.apps.account.models import Secret
 from smarter.apps.provider.models import ProviderModel
+from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.mixins import SmarterHelperMixin
 

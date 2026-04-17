@@ -24,7 +24,6 @@ from django.db.utils import ConnectionHandler
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
     MetaDataWithOwnershipModelManager,
-    Secret,
     User,
     UserProfile,
 )
@@ -36,6 +35,7 @@ from smarter.apps.account.utils import (
 
 # smarter stuff
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
