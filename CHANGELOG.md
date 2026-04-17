@@ -4,134 +4,132 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-
-
 ## [0.13.219](https://github.com/smarter-sh/smarter/compare/v0.13.218...v0.13.219) (2026-04-16)
 
 ### Bug Fixes
 
-* give the cache a filename ([b95cfdb](https://github.com/smarter-sh/smarter/commit/b95cfdb07866ac013ea80721b086106f9a5e56aa))
+- give the cache a filename ([b95cfdb](https://github.com/smarter-sh/smarter/commit/b95cfdb07866ac013ea80721b086106f9a5e56aa))
 
 ## [0.13.218](https://github.com/smarter-sh/smarter/compare/v0.13.217...v0.13.218) (2026-04-16)
 
 ### Bug Fixes
 
-* AttributeError: 'NoneType' object has no attribute 'validate' ([2c1820c](https://github.com/smarter-sh/smarter/commit/2c1820c42406311ad0074d1e33044b1929be7f4a))
+- AttributeError: 'NoneType' object has no attribute 'validate' ([2c1820c](https://github.com/smarter-sh/smarter/commit/2c1820c42406311ad0074d1e33044b1929be7f4a))
 
 ## [0.13.217](https://github.com/smarter-sh/smarter/compare/v0.13.216...v0.13.217) (2026-04-16)
 
 ### Bug Fixes
 
-* requests cache path ([52e55da](https://github.com/smarter-sh/smarter/commit/52e55da18dd49db7653dc0e70c2ef1dd49c6d180))
+- requests cache path ([52e55da](https://github.com/smarter-sh/smarter/commit/52e55da18dd49db7653dc0e70c2ef1dd49c6d180))
 
 ## [0.13.216](https://github.com/smarter-sh/smarter/compare/v0.13.215...v0.13.216) (2026-04-15)
 
 ### Bug Fixes
 
-* misc post-deployment bugs ([a7e6b52](https://github.com/smarter-sh/smarter/commit/a7e6b520f452885dcb91bd2419113dd8d53f866d))
+- misc post-deployment bugs ([a7e6b52](https://github.com/smarter-sh/smarter/commit/a7e6b520f452885dcb91bd2419113dd8d53f866d))
 
 ## [0.13.215](https://github.com/smarter-sh/smarter/compare/v0.13.214...v0.13.215) (2026-04-08)
 
 ### Bug Fixes
 
-* UserProfile.DoesNotExist exception in user receiver ([aae27ac](https://github.com/smarter-sh/smarter/commit/aae27ac4ac5c9bc3a5f9679caf20dd9be3df95e0))
+- UserProfile.DoesNotExist exception in user receiver ([aae27ac](https://github.com/smarter-sh/smarter/commit/aae27ac4ac5c9bc3a5f9679caf20dd9be3df95e0))
 
 ## [0.13.214](https://github.com/smarter-sh/smarter/compare/v0.13.213...v0.13.214) (2026-04-07)
 
 ### Bug Fixes
 
-* from scratch init w/o aws ([1c48204](https://github.com/smarter-sh/smarter/commit/1c48204ce7303856af6edeea483fd629abeaf89a))
+- from scratch init w/o aws ([1c48204](https://github.com/smarter-sh/smarter/commit/1c48204ce7303856af6edeea483fd629abeaf89a))
 
 ## [0.13.213](https://github.com/smarter-sh/smarter/compare/v0.13.212...v0.13.213) (2026-04-06)
 
 ### Bug Fixes
 
-* force a new release ([2b13f4b](https://github.com/smarter-sh/smarter/commit/2b13f4b41ce8c60252d3585f94b131e670cf5ec3))
+- force a new release ([2b13f4b](https://github.com/smarter-sh/smarter/commit/2b13f4b41ce8c60252d3585f94b131e670cf5ec3))
 
 ## [0.13.212](https://github.com/smarter-sh/smarter/compare/v0.13.211...v0.13.212) (2026-04-04)
 
 ### Bug Fixes
 
-* resolve Windows Git Bash path separator in ACTIVATE_VENV and replace hardcoded admin email with SMARTER_ROOT_DOMAIN ([5da6724](https://github.com/smarter-sh/smarter/commit/5da672494ac601a01cfe2a3131de9134a07ee5f6))
+- resolve Windows Git Bash path separator in ACTIVATE_VENV and replace hardcoded admin email with SMARTER_ROOT_DOMAIN ([5da6724](https://github.com/smarter-sh/smarter/commit/5da672494ac601a01cfe2a3131de9134a07ee5f6))
 
 ## [0.13.211](https://github.com/smarter-sh/smarter/compare/v0.13.210...v0.13.211) (2026-03-31)
 
 ### Bug Fixes
 
-* lazy initialization of Plugin* child objects from SAM to ORM ([933fe31](https://github.com/smarter-sh/smarter/commit/933fe312ffb1ef4f93965516c6eb2e75734c8250))
+- lazy initialization of Plugin\* child objects from SAM to ORM ([933fe31](https://github.com/smarter-sh/smarter/commit/933fe312ffb1ef4f93965516c6eb2e75734c8250))
 
 ## [0.13.210](https://github.com/smarter-sh/smarter/compare/v0.13.209...v0.13.210) (2026-03-31)
 
 ### Bug Fixes
 
-* add an ai doc icon to My Resources ([07dbf1a](https://github.com/smarter-sh/smarter/commit/07dbf1aada8096ca210db8e8f384f9bcd4c1fe7e))
-* add branding to self-host widget ([5c74f13](https://github.com/smarter-sh/smarter/commit/5c74f13abca9e63d6bb32679a09bf8dc1b6cdf4f))
-* add global recordLocator to all SAM resources ([064667f](https://github.com/smarter-sh/smarter/commit/064667f92edb6042fe19a860b45f91ba96e92053))
-* add language logos to sdk widget ([eb4f940](https://github.com/smarter-sh/smarter/commit/eb4f9400d1b8fa2f4f109f7b58604bea93f61765))
-* add sphinx-init ([d120f90](https://github.com/smarter-sh/smarter/commit/d120f904bc62e47048fcee343136baa2587039dc))
-* always use the sandbox url for the api ([4a1ed9f](https://github.com/smarter-sh/smarter/commit/4a1ed9fc6ad5eee339ea8e00b450d945edb33652))
-* cast_value() should always return the default when val is None ([0cc8a16](https://github.com/smarter-sh/smarter/commit/0cc8a16e73a1c6926772f9e30fde3c4ae31b3e8e))
-* code apply drop zone page ([afc0788](https://github.com/smarter-sh/smarter/commit/afc0788ed73a766898c312f36a71d6c33c3b039d))
-* do not raise error on email service failure ([ab271f6](https://github.com/smarter-sh/smarter/commit/ab271f61ae0c2ccbae53bf38cd76da6213a90adb))
-* don't set name until we're certain we have a value ([fab3262](https://github.com/smarter-sh/smarter/commit/fab3262e1f6c4aa0dfa00443009b9d4bf72ca584))
-* ensure that SAMStatus is included in all describe() ([a8fb48d](https://github.com/smarter-sh/smarter/commit/a8fb48d03eb10e2b9b4450ccd668c9832a0ad167))
-* ensure that session_key_from_url() can process both ParseResult and str ([5fe3a9a](https://github.com/smarter-sh/smarter/commit/5fe3a9a2d881ef2d8e9de19688be31c87c320e8d))
-* get_brokered_json_response() has to use post() from now on ([57fa83f](https://github.com/smarter-sh/smarter/commit/57fa83f65178894ee06960db6bb29c428a10d291))
-* inherit tags TaggableManager from MetaDataWithOwnershipModel ([d66928a](https://github.com/smarter-sh/smarter/commit/d66928a1a940a705979c65ef6a26498c8850037f))
-* logging should be disabled by default ([5f7da0f](https://github.com/smarter-sh/smarter/commit/5f7da0f5ff6f95188a93efa34269a445edc2cdd6))
-* partial solution to csrf issues when changing manifest detail views from get() to post() ([6a0a6a9](https://github.com/smarter-sh/smarter/commit/6a0a6a9755731c4d600b5587f90475a4d8302d83))
-* remap SMARTER_EMAIL_ADMIN to input ([e6ab14a](https://github.com/smarter-sh/smarter/commit/e6ab14ad40613f0b33856c396ceb19e6524d67e0))
-* remove superuser restriction on menu link to Django admin ([dffdf5d](https://github.com/smarter-sh/smarter/commit/dffdf5d14e462411ef865f11eb3a7b9e630d2435))
-* return waffle_orig.switch_is_active(switch_name) so that we benefit from caching ([fb9d8aa](https://github.com/smarter-sh/smarter/commit/fb9d8aa1c985539050c75f694e0dc830763a29bc))
-* scaffold a file drop zone page for manifests ([092336b](https://github.com/smarter-sh/smarter/commit/092336b10370d1af45034c2856a2d46a4bcad6c2))
-* test db init from scratch ([038ed17](https://github.com/smarter-sh/smarter/commit/038ed170b6e2dfa9cc45f50f31a1f788737eb002))
-* test plugin caching ([26cea38](https://github.com/smarter-sh/smarter/commit/26cea38dcc9cc8dad91ae421da41e59610593913))
-* type check user_profile and user_profile.account ([6b86285](https://github.com/smarter-sh/smarter/commit/6b862851bda478ed3ae7d9538513b5759454b925))
-* use _get_model_by_pk(pk, class_name=cls.__name__) ([2aa6fe2](https://github.com/smarter-sh/smarter/commit/2aa6fe2143b41153561b44158211d3c31a2c5d8d))
-* work on dashboard widgets ([f26c199](https://github.com/smarter-sh/smarter/commit/f26c1993bdf6cb166e98a524d6cfd86c07cb3e80))
-* wrap up new dashboard widgets ([57f7d4e](https://github.com/smarter-sh/smarter/commit/57f7d4e8f47b8644d7bd0f33f2dc99a6b2c1ab77))
+- add an ai doc icon to My Resources ([07dbf1a](https://github.com/smarter-sh/smarter/commit/07dbf1aada8096ca210db8e8f384f9bcd4c1fe7e))
+- add branding to self-host widget ([5c74f13](https://github.com/smarter-sh/smarter/commit/5c74f13abca9e63d6bb32679a09bf8dc1b6cdf4f))
+- add global recordLocator to all SAM resources ([064667f](https://github.com/smarter-sh/smarter/commit/064667f92edb6042fe19a860b45f91ba96e92053))
+- add language logos to sdk widget ([eb4f940](https://github.com/smarter-sh/smarter/commit/eb4f9400d1b8fa2f4f109f7b58604bea93f61765))
+- add sphinx-init ([d120f90](https://github.com/smarter-sh/smarter/commit/d120f904bc62e47048fcee343136baa2587039dc))
+- always use the sandbox url for the api ([4a1ed9f](https://github.com/smarter-sh/smarter/commit/4a1ed9fc6ad5eee339ea8e00b450d945edb33652))
+- cast_value() should always return the default when val is None ([0cc8a16](https://github.com/smarter-sh/smarter/commit/0cc8a16e73a1c6926772f9e30fde3c4ae31b3e8e))
+- code apply drop zone page ([afc0788](https://github.com/smarter-sh/smarter/commit/afc0788ed73a766898c312f36a71d6c33c3b039d))
+- do not raise error on email service failure ([ab271f6](https://github.com/smarter-sh/smarter/commit/ab271f61ae0c2ccbae53bf38cd76da6213a90adb))
+- don't set name until we're certain we have a value ([fab3262](https://github.com/smarter-sh/smarter/commit/fab3262e1f6c4aa0dfa00443009b9d4bf72ca584))
+- ensure that SAMStatus is included in all describe() ([a8fb48d](https://github.com/smarter-sh/smarter/commit/a8fb48d03eb10e2b9b4450ccd668c9832a0ad167))
+- ensure that session_key_from_url() can process both ParseResult and str ([5fe3a9a](https://github.com/smarter-sh/smarter/commit/5fe3a9a2d881ef2d8e9de19688be31c87c320e8d))
+- get_brokered_json_response() has to use post() from now on ([57fa83f](https://github.com/smarter-sh/smarter/commit/57fa83f65178894ee06960db6bb29c428a10d291))
+- inherit tags TaggableManager from MetaDataWithOwnershipModel ([d66928a](https://github.com/smarter-sh/smarter/commit/d66928a1a940a705979c65ef6a26498c8850037f))
+- logging should be disabled by default ([5f7da0f](https://github.com/smarter-sh/smarter/commit/5f7da0f5ff6f95188a93efa34269a445edc2cdd6))
+- partial solution to csrf issues when changing manifest detail views from get() to post() ([6a0a6a9](https://github.com/smarter-sh/smarter/commit/6a0a6a9755731c4d600b5587f90475a4d8302d83))
+- remap SMARTER_EMAIL_ADMIN to input ([e6ab14a](https://github.com/smarter-sh/smarter/commit/e6ab14ad40613f0b33856c396ceb19e6524d67e0))
+- remove superuser restriction on menu link to Django admin ([dffdf5d](https://github.com/smarter-sh/smarter/commit/dffdf5d14e462411ef865f11eb3a7b9e630d2435))
+- return waffle_orig.switch_is_active(switch_name) so that we benefit from caching ([fb9d8aa](https://github.com/smarter-sh/smarter/commit/fb9d8aa1c985539050c75f694e0dc830763a29bc))
+- scaffold a file drop zone page for manifests ([092336b](https://github.com/smarter-sh/smarter/commit/092336b10370d1af45034c2856a2d46a4bcad6c2))
+- test db init from scratch ([038ed17](https://github.com/smarter-sh/smarter/commit/038ed170b6e2dfa9cc45f50f31a1f788737eb002))
+- test plugin caching ([26cea38](https://github.com/smarter-sh/smarter/commit/26cea38dcc9cc8dad91ae421da41e59610593913))
+- type check user_profile and user_profile.account ([6b86285](https://github.com/smarter-sh/smarter/commit/6b862851bda478ed3ae7d9538513b5759454b925))
+- use \_get_model_by_pk(pk, class_name=cls.**name**) ([2aa6fe2](https://github.com/smarter-sh/smarter/commit/2aa6fe2143b41153561b44158211d3c31a2c5d8d))
+- work on dashboard widgets ([f26c199](https://github.com/smarter-sh/smarter/commit/f26c1993bdf6cb166e98a524d6cfd86c07cb3e80))
+- wrap up new dashboard widgets ([57f7d4e](https://github.com/smarter-sh/smarter/commit/57f7d4e8f47b8644d7bd0f33f2dc99a6b2c1ab77))
 
 ### Performance Improvements
 
-* Account, UserProfile and SmarterCachedObjects caching ([b13629d](https://github.com/smarter-sh/smarter/commit/b13629db9e945381988edefa606c8f21eee2e3eb))
-* add a pk handler that prefetches tags and user_profile ([93f6cd9](https://github.com/smarter-sh/smarter/commit/93f6cd90c5ec441a464e846bc9877d52794e8492))
-* add cache_invalidations() to account receivers ([b76ea71](https://github.com/smarter-sh/smarter/commit/b76ea718b587bcef18d6aa75a69f6fa8f1eb3898))
-* add cached_account and cached_user ([0a54cec](https://github.com/smarter-sh/smarter/commit/0a54cec002fa38244b52778d618995d99ed93fb6))
-* add class-based caching to ChatBot ([ff2e748](https://github.com/smarter-sh/smarter/commit/ff2e748307aad3ffb258b0aab81882a7069aa053))
-* add fk prefetching for chatbot and provider resources ([a1551a7](https://github.com/smarter-sh/smarter/commit/a1551a754cdff3fd456d32fc02ba98bb6feb1acc))
-* add invalidation for the workbench listview ([ad20390](https://github.com/smarter-sh/smarter/commit/ad20390fba733490a7fe15ee27356258036a76a5))
-* add select_related() and prefetch_related() ([2b68606](https://github.com/smarter-sh/smarter/commit/2b686063aba446aae0fff10ac499946dd8a2fb50))
-* add select_related() and prefetch_related() ([f1d14af](https://github.com/smarter-sh/smarter/commit/f1d14aff141e856ecbb7faa1da22eb0ff3f963db))
-* cache composite QuerySet results for PromptListView, PluginsListView and ChatBots ([d7df950](https://github.com/smarter-sh/smarter/commit/d7df9503bc348069be7d4636440b3bace993ae4c))
-* cache tags retrieval ([bd52320](https://github.com/smarter-sh/smarter/commit/bd52320a6df9001cb5195904ef1bde5e08eaefeb))
-* ChatBot.get_cached_objects() cached prefetching ([a1920ff](https://github.com/smarter-sh/smarter/commit/a1920ffd5fcee57b951782bd8cff20c9d18687fc))
-* create cls.get_cached_models_for_user_profile() ([97e15a8](https://github.com/smarter-sh/smarter/commit/97e15a87992d17f27e7090ce448a7eb3ff3db852))
-* create formatted_text_blue() for cache invalidations ([fe3ac80](https://github.com/smarter-sh/smarter/commit/fe3ac805ae9a6acb7cd8d3c80cdcf66dc00c2cea))
-* create TimestampedModel.get_cached_model() ([93ee7b4](https://github.com/smarter-sh/smarter/commit/93ee7b4b39ee13b9fac8256a86b8d23700ca7c34))
-* enable 10-second page cache ([c10d9b1](https://github.com/smarter-sh/smarter/commit/c10d9b1dc94088b1123e501f5eb31de9f5e0f455))
-* ensure all SAM querysets prefetch and select related objects ([9867ab1](https://github.com/smarter-sh/smarter/commit/9867ab1deb7837b84e28f9a74a056b006cea522b))
-* expire cached smarter instances every 600 seconds ([4c52001](https://github.com/smarter-sh/smarter/commit/4c520011438320177cbb690dba6f6eef1acd1062))
-* fail gracefully when we don't have a workable combination of parameters ([6dfef2d](https://github.com/smarter-sh/smarter/commit/6dfef2d257c3cbdaa14c218dda2526c75bb7b074))
-* invalidate object lists for plugin and chatbot views ([809df8a](https://github.com/smarter-sh/smarter/commit/809df8ac177a6eaeead89d001d49b7c68fa369ab))
-* move orm caching to the parent MetaDataModel ([df3dbdd](https://github.com/smarter-sh/smarter/commit/df3dbdd21854ad9a2f0f7f9bc0151085e61292ee))
-* prefetch tags ([f14536e](https://github.com/smarter-sh/smarter/commit/f14536ef266051f78c07cdb241d1b13e105a8a1c))
-* prefetch tags ([0c56095](https://github.com/smarter-sh/smarter/commit/0c5609569e126a810209719b4de6b66e38edf84e))
-* read aws s3 bucket from cdn. cache chatbot.objects.filter ([ff9f1fa](https://github.com/smarter-sh/smarter/commit/ff9f1fad74b3a6d3a2b51e9fbc7f04799a75748c))
-* scaffold class-based cache invalidation ([6e00acc](https://github.com/smarter-sh/smarter/commit/6e00accf4535d57e23e675173de94399712df626))
-* scaffold class-based cache invalidation ([ab2b0c9](https://github.com/smarter-sh/smarter/commit/ab2b0c992c70ff8fb8f441ba67c27b3ff7d6a848))
-* scaffold class-based cache invalidation ([773d5c7](https://github.com/smarter-sh/smarter/commit/773d5c710aa56998dd1ad2077c72d70a9b9fb3bc))
-* scaffold class-based cache invalidation ([f665c03](https://github.com/smarter-sh/smarter/commit/f665c03371f36e56299217dad59e970391131da3))
-* scaffold class-based cache invalidation ([2bc136d](https://github.com/smarter-sh/smarter/commit/2bc136d23ee6d6cb3f230b54cf11bf8a0180aef6))
-* scaffold class-based cache invalidation ([e1ec35c](https://github.com/smarter-sh/smarter/commit/e1ec35c0a02114be57e49f5b13bafdb8f98c05bd))
-* select related objects along with the instance itself, so that all is cached ([84f9988](https://github.com/smarter-sh/smarter/commit/84f9988c59507bf2be6dcfed5d66df1d4436b3b8))
-* set default cache expiration to 600 seconds. ([31cdd53](https://github.com/smarter-sh/smarter/commit/31cdd53d5a323ff4997e7ff108506f0e7be282d3))
-* switch to get_cached_account() ([a174e6e](https://github.com/smarter-sh/smarter/commit/a174e6e6fc52bff8f8e824373b5988267ca04a8f))
-* work on cache invalidations for context processors ([8ce1ad1](https://github.com/smarter-sh/smarter/commit/8ce1ad18d9cb92d3feda6f2ba9eff410f9bc5bad))
-* work on cache_invalidations() ([3072853](https://github.com/smarter-sh/smarter/commit/30728533626d976ff68a61c37dc6673655e7d788))
-* work on class-based cache keys for SAM objects and page caching ([10c171a](https://github.com/smarter-sh/smarter/commit/10c171a7f6cfabf958e825256d722a2c6a1ce96a))
-* work on get_cached_model() ([4c707ea](https://github.com/smarter-sh/smarter/commit/4c707eac873ae6b1b041481c03944dc27e768eec))
-* work on get_cached_object() and get_cached_objects() ([2836992](https://github.com/smarter-sh/smarter/commit/2836992b6e083f49580549e021d813e477051cd3))
-* work on invalidation() ([b5beff7](https://github.com/smarter-sh/smarter/commit/b5beff75b28ac529c3a1570664fb62975400a872))
+- Account, UserProfile and SmarterCachedObjects caching ([b13629d](https://github.com/smarter-sh/smarter/commit/b13629db9e945381988edefa606c8f21eee2e3eb))
+- add a pk handler that prefetches tags and user_profile ([93f6cd9](https://github.com/smarter-sh/smarter/commit/93f6cd90c5ec441a464e846bc9877d52794e8492))
+- add cache_invalidations() to account receivers ([b76ea71](https://github.com/smarter-sh/smarter/commit/b76ea718b587bcef18d6aa75a69f6fa8f1eb3898))
+- add cached_account and cached_user ([0a54cec](https://github.com/smarter-sh/smarter/commit/0a54cec002fa38244b52778d618995d99ed93fb6))
+- add class-based caching to ChatBot ([ff2e748](https://github.com/smarter-sh/smarter/commit/ff2e748307aad3ffb258b0aab81882a7069aa053))
+- add fk prefetching for chatbot and provider resources ([a1551a7](https://github.com/smarter-sh/smarter/commit/a1551a754cdff3fd456d32fc02ba98bb6feb1acc))
+- add invalidation for the workbench listview ([ad20390](https://github.com/smarter-sh/smarter/commit/ad20390fba733490a7fe15ee27356258036a76a5))
+- add select_related() and prefetch_related() ([2b68606](https://github.com/smarter-sh/smarter/commit/2b686063aba446aae0fff10ac499946dd8a2fb50))
+- add select_related() and prefetch_related() ([f1d14af](https://github.com/smarter-sh/smarter/commit/f1d14aff141e856ecbb7faa1da22eb0ff3f963db))
+- cache composite QuerySet results for PromptListView, PluginsListView and ChatBots ([d7df950](https://github.com/smarter-sh/smarter/commit/d7df9503bc348069be7d4636440b3bace993ae4c))
+- cache tags retrieval ([bd52320](https://github.com/smarter-sh/smarter/commit/bd52320a6df9001cb5195904ef1bde5e08eaefeb))
+- ChatBot.get_cached_objects() cached prefetching ([a1920ff](https://github.com/smarter-sh/smarter/commit/a1920ffd5fcee57b951782bd8cff20c9d18687fc))
+- create cls.get_cached_models_for_user_profile() ([97e15a8](https://github.com/smarter-sh/smarter/commit/97e15a87992d17f27e7090ce448a7eb3ff3db852))
+- create formatted_text_blue() for cache invalidations ([fe3ac80](https://github.com/smarter-sh/smarter/commit/fe3ac805ae9a6acb7cd8d3c80cdcf66dc00c2cea))
+- create TimestampedModel.get_cached_model() ([93ee7b4](https://github.com/smarter-sh/smarter/commit/93ee7b4b39ee13b9fac8256a86b8d23700ca7c34))
+- enable 10-second page cache ([c10d9b1](https://github.com/smarter-sh/smarter/commit/c10d9b1dc94088b1123e501f5eb31de9f5e0f455))
+- ensure all SAM querysets prefetch and select related objects ([9867ab1](https://github.com/smarter-sh/smarter/commit/9867ab1deb7837b84e28f9a74a056b006cea522b))
+- expire cached smarter instances every 600 seconds ([4c52001](https://github.com/smarter-sh/smarter/commit/4c520011438320177cbb690dba6f6eef1acd1062))
+- fail gracefully when we don't have a workable combination of parameters ([6dfef2d](https://github.com/smarter-sh/smarter/commit/6dfef2d257c3cbdaa14c218dda2526c75bb7b074))
+- invalidate object lists for plugin and chatbot views ([809df8a](https://github.com/smarter-sh/smarter/commit/809df8ac177a6eaeead89d001d49b7c68fa369ab))
+- move orm caching to the parent MetaDataModel ([df3dbdd](https://github.com/smarter-sh/smarter/commit/df3dbdd21854ad9a2f0f7f9bc0151085e61292ee))
+- prefetch tags ([f14536e](https://github.com/smarter-sh/smarter/commit/f14536ef266051f78c07cdb241d1b13e105a8a1c))
+- prefetch tags ([0c56095](https://github.com/smarter-sh/smarter/commit/0c5609569e126a810209719b4de6b66e38edf84e))
+- read aws s3 bucket from cdn. cache chatbot.objects.filter ([ff9f1fa](https://github.com/smarter-sh/smarter/commit/ff9f1fad74b3a6d3a2b51e9fbc7f04799a75748c))
+- scaffold class-based cache invalidation ([6e00acc](https://github.com/smarter-sh/smarter/commit/6e00accf4535d57e23e675173de94399712df626))
+- scaffold class-based cache invalidation ([ab2b0c9](https://github.com/smarter-sh/smarter/commit/ab2b0c992c70ff8fb8f441ba67c27b3ff7d6a848))
+- scaffold class-based cache invalidation ([773d5c7](https://github.com/smarter-sh/smarter/commit/773d5c710aa56998dd1ad2077c72d70a9b9fb3bc))
+- scaffold class-based cache invalidation ([f665c03](https://github.com/smarter-sh/smarter/commit/f665c03371f36e56299217dad59e970391131da3))
+- scaffold class-based cache invalidation ([2bc136d](https://github.com/smarter-sh/smarter/commit/2bc136d23ee6d6cb3f230b54cf11bf8a0180aef6))
+- scaffold class-based cache invalidation ([e1ec35c](https://github.com/smarter-sh/smarter/commit/e1ec35c0a02114be57e49f5b13bafdb8f98c05bd))
+- select related objects along with the instance itself, so that all is cached ([84f9988](https://github.com/smarter-sh/smarter/commit/84f9988c59507bf2be6dcfed5d66df1d4436b3b8))
+- set default cache expiration to 600 seconds. ([31cdd53](https://github.com/smarter-sh/smarter/commit/31cdd53d5a323ff4997e7ff108506f0e7be282d3))
+- switch to get_cached_account() ([a174e6e](https://github.com/smarter-sh/smarter/commit/a174e6e6fc52bff8f8e824373b5988267ca04a8f))
+- work on cache invalidations for context processors ([8ce1ad1](https://github.com/smarter-sh/smarter/commit/8ce1ad18d9cb92d3feda6f2ba9eff410f9bc5bad))
+- work on cache_invalidations() ([3072853](https://github.com/smarter-sh/smarter/commit/30728533626d976ff68a61c37dc6673655e7d788))
+- work on class-based cache keys for SAM objects and page caching ([10c171a](https://github.com/smarter-sh/smarter/commit/10c171a7f6cfabf958e825256d722a2c6a1ce96a))
+- work on get_cached_model() ([4c707ea](https://github.com/smarter-sh/smarter/commit/4c707eac873ae6b1b041481c03944dc27e768eec))
+- work on get_cached_object() and get_cached_objects() ([2836992](https://github.com/smarter-sh/smarter/commit/2836992b6e083f49580549e021d813e477051cd3))
+- work on invalidation() ([b5beff7](https://github.com/smarter-sh/smarter/commit/b5beff75b28ac529c3a1570664fb62975400a872))
 
 ## [0.13.209](https://github.com/smarter-sh/smarter/compare/v0.13.208...v0.13.209) (2026-03-20)
 
@@ -700,7 +698,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Bug Fixes
 
-- every main urls module needs a 'root_home' ([b2ff8f3](https://github.com/smarter-sh/smarter/commit/b2ff8f303cb22175139680555570017e50b0d2b3))
+- every main urls module needs a 'console_home' ([b2ff8f3](https://github.com/smarter-sh/smarter/commit/b2ff8f303cb22175139680555570017e50b0d2b3))
 
 ## [0.13.120](https://github.com/smarter-sh/smarter/compare/v0.13.119...v0.13.120) (2026-02-07)
 

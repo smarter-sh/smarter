@@ -146,7 +146,7 @@ for model in models:
         pass
 
 
-name_prefix = "root"
+name_prefix = "console"
 
 
 urlpatterns = [
