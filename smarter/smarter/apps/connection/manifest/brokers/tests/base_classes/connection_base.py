@@ -63,10 +63,11 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
         if not cls.test_secret_name:
             raise SmarterValueError("Failed to get test secret name from manifest metadata.")
         try:
-            cls.secret = Secret.objects.get(
-                user_profile=cls.user_profile,
-                name=cls.test_secret_name,
+            cls.secret = (
+                Secret.objects.filter(name=cls.test_secret_name).with_read_permission_for(cls.user_profile.user).first()
             )
+            if not cls.secret:
+                raise Secret.DoesNotExist()
             cls.test_secret_value = cls.secret.get_secret()
         except Secret.DoesNotExist as e:
             raise SmarterValueError(f"Failed to get test secret '{cls.test_secret_name}' from database.") from e
@@ -88,10 +89,13 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
             raise SmarterValueError("Failed to get test proxy secret name from manifest metadata.")
 
         try:
-            cls.proxy_secret = Secret.objects.get(
-                user_profile=cls.user_profile,
-                name=cls.test_proxy_secret_name,
+            cls.proxy_secret = (
+                Secret.objects.filter(name=cls.test_proxy_secret_name)
+                .with_read_permission_for(cls.user_profile.user)
+                .first()
             )
+            if not cls.proxy_secret:
+                raise Secret.DoesNotExist()
             cls.test_proxy_secret_value = cls.proxy_secret.get_secret()
         except Secret.DoesNotExist as e:
             raise SmarterValueError(

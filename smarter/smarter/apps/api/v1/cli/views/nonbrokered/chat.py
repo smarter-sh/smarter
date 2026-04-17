@@ -583,7 +583,8 @@ This is a Non-brokered operation.
 
         # validate the chatbot name, as this is the most likely point of failure
         try:
-            ChatBot.objects.get(name=name, account=self.account)
+            if not ChatBot.objects.filter(name=name).with_read_permission_for(self.request.user).exists():  # type: ignore
+                raise ChatBot.DoesNotExist()
         except ChatBot.DoesNotExist as e:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
