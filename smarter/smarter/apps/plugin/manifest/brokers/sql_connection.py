@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
 from smarter.apps.account.models import Secret
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.plugin.manifest.enum import (
     SAMSqlConnectionSpecConnectionKeys,
 )
@@ -674,12 +675,23 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 self.user_profile or "(user_profile is missing)",
             )
         except SqlConnection.DoesNotExist:
-            logger.debug(
-                "%s SqlConnection %s not found for %s",
-                self.formatted_class_name,
-                self.name or "(name is missing)",
-                self.user_profile or "(user_profile is missing)",
-            )
+            try:
+                if self.user_profile:
+                    self._connection = SqlConnection.objects.get(
+                        user_profile__account=self.user_profile.account, name=name
+                    )
+            except SqlConnection.DoesNotExist:
+                try:
+                    self._connection = SqlConnection.objects.get(
+                        name=name, account=smarter_cached_objects.smarter_account
+                    )
+                except SqlConnection.DoesNotExist:
+                    logger.debug(
+                        "%s SqlConnection %s not found for %s",
+                        self.formatted_class_name,
+                        self.name or "(name is missing)",
+                        self.user_profile or "(user_profile is missing)",
+                    )
 
         if not self._connection:
             logger.warning(
