@@ -30,6 +30,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
@@ -52,12 +53,12 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
     template_path = "account/authentication/password-reset-request.html"
     email_template_path = "account/authentication/email/password-reset.html"
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         form = PasswordResetRequestView.EmailForm()
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         form = PasswordResetRequestView.EmailForm(request.POST)
         if not form.is_valid():
             return SmarterHttpResponseBadRequest(request=request, error_message="Email address is invalid.")
