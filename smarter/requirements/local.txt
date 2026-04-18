@@ -303,7 +303,7 @@ mysqlclient==2.2.7
     # via -r smarter/requirements/in/base.in
 nest-asyncio==1.6.0
     # via llamaai
-nltk==3.9.1
+nltk==3.9.4
     # via
     #   -r smarter/requirements/in/base.in
     #   textblob

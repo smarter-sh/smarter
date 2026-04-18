@@ -66,7 +66,7 @@ openmeteo-requests~=1.0                 # OpenMeteo API for weather data for wea
 # ------------
 pyyaml~=6.0                             # YAML parser
 python-Levenshtein                      # Levenshtein distance calculation for LLMs
-nltk~=3.0                               # Natural Language Toolkit
+nltk~=3.9                               # Natural Language Toolkit
 textblob                                # Text processing library
 inflect                                 # Pluralization and singularization
 
