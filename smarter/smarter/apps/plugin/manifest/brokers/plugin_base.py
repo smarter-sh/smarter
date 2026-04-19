@@ -433,7 +433,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             except PluginMeta.DoesNotExist:
                 try:
                     self._plugin_meta = PluginMeta.objects.get(
-                        user_profile__account=smarter_cached_objects.smarter_account,
+                        user_profile=smarter_cached_objects.smarter_admin_user_profile,
                         name=self.name,
                     )
                 except PluginMeta.DoesNotExist:
