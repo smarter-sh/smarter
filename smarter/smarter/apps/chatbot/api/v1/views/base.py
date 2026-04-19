@@ -14,6 +14,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 
+from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.chatbot.models import (
     ChatBot,
@@ -25,7 +26,10 @@ from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import ChatHelper
-from smarter.apps.prompt.providers.providers import HandlerProtocol, chat_providers
+from smarter.apps.prompt.providers.providers import (
+    SmarterChatHandlerProtocol,
+    smarter_compatible_chat_providers,
+)
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import is_authenticated_request
@@ -589,7 +593,9 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.NOT_FOUND.value,
                 stack_trace=traceback.format_exc(),
             )
-        handler: HandlerProtocol = chat_providers.get_handler(provider=self.chatbot.provider)
+        handler: SmarterChatHandlerProtocol = smarter_compatible_chat_providers.get_handler(
+            provider=self.chatbot.provider
+        )
         if not self.chat_helper:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
@@ -620,7 +626,13 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             raise SmarterChatBotException(
                 f"User is not a valid User instance. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}, user_type={type(self.user)}"
             )
-        response = handler(self.user, self.chat_helper.chat, self.data, plugins=self.plugins, functions=self.functions)
+        if not isinstance(self.user_profile, UserProfile):
+            raise SmarterChatBotException(
+                f"UserProfile is not a valid UserProfile instance. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}, user_profile_type={type(self.user_profile)}"
+            )
+        response = handler(
+            self.user_profile, self.chat_helper.chat, self.data, plugins=self.plugins, functions=self.functions
+        )
         response = {
             SmarterJournalApiResponseKeys.DATA: response,
         }

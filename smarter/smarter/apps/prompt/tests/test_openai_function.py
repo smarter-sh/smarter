@@ -22,7 +22,7 @@ from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.utils import get_readonly_yaml_file
 
 from ..models import Chat, ChatHistory, ChatPluginUsage
-from ..providers.providers import chat_providers
+from ..providers.providers import smarter_compatible_chat_providers
 from ..signals import (
     chat_completion_response,
     chat_finished,
@@ -38,7 +38,7 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 CELERY_WAIT = 1
 
-handler = chat_providers.openai_handler
+handler = smarter_compatible_chat_providers.openai_handler
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes

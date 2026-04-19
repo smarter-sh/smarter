@@ -207,6 +207,9 @@ class SmarterWaffleSwitches:
     ENABLE_LOG_VIEW_IN_BROWSER = "enable_log_view_in_browser"
     """Enables the 'View Logs in Browser' feature for easier access to log files during development and debugging."""
 
+    ENABLE_VECTORSTORE = "enable_vectorstore"
+    """Enables the vectorstore feature, which may include support for vector databases and related functionality."""
+
     MANIFEST_LOGGING = "log_manifest_brokers"
     """Enables detailed diagnostic logging for manifest initialization, validation and brokered operations."""
 
@@ -313,6 +316,11 @@ class SmarterWaffleSwitches:
         ENABLE_LOG_VIEW_IN_BROWSER: SmarterWaffleSwitch(
             name=ENABLE_LOG_VIEW_IN_BROWSER,
             comment="Enables the 'View Logs in Browser' feature for easier access to log files during development and debugging.",
+            default=False,
+        ),
+        ENABLE_VECTORSTORE: SmarterWaffleSwitch(
+            name=ENABLE_VECTORSTORE,
+            comment="Enables the Smarter Vectorstore Django app, which may includes support for vector databases. Requires app restart.",
             default=False,
         ),
         ENABLE_OAUTH2: SmarterWaffleSwitch(

@@ -17,7 +17,7 @@ from smarter.apps.prompt.providers.openai.classes import (
 from smarter.apps.prompt.providers.openai.classes import (
     OpenAIChatProvider,
 )
-from smarter.apps.prompt.providers.providers import chat_providers
+from smarter.apps.prompt.providers.providers import smarter_compatible_chat_providers
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .classes import ProviderBaseClass
@@ -28,43 +28,49 @@ class TestChatProviders(SmarterTestBase):
 
     def verify_providers(self):
         """Test chat providers."""
-        self.assertIsInstance(chat_providers.openai, OpenAIChatProvider)
-        self.assertIsInstance(chat_providers.googleai, GoogleAIChatProvider)
-        self.assertIsInstance(chat_providers.metaai, MetaAIChatProvider)
+        self.assertIsInstance(smarter_compatible_chat_providers.openai, OpenAIChatProvider)
+        self.assertIsInstance(smarter_compatible_chat_providers.googleai, GoogleAIChatProvider)
+        self.assertIsInstance(smarter_compatible_chat_providers.metaai, MetaAIChatProvider)
 
     def verify_providers_name_readonly(self):
         """Test that chat provider names are read-only."""
         with self.assertRaises(AttributeError):
-            chat_providers.openai.provider = "new_name"  # type: ignore
+            smarter_compatible_chat_providers.openai.provider = "new_name"  # type: ignore
 
         with self.assertRaises(AttributeError):
-            chat_providers.googleai.provider = "new_name"  # type: ignore
+            smarter_compatible_chat_providers.googleai.provider = "new_name"  # type: ignore
 
         with self.assertRaises(AttributeError):
-            chat_providers.metaai.provider = "new_name"  # type: ignore
+            smarter_compatible_chat_providers.metaai.provider = "new_name"  # type: ignore
 
     def verify_providers_get_handler(self):
         """Test provider get_handler()."""
 
-        handler = chat_providers.get_handler(provider=chat_providers.openai.provider)
+        handler = smarter_compatible_chat_providers.get_handler(
+            provider=smarter_compatible_chat_providers.openai.provider
+        )
         self.assertEqual(handler, type(Callable))
 
-        handler = chat_providers.get_handler(provider=chat_providers.googleai.provider)
+        handler = smarter_compatible_chat_providers.get_handler(
+            provider=smarter_compatible_chat_providers.googleai.provider
+        )
         self.assertEqual(handler, type(Callable))
 
-        handler = chat_providers.get_handler(provider=chat_providers.metaai.provider)
+        handler = smarter_compatible_chat_providers.get_handler(
+            provider=smarter_compatible_chat_providers.metaai.provider
+        )
         self.assertEqual(handler, type(Callable))
 
-        handler = chat_providers.get_handler()
+        handler = smarter_compatible_chat_providers.get_handler()
         self.assertEqual(handler, type(Callable))
 
     def verify_providers_all(self):
         """Test provider all()."""
         this_all = [OPENAI_PROVIDER_NAME, GOOGLEAI_PROVIDER_NAME, METAAI_PROVIDER_NAME]
-        self.assertCountEqual(chat_providers.all, this_all)
-        self.assertIn(OPENAI_PROVIDER_NAME, chat_providers.all)
-        self.assertIn(GOOGLEAI_PROVIDER_NAME, chat_providers.all)
-        self.assertIn(METAAI_PROVIDER_NAME, chat_providers.all)
+        self.assertCountEqual(smarter_compatible_chat_providers.all, this_all)
+        self.assertIn(OPENAI_PROVIDER_NAME, smarter_compatible_chat_providers.all)
+        self.assertIn(GOOGLEAI_PROVIDER_NAME, smarter_compatible_chat_providers.all)
+        self.assertIn(METAAI_PROVIDER_NAME, smarter_compatible_chat_providers.all)
 
 
 class TestProviderGoogleai(ProviderBaseClass):
@@ -72,7 +78,7 @@ class TestProviderGoogleai(ProviderBaseClass):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.provider = chat_providers.googleai.provider
+        self.provider = smarter_compatible_chat_providers.googleai.provider
 
 
 class TestProviderMetaai(ProviderBaseClass):
@@ -80,7 +86,7 @@ class TestProviderMetaai(ProviderBaseClass):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.provider = chat_providers.metaai.provider
+        self.provider = smarter_compatible_chat_providers.metaai.provider
 
 
 class TestProviderOpenai(ProviderBaseClass):
@@ -88,4 +94,4 @@ class TestProviderOpenai(ProviderBaseClass):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.provider = chat_providers.openai.provider
+        self.provider = smarter_compatible_chat_providers.openai.provider

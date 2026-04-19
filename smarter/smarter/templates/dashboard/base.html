@@ -439,6 +439,7 @@
 								<!--end:Menu item Secrets -->
 
                                 <!--begin:Menu item Vectorstores -->
+                                {% if dashboard.is_vectorstore_enabled %}
 								<div class="menu-item">
 									<!--begin:Menu link-->
 									<a class="menu-link" href="{% url 'vectorstore:list_view' %}" target="_self">
@@ -453,6 +454,7 @@
 									</a>
 									<!--end:Menu link-->
 								</div>
+                                {% endif %}
 								<!--end:Menu item Vectorstores -->
 
 
