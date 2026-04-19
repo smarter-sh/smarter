@@ -1,8 +1,8 @@
+# pylint: disable=W0613
 """
 This file contains the mixins for the provider model.
 """
 
-# pylint: disable=W0613
 import logging
 from typing import Optional
 
@@ -34,7 +34,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class InternalKeys:
+class _InternalKeys:
     """
     This class contains the internal keys for the provider model.
     """
@@ -195,9 +195,9 @@ class ChatDbMixin(AccountMixin):
         if self.db_charges is None:
             return None
         return {
-            InternalKeys.PromptTokens: self.db_total_prompt_tokens,
-            InternalKeys.CompletionTokens: self.db_total_completion_tokens,
-            InternalKeys.TotalTokens: self.db_total_total_tokens,
+            _InternalKeys.PromptTokens: self.db_total_prompt_tokens,
+            _InternalKeys.CompletionTokens: self.db_total_completion_tokens,
+            _InternalKeys.TotalTokens: self.db_total_total_tokens,
         }
 
     def db_refresh(self):

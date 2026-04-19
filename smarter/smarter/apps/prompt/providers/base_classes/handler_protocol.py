@@ -1,6 +1,7 @@
-# pylint: disable=C0302
 """
-Base class for chat providers.
+Handler protocol for chat providers.
+Defines a fixed Protocol for all chat provider handler functions.
+Ensures that all handler functions have exactly the same signature.
 """
 
 import logging
@@ -9,8 +10,6 @@ from typing import Any, List, Optional, Protocol, Union
 from smarter.apps.account.models import User
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
-
-# smarter chat provider stuff
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

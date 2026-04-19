@@ -1,4 +1,3 @@
-# pylint: disable=C0302
 """
 Mapping of exceptions to HTTP status codes and error types for chat providers.
 This is used in the main try block of handler() to map exceptions to
@@ -10,7 +9,6 @@ from http import HTTPStatus
 
 import openai
 
-# smarter chat provider stuff
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterIlligalInvocationError,
