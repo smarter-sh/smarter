@@ -10,7 +10,8 @@ from .passthrough_chat_provider import OpenAICompatiblePassthroughChatProvider
 from .protocols import (
     OpenAICompatibleChatCompletionRequest,
     OpenAICompatibleChatCompletionResponse,
-    OpenAICompatiblePassthoughProtocol,
+    OpenAICompatiblePassthroughProtocol,
+    SmarterChatCompletionResponse,
     SmarterChatHandlerProtocol,
 )
 
@@ -19,8 +20,10 @@ __all__ = [
     "EXCEPTION_MAP",
     "OpenAICompatibleChatProvider",
     "OpenAICompatiblePassthroughChatProvider",
-    "OpenAICompatiblePassthoughProtocol",
+    "OpenAICompatiblePassthroughProtocol",
     "OpenAICompatibleChatCompletionRequest",
+    "OpenAICompatibleChatCompletionResponse",
     "SmarterChatProviderBase",
     "ChatDbMixin",
+    "SmarterChatCompletionResponse",
 ]
