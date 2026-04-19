@@ -14,6 +14,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponse
 from django.shortcuts import render
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -124,13 +125,14 @@ class PluginDetailView(DocsBaseView):
         except PluginMeta.DoesNotExist:
             try:
                 if self.user_profile:
-                    self.plugin = PluginMeta.objects.get(
-                        name=self.name, user_profile__account=self.user_profile.account
-                    )
+
+                    admin_user = UserProfile.admin_for_account(self.user_profile.account)
+                    admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
+                    self.plugin = PluginMeta.objects.get(name=self.name, user_profile=admin_user_profile)
             except PluginMeta.DoesNotExist:
                 try:
                     self.plugin = PluginMeta.objects.get(
-                        name=self.name, user_profile__account=smarter_cached_objects.smarter_account
+                        name=self.name, user_profile=smarter_cached_objects.smarter_admin_user_profile
                     )
                 except PluginMeta.DoesNotExist:
                     pass
