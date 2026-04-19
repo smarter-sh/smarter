@@ -417,12 +417,14 @@ class SecretTransformer(SmarterHelperMixin):
         try:
             self._secret = Secret.objects.get(name=self.name, user_profile=self.user_profile)
         except Secret.DoesNotExist:
+            admin_user = UserProfile.admin_for_account(self.user_profile.account)
+            admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
             try:
-                self._secret = Secret.objects.get(name=self.name, user_profile__account=self.user_profile.account)
+                self._secret = Secret.objects.get(name=self.name, user_profile=admin_user_profile)
             except Secret.DoesNotExist:
                 try:
                     self._secret = Secret.objects.get(
-                        name=self.name, user_profile__account=smarter_cached_objects.smarter_account
+                        name=self.name, user_profile=smarter_cached_objects.smarter_admin_user_profile
                     )
                 except Secret.DoesNotExist:
                     pass

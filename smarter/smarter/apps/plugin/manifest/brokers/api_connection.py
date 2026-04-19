@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Optional, Type
 
 from django.core.exceptions import MultipleObjectsReturned
 
-from smarter.apps.account.models import Secret
+from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
     smarter_cached_objects,
@@ -618,13 +618,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         except ApiConnection.DoesNotExist:
             try:
                 if self.user_profile:
-                    self._connection = ApiConnection.objects.get(
-                        user_profile__account=self.user_profile.account, name=name
-                    )
+                    admin_user = UserProfile.admin_for_account(self.user_profile.account)
+                    admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
+                    self._connection = ApiConnection.objects.get(user_profile=admin_user_profile, name=name)
             except ApiConnection.DoesNotExist:
                 try:
                     self._connection = ApiConnection.objects.get(
-                        user_profile__account=smarter_cached_objects.smarter_account, name=name
+                        user_profile=smarter_cached_objects.smarter_admin_user_profile, name=name
                     )
                 except ApiConnection.DoesNotExist:
                     logger.debug(

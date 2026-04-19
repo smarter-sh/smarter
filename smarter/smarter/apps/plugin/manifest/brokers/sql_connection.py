@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
-from smarter.apps.account.models import Secret
+from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.plugin.manifest.enum import (
     SAMSqlConnectionSpecConnectionKeys,
@@ -677,13 +677,13 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         except SqlConnection.DoesNotExist:
             try:
                 if self.user_profile:
-                    self._connection = SqlConnection.objects.get(
-                        user_profile__account=self.user_profile.account, name=name
-                    )
+                    admin_user = UserProfile.admin_for_account(self.user_profile.account)
+                    admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
+                    self._connection = SqlConnection.objects.get(user_profile=admin_user_profile, name=name)
             except SqlConnection.DoesNotExist:
                 try:
                     self._connection = SqlConnection.objects.get(
-                        name=name, account=smarter_cached_objects.smarter_account
+                        name=name, user_profile=smarter_cached_objects.smarter_admin_user_profile
                     )
                 except SqlConnection.DoesNotExist:
                     logger.debug(
