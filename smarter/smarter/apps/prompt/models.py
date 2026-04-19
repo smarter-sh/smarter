@@ -122,6 +122,27 @@ class ChatToolCall(TimestampedModel):
         encoder=json.SmarterJSONEncoder,
     )
 
+    @classmethod
+    def get_cached_object(
+        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None
+    ) -> Optional["ChatToolCall"]:
+        """
+        Get the ChatToolCall instance for the given primary key from the cache.
+
+        This method retrieves the ChatToolCall instance associated with the given primary key
+        from the cache. If the instance is not found in the cache, it attempts to
+        retrieve it from the database. If it still cannot be found, it returns ``None``.
+
+        :param invalidate: Whether to invalidate the cache before retrieving the object.
+        :type invalidate: Optional[bool]
+        :param pk: The primary key of the ChatToolCall instance to retrieve.
+        :type pk: Optional[int]
+
+        :returns: The ChatToolCall instance associated with the given primary key, or ``None`` if not found.
+        :rtype: Optional[ChatToolCall]
+        """
+        return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return]
+
     def __str__(self):
         if self.plugin:
             name = f"{self.chat.id} - {self.plugin.name}"  # type: ignore[return]

@@ -3,7 +3,6 @@
 import logging
 
 # django stuff
-from django.conf import settings
 from django.db import models
 
 # our stuff
@@ -14,7 +13,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from ..signals import new_charge_created
-from .account import Account
+from . import user_profile
 
 
 # pylint: disable=W0613
@@ -52,10 +51,9 @@ class Charge(TimestampedModel):
     """
     Charge model for tracking periodic account billing events.
 
-    Represents a single billing event for an account and user, including provider, charge type, token usage, and reference details.
+    Represents a single billing event for a UserProfile, including provider, charge type, token usage, and reference details.
 
-    :param account: ForeignKey to :class:`Account`. The account being billed.
-    :param user: ForeignKey to :class:`django.contrib.auth.models.User`. The user associated with the charge.
+    :param user_profile: ForeignKey to :class:`UserProfile`. The user profile associated with the charge.
     :param session_key: String. Optional session identifier for the charge.
     :param provider: String. The LLM provider (e.g., OpenAI).
     :param charge_type: String. The type of charge (e.g., completion, plugin, tool).
@@ -72,8 +70,7 @@ class Charge(TimestampedModel):
     **Example usage**::
 
         charge = Charge.objects.create(
-            account=account,
-            user=user,
+            user_profile=user_profile,
             provider="openai",
             charge_type="completion",
             prompt_tokens=100,
@@ -85,12 +82,11 @@ class Charge(TimestampedModel):
 
     .. seealso::
 
-        :class:`Account`, :class:`LLMPrices`
+        :class:`UserProfile`, :class:`LLMPrices`
     """
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="charge", null=False, blank=False
+    user_profile = models.ForeignKey(
+        user_profile.UserProfile, on_delete=models.CASCADE, related_name="charge", null=True, blank=True
     )
     session_key = models.CharField(max_length=255, null=True, blank=True)
     provider = models.CharField(
@@ -115,15 +111,14 @@ class Charge(TimestampedModel):
         super().save(*args, **kwargs)
         if is_new:
             logger.debug(
-                "%s.save() New user charge created for %s %s. Sending signal.",
+                "%s.save() New user charge created for %s. Sending signal.",
                 formatted_text(__name__ + ".Charge()"),
-                self.account.company_name,
-                self.user.email,
+                self.user_profile,
             )
             new_charge_created.send(sender=self.__class__, charge=self)
 
     def __str__(self):
-        return f"""{self.account.account_number} - {self.user.email} - {self.provider} - {self.charge_type} - {self.total_tokens}"""
+        return f"""{self.user_profile} - {self.provider} - {self.charge_type} - {self.total_tokens}"""
 
 
 __all__ = [

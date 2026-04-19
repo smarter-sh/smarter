@@ -73,7 +73,8 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from . import EXCEPTION_MAP, ChatProviderBase, _InternalKeys
+from . import EXCEPTION_MAP, SmarterChatProviderBase
+from .internal_keys import _InternalKeys
 
 
 # pylint: disable=W0613
@@ -88,10 +89,39 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class OpenAICompatibleChatProvider(ChatProviderBase):
+class OpenAICompatibleChatProvider(SmarterChatProviderBase):
     """
-    A chat provider that works with any vendor provider that is
-    fully compatible with OpenAI's text completion API.
+    Chat provider for OpenAI-compatible text completion APIs.
+
+    This provider class enables seamless integration with any vendor or service
+    that implements the OpenAI chat completion API, including both OpenAI and third-party providers
+    that adhere to the same protocol and message formats.
+
+    **Key Features:**
+
+        - Supports OpenAI's chat completion API and compatible alternatives.
+        - Handles message formatting, tool calls, plugin integration, and billing.
+        - Manages multi-step chat completion workflows, including tool and plugin responses.
+        - Provides hooks for plugin selection, function registration, and error handling.
+
+    **Usage:**
+
+        Inherit from this class to implement a chat provider that communicates with any OpenAI-compatible API endpoint.
+        This class is suitable for use cases where you want to support multiple LLM vendors with a unified interface.
+
+    **Example:**
+
+        .. code-block:: python
+
+            class MyProvider(OpenAICompatibleChatProvider):
+                pass
+
+            provider = MyProvider()
+            response = provider.handler(user, chat, data)
+
+    .. seealso::
+        - https://platform.openai.com/docs/api-reference/chat
+        - :class:`SmarterChatProviderBase`
     """
 
     @property
