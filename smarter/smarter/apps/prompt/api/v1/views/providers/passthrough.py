@@ -1,8 +1,7 @@
 # pylint: disable=W0613
 """
 This module contains passthrough views for interacting directly with the LLM
-provider backend API. These views are intended to be used for debugging and
-testing purposes, and should not be exposed in production environments.
+provider backend API.
 """
 
 import logging
@@ -12,6 +11,7 @@ import openai
 from openai.types.chat.chat_completion import ChatCompletion
 from rest_framework.request import Request
 
+from smarter.apps.prompt.providers.base_classes import ChatDbMixin
 from smarter.apps.prompt.signals import (
     chat_completion_request,
     chat_completion_response,
@@ -20,11 +20,13 @@ from smarter.apps.prompt.signals import (
     chat_started,
 )
 from smarter.apps.provider.models import Provider
+from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
 )
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
 )
@@ -33,8 +35,17 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-logger = logging.getLogger(__name__)
+
+# pylint: disable=W0613
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class PromptPassthroughView(SmarterAuthenticatedAPIView):
@@ -53,6 +64,17 @@ class PromptPassthroughView(SmarterAuthenticatedAPIView):
     :return: A JSON response containing the provider's chat completion result, or an error message.
     :rtype: SmarterJournaledJsonResponse | SmarterJournaledJsonErrorResponse | SmarterHttpResponseBadRequest | SmarterHttpResponseForbidden | SmarterHttpResponseNotFound
 
+    :signals:
+        - ``chat_started``: Sent before the chat completion request is made.
+        - ``chat_completion_request``: Sent with the prompt data before calling the provider.
+        - ``chat_completion_response``: Sent after a successful response from the provider.
+        - ``chat_finished``: Sent after the chat completion process is finished.
+        - ``chat_response_failure``: Sent if an exception occurs during the provider call.
+
+    :raises SmarterHttpResponseForbidden: If the user is not authenticated.
+    :raises SmarterHttpResponseNotFound: If the specified provider is not found.
+    :raises SmarterHttpResponseBadRequest: If the request body is invalid.
+    :raises SmarterJournaledJsonErrorResponse: If the provider API call fails.
 
     **Valid request body keys include (but are not limited to):**
 
@@ -140,6 +162,8 @@ class PromptPassthroughView(SmarterAuthenticatedAPIView):
             logger.debug("%s.post() using provider: %s", self.formatted_class_name, provider)
         except Provider.DoesNotExist:
             return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
+
+        chat_db_mixin = ChatDbMixin()
 
         if provider.api_key:
             openai.api_key = provider.api_key.get_secret_value()

@@ -40,8 +40,7 @@ class TestCharge(TestAccountMixin):
         """
 
         Charge.objects.create(
-            account=self.account,
-            user=self.admin_user,
+            user_profile=self.user_profile,
             session_key="test_session_key",
             provider=self.provider.name,
             charge_type=CHARGE_TYPES[0][0],
@@ -52,7 +51,7 @@ class TestCharge(TestAccountMixin):
             reference="test_reference",
         )
 
-        charge = Charge.objects.get(account=self.account, user=self.admin_user, session_key="test_session_key")
+        charge = Charge.objects.get(user_profile=self.user_profile, session_key="test_session_key")
         self.assertEqual(charge.provider, self.provider.name)
         self.assertEqual(charge.charge_type, CHARGE_TYPES[0][0])
         self.assertEqual(charge.prompt_tokens, 10)

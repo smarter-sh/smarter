@@ -427,6 +427,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         user_profile: Optional[UserProfile] = None,
         username: Optional[str] = None,
         account: Optional[Account] = None,
+        session_key: Optional[str] = None,
         **kwargs,
     ) -> models.Model:
         """
@@ -557,14 +558,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 )
                 return None
             except cls.MultipleObjectsReturned:
-                logger.error(
-                    "%s.get_cached_object() Multiple %s objects found with name '%s' and user profile '%s'. Defaulting to first result.",
-                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
-                    cls.__name__,
-                    name,
-                    user_profile,
+                raise SmarterValueError(
+                    f"Multiple {class_name} objects found for name '{name}' and user profile '{user_profile}'. This should not happen as there should be a unique constraint on name and user profile."
                 )
-                return cls.objects.prefetch_related("tags").filter(name=name, user_profile=user_profile).first()
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_account(
@@ -606,15 +602,51 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     account,
                 )
                 return None
-            except cls.MultipleObjectsReturned:
-                logger.error(
-                    "%s.get_cached_object() Multiple %s objects found with name '%s' and account '%s'. Defaulting to first result.",
+            except cls.MultipleObjectsReturned as e:
+                raise SmarterValueError(
+                    f"Multiple {class_name} objects found for name '{name}' and account '{account}'. This should not happen as there should be a unique constraint on name and account."
+                ) from e
+
+        @cache_results(cls.cache_expiration)
+        def _get_object_by_session_key(
+            session_key: str, class_name: str = cls.__name__
+        ) -> Optional["MetaDataWithOwnershipModel"]:
+            """
+            Internal method to retrieve a model instance by session key with caching.
+            Prefetches related tags and selects related user profile, account, and
+            user for optimal access.
+
+            :param session_key: The session key associated with the model instance.
+            :param class_name: The name of the class for cache key purposes.
+
+            :returns: The model instance if found, otherwise None.
+            :rtype: Optional["MetaDataWithOwnershipModel"]
+            """
+            try:
+                retval = (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(user_profile__cached_user__sessions__session_key=session_key)
+                )
+                logger.debug(
+                    "%s._get_object_by_session_key() fetched %s for session_key: %s",
+                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    type(retval).__class__.__name__,
+                    session_key,
+                )
+                return retval
+            except cls.DoesNotExist:
+                logger.debug(
+                    "%s._get_object_by_session_key() no %s found for session_key: %s",
                     formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     cls.__name__,
-                    name,
-                    account,
+                    session_key,
                 )
-                return cls.objects.prefetch_related("tags").filter(name=name, user_profile__account=account).first()
+                return None
+            except cls.MultipleObjectsReturned as e:
+                raise SmarterValueError(
+                    f"Multiple {class_name} objects found for session_key '{session_key}'. This should not happen as session keys should be unique to a user session."
+                ) from e
 
         if invalidate:
             _get_object_by_pk.invalidate(pk=pk, class_name=cls.__name__)
@@ -625,6 +657,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         if pk:
             return _get_object_by_pk(pk=pk, class_name=cls.__name__)
+
+        if session_key:
+            return _get_object_by_session_key(session_key=session_key, class_name=cls.__name__)
 
         try:
             user_profile = user_profile or UserProfile.get_cached_object(user=user, account=account)

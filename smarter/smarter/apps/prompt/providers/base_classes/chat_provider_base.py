@@ -43,7 +43,8 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from . import ChatDbMixin, _InternalKeys
+from . import ChatDbMixin
+from .internal_keys import _InternalKeys
 
 
 # pylint: disable=W0613
@@ -56,9 +57,39 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class ChatProviderBase(ChatDbMixin):
+class SmarterChatProviderBase(ChatDbMixin):
     """
-    Base class for all chat providers.
+    Base class for all Smarter chat providers.
+
+    This class defines the core interface and shared logic for chat providers
+    that interact with ChatBots via the Smarter API, including both the
+    Reactapp and deployed ChatBots accessible through named URLs. It is
+    designed to be subclassed by specific provider implementations.
+
+    The API is largely a superset of the OpenAI chat completion API, with
+    additional properties and methods for configuring the Reactapp and for
+    managing additional message content types that are proprietary to Smarter.
+
+    **Key Features:**
+
+        - Provides a unified interface for chat providers, supporting both OpenAI-compatible and proprietary Smarter features.
+        - Handles message thread management, including system prompts, user/assistant messages, and plugin/tool messages.
+        - Supports built-in tools (e.g., weather, date calculator) and plugin integration.
+        - Manages provider configuration, validation, and readiness checks.
+        - Tracks token usage and charge insertion for billing/auditing.
+
+    **Usage:**
+
+        Subclass this base class to implement a new chat provider. Override or extend methods as needed for provider-specific logic.
+
+    **Example:**
+        .. code-block:: python
+
+            class MyProvider(SmarterChatProviderBase):
+                def my_custom_method(self):
+                    # Custom logic here
+                    pass
+
     """
 
     __slots__ = (
@@ -147,6 +178,32 @@ class ChatProviderBase(ChatDbMixin):
         *args,
         **kwargs,
     ):
+        """
+        Initialize the SmarterChatProviderBase with the given parameters.
+
+        :param provider: The name of the chat provider (e.g., "openai", "google").
+        :type provider: str
+        :param base_url: The base URL for the chat provider's API.
+        :type base_url: str
+        :param api_key: The API key for authenticating with the chat provider.
+        :type api_key: str
+        :param default_model: The default model to use for chat completions.
+        :type default_model: str
+        :param default_system_role: The default system role to use in the message thread.
+        :type default_system_role: str
+        :param default_temperature: The default temperature to use for chat completions.
+        :type default_temperature: float
+        :param default_max_tokens: The default maximum number of tokens for chat completions.
+        :type default_max_tokens: int
+        :param valid_chat_completion_models: A list of valid chat completion models for the provider.
+        :type valid_chat_completion_models: list[str]
+        :param add_built_in_tools: Whether to add built-in tools (weather and date calculator) to the provider.
+        :type add_built_in_tools: bool
+
+
+
+
+        """
         super().__init__(*args, **kwargs)
 
         # constructor arguments
@@ -315,7 +372,7 @@ class ChatProviderBase(ChatDbMixin):
         :returns: The formatted class name.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{ChatProviderBase.__name__}[{id(self)}]")
+        return formatted_text(f"{__name__}.{SmarterChatProviderBase.__name__}[{id(self)}]")
 
     @property
     def provider(self) -> Optional[str]:
@@ -588,8 +645,8 @@ class ChatProviderBase(ChatDbMixin):
             prompt_tokens=self.prompt_tokens,
             total_tokens=self.total_tokens,
             model=self.model,
-            reference=self.reference or "ChatProviderBase._insert_charge_by_type()",
+            reference=self.reference or "SmarterChatProviderBase._insert_charge_by_type()",
         )
 
 
-__all__ = ["ChatProviderBase"]
+__all__ = ["SmarterChatProviderBase"]
