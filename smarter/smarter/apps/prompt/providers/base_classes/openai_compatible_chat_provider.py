@@ -24,7 +24,7 @@ from smarter.apps.account.models import (
     CHARGE_TYPE_PLUGIN,
     CHARGE_TYPE_PROMPT_COMPLETION,
     CHARGE_TYPE_TOOL,
-    User,
+    UserProfile,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta, PluginPrompt
@@ -117,7 +117,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
                 pass
 
             provider = MyProvider()
-            response = provider.handler(user, chat, data)
+            response = provider.handler(user_profile, chat, data)
 
     .. seealso::
         - https://platform.openai.com/docs/api-reference/chat
@@ -597,21 +597,21 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
                 raise SmarterConfigurationError(
                     f"{self.formatted_class_name}: account is required to handle plugin calls."
                 )
-            if not self.user:
+            if not self.user_profile:
                 raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}: user is required to handle plugin calls."
+                    f"{self.formatted_class_name}: user_profile is required to handle plugin calls."
                 )
             if not self.user_profile:
                 raise SmarterConfigurationError(
                     f"{self.formatted_class_name}: user_profile is required to handle plugin calls."
                 )
-            if not isinstance(self.user, User):
+            if not isinstance(self.user_profile, UserProfile):
                 raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}: user must be an instance of User, got {type(self.user)}. This is a bug."
+                    f"{self.formatted_class_name}: user_profile must be an instance of UserProfile, got {type(self.user_profile)}. This is a bug."
                 )
             plugin_controller = PluginController(
                 account=self.account,
-                user=self.user,
+                user_profile=self.user_profile,
                 user_profile=self.user_profile,
                 plugin_meta=plugin_meta,
             )
@@ -765,7 +765,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
 
     def handler(
         self,
-        user: User,
+        user_profile: UserProfile,
         chat: Chat,
         data: Union[dict[str, Any], list],
         plugins: Optional[list[PluginBase]] = None,
@@ -784,8 +784,8 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
         - Managing billing, logging, and signal dispatch.
         - Returning a formatted HTTP response with the LLM's output and relevant metadata.
 
-        :param user: The user instance making the request.
-        :type user: User
+        :param user_profile: The user_profile instance making the request.
+        :type user_profile: UserProfile
         :param chat: The chat session instance associated with this request.
         :type chat: Chat
         :param data: The request payload, typically containing a session key and a list of message dictionaries.
@@ -799,7 +799,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
                         {'role': 'system', 'content': "You are a helpful assistant."},
                         {'role': 'assistant', 'content': "Welcome to Smarter! ..."},
                         {'role': 'smarter', 'content': "Tool call: smarter_plugin_0002({\"inquiry_type\":\"about\"})"},
-                        {'role': 'user', 'content': 'Hello, World!'}
+                        {'role': 'user_profile', 'content': 'Hello, World!'}
                     ]
                 }
 
@@ -835,20 +835,20 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
                 data=request_data,
                 plugins=[plugin1, plugin2],
                 functions=[function_definition_1, function_definition_2],
-                user=current_user
+                user_profile=current_user
             )
         """
         plugins_list = [plugin.name for plugin in plugins] if plugins else []
         logger.debug(
-            "%s.handler() called with user=%s, chat=%s, plugins=%s, functions=%s",
+            "%s.handler() called with user_profile=%s, chat=%s, plugins=%s, functions=%s",
             self.formatted_class_name,
-            user,
+            user_profile,
             chat,
             plugins_list,
             functions,
         )
         self._chat = chat
-        self.user = user
+        self.user_profile = user_profile
         if chat:
             self.user_profile = chat.user_profile
         self.data = data  # type: ignore[assignment]
@@ -877,7 +877,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
 
             # initialize the message history from the persisted
             # message history in the database, if it exists,
-            # and append the user's message.
+            # and append the user_profile's message.
             #
             # using the persisted message history ensures that the chat
             # provider has a consistent view of the conversation history
@@ -890,13 +890,15 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
                 # new thread with no history, so we initialize with everything
                 # that was passed in by the React front-end. There customarily
                 # is 1 or more system messages, 1 or more assistant messages,
-                # and a user message.
+                # and a user_profile message.
                 self.messages = self.get_message_thread(data=self.data)
 
             # add plugins to the prompt if any are selected
             if self.plugins:
                 for plugin in self.plugins:
-                    if plugin.selected(user=self.user, input_text=self.input_text, messages=self.messages):
+                    if plugin.selected(
+                        user_profile=self.user_profile, input_text=self.input_text, messages=self.messages
+                    ):
                         self.handle_plugin_selected(plugin=plugin)
 
             # add all functions that are included in the chatbot definition

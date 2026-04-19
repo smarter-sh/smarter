@@ -11,7 +11,10 @@ There are a few objectives of this class:
 import logging
 from typing import Any, Dict, List, Optional, Union
 
-from smarter.apps.account.models import User
+from openai.types.chat.chat_completion import ChatCompletion
+from rest_framework.request import Request
+
+from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
 from smarter.common.exceptions import SmarterValueError
@@ -22,13 +25,18 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .base_classes import HandlerProtocol
-from .googleai.classes import GoogleAIChatProvider
+from .base_classes import (
+    OpenAICompatibleChatCompletionRequest,
+    OpenAICompatibleChatCompletionResponse,
+    OpenAICompatiblePassthoughProtocol,
+    SmarterChatHandlerProtocol,
+)
+from .googleai.classes import GoogleAIChatProvider, GoogleAIPassthroughChatProvider
 from .googleai.const import PROVIDER_NAME as GOOGLEAI_PROVIDER_NAME
-from .metaai.classes import MetaAIChatProvider
+from .metaai.classes import MetaAIChatProvider, MetaAIPassthroughChatProvider
 from .metaai.const import PROVIDER_NAME as METAAI_PROVIDER_NAME
 from .openai.classes import PROVIDER_NAME as OPENAI_PROVIDER_NAME
-from .openai.classes import OpenAIChatProvider
+from .openai.classes import OpenAIChatProvider, OpenAIPassthroughChatProvider
 
 
 # pylint: disable=W0613
@@ -62,7 +70,7 @@ patterns emerge that are confirmed to be cache safe.
 """
 
 
-class ChatProviders(SmarterHelperMixin):
+class SmarterCompatibleChatProviders(SmarterHelperMixin):
     """
     Collection of all the chat providers.
     """
@@ -119,7 +127,7 @@ class ChatProviders(SmarterHelperMixin):
     # -------------------------------------------------------------------------
     def openai_handler(
         self,
-        user: User,
+        user_profile: UserProfile,
         chat: Chat,
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
@@ -137,13 +145,13 @@ class ChatProviders(SmarterHelperMixin):
                 chat.id,  # type: ignore[arg-type]
             )
 
-            if not user:
+            if not user_profile:
                 raise SmarterValueError(
-                    f"{self.formatted_class_name}: user is required to handle OpenAIChatProvider calls."
+                    f"{self.formatted_class_name}: user_profile is required to handle OpenAIChatProvider calls."
                 )
             # if we have a cached provider, we can use it to invoke the handler
             # with everything preinitialized (from the last invocation) get the response.
-            result = cached_provider.handler(user, chat, data, plugins=plugins, functions=functions)
+            result = cached_provider.handler(user_profile, chat, data, plugins=plugins, functions=functions)
 
             # the state of the class instance will change after the handler is invoked
             # so we need to update the cache with the new state, and we'll also reset the timeout.
@@ -151,7 +159,7 @@ class ChatProviders(SmarterHelperMixin):
             caching_logger.debug(f"caching {cache_key}")
             return result
 
-        result = self.openai.handler(user, chat, data, plugins=plugins, functions=functions)
+        result = self.openai.handler(user_profile, chat, data, plugins=plugins, functions=functions)
         # raised Can't pickle <function capfirst at 0x7ffffa408540>: it's not the same object as django.utils.text.capfirst
         # cache.set(cache_key, self.openai, timeout=CACHE_TIMEOUT)
         caching_logger.debug(f"caching {cache_key}")
@@ -160,7 +168,7 @@ class ChatProviders(SmarterHelperMixin):
 
     def googleai_handler(
         self,
-        user: User,
+        user_profile: UserProfile,
         chat: Chat,
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
@@ -177,16 +185,16 @@ class ChatProviders(SmarterHelperMixin):
                 self.formatted_class_name,
                 chat.id,  # type: ignore[arg-type]
             )
-            if not user:
+            if not user_profile:
                 raise SmarterValueError(
-                    f"{self.formatted_class_name}: user is required to handle GoogleAIChatProvider calls."
+                    f"{self.formatted_class_name}: user_profile is required to handle GoogleAIChatProvider calls."
                 )
-            result = cached_provider.handler(user, chat, data, plugins=plugins, functions=functions)
+            result = cached_provider.handler(user_profile, chat, data, plugins=plugins, functions=functions)
             cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)
             caching_logger.debug(f"caching {cache_key}")
             return result
 
-        result = self.googleai.handler(user, chat, data, plugins=plugins, functions=functions)
+        result = self.googleai.handler(user_profile, chat, data, plugins=plugins, functions=functions)
         cache.set(cache_key, self.googleai, timeout=CACHE_TIMEOUT)
         caching_logger.debug(f"caching {cache_key}")
         self._googleai = None
@@ -194,7 +202,7 @@ class ChatProviders(SmarterHelperMixin):
 
     def metaai_handler(
         self,
-        user: User,
+        user_profile: UserProfile,
         chat: Chat,
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
@@ -210,16 +218,16 @@ class ChatProviders(SmarterHelperMixin):
                 "%s returning cached MetaAIChatProvider for chat %s", formatted_text("metaai_handler()"), chat.id  # type: ignore[arg-type]
             )
 
-            if not user:
+            if not user_profile:
                 raise SmarterValueError(
-                    f"{self.formatted_class_name}: user is required to handle MetaAIChatProvider calls."
+                    f"{self.formatted_class_name}: user_profile is required to handle MetaAIChatProvider calls."
                 )
-            result = cached_provider.handler(user, chat, data, plugins=plugins, functions=functions)
+            result = cached_provider.handler(user_profile, chat, data, plugins=plugins, functions=functions)
             cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)
             caching_logger.debug(f"caching {cache_key}")
             return result
 
-        result = self.metaai.handler(user, chat, data, plugins=plugins, functions=functions)
+        result = self.metaai.handler(user_profile, chat, data, plugins=plugins, functions=functions)
         cache.set(cache_key, self.metaai, timeout=CACHE_TIMEOUT)
         caching_logger.debug(f"caching {cache_key}")
         self._metaai = None
@@ -227,29 +235,29 @@ class ChatProviders(SmarterHelperMixin):
 
     def default_handler(
         self,
-        user: User,
+        user_profile: UserProfile,
         chat: Chat,
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
     ) -> Union[dict, list]:
         """Expose the handler method of the default provider"""
-        return self.openai_handler(user, chat, data, plugins=plugins, functions=functions)
+        return self.openai_handler(user_profile, chat, data, plugins=plugins, functions=functions)
 
     def logger_helper(self, verb: str, msg: str):
         logger.debug("%s %s %s", self.formatted_class_name, verb, msg)
 
     @property
-    def all_handlers(self) -> Dict[str, HandlerProtocol]:
+    def all_handlers(self) -> Dict[str, SmarterChatHandlerProtocol]:
         """
         A dictionary of all the handler callables.
-        handlers must conform to HandlerProtocol.
+        handlers must conform to SmarterChatHandlerProtocol.
         """
 
-        googleai_handler: HandlerProtocol = self.googleai_handler
-        metaai_handler: HandlerProtocol = self.metaai_handler
-        openai_handler: HandlerProtocol = self.openai_handler
-        default_handler: HandlerProtocol = self.default_handler
+        googleai_handler: SmarterChatHandlerProtocol = self.googleai_handler
+        metaai_handler: SmarterChatHandlerProtocol = self.metaai_handler
+        openai_handler: SmarterChatHandlerProtocol = self.openai_handler
+        default_handler: SmarterChatHandlerProtocol = self.default_handler
 
         return {
             GOOGLEAI_PROVIDER_NAME: googleai_handler,
@@ -258,7 +266,7 @@ class ChatProviders(SmarterHelperMixin):
             "DEFAULT": default_handler,
         }
 
-    def get_handler(self, provider: Optional[str] = None) -> HandlerProtocol:
+    def get_handler(self, provider: Optional[str] = None) -> SmarterChatHandlerProtocol:
         """
         A convenience method to get a handler by provider name.
         """
@@ -280,4 +288,134 @@ class ChatProviders(SmarterHelperMixin):
         ]
 
 
-chat_providers = ChatProviders()
+class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
+    """
+    Collection of all OpenAI-compatible passthrough chat providers.
+    """
+
+    _default = None
+    _googleai = None
+    _metaai = None
+    _openai = None
+
+    # -------------------------------------------------------------------------
+    # all providers
+    # -------------------------------------------------------------------------
+    @property
+    def googleai(self) -> GoogleAIPassthroughChatProvider:
+        if self._googleai is None:
+            self._googleai = GoogleAIPassthroughChatProvider()
+        return self._googleai
+
+    @property
+    def metaai(self) -> MetaAIPassthroughChatProvider:
+        if self._metaai is None:
+            self._metaai = MetaAIPassthroughChatProvider()
+        return self._metaai
+
+    @property
+    def openai(self) -> OpenAIPassthroughChatProvider:
+        if self._openai is None:
+            self._openai = OpenAIPassthroughChatProvider()
+        return self._openai
+
+    @property
+    def default(self) -> OpenAIPassthroughChatProvider:
+        if self._default is None:
+            self._default = OpenAIPassthroughChatProvider()
+        return self._default
+
+    def validate_chat(self, chat: Chat) -> None:
+        """
+        Validate the chat object.
+        """
+        if not chat:
+            raise SmarterValueError("Chat object is required to get the handler")
+        if not chat.session_key:
+            raise SmarterValueError("Chat session key is required to get the handler")
+
+    # -------------------------------------------------------------------------
+    # all handlers
+    # -------------------------------------------------------------------------
+    def openai_handler(
+        self,
+        request: Request,
+        user_profile: UserProfile,
+        data: OpenAICompatibleChatCompletionRequest,
+    ) -> OpenAICompatibleChatCompletionResponse:
+        """Expose the handler method of the default provider"""
+        return self.openai.handler(request, user_profile, data)
+
+    def googleai_handler(
+        self,
+        request: Request,
+        user_profile: UserProfile,
+        data: OpenAICompatibleChatCompletionRequest,
+    ) -> OpenAICompatibleChatCompletionResponse:
+        """Expose the handler method of the googleai provider"""
+        return self.googleai.handler(request, user_profile, data)
+
+    def metaai_handler(
+        self,
+        request: Request,
+        user_profile: UserProfile,
+        data: OpenAICompatibleChatCompletionRequest,
+    ) -> OpenAICompatibleChatCompletionResponse:
+        """Expose the handler method of the metaai provider"""
+        return self.metaai.handler(request, user_profile, data)
+
+    def default_handler(
+        self,
+        request: Request,
+        user_profile: UserProfile,
+        data: OpenAICompatibleChatCompletionRequest,
+    ) -> OpenAICompatibleChatCompletionResponse:
+        """Expose the handler method of the default provider"""
+        return self.openai_handler(request, user_profile, data)
+
+    def logger_helper(self, verb: str, msg: str):
+        logger.debug("%s %s %s", self.formatted_class_name, verb, msg)
+
+    @property
+    def all_handlers(self) -> Dict[str, OpenAICompatiblePassthoughProtocol]:
+        """
+        A dictionary of all the handler callables.
+        handlers must conform to OpenAICompatiblePassthoughProtocol.
+        """
+
+        googleai_handler: OpenAICompatiblePassthoughProtocol = self.googleai_handler
+        metaai_handler: OpenAICompatiblePassthoughProtocol = self.metaai_handler
+        openai_handler: OpenAICompatiblePassthoughProtocol = self.openai_handler
+        default_handler: OpenAICompatiblePassthoughProtocol = self.default_handler
+
+        return {
+            GOOGLEAI_PROVIDER_NAME: googleai_handler,
+            METAAI_PROVIDER_NAME: metaai_handler,
+            OPENAI_PROVIDER_NAME: openai_handler,
+            "DEFAULT": default_handler,
+        }
+
+    def get_handler(self, provider: Optional[str] = None) -> OpenAICompatiblePassthoughProtocol:
+        """
+        A convenience method to get a handler by provider name.
+        """
+        if not provider:
+            return self.default_handler
+
+        handler = self.all_handlers.get(provider)
+        if not handler:
+            raise ValueError(f"Handler not found for provider: {provider}")
+        return handler
+
+    @property
+    def all(self) -> list[str]:
+        return [
+            self.googleai.provider or "GoogleAi",
+            self.metaai.provider or "MetaAI",
+            self.openai.provider or "OpenAI",
+            self.default.provider or "Default",
+        ]
+
+
+smarter_compatible_chat_providers = SmarterCompatibleChatProviders()
+openai_compatible_passthrough_chat_providers = OpenAICompatiblePassthroughChatProviders()

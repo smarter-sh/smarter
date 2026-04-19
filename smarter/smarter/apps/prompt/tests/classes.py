@@ -32,7 +32,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from ..models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
-from ..providers.providers import chat_providers
+from ..providers.providers import smarter_compatible_chat_providers
 from ..signals import (
     chat_completion_response,
     chat_finished,
@@ -174,7 +174,7 @@ class ProviderBaseClass(TestAccountMixin):
         # create a chatbot that uses the provider
         print(f"Setting up provider {self.provider}")
         self.chatbot = self.chatbot_factory(provider=self.provider)
-        self.handler = chat_providers.get_handler(provider=self.provider)
+        self.handler = smarter_compatible_chat_providers.get_handler(provider=self.provider)
         print(f"provider {self.provider} is setup")
 
         self.client = Client()
@@ -335,7 +335,9 @@ class ProviderBaseClass(TestAccountMixin):
 
         try:
             if not self.handler:
-                raise ValueError("Handler is not set. Did you call chat_providers.get_handler(provider=...) ?")
+                raise ValueError(
+                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_handler(provider=...) ?"
+                )
 
             response = self.handler(
                 chat=self.chat, data=event_about_gobstoppers, plugins=self.plugins, user=self.admin_user
@@ -383,7 +385,9 @@ class ProviderBaseClass(TestAccountMixin):
 
         try:
             if not self.handler:
-                raise ValueError("Handler is not set. Did you call chat_providers.get_handler(provider=...) ?")
+                raise ValueError(
+                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_handler(provider=...) ?"
+                )
 
             response = self.handler(
                 chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_weather
@@ -399,7 +403,9 @@ class ProviderBaseClass(TestAccountMixin):
 
         try:
             if not self.handler:
-                raise ValueError("Handler is not set. Did you call chat_providers.get_handler(provider=...) ?")
+                raise ValueError(
+                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_handler(provider=...) ?"
+                )
 
             response = self.handler(
                 chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_recipes

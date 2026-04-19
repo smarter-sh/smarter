@@ -5,35 +5,25 @@ provider backend API.
 """
 
 import logging
-from typing import Optional
 
-import openai
-from openai.types.chat.chat_completion import ChatCompletion
 from rest_framework.request import Request
 
-from smarter.apps.prompt.providers.base_classes import ChatDbMixin
-from smarter.apps.prompt.signals import (
-    chat_completion_request,
-    chat_completion_response,
-    chat_finished,
-    chat_response_failure,
-    chat_started,
+from smarter.apps.account.models import UserProfile
+from smarter.apps.prompt.providers.base_classes.protocols import (
+    OpenAICompatibleChatCompletionRequest,
 )
-from smarter.apps.provider.models import Provider
+from smarter.apps.prompt.providers.providers import (
+    openai_compatible_passthrough_chat_providers,
+)
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
-    SmarterHttpResponseNotFound,
+    SmarterHttpResponseServerError,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
-)
-from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
-from smarter.lib.journal.http import (
-    SmarterJournaledJsonErrorResponse,
-    SmarterJournaledJsonResponse,
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -145,62 +135,17 @@ class PromptPassthroughView(SmarterAuthenticatedAPIView):
         )
 
     def post(self, request: Request, *args, **kwargs):
-        response: Optional[ChatCompletion] = None
-        provider: Optional[Provider] = None
-        if not hasattr(request, "user") or not request.user.is_authenticated:
-            return SmarterHttpResponseForbidden(
-                request=request, error_message="Authentication required to use passthrough endpoint"
-            )
-
-        logger.info("%s.post() called with data: %s", self.formatted_class_name, request.data)
-
-        provider_name = kwargs.pop("provider", None)
+        handler = openai_compatible_passthrough_chat_providers.default_handler
         try:
-            provider = Provider.get_cached_object(name=provider_name, user=request.user)  # type: ignore
-            if not provider:
-                raise Provider.DoesNotExist
-            logger.debug("%s.post() using provider: %s", self.formatted_class_name, provider)
-        except Provider.DoesNotExist:
-            return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
-
-        chat_db_mixin = ChatDbMixin()
-
-        if provider.api_key:
-            openai.api_key = provider.api_key.get_secret_value()
-        openai.base_url = provider.base_url
-
-        if not hasattr(request, "data") or not isinstance(request.data, dict):
-            return SmarterHttpResponseBadRequest(
-                request=request, error_message="Invalid request body: expected a JSON object"
-            )
-        data = request.data
-
-        chat_started.send(sender=self.__class__, request=request)
-        chat_completion_request.send(sender=self.__class__, request=request, prompt=data)
-
+            user_profile = UserProfile.objects.get(user=request.user)
+        except UserProfile.DoesNotExist:
+            return SmarterHttpResponseForbidden(request=request, error_message="User profile not found")
         try:
-            response = openai.chat.completions.create(**data)
+            data = OpenAICompatibleChatCompletionRequest(**request.data)
+        except (TypeError, ValueError) as e:
+            return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
         # pylint: disable=broad-except
         except Exception as e:
-            # send error signal
-            response = None
-            chat_response_failure.send(sender=self.__class__, request=request, error=e)
-            logger.error("Error calling OpenAI API: %s", str(e), exc_info=True)
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                e=e,
-                thing=SmarterJournalThings.CHAT,
-                command=SmarterJournalCliCommands.CHAT,
-            )
-
-        chat_completion_response.send(sender=self.__class__, request=request, response=response)
-        chat_finished.send(sender=self.__class__, request=request, response=response)
-
-        response_dict: dict = {"message": "Response is not a ChatCompletion object"}
-        if isinstance(response, ChatCompletion):
-            response_dict = response.model_dump()
-
-        logger.debug("%s.post() returning response: %s", self.formatted_class_name, response_dict)
-        return SmarterJournaledJsonResponse(
-            request=request, data=response_dict, thing=SmarterJournalThings.CHAT, command=SmarterJournalCliCommands.CHAT
-        )
+            logger.error("Unexpected error parsing request data: %s", e)
+            return SmarterHttpResponseServerError(request=request, error_message="Invalid request data format")
+        return handler(request, user_profile, data, *args, **kwargs)

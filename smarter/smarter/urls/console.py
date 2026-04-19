@@ -64,7 +64,8 @@ from smarter.apps.vectorstore import urls as vectorstore_urls
 from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.logger_helpers import formatted_text
-from smarter.lib.django.waffle import SmarterSwitchAdmin
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterSwitchAdmin, SmarterWaffleSwitches
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +168,6 @@ urlpatterns = [
     path("provider/", include(provider_urls, namespace=provider_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
     path("session-test/", session_test_view, name="session_test"),
-    path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
     path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     path("secret/", include(secret_urls, namespace=secret_namespace)),
     # -----------------------------------
@@ -217,6 +217,11 @@ urlpatterns = [
     # -----------------------------------
     path("social-auth/", include(social_django_urls, namespace="social_auth")),
 ]
+
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_VECTORSTORE):
+    urlpatterns += [
+        path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
+    ]
 
 # mcdaniel 2026-01-20: converting static() to list(static(...)) to fix
 # Sphinx doc build error: 'TypeError: can only concatenate list (not "static") to list

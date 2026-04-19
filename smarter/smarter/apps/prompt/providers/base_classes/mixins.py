@@ -51,7 +51,8 @@ class ChatDbMixin(AccountMixin):
     models, including management of chat sessions, chat history, plugin/tool
     usage, and charge records. It is intended to be used as a base class for
     provider implementations that require integration with the Smarter database
-    models.
+    models. This provides layers of abstraction for asynchronously creating
+    history and charge records resulting from provider requests.
 
     **Key Features:**
 

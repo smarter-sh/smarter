@@ -296,12 +296,14 @@ def validate_provider(value):
     :returns: None
     """
     # pylint: disable=C0415
-    from smarter.apps.prompt.providers.providers import chat_providers
+    from smarter.apps.prompt.providers.providers import (
+        smarter_compatible_chat_providers,
+    )
 
-    if not value in chat_providers.all:
+    if not value in smarter_compatible_chat_providers.all:
         raise ValidationError(
             "%(value)s is not a valid provider. Valid providers are: %(providers)s",
-            params={"value": value, "providers": str(chat_providers.all)},
+            params={"value": value, "providers": str(smarter_compatible_chat_providers.all)},
         )
 
 

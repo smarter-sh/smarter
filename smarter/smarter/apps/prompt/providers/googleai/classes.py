@@ -5,7 +5,10 @@ Google AI chat provider.
 import logging
 
 # smarter stuff
-from smarter.apps.prompt.providers.base_classes import OpenAICompatibleChatProvider
+from smarter.apps.prompt.providers.base_classes import (
+    OpenAICompatibleChatProvider,
+    OpenAICompatiblePassthroughChatProvider,
+)
 from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -41,5 +44,20 @@ class GoogleAIChatProvider(OpenAICompatibleChatProvider):
             default_max_tokens=smarter_settings.llm_default_max_tokens,
             valid_chat_completion_models=VALID_CHAT_COMPLETION_MODELS,
             add_built_in_tools=False,
+            **kwargs,
+        )
+
+
+class GoogleAIPassthroughChatProvider(OpenAICompatiblePassthroughChatProvider):
+    """
+    GoogleAI passthrough chat provider service.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            *args,
+            provider=PROVIDER_NAME,
+            base_url=BASE_URL,
+            api_key=smarter_settings.gemini_api_key.get_secret_value(),
             **kwargs,
         )

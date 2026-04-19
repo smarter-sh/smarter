@@ -87,7 +87,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
     ACCOUNT = "Account"
     """Smarter Account resource. A Django ORM model instance."""
 
-    AUTH_TOKEN = "AuthToken"
+    AUTH_TOKEN = "SmarterAuthToken"
     """Smarter Authentication Token resource. A Django DRF Knox subclass ORM model instance."""
 
     USER = "User"

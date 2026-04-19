@@ -41,6 +41,8 @@ from smarter.apps.provider.const import namespace as provider_namespace
 from smarter.apps.secret.api.v1 import urls as secret_urls
 from smarter.apps.secret.const import namespace as secret_namespace
 from smarter.apps.vectorstore.api.v1 import urls as vectorstore_urls
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .cli.const import namespace as cli_namespace
 from .const import namespace
@@ -63,5 +65,9 @@ urlpatterns = [
     path("providers/", include(provider_urls, namespace=provider_namespace)),
     path("tests/", include(tests_urls, namespace="tests")),
     path("secrets/", include(secret_urls, namespace=secret_namespace)),
-    path("vectorstores/", include(vectorstore_urls, namespace="vectorstore")),
 ]
+
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_VECTORSTORE):
+    urlpatterns += [
+        path("vectorstores/", include(vectorstore_urls, namespace="vectorstore")),
+    ]
