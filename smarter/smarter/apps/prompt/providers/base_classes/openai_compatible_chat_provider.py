@@ -1,4 +1,4 @@
-# pylint: disable=C0302
+# pylint: disable=W0602
 """
 Base class for chat providers.
 """
@@ -12,8 +12,6 @@ from http import HTTPStatus
 from typing import Any, Optional, Union
 
 import openai
-
-# 3rd party stuff
 from openai.types.chat.chat_completion import ChatCompletion, Choice
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.chat.chat_completion_message_tool_call import (
@@ -45,8 +43,7 @@ from smarter.apps.prompt.functions.function_weather import (
     weather_tool_factory,
 )
 from smarter.apps.prompt.models import Chat
-
-# smarter chat provider stuff
+from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.apps.prompt.providers.utils import (
     http_response_factory,
 )
@@ -76,8 +73,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from ..const import OpenAIMessageKeys
-from . import EXCEPTION_MAP, ChatProviderBase, InternalKeys
+from . import EXCEPTION_MAP, ChatProviderBase, _InternalKeys
 
 
 # pylint: disable=W0613
@@ -172,8 +168,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         retval = []
         for message in filtered_messages:
             message_copy = message.copy()
-            if InternalKeys.SMARTER_IS_NEW in message_copy:
-                del message_copy[InternalKeys.SMARTER_IS_NEW]
+            if _InternalKeys.SMARTER_IS_NEW in message_copy:
+                del message_copy[_InternalKeys.SMARTER_IS_NEW]
             retval.append(message_copy)
         return retval
 
@@ -191,11 +187,11 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             return []
 
         try:
-            return [message for message in self.messages if message[InternalKeys.SMARTER_IS_NEW]]
+            return [message for message in self.messages if message[_InternalKeys.SMARTER_IS_NEW]]
         except KeyError:
             prefix = formatted_text(f"{self.formatted_class_name} new_messages()")
             logger.error(
-                "%s - KeyError: '%s' key not found in message: %s", prefix, InternalKeys.SMARTER_IS_NEW, self.messages
+                "%s - KeyError: '%s' key not found in message: %s", prefix, _InternalKeys.SMARTER_IS_NEW, self.messages
             )
         return self.messages
 
@@ -214,14 +210,14 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         if isinstance(self.messages, list):
             self.messages = self.messages_set_is_new(self.messages, is_new=False)
         tool_choice = OPENAI_TOOL_CHOICE
-        self.first_iteration[InternalKeys.REQUEST_KEY] = {
-            InternalKeys.API_URL: self.base_url,
-            InternalKeys.API_KEY: self.mask_string(self.api_key),
-            InternalKeys.MODEL_KEY: self.model,
-            InternalKeys.MESSAGES_KEY: self.openai_messages,
-            InternalKeys.TEMPERATURE_KEY: self.temperature,
-            InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
-            InternalKeys.TOOLS_KEY: self.tools,
+        self.first_iteration[_InternalKeys.REQUEST_KEY] = {
+            _InternalKeys.API_URL: self.base_url,
+            _InternalKeys.API_KEY: self.mask_string(self.api_key),
+            _InternalKeys.MODEL_KEY: self.model,
+            _InternalKeys.MESSAGES_KEY: self.openai_messages,
+            _InternalKeys.TEMPERATURE_KEY: self.temperature,
+            _InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
+            _InternalKeys.TOOLS_KEY: self.tools,
         }
 
         # create a Smarter UI message with the established configuration
@@ -236,7 +232,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             # 'Error code: 400 - Invalid value 'tool_choice' is only allowed when 'tools' are specified."
             #
             # pylint: disable=E1137
-            self.first_iteration[InternalKeys.REQUEST_KEY][InternalKeys.TOOL_CHOICE] = tool_choice
+            self.first_iteration[_InternalKeys.REQUEST_KEY][_InternalKeys.TOOL_CHOICE] = tool_choice
 
             # for any tools that are included in the request, add Smarter UI messages for each tool
             for tool in self.tools:
@@ -285,7 +281,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             sender=self.handler,
             chat=self.chat,
             iteration=self.iteration,
-            request=self.first_iteration[InternalKeys.REQUEST_KEY],
+            request=self.first_iteration[_InternalKeys.REQUEST_KEY],
         )
 
     def prep_second_request(self):
@@ -301,17 +297,17 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
             )
-        self.second_iteration[InternalKeys.REQUEST_KEY] = {
-            InternalKeys.API_URL: self.base_url,
-            InternalKeys.API_KEY: self.mask_string(self.api_key),
-            InternalKeys.MODEL_KEY: self.model,
-            InternalKeys.MESSAGES_KEY: self.openai_messages,
+        self.second_iteration[_InternalKeys.REQUEST_KEY] = {
+            _InternalKeys.API_URL: self.base_url,
+            _InternalKeys.API_KEY: self.mask_string(self.api_key),
+            _InternalKeys.MODEL_KEY: self.model,
+            _InternalKeys.MESSAGES_KEY: self.openai_messages,
         }
         chat_completion_request.send(
             sender=self.handler,
             chat=self.chat,
             iteration=self.iteration,
-            request=self.second_iteration[InternalKeys.REQUEST_KEY],
+            request=self.second_iteration[_InternalKeys.REQUEST_KEY],
         )
 
     def append_openai_response(self, response: ChatCompletion) -> None:
@@ -438,7 +434,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 raise SmarterIlligalInvocationError(
                     f"{self.formatted_class_name}.handle_response(): first_response is required for iteration 1, but was not set."
                 )
-            self.first_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.first_response.model_dump_json())
+            self.first_iteration[_InternalKeys.RESPONSE_KEY] = json.loads(self.first_response.model_dump_json())
         if self.iteration == 2:
             if not self.second_response:
                 raise SmarterIlligalInvocationError(
@@ -448,17 +444,17 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 raise SmarterValueError(
                     f"{self.formatted_class_name}.handle_response(): second_iteration must be a dictionary, got {type(self.second_iteration)}"
                 )
-            self.second_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.second_response.model_dump_json())
+            self.second_iteration[_InternalKeys.RESPONSE_KEY] = json.loads(self.second_response.model_dump_json())
 
         serialized_request = (
-            self.first_iteration[InternalKeys.REQUEST_KEY]
+            self.first_iteration[_InternalKeys.REQUEST_KEY]
             if self.iteration == 1
-            else self.second_iteration[InternalKeys.REQUEST_KEY] if self.second_iteration else None
+            else self.second_iteration[_InternalKeys.REQUEST_KEY] if self.second_iteration else None
         )
         serialized_response = (
-            self.first_iteration[InternalKeys.RESPONSE_KEY]
+            self.first_iteration[_InternalKeys.RESPONSE_KEY]
             if self.iteration == 1
-            else self.second_iteration[InternalKeys.RESPONSE_KEY] if self.second_iteration else None
+            else self.second_iteration[_InternalKeys.RESPONSE_KEY] if self.second_iteration else None
         )
 
         chat_completion_response.send(
@@ -483,8 +479,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         :rtype: None
         """
         logger.debug("%s.handle_tool_called() - %s", self.formatted_class_name, function_name)
-        request = (self.first_iteration[InternalKeys.REQUEST_KEY],)
-        response = (self.first_iteration[InternalKeys.RESPONSE_KEY],)
+        request = (self.first_iteration[_InternalKeys.REQUEST_KEY],)
+        response = (self.first_iteration[_InternalKeys.RESPONSE_KEY],)
         chat_completion_tool_called.send(
             sender=self.handler,
             chat=self.chat,
@@ -596,7 +592,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             plugin = plugin_controller.plugin
             plugin.params = function_args
             function_response = plugin.tool_call_fetch_plugin_response(function_args)
-            serialized_tool_call[InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
+            serialized_tool_call[_InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
             self.handle_plugin_called(plugin=plugin)
         else:
             raise SmarterConfigurationError(
@@ -702,8 +698,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
             )
-        response = self.second_iteration.get(InternalKeys.RESPONSE_KEY) or self.first_iteration.get(
-            InternalKeys.RESPONSE_KEY
+        response = self.second_iteration.get(_InternalKeys.RESPONSE_KEY) or self.first_iteration.get(
+            _InternalKeys.RESPONSE_KEY
         )
         if not isinstance(response, dict):
             raise SmarterValueError(f"{self.formatted_class_name}: response must be a dictionary, got {type(response)}")
@@ -712,12 +708,12 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
             "first_iteration": json.loads(json.dumps(self.first_iteration)),
             "second_iteration": json.loads(json.dumps(self.second_iteration)),
-            InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins],  # type: ignore[call-arg]
-            InternalKeys.MESSAGES_KEY: self.new_messages,
+            _InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins],  # type: ignore[call-arg]
+            _InternalKeys.MESSAGES_KEY: self.new_messages,
         }
         if self.tools:
             response_extended = response.get(OpenAIMessageKeys.SMARTER_MESSAGE_KEY).copy() or {}  # type: ignore[call-arg]
-            response_extended[InternalKeys.TOOLS_KEY] = [tool["function"]["name"] for tool in self.tools]
+            response_extended[_InternalKeys.TOOLS_KEY] = [tool["function"]["name"] for tool in self.tools]
             response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = response_extended
         return response
 
@@ -731,9 +727,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         """
         logger.debug("%s.request_meta_data_factory() called.", self.formatted_class_name)
         return {
-            InternalKeys.MODEL_KEY: self.model,
-            InternalKeys.TEMPERATURE_KEY: self.temperature,
-            InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
+            _InternalKeys.MODEL_KEY: self.model,
+            _InternalKeys.TEMPERATURE_KEY: self.temperature,
+            _InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
             "input_text": self.input_text,
         }
 
@@ -796,7 +792,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
         .. seealso::
 
-            :class:`InternalKeys`
+            :class:`_InternalKeys`
             :class:`OpenAIMessageKeys`
             :class:`PluginBase`
             :class:`ChatCompletion`
@@ -880,18 +876,18 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
             self.prep_first_request()
             completions_kwargs = {
-                InternalKeys.MODEL_KEY: self.model,
-                InternalKeys.MESSAGES_KEY: self.openai_messages,
-                InternalKeys.TEMPERATURE_KEY: self.temperature,
-                InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
+                _InternalKeys.MODEL_KEY: self.model,
+                _InternalKeys.MESSAGES_KEY: self.openai_messages,
+                _InternalKeys.TEMPERATURE_KEY: self.temperature,
+                _InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
             }
             if self.tools:
                 # new rule: tool_choice should only be provided if there are
                 # actual tools included in the request, otherwise OpenAI's
                 # API returns a 400 error: 'Invalid value 'tool_choice'
                 # is only allowed when 'tools' are specified.'
-                completions_kwargs[InternalKeys.TOOLS_KEY] = self.tools
-                completions_kwargs[InternalKeys.TOOL_CHOICE] = OPENAI_TOOL_CHOICE
+                completions_kwargs[_InternalKeys.TOOLS_KEY] = self.tools
+                completions_kwargs[_InternalKeys.TOOL_CHOICE] = OPENAI_TOOL_CHOICE
             completions_kwargs = self.prune_empty_values(completions_kwargs)
 
             logger.debug(
@@ -1001,7 +997,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         chat_finished.send(
             sender=self.handler,
             chat=self.chat,
-            request=self.first_iteration.get(InternalKeys.REQUEST_KEY),
+            request=self.first_iteration.get(_InternalKeys.REQUEST_KEY),
             response=response,
             messages=self.messages,
         )

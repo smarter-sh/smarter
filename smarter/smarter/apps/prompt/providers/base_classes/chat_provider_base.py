@@ -1,4 +1,3 @@
-# pylint: disable=C0302
 """
 Base class for chat providers.
 """
@@ -7,7 +6,6 @@ import logging
 from functools import cached_property
 from typing import Any, Dict, List, Optional, Union
 
-# 3rd party stuff
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCallUnion,
@@ -26,8 +24,7 @@ from smarter.apps.prompt.functions.function_weather import (
     weather_tool_factory,
 )
 from smarter.apps.prompt.models import Chat
-
-# smarter chat provider stuff
+from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.apps.prompt.providers.utils import (
     ensure_system_role_present,
     get_request_body,
@@ -46,8 +43,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from ..const import OpenAIMessageKeys
-from . import ChatDbMixin, InternalKeys
+from . import ChatDbMixin, _InternalKeys
 
 
 # pylint: disable=W0613
@@ -183,15 +179,15 @@ class ChatProviderBase(ChatDbMixin):
         self.iteration = 1
         self.request_meta_data = {}
         self.first_iteration = {
-            InternalKeys.REQUEST_KEY: None,
-            InternalKeys.RESPONSE_KEY: None,
+            _InternalKeys.REQUEST_KEY: None,
+            _InternalKeys.RESPONSE_KEY: None,
         }
         self.first_response = None
         self.second_response = None
         self.second_iteration = {
-            InternalKeys.REQUEST_KEY: {InternalKeys.MESSAGES_KEY: []},
-            InternalKeys.RESPONSE_KEY: {},
-            InternalKeys.MESSAGES_KEY: [],
+            _InternalKeys.REQUEST_KEY: {_InternalKeys.MESSAGES_KEY: []},
+            _InternalKeys.RESPONSE_KEY: {},
+            _InternalKeys.MESSAGES_KEY: [],
         }
 
         # initializations
@@ -443,7 +439,7 @@ class ChatProviderBase(ChatDbMixin):
         retval = []
         for message in messages:
             new_message = message.copy()
-            new_message[InternalKeys.SMARTER_IS_NEW] = is_new
+            new_message[_InternalKeys.SMARTER_IS_NEW] = is_new
             retval.append(new_message)
         return retval
 
@@ -531,7 +527,7 @@ class ChatProviderBase(ChatDbMixin):
         new_message = message.copy()
         new_message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] = role
         new_message[OpenAIMessageKeys.MESSAGE_CONTENT_KEY] = content
-        new_message[InternalKeys.SMARTER_IS_NEW] = True
+        new_message[_InternalKeys.SMARTER_IS_NEW] = True
         if isinstance(self.messages, list):
             self.messages.append(new_message)
 

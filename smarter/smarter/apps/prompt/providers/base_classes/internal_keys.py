@@ -5,7 +5,7 @@ Internal keys used in the chat provider.
 SMARTER_SYSTEM_KEY_PREFIX = "smarter_"
 
 
-class InternalKeys:
+class _InternalKeys:
     """
     Internal dict keys used in the chat provider.
     """
@@ -26,4 +26,4 @@ class InternalKeys:
     SMARTER_IS_NEW = SMARTER_SYSTEM_KEY_PREFIX + "is_new"
 
 
-__all__ = ["InternalKeys"]
+__all__ = ["_InternalKeys"]
