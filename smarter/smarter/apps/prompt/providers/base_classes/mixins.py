@@ -4,6 +4,7 @@ This file contains the mixins for the provider model.
 
 # pylint: disable=W0613
 import logging
+from typing import Optional
 
 from django.db.models import Sum
 from django.db.models.query import QuerySet
@@ -15,9 +16,7 @@ from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatT
 from smarter.apps.prompt.tasks import (
     create_chat_plugin_usage,
     create_chat_tool_call_history,
-    update_chat,
 )
-from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.cache import cache_results
@@ -45,7 +44,7 @@ class InternalKeys:
     TotalTokens = "total_tokens"
 
 
-class ProviderDbMixin(AccountMixin):
+class ChatDbMixin(AccountMixin):
     """
     This mixin contains the database related methods for the provider model.
     """
@@ -54,19 +53,19 @@ class ProviderDbMixin(AccountMixin):
 
     def __init__(self, *args, **kwargs):
         """
-        Constructor method for the ProviderDbMixin class.
+        Constructor method for the ChatDbMixin class.
         """
 
         @cache_results()
         def cached_chat_by_session_key(session_key: str) -> Chat:
             return Chat.objects.get(session_key=session_key)
 
-        self._chat: Chat = None
-        self._chat_tool_call: ChatToolCall = None
-        self._chat_plugin_usage: ChatPluginUsage = None
-        self._charges: QuerySet[Charge] = None
-        self._chat_history: QuerySet[ChatHistory] = None
-        self._message_history: list[dict] = None
+        self._chat: Optional[Chat] = None
+        self._chat_tool_call: Optional[ChatToolCall] = None
+        self._chat_plugin_usage: Optional[ChatPluginUsage] = None
+        self._charges: Optional[QuerySet[Charge]] = None
+        self._chat_history: Optional[QuerySet[ChatHistory]] = None
+        self._message_history: Optional[list[dict]] = None
         super().__init__(*args, **kwargs)
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
         if session_key:
@@ -84,7 +83,7 @@ class ProviderDbMixin(AccountMixin):
         return super_ready and chat_ready
 
     @property
-    def chat(self) -> Chat:
+    def chat(self) -> Optional[Chat]:
         """
         This method returns the chat instance.
         """
@@ -95,6 +94,8 @@ class ProviderDbMixin(AccountMixin):
         """
         This method sets the chat instance.
         """
+        if not isinstance(value, Chat) and not value is None:
+            raise SmarterValueError("Chat must be an instance of Chat or None")
         self._chat = value
         self._chat = None
         self._chat_tool_call = None
@@ -104,7 +105,7 @@ class ProviderDbMixin(AccountMixin):
         self._message_history = None
 
     @property
-    def chat_history(self) -> QuerySet[ChatHistory]:
+    def chat_history(self) -> Optional[QuerySet[ChatHistory]]:
         """
         This method returns the chat history instance.
         """
@@ -113,7 +114,7 @@ class ProviderDbMixin(AccountMixin):
         return self._chat_history
 
     @property
-    def db_message_history(self) -> list[dict]:
+    def db_message_history(self) -> Optional[list[dict]]:
         """
         This method returns the most recently persisted
         messages in the chat history.
@@ -127,7 +128,7 @@ class ProviderDbMixin(AccountMixin):
         return self._message_history
 
     @property
-    def db_chat_tool_call(self) -> ChatToolCall:
+    def db_chat_tool_call(self) -> Optional[ChatToolCall]:
         """
         This method returns the chat tool call instance.
         """
@@ -137,11 +138,11 @@ class ProviderDbMixin(AccountMixin):
             return ChatToolCall.objects.get(chat_id=chat_id)
 
         if self._chat_tool_call is None and self.chat is not None:
-            self._chat_tool_call = cached_chat_tool_call_by_chat_id(chat_id=self.chat.id)
+            self._chat_tool_call = cached_chat_tool_call_by_chat_id(chat_id=self.chat.id)  # type: ignore
         return self._chat_tool_call
 
     @property
-    def db_chat_plugin_usage(self) -> ChatPluginUsage:
+    def db_chat_plugin_usage(self) -> Optional[ChatPluginUsage]:
         """
         This method returns the chat plugin usage instance.
         """
@@ -151,11 +152,11 @@ class ProviderDbMixin(AccountMixin):
             return ChatPluginUsage.objects.get(chat_id=chat_id)
 
         if self._chat_plugin_usage is None and self.chat is not None:
-            self._chat_plugin_usage = cached_chat_plugin_usage_by_chat_id(chat_id=self.chat.id)
+            self._chat_plugin_usage = cached_chat_plugin_usage_by_chat_id(chat_id=self.chat.id)  # type: ignore
         return self._chat_plugin_usage
 
     @property
-    def db_charges(self) -> QuerySet[Charge]:
+    def db_charges(self) -> Optional[QuerySet[Charge]]:
         """
         This method returns the charge instance.
             prompt_tokens = models.IntegerField()
@@ -164,14 +165,8 @@ class ProviderDbMixin(AccountMixin):
 
         """
 
-        @cache_results()
-        def cached_charges_by_account_id_and_session_key(account_id: int, session_key: str) -> Charge:
-            return Charge.objects.get(account_id=account_id, session_key=session_key)
-
         if self._charges is None and self.account is not None and self.chat is not None:
-            self._charges = cached_charges_by_account_id_and_session_key(
-                account_id=self.account.id, session_key=self.chat.session_key
-            )
+            self._charges = Charge.objects.filter(account=self.account, session_key=self.chat.session_key)
         return self._charges
 
     @property
@@ -179,50 +174,31 @@ class ProviderDbMixin(AccountMixin):
         """
         This method returns the prompt tokens.
         """
-        return self.charges.aggregate(Sum("prompt_tokens"))["prompt_tokens__sum"] if self.db_charges else 0
+        return self.db_charges.aggregate(Sum("prompt_tokens"))["prompt_tokens__sum"] if self.db_charges else 0
 
     @property
     def db_total_completion_tokens(self) -> int:
         """
         This method returns the completion tokens.
         """
-        return self.charges.aggregate(Sum("completion_tokens"))["completion_tokens__sum"] if self.db_charges else 0
+        return self.db_charges.aggregate(Sum("completion_tokens"))["completion_tokens__sum"] if self.db_charges else 0
 
     @property
     def db_total_total_tokens(self) -> int:
         """
         This method returns the total tokens.
         """
-        return self.charges.aggregate(Sum("total_tokens"))["total_tokens__sum"] if self.db_charges else 0
+        return self.db_charges.aggregate(Sum("total_tokens"))["total_tokens__sum"] if self.db_charges else 0
 
     @property
-    def db_total_tokens(self) -> dict:
-        if self.charges is None:
+    def db_total_tokens(self) -> Optional[dict]:
+        if self.db_charges is None:
             return None
         return {
             InternalKeys.PromptTokens: self.db_total_prompt_tokens,
             InternalKeys.CompletionTokens: self.db_total_completion_tokens,
             InternalKeys.TotalTokens: self.db_total_total_tokens,
         }
-
-    def db_save(self, *args, **kwargs):
-        """
-        This method saves the chat instance associated with the session_key.
-        """
-        if self.chat:
-            account = kwargs.get("account", self.account)
-            chatbot = kwargs.get("chatbot", self.chat.chatbot)
-            update_chat.delay(
-                chat_id=self.chat.id,
-                account_id=account.id if account else None,
-                chatbot_id=chatbot.id if chatbot else None,
-                ip_address=kwargs.get("ip_address", self.chat.ip_address),
-                user_agent=kwargs.get("user_agent", self.chat.user_agent),
-                url=kwargs.get("url", self.chat.url),
-                request=kwargs.get("request", self.chat.request),
-                response=kwargs.get("response", self.chat.response),
-            )
-        super().save(*args, **kwargs)
 
     def db_refresh(self):
         """
@@ -232,8 +208,7 @@ class ProviderDbMixin(AccountMixin):
             self.chat.refresh_from_db()
         self._charges = None
         # pylint: disable=W0104
-        self.charges
-        super().refresh()
+        self.db_charges
 
     def db_insert_chat_tool_call(self, *args, **kwargs):
         """
@@ -241,7 +216,7 @@ class ProviderDbMixin(AccountMixin):
         """
         if not self.chat:
             return
-        chat_id = self.chat.id
+        chat_id = self.chat.id  # type: ignore
         plugin = kwargs.get("plugin", None)
         plugin_id = plugin.id if plugin else None
         function_name = kwargs.get("function_name", None)
@@ -258,7 +233,7 @@ class ProviderDbMixin(AccountMixin):
         if not chat:
             logger.warning("db_insert_chat_plugin_usage() Chat is required to create a chat plugin usage record.")
             return
-        chat_id = chat.id
+        chat_id = chat.id  # type: ignore
         plugin = kwargs.get("plugin", None)
         plugin_id = plugin.id if plugin else None
         input_text = kwargs.get("input_text", None)
@@ -284,8 +259,8 @@ class ProviderDbMixin(AccountMixin):
             logger.warning("Creating a charge record with no User.")
 
         create_charge.delay(
-            account_id=self.account.id,
-            user_id=self.user.id if self.user else None,
+            account_id=self.account.id,  # type: ignore
+            user_id=self.user.id if self.user else None,  # type: ignore
             session_key=self.chat.session_key,
             provider=provider,
             charge_type=charge_type,
