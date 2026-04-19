@@ -11,7 +11,6 @@ There are a few objectives of this class:
 import logging
 from typing import Any, Dict, List, Optional, Union
 
-from openai.types.chat.chat_completion import ChatCompletion
 from rest_framework.request import Request
 
 from smarter.apps.account.models import UserProfile
@@ -28,7 +27,8 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .base_classes import (
     OpenAICompatibleChatCompletionRequest,
     OpenAICompatibleChatCompletionResponse,
-    OpenAICompatiblePassthoughProtocol,
+    OpenAICompatiblePassthroughProtocol,
+    SmarterChatCompletionResponse,
     SmarterChatHandlerProtocol,
 )
 from .googleai.classes import GoogleAIChatProvider, GoogleAIPassthroughChatProvider
@@ -132,7 +132,7 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> Union[dict, list]:
+    ) -> SmarterChatCompletionResponse:
         """Expose the handler method of the default provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
@@ -173,7 +173,7 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> Union[dict, list]:
+    ) -> SmarterChatCompletionResponse:
         """Expose the handler method of the googleai provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
@@ -207,7 +207,7 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> Union[dict, list]:
+    ) -> SmarterChatCompletionResponse:
         """Expose the handler method of the metaai provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
@@ -240,7 +240,7 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> Union[dict, list]:
+    ) -> SmarterChatCompletionResponse:
         """Expose the handler method of the default provider"""
         return self.openai_handler(user_profile, chat, data, plugins=plugins, functions=functions)
 
@@ -291,6 +291,26 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
 class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
     """
     Collection of all OpenAI-compatible passthrough chat providers.
+
+    This class provides a unified interface to access and manage all chat
+    providers that are compatible with the OpenAI API for passthrough chat
+    completion requests. It encapsulates provider instantiation, handler
+    exposure, and convenience methods for retrieving handlers by provider name.
+
+    Features:
+        - Centralized access to all OpenAI-compatible passthrough chat providers (OpenAI, GoogleAI, MetaAI, and a default provider).
+        - Lazy instantiation and caching of provider instances for efficient resource usage.
+        - Standardized handler methods for each provider, conforming to the OpenAICompatiblePassthroughProtocol.
+        - Convenience methods to retrieve handlers by provider name or use the default handler.
+        - Utility methods for logging and provider validation.
+
+    Example::
+
+        ```python
+        providers = OpenAICompatiblePassthroughChatProviders()
+        handler = providers.get_handler('openai')
+        response = handler(request, user_profile, data)
+        ```
     """
 
     _default = None
@@ -303,24 +323,104 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
     # -------------------------------------------------------------------------
     @property
     def googleai(self) -> GoogleAIPassthroughChatProvider:
+        """
+        Get the GoogleAI passthrough chat provider instance.
+
+        Returns
+        -------
+        GoogleAIPassthroughChatProvider
+            An instance of the GoogleAI passthrough chat provider, which implements the OpenAI-compatible passthrough protocol for chat completion requests.
+
+        Notes
+        -----
+        The provider instance is lazily instantiated and cached for reuse. This ensures efficient resource usage and consistent provider state across multiple calls.
+
+          Example
+          -------
+          .. code-block:: python
+
+              providers = OpenAICompatiblePassthroughChatProviders()
+              googleai_provider = providers.googleai
+              response = googleai_provider.handler(request, user_profile, data)
+        """
         if self._googleai is None:
             self._googleai = GoogleAIPassthroughChatProvider()
         return self._googleai
 
     @property
     def metaai(self) -> MetaAIPassthroughChatProvider:
+        """
+        Get the MetaAI passthrough chat provider instance.
+
+        Returns
+        -------
+        MetaAIPassthroughChatProvider
+            An instance of the MetaAI passthrough chat provider, which implements the OpenAI-compatible passthrough protocol for chat completion requests.
+
+        Notes
+        -----
+        The provider instance is lazily instantiated and cached for reuse. This ensures efficient resource usage and consistent provider state across multiple calls.
+
+        Example
+        -------
+        .. code-block:: python
+
+           providers = OpenAICompatiblePassthroughChatProviders()
+           metaai_provider = providers.metaai
+           response = metaai_provider.handler(request, user_profile, data)
+        """
         if self._metaai is None:
             self._metaai = MetaAIPassthroughChatProvider()
         return self._metaai
 
     @property
     def openai(self) -> OpenAIPassthroughChatProvider:
+        """
+        Get the OpenAI passthrough chat provider instance.
+
+        Returns
+        -------
+        OpenAIPassthroughChatProvider
+            An instance of the OpenAI passthrough chat provider, which implements the OpenAI-compatible passthrough protocol for chat completion requests.
+
+        Notes
+        -----
+        The provider instance is lazily instantiated and cached for reuse. This ensures efficient resource usage and consistent provider state across multiple calls.
+
+        Example
+        -------
+        .. code-block:: python
+
+           providers = OpenAICompatiblePassthroughChatProviders()
+           openai_provider = providers.openai
+           response = openai_provider.handler(request, user_profile, data)
+        """
         if self._openai is None:
             self._openai = OpenAIPassthroughChatProvider()
         return self._openai
 
     @property
     def default(self) -> OpenAIPassthroughChatProvider:
+        """
+        Get the default passthrough chat provider instance.
+
+        Returns
+        -------
+        OpenAIPassthroughChatProvider
+            An instance of the default passthrough chat provider, which implements the OpenAI-compatible passthrough protocol for chat completion requests.
+
+        Notes
+        -----
+        The provider instance is lazily instantiated and cached for reuse. This ensures efficient resource usage and consistent provider state across multiple calls.
+
+        Example
+        -------
+        .. code-block:: python
+
+           providers = OpenAICompatiblePassthroughChatProviders()
+           default_provider = providers.default
+           response = default_provider.handler(request, user_profile, data)
+        """
         if self._default is None:
             self._default = OpenAIPassthroughChatProvider()
         return self._default
@@ -328,6 +428,25 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
     def validate_chat(self, chat: Chat) -> None:
         """
         Validate the chat object.
+
+        This method checks that the provided chat object is valid and contains a session key. If the chat object is invalid or missing required attributes, an exception is raised.
+
+        Parameters
+        ----------
+        chat : Chat
+            The chat object to validate.
+
+        Raises
+        ------
+        SmarterValueError
+            If the chat object is missing or does not have a session key.
+
+        Example
+        -------
+        .. code-block:: python
+
+           providers = OpenAICompatiblePassthroughChatProviders()
+           providers.validate_chat(chat)
         """
         if not chat:
             raise SmarterValueError("Chat object is required to get the handler")
@@ -343,7 +462,32 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         user_profile: UserProfile,
         data: OpenAICompatibleChatCompletionRequest,
     ) -> OpenAICompatibleChatCompletionResponse:
-        """Expose the handler method of the default provider"""
+        """
+        Expose the handler method of the default provider.
+
+        This method invokes the handler for the default (OpenAI) passthrough chat provider, processing an OpenAI-compatible chat completion request.
+
+        Parameters
+        ----------
+        request : Request
+            The Django REST Framework request object.
+        user_profile : UserProfile
+            The user profile making the request.
+        data : OpenAICompatibleChatCompletionRequest
+            The OpenAI-compatible chat completion request data.
+
+        Returns
+        -------
+        OpenAICompatibleChatCompletionResponse
+            The response data, conforming to the :py:class:`OpenAICompatibleChatCompletionResponse` protocol. This may include a ChatCompletion, SmarterHttpResponseForbidden, SmarterHttpResponseNotFound, SmarterHttpResponseBadRequest, SmarterJournaledJsonErrorResponse, or SmarterJournaledJsonResponse.
+
+        Example
+        -------
+        .. code-block:: python
+
+           providers = OpenAICompatiblePassthroughChatProviders()
+           response = providers.openai_handler(request, user_profile, data)
+        """
         return self.openai.handler(request, user_profile, data)
 
     def googleai_handler(
@@ -370,23 +514,25 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         user_profile: UserProfile,
         data: OpenAICompatibleChatCompletionRequest,
     ) -> OpenAICompatibleChatCompletionResponse:
-        """Expose the handler method of the default provider"""
+        """
+        Expose the handler method of the default provider
+        """
         return self.openai_handler(request, user_profile, data)
 
     def logger_helper(self, verb: str, msg: str):
         logger.debug("%s %s %s", self.formatted_class_name, verb, msg)
 
     @property
-    def all_handlers(self) -> Dict[str, OpenAICompatiblePassthoughProtocol]:
+    def all_handlers(self) -> Dict[str, OpenAICompatiblePassthroughProtocol]:
         """
         A dictionary of all the handler callables.
-        handlers must conform to OpenAICompatiblePassthoughProtocol.
+        handlers must conform to OpenAICompatiblePassthroughProtocol.
         """
 
-        googleai_handler: OpenAICompatiblePassthoughProtocol = self.googleai_handler
-        metaai_handler: OpenAICompatiblePassthoughProtocol = self.metaai_handler
-        openai_handler: OpenAICompatiblePassthoughProtocol = self.openai_handler
-        default_handler: OpenAICompatiblePassthoughProtocol = self.default_handler
+        googleai_handler: OpenAICompatiblePassthroughProtocol = self.googleai_handler
+        metaai_handler: OpenAICompatiblePassthroughProtocol = self.metaai_handler
+        openai_handler: OpenAICompatiblePassthroughProtocol = self.openai_handler
+        default_handler: OpenAICompatiblePassthroughProtocol = self.default_handler
 
         return {
             GOOGLEAI_PROVIDER_NAME: googleai_handler,
@@ -395,7 +541,7 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
             "DEFAULT": default_handler,
         }
 
-    def get_handler(self, provider: Optional[str] = None) -> OpenAICompatiblePassthoughProtocol:
+    def get_handler(self, provider: Optional[str] = None) -> OpenAICompatiblePassthroughProtocol:
         """
         A convenience method to get a handler by provider name.
         """

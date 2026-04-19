@@ -57,6 +57,15 @@ OpenAICompatibleChatCompletionResponse = Union[
     SmarterJournaledJsonResponse,
 ]
 
+SmarterChatCompletionResponse = Union[
+    dict[str, Any],
+    SmarterHttpResponseForbidden,
+    SmarterHttpResponseNotFound,
+    SmarterHttpResponseBadRequest,
+    SmarterJournaledJsonErrorResponse,
+    SmarterJournaledJsonResponse,
+]
+
 
 class OpenAICompatibleChatMessage(TypedDict, total=False):
     """
@@ -105,7 +114,7 @@ class OpenAICompatibleChatCompletionRequest(TypedDict, total=False):
     tool_choice: NotRequired[Union[str, dict]]
 
 
-class OpenAICompatiblePassthoughProtocol(Protocol):
+class OpenAICompatiblePassthroughProtocol(Protocol):
     """
     A Protocol for OpenAI compatible passthrough functions.
     Ensures that passthrough function call signature conforms to
@@ -114,12 +123,12 @@ class OpenAICompatiblePassthoughProtocol(Protocol):
     :param request: The DRF request object.
     :type request: Request
     :param user_profile: The user profile making the request.
-    :type user: UserProfile
+    :type user_profile: UserProfile
     :param data: The OpenAI-compatible chat completion request data.
-    :type data: ChatCompletion
+    :type data: OpenAICompatibleChatCompletionRequest
 
     :returns: The response data.
-    :rtype: Union[dict[str, Any], list]
+    :rtype: OpenAICompatibleChatCompletionResponse
     """
 
     def __call__(
@@ -137,7 +146,7 @@ class SmarterChatHandlerProtocol(Protocol):
     this exact standard.
 
     :param user_profile: The user profile making the request.
-    :type user: User
+    :type user_profile: UserProfile
     :param chat: The chat object.
     :type chat: Chat
     :param data: The Smarter chat API request data.
@@ -158,20 +167,13 @@ class SmarterChatHandlerProtocol(Protocol):
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> Union[
-        dict[str, Any],
-        list,
-        SmarterHttpResponseForbidden,
-        SmarterHttpResponseNotFound,
-        SmarterHttpResponseBadRequest,
-        SmarterJournaledJsonErrorResponse,
-        SmarterJournaledJsonResponse,
-    ]: ...
+    ) -> OpenAICompatibleChatCompletionResponse: ...
 
 
 __all__ = [
     "SmarterChatHandlerProtocol",
-    "OpenAICompatiblePassthoughProtocol",
+    "OpenAICompatiblePassthroughProtocol",
     "OpenAICompatibleChatCompletionRequest",
     "OpenAICompatibleChatCompletionResponse",
+    "SmarterChatCompletionResponse",
 ]

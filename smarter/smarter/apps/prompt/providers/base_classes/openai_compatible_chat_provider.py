@@ -43,6 +43,7 @@ from smarter.apps.prompt.functions.function_weather import (
     weather_tool_factory,
 )
 from smarter.apps.prompt.models import Chat
+from smarter.apps.prompt.providers.base_classes import SmarterChatCompletionResponse
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.apps.prompt.providers.utils import (
     http_response_factory,
@@ -770,7 +771,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
         data: Union[dict[str, Any], list],
         plugins: Optional[list[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> Union[dict[str, Any], list]:
+    ) -> SmarterChatCompletionResponse:
         """
         Process a chat prompt request and invoke the appropriate OpenAI-compatible API endpoint.
 
@@ -789,7 +790,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
         :param chat: The chat session instance associated with this request.
         :type chat: Chat
         :param data: The request payload, typically containing a session key and a list of message dictionaries.
-        :type data: dict
+        :type data: Union[dict[str, Any], list]
 
             Example::
 
@@ -809,7 +810,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
         :type functions: Optional[list[str]]
 
         :returns: An HTTP response dictionary (or list) containing the LLM's output, tool call results, and metadata.
-        :rtype: dict or list
+        :rtype: SmarterChatCompletionResponse
 
         :raises SmarterValueError: If required parameters are missing or invalid.
         :raises SmarterConfigurationError: If there are configuration issues with the provider or plugins.
