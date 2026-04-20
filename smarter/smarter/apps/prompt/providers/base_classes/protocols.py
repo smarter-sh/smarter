@@ -48,7 +48,7 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-OpenAICompatibleChatCompletionResponse = Union[
+OpenAICompatibleChatCompletionResponseType = Union[
     ChatCompletion,
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
@@ -128,7 +128,7 @@ class OpenAICompatiblePassthroughProtocol(Protocol):
     :type data: OpenAICompatibleChatCompletionRequest
 
     :returns: The response data.
-    :rtype: OpenAICompatibleChatCompletionResponse
+    :rtype: OpenAICompatibleChatCompletionResponseType
     """
 
     def __call__(
@@ -136,7 +136,7 @@ class OpenAICompatiblePassthroughProtocol(Protocol):
         request: Request,
         user_profile: UserProfile,
         data: OpenAICompatibleChatCompletionRequest,
-    ) -> OpenAICompatibleChatCompletionResponse: ...
+    ) -> OpenAICompatibleChatCompletionResponseType: ...
 
 
 class SmarterChatHandlerProtocol(Protocol):
@@ -174,6 +174,6 @@ __all__ = [
     "SmarterChatHandlerProtocol",
     "OpenAICompatiblePassthroughProtocol",
     "OpenAICompatibleChatCompletionRequest",
-    "OpenAICompatibleChatCompletionResponse",
+    "OpenAICompatibleChatCompletionResponseType",
     "SmarterChatCompletionResponseType",
 ]

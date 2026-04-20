@@ -47,21 +47,23 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class OpenAICompatiblePassthroughChatProvider(ChatDbMixin):
     """
-    A passthrough chat provider that is fully compatible with OpenAI's API. This
-    provider allows authenticated users to send arbitrary OpenAI-compatible
+    A passthrough chat provider that is fully compatible with OpenAI's API.
+    This provider allows authenticated users to send arbitrary OpenAI-compatible
     prompt dicts directly to the underlying API. It handles authentication,
     request forwarding, and response handling.
 
     Smarter-specific features include:
 
     - Emits signals for chat lifecycle events
-    - Logs interactions based on a waffle switch.
-    - Returns journaled JSON responses for integration with Smarter's journaling system.
+    - Logs interactions based on a waffle switch
+    - Returns journaled JSON responses for integration with Smarter's journaling system
     - Manages history and charge records asynchronously via ChatDbMixin
 
-                provider=PROVIDER_NAME,
-            base_url=BASE_URL,
-            api_key=smarter_settings.gemini_api_key.get_secret_value(),
+    Example usage::
+
+        provider=PROVIDER_NAME
+        base_url=BASE_URL
+        api_key=smarter_settings.gemini_api_key.get_secret_value()
 
     """
 
