@@ -39,7 +39,9 @@ capabilities of the various team member roles, and provides usable tools and abs
 
    smarter-resources/smarter-account
    smarter-resources/smarter-chatbot
+   smarter-resources/smarter-connection
    smarter-resources/smarter-provider
    smarter-resources/smarter-plugin
    smarter-resources/smarter-prompt
+   smarter-resources/smarter-secret
    smarter-resources/smarter-vectorstore
