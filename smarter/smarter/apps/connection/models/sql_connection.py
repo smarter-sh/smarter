@@ -1,4 +1,4 @@
-"""Connection app models."""
+"""SqlConnection model"""
 
 import io
 import logging
@@ -87,13 +87,10 @@ class SqlConnection(ConnectionBase):
     - :class:`smarter.apps.account.models.Secret`
     """
 
+    # pylint: disable=C0115
     class Meta:
         verbose_name = "SQL Connection"
         verbose_name_plural = "SQL Connections"
-        unique_together = (
-            "user_profile",
-            "name",
-        )
 
     objects: MetaDataWithOwnershipModelManager["SqlConnection"] = MetaDataWithOwnershipModelManager()
 
