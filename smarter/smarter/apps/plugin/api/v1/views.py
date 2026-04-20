@@ -77,8 +77,6 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.cached_account,  # type: ignore[arg-type]
-            user=user_profile.cached_user,  # type: ignore[arg-type]
             plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -184,8 +182,6 @@ def get_plugin(request, plugin_id):
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.cached_account,  # type: ignore[arg-type]
-            user=user_profile.cached_user,  # type: ignore[arg-type]
             plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -229,8 +225,6 @@ def create_plugin(request, data: Optional[dict] = None):
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.cached_account,  # type: ignore[arg-type]
-            user=user_profile.cached_user,  # type: ignore[arg-type]
             manifest=data,  # type: ignore[arg-type]
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -283,8 +277,6 @@ def update_plugin(request: WSGIRequest):
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.cached_account,  # type: ignore[arg-type]
-            user=user_profile.cached_user,  # type: ignore[arg-type]
             manifest=SAMPluginCommon(**data),  # type: ignore[arg-type]
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -315,8 +307,6 @@ def delete_plugin(request, plugin_id):
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.cached_account,  # type: ignore[arg-type]
-            user=user_profile.cached_user,  # type: ignore[arg-type]
             plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:

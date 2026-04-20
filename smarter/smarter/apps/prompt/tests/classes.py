@@ -158,8 +158,6 @@ class ProviderBaseClass(TestAccountMixin):
         if not self.plugin:
             plugin_controller = PluginController(
                 user_profile=self.user_profile,
-                account=self.account,
-                user=self.admin_user,
                 manifest=plugin_data,
             )
             if not plugin_controller or not plugin_controller.plugin:

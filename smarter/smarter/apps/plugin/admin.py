@@ -6,10 +6,9 @@ import re
 
 from django.contrib import admin
 
-from smarter.apps.account.models import get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
-    smarter_filter_queryset_for_user,
     smarter_restricted_admin_site,
 )
 
@@ -125,10 +124,13 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        qs = smarter_filter_queryset_for_user(user=user, qs=qs)
-        if qs.count() > 0:
-            qs = qs.filter(plugin_class=SAMPluginCommonMetadataClassValues.STATIC.value)
-        return qs
+        if not isinstance(user, User):
+            return qs.none()
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(requests__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.STATIC.value)
+        )
 
 
 class PluginApiAdmin(SmarterCustomerModelAdmin):
@@ -159,10 +161,14 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        qs = smarter_filter_queryset_for_user(user=user, qs=qs)
-        if qs.count() > 0:
-            qs = qs.filter(plugin_class=SAMPluginCommonMetadataClassValues.API.value)
-        return qs
+        if not isinstance(user, User):
+            return qs.none()
+
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(requests__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.API.value)
+        )
 
 
 class PluginSqlAdmin(SmarterCustomerModelAdmin):
@@ -193,10 +199,13 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        qs = smarter_filter_queryset_for_user(user=user, qs=qs)
-        if qs.count() > 0:
-            qs = qs.filter(plugin_class=SAMPluginCommonMetadataClassValues.SQL.value)
-        return qs
+        if not isinstance(user, User):
+            return qs.none()
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(requests__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.SQL.value)
+        )
 
 
 class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
@@ -227,12 +236,10 @@ class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user,
-            qs=qs,
-            account_filter="plugin_selector__plugin__user_profile__account",
-            user_profile_filter="plugin_selector__plugin__user_profile",
-        )
+        if not isinstance(user, User):
+            return qs.none()
+        plugins = PluginMeta.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return PluginSelectorHistory.objects.filter(plugin_selector__plugin__in=plugins)
 
 
 # Plugin Models

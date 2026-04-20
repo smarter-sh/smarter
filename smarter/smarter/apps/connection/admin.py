@@ -3,10 +3,9 @@
 
 import logging
 
-from smarter.apps.account.models import get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
-    smarter_filter_queryset_for_user,
     smarter_restricted_admin_site,
 )
 
@@ -52,8 +51,10 @@ class SqlConnectionAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
 
-        return smarter_filter_queryset_for_user(user=user, qs=qs)
+        return SqlConnection.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
 
 
 class ApiConnectionAdmin(SmarterCustomerModelAdmin):
@@ -85,8 +86,10 @@ class ApiConnectionAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
 
-        return smarter_filter_queryset_for_user(user=user, qs=qs)
+        return ApiConnection.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
 
 
 smarter_restricted_admin_site.register(SqlConnection, SqlConnectionAdmin)

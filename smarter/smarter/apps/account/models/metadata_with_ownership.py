@@ -7,13 +7,11 @@ from typing import Any, Optional, TypeVar, overload
 from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
-from django.db.models import Manager, QuerySet
 from django.db.models.expressions import Combinable
 from django.db.models.query import Prefetch
 from typing_extensions import deprecated
 
 # our stuff
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
@@ -22,8 +20,12 @@ from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .account import Account, get_resolved_user, is_authenticated_user
-from .user_profile import UserProfile
+from .account import Account, get_resolved_user
+from .user_profile import (
+    SmarterBaseModelManager,
+    SmarterBaseQuerySetWithPermissions,
+    UserProfile,
+)
 
 
 # pylint: disable=W0613
@@ -47,7 +49,7 @@ custom queryset and manager to ensure methods return the correct model type.
 """
 
 
-class SmarterQuerySetWithPermissions(QuerySet[_MT]):
+class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
     """
     Custom queryset for permission-based resource filtering by user profile.
 
@@ -62,146 +64,209 @@ class SmarterQuerySetWithPermissions(QuerySet[_MT]):
 
     def with_read_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
         """
-        A pipeline for filtering a queryset of this resource based on the
-        permissions of the authenticated user in the given request.
+        Returns a queryset of resources that the authenticated user in the
+        given request has read permission for.
 
-        Return a queryset of this resource if the user has permission to read it,
-        or an empty queryset if not.
+        This method supports users with multiple UserProfiles. For each profile,
+        it computes the set of resources the user can read, and combines all
+        such querysets into a single result using the bitwise OR (|) operator.
+        The final queryset is the union of all resources the user can read
+        across all their profiles, with duplicates removed.
 
-        :param user: :class:`django.contrib.auth.models.User`
-            The user to check.
-        :param queryset: Optional[:class:`django.db.models.QuerySet`]
-            An optional queryset to filter. If not provided, the method will default to filtering all instances
-
-        :returns: :class:`django.db.models.QuerySet`
-            A queryset of this resource if the user has permission to read it, or an empty queryset
-            if not.
-        """
-        logger.debug(
-            "%s.with_read_permission_for() called for user: %s",
-            formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
-            user,
-        )
-        if not is_authenticated_user(user):
-            logger.debug(
-                "%s.with_read_permission_for() user is not authenticated: %s",
-                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
-                user,
-            )
-            return self.none()
-        try:
-            request_user_profile = UserProfile.get_cached_object(user=user)
-        except UserProfile.DoesNotExist:
-            logger.debug(
-                "%s.with_read_permission_for() no UserProfile found for user: %s",
-                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
-                user,
-            )
-            return self.none()
-        if request_user_profile.user.is_superuser:
-            logger.debug(
-                "%s.with_read_permission_for() user is superuser, returning all resources. count: %s",
-                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
-                self.count(),
-            )
-            return self.all()
-        try:
-            smarter_account = Account.get_cached_object(account_number=SMARTER_ACCOUNT_NUMBER)
-        except Account.DoesNotExist:
-            logger.debug(
-                "%s.with_read_permission_for() no smarter account found with account number: %s",
-                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
-                SMARTER_ACCOUNT_NUMBER,
-            )
-            return self.none()
-
-        retval = self.filter(
-            models.Q(user_profile=request_user_profile)
-            | models.Q(user_profile__account=request_user_profile.account, user_profile__user__is_staff=True)
-            | models.Q(user_profile__account=smarter_account)
-        )
-        logger.debug(
-            "%s.with_read_permission_for() called for user: %s, returning resources. count: %s",
-            formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
-            user,
-            retval.count(),
-        )
-        return retval
-
-    def with_ownership_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
-        """
-        Returns a queryset of resources that the authenticated user in the given request has full management (ownership) permission for.
-
-        Only users with staff or superuser status are permitted to manage resources.
+        Permission logic:
+        - If the user is not authenticated, they have no access.
+        - If the user is a superuser, they have access to all resources.
+        - If the user is a regular authenticated user, they have access to resources that are:
+            - Owned by their UserProfile, OR
+            - Owned by their Account admin UserProfile, OR
+            - Owned by the Smarter admin UserProfile.
 
         :param user: :class:`django.contrib.auth.models.User`
             The user to check.
         :returns: :class:`django.db.models.QuerySet`
-            A queryset of this resource if the user has permission to fully manage it, or an empty queryset if not.
+            A queryset of this resource if the user has permission to read it, or an empty queryset if not.
+
+        .. note::
+            If the user has multiple UserProfiles, the result is the union of all resources they can read for each profile.
         """
+        # pylint: disable=C0415
+        from smarter.apps.account.utils import smarter_cached_objects
+
+        logger_prefix = formatted_text(
+            __name__ + f"{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
+        )
         logger.debug(
-            "%s.with_ownership_permission_for() called for user: %s",
-            formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+            "%s called for user: %s",
+            logger_prefix,
             user,
         )
-        if not isinstance(user, User):
-            logger.debug(
-                "%s.with_ownership_permission_for() user is not an instance of User: %s",
-                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
-                user,
-            )
-            return self.none()
-        if not is_authenticated_user(user):
-            logger.debug(
-                "%s.with_ownership_permission_for() user is not authenticated: %s",
-                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
-                user,
-            )
-            return self.none()
 
-        # superusers have ownership permission for all resources
-        if user.is_superuser:
+        def _get_for_user_profile(user_profile: UserProfile) -> models.QuerySet[_MT]:
             logger.debug(
-                "%s.with_ownership_permission_for() user is superuser, returning all resources. count: %s",
-                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
-                self.count(),
+                "%s checking permissions for user_profile: %s",
+                logger_prefix,
+                user_profile,
             )
-            return self.all()
-        try:
-            user_profile = UserProfile.get_cached_object(user=user)
-        except UserProfile.DoesNotExist:
-            logger.debug(
-                "%s.with_ownership_permission_for() no UserProfile found for user: %s",
-                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
-                user,
-            )
-            return self.none()
+            if user_profile.user.is_superuser:
+                logger.debug(
+                    "%s user is superuser, returning all resources. count: %s",
+                    logger_prefix,
+                    self.count(),
+                )
+                return self.all()
 
-        # staff users have ownership permission for resources owned within their account, or owned by themselves
-        if user.is_staff:
             retval = self.filter(
-                models.Q(user_profile=user_profile) | models.Q(user_profile__account=user_profile.account)
+                models.Q(user_profile=user_profile)
+                | models.Q(user_profile__account=user_profile.account, user_profile__user__is_staff=True)
+                | models.Q(user_profile__account=user_profile.account, user_profile__user__is_superuser=True)
+                | models.Q(user_profile__account=smarter_cached_objects.smarter_account)
             )
             logger.debug(
-                "%s.with_ownership_permission_for() called for staff user: %s, returning resources. count: %s",
-                formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+                "%s called for user: %s, returning resources. count: %s",
+                logger_prefix,
                 user,
                 retval.count(),
             )
             return retval
 
-        # regular authenticated users have ownership permission only for resources they own
-        retval = self.filter(user_profile=user_profile)
+        request_user_profiles = UserProfile.get_cached_objects(user=user)
+        if not request_user_profiles.exists():
+            logger.debug(
+                "%s no UserProfiles found for user: %s, returning empty queryset.",
+                logger_prefix,
+                user,
+            )
+            return self.none()
+
         logger.debug(
-            "%s.with_ownership_permission_for() called for regular user: %s, returning resources. count: %s",
-            formatted_text(__name__ + ".SmarterQuerySetWithPermissions"),
+            "%s found %s UserProfiles for user: %s, checking permissions for each profile.",
+            logger_prefix,
+            request_user_profiles.count(),
             user,
-            retval.count(),
         )
-        return retval
+
+        qs = self.none()
+
+        for request_user_profile in request_user_profiles:
+            qs = qs | _get_for_user_profile(request_user_profile)
+
+        qs_distinct = qs.distinct()
+        logger.debug(
+            "%s final queryset for user: %s has count: %s",
+            logger_prefix,
+            user,
+            qs_distinct.count(),
+        )
+        return qs_distinct
+
+    def with_ownership_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
+        """
+        Returns a queryset of resources that the authenticated user in the
+        given request has full management (ownership) permission for.
+
+        This method supports users with multiple UserProfiles. For each profile,
+        it computes the set of resources the user can fully manage
+        (ownership permission), and combines all such querysets into a single
+        result using the bitwise OR (|) operator. The final queryset is the
+        union of all resources the user can manage across all their profiles,
+        with duplicates removed.
+
+        Only users with staff or superuser status are permitted to manage
+        resources. Superusers receive all resources. Staff users receive resources
+        owned by their UserProfile or by any UserProfile within their Account.
+        Regular users receive only resources they own.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+        :returns: :class:`django.db.models.QuerySet`
+            A queryset of this resource if the user has permission to fully manage it, or an empty queryset if not.
+
+        .. note::
+            If the user has multiple UserProfiles, the result is the union of all resources they can manage for each profile.
+        """
+        logger_prefix = formatted_text(
+            __name__
+            + f"{self.__class__.__name__}.with_ownership_permission_for('{user}') - model: {self.model.__name__}"
+        )
+        logger.debug(
+            "%s called for user: %s",
+            logger_prefix,
+            user,
+        )
+
+        if not isinstance(user, User):
+            logger.debug(
+                "%s user is not an instance of User: %s",
+                logger_prefix,
+                user,
+            )
+            return self.none()
+
+        def _get_for_user_profile(user_profile: UserProfile) -> models.QuerySet[_MT]:
+            # superusers have ownership permission for all resources
+            if user_profile.user.is_superuser:
+                logger.debug(
+                    "%s user is superuser, returning all resources. count: %s",
+                    logger_prefix,
+                    self.all().count(),
+                )
+                return self.all()
+
+            # staff users have ownership permission for resources owned within their account, or owned by themselves
+            if user_profile.user.is_staff:
+                retval = self.filter(
+                    models.Q(user_profile=user_profile) | models.Q(user_profile__account=user_profile.account)
+                )
+                logger.debug(
+                    "%s called for staff user: %s, returning resources. count: %s",
+                    logger_prefix,
+                    user_profile.user,
+                    retval.count(),
+                )
+                return retval
+
+            # regular authenticated users have ownership permission only for resources they own
+            retval = self.filter(user_profile=user_profile)
+            logger.debug(
+                "%s called for regular user: %s, returning resources. count: %s",
+                logger_prefix,
+                user_profile.user,
+                retval.count(),
+            )
+            return retval
+
+        user_profiles = UserProfile.get_cached_objects(user=user)
+
+        if not user_profiles.exists():
+            logger.debug(
+                "%s no UserProfiles found for user: %s, returning empty queryset.",
+                logger_prefix,
+                user,
+            )
+            return self.none()
+
+        logger.debug(
+            "%s found %s UserProfiles for user: %s, checking ownership permissions for each profile.",
+            logger_prefix,
+            user_profiles.count(),
+            user,
+        )
+
+        qs = self.none()
+        for user_profile in user_profiles:
+            qs = qs | _get_for_user_profile(user_profile)
+
+        qs_distinct = qs.distinct()
+        logger.debug(
+            "%s final queryset for user: %s has count: %s",
+            logger_prefix,
+            user,
+            qs_distinct.count(),
+        )
+        return qs_distinct
 
 
-class MetaDataWithOwnershipModelManager(Manager[_MT]):
+class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
     """
     Custom manager for MetaDataWithOwnershipModel that returns a
     SmarterQuerySetWithPermissions to enable permission-based filtering by
