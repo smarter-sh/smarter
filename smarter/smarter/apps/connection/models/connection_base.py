@@ -60,8 +60,8 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
     See also:
 
-    - :class:`smarter.apps.plugin.models.SqlConnection`
-    - :class:`smarter.apps.plugin.models.ApiConnection`
+    - :class:`smarter.apps.connection.models.SqlConnection`
+    - :class:`smarter.apps.connection.models.ApiConnection`
     """
 
     CONNECTION_KIND_CHOICES = [

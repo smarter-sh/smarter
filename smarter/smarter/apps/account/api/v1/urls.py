@@ -4,7 +4,7 @@ from django.urls import path
 
 from .const import namespace
 from .views.account import AccountListView, AccountView
-from .views.payment_methods import PaymentMethodsListView, PaymentMethodView
+from .views.account_contact import AccountContactListView, AccountContactView
 from .views.user import UserListView, UserView
 
 app_name = namespace
@@ -26,16 +26,14 @@ urlpatterns = [
         UserView.as_view(),
         name="account_user_view",
     ),
-    # account payment methods
-    # -----------------------------------------------------------------------
     path(
-        "payment-methods/",
-        PaymentMethodsListView.as_view(),
-        name="account_payment_methods_list_view",
+        "contacts/",
+        AccountContactListView.as_view(),
+        name="account_contact_list_view",
     ),
     path(
-        "payment-methods/<int:payment_method_id>/",
-        PaymentMethodView.as_view(),
-        name="account_payment_method_view",
+        "contacts/<int:account_contact_id>/",
+        AccountContactView.as_view(),
+        name="account_contact_view",
     ),
 ]

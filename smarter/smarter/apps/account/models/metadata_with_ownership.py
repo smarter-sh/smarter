@@ -432,7 +432,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
     objects: MetaDataWithOwnershipModelManager = MetaDataWithOwnershipModelManager()
 
-    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="%(class)ss")
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
     # pylint: disable=W0221
     @classmethod

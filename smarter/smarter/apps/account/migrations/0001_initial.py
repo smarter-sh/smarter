@@ -213,47 +213,6 @@ class Migration(migrations.Migration):
             bases=(models.Model, smarter.common.mixins.SmarterHelperMixin),
         ),
         migrations.CreateModel(
-            name="PaymentMethod",
-            fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                (
-                    "created_at",
-                    models.DateTimeField(auto_now_add=True, db_index=True, null=True),
-                ),
-                (
-                    "updated_at",
-                    models.DateTimeField(auto_now=True, db_index=True, null=True),
-                ),
-                ("name", models.CharField(max_length=255)),
-                ("stripe_id", models.CharField(max_length=255)),
-                ("card_type", models.CharField(max_length=255)),
-                ("card_last_4", models.CharField(max_length=4)),
-                ("card_exp_month", models.CharField(max_length=2)),
-                ("card_exp_year", models.CharField(max_length=4)),
-                ("is_default", models.BooleanField(default=False)),
-                (
-                    "account",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="payment_methods",
-                        to="account.account",
-                    ),
-                ),
-            ],
-            options={
-                "abstract": False,
-            },
-            bases=(models.Model, smarter.common.mixins.SmarterHelperMixin),
-        ),
-        migrations.CreateModel(
             name="UserProfile",
             fields=[
                 (

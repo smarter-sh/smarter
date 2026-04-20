@@ -1,19 +1,12 @@
 Django ORM
 ================
 
-.. .. automodule:: smarter.apps.account.models
-..     :members:
-..     :undoc-members:
-..     :show-inheritance:
-..     :exclude-members: should_log, welcome_email_context
+.. toctree::
+   :maxdepth: 1
 
-
-.. autoclass:: smarter.apps.account.models.Account
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. autoclass:: smarter.apps.account.models.UserProfile
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   models/account
+   models/charge
+   models/daily_billing_record
+   models/llm_prices
+   models/metadata_with_ownership
+   models/user_profile

@@ -33,7 +33,6 @@ Technical Reference
 
    account/account
    account/user
-   secret/secret
    account/api
    account/models
    account/sam

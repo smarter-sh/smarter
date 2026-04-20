@@ -25,7 +25,6 @@ from .models import (
     AccountContact,
     Charge,
     DailyBillingRecord,
-    PaymentMethod,
     UserProfile,
 )
 
@@ -245,27 +244,6 @@ class DailyBillingRecordAdmin(SmarterCustomerModelAdmin):
         )
 
 
-# @admin.register(PaymentMethod)
-class PaymentMethodModelAdmin(SmarterStaffOnlyModelAdmin):
-    """Payment method model admin."""
-
-    model = PaymentMethod
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
-    list_display = ("name", "created_at", "updated_at")
-
-    def get_queryset(self, request: HttpRequest):
-        user = get_resolved_user(request.user)  # type: ignore
-        qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user_profile(
-            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
-            qs=qs,
-        )
-
-
 class RestrictedUserAdmin(UserAdmin):
     """
     Custom User admin that restricts access to users based on their account.
@@ -416,6 +394,5 @@ smarter_restricted_admin_site.register(Account, AccountAdmin)
 smarter_restricted_admin_site.register(AccountContact, AccountContactAdmin)
 smarter_restricted_admin_site.register(Charge, ChargeAdmin)
 smarter_restricted_admin_site.register(DailyBillingRecord, DailyBillingRecordAdmin)
-smarter_restricted_admin_site.register(PaymentMethod, PaymentMethodModelAdmin)
 smarter_restricted_admin_site.register(UserProfile, RestrictedUserProfileAdmin)
 smarter_restricted_admin_site.register(User, RestrictedUserAdmin)

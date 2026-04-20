@@ -7,5 +7,4 @@ Smarter API Manifests (SAM)
    sam/brokers
    sam/enum
    sam/models
-   sam/transformers
    sam/example-manifests

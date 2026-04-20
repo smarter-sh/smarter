@@ -27,7 +27,6 @@ from .metadata_with_ownership import (
     MetaDataWithOwnershipModelManager,
     SmarterQuerySetWithPermissions,
 )
-from .payment_method import PaymentMethod
 from .user_profile import UserProfile
 
 __all__ = [
@@ -43,7 +42,6 @@ __all__ = [
     "DailyBillingRecord",
     "is_authenticated_user",
     "UserProfile",
-    "PaymentMethod",
     "ResolvedUserType",
     "LLMPrices",
     "MetaDataWithOwnershipModel",
