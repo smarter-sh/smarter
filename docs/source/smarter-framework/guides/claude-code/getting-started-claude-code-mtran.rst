@@ -1,4 +1,4 @@
-.. _getting-started-claude-code:
+.. _getting-started-claude-code-marvintran:
 
 ===========================================================
 Getting Started: Using Claude Code with Smarter at NAPL

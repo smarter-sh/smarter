@@ -12,7 +12,6 @@ work as represented in the documentation listed below, and is subject to change 
    claude-code/claude-code-getting-started
    claude-code/getting-started-with-claude-code
    claude-code/napl-grid-maintenance-assistant
-   claude-code/smarter-claude
    claude-code/tutorial
    claude-code/getting-started-claude-code
    claude-code/claude-code-with-smarter
@@ -23,6 +22,5 @@ work as represented in the documentation listed below, and is subject to change 
    claude-code/getting-started-claude-code-mtran
    claude-code/smarter-claude-plugin
    claude-code/napl-adding-llm-provider
-   claude-code/napl-getting-started
    claude-code/getting-started-claude-code-as-coding-assistant
    claude-code/getting-started-with-claude-code-napl

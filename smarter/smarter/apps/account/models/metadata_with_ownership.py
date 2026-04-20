@@ -5,11 +5,9 @@ from typing import Any, Optional, TypeVar, overload
 
 # django stuff
 from django.contrib.auth.models import User
-from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
 from django.db.models.expressions import Combinable
 from django.db.models.query import Prefetch
-from typing_extensions import deprecated
 
 # our stuff
 from smarter.common.exceptions import SmarterValueError
@@ -20,7 +18,7 @@ from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .account import Account, get_resolved_user
+from .account import Account
 from .user_profile import (
     SmarterBaseModelManager,
     SmarterBaseQuerySetWithPermissions,
@@ -93,7 +91,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         from smarter.apps.account.utils import smarter_cached_objects
 
         logger_prefix = formatted_text(
-            __name__ + f"{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
+            __name__ + f".{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
         )
         logger.debug(
             "%s called for user: %s",
@@ -186,7 +184,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         """
         logger_prefix = formatted_text(
             __name__
-            + f"{self.__class__.__name__}.with_ownership_permission_for('{user}') - model: {self.model.__name__}"
+            + f".{self.__class__.__name__}.with_ownership_permission_for('{user}') - model: {self.model.__name__}"
         )
         logger.debug(
             "%s called for user: %s",
@@ -436,50 +434,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="%(class)ss")
 
-    @deprecated(
-        "Use model.objects.with_ownership_permission_for(user=user) on the queryset instead for more efficient permission checks."
-    )
-    def has_all_permission(self, request: WSGIRequest) -> bool:
-        """
-        Check if the authenticated user in the given request has permission to
-        fully manage this resource.
-
-        :param request: :class:`django.core.handlers.wsgi.WSGIRequest`
-            The HTTP request containing the user to check.
-
-        :returns: bool
-
-            True if the user is authenticated and is either staff or superuser; False otherwise.
-
-        .. attention::
-
-            Only users with staff or superuser status are permitted to manage resources.
-
-        .. warning::
-
-            If the request does not contain a valid user, or the user lacks required privileges, permission is denied.
-
-        **Example usage**::
-
-            if resource.has_all_permission(request):
-                # Allow resource management
-                pass
-
-        .. seealso::
-
-            :meth:`get_resolved_user` -- Resolves the user from the request.
-        """
-        if not hasattr(request, "user"):
-            return False
-        user = get_resolved_user(request.user)
-        if not isinstance(user, User):
-            return False
-        if not hasattr(user, "is_authenticated") or not user.is_authenticated:
-            return False
-        if not hasattr(user, "is_staff") or not hasattr(user, "is_superuser"):
-            return False
-        return user.is_staff or user.is_superuser
-
     # pylint: disable=W0221
     @classmethod
     def get_cached_object(
@@ -622,10 +576,10 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     user_profile,
                 )
                 return None
-            except cls.MultipleObjectsReturned:
+            except cls.MultipleObjectsReturned as e:
                 raise SmarterValueError(
                     f"Multiple {class_name} objects found for name '{name}' and user profile '{user_profile}'. This should not happen as there should be a unique constraint on name and user profile."
-                )
+                ) from e
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_account(

@@ -9,6 +9,7 @@ and performance optimization.
 
 The Smarter Framework supports multiple hosting naming schemes for the Smarter API. For example:
 
+
 .. list-table:: Smarter API Hosting Schemes
    :header-rows: 1
 
@@ -37,15 +38,15 @@ See :doc:`django/hosts` for more details.
 
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Smarter API Technical Reference
+  :maxdepth: 1
+  :caption: Smarter API Technical Reference
 
-   smarter-api/documentation
-   smarter-api/cli
-   smarter-api/chat
-   smarter-api/authentication
-   smarter-api/error-handling
-   smarter-api/logging
-   smarter-api/rate-limiting
-   smarter-api/smarter-journal
-   smarter-api/code
+  smarter-api/documentation
+  smarter-api/cli
+  smarter-api/chat
+  smarter-api/authentication
+  smarter-api/error-handling
+  smarter-api/logging
+  smarter-api/rate-limiting
+  smarter-api/smarter-journal
+  smarter-api/code
