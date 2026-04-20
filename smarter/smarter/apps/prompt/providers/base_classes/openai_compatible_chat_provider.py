@@ -43,7 +43,9 @@ from smarter.apps.prompt.functions.function_weather import (
     weather_tool_factory,
 )
 from smarter.apps.prompt.models import Chat
-from smarter.apps.prompt.providers.base_classes import SmarterChatCompletionResponseType
+from smarter.apps.prompt.providers.base_classes.protocols import (
+    SmarterChatCompletionResponseType,
+)
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.apps.prompt.providers.utils import (
     http_response_factory,

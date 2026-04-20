@@ -24,9 +24,9 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .base_classes import (
+from .base_classes.protocols import (
     OpenAICompatibleChatCompletionRequest,
-    OpenAICompatibleChatCompletionResponse,
+    OpenAICompatibleChatCompletionResponseType,
     OpenAICompatiblePassthroughProtocol,
     SmarterChatCompletionResponseType,
     SmarterChatHandlerProtocol,
@@ -335,13 +335,13 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         -----
         The provider instance is lazily instantiated and cached for reuse. This ensures efficient resource usage and consistent provider state across multiple calls.
 
-          Example
-          -------
-          .. code-block:: python
+        Example
+        -------
+        .. code-block:: python
 
-              providers = OpenAICompatiblePassthroughChatProviders()
-              googleai_provider = providers.googleai
-              response = googleai_provider.handler(request, user_profile, data)
+           providers = OpenAICompatiblePassthroughChatProviders()
+           googleai_provider = providers.googleai
+           response = googleai_provider.handler(request, user_profile, data)
         """
         if self._googleai is None:
             self._googleai = GoogleAIPassthroughChatProvider()
@@ -461,7 +461,7 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         request: Request,
         user_profile: UserProfile,
         data: OpenAICompatibleChatCompletionRequest,
-    ) -> OpenAICompatibleChatCompletionResponse:
+    ) -> OpenAICompatibleChatCompletionResponseType:
         """
         Expose the handler method of the default provider.
 
@@ -478,8 +478,8 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
 
         Returns
         -------
-        OpenAICompatibleChatCompletionResponse
-            The response data, conforming to the :py:class:`OpenAICompatibleChatCompletionResponse` protocol. This may include a ChatCompletion, SmarterHttpResponseForbidden, SmarterHttpResponseNotFound, SmarterHttpResponseBadRequest, SmarterJournaledJsonErrorResponse, or SmarterJournaledJsonResponse.
+        OpenAICompatibleChatCompletionResponseType
+            The response data, conforming to the :py:class:`OpenAICompatibleChatCompletionResponseType` protocol. This may include a ChatCompletion, SmarterHttpResponseForbidden, SmarterHttpResponseNotFound, SmarterHttpResponseBadRequest, SmarterJournaledJsonErrorResponse, or SmarterJournaledJsonResponse.
 
         Example
         -------
@@ -495,7 +495,7 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         request: Request,
         user_profile: UserProfile,
         data: OpenAICompatibleChatCompletionRequest,
-    ) -> OpenAICompatibleChatCompletionResponse:
+    ) -> OpenAICompatibleChatCompletionResponseType:
         """Expose the handler method of the googleai provider"""
         return self.googleai.handler(request, user_profile, data)
 
@@ -504,7 +504,7 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         request: Request,
         user_profile: UserProfile,
         data: OpenAICompatibleChatCompletionRequest,
-    ) -> OpenAICompatibleChatCompletionResponse:
+    ) -> OpenAICompatibleChatCompletionResponseType:
         """Expose the handler method of the metaai provider"""
         return self.metaai.handler(request, user_profile, data)
 
@@ -513,7 +513,7 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         request: Request,
         user_profile: UserProfile,
         data: OpenAICompatibleChatCompletionRequest,
-    ) -> OpenAICompatibleChatCompletionResponse:
+    ) -> OpenAICompatibleChatCompletionResponseType:
         """
         Expose the handler method of the default provider
         """
