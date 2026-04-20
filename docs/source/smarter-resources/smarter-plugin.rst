@@ -109,6 +109,7 @@ Technical Reference
    plugins/const
    plugins/nlp
    plugins/signals
+   plugins/receivers
    plugins/tasks
    plugins/utils
    plugins/views

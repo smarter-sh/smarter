@@ -1,14 +1,11 @@
 """Dict factories for testing views."""
 
 import logging
-import random
 import uuid
-from datetime import datetime
 from typing import Optional
 
 from smarter.apps.account.models import (
     Account,
-    PaymentMethod,
     User,
     UserProfile,
 )
@@ -17,7 +14,6 @@ from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.lib.unittest.base_classes import SmarterTestBase
 
 HERE = formatted_text(__name__)
 COMMON_VERSION = "0.0.1"
@@ -189,35 +185,3 @@ def billing_address_factory():
         "zip": "12345",
         "country": "US",
     }
-
-
-def payment_method_factory(account: Account):
-    """
-    Factory for creating a PaymentMethod object for testing.
-    """
-
-    payment_method = PaymentMethod.objects.create(
-        account=account,
-        name=camel_to_snake("TestPaymentMethod" + SmarterTestBase.generate_hash_suffix()),
-        stripe_id="test-stripe-id",
-        card_type="test_card_type",
-        card_last_4=random.randint(1000, 9999),
-        card_exp_month=random.randint(1, 12),
-        card_exp_year=random.randint(datetime.now().year, datetime.now().year + 7),
-        is_default=True,
-    )
-    logger.debug("%s.payment_method_factory() Created payment method: %s", HERE, payment_method.name)
-    return payment_method
-
-
-def payment_method_factory_teardown(payment_method: PaymentMethod):
-    try:
-        if payment_method:
-            lbl = str(payment_method)
-            payment_method.delete()
-            logger.debug("%s.payment_method_factory_teardown() Deleted payment method: %s", HERE, lbl)
-    except PaymentMethod.DoesNotExist:
-        pass
-    except Exception as e:
-        logger.error("%s.payment_method_factory_teardown() Error deleting payment method: %s", HERE, e)
-        raise

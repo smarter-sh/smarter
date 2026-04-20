@@ -3,7 +3,6 @@
 from smarter.apps.account.models import (
     Account,
     AccountContact,
-    PaymentMethod,
     User,
     UserProfile,
 )
@@ -207,29 +206,6 @@ class UserProfileSerializer(SmarterCamelCaseSerializer):
             "user",
             "account",
         )
-
-
-class PaymentMethodSerializer(SmarterCamelCaseSerializer):
-    """
-    Serializer for the `PaymentMethod` model in the Smarter API.
-
-    This serializer exposes all fields of the `PaymentMethod` model, making it suitable for
-    creating, updating, and retrieving payment method details via API endpoints.
-
-    :param ...: All fields as defined in the `PaymentMethod` model.
-
-    **Example usage**::
-
-        from smarter.apps.account.serializers import PaymentMethodSerializer
-        serializer = PaymentMethodSerializer(payment_method_instance)
-        data = serializer.data
-
-    """
-
-    # pylint: disable=missing-class-docstring
-    class Meta:
-        model = PaymentMethod
-        fields = "__all__"
 
 
 class AccountContactSerializer(SmarterCamelCaseSerializer):

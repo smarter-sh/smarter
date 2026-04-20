@@ -1,7 +1,7 @@
 ApiConnection Model
 =======================
 
-.. autoclass:: smarter.apps.plugin.models.ApiConnection
+.. autoclass:: smarter.apps.connection.models.ApiConnection
     :members:
     :undoc-members:
     :inherited-members:

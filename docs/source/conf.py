@@ -116,3 +116,7 @@ autodoc_mock_imports = [
     "django.template.loader",
     "django.utils",
 ]
+autodoc_type_aliases = {
+    "pydantic.types.JsonValue": "JsonValue",
+    "JsonValue": "JsonValue",
+}
