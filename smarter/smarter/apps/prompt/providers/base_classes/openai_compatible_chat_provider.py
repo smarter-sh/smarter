@@ -1,4 +1,4 @@
-# pylint: disable=W0602
+# pylint: disable=W0602,C0302
 """
 Base class for chat providers.
 """
@@ -43,7 +43,7 @@ from smarter.apps.prompt.functions.function_weather import (
     weather_tool_factory,
 )
 from smarter.apps.prompt.models import Chat
-from smarter.apps.prompt.providers.base_classes import SmarterChatCompletionResponse
+from smarter.apps.prompt.providers.base_classes import SmarterChatCompletionResponseType
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.apps.prompt.providers.utils import (
     http_response_factory,
@@ -74,7 +74,8 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from . import EXCEPTION_MAP, SmarterChatProviderBase
+from .chat_provider_base import SmarterChatProviderBase
+from .exception_map import EXCEPTION_MAP
 from .internal_keys import _InternalKeys
 
 
@@ -769,7 +770,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
         data: Union[dict[str, Any], list],
         plugins: Optional[list[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> SmarterChatCompletionResponse:
+    ) -> SmarterChatCompletionResponseType:
         """
         Process a chat prompt request and invoke the appropriate OpenAI-compatible API endpoint.
 
@@ -808,7 +809,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
         :type functions: Optional[list[str]]
 
         :returns: An HTTP response dictionary (or list) containing the LLM's output, tool call results, and metadata.
-        :rtype: SmarterChatCompletionResponse
+        :rtype: SmarterChatCompletionResponseType
 
         :raises SmarterValueError: If required parameters are missing or invalid.
         :raises SmarterConfigurationError: If there are configuration issues with the provider or plugins.
@@ -895,9 +896,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
             # add plugins to the prompt if any are selected
             if self.plugins:
                 for plugin in self.plugins:
-                    if plugin.selected(
-                        user_profile=self.user_profile, input_text=self.input_text, messages=self.messages
-                    ):
+                    if plugin.selected(user=self.user_profile.user, input_text=self.input_text, messages=self.messages):
                         self.handle_plugin_selected(plugin=plugin)
 
             # add all functions that are included in the chatbot definition

@@ -4,7 +4,7 @@ Secret Resource
 A sensitive credential or piece of information that is referenced by other Smarter Resources.
 Secrets are used to securely persist data such as API keys, passwords, and tokens.
 
-.. literalinclude:: ../../../../smarter/smarter/apps/secret/data/example-manifests/secret-smarter-test-db.yaml
+.. literalinclude:: ../../../example-manifests/secret.yaml
   :language: yaml
   :caption: Sample Secret Manifest
 

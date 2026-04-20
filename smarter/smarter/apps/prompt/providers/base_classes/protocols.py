@@ -57,7 +57,7 @@ OpenAICompatibleChatCompletionResponse = Union[
     SmarterJournaledJsonResponse,
 ]
 
-SmarterChatCompletionResponse = Union[
+SmarterChatCompletionResponseType = Union[
     dict[str, Any],
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
@@ -167,7 +167,7 @@ class SmarterChatHandlerProtocol(Protocol):
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> OpenAICompatibleChatCompletionResponse: ...
+    ) -> SmarterChatCompletionResponseType: ...
 
 
 __all__ = [
@@ -175,5 +175,5 @@ __all__ = [
     "OpenAICompatiblePassthroughProtocol",
     "OpenAICompatibleChatCompletionRequest",
     "OpenAICompatibleChatCompletionResponse",
-    "SmarterChatCompletionResponse",
+    "SmarterChatCompletionResponseType",
 ]

@@ -6,7 +6,6 @@ from smarter.apps.account.models import (
     User,
     UserProfile,
 )
-from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.serializers import MetaDataModelSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
@@ -20,6 +19,11 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
     class Meta(MetaDataModelSerializer.Meta):
         fields = "__all__"
         read_only_fields = getattr(MetaDataModelSerializer.Meta, "read_only_fields", [])
+
+        # mcdaniel apr-2026: this is an abstract base serializer. if i understand this
+        # correctly, the child serializers will override the Meta class and thus this will not be used.
+        # and at any rate, setting the model there it seems to break Sphinx.
+        # ----------------------------------------------------------------------------------------
         # model = MetaDataModel
         # abstract = True
 

@@ -17,7 +17,6 @@ from smarter.apps.account.manifest.models.account.spec import (
 )
 from smarter.lib import json
 from smarter.lib.manifest.broker import (
-    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
 )
 from smarter.lib.manifest.enum import SAMMetadataKeys

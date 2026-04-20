@@ -4,7 +4,7 @@ User Resource
 A Django User represents an individual user account within the Smarter platform, related to an :doc:`account`.
 Users have specific roles and permissions.
 
-.. literalinclude:: ../../example-manifests/user.yaml
+.. literalinclude:: ../../../example-manifests/user.yaml
    :language: yaml
    :caption: Example User Manifest
 

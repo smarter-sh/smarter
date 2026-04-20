@@ -125,7 +125,7 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
     :param base_url: The base URL for API requests.
     :type base_url: str
     :param api_key: The API key for authentication (read-only).
-    :type api_key: SecretSerializer
+    :type api_key: smarter.apps.secret.serializers.SecretSerializer
     :param auth_method: The authentication method used (e.g., "Bearer", "Basic").
     :type auth_method: str
     :param timeout: The request timeout in seconds.
@@ -139,7 +139,7 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
     :param proxy_username: The proxy username (optional).
     :type proxy_username: str
     :param proxy_password: The proxy password (read-only, optional).
-    :type proxy_password: SecretSerializer
+    :type proxy_password: smarter.apps.secret.serializers.SecretSerializer
 
     :return: Serialized API connection configuration.
     :rtype: dict
@@ -153,7 +153,7 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
 
         - :class:`ApiConnection`
         - :class:`AccountMiniSerializer`
-        - :class:`smarter.apps.account.serializers.SecretSerializer`
+        - :class:`smarter.apps.secret.serializers.SecretSerializer`
 
     **Example usage**:
 
