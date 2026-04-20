@@ -12,5 +12,5 @@ Technical References
 --------------------
 
 - Django ORM Model: :py:class:`django.contrib.auth.models.User`
-- :doc:`SAM Broker <sam/brokers/user>`
-- :doc:`SAM Pydantic Class Reference <sam/models/user>`
+- :doc:`SAM Broker <../sam/brokers/user>`
+- :doc:`SAM Pydantic Class Reference <../sam/models/user>`

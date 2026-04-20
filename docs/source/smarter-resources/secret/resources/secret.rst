@@ -12,5 +12,5 @@ Technical References
 --------------------
 
 - Django ORM Model: :py:class:`smarter.apps.secret.models.Secret`
-- :doc:`SAM Broker <sam/brokers/secret>`
-- :doc:`SAM Pydantic Class Reference <sam/models/secret>`
+- :doc:`SAM Broker <../sam/brokers/secret>`
+- :doc:`SAM Pydantic Class Reference <../sam/models/secret>`

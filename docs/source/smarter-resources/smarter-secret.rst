@@ -8,16 +8,15 @@ The Smarter Secret module provides secure storage capabilities for the Smarter p
 with seamless integration to Smarter resources that rely on sensitive information
 for authentication and connectivity.
 
-- :doc:`Smarter Secret <secret/secret>`: A Django ORM-based secure storage for sensitive
+- :doc:`Smarter Secret <secret/resources/secret>`: A Django ORM-based secure storage for sensitive
     information like SQL connection strings and API keys. Secrets are used by other
     Smarter resources to provide authentication credentials for remote services.
 
-Usage
------
+.. literalinclude:: ../../smarter/smarter/apps/secret/data/example-manifests/secret-smarter-test-db.yaml
+   :language: yaml
+   :caption: Example Smarter Secret Manifest
 
-.. seealso::
 
-  - :doc:`Example Manifests <secret/data/example-manifests/secret-smarter-test-db.yaml>`: An example manifest for creating a Smarter Secret using SAM.
 
 Technical Reference
 -------------------
@@ -27,9 +26,9 @@ Technical Reference
 
    secret/api
    secret/const
-   secret/manifests
    secret/models
    secret/receivers
+   secret/resources
    secret/sam
    secret/serializers
    secret/signals

@@ -32,13 +32,13 @@ Technical Reference
 .. toctree::
    :maxdepth: 1
 
-   connection/resources/api
-   connection/resources/sql
+   connection/api
    connection/models
-   connection/manifests
    connection/serializers
    connection/const
-   connection/signals
    connection/receivers
+   connection/resources
+   connection/signals
+   connection/sam
    connection/tasks
    connection/views

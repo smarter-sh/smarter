@@ -18,9 +18,10 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
 
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataModelSerializer.Meta):
-        model = MetaDataModel
         fields = "__all__"
         read_only_fields = getattr(MetaDataModelSerializer.Meta, "read_only_fields", [])
+        # model = MetaDataModel
+        # abstract = True
 
 
 class UserSerializer(MetaDataModelSerializer):

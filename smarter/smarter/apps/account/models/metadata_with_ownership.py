@@ -75,6 +75,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         - If the user is not authenticated, they have no access.
         - If the user is a superuser, they have access to all resources.
         - If the user is a regular authenticated user, they have access to resources that are:
+
             - Owned by their UserProfile, OR
             - Owned by their Account admin UserProfile, OR
             - Owned by the Smarter admin UserProfile.
@@ -415,7 +416,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
     by a specific user profile. It also enforces uniqueness constraints on
     the combination of `user_profile` and `name` fields,
 
-    :param user_profile: ForeignKey to :class:`UserProfile`. The user profile that owns this resource.
+    :param user_profile: ForeignKey to :class:`smarter.apps.account.models.UserProfile`. The user profile that owns this resource.
 
     .. note::
 

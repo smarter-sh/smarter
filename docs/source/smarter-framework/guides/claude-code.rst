@@ -7,7 +7,6 @@ work as represented in the documentation listed below, and is subject to change 
 .. toctree::
    :maxdepth: 1
 
-   claude-code/claude-code-getting-started-2
    claude-code/claude-code-getting-started-guide
    claude-code/claude-code-getting-started
    claude-code/getting-started-with-claude-code
@@ -23,4 +22,3 @@ work as represented in the documentation listed below, and is subject to change 
    claude-code/smarter-claude-plugin
    claude-code/napl-adding-llm-provider
    claude-code/getting-started-claude-code-as-coding-assistant
-   claude-code/getting-started-with-claude-code-napl

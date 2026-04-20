@@ -18,8 +18,8 @@ resource to store authentication credentials:
 
 **Connection Types**
 
- - :doc:`plugins/connection/api`: Connect to REST APIs.
- - :doc:`plugins/connection/sql`: Connect to SQL databases.
+ - :doc:`connection/resources/api`: Connect to REST APIs.
+ - :doc:`connection/resources/sql`: Connect to SQL databases.
 
 Plugins are fundamentally more feature rich than traditional :doc:`LLM function tools <plugins/how-tools-work>`. A Smarter Plugin manifest
 defines not only what proprietary data is being made available to the LLM, but also the LLM prompt specification itself
