@@ -12,7 +12,7 @@ for authentication and connectivity.
     information like SQL connection strings and API keys. Secrets are used by other
     Smarter resources to provide authentication credentials for remote services.
 
-.. literalinclude:: ../../smarter/smarter/apps/secret/data/example-manifests/secret-smarter-test-db.yaml
+.. literalinclude:: ../example-manifests/secret.yaml
    :language: yaml
    :caption: Example Smarter Secret Manifest
 

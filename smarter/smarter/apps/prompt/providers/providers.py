@@ -28,7 +28,7 @@ from .base_classes import (
     OpenAICompatibleChatCompletionRequest,
     OpenAICompatibleChatCompletionResponse,
     OpenAICompatiblePassthroughProtocol,
-    SmarterChatCompletionResponse,
+    SmarterChatCompletionResponseType,
     SmarterChatHandlerProtocol,
 )
 from .googleai.classes import GoogleAIChatProvider, GoogleAIPassthroughChatProvider
@@ -132,7 +132,7 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> SmarterChatCompletionResponse:
+    ) -> SmarterChatCompletionResponseType:
         """Expose the handler method of the default provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
@@ -173,7 +173,7 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> SmarterChatCompletionResponse:
+    ) -> SmarterChatCompletionResponseType:
         """Expose the handler method of the googleai provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
@@ -207,7 +207,7 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> SmarterChatCompletionResponse:
+    ) -> SmarterChatCompletionResponseType:
         """Expose the handler method of the metaai provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
@@ -240,7 +240,7 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,
-    ) -> SmarterChatCompletionResponse:
+    ) -> SmarterChatCompletionResponseType:
         """Expose the handler method of the default provider"""
         return self.openai_handler(user_profile, chat, data, plugins=plugins, functions=functions)
 

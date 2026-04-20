@@ -32,7 +32,7 @@ from smarter.lib.journal.http import (
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from . import ChatDbMixin
+from .mixins import ChatDbMixin
 
 
 # pylint: disable=W0613

@@ -43,8 +43,8 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from . import ChatDbMixin
 from .internal_keys import _InternalKeys
+from .mixins import ChatDbMixin
 
 
 # pylint: disable=W0613

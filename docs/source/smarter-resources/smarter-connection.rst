@@ -7,8 +7,8 @@ Overview
 
 **Connection Types**
 
- - :doc:`connection/api`: Connect to REST APIs.
- - :doc:`connection/sql`: Connect to SQL databases.
+ - :doc:`connection/resources/api`: Connect to REST APIs.
+ - :doc:`connection/resources/sql`: Connect to SQL databases.
 
 
 .. seealso::
