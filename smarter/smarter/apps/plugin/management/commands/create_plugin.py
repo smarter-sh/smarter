@@ -71,7 +71,7 @@ class Command(SmarterCommand):
         plugin_class = SAM_MAP[loader.manifest_kind]
         manifest = plugin_class(**loader.pydantic_model_dump())
         self.stdout.write(f"Creating {plugin_class.__name__} {manifest.metadata.name} for account {account}...")
-        controller = PluginController(account=account, user=user, user_profile=user_profile, manifest=manifest)  # type: ignore
+        controller = PluginController(user_profile=user_profile, manifest=manifest)  # type: ignore
         plugin = controller.obj
 
         if isinstance(plugin, PluginBase) and plugin.ready:

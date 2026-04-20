@@ -124,8 +124,6 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             data = yaml.safe_load(yaml_data)
             plugin_controller = PluginController(
                 user_profile=user_profile,
-                account=user_profile.cached_account,  # type: ignore[arg-type]
-                user=user_profile.cached_user,  # type: ignore[arg-type]
                 manifest=data,  # type: ignore[arg-type]
             )
             # we do this to ensure that that plugin can instantiate correctly.

@@ -2,13 +2,17 @@
 
 import logging
 import os
-from typing import Optional
+from typing import Any, Optional, TypeVar, overload
 
 # django stuff
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Manager, QuerySet
+from django.db.models.expressions import Combinable
+from django.db.models.query import Prefetch
 
 # our stuff
+from smarter.apps.account.signals import new_user_created
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -18,12 +22,21 @@ from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from ..signals import (
-    new_user_created,
-)
 from .account import Account, AccountContact
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+
+_GenericTypeVar = TypeVar("_GenericTypeVar", bound="models.Model")
+"""
+Generic Manager Type variable bound to any Django Model, so that it
+its associated Manager can be type hinted to return the correct model type.
+Used for type hinting in the custom queryset and manager to ensure methods
+return the correct model type.
+
+.. seealso::
+
+    - django-stubs: Custom QuerySets <https://github.com/typeddjango/django-stubs>_
+"""
 
 
 # pylint: disable=W0613
@@ -34,6 +47,235 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+
+class SmarterBaseQuerySetWithPermissions(QuerySet[_GenericTypeVar]):
+    """
+    Custom queryset for permission-based resource filtering by user profile.
+
+    This queryset adds permission-aware filtering for resources owned by a specific user profile.
+
+    .. seealso::
+
+        - Django: Creating a manager with QuerySet methods <https://docs.djangoproject.com/en/6.0/topics/db/managers/#creating-a-manager-with-queryset-methods>_
+        - django-stubs: Custom QuerySets <https://github.com/typeddjango/django-stubs>_
+
+    """
+
+    def with_read_permission_for(self, user: User) -> "SmarterBaseQuerySetWithPermissions[_GenericTypeVar]":
+        """
+        A pipeline for filtering a queryset of this resource based on the
+        permissions of the authenticated user in the given request.
+
+        Return a queryset of this resource if the user has permission to read it,
+        or an empty queryset if not.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+        :param queryset: Optional[:class:`django.db.models.QuerySet`]
+            An optional queryset to filter. If not provided, the method will default to filtering all instances
+
+        :returns: :class:`django.db.models.QuerySet`
+            A queryset of this resource if the user has permission to read it, or an empty queryset
+            if not.
+        """
+        logger.debug(
+            "%s.with_read_permission_for() called for user: %s",
+            formatted_text(__name__ + ".SmarterBaseQuerySetWithPermissions"),
+            user,
+        )
+        if user.is_superuser:
+            logger.debug(
+                "%s.with_read_permission_for() user is superuser, returning all resources. count: %s",
+                formatted_text(__name__ + ".SmarterBaseQuerySetWithPermissions"),
+                self.count(),
+            )
+            return self.all()
+        return self.none()
+
+    def with_ownership_permission_for(self, user: User) -> "SmarterBaseQuerySetWithPermissions[_GenericTypeVar]":
+        """
+        Returns a queryset of resources that the authenticated user in the given request has full management (ownership) permission for.
+
+        Only users with staff or superuser status are permitted to manage resources.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+        :returns: :class:`django.db.models.QuerySet`
+            A queryset of this resource if the user has permission to fully manage it, or an empty queryset if not.
+        """
+        logger.debug(
+            "%s.with_ownership_permission_for() called for user: %s",
+            formatted_text(__name__ + ".SmarterBaseQuerySetWithPermissions"),
+            user,
+        )
+        if not isinstance(user, User):
+            logger.debug(
+                "%s.with_ownership_permission_for() user is not an instance of User: %s",
+                formatted_text(__name__ + ".SmarterBaseQuerySetWithPermissions"),
+                user,
+            )
+            return self.none()
+
+        if user.is_superuser:
+            logger.debug(
+                "%s.with_ownership_permission_for() user is superuser, returning all resources. count: %s",
+                formatted_text(__name__ + ".SmarterBaseQuerySetWithPermissions"),
+                self.count(),
+            )
+            return self.all()
+        return self.none()
+
+
+class SmarterBaseModelManager(Manager[_GenericTypeVar]):
+    """
+    Custom manager for MetaDataWithOwnershipModel that returns a
+    SmarterBaseQuerySetWithPermissions to enable permission-based filtering by
+    user_profile.
+    """
+
+    # --------------------------------------------------------------------------
+    # Override base Manager methods to return SmarterBaseQuerySetWithPermissions
+    # to ensure all queries go through the permission-aware queryset.
+    # --------------------------------------------------------------------------
+    def get_queryset(self) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """
+        Returns a SmarterBaseQuerySetWithPermissions for the model.
+        """
+        return SmarterBaseQuerySetWithPermissions(self.model, using=self._db)
+
+    def filter(self, *args, **kwargs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """
+        Returns a SmarterBaseQuerySetWithPermissions with the applied filter.
+        """
+        return self.get_queryset().filter(*args, **kwargs)
+
+    def exclude(self, *args, **kwargs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """
+        Returns a SmarterBaseQuerySetWithPermissions with the applied exclusion.
+        """
+        return self.get_queryset().exclude(*args, **kwargs)
+
+    def none(self) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """Returns an empty SmarterBaseQuerySetWithPermissions."""
+        return self.get_queryset().none()
+
+    def complex_filter(self, filter_obj) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """Returns a SmarterBaseQuerySetWithPermissions with the applied complex filter."""
+        return self.get_queryset().complex_filter(filter_obj)
+
+    def union(self, *other_qs, all=False) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """Returns a SmarterBaseQuerySetWithPermissions representing the union of querysets."""
+        return self.get_queryset().union(*other_qs, all=all)
+
+    def intersection(self, *other_qs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """Returns a SmarterBaseQuerySetWithPermissions representing the intersection of querysets."""
+        return self.get_queryset().intersection(*other_qs)
+
+    def difference(self, *other_qs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """Returns a SmarterBaseQuerySetWithPermissions representing the difference of querysets."""
+        return self.get_queryset().difference(*other_qs)
+
+    def select_for_update(self, **kwargs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """Returns a SmarterBaseQuerySetWithPermissions with select_for_update applied."""
+        return self.get_queryset().select_for_update(**kwargs)
+
+    @overload
+    def select_related(self, clear: None, /) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]: ...
+    @overload
+    def select_related(self, *fields: str) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]: ...
+    def select_related(self, *args, **kwargs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """Returns a SmarterBaseQuerySetWithPermissions with select_related applied."""
+        return self.get_queryset().select_related(*args, **kwargs)
+
+    @overload
+    def prefetch_related(self, clear: None, /) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]: ...
+    @overload
+    def prefetch_related(self, *lookups: str | Prefetch) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]: ...
+    def prefetch_related(self, *args, **kwargs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """
+        Returns a SmarterBaseQuerySetWithPermissions with prefetch_related applied.
+        """
+        return self.get_queryset().prefetch_related(*args, **kwargs)
+
+    def annotate(self, *args: Any, **kwargs: Any) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """Returns a SmarterBaseQuerySetWithPermissions with annotate applied."""
+        return self.get_queryset().annotate(*args, **kwargs)
+
+    def alias(self, *args: Any, **kwargs: Any) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """Returns a SmarterBaseQuerySetWithPermissions with alias applied."""
+        return self.get_queryset().alias(*args, **kwargs)
+
+    def order_by(self, *field_names: str | Combinable) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """Returns a SmarterBaseQuerySetWithPermissions with order_by applied."""
+        return self.get_queryset().order_by(*field_names)
+
+    def distinct(self, *field_names: str) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """Returns a SmarterBaseQuerySetWithPermissions with distinct applied."""
+        return self.get_queryset().distinct(*field_names)
+
+    # --------------------------------------------------------------------------
+    # Custom permission-based queryset methods for filtering by user_profile
+    # read and ownership permissions.
+    # --------------------------------------------------------------------------
+    def with_read_permission_for(self, user: User) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """
+        A custom Smarter pipeline for filtering any MetaDataWithOwnership
+        queryset based on the Smarter permissions scheme for the authenticated user in
+        the given request.
+
+        Returns a queryset of the resource if the user has permission to read it,
+        or an empty queryset if not.
+
+        Permission logic:
+
+        - If the user is not authenticated, they have no access.
+        - If the user is a superuser, they have access to all resources.
+        - If the user is a regular authenticated user, they have access to resources that are:
+            - Owned by their UserProfile, OR
+            - Owned by their Account admin UserProfile, OR
+            - Owned by the Smarter admin UserProfile.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+        :param queryset: Optional[:class:`django.db.models.QuerySet`]
+            An optional queryset to filter. If not provided, the method will default to filtering all instances
+
+        :returns: :class:`django.db.models.QuerySet`
+            A queryset of this resource if the user has permission to read it, or an empty queryset
+            if not.
+        """
+        logger.debug(
+            "%s.with_read_permission_for() called for user: %s",
+            formatted_text(__name__ + ".SmarterBaseModelManager"),
+            user,
+        )
+        return self.get_queryset().with_read_permission_for(user)
+
+    def with_ownership_permission_for(self, user: User) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+        """
+        Returns a queryset of resources that the authenticated user in the given request has full management (ownership) permission for.
+
+        Permission logic:
+
+        - If the user is not authenticated, they have no access.
+        - If the user is a superuser, they have ownership permission for all resources.
+        - If the user is a staff user, they have ownership permission for resources that are:
+            - Owned by their UserProfile, OR
+            - Owned by any UserProfile within their Account.
+        - If the user is a regular authenticated user, they have ownership permission only for resources they own.
+
+        :param user: :class:`django.contrib.auth.models.User`
+            The user to check.
+        :returns: :class:`django.db.models.QuerySet`
+            A queryset of this resource if the user has permission to fully manage it, or an empty queryset if not.
+        """
+        logger.debug(
+            "%s.with_ownership_permission_for() called for user: %s",
+            formatted_text(__name__ + ".SmarterBaseModelManager"),
+            user,
+        )
+        return self.get_queryset().with_ownership_permission_for(user)
 
 
 class UserProfile(MetaDataModel):
@@ -64,6 +306,8 @@ class UserProfile(MetaDataModel):
             "user",
             "account",
         )
+
+    objects: SmarterBaseModelManager = SmarterBaseModelManager()
 
     # Add more fields here as needed
     user = models.ForeignKey(
@@ -435,6 +679,48 @@ class UserProfile(MetaDataModel):
 
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, **kwargs)  # type: ignore[return-value]
 
+    @classmethod
+    def get_cached_objects(
+        cls, invalidate: Optional[bool] = False, user: Optional[User] = None, **kwargs
+    ) -> QuerySet["UserProfile"]:
+        """
+        Retrieve a queryset of UserProfile instances associated with the given
+        user, using caching to optimize performance.
+
+        :param invalidate: Boolean. If True, invalidates the cache for the user's profiles before retrieving.
+        :param user: Optional[User]. If provided, retrieves profiles associated with this user. If not provided, retrieves all profiles.
+        :returns: QuerySet[UserProfile]. A queryset of UserProfile instances associated with the
+            given user, or all profiles if no user is specified.
+        :rtype: QuerySet[UserProfile]
+        """
+        logger_prefix = formatted_text(__name__ + f".{UserProfile.__name__}.get_cached_objects()")
+        logger.debug(
+            "%s called with invalidate: %s,  user: %s, kwargs: %s",
+            logger_prefix,
+            invalidate,
+            user,
+            kwargs,
+        )
+
+        @cache_results(cls.cache_expiration)
+        def _get_objects_by_user(user_id: int, class_name: str = cls.__name__) -> QuerySet["UserProfile"]:
+            retval = UserProfile.objects.prefetch_related("tags").select_related("user", "account").filter(user=user)
+            logger.debug(
+                "%s._get_objects_by_user() fetched %s objects for user_id: %s. count: %s",
+                formatted_text(__name__ + ".UserProfile.get_cached_objects()"),
+                cls.__name__,
+                user_id,
+                retval.count(),
+            )
+            return retval
+
+        if isinstance(user, User):
+            if invalidate:
+                _get_objects_by_user.invalidate(user_id=user.id, class_name=UserProfile.__name__)  # type: ignore[call-arg]
+            return _get_objects_by_user(user_id=user.id, class_name=UserProfile.__name__)  # type: ignore[return-value]
+
+        return super().get_cached_objects()  # type: ignore[return-value]
+
     def __str__(self):
         try:
             user_identifier = (
@@ -451,4 +737,4 @@ class UserProfile(MetaDataModel):
         return self.__str__()
 
 
-__all__ = ["UserProfile"]
+__all__ = ["UserProfile", "SmarterBaseModelManager", "SmarterBaseQuerySetWithPermissions"]

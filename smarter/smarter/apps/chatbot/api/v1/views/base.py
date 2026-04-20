@@ -26,10 +26,6 @@ from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import ChatHelper
-from smarter.apps.prompt.providers.providers import (
-    SmarterChatHandlerProtocol,
-    smarter_compatible_chat_providers,
-)
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import is_authenticated_request
@@ -275,7 +271,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         :return: True if the request is from the web platform domain, False otherwise.
         :rtype: bool
         """
-        host = self.smarter_request.get_host()
+        host = self.smarter_request.get_host() if self.smarter_request else ""
         if host in smarter_settings.environment_platform_domain:
             return True
         return False
@@ -566,6 +562,12 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         - SmarterJournaledJsonResponse for response structure.
         - ChatBotHelper and ChatHelper for chatbot and chat session logic.
         """
+
+        # pylint: disable=C0415
+        from smarter.apps.prompt.providers.providers import (
+            SmarterChatHandlerProtocol,
+            smarter_compatible_chat_providers,
+        )
 
         logger.debug(
             "%s.post() - provider=%s", self.formatted_class_name, self.chatbot.provider if self.chatbot else None

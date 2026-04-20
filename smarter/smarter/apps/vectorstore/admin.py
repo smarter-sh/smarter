@@ -6,7 +6,6 @@ Admin configuration for the vectorstore app.
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
-    smarter_filter_queryset_for_user,
     smarter_restricted_admin_site,
 )
 
@@ -57,7 +56,7 @@ class VectorDatabaseAdmin(SmarterCustomerModelAdmin):
         if not isinstance(user, User):
             return qs.none()
 
-        return smarter_filter_queryset_for_user(user=user, qs=qs)
+        return VectorestoreMeta.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
 
 
 smarter_restricted_admin_site.register(VectorestoreMeta, VectorDatabaseAdmin)

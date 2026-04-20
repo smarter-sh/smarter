@@ -13,7 +13,6 @@ from django.utils.translation import gettext_lazy as _
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
-    smarter_filter_queryset_for_user,
     smarter_restricted_admin_site,
 )
 from smarter.common.helpers.console_helpers import formatted_text
@@ -213,10 +212,9 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
     def get_queryset(self, request: HttpRequest):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user,
-            qs=qs,
-        )
+        if not isinstance(user, User):
+            return qs.none()
+        return Secret.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
 
 
 class CustomPasswordWidget(forms.Widget):

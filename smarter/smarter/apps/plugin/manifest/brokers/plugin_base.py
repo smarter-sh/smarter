@@ -8,7 +8,7 @@ from django.core import serializers
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
-from smarter.apps.account.models import User, UserProfile
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
     smarter_cached_objects,
@@ -346,15 +346,9 @@ class SAMPluginBaseBroker(AbstractBroker):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.CHAT,
             )
-        if not self.account:
+        if not self.user_profile:
             raise SAMBrokerError(
-                message="No account set for the broker",
-                thing=self.thing,
-                command=SmarterJournalCliCommands.CHAT,
-            )
-        if not isinstance(self.user, User):
-            raise SAMBrokerError(
-                message=f"Invalid user type for the broker. Expected User instance but got {type(self.user)}",
+                message="No user profile set for the broker",
                 thing=self.thing,
                 command=SmarterJournalCliCommands.CHAT,
             )
@@ -364,13 +358,28 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         controller = PluginController(
             request=self.smarter_request,
-            user=self.user,
-            account=self.account,
+            user_profile=self.user_profile,
             manifest=self._manifest,  # type: ignore
             plugin_meta=self.plugin_meta if not self._manifest else None,
             name=self.name,
         )
         self._plugin = controller.obj
+        if isinstance(self._plugin, PluginBase):
+            logger.debug(
+                "%s.plugin() - resolved plugin=%s, user_profile=%s",
+                logger_prefix,
+                self._plugin,
+                self.user_profile,
+            )
+        else:
+            logger.warning(
+                "%s.plugin() - could not resolve plugin. manifest=%s, plugin_meta=%s, name=%s, user_profile=%s.",
+                logger_prefix,
+                self._manifest,
+                self.plugin_meta,
+                self.name,
+                self.user_profile,
+            )
         return self._plugin
 
     @property

@@ -22,8 +22,6 @@ class TestStaticPlugin(TestAccountMixin):
 
         plugin_controller = PluginController(
             user_profile=self.user_profile,
-            account=self.account,
-            user=self.user_profile.cached_user,  # type: ignore
             manifest=plugin_json,
         )
         if not plugin_controller or not plugin_controller.plugin:

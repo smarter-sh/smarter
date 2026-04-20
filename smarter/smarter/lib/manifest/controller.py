@@ -4,10 +4,11 @@ instance of the the correct Python subclass.
 """
 
 import abc
-from typing import Any
+from typing import Any, Optional
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, User
+from smarter.apps.account.models.user_profile import UserProfile
 from smarter.lib.manifest.models import AbstractSAMBase
 
 
@@ -52,14 +53,17 @@ class AbstractController(abc.ABC, AccountMixin):
 
     """
 
-    def __init__(self, account: Account, user: User, *args, **kwargs):
+    def __init__(self, user_profile: UserProfile, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        user_profile = kwargs.pop("user_profile", None)
         request = kwargs.pop("request", None)
-        if not account.pk or not user.pk:
-            raise ValueError("unsaved data was padded to the controller")
         AccountMixin.__init__(
-            self, account=account, user=user, user_profile=user_profile, request=request, *args, **kwargs
+            self,
+            account=user_profile.account,
+            user=user_profile.user,
+            user_profile=user_profile,
+            request=request,
+            *args,
+            **kwargs,
         )
 
     ###########################################################################

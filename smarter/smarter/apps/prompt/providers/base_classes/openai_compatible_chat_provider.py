@@ -611,8 +611,6 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
                     f"{self.formatted_class_name}: user_profile must be an instance of UserProfile, got {type(self.user_profile)}. This is a bug."
                 )
             plugin_controller = PluginController(
-                account=self.account,
-                user_profile=self.user_profile,
                 user_profile=self.user_profile,
                 plugin_meta=plugin_meta,
             )

@@ -395,7 +395,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         ISSUED = "Issued", "Issued"
         FAILED = "Failed", "Failed"
 
-    objects: MetaDataWithOwnershipModelManager["ChatBot"] = MetaDataWithOwnershipModelManager()
+    # objects: MetaDataWithOwnershipModelManager["ChatBot"] = MetaDataWithOwnershipModelManager()
 
     #: The subdomain DNS record associated with this ChatBot.
     #: Example: ChatBotCustomDomainDNS(id=1, domain="my-chatbot.example.com")
@@ -1329,9 +1329,7 @@ class ChatBotPlugin(TimestampedModel):
         user_profile = UserProfile.get_cached_object(invalidate=False, user=admin_user)
         loader = SAMLoader(manifest=data)
         manifest = SAMPluginCommon(**loader.json_data)  # type: ignore[call-arg]
-        plugin_controller = PluginController(
-            account=chatbot.user_profile.cached_account, user=admin_user, user_profile=user_profile, manifest=manifest
-        )
+        plugin_controller = PluginController(user_profile=user_profile, manifest=manifest)
         plugin = plugin_controller.plugin
         if not plugin or plugin.plugin_meta is None:
             raise SmarterValueError("ChatBotPlugin.load() failed to load plugin from data file")
@@ -1363,10 +1361,8 @@ class ChatBotPlugin(TimestampedModel):
         retval = []
         for chatbot_plugin in chatbot_plugins:
             plugin_controller = PluginController(
-                account=chatbot.user_profile.cached_account,
-                user=admin_user,
-                plugin_meta=chatbot_plugin.plugin_meta,
                 user_profile=user_profile,
+                plugin_meta=chatbot_plugin.plugin_meta,
             )
             if not plugin_controller or not plugin_controller.plugin:
                 raise SmarterValueError(
