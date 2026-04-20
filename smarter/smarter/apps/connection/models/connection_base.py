@@ -1,4 +1,4 @@
-"""Connection app models."""
+"""ConnectionBase abstract model."""
 
 import logging
 from abc import abstractmethod

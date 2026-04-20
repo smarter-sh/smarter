@@ -52,7 +52,13 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 
-from .exceptions import SAMExceptionBase
+from .error_classes import (
+    SAMBrokerError,
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+    SAMBrokerReadOnlyError,
+)
 
 inflect_engine = inflect.engine()
 
@@ -68,92 +74,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class SAMBrokerError(SAMExceptionBase):
-    """Base class for all SAMBroker errors."""
-
-    thing: Optional[Union[SmarterJournalThings, str]] = None
-    command: Optional[SmarterJournalCliCommands] = None
-    stack_trace: Optional[str] = None
-
-    def __init__(
-        self,
-        message: Optional[str] = None,
-        thing: Optional[Union[SmarterJournalThings, str]] = None,
-        command: Optional[SmarterJournalCliCommands] = None,
-        stack_trace: Optional[str] = None,
-    ):
-        self.thing = thing
-        self.command = command
-        self.stack_trace = stack_trace
-        super().__init__(message or "")
-
-    @property
-    def get_formatted_err_message(self):
-        msg = f"Smarter API {self.thing} manifest broker: {self.command}() unidentified error."
-        if self.message:
-            msg += "  " + self.message
-        return msg
-
-
-class SAMBrokerReadOnlyError(SAMBrokerError):
-    """Error for read-only broker operations."""
-
-    @property
-    def get_formatted_err_message(self):
-        msg = f"Smarter API {self.thing} manifest broker: {self.command}() read-only error."
-        if self.message:
-            msg += "  " + self.message
-        return msg
-
-
-class SAMBrokerErrorNotImplemented(SAMBrokerError):
-    """Base class for all SAMBroker errors."""
-
-    @property
-    def get_formatted_err_message(self):
-        msg = f"Smarter API {self.thing} manifest broker: {self.command}() not implemented error."
-        if self.message:
-            msg += "  " + self.message
-        return msg
-
-
-class SAMBrokerErrorNotReady(SAMBrokerError):
-    """Error for broker operations on resources that are not ready."""
-
-    @property
-    def get_formatted_err_message(self):
-        msg = f"Smarter API {self.thing} manifest broker: {self.command}() not ready error."
-        if self.message:
-            msg += "  " + self.message
-        return msg
-
-
-class SAMBrokerErrorNotFound(SAMBrokerError):
-    """Error for broker operations on resources that are not found."""
-
-    @property
-    def get_formatted_err_message(self):
-        msg = f"Smarter API {self.thing} manifest broker: {self.command}() not found error."
-        if self.message:
-            msg += "  " + self.message
-        return msg
-
-
-class SAMBrokerInternalError(SAMBrokerError):
-    """
-    Error for broker operations that result in an internal error,
-    such as trying to create a resource that already exists.
-    """
-
-    @property
-    def get_formatted_err_message(self):
-        msg = f"Smarter API {self.thing} manifest broker: {self.command}() internal error."
-        if self.message:
-            msg += "  " + self.message
-        return msg
-
-
-class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
+class _ORM(ABC, SmarterRequestMixin, SmarterConverterMixin):
     """
     Abstract base class for the Smarter Broker Model.
 
@@ -315,162 +236,55 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         self.log_abstract_broker_state()
         logger.debug("%s.__init__() is complete.", self.abstract_broker_logger_prefix)
 
-    def __str__(self):
-        """
-        Returns the string representation of the broker, expresssed as
-        "{apiVersion} {kind} Broker".
-
-        example: "smarter.sh/v1 ChatBot Broker"
-
-        :return: The string representation of the broker.
-        :rtype: str
-        """
-        user_profile = self.user_profile or "Anonymous"
-        name = self.name or "Unknown"
-
-        return f"{formatted_text(self.__class__.__name__)}[id={id(self)}](name={name}, user_profile={user_profile})"
-
-    def __repr__(self) -> str:
-        """
-        Returns the JSON representation of the broker.
-
-        :return: The JSON representation of the broker.
-        :rtype: str
-        """
-        return self.__str__()
-
-    def __bool__(self) -> bool:
-        """
-        Return True if the broker is ready for operations.
-
-        :return: True if the broker is ready for operations.
-        :rtype: bool
-        """
-        return self.ready
-
-    def __hash__(self) -> int:
-        """
-        Return the hash of the broker based on account, kind, and name.
-
-        :return: The hash of the broker.
-        :rtype: int
-        """
-        return hash((self.account, self.kind, self.name))
-
-    def __eq__(self, other: object) -> bool:
-        """
-        Check if two brokers are equal based on account, kind, and name.
-
-        :param other: The other broker to compare.
-        :type other: object
-        :return: True if the brokers are equal, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        return self.account == other.account and self.kind == other.kind and self.name == other.name
-
-    def __lt__(self, other: object) -> bool:
-        """
-        Less than comparison based on account, kind, and name.
-
-        :param other: The other broker to compare.
-        :type other: object
-        :return: True if this broker is less than the other broker, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        return (self.account, self.kind, self.name) < (other.account, other.kind, other.name)
-
-    def __le__(self, other: object) -> bool:
-        """
-        Less than or equal comparison based on account, kind, and name.
-
-        :param other: The other broker to compare.
-        :type other: object
-        :return: True if this broker is less than or equal to the other broker, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        return (self.account, self.kind, self.name) <= (other.account, other.kind, other.name)
-
-    def __gt__(self, other: object) -> bool:
-        """
-        Greater than comparison based on account, kind, and name.
-
-        :param other: The other broker to compare.
-        :type other: object
-        :return: True if this broker is greater than the other broker, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        return (self.account, self.kind, self.name) > (other.account, other.kind, other.name)
-
-    def __ge__(self, other: object) -> bool:
-        """
-        Greater than or equal comparison based on account, kind, and name.
-
-        :param other: The other broker to compare.
-        :type other: object
-        :return: True if this broker is greater than or equal to the other broker, False otherwise.
-        :rtype: bool
-        """
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        return (self.account, self.kind, self.name) >= (other.account, other.kind, other.name)
-
     ###########################################################################
     # Class Instance Properties
     ###########################################################################
     @property
     def abstract_broker_logger_cache_invalidation_prefix(self) -> str:
-        """Return the logger prefix for the AbstractBroker cache invalidation.
+        """Return the logger prefix for the _ORM cache invalidation.
 
-        :return: The logger prefix for the AbstractBroker.
+        :return: The logger prefix for the _ORM.
         :rtype: str
         """
-        return formatted_text_blue(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        return formatted_text_blue(f"{__name__}.{_ORM.__name__}[{id(self)}]")
 
     @property
     def abstract_broker_logger_prefix(self) -> str:
-        """Return the logger prefix for the AbstractBroker.
+        """Return the logger prefix for the _ORM.
 
-        :return: The logger prefix for the AbstractBroker.
+        :return: The logger prefix for the _ORM.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        return formatted_text(f"{__name__}.{_ORM.__name__}[{id(self)}]")
 
     @property
     def formatted_class_name(self) -> str:
-        """Return the logger prefix for the AbstractBroker.
+        """Return the logger prefix for the _ORM.
 
-        :return: The logger prefix for the AbstractBroker.
+        :return: The logger prefix for the _ORM.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        return formatted_text(f"{__name__}.{_ORM.__name__}[{id(self)}]")
 
     @property
     def formatted_class_name_cache_invalidations(self) -> str:
-        """Return the logger prefix for the AbstractBroker cache invalidations.
+        """Return the logger prefix for the _ORM cache invalidations.
 
-        :return: The logger prefix for the AbstractBroker cache invalidations.
+        :return: The logger prefix for the _ORM cache invalidations.
         :rtype: str
         """
-        return formatted_text_blue(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        return formatted_text_blue(f"{__name__}.{_ORM.__name__}[{id(self)}]")
 
     @property
     def is_ready_abstract_broker(self) -> bool:
-        """Return True if the AbstractBroker is ready for operations.
+        """Return True if the _ORM is ready for operations.
 
-        An AbstractBroker is considered ready if:
+        An _ORM is considered ready if:
         - The AccountMixin is ready.
         - The RequestMixin is ready.
         - either a valid manifest is loaded or a ready SAMLoader is present.
 
-        :return: True if the AbstractBroker is ready for operations.
+        :return: True if the _ORM is ready for operations.
         :rtype: bool
         """
         logger.debug(
@@ -545,9 +359,9 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
 
     @property
     def abstract_broker_ready_state(self) -> str:
-        """Return a string representation of the AbstractBroker's ready state.
+        """Return a string representation of the _ORM's ready state.
 
-        :return: "READY" if the AbstractBroker is ready, otherwise "NOT_READY".
+        :return: "READY" if the _ORM is ready, otherwise "NOT_READY".
         :rtype: str
         """
         if self.is_ready_abstract_broker:
@@ -1349,7 +1163,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
 
     def manifest_setter(self, value: Optional[Union[AbstractSAMBase, dict[str, Any]]]):
         """
-        Set the manifest for the broker and override all AbstractBroker
+        Set the manifest for the broker and override all _ORM
         model properties based on the manifest data.
 
         :param value: The manifest to set, either as a Pydantic model or a dictionary.
@@ -2075,7 +1889,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
 
     def log_abstract_broker_state(self):
         """
-        Log the current state of the AbstractBroker instance for debugging purposes.
+        Log the current state of the _ORM instance for debugging purposes.
 
         :return: None
         """
@@ -2097,7 +1911,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
 
 
 # pylint: disable=W0246
-class BrokerNotImplemented(AbstractBroker):
+class BrokerNotImplemented(_ORM):
     """An error class to proxy for a broker class that has not been implemented."""
 
     # pylint: disable=W0231,R0913

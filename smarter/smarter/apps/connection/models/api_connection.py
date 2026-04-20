@@ -1,4 +1,4 @@
-"""Connection app models."""
+"""ApiConnection model."""
 
 import logging
 from http import HTTPStatus
@@ -73,13 +73,10 @@ class ApiConnection(ConnectionBase):
     - :class:`smarter.apps.account.models.Secret`
     """
 
+    # pylint: disable=C0115
     class Meta:
         verbose_name = "API Connection"
         verbose_name_plural = "API Connections"
-        unique_together = (
-            "user_profile",
-            "name",
-        )
 
     objects: MetaDataWithOwnershipModelManager["ApiConnection"] = MetaDataWithOwnershipModelManager()
 
