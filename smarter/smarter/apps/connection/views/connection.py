@@ -16,7 +16,10 @@ from django.shortcuts import render
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.connection.models import ConnectionBase
+from smarter.apps.connection.models import (
+    ConnectionBase,
+    get_cached_connection_by_name_and_kind,
+)
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json
@@ -101,7 +104,6 @@ class ConnectionDetailView(DocsBaseView):
         :returns: Rendered HTML page with connection manifest details, or an error response if the connection is not found or parameters are invalid.
         :rtype: HttpResponse
         """
-
         self.name = kwargs.pop("name", None)
         self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
         if self.kind is None:
@@ -118,7 +120,7 @@ class ConnectionDetailView(DocsBaseView):
         if not is_authenticated_request(request):
             logger.error("%s.setup() User is not authenticated.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.connection = ConnectionBase.get_cached_connection_by_name_and_kind(
+        self.connection = get_cached_connection_by_name_and_kind(
             user=request.user, kind=self.kind, name=self.name  # type: ignore[arg-type]
         )
         if not self.connection:
