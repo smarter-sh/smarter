@@ -1,15 +1,11 @@
-# pylint: disable=C0114,C0115,C0302,W0613
 """Connection app models."""
 
-# python stuff
 import io
 import logging
 import tempfile
-from abc import abstractmethod
 from http import HTTPStatus
 from socket import socket
-from typing import Any, Optional, Union
-from urllib.parse import urljoin
+from typing import Optional, Union
 
 import paramiko
 import requests
@@ -17,45 +13,16 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.validators import MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
-
-# django stuff
 from django.db.utils import ConnectionHandler
 
 from smarter.apps.account.models import (
-    MetaDataWithOwnershipModel,
     MetaDataWithOwnershipModelManager,
-    User,
-    UserProfile,
 )
-from smarter.apps.account.utils import (
-    get_cached_account_for_user,
-    get_cached_admin_user_for_account,
-    smarter_cached_objects,
+from smarter.apps.connection.manifest.models.sql_connection.enum import (
+    DbEngines,
+    DBMSAuthenticationMethods,
 )
-
-# smarter stuff
-from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.secret.models import Secret
-from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.logger_helpers import formatted_text
-from smarter.common.mixins import SmarterHelperMixin
-from smarter.common.utils import camel_to_snake
-from smarter.lib import json
-from smarter.lib.cache import cache_results
-from smarter.lib.django import waffle
-from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-
-# connection stuff
-from .manifest.models.sql_connection.enum import DbEngines, DBMSAuthenticationMethods
-from .signals import (
-    api_connection_attempted,
-    api_connection_failed,
-    api_connection_query_attempted,
-    api_connection_query_failed,
-    api_connection_query_success,
-    api_connection_success,
+from smarter.apps.connection.signals import (
     sql_connection_attempted,
     sql_connection_failed,
     sql_connection_query_attempted,
@@ -64,10 +31,20 @@ from .signals import (
     sql_connection_success,
     sql_connection_validated,
 )
+from smarter.apps.secret.models import Secret
+from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.common.utils import camel_to_snake
+from smarter.lib import json
+from smarter.lib.django import waffle
+from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-# 3rd party stuff
+from .connection_base import ConnectionBase
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.CONNECTION_LOGGING)
@@ -76,199 +53,6 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 logger_prefix = formatted_text(f"{__name__}")
-
-
-class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
-    """
-    Abstract base class for all connection models in the Smarter platform.
-
-    ``ConnectionBase`` defines the shared interface and core fields required for representing connection
-    configurations to external data sources, such as SQL databases and remote APIs. This class is not
-    intended to be instantiated directly, but rather to be subclassed by concrete connection models like
-    :class:`SqlConnection` and :class:`ApiConnection`, each of which implements the logic for a specific
-    connection type.
-
-    This base class enforces a consistent structure for connection models by providing:
-      - An ``account`` field to associate the connection with a specific user account.
-      - A ``name`` field, validated to ensure snake_case and no spaces, for uniquely identifying the connection.
-      - A ``kind`` field to distinguish between connection types (e.g., SQL, API).
-      - Descriptive metadata fields such as ``description`` and ``version``.
-      - An abstract ``connection_string`` property that must be implemented by subclasses to return a usable connection string.
-      - Class methods for retrieving and caching connections for a user, supporting efficient access and management of connection objects.
-
-    Subclasses are responsible for implementing the logic to establish, test, and manage connections to their
-    respective data sources, as well as any additional configuration or validation required for their protocols.
-
-    This class is foundational for the Smarter connection architecture, ensuring that all connection models
-    adhere to a uniform interface and can be managed, validated, and retrieved in a consistent manner.
-
-    See also:
-
-    - :class:`smarter.apps.plugin.models.SqlConnection`
-    - :class:`smarter.apps.plugin.models.ApiConnection`
-    """
-
-    class Meta:
-        abstract = True
-        unique_together = (
-            "user_profile",
-            "name",
-        )
-
-    CONNECTION_KIND_CHOICES = [
-        (SAMKinds.SQL_CONNECTION.value, SAMKinds.SQL_CONNECTION.value),
-        (SAMKinds.API_CONNECTION.value, SAMKinds.API_CONNECTION.value),
-    ]
-
-    kind = models.CharField(
-        help_text="The kind of connection. Example: 'SQL', 'API'.",
-        max_length=50,
-        choices=CONNECTION_KIND_CHOICES,
-    )
-
-    @property
-    def formatted_class_name(self) -> str:
-        """
-        Returns the class name formatted for logging.
-
-        :return: The formatted class name as a string.
-        :rtype: str
-
-        """
-
-        return formatted_text(self.__class__.__module__ + "." + self.__class__.__name__)
-
-    @property
-    @abstractmethod
-    def connection_string(self) -> str:
-        """Return the connection string."""
-        raise NotImplementedError
-
-    @classmethod
-    @cache_results()
-    def get_cached_connections_for_user(cls, user: User, invalidate: bool = False) -> list["ConnectionBase"]:
-        """
-        Return a list of all instances of all concrete subclasses of :class:`ConnectionBase`.
-
-        This method retrieves all connection objects (such as :class:`SqlConnection` and :class:`ApiConnection`)
-        associated with the user's account, across all concrete subclasses of :class:`ConnectionBase`.
-        It is useful for enumerating all available connections for a given user, regardless of connection type.
-
-        :param user: The user whose connections should be retrieved.
-        :type user: User
-        :return: A list of all connection instances for the user's account.
-        :rtype: list[ConnectionBase]
-
-        **Example:**
-
-        .. code-block:: python
-
-            connections = ConnectionBase.get_cached_connections_for_user(user)
-            # returns [<SqlConnection ...>, <ApiConnection ...>, ...]
-
-        See also:
-
-        - :class:`SqlConnection`
-        - :class:`ApiConnection`
-        - :func:`smarter.apps.account.utils.get_cached_account_for_user`
-        """
-        if user is None:
-            logger.warning("%s.get_cached_connections_for_user: user is None", cls.formatted_class_name)
-            return []
-        user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
-        admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore
-        admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore
-        instances = []
-        for subclass in ConnectionBase.__subclasses__():
-            instances.extend(subclass.objects.filter(user_profile=user_profile).order_by("name"))
-            instances.extend(subclass.objects.filter(user_profile=admin_user_profile).order_by("name"))
-            instances.extend(
-                subclass.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile).order_by("name")
-            )
-        logger.debug(
-            "%s.get_cached_connections_for_user: Found these connections %s for user %s",
-            cls.formatted_class_name,
-            instances,
-            user,
-        )
-        unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
-        return list(unique_instances)
-
-    @classmethod
-    def get_cached_connection_by_name_and_kind(
-        cls, user: User, kind: SAMKinds, name: str, invalidate: bool = False
-    ) -> Union["ConnectionBase", None]:
-        """
-        Return a single instance of a concrete subclass of :class:`ConnectionBase` by name and kind.
-
-        This method retrieves a connection object (such as :class:`SqlConnection` or :class:`ApiConnection`)
-        for the given user, connection kind, and connection name. It searches across all concrete subclasses
-        of :class:`ConnectionBase` and returns the matching instance if found.
-
-        :param user: The user whose connection should be retrieved.
-        :type user: User
-        :param kind: The kind of connection (e.g., ``SAMKinds.SQL_CONNECTION`` or ``SAMKinds.API_CONNECTION``).
-        :type kind: SAMKinds
-        :param name: The name of the connection to retrieve.
-        :type name: str
-        :return: The connection instance if found, otherwise None.
-        :rtype: Union[ConnectionBase, None]
-
-        **Example:**
-
-        .. code-block:: python
-
-            sql_conn = ConnectionBase.get_cached_connection_by_name_and_kind(user, SAMKinds.SQL_CONNECTION, "hr_database")
-            api_conn = ConnectionBase.get_cached_connection_by_name_and_kind(user, SAMKinds.API_CONNECTION, "inventory_api")
-
-        See also:
-
-        - :class:`SqlConnection`
-        - :class:`ApiConnection`
-        - :func:`smarter.lib.cache.cache_results`
-        - :func:`smarter.apps.account.utils.get_cached_account_for_user`
-        """
-
-        @cache_results()
-        def cached_sqlconnection_by_id_and_name(account_id: int, name: str) -> Union["SqlConnection", None]:
-            try:
-                return (
-                    SqlConnection.objects.prefetch_related("tags")
-                    .select_related("user_profile", "user_profile__account", "user_profile__user")
-                    .get(user_profile__account__id=account_id, name=name)
-                )
-            except SqlConnection.DoesNotExist:
-                return None
-
-        @cache_results()
-        def cached_apiconnection_by_id_and_name(account_id: int, name: str) -> Union["ApiConnection", None]:
-            try:
-                return (
-                    ApiConnection.objects.prefetch_related("tags")
-                    .select_related("user_profile", "user_profile__account", "user_profile__user")
-                    .get(user_profile__account__id=account_id, name=name)
-                )
-            except ApiConnection.DoesNotExist:
-                return None
-
-        account = get_cached_account_for_user(invalidate=False, user=user)
-        if not kind or not kind in [SAMKinds.SQL_CONNECTION, SAMKinds.API_CONNECTION]:
-            raise SmarterValueError(f"Unsupported connection kind: {kind}")
-        if kind == SAMKinds.SQL_CONNECTION:
-            try:
-                if invalidate:
-                    cached_sqlconnection_by_id_and_name.invalidate(account.id, name)  # type: ignore[union-attr]
-                return cached_sqlconnection_by_id_and_name(account.id, name)  # type: ignore[return-value]
-            except SqlConnection.DoesNotExist:
-                pass
-
-        elif kind == SAMKinds.API_CONNECTION:
-            try:
-                if invalidate:
-                    cached_apiconnection_by_id_and_name.invalidate(account.id, name)  # type: ignore[union-attr]
-                return cached_apiconnection_by_id_and_name(account.id, name)  # type: ignore[return-value]
-            except ApiConnection.DoesNotExist:
-                pass
 
 
 class SqlConnection(ConnectionBase):
@@ -1023,210 +807,4 @@ class SqlConnection(ConnectionBase):
         return self.name + " - " + self.get_connection_string() if isinstance(self.name, str) else "unassigned"
 
 
-class ApiConnection(ConnectionBase):
-    """
-    Stores API connection configuration.
-
-    This model defines the connection details for a remote API,
-    including authentication method, base URL, credentials, timeout, and proxy settings.
-    It provides methods for testing the API and proxy connections, and for validating
-    the configuration.
-
-    ``ApiConnection`` is a concrete subclass of :class:`ConnectionBase` and is referenced by
-    :class:`PluginDataApi` to provide the connection. It supports a variety
-    of authentication methods (none, basic, token, OAuth), as well as proxy configuration for secure
-    and flexible integration with external APIs.
-
-    This model is responsible for:
-      - Managing API credentials and secrets using the :class:`Secret` model.
-      - Constructing connection strings and request headers for different authentication schemes.
-      - Providing methods for testing connectivity to the API and proxy endpoints.
-      - Supporting timeout and proxy configuration for robust and secure API access.
-      - Integrating with the Smarter plugin system to enable dynamic, authenticated API requests.
-
-    Typical use cases include plugins that need to retrieve or send data to external REST APIs,
-    integrate with third-party services, or expose organizational APIs to the Smarter LLM platform.
-
-    See also:
-
-    - :class:`ConnectionBase`
-    - :class:`PluginDataApi`
-    - :class:`smarter.apps.account.models.Secret`
-    """
-
-    class Meta:
-        verbose_name = "API Connection"
-        verbose_name_plural = "API Connections"
-        unique_together = (
-            "user_profile",
-            "name",
-        )
-
-    objects: MetaDataWithOwnershipModelManager["ApiConnection"] = MetaDataWithOwnershipModelManager()
-
-    AUTH_METHOD_CHOICES = [
-        ("none", "None"),
-        ("basic", "Basic Auth"),
-        ("token", "Token Auth"),
-        ("oauth", "OAuth"),
-    ]
-    PROXY_PROTOCOL_CHOICES = [("http", "HTTP"), ("https", "HTTPS"), ("socks", "SOCKS")]
-
-    base_url = models.URLField(
-        help_text="The root domain of the API. Example: 'https://api.example.com'.",
-    )
-    api_key = models.ForeignKey(
-        Secret,
-        on_delete=models.CASCADE,
-        related_name="api_connections_api_key",
-        help_text="The API key for authentication, if required.",
-        blank=True,
-        null=True,
-    )
-    auth_method = models.CharField(
-        help_text="The authentication method to use. Example: 'Basic Auth', 'Token Auth'.",
-        max_length=50,
-        choices=AUTH_METHOD_CHOICES,
-        default="none",
-        blank=True,
-        null=True,
-    )
-    timeout = models.IntegerField(
-        help_text="The timeout for the API request in seconds. Default is 30 seconds.",
-        default=30,
-        validators=[MinValueValidator(1)],
-        blank=True,
-        null=True,
-    )
-    # Proxy fields
-    proxy_protocol = models.CharField(
-        max_length=10,
-        choices=PROXY_PROTOCOL_CHOICES,
-        default="http",
-        help_text="The protocol to use for the proxy connection.",
-        blank=True,
-        null=True,
-    )
-    proxy_host = models.CharField(max_length=255, blank=True, null=True)
-    proxy_port = models.IntegerField(blank=True, null=True)
-    proxy_username = models.CharField(max_length=255, blank=True, null=True)
-    proxy_password = models.ForeignKey(
-        Secret,
-        on_delete=models.CASCADE,
-        related_name="api_connections_proxy_password",
-        help_text="The proxy password for authentication, if required.",
-        blank=True,
-        null=True,
-    )
-
-    @property
-    def connection_string(self) -> str:
-        return self.get_connection_string()
-
-    def test_proxy(self) -> bool:
-        proxy_dict = {
-            self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
-        }
-        try:
-            response = requests.get("https://www.google.com", proxies=proxy_dict, timeout=self.timeout)
-            return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
-        except requests.exceptions.RequestException as e:
-            logger.error("%s.test_proxy() proxy test connection failed: %s", self.formatted_class_name, e)
-            return False
-
-    def test_connection(self) -> bool:
-        """Test the API connection by making a simple GET request to the root domain."""
-        try:
-            logger.warning(
-                "%s.test_connection() called for %s with auth method %s but we didn't actually test it.",
-                self.formatted_class_name,
-                self.name,
-                self.auth_method,
-            )
-            # result = self.execute_query(endpoint="/", params=None, limit=1)
-            # return bool(result)
-            return True
-        # pylint: disable=W0718
-        except Exception:
-            return False
-
-    def get_connection_string(self, masked: bool = True) -> str:
-        """Return the connection string."""
-        if masked:
-            return f"{self.base_url} (Auth: ******)"
-        return f"{self.base_url} (Auth: {self.auth_method})"
-
-    def save(self, *args, **kwargs):
-        """Override the save method to validate the field dicts."""
-        if isinstance(self.name, str) and not SmarterValidator.is_valid_snake_case(self.name):
-            snake_case_name = camel_to_snake(self.name)
-            logger.warning(
-                "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
-                self.formatted_class_name,
-                self.name,
-                snake_case_name,
-            )
-            self.name = snake_case_name
-        self.validate()
-        super().save(*args, **kwargs)
-
-    def validate(self) -> bool:
-        """Validate the API connection."""
-        super().validate()
-        return self.test_connection()
-
-    def execute_query(
-        self, endpoint: str, params: Optional[dict] = None, limit: Optional[int] = None
-    ) -> Union[dict[str, Any], list[Any], bool]:
-        """
-        Execute the API query and return the results.
-        This method constructs the full URL by combining the base URL and the endpoint,
-        and sends a GET request to the API with the provided parameters.
-
-        :param endpoint: The API endpoint to query.
-        :param params: A dictionary of parameters to include in the API request.
-        :param limit: The maximum number of rows to return from the API response.
-        :return: The API response as a JSON object or False if the request fails.
-        """
-        params = params or {}
-        url = urljoin(self.base_url, endpoint)
-        headers = {}
-        if self.auth_method == "basic" and self.api_key:
-            headers["Authorization"] = f"Basic {self.api_key}"
-        elif self.auth_method == "token" and self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-
-        try:
-            api_connection_attempted.send(sender=self.__class__, connection=self)
-            api_connection_query_attempted.send(sender=self.__class__, connection=self)
-            response = requests.get(url, headers=headers, params=params, timeout=self.timeout)
-            response.raise_for_status()
-            if response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]:
-                api_connection_success.send(sender=self.__class__, connection=self)
-                api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
-                if limit:
-                    response_data = response.json()
-                    if isinstance(response_data, list):
-                        response_data = response_data[:limit]
-                    elif isinstance(response_data, dict):
-                        response_data = {k: v[:limit] for k, v in response_data.items() if isinstance(v, list)}
-                    return response_data
-                return response.json()
-            else:
-                # we connected, but the query failed.
-                api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
-                api_connection_failed.send(sender=self.__class__, connection=self, response=response, error=None)
-                return False
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-            # connection failed, and so by extension, so did the query
-            api_connection_query_failed.send(sender=self.__class__, connection=self, response=response, error=e)
-            api_connection_failed.send(sender=self.__class__, connection=self, response=response, error=e)
-            return False
-        except (requests.exceptions.HTTPError, requests.exceptions.RequestException) as e:
-            # query failed, but connection was successful
-            api_connection_success.send(sender=self.__class__, connection=self, response=response, error=e)
-            api_connection_query_failed.send(sender=self.__class__, connection=self, response=response, error=e)
-            return False
-
-    def __str__(self) -> str:
-        return self.name + " - " + self.get_connection_string() if isinstance(self.name, str) else "unassigned"
+__all__ = ["SqlConnection"]
