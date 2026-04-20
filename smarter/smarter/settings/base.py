@@ -1474,26 +1474,27 @@ to "True". If set to True, tags will be treated as case insensitive
 # step 2: load environment variables from .env file (if present)
 ASCII_CONTROL_CHAR_REGEX = re.compile(r"[\x00-\x1F\x7F]")
 """
-Process environment variables to override settings values
+Process environment variables to override settings values.
 
 This allows for 12-factor style configuration via environment variables.
 Environment variable values are cast to the same data type as the
-existing Django and/or Smarter setting value.
+existing Django or Smarter setting value.
 
 The basic process is:
-----------------------
-1. set default settings values, above.
-2. load environment variables from .env file (if present) and os.environ
-3. map environment variables to Django settings by removing the "DJANGO_"
-   prefix, and for any environment variable that matches an existing Django
-   setting, cast the value to the same type as the existing setting value
-   and override the default setting value. For anything else
-   analyze the passed value to attempt to infer the intended data type and
-   usage, and create a new setting with that name and value if it does
-   not already exist.
 
-   * Note that Django settings are prefixed with "DJANGO_"
-     and Smarter settings are prefixed with "SMARTER_".
+1. Set default settings values.
+2. Load environment variables from a .env file (if present) and os.environ.
+3. Map environment variables to Django settings by removing the ``DJANGO_``
+   prefix. For any environment variable that matches an existing Django
+   setting, cast the value to the same type as the existing setting value
+   and override the default.
+
+   For anything else, analyze the passed value to infer the intended data
+   type and create a new setting if it does not already exist.
+
+Note:
+Django settings are prefixed with ``DJANGO_`` and Smarter settings
+are prefixed with ``SMARTER_``.
 """
 
 # step 3: override settings from environment variables
