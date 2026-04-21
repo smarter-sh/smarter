@@ -239,6 +239,8 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         logger.error(f"{logger_prefix} Unexpected error calling OpenMeteo API: {e}")
         return [{"error": f"Unexpected error calling weather service: {e}"}]
 
+    # Process the API response. Extract the relevant weather data, convert
+    # units if necessary, and format it for return.
     try:
         response = responses[0]
         hourly = response.Hourly()
