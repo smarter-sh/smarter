@@ -40,8 +40,13 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 logger_prefix = formatted_text(__name__)
 
 
-# Cache singleton for the session object to reuse across function calls to
-# avoid creating multiple sessions and Redis connections.
+# OpenMeteo API client initialization with caching and retry logic.
+# -----------------------------------------------------------------------------
+
+
+# 1.) Initialize a Redis cache singleton for the OpenMeteo API client session
+# object to reuse across function calls to avoid creating multiple sessions
+# and Redis connections.
 def get_session():
     """
     Returns a cached session for making HTTP requests, using Redis as the backend.
@@ -62,16 +67,18 @@ def get_session():
 
 redis_session = get_session()
 
-# Wrap the session with retry logic to handle transient errors when making API calls.
-# We use the retry_requests library to automatically retry failed requests with exponential backoff.
+# 2.) Wrap the session with retry logic to handle transient errors when making
+# API calls. We use the retry_requests library to automatically retry failed
+# requests with exponential backoff.
 cached_session_with_retry = retry(redis_session, retries=5, backoff_factor=0.2)
 
-# Initialize the OpenMeteo API client with the cached session that has retry
+# 3.) Initialize the OpenMeteo API client with the cached session that has retry
 # logic.
 openmeteo_api_client = openmeteo_requests.Client(session=cached_session_with_retry)  # type: ignore
 
 
 # Google Maps API key and client
+# -----------------------------------------------------------------------------
 google_maps_client = None
 if (
     not smarter_settings.google_maps_api_key
