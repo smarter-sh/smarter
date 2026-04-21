@@ -169,12 +169,9 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
                 logger.error(f"{logger_prefix} Error parsing arguments JSON: {e}")
                 return [{"error": f"Invalid arguments JSON: {e}. Received arguments: {tool_call.function.arguments}"}]
             except Exception as e:
-                logger.error(f"{logger_prefix} Unexpected error parsing arguments: {e}")
-                return [
-                    {
-                        "error": f"Unexpected error parsing arguments: {e}. Received arguments: {tool_call.function.arguments}"
-                    }
-                ]
+                msg = f"Unexpected error parsing arguments: {e}. Received arguments: {tool_call.function.arguments}"
+                logger.error(f"{logger_prefix} {msg}")
+                return [{"error": msg}]
         else:
             arguments = tool_call.function.arguments
 
@@ -183,20 +180,18 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         location = arguments.get(WeatherParameters.LOCATION, None)
         logger.debug(f"{logger_prefix} Extracted location: {location}")
     except (AttributeError, KeyError) as e:
-        logger.error(f"{logger_prefix} Unexpected error processing location argument: {arguments} Exception: {e}")
-        return [
-            {
-                "error": (
-                    f"Unexpected error processing arguments: {e}. "
-                    f"Received arguments: {arguments}. "
-                    f"Expected: {{'{WeatherParameters.LOCATION}': 'city, state', "
-                    f"'{WeatherParameters.UNIT}': 'METRIC|USCS'}}"
-                )
-            }
-        ]
+        msg = (
+            f"Invalid location argument received: {e}. "
+            f"Received arguments: {arguments}. "
+            f"Expected: {{{WeatherParameters.LOCATION}: 'city/town/area/region, "
+            f"[state], [country]', {WeatherParameters.UNIT}: 'METRIC|USCS'}}"
+        )
+        logger.error(f"{logger_prefix} {msg}")
+        return [{"error": msg}]
     except Exception as e:
-        logger.error(f"{logger_prefix} Unexpected error processing arguments: {arguments} Exception: {e}")
-        return [{"error": f"Unexpected error processing arguments: {e}. Received arguments: {arguments}"}]
+        msg = f"Unexpected error processing location argument: {e}. Received arguments: {arguments}"
+        logger.error(f"{logger_prefix} {msg}")
+        return [{"error": msg}]
 
     if not location or not isinstance(location, str) or not location.strip():
         return [{"error": f"No {WeatherParameters.LOCATION} provided. Please provide a valid location string."}]
@@ -206,20 +201,18 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         unit = arguments.get(WeatherParameters.UNIT, WeatherUnits.METRIC)
         logger.debug(f"{logger_prefix} Extracted unit: {unit}")
     except (AttributeError, KeyError) as e:
-        logger.error(f"{logger_prefix} Unexpected error processing unit argument: {arguments} Exception: {e}")
-        return [
-            {
-                "error": (
-                    f"Unexpected error processing arguments: {e}. "
-                    f"Received arguments: {arguments}. "
-                    f"Expected: {{'{WeatherParameters.LOCATION}': 'city, state', "
-                    f"'{WeatherParameters.UNIT}': 'METRIC|USCS'}}"
-                )
-            }
-        ]
+        msg = (
+            f"Invalid unit argument received: {e}. "
+            f"Received arguments: {arguments}. "
+            f"Expected: {{{WeatherParameters.LOCATION}: 'city/town/area/region, "
+            f"[state], [country]', {WeatherParameters.UNIT}: 'METRIC|USCS'}}"
+        )
+        logger.error(f"{logger_prefix} {msg}")
+        return [{"error": msg}]
     except Exception as e:
-        logger.error(f"{logger_prefix} Unexpected error processing arguments: {arguments} Exception: {e}")
-        return [{"error": f"Unexpected error processing arguments: {e}. Received arguments: {arguments}"}]
+        msg = f"Unexpected error processing unit argument: {e}. Received arguments: {arguments}"
+        logger.error(f"{logger_prefix} {msg}")
+        return [{"error": msg}]
 
     if unit not in WeatherUnits.all():
         return [{"error": f"Invalid {WeatherParameters.UNIT}. Supported units are: {', '.join(WeatherUnits.all())}."}]
@@ -247,14 +240,17 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         # fallback to the original location string if not found.
         address = geocode_result[0].get("formatted_address", location)
     except GoogleMapsApiError as api_error:
-        logger.error(f"{logger_prefix} Google Maps API error getting geo coordinates for {location}: {api_error}")
-        return [{"error": f"Google Maps API error: {api_error}"}]
+        msg = f"Google Maps API error geocoding location '{location}': {api_error}"
+        logger.error(f"{logger_prefix} {msg}")
+        return [{"error": msg}]
     except json.JSONDecodeError as e:
-        logger.error(f"{logger_prefix} JSON decode error getting geo coordinates for {location}: {e}")
-        return [{"error": f"JSON decode error geocoding location: {e}"}]
+        msg = f"JSON decode error geocoding location '{location}': {e}"
+        logger.error(f"{logger_prefix} {msg}")
+        return [{"error": msg}]
     except Exception as e:
-        logger.error(f"{logger_prefix} Unexpected error getting geo coordinates for {location}: {e}")
-        return [{"error": f"Unexpected error geocoding location: {e}"}]
+        msg = f"Unexpected error geocoding location '{location}': {e}"
+        logger.error(f"{logger_prefix} {msg}")
+        return [{"error": msg}]
 
     # 5.) Query the OpenMeteo Weather API
     # -------------------------------------------------------------------------
@@ -272,11 +268,13 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     try:
         responses = openmeteo_api_client.weather_api(WEATHER_API_URL, params=params)
     except OpenMeteoRequestsError as e:
-        logger.error(f"{logger_prefix} OpenMeteo API error: {e}")
-        return [{"error": f"OpenMeteo API error: {e}"}]
+        msg = f"OpenMeteo API error: {e}"
+        logger.error(f"{logger_prefix} {msg}")
+        return [{"error": msg}]
     except Exception as e:
-        logger.error(f"{logger_prefix} Unexpected error calling OpenMeteo API: {e}")
-        return [{"error": f"Unexpected error calling weather service: {e}"}]
+        msg = f"Unexpected error calling OpenMeteo API: {e}"
+        logger.error(f"{logger_prefix} {msg}")
+        return [{"error": msg}]
 
     # 6.) Format the response as a JSON-compatible dictionary and return it.
     # -------------------------------------------------------------------------
@@ -318,11 +316,13 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
             "forecast": hourly_json,
         }
     except (IndexError, AttributeError, TypeError, ValueError, KeyError) as e:
-        logger.error(f"{logger_prefix} Error processing weather data: {e}")
-        return [{"error": f"Error processing weather data: {e}"}]
+        msg = f"Error processing weather data: {e}"
+        logger.error(f"{logger_prefix} {msg}")
+        return [{"error": msg}]
     except Exception as e:
-        logger.error(f"{logger_prefix} Unexpected error processing weather data: {e}")
-        return [{"error": f"Unexpected error processing weather data: {e}"}]
+        msg = f"Unexpected error processing weather data: {e}"
+        logger.error(f"{logger_prefix} {msg}")
+        return [{"error": msg}]
 
     # Send a Django signal that the tool has generated a response, with the tool call data and the response.
     # see: https://docs.djangoproject.com/en/6.0/topics/signals/
