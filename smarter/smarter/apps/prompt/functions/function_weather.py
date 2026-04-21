@@ -246,6 +246,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
             except json.JSONDecodeError as e:
                 logger.error(f"{logger_prefix} Error parsing arguments JSON: {e}")
                 return [{"error": f"Invalid arguments JSON: {e}. Received arguments: {tool_call.function.arguments}"}]
+            # pylint: disable=broad-exception-caught
             except Exception as e:
                 msg = f"Unexpected error parsing arguments: {e}. Received arguments: {tool_call.function.arguments}"
                 logger.error(f"{logger_prefix} {msg}")
@@ -266,6 +267,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         )
         logger.error(f"{logger_prefix} {msg}")
         return [{"error": msg}]
+    # pylint: disable=broad-exception-caught
     except Exception as e:
         msg = f"Unexpected error processing location argument: {e}. Received arguments: {arguments}"
         logger.error(f"{logger_prefix} {msg}")
@@ -287,6 +289,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         )
         logger.error(f"{logger_prefix} {msg}")
         return [{"error": msg}]
+    # pylint: disable=broad-exception-caught
     except Exception as e:
         msg = f"Unexpected error processing unit argument: {e}. Received arguments: {arguments}"
         logger.error(f"{logger_prefix} {msg}")
@@ -326,6 +329,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         msg = f"JSON decode error geocoding location '{location}': {e}"
         logger.error(f"{logger_prefix} {msg}")
         return [{"error": msg}]
+    # pylint: disable=broad-exception-caught
     except Exception as e:
         msg = f"Unexpected error geocoding location '{location}': {e}"
         logger.error(f"{logger_prefix} {msg}")
@@ -351,6 +355,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         msg = f"OpenMeteo API error: {e}"
         logger.error(f"{logger_prefix} {msg}")
         return [{"error": msg}]
+    # pylint: disable=broad-exception-caught
     except Exception as e:
         msg = f"Unexpected error calling OpenMeteo API: {e}"
         logger.error(f"{logger_prefix} {msg}")
@@ -419,6 +424,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         msg = f"Error processing weather data: {e}"
         logger.error(f"{logger_prefix} {msg}")
         return [{"error": msg}]
+    # pylint: disable=broad-exception-caught
     except Exception as e:
         msg = f"Unexpected error processing weather data: {e}"
         logger.error(f"{logger_prefix} {msg}")
