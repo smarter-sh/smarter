@@ -2,6 +2,10 @@ default_language_version:
   # default language version for each language
   python: python3.13
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.11
+    hooks:
+      - id: ruff-check
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.21.2
     hooks:

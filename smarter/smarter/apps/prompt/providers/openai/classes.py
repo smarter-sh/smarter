@@ -32,7 +32,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class OpenAIChatProvider(OpenAICompatibleChatProvider):
+class OpenAISmarterChatProvider(OpenAICompatibleChatProvider):
     """
     OpenAI chat provider.
     """
