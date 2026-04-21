@@ -3,13 +3,10 @@ Middleware to block clients that trigger excessive 404 responses.
 """
 
 import logging
-from collections.abc import Awaitable
 from http import HTTPStatus
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseForbidden
-from django.http.request import HttpRequest
-from django.http.response import HttpResponseBase
 
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.helpers.console_helpers import formatted_text

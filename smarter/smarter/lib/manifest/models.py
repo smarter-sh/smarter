@@ -17,7 +17,6 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from pydantic.types import JsonValue
 
 from smarter.apps.account.models import (
     User,

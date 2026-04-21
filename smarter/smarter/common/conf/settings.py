@@ -37,7 +37,6 @@ import os  # library for interacting with the operating system
 import re  # library for regular expressions
 import warnings  # library for issuing warning messages
 from functools import cached_property, lru_cache
-from sys import platform
 from typing import Any, List, Optional, Pattern, Union  # type hint utilities
 from urllib.parse import urljoin, urlparse  # library for URL manipulation
 

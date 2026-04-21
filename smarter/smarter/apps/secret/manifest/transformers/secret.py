@@ -12,10 +12,6 @@ from rest_framework import serializers
 
 from smarter.apps.account.manifest.enum import SAMSecretSpecKeys
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import (
-    get_user_profiles_for_account,
-    smarter_cached_objects,
-)
 from smarter.apps.secret.manifest.models.secret.const import MANIFEST_KIND
 from smarter.apps.secret.manifest.models.secret.metadata import SAMSecretMetadata
 

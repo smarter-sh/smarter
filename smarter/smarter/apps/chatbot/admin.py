@@ -3,7 +3,7 @@
 
 import logging
 
-from smarter.apps.account.models import User, UserProfile, get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,

@@ -5,8 +5,6 @@ see: https://qdrant.tech/
 
 from .base import (
     SmarterVectorstoreBackend,
-    VectorStoreBackendConnectionError,
-    VectorStoreBackendError,
 )
 
 

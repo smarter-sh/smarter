@@ -6,7 +6,6 @@ from typing import Any, Dict, Literal, Mapping, Optional, Sequence
 
 from pydantic import Field, field_validator
 
-from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

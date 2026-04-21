@@ -17,7 +17,7 @@ from string import Template
 from unittest.mock import MagicMock, patch
 
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.helpers.aws_helpers import AWSRoute53, aws_helper
 from smarter.common.helpers.console_helpers import formatted_text_red
 from smarter.common.helpers.k8s_helpers import (

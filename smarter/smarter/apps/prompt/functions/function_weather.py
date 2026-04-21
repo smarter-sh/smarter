@@ -24,7 +24,6 @@ Signals
 
 import logging
 from typing import Optional
-from urllib.parse import urljoin
 
 import googlemaps
 import openmeteo_requests

@@ -9,7 +9,6 @@ from django.db.models.query import QuerySet
 from smarter.apps.account.models import Account
 from smarter.apps.account.tests.test_account_mixin import TestAccountMixin
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.django.models import MetaDataModel
 
 logger = logging.getLogger(__name__)
 
