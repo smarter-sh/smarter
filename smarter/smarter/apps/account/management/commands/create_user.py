@@ -4,6 +4,8 @@ import secrets
 import string
 from urllib.parse import urljoin
 
+from django.db import transaction
+
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
@@ -16,32 +18,53 @@ from smarter.lib.django.validators import SmarterValidator
 class Command(SmarterCommand):
     """Django manage.py create_user command. This command is used to create a new user for an account."""
 
-    def add_arguments(self, parser):
-        """Add arguments to the command."""
-        parser.add_argument(
-            "--account_number", type=str, required=True, help="The Smarter account number to which the user belongs"
-        )
-        parser.add_argument("--username", type=str, required=True, help="The username for the new user")
-        parser.add_argument("--email", type=str, required=True, help="The email address for the new user")
-        parser.add_argument("--first_name", type=str, required=True, help="The first name of the new user")
-        parser.add_argument("--last_name", type=str, required=True, help="The last name of the new user")
-        parser.add_argument("--password", type=str, help="The password for the new user")
-        parser.add_argument(
-            "--admin", action="store_true", default=False, help="True if the new user is an admin, False otherwise."
-        )
+    def create_user(
+        self, account_number, username, email, first_name, last_name, password=None, is_admin=False
+    ) -> bool:
+        """
+        Create a new user for the specified account. If the user already exists,
+        update the user's information. The basic workflow is as follows:
 
-    def handle(self, *args, **options):
-        """create the superuser account."""
-        self.handle_begin()
+          1. Get the account based on the provided account number. If the account does
+              not exist, log a failure and return False.
+          2. Attempt to get or create the user based on the provided username. If there
+              is an error during user creation, log a failure and return False.
+          3. If the user already exists, log a notice that the existing user will be
+              updated. Set the user's staff status based on the is_admin flag. Validate
+              the provided email address and if it is invalid, log a failure and return
+              False. Update the user's email, first name, last name, and active status.
+              If a password is provided, set the user's password to the provided
+              password. If no password is provided and the user was created, generate a
+              random password, set it for the user, and log the generated password.
+              Attempt to save the user and if there is an error during saving, log a
+              failure and return False. Log a success message that the user has been
+              created or updated.
+          4. If the user was created and the Waffle switch
+              ENABLE_NEW_USER_PASSWORD_EMAIL is active, attempt to send an email to the
+              user with their account credentials. If there is an error during email
+              sending, log a failure but do not return False since the user account has
+              been created successfully.
+          5. Attempt to get or create a UserProfile for the user and account. If there
+              is an error during this process, log a failure and return False. If the
+              UserProfile was created, log a success message.
+          6. Attempt to get an AccountContact for the account and email. If it exists,
+              update the first name and last name and save it. If it does not exist,
+              create a new AccountContact. If there is an error during this process,
+              log a failure and return False.
+          7. If all steps are successful, log a success message that the create_user
+              command completed successfully and return True.
 
-        account_number = options["account_number"]
-        username = options["username"]
-        email = options["email"]
-        first_name = options["first_name"]
-        last_name = options["last_name"]
-        password = options["password"]
-        is_admin = options["admin"]
 
+        :param str account_number: The account number of the account to which the user belongs.
+        :param str username: The username for the new user.
+        :param str email: The email address for the new user.
+        :param str first_name: The first name of the new user.
+        :param str last_name: The last name of the new user.
+        :param str password: The password for the new user. If not provided, a random password will be generated. Defaults to None.
+        :param bool is_admin: Whether the new user should be an admin. Defaults to False.
+        :returns: True if the user was created or updated successfully, False otherwise.
+        :rtype: bool
+        """
         account: Account
         user: User
         created: bool
@@ -50,14 +73,14 @@ class Command(SmarterCommand):
             account = Account.objects.get(account_number=account_number)
         except Account.DoesNotExist:
             self.handle_completed_failure(msg=f"Account with account number {account_number} does not exist.")
-            return
+            return False
 
         try:
             user, created = User.objects.get_or_create(username=username)
         # pylint: disable=broad-except
         except Exception as e:
             self.handle_completed_failure(msg=f"Error creating user {username}: {str(e)}")
-            return
+            return False
 
         if not created:
             self.stdout.write(self.style.NOTICE(f"User {username} already exists, updating the existing user."))
@@ -68,7 +91,7 @@ class Command(SmarterCommand):
 
         if not SmarterValidator.is_valid_email(email):
             self.handle_completed_failure(msg=f"Invalid email address: {email}")
-            return
+            return False
 
         user.email = email
         user.first_name = first_name
@@ -88,7 +111,7 @@ class Command(SmarterCommand):
         # pylint: disable=broad-except
         except Exception as e:
             self.handle_completed_failure(msg=f"Error saving user {username}: {str(e)}")
-            return
+            return False
 
         self.handle_completed_success(msg=f"User {username} {email} has been created.")
 
@@ -123,7 +146,7 @@ class Command(SmarterCommand):
         # pylint: disable=broad-except
         except Exception as e:
             self.handle_completed_failure(msg=f"Error creating user profile for user {username}: {str(e)}")
-            return
+            return False
 
         if created:
             self.handle_completed_success(
@@ -145,8 +168,52 @@ class Command(SmarterCommand):
             # pylint: disable=broad-except
             except Exception as e:
                 self.handle_completed_failure(msg=f"Error creating account contact for user {username}: {str(e)}")
-                return
+                return False
         # pylint: disable=broad-except
         except Exception as e:
             self.handle_completed_failure(msg=f"Error creating account contact for user {username}: {str(e)}")
-            return
+            return False
+
+        self.handle_completed_success(msg="create_user command completed successfully.")
+        return True
+
+    def add_arguments(self, parser):
+        """Add arguments to the command."""
+        parser.add_argument(
+            "--account_number", type=str, required=True, help="The Smarter account number to which the user belongs"
+        )
+        parser.add_argument("--username", type=str, required=True, help="The username for the new user")
+        parser.add_argument("--email", type=str, required=True, help="The email address for the new user")
+        parser.add_argument("--first_name", type=str, required=True, help="The first name of the new user")
+        parser.add_argument("--last_name", type=str, required=True, help="The last name of the new user")
+        parser.add_argument("--password", type=str, help="The password for the new user")
+        parser.add_argument(
+            "--admin", action="store_true", default=False, help="True if the new user is an admin, False otherwise."
+        )
+
+    def handle(self, *args, **options):
+        """create the user."""
+        self.handle_begin()
+
+        account_number = options["account_number"]
+        username = options["username"]
+        email = options["email"]
+        first_name = options["first_name"]
+        last_name = options["last_name"]
+        password = options["password"]
+        is_admin = options["admin"]
+        retval = False
+
+        with transaction.atomic():
+            retval = self.create_user(
+                account_number=account_number,
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                password=password,
+                is_admin=is_admin,
+            )
+
+        if not retval:
+            self.handle_completed_failure(msg="create_user command failed.")
