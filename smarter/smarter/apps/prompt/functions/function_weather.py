@@ -76,6 +76,21 @@ class WeatherUnits(SmarterEnum):
     USCS = "USCS"
 
 
+class WeatherMetrics(SmarterEnum):
+    """
+    Enum for weather metrics to retrieve from the API.
+    """
+
+    TEMPERATURE_2M = "temperature_2m"
+    PRECIPITATION = "precipitation"
+    SNOWFALL = "snowfall"
+    WEATHERCODE = "weathercode"
+    WINDSPEED_10M = "windspeed_10m"
+    WINDDIRECTION_10M = "winddirection_10m"
+    WINDGUSTS_10M = "windgusts_10m"
+    CLOUDCOVER = "cloudcover"
+
+
 class WeatherError(SmarterException):
     """Custom exception for weather tool errors."""
 
@@ -266,21 +281,11 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
 
     # OpenMeteo API parameters for current weather and hourly forecast.
     # See API docs for details: https://open-meteo.com/en/docs#api_format
-    weather_metrics = [
-        "temperature_2m",
-        "precipitation",
-        "snowfall",
-        "weathercode",
-        "windspeed_10m",
-        "winddirection_10m",
-        "windgusts_10m",
-        "cloudcover",
-    ]
     params = {
         "latitude": latitude,
         "longitude": longitude,
-        "hourly": weather_metrics,
-        "current": weather_metrics,
+        "hourly": WeatherMetrics.all(),
+        "current": WeatherMetrics.all(),
     }
 
     # send the API request.
@@ -330,14 +335,14 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
                 inclusive="left",
             )
         }
-        hourly_data["temperature"] = hourly_temperature_2m  # type: ignore
-        hourly_data["precipitation"] = hourly_precipitation_2m  # type: ignore
-        hourly_data["snowfall"] = hourly_snowfall  # type: ignore
-        hourly_data["weathercode"] = hourly_weathercode  # type: ignore
-        hourly_data["windspeed"] = hourly_windspeed_10m  # type: ignore
-        hourly_data["winddirection"] = hourly_winddirection_10m  # type: ignore
-        hourly_data["windgusts"] = hourly_windgusts_10m  # type: ignore
-        hourly_data["cloudcover"] = hourly_cloudcover  # type: ignore
+        hourly_data[WeatherMetrics.TEMPERATURE_2M] = hourly_temperature_2m  # type: ignore
+        hourly_data[WeatherMetrics.PRECIPITATION] = hourly_precipitation_2m  # type: ignore
+        hourly_data[WeatherMetrics.SNOWFALL] = hourly_snowfall  # type: ignore
+        hourly_data[WeatherMetrics.WEATHERCODE] = hourly_weathercode  # type: ignore
+        hourly_data[WeatherMetrics.WINDSPEED_10M] = hourly_windspeed_10m  # type: ignore
+        hourly_data[WeatherMetrics.WINDDIRECTION_10M] = hourly_winddirection_10m  # type: ignore
+        hourly_data[WeatherMetrics.WINDGUSTS_10M] = hourly_windgusts_10m  # type: ignore
+        hourly_data[WeatherMetrics.CLOUDCOVER] = hourly_cloudcover  # type: ignore
         hourly_dataframe = pd.DataFrame(data=hourly_data).head(24)
         hourly_dataframe["date"] = hourly_dataframe["date"].dt.strftime("%Y-%m-%d %H:%M")
         hourly_json = hourly_dataframe.to_dict(orient="records")
