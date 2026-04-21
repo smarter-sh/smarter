@@ -110,14 +110,21 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     list
         A JSON list containing the weather data or error message.
     """
-    latitude: float = 0.0
-    longitude: float = 0.0
-    address: Optional[str] = None
-    arguments: dict[str, Any] = {}
-    response: WeatherApiResponse
-    hourly: Optional[VariablesWithTime]
-    hourly_data: dict[str, pd.DatetimeIndex]
-    result: dict[str, Any]
+    arguments: dict[str, Any] = (
+        {}
+    )  # parsed arguments from the tool call, expected to contain 'location' and optionally 'unit'.
+
+    latitude: float = 0.0  # google maps geocoding coordinate.
+    longitude: float = 0.0  # google maps geocoding coordinate.
+    address: Optional[str] = None  # formatted address from google maps geocoding result.
+
+    response: WeatherApiResponse  # response object from the OpenMeteo API client.
+    hourly: Optional[VariablesWithTime]  # hourly weather data from the OpenMeteo API response.
+    hourly_temperature_2m: Optional[pd.Series]  # hourly temperature data extracted from the OpenMeteo API response.
+    hourly_precipitation_2m: Optional[pd.Series]  # hourly precipitation data extracted from the OpenMeteo API response.
+    hourly_data: dict[str, pd.DatetimeIndex]  # dictionary to store hourly data with datetime index.
+
+    result: dict[str, Any]  # final result dictionary to be returned.
 
     if google_maps_client is None:
         retval = {
