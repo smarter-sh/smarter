@@ -9,10 +9,10 @@ import logging
 from rest_framework.request import Request
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.prompt.providers.base_classes.protocols import (
+from smarter.apps.provider.services.text_completion.base_classes.protocols import (
     OpenAICompatibleChatCompletionRequest,
 )
-from smarter.apps.prompt.providers.providers import (
+from smarter.apps.provider.services.text_completion.providers import (
     openai_compatible_passthrough_chat_providers,
 )
 from smarter.lib.django import waffle

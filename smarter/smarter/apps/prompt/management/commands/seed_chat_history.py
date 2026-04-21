@@ -11,7 +11,9 @@ from smarter.apps.account.utils import (
 )
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.prompt.models import Chat
-from smarter.apps.prompt.providers.providers import smarter_compatible_chat_providers
+from smarter.apps.provider.services.text_completion.providers import (
+    smarter_compatible_chat_providers,
+)
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand

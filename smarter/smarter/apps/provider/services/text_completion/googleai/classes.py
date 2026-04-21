@@ -1,11 +1,11 @@
 """
-OpenAI chat provider.
+Google AI chat provider.
 """
 
 import logging
 
 # smarter stuff
-from smarter.apps.prompt.providers.base_classes import (
+from smarter.apps.provider.services.text_completion.base_classes import (
     OpenAICompatibleChatProvider,
     OpenAICompatiblePassthroughChatProvider,
 )
@@ -15,11 +15,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # smarter chat provider stuff
-from ..const import VALID_CHAT_COMPLETION_MODELS
-
-BASE_URL = "https://api.openai.com/v1/"  # don't forget the trailing slash
-PROVIDER_NAME = "openai"
-DEFAULT_MODEL = "gpt-4o-mini"
+from .const import BASE_URL, DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION_MODELS
 
 
 # pylint: disable=W0613
@@ -32,9 +28,9 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class OpenAISmarterChatProvider(OpenAICompatibleChatProvider):
+class GoogleAISmarterChatProvider(OpenAICompatibleChatProvider):
     """
-    OpenAI chat provider.
+    GoogleAI chat provider.
     """
 
     def __init__(self, *args, **kwargs):
@@ -42,7 +38,7 @@ class OpenAISmarterChatProvider(OpenAICompatibleChatProvider):
             *args,
             provider=PROVIDER_NAME,
             base_url=BASE_URL,
-            api_key=smarter_settings.openai_api_key.get_secret_value(),
+            api_key=smarter_settings.gemini_api_key.get_secret_value(),
             default_model=DEFAULT_MODEL,
             default_system_role=smarter_settings.llm_default_system_role,
             default_temperature=smarter_settings.llm_default_temperature,
@@ -53,9 +49,9 @@ class OpenAISmarterChatProvider(OpenAICompatibleChatProvider):
         )
 
 
-class OpenAIPassthroughChatProvider(OpenAICompatiblePassthroughChatProvider):
+class GoogleAIPassthroughChatProvider(OpenAICompatiblePassthroughChatProvider):
     """
-    OpenAI passthrough chat provider service.
+    GoogleAI passthrough chat provider service.
     """
 
     def __init__(self, *args, **kwargs):
@@ -63,6 +59,6 @@ class OpenAIPassthroughChatProvider(OpenAICompatiblePassthroughChatProvider):
             *args,
             provider=PROVIDER_NAME,
             base_url=BASE_URL,
-            api_key=smarter_settings.openai_api_key.get_secret_value(),
+            api_key=smarter_settings.gemini_api_key.get_secret_value(),
             **kwargs,
         )

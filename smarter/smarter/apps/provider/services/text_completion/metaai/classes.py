@@ -5,7 +5,7 @@ Meta AI chat provider.
 import logging
 
 # smarter stuff
-from smarter.apps.prompt.providers.base_classes import (
+from smarter.apps.provider.services.text_completion.base_classes import (
     OpenAICompatibleChatProvider,
     OpenAICompatiblePassthroughChatProvider,
 )
@@ -18,6 +18,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .const import BASE_URL, DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION_MODELS
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
