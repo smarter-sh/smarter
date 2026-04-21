@@ -30,6 +30,7 @@ from googlemaps.exceptions import ApiError as GoogleMapsApiError
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
+from openmeteo_requests import OpenMeteoRequestsError
 from openmeteo_sdk.VariablesWithTime import VariablesWithTime
 from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
 
@@ -190,6 +191,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         return [{"error": f"Invalid {WeatherParameters.UNIT}. Supported units are: {', '.join(WeatherUnits.all())}."}]
 
     # Send a Django signal that the tool was requested, with the tool call data, location, and unit.
+    # see: https://docs.djangoproject.com/en/6.0/topics/signals/
     llm_tool_requested.send(sender=get_current_weather, tool_call=tool_call.model_dump(), location=location, unit=unit)
 
     # 2.) Geocode location to get latitude and longitude
@@ -217,19 +219,27 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         return [{"error": f"Unexpected error geocoding location: {e}"}]
 
     # 3.) Query the OpenMeteo Weather API
+
+    # OpenMeteo API parameters for current weather and hourly forecast.
+    # See API docs for details: https://open-meteo.com/en/docs#api_format
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "hourly": ["temperature_2m", "precipitation"],
+        "current": ["temperature_2m"],
+    }
+
+    # send the API request.
     try:
-
-        # OpenMeteo API parameters for current weather and hourly forecast.
-        # See API docs for details: https://open-meteo.com/en/docs#api_format
-        params = {
-            "latitude": latitude,
-            "longitude": longitude,
-            "hourly": ["temperature_2m", "precipitation"],
-            "current": ["temperature_2m"],
-        }
-
-        # send the API request.
         responses = openmeteo_api_client.weather_api(WEATHER_API_URL, params=params)
+    except OpenMeteoRequestsError as e:
+        logger.error(f"{logger_prefix} OpenMeteo API error: {e}")
+        return [{"error": f"OpenMeteo API error: {e}"}]
+    except Exception as e:
+        logger.error(f"{logger_prefix} Unexpected error calling OpenMeteo API: {e}")
+        return [{"error": f"Unexpected error calling weather service: {e}"}]
+
+    try:
         response = responses[0]
         hourly = response.Hourly()
         if not hourly:
@@ -266,11 +276,15 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
             "unit": unit,
             "forecast": hourly_json,
         }
+    except (IndexError, AttributeError, TypeError, ValueError, KeyError) as e:
+        logger.error(f"{logger_prefix} Error processing weather data: {e}")
+        return [{"error": f"Error processing weather data: {e}"}]
     except Exception as e:
-        logger.error(f"{logger_prefix} Error fetching weather data: {e}")
-        return [{"error": f"Error fetching weather data: {e}"}]
+        logger.error(f"{logger_prefix} Unexpected error processing weather data: {e}")
+        return [{"error": f"Unexpected error processing weather data: {e}"}]
 
     # Send a Django signal that the tool has generated a response, with the tool call data and the response.
+    # see: https://docs.djangoproject.com/en/6.0/topics/signals/
     llm_tool_responded.send(
         sender=get_current_weather,
         tool_call=tool_call.model_dump(),
