@@ -160,6 +160,10 @@ filelock==3.25.2
     # via tldextract
 flatbuffers==25.9.23
     # via openmeteo-sdk
+flexcache==0.3
+    # via pint
+flexparser==0.4
+    # via pint
 frozenlist==1.8.0
     # via
     #   aiohttp
@@ -338,8 +342,12 @@ pinecone-plugin-assistant==1.8.0
     # via pinecone
 pinecone-plugin-interface==0.0.7
     # via pinecone
+pint==0.25.3
+    # via -r smarter/requirements/in/base.in
 platformdirs==4.9.6
-    # via requests-cache
+    # via
+    #   pint
+    #   requests-cache
 prompt-toolkit==3.0.52
     # via click-repl
 propcache==0.4.1
@@ -500,10 +508,13 @@ typing-extensions==4.15.0
     # via
     #   beautifulsoup4
     #   cattrs
+    #   flexcache
+    #   flexparser
     #   google-genai
     #   langchain-core
     #   openai
     #   pinecone
+    #   pint
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
