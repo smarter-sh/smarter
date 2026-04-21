@@ -7,7 +7,7 @@ how we got here:
  - /workbench/<str:name>/config/
 """
 
-from django.urls import include, path
+from django.urls import path
 
 from smarter.common.utils import camel_case_object_name
 

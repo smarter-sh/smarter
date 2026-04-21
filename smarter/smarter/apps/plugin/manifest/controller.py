@@ -8,7 +8,7 @@ from typing import Dict, Optional, Union
 
 from django.core.exceptions import MultipleObjectsReturned
 
-from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import valid_resource_owners_for_user
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.lib import json

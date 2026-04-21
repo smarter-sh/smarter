@@ -4,7 +4,6 @@
 import logging
 
 from django.contrib.auth.signals import user_logged_in
-from django.core import serializers
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict

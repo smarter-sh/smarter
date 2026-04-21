@@ -22,7 +22,6 @@ from smarter.apps.provider.utils import (
     set_provider_verification,
     test_web_page,
 )
-from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle

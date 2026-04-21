@@ -17,7 +17,7 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.provider.models import Provider
-from smarter.common.helpers.logger_helpers import formatted_json, formatted_text
+from smarter.common.helpers.logger_helpers import formatted_json
 from smarter.common.utils import rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
