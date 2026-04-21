@@ -1,4 +1,4 @@
-Smarter Provider
+Smarter Chat
 =================
 
 
