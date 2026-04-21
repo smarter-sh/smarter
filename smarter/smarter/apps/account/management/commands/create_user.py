@@ -102,9 +102,15 @@ class Command(SmarterCommand):
             Email: {email}
             Password: {password}
             """
-            email_helper.send_email(
-                subject="Your Smarter user account has been created", to=email, body=body, html=False, quiet=False
-            )
+            try:
+                email_helper.send_email(
+                    subject="Your Smarter user account has been created", to=email, body=body, html=False, quiet=False
+                )
+            # pylint: disable=broad-except
+            except Exception as e:
+                self.handle_completed_failure(
+                    msg=f"Error sending password email to user {username} at {email}: {str(e)}. The user account has been created, but the user may not have received an email with their password."
+                )
         else:
             self.stdout.write(
                 self.style.WARNING(
