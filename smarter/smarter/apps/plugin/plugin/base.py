@@ -47,7 +47,7 @@ from smarter.apps.plugin.signals import (
     plugin_selected,
     plugin_updated,
 )
-from smarter.apps.prompt.providers.const import OpenAIMessageKeys
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (

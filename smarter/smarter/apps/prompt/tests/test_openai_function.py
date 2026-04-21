@@ -18,17 +18,19 @@ from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
-from smarter.apps.prompt.providers.const import OpenAIMessageKeys
-from smarter.common.utils import get_readonly_yaml_file
-
-from ..models import Chat, ChatHistory, ChatPluginUsage
-from ..providers.providers import smarter_compatible_chat_providers
-from ..signals import (
+from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage
+from smarter.apps.prompt.signals import (
     chat_completion_response,
     chat_finished,
     chat_response_failure,
     chat_started,
 )
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.apps.provider.services.text_completion.providers import (
+    smarter_compatible_chat_providers,
+)
+from smarter.common.utils import get_readonly_yaml_file
+
 from ..tests.test_setup import get_test_file, get_test_file_path
 
 HERE = os.path.abspath(os.path.dirname(__file__))

@@ -564,7 +564,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         """
 
         # pylint: disable=C0415
-        from smarter.apps.prompt.providers.providers import (
+        from smarter.apps.provider.services.text_completion.providers import (
             SmarterChatHandlerProtocol,
             smarter_compatible_chat_providers,
         )

@@ -24,14 +24,14 @@ from smarter.apps.prompt.functions.function_weather import (
     weather_tool_factory,
 )
 from smarter.apps.prompt.models import Chat
-from smarter.apps.prompt.providers.const import OpenAIMessageKeys
-from smarter.apps.prompt.providers.utils import (
+from smarter.apps.prompt.signals import (
+    chat_provider_initialized,
+)
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.apps.provider.services.text_completion.utils import (
     ensure_system_role_present,
     get_request_body,
     parse_request,
-)
-from smarter.apps.prompt.signals import (
-    chat_provider_initialized,
 )
 from smarter.common.exceptions import (
     SmarterValueError,

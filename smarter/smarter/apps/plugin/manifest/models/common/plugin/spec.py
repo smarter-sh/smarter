@@ -11,7 +11,9 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
     SAMPluginCommonSpecSelectorKeys,
 )
-from smarter.apps.prompt.providers.const import VALID_CHAT_COMPLETION_MODELS
+from smarter.apps.provider.services.text_completion.const import (
+    VALID_CHAT_COMPLETION_MODELS,
+)
 from smarter.common.conf import settings_defaults
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError

@@ -43,13 +43,6 @@ from smarter.apps.prompt.functions.function_weather import (
     weather_tool_factory,
 )
 from smarter.apps.prompt.models import Chat
-from smarter.apps.prompt.providers.base_classes.protocols import (
-    SmarterChatCompletionResponseType,
-)
-from smarter.apps.prompt.providers.const import OpenAIMessageKeys
-from smarter.apps.prompt.providers.utils import (
-    http_response_factory,
-)
 from smarter.apps.prompt.receivers import (
     llm_tool_presented,
     llm_tool_requested,
@@ -63,6 +56,13 @@ from smarter.apps.prompt.signals import (
     chat_finished,
     chat_response_failure,
     chat_started,
+)
+from smarter.apps.provider.services.text_completion.base_classes.protocols import (
+    SmarterChatCompletionResponseType,
+)
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.apps.provider.services.text_completion.utils import (
+    http_response_factory,
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
