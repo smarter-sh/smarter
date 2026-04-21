@@ -75,7 +75,7 @@ inflect                                 # Pluralization and singularization
 beautifulsoup4~=4.0                     # HTML parser for Wagtail page compression
 docutils                                # required by Django for django.contrib.admindocs
 drf-yasg~=1.0                           # Swagger API documentation
-lxml~=6.0                               # parser for Wagtail page compression
+lxml~=6.1                               # parser for Wagtail page compression
 markdown~=3.0                           # Markdown reader/parser
 whitenoise~=6.0                         # static file serving
 pillow~=11.0                            # for provider.Provider.logo:
