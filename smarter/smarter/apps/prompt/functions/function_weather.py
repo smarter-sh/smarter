@@ -88,11 +88,13 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     Retrieves the current weather and a 24-hour forecast for a specified location.
     The basic flow is:
 
-    1. Parse and validate the input arguments from the tool call.
-    2. Geocode the location using the Google Maps API to get latitude and longitude.
-    3. Query the OpenMeteo API for current weather and hourly forecast data.
-    4. Format the response as a JSON-compatible dictionary and return it.
-    5. Return the result as a JSON list (to be compatible with OpenAI function calling response format).
+    1. Define and initialize variables to be used in the function.
+    2. Check if the necessary API clients are initialized before proceeding. If not, return an error message.
+    3. Parse and validate the input arguments from the tool call.
+    4. Geocode the location using the Google Maps API to get latitude and longitude.
+    5. Query the OpenMeteo API for current weather and hourly forecast data.
+    6. Format the response as a JSON-compatible dictionary and return it.
+    7. Return the result as a JSON list (to be compatible with OpenAI function calling response format).
 
 
     Parameters
@@ -111,7 +113,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         A JSON list containing the weather data or error message.
     """
 
-    # Define, annotate and if necessary, initialize variables to be used
+    # 1.) Define, annotate and if necessary, initialize variables to be used
     # in the function.
     # -------------------------------------------------------------------------
     arguments: dict[str, Any] = (
@@ -132,7 +134,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
 
     result: dict[str, Any] = {}  # final result dictionary to be returned.
 
-    # Check if the necessary API clients are initialized before proceeding.
+    # 2.) Check if the necessary API clients are initialized before proceeding.
     # If not, return an error message.
     # -------------------------------------------------------------------------
     if google_maps_client is None:
@@ -154,10 +156,10 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         }
         return [retval]
 
-    # Parse and validate input arguments, geocode location, call weather API.
+    # 3.) Parse and validate input arguments, geocode location, call weather API.
     # -------------------------------------------------------------------------
 
-    # 1a.) Parse and validate input arguments
+    # 3a.) Parse and validate input arguments
     if tool_call and tool_call.function and tool_call.function.arguments:
         if isinstance(tool_call.function.arguments, str):
             try:
@@ -169,7 +171,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         else:
             arguments = tool_call.function.arguments
 
-    # 1b.) Validate location
+    # 3b.) Validate location
     try:
         location = arguments.get(WeatherParameters.LOCATION, None)
         logger.debug(f"{logger_prefix} Extracted location: {location}")
@@ -189,7 +191,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     if not location or not isinstance(location, str) or not location.strip():
         return [{"error": f"No {WeatherParameters.LOCATION} provided. Please provide a valid location string."}]
 
-    # 1c.) Validate unit
+    # 3c.) Validate unit
     try:
         unit = arguments.get(WeatherParameters.UNIT, WeatherUnits.METRIC)
         logger.debug(f"{logger_prefix} Extracted unit: {unit}")
@@ -213,7 +215,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     # see: https://docs.djangoproject.com/en/6.0/topics/signals/
     llm_tool_requested.send(sender=get_current_weather, tool_call=tool_call.model_dump(), location=location, unit=unit)
 
-    # 2.) Geocode location to get latitude and longitude
+    # 4.) Geocode location to get latitude and longitude
     # -------------------------------------------------------------------------
     try:
         # Use the Google Maps API client to geocode the location string into
@@ -238,7 +240,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         logger.error(f"{logger_prefix} Unexpected error getting geo coordinates for {location}: {e}")
         return [{"error": f"Unexpected error geocoding location: {e}"}]
 
-    # 3.) Query the OpenMeteo Weather API
+    # 5.) Query the OpenMeteo Weather API
     # -------------------------------------------------------------------------
 
     # OpenMeteo API parameters for current weather and hourly forecast.
@@ -260,7 +262,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         logger.error(f"{logger_prefix} Unexpected error calling OpenMeteo API: {e}")
         return [{"error": f"Unexpected error calling weather service: {e}"}]
 
-    # 4.) Format the response as a JSON-compatible dictionary and return it.
+    # 6.) Format the response as a JSON-compatible dictionary and return it.
     # -------------------------------------------------------------------------
     try:
         # Extract the relevant weather data, convert units if necessary, and format it for return.
@@ -314,7 +316,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         tool_response=result,
     )
 
-    # 5.) Return the result as a JSON list (to be compatible with OpenAI function calling response format).
+    # 7.) Return the result as a JSON list (to be compatible with OpenAI function calling response format).
     # -------------------------------------------------------------------------
     return [result]
 
