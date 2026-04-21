@@ -44,9 +44,10 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-# a lambda function that checks if logging should be enabled based on a waffle switch
-# an authenticated OpenMeteo API client instance, or None if initialization failed
-# an authenticated Google Maps client instance, or None if initialization failed
+# local imports of utility functions and variables (in order of import):
+# - an authenticated Google Maps client instance
+# - an authenticated OpenMeteo API cacheable client instance
+# - a lambda function that checks if logging should be enabled
 from .utils import google_maps_client, openmeteo_api_client, should_log
 
 base_logger = logging.getLogger(__name__)
