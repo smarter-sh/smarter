@@ -128,6 +128,14 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
             )
         }
         return [retval]
+    if openmeteo_api_client is None:
+        retval = {
+            "error": (
+                "OpenMeteo Weather API service is unavailable. "
+                "Please check the OpenMeteo API client initialization and ensure the service is reachable."
+            )
+        }
+        return [retval]
 
     # 1a.) Parse and validate input arguments
     if tool_call and tool_call.function and tool_call.function.arguments:
