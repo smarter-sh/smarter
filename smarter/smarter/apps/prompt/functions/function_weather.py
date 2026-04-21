@@ -22,9 +22,11 @@ Signals
 - llm_tool_responded
 """
 
+# standard Python library imports
 import logging
 from typing import Any, Optional
 
+# Pandas, Google Maps API client, and OpenMeteo SDK imports
 import pandas as pd
 from googlemaps.exceptions import ApiError as GoogleMapsApiError
 from openai.types.chat.chat_completion_message_tool_call import (
@@ -34,24 +36,18 @@ from openmeteo_requests import OpenMeteoRequestsError
 from openmeteo_sdk.VariablesWithTime import VariablesWithTime
 from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
 
+# Smarter platform imports
 from smarter.apps.prompt.signals import llm_tool_requested, llm_tool_responded
 from smarter.common.enum import SmarterEnum
 from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json  # for robust JSON parsing of tool call arguments
-from smarter.lib.logging import (
-    WaffleSwitchedLoggerWrapper,  # to control logging output based on a waffle switch
-)
+from smarter.lib import json
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .utils import (
-    google_maps_client,  # an authenticated Google Maps client instance, or None if initialization failed
-)
-from .utils import (
-    openmeteo_api_client,  # an authenticated OpenMeteo API client instance, or None if initialization failed
-)
-from .utils import (
-    should_log,  # a lambda function that checks if logging should be enabled based on a waffle switch
-)
+# a lambda function that checks if logging should be enabled based on a waffle switch
+# an authenticated OpenMeteo API client instance, or None if initialization failed
+# an authenticated Google Maps client instance, or None if initialization failed
+from .utils import google_maps_client, openmeteo_api_client, should_log
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
