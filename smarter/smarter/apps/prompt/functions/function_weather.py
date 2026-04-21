@@ -3,6 +3,13 @@
 This module provides a weather forecast function for use with Smarter's
 extension of the OpenAI API function calling feature.
 
+Secondarily, this modules also serves as a template for implementing
+additional tools following the same protocol, with best practices for error
+handling, logging, input validation, documentation style, and examples
+of commonly-used third-party libraries like Pandas, NumPy, and Pint for data
+manipulation and unit conversion.
+
+
 See Also
 --------
 https://developers.openai.com/api/docs/guides/function-calling
@@ -22,14 +29,14 @@ registration process, which adds the tool definition to the list of available
 tools for the LLM to call.
 
 The implementation function (`get_current_weather`) is executed by
-`OpenAICompatibleChatProvider.process_tool_call()` when the LLM generates a
-tool call for this function.
+`OpenAICompatibleChatProvider.process_tool_call()` when the LLM requests
+this tool following iteration #1 of the conversation.
 
 Overview
 --------
 Enables retrieval of current weather data and 24-hour forecasts for a given
 location, suitable for LLM function calling. Features reliability, caching,
-logging, and robust input validation.
+logging, robust input validation, error handling, and strict type checking.
 
 Dependencies
 ------------
@@ -427,6 +434,10 @@ def weather_tool_factory() -> dict[str, Any]:
     See Also
     ---------
     https://developers.openai.com/api/docs/guides/function-calling
+
+    Django Signals
+    --------------
+    - llm_tool_presented: Sent when this functions is called.
 
     Returns
     -------
