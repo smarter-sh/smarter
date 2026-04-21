@@ -278,7 +278,7 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
 
         handler = self.all_handlers.get(provider)
         if not handler:
-            raise ValueError(f"Handler not found for provider: {provider}")
+            raise SmarterValueError(f"Handler not found for provider: {provider}")
         return handler
 
     @property
@@ -553,7 +553,7 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
 
         handler = self.all_handlers.get(provider)
         if not handler:
-            raise ValueError(f"Handler not found for provider: {provider}")
+            raise KeyError(f"Handler not found for provider: {provider}")
         return handler
 
     @property

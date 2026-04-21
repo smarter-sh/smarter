@@ -1,12 +1,12 @@
 OpenAI
 ==========
 
-.. automodule:: smarter.apps.prompt.providers.openai.const
+.. automodule:: smarter.apps.provider.services.text_completion.openai.const
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: smarter.apps.prompt.providers.openai.classes
+.. automodule:: smarter.apps.provider.services.text_completion.openai.classes
     :members:
     :undoc-members:
     :show-inheritance:

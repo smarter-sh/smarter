@@ -433,8 +433,8 @@ Subclass ``OpenAICompatibleChatProvider`` exactly as shown below:
 
    # smarter/apps/prompt/providers/claude/classes.py
 
-   from smarter.apps.prompt.providers.base import OpenAICompatibleChatProvider
-   from smarter.apps.prompt.providers.claude.const import (
+   from smarter.apps.provider.services.text_completion.base import OpenAICompatibleChatProvider
+   from smarter.apps.provider.services.text_completion.claude.const import (
        BASE_URL,
        DEFAULT_MODEL,
        PROVIDER_NAME,
@@ -467,8 +467,8 @@ Edit ``smarter/apps/prompt/providers/providers.py``:
 
    .. code-block:: python
 
-      from smarter.apps.prompt.providers.claude.classes import ClaudeChatProvider
-      from smarter.apps.prompt.providers.claude.const import PROVIDER_NAME as CLAUDE_PROVIDER_NAME
+      from smarter.apps.provider.services.text_completion.claude.classes import ClaudeChatProvider
+      from smarter.apps.provider.services.text_completion.claude.const import PROVIDER_NAME as CLAUDE_PROVIDER_NAME
 
 2. Add a ``_claude`` instance attribute and a ``claude`` property:
 
@@ -584,7 +584,7 @@ Create ``smarter/apps/prompt/tests/test_claude_provider.py``:
 .. code-block:: python
 
    import pytest
-   from smarter.apps.prompt.providers.providers import chat_providers
+   from smarter.apps.provider.services.text_completion.providers import chat_providers
 
 
    def test_claude_provider_exists():

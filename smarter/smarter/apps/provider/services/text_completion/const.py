@@ -9,13 +9,16 @@ import openai
 class OpenAIObjectTypes:
     """V1 API Object Types (replace OpeanAIEndPoint)"""
 
-    Embedding = "embedding"
     ChatCompletion = "chat.completion"
-    Moderation = "moderation"
-    Image = "image"
-    Audio = "audio"
-    Models = "models"
-    all_object_types = [Embedding, ChatCompletion, Moderation, Image, Audio, Models]
+
+    # removed in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+    # -------------------------------------------------------------------------
+    # Embedding = "embedding"
+    # Audio = "audio"
+    # Image = "image"
+    # Models = "models"
+    # Moderation = "moderation"
+    all_object_types = [ChatCompletion]
 
 
 # pylint: disable=too-few-public-methods
@@ -28,13 +31,15 @@ class OpenAIEndPoint:
         endpoint (str): The URL of the OpenAI API endpoint.
     """
 
-    Embedding = openai.Embedding.__name__  # type: ignore[assignment]
     ChatCompletion = "chat/completions"
-    Moderation = openai.Moderation.__name__  # type: ignore[assignment]
-    Image = openai.Image.__name__  # type: ignore[assignment]
-    Audio = openai.Audio.__name__  # type: ignore[assignment]
-    Models = openai.Model.__name__  # type: ignore[assignment]
-    all_endpoints = [Embedding, ChatCompletion, Moderation, Image, Audio, Models]
+
+    # removed in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+    # -------------------------------------------------------------------------
+    # Moderation = openai.Moderation.__name__  # type: ignore[assignment]
+    # Image = openai.Image.__name__  # type: ignore[assignment]
+    # Audio = openai.Audio.__name__  # type: ignore[assignment]
+    # Models = openai.Model.__name__  # type: ignore[assignment]
+    all_endpoints = [ChatCompletion]
 
 
 # pylint: disable=too-few-public-methods

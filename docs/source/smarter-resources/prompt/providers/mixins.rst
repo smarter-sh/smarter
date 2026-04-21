@@ -1,7 +1,7 @@
 Mixins
 =========
 
-.. automodule:: smarter.apps.prompt.providers.base_classes.mixins
+.. automodule:: smarter.apps.provider.services.text_completion.base_classes.mixins
     :members:
     :undoc-members:
     :show-inheritance:
