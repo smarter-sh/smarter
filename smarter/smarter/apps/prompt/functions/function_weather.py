@@ -35,7 +35,7 @@ from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
 
 from smarter.apps.prompt.signals import llm_tool_requested, llm_tool_responded
 from smarter.common.enum import SmarterEnum
-from smarter.common.exceptions import SmarterException, SmarterValueError
+from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json  # for robust JSON parsing of tool call arguments
 from smarter.lib.logging import (
@@ -91,6 +91,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     2. Geocode the location using the Google Maps API to get latitude and longitude.
     3. Query the OpenMeteo API for current weather and hourly forecast data.
     4. Format the response as a JSON-compatible dictionary and return it.
+    5. Return the result as a JSON list (to be compatible with OpenAI function calling response format).
 
 
     Parameters
@@ -119,7 +120,12 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
 
     if google_maps_client is None:
         retval = {
-            "error": "Google Maps Geolocation service is unavailable. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview, and add your GOOGLE_MAPS_API_KEY to .env"
+            "error": (
+                "Google Maps Geolocation service is unavailable. "
+                "Setup the Google Geolocation API service: "
+                "https://developers.google.com/maps/documentation/geolocation/overview, "
+                "and add your GOOGLE_MAPS_API_KEY to .env"
+            )
         }
         return [retval]
 
@@ -143,7 +149,12 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         logger.error(f"{logger_prefix} Unexpected error processing location argument: {arguments} Exception: {e}")
         return [
             {
-                "error": f"Unexpected error processing arguments: {e}. Received arguments: {arguments}. Expected: {{'{WeatherParameters.LOCATION}': 'city, state', '{WeatherParameters.UNIT}': 'METRIC|USCS'}}"
+                "error": (
+                    f"Unexpected error processing arguments: {e}. "
+                    f"Received arguments: {arguments}. "
+                    f"Expected: {{'{WeatherParameters.LOCATION}': 'city, state', "
+                    f"'{WeatherParameters.UNIT}': 'METRIC|USCS'}}"
+                )
             }
         ]
 
@@ -158,7 +169,12 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         logger.error(f"{logger_prefix} Unexpected error processing unit argument: {arguments} Exception: {e}")
         return [
             {
-                "error": f"Unexpected error processing arguments: {e}. Received arguments: {arguments}. Expected: {{'{WeatherParameters.LOCATION}': 'city, state', '{WeatherParameters.UNIT}': 'METRIC|USCS'}}"
+                "error": (
+                    f"Unexpected error processing arguments: {e}. "
+                    f"Received arguments: {arguments}. "
+                    f"Expected: {{'{WeatherParameters.LOCATION}': 'city, state', "
+                    f"'{WeatherParameters.UNIT}': 'METRIC|USCS'}}"
+                )
             }
         ]
 
@@ -170,12 +186,20 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
 
     # 2.) Geocode location to get latitude and longitude
     try:
+        # Use the Google Maps API client to geocode the location string into
+        # latitude and longitude coordinates.
         geocode_result = google_maps_client.geocode(location)  # type: ignore
         if not geocode_result or "geometry" not in geocode_result[0] or "location" not in geocode_result[0]["geometry"]:
             logger.error(f"{logger_prefix} Geocoding failed for location: {location}")
             return [{"error": f"Could not geocode location: {location}"}]
+
+        # Extract latitude and longitude from the geocoding result, with
+        # fallbacks to 0 if not found.
         latitude = geocode_result[0]["geometry"]["location"]["lat"] or 0
         longitude = geocode_result[0]["geometry"]["location"]["lng"] or 0
+
+        # Extract the formatted address from the geocoding result, with a
+        # fallback to the original location string if not found.
         address = geocode_result[0].get("formatted_address", location)
     except GoogleMapsApiError as api_error:
         logger.error(f"{logger_prefix} Google Maps API error getting geo coordinates for {location}: {api_error}")
@@ -238,11 +262,14 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         logger.error(f"{logger_prefix} Error fetching weather data: {e}")
         return [{"error": f"Error fetching weather data: {e}"}]
 
+    # Send a Django signal that the tool has generated a response, with the tool call data and the response.
     llm_tool_responded.send(
         sender=get_current_weather,
         tool_call=tool_call.model_dump(),
         tool_response=result,
     )
+
+    # 5.) Return the result as a JSON list (to be compatible with OpenAI function calling response format).
     return [result]
 
 
