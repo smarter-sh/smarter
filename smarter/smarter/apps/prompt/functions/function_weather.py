@@ -2,7 +2,7 @@
 This module provides a weather forecast function for use with Smarter's
 extension of the OpenAI API function calling feature.
 
-Secondarily, this modules also serves as a template for implementing
+Secondarily, this module also serves as a template for implementing
 additional tools following the same protocol, with best practices for error
 handling, logging, input validation, documentation style, and examples
 of commonly-used third-party libraries like Pandas, NumPy, and Pint for data
@@ -17,10 +17,10 @@ Protocol
 --------
 Two functions are required for implementing this protocol:
 
-1. A function that implements the desired behavior (in this case, retrieving
-    weather data from an API).
-2. A factory function that returns a JSON-compatible dictionary defining the
+1. A factory function that returns a JSON-compatible dictionary defining the
     tool for OpenAI LLM function calling.
+2. A function that implements the desired behavior (in this case, retrieving
+    weather data from an API).
 
 The factory function (`weather_tool_factory`) is consumed by
 `OpenAICompatibleChatProvider.handle_function_provided()` during the tool
