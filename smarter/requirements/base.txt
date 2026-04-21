@@ -285,7 +285,7 @@ python-dateutil==2.9.0.post0
     #   celery-redbeat
     #   mailchimp-marketing
     #   pandas
-python-dotenv==1.1.1
+python-dotenv==1.2.2
     # via
     #   -r smarter/requirements/in/base.in
     #   pydantic-settings
