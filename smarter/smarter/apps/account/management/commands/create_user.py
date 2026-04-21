@@ -42,9 +42,23 @@ class Command(SmarterCommand):
         password = options["password"]
         is_admin = options["admin"]
 
-        account = Account.objects.get(account_number=account_number)
+        account: Account
+        user: User
+        created: bool
 
-        user, created = User.objects.get_or_create(username=username)
+        try:
+            account = Account.objects.get(account_number=account_number)
+        except Account.DoesNotExist:
+            self.handle_completed_failure(msg=f"Account with account number {account_number} does not exist.")
+            return
+
+        try:
+            user, created = User.objects.get_or_create(username=username)
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.handle_completed_failure(msg=f"Error creating user {username}: {str(e)}")
+            return
+
         if not created:
             self.stdout.write(self.style.NOTICE(f"User {username} already exists, updating the existing user."))
         if is_admin:
@@ -69,7 +83,13 @@ class Command(SmarterCommand):
             user.set_password(generated_password)
             password = generated_password  # Set password to generated password for email
             self.stdout.write(self.style.SUCCESS(f"Password for user {username} has been set to {password}"))
-        user.save()
+        try:
+            user.save()
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.handle_completed_failure(msg=f"Error saving user {username}: {str(e)}")
+            return
+
         self.handle_completed_success(msg=f"User {username} {email} has been created.")
 
         if created and waffle.switch_is_active(waffle.SmarterWaffleSwitches.ENABLE_NEW_USER_PASSWORD_EMAIL):
@@ -92,7 +112,13 @@ class Command(SmarterCommand):
                 )
             )
 
-        user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
+        try:
+            user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.handle_completed_failure(msg=f"Error creating user profile for user {username}: {str(e)}")
+            return
+
         if created:
             self.handle_completed_success(
                 msg=f"User profile created for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}."
@@ -105,7 +131,16 @@ class Command(SmarterCommand):
             account_contact.save()
             self.handle_completed_success(msg="smarter.apps.account.management.commands.create_user completed.")
         except AccountContact.DoesNotExist:
-            AccountContact.objects.create(account=account, first_name=first_name, last_name=last_name, email=email)
-            self.handle_completed_success(
-                msg=f"Account contact created for {first_name} {last_name}, account {account.account_number} {account.company_name}."
-            )
+            try:
+                AccountContact.objects.create(account=account, first_name=first_name, last_name=last_name, email=email)
+                self.handle_completed_success(
+                    msg=f"Account contact created for {first_name} {last_name}, account {account.account_number} {account.company_name}."
+                )
+            # pylint: disable=broad-except
+            except Exception as e:
+                self.handle_completed_failure(msg=f"Error creating account contact for user {username}: {str(e)}")
+                return
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.handle_completed_failure(msg=f"Error creating account contact for user {username}: {str(e)}")
+            return
