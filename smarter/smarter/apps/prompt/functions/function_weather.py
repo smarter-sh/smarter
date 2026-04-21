@@ -1,25 +1,51 @@
 # pylint: disable=broad-exception-caught
 """
-This module provides weather-related functions for use with the OpenAI API function calling feature.
+This module provides a weather forecast function for use with Smarter's
+extension of the OpenAI API function calling feature.
+
+See Also
+--------
+https://developers.openai.com/api/docs/guides/function-calling
+
+Protocol
+--------
+Two functions are required for implementing this protocol:
+
+1. A function that implements the desired behavior (in this case, retrieving
+    weather data from an API).
+2. A factory function that returns a JSON-compatible dictionary defining the
+    tool for OpenAI LLM function calling.
+
+The factory function (`weather_tool_factory`) is consumed by
+`OpenAICompatibleChatProvider.handle_function_provided()` during the tool
+registration process, which adds the tool definition to the list of available
+tools for the LLM to call.
+
+The implementation function (`get_current_weather`) is executed by
+`OpenAICompatibleChatProvider.process_tool_call()` when the LLM generates a
+tool call for this function.
 
 Overview
 --------
-Enables retrieval of current weather data and 24-hour forecasts for a given location, suitable for LLM function calling.
-Features reliability, caching, logging, and robust input validation.
+Enables retrieval of current weather data and 24-hour forecasts for a given
+location, suitable for LLM function calling. Features reliability, caching,
+logging, and robust input validation.
 
 Dependencies
 ------------
-- googlemaps
-- openmeteo_requests
-- pandas
-- requests_cache
-- retry_requests
+* googlemaps
+* openmeteo_requests
+* numpy
+* pint
+* pandas
+* requests_cache
+* retry_requests
 
 Signals
 -------
-- llm_tool_presented
-- llm_tool_requested
-- llm_tool_responded
+* llm_tool_presented
+* llm_tool_requested
+* llm_tool_responded
 """
 
 # standard Python library imports
@@ -39,7 +65,11 @@ from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
 from pint import UnitRegistry
 
 # Smarter platform imports
-from smarter.apps.prompt.signals import llm_tool_requested, llm_tool_responded
+from smarter.apps.prompt.signals import (
+    llm_tool_presented,
+    llm_tool_requested,
+    llm_tool_responded,
+)
 from smarter.common.enum import SmarterEnum
 from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.console_helpers import formatted_text
@@ -99,17 +129,19 @@ class WeatherError(SmarterException):
 
 def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[str, Any]]:
     """
-    Retrieves the current weather and a 24-hour forecast for a specified location.
-    The basic flow is:
+    Retrieves the current weather and a 24-hour forecast for a specified
+    location. The basic flow is:
 
     1. Define and initialize variables to be used in the function.
-    2. Check if the necessary API clients are initialized before proceeding. If not, return an error message.
+    2. Check if the necessary API clients are initialized before proceeding.
+       If not, return an error message.
     3. Parse and validate the input arguments from the tool call.
-    4. Geocode the location using the Google Maps API to get latitude and longitude.
+    4. Geocode the location using the Google Maps API to get latitude and
+       longitude.
     5. Query the OpenMeteo API for current weather and hourly forecast data.
     6. Format the response as a JSON-compatible dictionary and return it.
-    7. Return the result as a JSON list (to be compatible with OpenAI function calling response format).
-
+    7. Return the result as a JSON list (to be compatible with OpenAI function
+       calling response format).
 
     Parameters
     ----------
@@ -118,8 +150,10 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
 
     Django Signals
     --------------
-    - llm_tool_requested: Sent when the tool is called, with the tool call data, location, and unit.
-    - llm_tool_responded: Sent after the tool has generated a response, with the tool call data and the response.
+    - llm_tool_requested: Sent when the tool is called, with the tool call
+      data, location, and unit.
+    - llm_tool_responded: Sent after the tool has generated a response, with
+      the tool call data and the response.
 
     Returns
     -------
@@ -387,13 +421,27 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
 
 def weather_tool_factory() -> dict[str, Any]:
     """
-    Constructs and returns a JSON-compatible dictionary defining the weather tool for OpenAI LLM function calling.
+    Constructs and returns a JSON-compatible dictionary defining the weather
+    tool for OpenAI LLM function calling.
+
+    See Also
+    ---------
+    https://developers.openai.com/api/docs/guides/function-calling
 
     Returns
     -------
     dict[str, Any]
-        A dictionary containing the tool definition for `get_current_weather`, formatted for OpenAI LLM function calling.
+        A dictionary containing the tool definition for `get_current_weather`,
+        formatted for OpenAI LLM function calling.
     """
+    llm_tool_presented.send(
+        sender=weather_tool_factory,
+        tool={
+            "name": get_current_weather.__name__,
+            "description": "Get the current weather and 24-hour forecast for a given location.",
+        },
+    )
+
     tool = {
         "type": "function",
         "function": {
