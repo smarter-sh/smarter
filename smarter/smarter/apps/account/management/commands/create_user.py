@@ -9,6 +9,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django import waffle
 from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.django.validators import SmarterValidator
 
 
 # pylint: disable=E1101
@@ -50,6 +51,11 @@ class Command(SmarterCommand):
             user.is_staff = True
         else:
             user.is_staff = False
+
+        if not SmarterValidator.is_valid_email(email):
+            self.handle_completed_failure(msg=f"Invalid email address: {email}")
+            return
+
         user.email = email
         user.first_name = first_name
         user.last_name = last_name
