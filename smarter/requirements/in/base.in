@@ -53,6 +53,7 @@ pandas                                  # Data manipulation for data science stu
 pydantic                                # best data validation library ever!
 pydantic-settings                       # settings management
 email-validator                         # Pydantic email validator for EmailStr
+pint                                    # Define, operate and manipulate physical quantities:
 
 # LLM support
 # ------------

@@ -54,16 +54,16 @@ billiard==4.2.4
     # via celery
 black==26.3.1
     # via -r smarter/requirements/in/local.in
-boto3==1.42.89
+boto3==1.42.92
     # via -r smarter/requirements/in/base.in
-botocore==1.42.89
+botocore==1.42.92
     # via
     #   -r smarter/requirements/in/base.in
     #   boto3
     #   s3transfer
 build==1.4.3
     # via pip-tools
-cachetools==7.0.5
+cachetools==7.0.6
     # via
     #   -r smarter/requirements/in/base.in
     #   tox
@@ -178,11 +178,11 @@ django-rest-knox==5.0.4
     # via -r smarter/requirements/in/base.in
 django-storages==1.14.6
     # via -r smarter/requirements/in/base.in
-django-stubs==6.0.2
+django-stubs==6.0.3
     # via
     #   -r smarter/requirements/in/local.in
     #   djangorestframework-stubs
-django-stubs-ext==6.0.2
+django-stubs-ext==6.0.3
     # via django-stubs
 django-taggit==6.1.0
     # via -r smarter/requirements/in/base.in
@@ -210,7 +210,7 @@ drf-yasg==1.21.15
     # via -r smarter/requirements/in/base.in
 email-validator==2.3.0
     # via -r smarter/requirements/in/base.in
-filelock==3.25.2
+filelock==3.29.0
     # via
     #   python-discovery
     #   tldextract
@@ -224,13 +224,17 @@ flake8-coding==1.3.2
     # via -r smarter/requirements/in/local.in
 flatbuffers==25.9.23
     # via openmeteo-sdk
+flexcache==0.3
+    # via pint
+flexparser==0.4
+    # via pint
 frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
 google-auth[requests]==2.49.2
     # via google-genai
-google-genai==1.73.0
+google-genai==1.73.1
     # via -r smarter/requirements/in/base.in
 googlemaps==4.10.0
     # via -r smarter/requirements/in/base.in
@@ -249,9 +253,9 @@ httpx==0.28.1
     #   openai
 httpx-sse==0.4.3
     # via langchain-community
-identify==2.6.18
+identify==2.6.19
     # via pre-commit
-idna==3.11
+idna==3.12
     # via
     #   anyio
     #   email-validator
@@ -292,11 +296,11 @@ kombu==5.6.2
     # via celery
 langchain==1.2.15
     # via -r smarter/requirements/in/base.in
-langchain-classic==1.0.3
+langchain-classic==1.0.4
     # via langchain-community
 langchain-community==0.4.1
     # via -r smarter/requirements/in/base.in
-langchain-core==1.2.28
+langchain-core==1.3.0
     # via
     #   langchain
     #   langchain-classic
@@ -307,27 +311,27 @@ langchain-core==1.2.28
     #   langgraph
     #   langgraph-checkpoint
     #   langgraph-prebuilt
-langchain-openai==1.1.12
+langchain-openai==1.1.16
     # via
     #   -r smarter/requirements/in/base.in
     #   langchain-pinecone
 langchain-pinecone==0.2.13
     # via -r smarter/requirements/in/base.in
-langchain-text-splitters==1.1.1
+langchain-text-splitters==1.1.2
     # via
     #   -r smarter/requirements/in/base.in
     #   langchain-classic
-langgraph==1.1.6
+langgraph==1.1.9
     # via langchain
-langgraph-checkpoint==4.0.1
+langgraph-checkpoint==4.0.2
     # via
     #   langgraph
     #   langgraph-prebuilt
-langgraph-prebuilt==1.0.9
+langgraph-prebuilt==1.0.10
     # via langgraph
 langgraph-sdk==0.3.13
     # via langgraph
-langsmith==0.7.30
+langsmith==0.7.33
     # via
     #   langchain-classic
     #   langchain-community
@@ -340,7 +344,7 @@ librt==0.9.0
     # via mypy
 llamaai==0.1.27
     # via -r smarter/requirements/in/base.in
-lxml==6.0.4
+lxml==6.1.0
     # via -r smarter/requirements/in/base.in
 mailchimp-marketing==3.0.80
     # via -r smarter/requirements/in/base.in
@@ -364,7 +368,7 @@ multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
-mypy==1.20.1
+mypy==1.20.2
     # via -r smarter/requirements/in/local.in
 mypy-extensions==1.1.0
     # via
@@ -443,11 +447,14 @@ pinecone-plugin-assistant==1.8.0
     # via pinecone
 pinecone-plugin-interface==0.0.7
     # via pinecone
+pint==0.25.3
+    # via -r smarter/requirements/in/base.in
 pip-tools==7.5.3
     # via -r smarter/requirements/in/local.in
 platformdirs==4.9.6
     # via
     #   black
+    #   pint
     #   pylint
     #   python-discovery
     #   requests-cache
@@ -459,7 +466,7 @@ pluggy==1.6.0
     #   tox
 pprintpp==0.4.0
     # via sphinxcontrib-django
-pre-commit==4.5.1
+pre-commit==4.6.0
     # via -r smarter/requirements/in/local.in
 prompt-toolkit==3.0.52
     # via click-repl
@@ -479,7 +486,7 @@ pycountry==26.2.16
     # via -r smarter/requirements/in/base.in
 pycparser==3.0
     # via cffi
-pydantic==2.13.0
+pydantic==2.13.3
     # via
     #   -r smarter/requirements/in/base.in
     #   autodoc-pydantic
@@ -492,9 +499,9 @@ pydantic==2.13.0
     #   langsmith
     #   openai
     #   pydantic-settings
-pydantic-core==2.46.0
+pydantic-core==2.46.3
     # via pydantic
-pydantic-settings==2.13.1
+pydantic-settings==2.14.0
     # via
     #   -r smarter/requirements/in/base.in
     #   autodoc-pydantic
@@ -570,7 +577,7 @@ pyyaml==6.0.3
     #   langchain-community
     #   langchain-core
     #   pre-commit
-qh3==1.7.1
+qh3==1.7.2
     # via urllib3-future
 rapidfuzz==3.14.5
     # via levenshtein
@@ -632,9 +639,9 @@ sniffio==1.3.1
     #   openai
 snowballstemmer==3.0.1
     # via sphinx
-social-auth-app-django==5.7.0
+social-auth-app-django==5.8.0
     # via -r smarter/requirements/in/base.in
-social-auth-core==4.8.5
+social-auth-core==4.8.6
     # via social-auth-app-django
 soupsieve==2.8.3
     # via beautifulsoup4
@@ -648,7 +655,7 @@ sphinx==9.1.0
     #   sphinx-rtd-theme
     #   sphinxcontrib-django
     #   sphinxcontrib-jquery
-sphinx-autodoc-typehints==3.10.1
+sphinx-autodoc-typehints==3.10.2
     # via -r smarter/requirements/in/local.in
 sphinx-copybutton==0.5.2
     # via -r smarter/requirements/in/local.in
@@ -730,11 +737,14 @@ typing-extensions==4.15.0
     #   django-stubs
     #   django-stubs-ext
     #   djangorestframework-stubs
+    #   flexcache
+    #   flexparser
     #   google-genai
     #   langchain-core
     #   mypy
     #   openai
     #   pinecone
+    #   pint
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
@@ -767,7 +777,7 @@ urllib3==2.6.3
     #   requests-cache
     #   retry-requests
     #   types-requests
-urllib3-future==2.19.908
+urllib3-future==2.19.909
     # via niquests
 uuid-utils==0.14.1
     # via
@@ -780,7 +790,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==21.2.3
+virtualenv==21.2.4
     # via
     #   pre-commit
     #   tox

@@ -35,6 +35,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
 from openmeteo_requests import OpenMeteoRequestsError
 from openmeteo_sdk.VariablesWithTime import VariablesWithTime
 from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
+from pint import UnitRegistry
 
 # Smarter platform imports
 from smarter.apps.prompt.signals import llm_tool_requested, llm_tool_responded
@@ -321,11 +322,16 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
 
         # Convert units if necessary - OpenMeteo returns metric by default, so convert to USCS if requested.
         if unit == WeatherUnits.USCS:
-            hourly_temperature_2m = hourly_temperature_2m * 9 / 5 + 32
-            hourly_precipitation_2m = hourly_precipitation_2m / 2.54
-            hourly_snowfall = hourly_snowfall / 2.54
-            hourly_windspeed_10m = hourly_windspeed_10m * 2.23694
-            hourly_windgusts_10m = hourly_windgusts_10m * 2.23694
+
+            def convert_array(arr, from_unit, to_unit):
+                return pd.Series((arr * ureg(from_unit)).to(to_unit).magnitude)
+
+            ureg = UnitRegistry()
+            hourly_temperature_2m = convert_array(hourly_temperature_2m, "degC", "degF")
+            hourly_precipitation_2m = convert_array(hourly_precipitation_2m, "millimeter", "inch")
+            hourly_snowfall = convert_array(hourly_snowfall, "millimeter", "inch")
+            hourly_windspeed_10m = convert_array(hourly_windspeed_10m, "kilometer/hour", "mile/hour")
+            hourly_windgusts_10m = convert_array(hourly_windgusts_10m, "kilometer/hour", "mile/hour")
 
         hourly_data = {
             "date": pd.date_range(
