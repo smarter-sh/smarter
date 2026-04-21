@@ -6,7 +6,19 @@ Secondarily, this module also serves as a template for implementing
 additional tools following the same protocol, with best practices for error
 handling, logging, input validation, documentation style, and examples
 of commonly-used third-party libraries like Pandas, NumPy, and Pint for data
-manipulation and unit conversion.
+manipulation and unit conversion. These best practices include the following:
+
+- Robust input validation using Pydantic models, with clear error messages for
+  invalid inputs.
+- Comprehensive error handling with specific exceptions for different failure
+  modes (e.g. API errors, data processing errors), and logging of error details.
+- Use of a WaffleSwitchedLoggerWrapper to enable or disable logging based on a
+  lambda function, allowing for dynamic control of logging without code changes.
+- Detailed Sphinx-compatible docstrings for all functions and classes,
+  following the NumPy style guide, including sections for Parameters, Returns,
+  Raises, Examples, and See Also.
+- Use of Django signals to emit events at key points in the function execution,
+  allowing for extensibility and integration with other parts of the application.
 
 
 See Also
@@ -81,6 +93,7 @@ from smarter.lib import json
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .enum import WeatherMetrics, WeatherParameters, WeatherUnits
+from .models import WeatherRequestModel
 
 # local imports of utility functions and variables (in order of import):
 # - an authenticated Google Maps client instance
@@ -93,6 +106,7 @@ WEATHER_API_URL = "https://api.open-meteo.com/v1/forecast"
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 logger_prefix = formatted_text(__name__ + ".get_current_weather()")
+ureg = UnitRegistry()
 
 
 def weather_tool_factory() -> dict[str, Any]:
@@ -127,7 +141,6 @@ def weather_tool_factory() -> dict[str, Any]:
         "function": {
             "name": get_current_weather.__name__,
             "description": "Get the current weather and 24-hour forecast for a given location.",
-            "strict": True,
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -188,10 +201,6 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     # in the function.
     # -------------------------------------------------------------------------
 
-    # parsed arguments from the incoming tool call request, expected to contain
-    # 'location' and optionally 'unit'.
-    arguments: dict[str, Any] = {}
-
     # google maps geocoding coordinates
     latitude: float = 0.0
     longitude: float = 0.0
@@ -240,65 +249,29 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     # -------------------------------------------------------------------------
 
     # 3a.) Parse and validate input arguments
-    if tool_call and tool_call.function and tool_call.function.arguments:
-        if isinstance(tool_call.function.arguments, str):
-            try:
-                arguments = json.loads(tool_call.function.arguments)
-                logger.debug(f"{logger_prefix} Parsed arguments: {json.dumps(arguments, indent=4)}")
-            except json.JSONDecodeError as e:
-                logger.error(f"{logger_prefix} Error parsing arguments JSON: {e}")
-                return [{"error": f"Invalid arguments JSON: {e}. Received arguments: {tool_call.function.arguments}"}]
-            # pylint: disable=broad-exception-caught
-            except Exception as e:
-                msg = f"Unexpected error parsing arguments: {e}. Received arguments: {tool_call.function.arguments}"
-                logger.error(f"{logger_prefix} {msg}")
-                return [{"error": msg}]
-        else:
-            arguments = tool_call.function.arguments
+    if not tool_call or not tool_call.function or not tool_call.function.arguments:
+        return [{"error": "No arguments provided. Please provide a location and optionally a unit."}]
 
-    # 3b.) Validate location
     try:
-        location = arguments.get(WeatherParameters.LOCATION, None)
+        raw_args = tool_call.function.arguments
+        if isinstance(raw_args, str):
+            raw_args = json.loads(raw_args)
+
+        # Use the WeatherRequestModel Pydantic model to validate and parse the
+        # input arguments.
+        request = WeatherRequestModel(**raw_args)
+
+        location = request.location
+        unit = request.unit or WeatherUnits.METRIC
         logger.debug(f"{logger_prefix} Extracted location: {location}")
-    except (AttributeError, KeyError) as e:
-        msg = (
-            f"Invalid location argument received: {e}. "
-            f"Received arguments: {arguments}. "
-            f"Expected: {{{WeatherParameters.LOCATION}: 'city/town/area/region, "
-            f"[state], [country]', {WeatherParameters.UNIT}: 'METRIC|USCS'}}"
-        )
-        logger.error(f"{logger_prefix} {msg}")
-        return [{"error": msg}]
     # pylint: disable=broad-exception-caught
     except Exception as e:
-        msg = f"Unexpected error processing location argument: {e}. Received arguments: {arguments}"
-        logger.error(f"{logger_prefix} {msg}")
-        return [{"error": msg}]
-
-    if not location or not isinstance(location, str) or not location.strip():
-        return [{"error": f"No {WeatherParameters.LOCATION} provided. Please provide a valid location string."}]
+        return [{"error": f"Invalid arguments: {e}"}]
 
     # 3c.) Validate unit
-    try:
-        unit = arguments.get(WeatherParameters.UNIT, WeatherUnits.METRIC)
-        logger.debug(f"{logger_prefix} Extracted unit: {unit}")
-    except (AttributeError, KeyError) as e:
-        msg = (
-            f"Invalid unit argument received: {e}. "
-            f"Received arguments: {arguments}. "
-            f"Expected: {{{WeatherParameters.LOCATION}: 'city/town/area/region, "
-            f"[state], [country]', {WeatherParameters.UNIT}: 'METRIC|USCS'}}"
-        )
-        logger.error(f"{logger_prefix} {msg}")
-        return [{"error": msg}]
-    # pylint: disable=broad-exception-caught
-    except Exception as e:
-        msg = f"Unexpected error processing unit argument: {e}. Received arguments: {arguments}"
-        logger.error(f"{logger_prefix} {msg}")
-        return [{"error": msg}]
-
     if unit not in WeatherUnits.all():
         return [{"error": f"Invalid {WeatherParameters.UNIT}. Supported units are: {', '.join(WeatherUnits.all())}."}]
+    logger.debug(f"{logger_prefix} Extracted unit: {unit}")
 
     # Send a Django signal that the tool was requested, with the tool call data, location, and unit.
     # see: https://docs.djangoproject.com/en/6.0/topics/signals/
@@ -388,7 +361,6 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
             def convert_array(arr, from_unit, to_unit):
                 return pd.Series((arr * ureg(from_unit)).to(to_unit).magnitude)
 
-            ureg = UnitRegistry()
             hourly_temperature_2m = convert_array(hourly_temperature_2m, "degC", "degF")
             hourly_precipitation_2m = convert_array(hourly_precipitation_2m, "millimeter", "inch")
             hourly_snowfall = convert_array(hourly_snowfall, "millimeter", "inch")

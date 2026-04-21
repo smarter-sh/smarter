@@ -1,3 +1,7 @@
+"""
+Enums for the weather function parameters, units, and metrics.
+"""
+
 from smarter.common.enum import SmarterEnum
 
 
