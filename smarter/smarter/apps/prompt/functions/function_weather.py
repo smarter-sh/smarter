@@ -165,9 +165,16 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
             try:
                 arguments = json.loads(tool_call.function.arguments)
                 logger.debug(f"{logger_prefix} Parsed arguments: {json.dumps(arguments, indent=4)}")
-            except Exception as e:
+            except json.JSONDecodeError as e:
                 logger.error(f"{logger_prefix} Error parsing arguments JSON: {e}")
                 return [{"error": f"Invalid arguments JSON: {e}. Received arguments: {tool_call.function.arguments}"}]
+            except Exception as e:
+                logger.error(f"{logger_prefix} Unexpected error parsing arguments: {e}")
+                return [
+                    {
+                        "error": f"Unexpected error parsing arguments: {e}. Received arguments: {tool_call.function.arguments}"
+                    }
+                ]
         else:
             arguments = tool_call.function.arguments
 
@@ -187,6 +194,9 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
                 )
             }
         ]
+    except Exception as e:
+        logger.error(f"{logger_prefix} Unexpected error processing arguments: {arguments} Exception: {e}")
+        return [{"error": f"Unexpected error processing arguments: {e}. Received arguments: {arguments}"}]
 
     if not location or not isinstance(location, str) or not location.strip():
         return [{"error": f"No {WeatherParameters.LOCATION} provided. Please provide a valid location string."}]
@@ -207,6 +217,9 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
                 )
             }
         ]
+    except Exception as e:
+        logger.error(f"{logger_prefix} Unexpected error processing arguments: {arguments} Exception: {e}")
+        return [{"error": f"Unexpected error processing arguments: {e}. Received arguments: {arguments}"}]
 
     if unit not in WeatherUnits.all():
         return [{"error": f"Invalid {WeatherParameters.UNIT}. Supported units are: {', '.join(WeatherUnits.all())}."}]
@@ -236,6 +249,9 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     except GoogleMapsApiError as api_error:
         logger.error(f"{logger_prefix} Google Maps API error getting geo coordinates for {location}: {api_error}")
         return [{"error": f"Google Maps API error: {api_error}"}]
+    except json.JSONDecodeError as e:
+        logger.error(f"{logger_prefix} JSON decode error getting geo coordinates for {location}: {e}")
+        return [{"error": f"JSON decode error geocoding location: {e}"}]
     except Exception as e:
         logger.error(f"{logger_prefix} Unexpected error getting geo coordinates for {location}: {e}")
         return [{"error": f"Unexpected error geocoding location: {e}"}]
