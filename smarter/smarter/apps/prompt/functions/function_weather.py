@@ -273,13 +273,13 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     return [result]
 
 
-def weather_tool_factory() -> dict:
+def weather_tool_factory() -> dict[str, Any]:
     """
     Constructs and returns a JSON-compatible dictionary defining the weather tool for OpenAI LLM function calling.
 
     Returns
     -------
-    dict
+    dict[str, Any]
         A dictionary containing the tool definition for `get_current_weather`, formatted for OpenAI LLM function calling.
     """
     tool = {
