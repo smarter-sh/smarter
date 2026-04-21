@@ -26,7 +26,8 @@ Signals
 import logging
 from typing import Any, Optional
 
-# Pandas, Google Maps API client, and OpenMeteo SDK imports
+# NumPy, Pandas, Google Maps API client, and OpenMeteo SDK imports
+import numpy as np
 import pandas as pd
 from googlemaps.exceptions import ApiError as GoogleMapsApiError
 from openai.types.chat.chat_completion_message_tool_call import (
@@ -150,7 +151,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     hourly_precipitation_2m: pd.Series = pd.Series()
 
     # dictionary to store hourly data with datetime index.
-    hourly_data: dict[str, pd.DatetimeIndex] = {}
+    hourly_data: dict[str, pd.Series | np.ndarray | pd.DatetimeIndex] = {}
 
     # final result dictionary to be returned.
     result: dict[str, Any] = {}
@@ -333,22 +334,21 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
             hourly_windspeed_10m = convert_array(hourly_windspeed_10m, "kilometer/hour", "mile/hour")
             hourly_windgusts_10m = convert_array(hourly_windgusts_10m, "kilometer/hour", "mile/hour")
 
-        hourly_data = {
-            "date": pd.date_range(
-                start=pd.to_datetime(hourly.Time(), unit="s"),
-                end=pd.to_datetime(hourly.TimeEnd(), unit="s"),
-                freq=pd.Timedelta(seconds=hourly.Interval()),
-                inclusive="left",
-            )
-        }
-        hourly_data[WeatherMetrics.TEMPERATURE_2M] = hourly_temperature_2m  # type: ignore
-        hourly_data[WeatherMetrics.PRECIPITATION] = hourly_precipitation_2m  # type: ignore
-        hourly_data[WeatherMetrics.SNOWFALL] = hourly_snowfall  # type: ignore
-        hourly_data[WeatherMetrics.WEATHERCODE] = hourly_weathercode  # type: ignore
-        hourly_data[WeatherMetrics.WINDSPEED_10M] = hourly_windspeed_10m  # type: ignore
-        hourly_data[WeatherMetrics.WINDDIRECTION_10M] = hourly_winddirection_10m  # type: ignore
-        hourly_data[WeatherMetrics.WINDGUSTS_10M] = hourly_windgusts_10m  # type: ignore
-        hourly_data[WeatherMetrics.CLOUDCOVER] = hourly_cloudcover  # type: ignore
+        hourly_data["date"] = pd.date_range(
+            start=pd.to_datetime(hourly.Time(), unit="s"),
+            end=pd.to_datetime(hourly.TimeEnd(), unit="s"),
+            freq=pd.Timedelta(seconds=hourly.Interval()),
+            inclusive="left",
+        )
+        hourly_data[WeatherMetrics.TEMPERATURE_2M] = hourly_temperature_2m
+        hourly_data[WeatherMetrics.PRECIPITATION] = hourly_precipitation_2m
+        hourly_data[WeatherMetrics.SNOWFALL] = hourly_snowfall
+        hourly_data[WeatherMetrics.WEATHERCODE] = hourly_weathercode
+        hourly_data[WeatherMetrics.WINDSPEED_10M] = hourly_windspeed_10m
+        hourly_data[WeatherMetrics.WINDDIRECTION_10M] = hourly_winddirection_10m
+        hourly_data[WeatherMetrics.WINDGUSTS_10M] = hourly_windgusts_10m
+        hourly_data[WeatherMetrics.CLOUDCOVER] = hourly_cloudcover
+
         hourly_dataframe = pd.DataFrame(data=hourly_data).head(24)
         hourly_dataframe["date"] = hourly_dataframe["date"].dt.strftime("%Y-%m-%d %H:%M")
         hourly_json = hourly_dataframe.to_dict(orient="records")
