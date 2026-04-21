@@ -1,8 +1,10 @@
 """URL configuration for chat app."""
 
-from django.urls import path
+from django.urls import include, path
 
 from .const import namespace
+from .views.chat import urls as chat_urls
+from .views.chat.const import namespace as chat_namespace
 from .views.history import (
     ChatHistoryListView,
     ChatHistoryView,
@@ -11,12 +13,11 @@ from .views.history import (
     PluginUsageHistoryListView,
     PluginUsageHistoryView,
 )
-from .views.providers.smarter import SmarterChatApiViewSet
 
 app_name = namespace
 
 urlpatterns = [
-    path("smarter/", SmarterChatApiViewSet.as_view(), name="smarter-chat-api"),
+    path("", include(chat_urls, chat_namespace)),
     path("history/chat/", ChatHistoryListView.as_view(), name="chathistory_list"),
     path(
         "history/chat/<int:pk>/",

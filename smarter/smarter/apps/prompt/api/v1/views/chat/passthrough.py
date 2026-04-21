@@ -5,6 +5,7 @@ provider backend API.
 """
 
 import logging
+from http import HTTPStatus
 
 from rest_framework.request import Request
 
@@ -25,6 +26,11 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
 )
+from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
+from smarter.lib.journal.http import (
+    SmarterJournaledJsonErrorResponse,
+    SmarterJournaledJsonResponse,
+)
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
@@ -38,7 +44,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class PromptPassthroughView(SmarterAuthenticatedAPIView):
+class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
     """
     Handle POST requests to the passthrough endpoint for direct LLM provider API access.
 
@@ -109,9 +115,15 @@ class PromptPassthroughView(SmarterAuthenticatedAPIView):
         - timeout: float | httpx.Timeout | None | NotGiven
     """
 
+    provider_name: str
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.provider_name = self.kwargs.pop("provider_name")
+
     def get(self, request: Request, *args, **kwargs):
         return SmarterHttpResponseBadRequest(
-            request=request, error_message="GET method not supported for passthrough endpoint"
+            request=request, error_message="PUT method not supported for passthrough endpoint"
         )
 
     def put(self, request: Request, *args, **kwargs):
@@ -148,4 +160,11 @@ class PromptPassthroughView(SmarterAuthenticatedAPIView):
         except Exception as e:
             logger.error("Unexpected error parsing request data: %s", e)
             return SmarterHttpResponseServerError(request=request, error_message="Invalid request data format")
-        return handler(request, user_profile, data, *args, **kwargs)
+        retval = handler(request, user_profile, data, *args, **kwargs)
+        return SmarterJournaledJsonResponse(
+            request=request,
+            data=retval,
+            command=SmarterJournalCliCommands.CHAT,
+            thing=SmarterJournalThings.CHAT,
+            status=HTTPStatus.OK,
+        )
