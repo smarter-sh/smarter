@@ -27,7 +27,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class MetaAIChatProvider(OpenAICompatibleChatProvider):
+class MetaAISmarterChatProvider(OpenAICompatibleChatProvider):
     """
     MetaAI chat provider.
     """

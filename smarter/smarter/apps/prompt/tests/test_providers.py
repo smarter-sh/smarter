@@ -3,11 +3,11 @@
 
 from typing import Callable
 
-from smarter.apps.prompt.providers.googleai.classes import GoogleAIChatProvider
+from smarter.apps.prompt.providers.googleai.classes import GoogleAISmarterChatProvider
 from smarter.apps.prompt.providers.googleai.const import (
     PROVIDER_NAME as GOOGLEAI_PROVIDER_NAME,
 )
-from smarter.apps.prompt.providers.metaai.classes import MetaAIChatProvider
+from smarter.apps.prompt.providers.metaai.classes import MetaAISmarterChatProvider
 from smarter.apps.prompt.providers.metaai.const import (
     PROVIDER_NAME as METAAI_PROVIDER_NAME,
 )
@@ -15,7 +15,7 @@ from smarter.apps.prompt.providers.openai.classes import (
     PROVIDER_NAME as OPENAI_PROVIDER_NAME,
 )
 from smarter.apps.prompt.providers.openai.classes import (
-    OpenAIChatProvider,
+    OpenAISmarterChatProvider,
 )
 from smarter.apps.prompt.providers.providers import smarter_compatible_chat_providers
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -28,9 +28,9 @@ class TestChatProviders(SmarterTestBase):
 
     def verify_providers(self):
         """Test chat providers."""
-        self.assertIsInstance(smarter_compatible_chat_providers.openai, OpenAIChatProvider)
-        self.assertIsInstance(smarter_compatible_chat_providers.googleai, GoogleAIChatProvider)
-        self.assertIsInstance(smarter_compatible_chat_providers.metaai, MetaAIChatProvider)
+        self.assertIsInstance(smarter_compatible_chat_providers.openai, OpenAISmarterChatProvider)
+        self.assertIsInstance(smarter_compatible_chat_providers.googleai, GoogleAISmarterChatProvider)
+        self.assertIsInstance(smarter_compatible_chat_providers.metaai, MetaAISmarterChatProvider)
 
     def verify_providers_name_readonly(self):
         """Test that chat provider names are read-only."""

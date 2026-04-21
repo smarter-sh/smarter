@@ -31,12 +31,15 @@ from .base_classes.protocols import (
     SmarterChatCompletionResponseType,
     SmarterChatHandlerProtocol,
 )
-from .googleai.classes import GoogleAIChatProvider, GoogleAIPassthroughChatProvider
+from .googleai.classes import (
+    GoogleAIPassthroughChatProvider,
+    GoogleAISmarterChatProvider,
+)
 from .googleai.const import PROVIDER_NAME as GOOGLEAI_PROVIDER_NAME
-from .metaai.classes import MetaAIChatProvider, MetaAIPassthroughChatProvider
+from .metaai.classes import MetaAIPassthroughChatProvider, MetaAISmarterChatProvider
 from .metaai.const import PROVIDER_NAME as METAAI_PROVIDER_NAME
 from .openai.classes import PROVIDER_NAME as OPENAI_PROVIDER_NAME
-from .openai.classes import OpenAIChatProvider, OpenAIPassthroughChatProvider
+from .openai.classes import OpenAIPassthroughChatProvider, OpenAISmarterChatProvider
 
 
 # pylint: disable=W0613
@@ -84,27 +87,27 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
     # all providers
     # -------------------------------------------------------------------------
     @property
-    def googleai(self) -> GoogleAIChatProvider:
+    def googleai(self) -> GoogleAISmarterChatProvider:
         if self._googleai is None:
-            self._googleai = GoogleAIChatProvider()
+            self._googleai = GoogleAISmarterChatProvider()
         return self._googleai
 
     @property
-    def metaai(self) -> MetaAIChatProvider:
+    def metaai(self) -> MetaAISmarterChatProvider:
         if self._metaai is None:
-            self._metaai = MetaAIChatProvider()
+            self._metaai = MetaAISmarterChatProvider()
         return self._metaai
 
     @property
-    def openai(self) -> OpenAIChatProvider:
+    def openai(self) -> OpenAISmarterChatProvider:
         if self._openai is None:
-            self._openai = OpenAIChatProvider()
+            self._openai = OpenAISmarterChatProvider()
         return self._openai
 
     @property
-    def default(self) -> OpenAIChatProvider:
+    def default(self) -> OpenAISmarterChatProvider:
         if self._default is None:
-            self._default = OpenAIChatProvider()
+            self._default = OpenAISmarterChatProvider()
         return self._default
 
     def get_cache_key(self, chat: Chat) -> str:
@@ -136,18 +139,18 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         """Expose the handler method of the default provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
-        cached_provider: OpenAIChatProvider = cache.get(cache_key)
+        cached_provider: OpenAISmarterChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
             caching_logger.debug(
-                "%s.openai_handler() returning cached OpenAIChatProvider for chat %s",
+                "%s.openai_handler() returning cached OpenAISmarterChatProvider for chat %s",
                 self.formatted_class_name,
                 chat.id,  # type: ignore[arg-type]
             )
 
             if not user_profile:
                 raise SmarterValueError(
-                    f"{self.formatted_class_name}: user_profile is required to handle OpenAIChatProvider calls."
+                    f"{self.formatted_class_name}: user_profile is required to handle OpenAISmarterChatProvider calls."
                 )
             # if we have a cached provider, we can use it to invoke the handler
             # with everything preinitialized (from the last invocation) get the response.
@@ -177,17 +180,17 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         """Expose the handler method of the googleai provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
-        cached_provider: GoogleAIChatProvider = cache.get(cache_key)
+        cached_provider: GoogleAISmarterChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
             caching_logger.debug(
-                "%s.googleai_handler() returning cached GoogleAIChatProvider for chat %s",
+                "%s.googleai_handler() returning cached GoogleAISmarterChatProvider for chat %s",
                 self.formatted_class_name,
                 chat.id,  # type: ignore[arg-type]
             )
             if not user_profile:
                 raise SmarterValueError(
-                    f"{self.formatted_class_name}: user_profile is required to handle GoogleAIChatProvider calls."
+                    f"{self.formatted_class_name}: user_profile is required to handle GoogleAISmarterChatProvider calls."
                 )
             result = cached_provider.handler(user_profile, chat, data, plugins=plugins, functions=functions)
             cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)
@@ -211,16 +214,16 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         """Expose the handler method of the metaai provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
-        cached_provider: MetaAIChatProvider = cache.get(cache_key)
+        cached_provider: MetaAISmarterChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
             caching_logger.debug(
-                "%s returning cached MetaAIChatProvider for chat %s", formatted_text("metaai_handler()"), chat.id  # type: ignore[arg-type]
+                "%s returning cached MetaAISmarterChatProvider for chat %s", formatted_text("metaai_handler()"), chat.id  # type: ignore[arg-type]
             )
 
             if not user_profile:
                 raise SmarterValueError(
-                    f"{self.formatted_class_name}: user_profile is required to handle MetaAIChatProvider calls."
+                    f"{self.formatted_class_name}: user_profile is required to handle MetaAISmarterChatProvider calls."
                 )
             result = cached_provider.handler(user_profile, chat, data, plugins=plugins, functions=functions)
             cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)

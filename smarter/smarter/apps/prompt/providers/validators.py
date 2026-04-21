@@ -1,5 +1,7 @@
 """OpenAI API request validators"""
 
+from typing import Any
+
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 
@@ -10,7 +12,7 @@ from .const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
 ####################################################################################################
 
 
-def validate_temperature(temperature: any) -> None:
+def validate_temperature(temperature: Any) -> None:
     """Ensure that temperature is a float between 0 and 1"""
     try:
         float_temperature = float(temperature)
@@ -20,7 +22,7 @@ def validate_temperature(temperature: any) -> None:
         raise SmarterValueError("Temperature must be a float") from exc
 
 
-def validate_max_completion_tokens(max_completion_tokens: any) -> None:
+def validate_max_completion_tokens(max_completion_tokens: Any) -> None:
     """Ensure that max_completion_tokens is an int between 1 and 2048"""
     if not isinstance(max_completion_tokens, int):
         raise TypeError("max_completion_tokens should be an int")
@@ -29,7 +31,7 @@ def validate_max_completion_tokens(max_completion_tokens: any) -> None:
         raise SmarterValueError("max_completion_tokens should be between 1 and 2048")
 
 
-def validate_endpoint(end_point: any) -> None:
+def validate_endpoint(end_point: Any) -> None:
     """Ensure that end_point is a valid endpoint based on the OpenAIEndPoint enum"""
     if not isinstance(end_point, str):
         raise TypeError(f"Invalid end_point '{end_point}'. end_point should be a string.")
@@ -38,7 +40,7 @@ def validate_endpoint(end_point: any) -> None:
         raise SmarterValueError(f"Invalid end_point {end_point}. Should be one of {OpenAIEndPoint.all_endpoints}")
 
 
-def validate_object_types(object_type: any) -> None:
+def validate_object_types(object_type: Any) -> None:
     """Ensure that object_type is a valid object type based on the OpenAIObjectTypes enum"""
     if not isinstance(object_type, str):
         raise TypeError(f"Invalid object_type '{object_type}'. object_type should be a string.")
