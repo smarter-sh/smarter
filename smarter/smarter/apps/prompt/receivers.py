@@ -2,7 +2,7 @@
 
 # pylint: disable=W0612,W0613,C0115
 import logging
-from typing import Union
+from typing import Optional, Union
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models.signals import post_save, pre_delete
@@ -75,7 +75,7 @@ def handle_chat_session_invoked(sender, instance: SmarterChatSession, request: W
 @receiver(chat_config_invoked, dispatch_uid="chat_config_invoked")
 def handle_chat_config_invoked_(sender, instance: ChatConfigView, request, data: dict, *args, **kwargs):
     """Handle chat config invoked signal."""
-    url: str = instance.url
+    url: Optional[str] = instance.url
 
     logger.info("%s url=%s", formatted_text(f"{prefix}.chat_config_invoked"), url)
 
