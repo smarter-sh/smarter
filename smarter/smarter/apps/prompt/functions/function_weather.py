@@ -1,4 +1,3 @@
-# pylint: disable=broad-exception-caught
 """
 This module provides a weather forecast function for use with Smarter's
 extension of the OpenAI API function calling feature.
@@ -77,11 +76,11 @@ from smarter.apps.prompt.signals import (
     llm_tool_requested,
     llm_tool_responded,
 )
-from smarter.common.enum import SmarterEnum
-from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+
+from .enum import WeatherMetrics, WeatherParameters, WeatherUnits
 
 # local imports of utility functions and variables (in order of import):
 # - an authenticated Google Maps client instance
@@ -89,49 +88,63 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 # - a lambda function that checks if logging should be enabled
 from .utils import google_maps_client, openmeteo_api_client, should_log
 
+WEATHER_API_URL = "https://api.open-meteo.com/v1/forecast"
+
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 logger_prefix = formatted_text(__name__ + ".get_current_weather()")
 
 
-WEATHER_API_URL = "https://api.open-meteo.com/v1/forecast"
-
-
-class WeatherParameters(SmarterEnum):
+def weather_tool_factory() -> dict[str, Any]:
     """
-    Enum for weather function parameters.
+    Constructs and returns a JSON-compatible dictionary defining the weather
+    tool for OpenAI LLM function calling.
+
+    See Also
+    ---------
+    https://developers.openai.com/api/docs/guides/function-calling
+
+    Django Signals
+    --------------
+    - llm_tool_presented: Sent when this functions is called.
+
+    Returns
+    -------
+    dict[str, Any]
+        A dictionary containing the tool definition for `get_current_weather`,
+        formatted for OpenAI LLM function calling.
     """
+    llm_tool_presented.send(
+        sender=weather_tool_factory,
+        tool={
+            "name": get_current_weather.__name__,
+            "description": "Get the current weather and 24-hour forecast for a given location.",
+        },
+    )
 
-    LOCATION = "location"
-    UNIT = "unit"
-
-
-class WeatherUnits(SmarterEnum):
-    """
-    Enum for supported weather units.
-    """
-
-    METRIC = "METRIC"
-    USCS = "USCS"
-
-
-class WeatherMetrics(SmarterEnum):
-    """
-    Enum for weather metrics to retrieve from the API.
-    """
-
-    TEMPERATURE_2M = "temperature_2m"
-    PRECIPITATION = "precipitation"
-    SNOWFALL = "snowfall"
-    WEATHERCODE = "weathercode"
-    WINDSPEED_10M = "windspeed_10m"
-    WINDDIRECTION_10M = "winddirection_10m"
-    WINDGUSTS_10M = "windgusts_10m"
-    CLOUDCOVER = "cloudcover"
-
-
-class WeatherError(SmarterException):
-    """Custom exception for weather tool errors."""
+    tool = {
+        "type": "function",
+        "function": {
+            "name": get_current_weather.__name__,
+            "description": "Get the current weather and 24-hour forecast for a given location.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    WeatherParameters.LOCATION: {
+                        "type": "string",
+                        "description": "The city and state, e.g. San Francisco, CA",
+                    },
+                    WeatherParameters.UNIT: {
+                        "type": "string",
+                        "enum": WeatherUnits.all(),
+                        "description": f"Unit system for weather data. Supported: {WeatherUnits.list_all()}",
+                    },
+                },
+                "required": [WeatherParameters.LOCATION],
+            },
+        },
+    }
+    return tool
 
 
 def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[str, Any]]:
@@ -424,55 +437,3 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     # function calling response format).
     # -------------------------------------------------------------------------
     return [result]
-
-
-def weather_tool_factory() -> dict[str, Any]:
-    """
-    Constructs and returns a JSON-compatible dictionary defining the weather
-    tool for OpenAI LLM function calling.
-
-    See Also
-    ---------
-    https://developers.openai.com/api/docs/guides/function-calling
-
-    Django Signals
-    --------------
-    - llm_tool_presented: Sent when this functions is called.
-
-    Returns
-    -------
-    dict[str, Any]
-        A dictionary containing the tool definition for `get_current_weather`,
-        formatted for OpenAI LLM function calling.
-    """
-    llm_tool_presented.send(
-        sender=weather_tool_factory,
-        tool={
-            "name": get_current_weather.__name__,
-            "description": "Get the current weather and 24-hour forecast for a given location.",
-        },
-    )
-
-    tool = {
-        "type": "function",
-        "function": {
-            "name": get_current_weather.__name__,
-            "description": "Get the current weather and 24-hour forecast for a given location.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    WeatherParameters.LOCATION: {
-                        "type": "string",
-                        "description": "The city and state, e.g. San Francisco, CA",
-                    },
-                    WeatherParameters.UNIT: {
-                        "type": "string",
-                        "enum": WeatherUnits.all(),
-                        "description": f"Unit system for weather data. Supported: {WeatherUnits.list_all()}",
-                    },
-                },
-                "required": [WeatherParameters.LOCATION],
-            },
-        },
-    }
-    return tool
