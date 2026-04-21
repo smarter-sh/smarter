@@ -2,12 +2,12 @@ MetaAI
 =========
 
 
-.. automodule:: smarter.apps.prompt.providers.metaai.const
+.. automodule:: smarter.apps.provider.services.text_completion.metaai.const
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: smarter.apps.prompt.providers.metaai.classes
+.. automodule:: smarter.apps.provider.services.text_completion.metaai.classes
     :members:
     :undoc-members:
     :show-inheritance:

@@ -665,7 +665,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
         """
         logger.debug("%s.handle_plugin_selected() called.", self.formatted_class_name)
         logger.warning(
-            "smarter.apps.prompt.providers.base_classes.OpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
+            "smarter.apps.provider.services.text_completion.base_classes.OpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
         )
         if not isinstance(self.messages, list):
             raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")

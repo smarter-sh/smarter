@@ -32,12 +32,7 @@ Generated when DEBUG_MODEL=true
        "openai": "0.28.0",
        "openai_app_info": null,
        "openai_end_points": [
-         "Embedding",
          "ChatCompletion",
-         "Moderation",
-         "Image",
-         "Audio",
-         "Model"
        ],
        "DEBUG_MODE": true
      }

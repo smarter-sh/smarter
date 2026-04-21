@@ -24,14 +24,7 @@ Generated when DEBUG_MODEL=true
     "release": "5.10.184-194.730.amzn2.x86_64",
     "openai": "0.28.0",
     "openai_app_info": null,
-    "openai_end_points": [
-      "Embedding",
-      "ChatCompletion",
-      "Moderation",
-      "Image",
-      "Audio",
-      "Model"
-    ],
+    "openai_end_points": ["ChatCompletion"],
     "DEBUG_MODE": true
   }
 }

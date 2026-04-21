@@ -1,7 +1,7 @@
 Providers
 ================
 
-.. automodule:: smarter.apps.prompt.providers.providers
+.. automodule:: smarter.apps.provider.services.text_completion.providers
     :members:
     :undoc-members:
     :show-inheritance:

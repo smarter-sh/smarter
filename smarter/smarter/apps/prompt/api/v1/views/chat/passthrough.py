@@ -12,6 +12,7 @@ from rest_framework.request import Request
 from smarter.apps.account.models import UserProfile
 from smarter.apps.provider.services.text_completion.base_classes.protocols import (
     OpenAICompatibleChatCompletionRequest,
+    OpenAICompatiblePassthroughProtocol,
 )
 from smarter.apps.provider.services.text_completion.providers import (
     openai_compatible_passthrough_chat_providers,
@@ -20,6 +21,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
+    SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -116,10 +118,17 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
     """
 
     provider_name: str
+    handler: OpenAICompatiblePassthroughProtocol
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         self.provider_name = self.kwargs.pop("provider_name")
+        try:
+            self.handler = openai_compatible_passthrough_chat_providers.get_handler(self.provider_name)
+        except KeyError:
+            return SmarterHttpResponseNotFound(
+                request=request, error_message=f"Provider '{self.provider_name}' not found"
+            )
 
     def get(self, request: Request, *args, **kwargs):
         return SmarterHttpResponseBadRequest(
@@ -147,11 +156,19 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
         )
 
     def post(self, request: Request, *args, **kwargs):
-        handler = openai_compatible_passthrough_chat_providers.default_handler
+        """
+        Handle POST requests to the passthrough endpoint for direct LLM
+        provider API access.
+        """
+
+        # do we know who this is?
         try:
             user_profile = UserProfile.objects.get(user=request.user)
         except UserProfile.DoesNotExist:
             return SmarterHttpResponseForbidden(request=request, error_message="User profile not found")
+
+        # validate the request body to ensure that it conforms to the expected
+        # schema for an OpenAI-compatible chat completion request.
         try:
             data = OpenAICompatibleChatCompletionRequest(**request.data)
         except (TypeError, ValueError) as e:
@@ -160,7 +177,24 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
         except Exception as e:
             logger.error("Unexpected error parsing request data: %s", e)
             return SmarterHttpResponseServerError(request=request, error_message="Invalid request data format")
-        retval = handler(request, user_profile, data, *args, **kwargs)
+
+        # process the request using the appropriate handler for the specified provider.
+        try:
+            retval = self.handler(request, user_profile, data, *args, **kwargs)
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("Error processing passthrough chat request: %s", e)
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=e,
+                error_message=str(e),
+                command=SmarterJournalCliCommands.CHAT,
+                thing=SmarterJournalThings.CHAT,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
+        # return a journaled JSON response containing the result from the
+        # provider, or an error if something went wrong.
         return SmarterJournaledJsonResponse(
             request=request,
             data=retval,

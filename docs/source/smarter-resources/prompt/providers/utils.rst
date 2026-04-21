@@ -1,7 +1,7 @@
 Utils
 ======
 
-.. automodule:: smarter.apps.prompt.providers.utils
+.. automodule:: smarter.apps.provider.services.text_completion.utils
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,7 +1,7 @@
 Base Classes
 =================
 
-.. automodule:: smarter.apps.prompt.providers.base_classes
+.. automodule:: smarter.apps.provider.services.text_completion.base_classes
     :members:
     :undoc-members:
     :show-inheritance:

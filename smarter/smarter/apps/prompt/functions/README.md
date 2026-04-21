@@ -9,7 +9,9 @@ label, 'functions'
 Contributors: add your new function to the following
 
 - smarter.apps.chatbot.models.ChatBotFunctions.CHOICES
-- smarter.apps.prompt.providers.base_classes.ChatProviderBase.tools
-- smarter.apps.prompt.providers.base_classes.ChatProviderBase.available_functions
-- smarter.apps.prompt.providers.base_classes.OpenAICompatibleChatProvider.process_tool_call()
-- smarter.apps.prompt.providers.base_classes.OpenAICompatibleChatProvider.handle_function_provided()
+- smarter.apps.prompt.functions
+
+See also:
+
+- smarter.apps.provider.services.text_completion.base_classes.OpenAICompatibleChatProvider.process_tool_call()
+- smarter.apps.provider.services.text_completion.base_classes.OpenAICompatibleChatProvider.handle_function_provided()
