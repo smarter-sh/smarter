@@ -127,6 +127,7 @@ def weather_tool_factory() -> dict[str, Any]:
         "function": {
             "name": get_current_weather.__name__,
             "description": "Get the current weather and 24-hour forecast for a given location.",
+            "strict": True,
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -137,10 +138,11 @@ def weather_tool_factory() -> dict[str, Any]:
                     WeatherParameters.UNIT: {
                         "type": "string",
                         "enum": WeatherUnits.all(),
-                        "description": f"Unit system for weather data. Supported: {WeatherUnits.list_all()}",
+                        "description": "Unit system for weather data. Defaults to celsius if not provided.",
                     },
                 },
                 "required": [WeatherParameters.LOCATION],
+                "additionalProperties": False,
             },
         },
     }
