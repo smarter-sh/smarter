@@ -266,11 +266,21 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
 
     # OpenMeteo API parameters for current weather and hourly forecast.
     # See API docs for details: https://open-meteo.com/en/docs#api_format
+    weather_metrics = [
+        "temperature_2m",
+        "precipitation",
+        "snowfall",
+        "weathercode",
+        "windspeed_10m",
+        "winddirection_10m",
+        "windgusts_10m",
+        "cloudcover",
+    ]
     params = {
         "latitude": latitude,
         "longitude": longitude,
-        "hourly": ["temperature_2m", "precipitation"],
-        "current": ["temperature_2m"],
+        "hourly": weather_metrics,
+        "current": weather_metrics,
     }
 
     # send the API request.
@@ -297,11 +307,20 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
             return [{"error": f"Weather API response missing hourly data for location: {location}"}]
         hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()  # type: ignore
         hourly_precipitation_2m = hourly.Variables(1).ValuesAsNumpy()  # type: ignore
+        hourly_snowfall = hourly.Variables(2).ValuesAsNumpy()  # type: ignore
+        hourly_weathercode = hourly.Variables(3).ValuesAsNumpy()  # type: ignore
+        hourly_windspeed_10m = hourly.Variables(4).ValuesAsNumpy()  # type: ignore
+        hourly_winddirection_10m = hourly.Variables(5).ValuesAsNumpy()  # type: ignore
+        hourly_windgusts_10m = hourly.Variables(6).ValuesAsNumpy()  # type: ignore
+        hourly_cloudcover = hourly.Variables(7).ValuesAsNumpy()  # type: ignore
 
         # Convert units if necessary - OpenMeteo returns metric by default, so convert to USCS if requested.
         if unit == WeatherUnits.USCS:
             hourly_temperature_2m = hourly_temperature_2m * 9 / 5 + 32
             hourly_precipitation_2m = hourly_precipitation_2m / 2.54
+            hourly_snowfall = hourly_snowfall / 2.54
+            hourly_windspeed_10m = hourly_windspeed_10m * 2.23694
+            hourly_windgusts_10m = hourly_windgusts_10m * 2.23694
 
         hourly_data = {
             "date": pd.date_range(
@@ -313,6 +332,12 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
         }
         hourly_data["temperature"] = hourly_temperature_2m  # type: ignore
         hourly_data["precipitation"] = hourly_precipitation_2m  # type: ignore
+        hourly_data["snowfall"] = hourly_snowfall  # type: ignore
+        hourly_data["weathercode"] = hourly_weathercode  # type: ignore
+        hourly_data["windspeed"] = hourly_windspeed_10m  # type: ignore
+        hourly_data["winddirection"] = hourly_winddirection_10m  # type: ignore
+        hourly_data["windgusts"] = hourly_windgusts_10m  # type: ignore
+        hourly_data["cloudcover"] = hourly_cloudcover  # type: ignore
         hourly_dataframe = pd.DataFrame(data=hourly_data).head(24)
         hourly_dataframe["date"] = hourly_dataframe["date"].dt.strftime("%Y-%m-%d %H:%M")
         hourly_json = hourly_dataframe.to_dict(orient="records")
