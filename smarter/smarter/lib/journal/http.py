@@ -168,7 +168,13 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 )
                 logger.error("SmarterJournaledJsonResponse()__init__() could not create journal entry: %s", e)
 
-        super().__init__(data=data, encoder=encoder, safe=safe, json_dumps_params=json_dumps_params, **kwargs)
+        if isinstance(data, dict | list):
+            super().__init__(data=data, encoder=encoder, safe=safe, json_dumps_params=json_dumps_params, **kwargs)
+        else:
+            logger.error("SmarterJournaledJsonResponse()__init__() data argument is not dict or list: %s", type(data))
+            super().__init__(
+                data={"response": data}, encoder=encoder, safe=safe, json_dumps_params=json_dumps_params, **kwargs
+            )
 
 
 class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
@@ -220,7 +226,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
     def __init__(
         self,
         request: HttpRequest,
-        e: Exception,
+        e: Optional[Exception],
         encoder=SmarterJSONEncoder,
         safe: bool = True,
         thing: Optional[Union[SmarterJournalThings, str]] = None,

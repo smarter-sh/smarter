@@ -81,7 +81,7 @@ def handle_chat_config_invoked_(sender, instance: ChatConfigView, request, data:
 
 
 @receiver(chat_started, dispatch_uid="chat_started")
-def handle_chat_started(sender, chat: Chat, data: dict, **kwargs):
+def handle_chat_started(sender, chat: Optional[Chat] = None, data: Optional[dict] = None, **kwargs):
     """Handle chat started signal."""
 
     sender_name = get_sender_name(sender)
@@ -93,7 +93,9 @@ def handle_chat_started(sender, chat: Chat, data: dict, **kwargs):
 
 
 @receiver(chat_completion_request, dispatch_uid="chat_completion_request")
-def handle_chat_completion_request_sent(sender, chat: Chat, iteration: int, request: dict, **kwargs):
+def handle_chat_completion_request_sent(
+    sender, chat: Optional[Chat] = None, iteration: int = 0, data: Optional[dict] = None, **kwargs
+):
     """Handle chat completion request sent signal."""
 
     sender_name = get_sender_name(sender)
@@ -109,18 +111,18 @@ def handle_chat_completion_request_sent(sender, chat: Chat, iteration: int, requ
         "%s for chat %s, \nrequest: %s",
         this_prefix,
         chat,
-        formatted_json(request),
+        formatted_json(data) if data else None,
     )
 
 
 @receiver(chat_completion_response, dispatch_uid="chat_completion_response")
 def handle_chat_completion_response_received(
     sender,
-    chat: Chat,
-    iteration: int,
-    request: Union[dict, list],
-    response: Union[dict, list],
-    messages: list,
+    chat: Optional[Chat] = None,
+    iteration: int = 0,
+    request: Optional[Union[dict, list]] = None,
+    response: Optional[Union[dict, list]] = None,
+    messages: Optional[list] = None,
     **kwargs,
 ):
     """Handle chat completion called signal."""
@@ -133,13 +135,15 @@ def handle_chat_completion_response_received(
         this_prefix,
         sender_name,
         chat,
-        formatted_json(request),
-        formatted_json(response),
+        formatted_json(request) if request else None,
+        formatted_json(response) if response else None,
     )
 
 
 @receiver(chat_completion_plugin_called, dispatch_uid="chat_completion_plugin_called")
-def handle_chat_completion_plugin_called(sender, chat: Chat, plugin: PluginMeta, input_text: str, **kwargs):
+def handle_chat_completion_plugin_called(
+    sender, chat: Optional[Chat] = None, plugin: Optional[PluginMeta] = None, input_text: Optional[str] = None, **kwargs
+):
     """Handle chat completion plugin call signal."""
     sender_name = get_sender_name(sender)
 
@@ -155,12 +159,12 @@ def handle_chat_completion_plugin_called(sender, chat: Chat, plugin: PluginMeta,
 @receiver(chat_completion_tool_called, dispatch_uid="chat_completion_tool_called")
 def handle_chat_completion_tool_called(
     sender,
-    chat: Chat,
-    plugin: PluginMeta,
-    function_name: str,
-    function_args: str,
-    request: Union[dict, list],
-    response: Union[dict, list],
+    chat: Optional[Chat] = None,
+    plugin: Optional[PluginMeta] = None,
+    function_name: Optional[str] = None,
+    function_args: Optional[str] = None,
+    request: Optional[Union[dict, list]] = None,
+    response: Optional[Union[dict, list]] = None,
     **kwargs,
 ):
     """Handle chat completion tool call signal."""
@@ -180,7 +184,12 @@ def handle_chat_completion_tool_called(
 # pylint: disable=W0612
 @receiver(chat_finished, dispatch_uid="chat_finished")
 def handle_chat_response_success(
-    sender, chat: Chat, request: Union[dict, list], response: Union[dict, list], messages: list, **kwargs
+    sender,
+    chat: Optional[Chat] = None,
+    request: Optional[Union[dict, list]] = None,
+    response: Optional[Union[dict, list]] = None,
+    messages: Optional[list] = None,
+    **kwargs,
 ):
     """Handle chat completion returned signal."""
 
@@ -190,24 +199,24 @@ def handle_chat_response_success(
         "%s for chat %s, \nrequest: %s, \nresponse: %s",
         formatted_text(f"{prefix}.chat_finished"),
         chat,
-        formatted_json(request),
-        formatted_json(response),
+        formatted_json(request) if request else None,
+        formatted_json(response) if response else None,
     )
-
-    create_chat_history.delay(chat.id, request, response, messages)  # type: ignore
+    if chat:
+        create_chat_history.delay(chat.id, request, response, messages)  # type: ignore
 
 
 @receiver(chat_response_failure, dispatch_uid="chat_response_failure")
 def handle_chat_response_failure(
     sender,
-    iteration: int,
-    chat: Chat,
-    request_meta_data: dict,
-    exception: Exception,
-    first_iteration: dict,
-    second_iteration: dict,
-    messages: list,
-    stack_trace: str,
+    iteration: int = 0,
+    chat: Optional[Chat] = None,
+    request_meta_data: Optional[dict] = None,
+    exception: Optional[Exception] = None,
+    first_iteration: Optional[dict] = None,
+    second_iteration: Optional[dict] = None,
+    messages: Optional[list] = None,
+    stack_trace: Optional[str] = None,
     **kwargs,
 ):
     """Handle chat completion failed signal."""
@@ -220,7 +229,7 @@ def handle_chat_response_failure(
         sender_name,
         iteration,
         chat if chat else None,
-        formatted_json(request_meta_data),
+        formatted_json(request_meta_data) if request_meta_data else None,
         exception,
         stack_trace if stack_trace else "",
     )
@@ -230,7 +239,7 @@ def handle_chat_response_failure(
             formatted_text(f"{prefix}.chat_response_failure"),
             formatted_text("dump"),
             chat if chat else None,
-            formatted_json(first_iteration),
+            formatted_json(first_iteration) if first_iteration else None,
         )
     if iteration == 2 and second_iteration:
         logger.error(
@@ -238,7 +247,7 @@ def handle_chat_response_failure(
             formatted_text(f"{prefix}.chat_response_failure"),
             formatted_text("dump"),
             chat if chat else None,
-            formatted_json(second_iteration),
+            formatted_json(second_iteration) if second_iteration else None,
         )
 
 

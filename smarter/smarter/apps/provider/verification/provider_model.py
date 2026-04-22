@@ -406,7 +406,7 @@ def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
             messages=[{"role": "user", "content": "Translate this to Spanish: Hello"}],
             max_completion_tokens=10,
         )
-        content = response.choices[0].message.content.strip().lower()
+        content = response.choices[0].message.content.strip().lower()  # type: ignore
         success = "hola" in content
     except Exception:
         success = False
@@ -444,7 +444,7 @@ def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
             messages=[{"role": "user", "content": f"Summarize this into 10 words or less: {long_text}"}],
             max_completion_tokens=30,
         )
-        summary = response.choices[0].message.content.strip()
+        summary = response.choices[0].message.content.strip()  # type: ignore
         success = len(summary) <= 10
     except Exception:
         success = False

@@ -315,7 +315,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
             sender=self.handler,
             chat=self.chat,
             iteration=self.iteration,
-            request=self.first_iteration[_InternalKeys.REQUEST_KEY],
+            data=self.first_iteration[_InternalKeys.REQUEST_KEY],
         )
 
     def prep_second_request(self):
@@ -341,7 +341,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
             sender=self.handler,
             chat=self.chat,
             iteration=self.iteration,
-            request=self.second_iteration[_InternalKeys.REQUEST_KEY],
+            data=self.second_iteration[_InternalKeys.REQUEST_KEY],
         )
 
     def append_openai_response(self, response: ChatCompletion) -> None:

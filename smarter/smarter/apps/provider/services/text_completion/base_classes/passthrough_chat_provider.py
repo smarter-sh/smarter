@@ -4,12 +4,14 @@ provider backend API.
 """
 
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 import openai
 from openai.types.chat.chat_completion import ChatCompletion
+from pydantic import SecretStr
 from rest_framework.request import Request
 
+from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.prompt.signals import (
     chat_completion_request,
     chat_completion_response,
@@ -18,6 +20,7 @@ from smarter.apps.prompt.signals import (
     chat_started,
 )
 from smarter.apps.provider.models import Provider
+from smarter.common.helpers.console_helpers import formatted_json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
@@ -74,7 +77,16 @@ class OpenAICompatiblePassthroughChatProvider(ChatDbMixin):
         self.base_url = base_url
         self.api_key = api_key
 
-    def handler(self, request: Request, *args, **kwargs):
+    def handler(
+        self,
+        request: Request,
+        user_profile: UserProfile,
+        data: dict[str, Any],
+        api_key: Optional[SecretStr] = None,
+        base_url: Optional[str] = None,
+        provider_name: Optional[str] = None,
+        **kwargs,
+    ):
         response: Optional[ChatCompletion] = None
         provider: Optional[Provider] = None
         if not hasattr(request, "user") or not request.user.is_authenticated:
@@ -82,20 +94,32 @@ class OpenAICompatiblePassthroughChatProvider(ChatDbMixin):
                 request=request, error_message="Authentication required to use passthrough endpoint"
             )
 
-        logger.info("%s.post() called with data: %s", self.formatted_class_name, request.data)
-
-        provider_name = kwargs.pop("provider", None)
-        try:
-            provider = Provider.get_cached_object(name=provider_name, user=request.user)  # type: ignore
-            if not provider:
-                raise Provider.DoesNotExist
-            logger.debug("%s.post() using provider: %s", self.formatted_class_name, provider)
-        except Provider.DoesNotExist:
-            return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
-
-        if provider.api_key:
-            openai.api_key = provider.api_key.get_secret_value()
-        openai.base_url = provider.base_url
+        logger.info(
+            "%s.handler() called with request: %s, user_profile: %s, api_key: %s, base_url: %s, provider_name: %s, data: %s",
+            self.formatted_class_name,
+            request,
+            user_profile,
+            api_key,
+            base_url,
+            provider_name,
+            formatted_json(data),
+        )
+        if provider_name:
+            try:
+                provider = Provider.objects.filter(name=provider_name).with_read_permission_for(request.user).first()  # type: ignore
+                if not provider:
+                    raise Provider.DoesNotExist
+                logger.debug("%s.handler() found provider: %s", self.formatted_class_name, provider)
+                if provider.api_key:
+                    openai.api_key = provider.api_key.get_secret()
+                openai.base_url = provider.base_url
+            except Provider.DoesNotExist:
+                logger.error("%s.handler() provider not found: %s", self.formatted_class_name, provider_name)
+                return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
+        if api_key:
+            openai.api_key = api_key.get_secret_value()
+        if base_url:
+            openai.base_url = base_url
 
         if not hasattr(request, "data") or not isinstance(request.data, dict):
             return SmarterHttpResponseBadRequest(
@@ -103,8 +127,8 @@ class OpenAICompatiblePassthroughChatProvider(ChatDbMixin):
             )
         data = request.data
 
-        chat_started.send(sender=self.__class__, request=request)
-        chat_completion_request.send(sender=self.__class__, request=request, prompt=data)
+        chat_started.send(sender=self.handler, request=request, data=data)
+        chat_completion_request.send(sender=self.handler, data=data)
 
         try:
             response = openai.chat.completions.create(**data)
@@ -112,7 +136,7 @@ class OpenAICompatiblePassthroughChatProvider(ChatDbMixin):
         except Exception as e:
             # send error signal
             response = None
-            chat_response_failure.send(sender=self.__class__, request=request, error=e)
+            chat_response_failure.send(sender=self.handler, request=request, error=e)
             logger.error("Error calling OpenAI API: %s", str(e), exc_info=True)
             return SmarterJournaledJsonErrorResponse(
                 request=request,
@@ -121,14 +145,14 @@ class OpenAICompatiblePassthroughChatProvider(ChatDbMixin):
                 command=SmarterJournalCliCommands.CHAT,
             )
 
-        chat_completion_response.send(sender=self.__class__, request=request, response=response)
-        chat_finished.send(sender=self.__class__, request=request, response=response)
+        chat_completion_response.send(sender=self.handler, request=request, response=response)
+        chat_finished.send(sender=self.handler, request=request, response=response)
 
         response_dict: dict = {"message": "Response is not a ChatCompletion object"}
         if isinstance(response, ChatCompletion):
             response_dict = response.model_dump()
 
-        logger.debug("%s.post() returning response: %s", self.formatted_class_name, response_dict)
+        logger.debug("%s.handler() returning response: %s", self.formatted_class_name, formatted_json(response_dict))
         return SmarterJournaledJsonResponse(
             request=request, data=response_dict, thing=SmarterJournalThings.CHAT, command=SmarterJournalCliCommands.CHAT
         )
