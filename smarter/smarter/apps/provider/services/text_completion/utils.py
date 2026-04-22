@@ -65,9 +65,12 @@ def http_response_factory(status_code: int, body, debug_mode: bool = False) -> U
         # log our output to the CloudWatch log for this Lambda
         logger.info(json.dumps({"retval": retval}))
 
-    # see https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
-    retval["body"] = json.dumps(body)
-
+    try:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
+        retval["body"] = json.dumps(body)
+    except (TypeError, ValueError) as exc:
+        logger.error("Failed to serialize response body: %s", exc)
+        retval["body"] = str(body)
     return retval
 
 

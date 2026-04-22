@@ -23,7 +23,6 @@ from smarter.apps.prompt.signals import (
 )
 from smarter.apps.provider.models import Provider
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
-from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
