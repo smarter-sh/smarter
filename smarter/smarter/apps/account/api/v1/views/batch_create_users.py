@@ -77,22 +77,22 @@ class BatchCreateUsersView(AccountViewBase):
     path: /api/v1/accounts/batch-create-users/
     """
 
-    def get(self, request: Request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs) -> HttpResponseBadRequest:
         return HttpResponseBadRequest(
             "GET method is not allowed for this endpoint. Please use POST to batch create users."
         )
 
-    def patch(self, request: Request, *args, **kwargs):
+    def patch(self, request: Request, *args, **kwargs) -> HttpResponseBadRequest:
         return HttpResponseBadRequest(
             "PATCH method is not allowed for this endpoint. Please use POST to batch create users."
         )
 
-    def delete(self, request: Request, *args, **kwargs):
+    def delete(self, request: Request, *args, **kwargs) -> HttpResponseBadRequest:
         return HttpResponseBadRequest(
             "DELETE method is not allowed for this endpoint. Please use POST to batch create users."
         )
 
-    def post(self, request: Request, *args, **kwargs):
+    def post(self, request: Request, *args, **kwargs) -> JsonResponse | HttpResponseBadRequest:
         """
         Handle batch user creation. Receives a list of user data in the
         request body and creates users for the specified account. The process
@@ -148,10 +148,19 @@ class BatchCreateUsersView(AccountViewBase):
         :type request: rest_framework.request.Request
 
         :returns: JsonResponse with the result of each attempted user creation.
-        :rtype: django.http.JsonResponse
+        :rtype: django.http.JsonResponse | django.http.HttpResponseBadRequest
 
-        :raises HttpResponseBadRequest: If the request body is missing or invalid.
+        :raises django.http.HttpResponseBadRequest: If the request body is missing or invalid.
         :raises Exception: If user creation fails for any user, the error is included in the response for that user.
+
+        .. seealso::
+
+            - :class:`smarter.apps.account.api.v1.views.base.AccountViewBase`
+            - :class:`pydantic.BaseModel`
+            - :class:`django.core.management.call_command`
+            - :class:`django.http.JsonResponse`
+            - :class:`django.http.HttpResponseBadRequest`
+            - :class:`rest_framework.request.Request`
         """
         logger.debug("Received batch user creation request: %s", request.data)
         if not request.data:

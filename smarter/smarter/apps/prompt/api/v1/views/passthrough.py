@@ -50,6 +50,8 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
     """
     Handle POST requests to the passthrough endpoint for direct LLM provider API access.
 
+    path: /api/v1/prompt/chat/passthrough/{provider_name}/
+
     This endpoint allows authenticated users to send arbitrary prompt dicts
     to the underlying LLM provider (such as OpenAI). The request body should
     be a JSON object containing any valid parameters accepted by the
@@ -115,6 +117,11 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
         - extra_query: Query | None
         - extra_body: Body | None
         - timeout: float | httpx.Timeout | None | NotGiven
+
+    .. seealso::
+
+        - The OpenAI API documentation for chat completions: https://platform.openai.com/docs/api-reference/chat/create
+        - :class:`openai.types.chat.chat_completion.ChatCompletion`
     """
 
     provider_name: str
