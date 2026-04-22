@@ -11,21 +11,23 @@ There are a few objectives of this class:
 import logging
 from typing import Any, Dict, List, Optional, Union
 
+from pydantic import SecretStr
 from rest_framework.request import Request
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
+from smarter.apps.provider.models import Provider
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
+from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base_classes.protocols import (
-    OpenAICompatibleChatCompletionRequest,
     OpenAICompatibleChatCompletionResponseType,
     OpenAICompatiblePassthroughProtocol,
     SmarterChatCompletionResponseType,
@@ -463,7 +465,7 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         self,
         request: Request,
         user_profile: UserProfile,
-        data: OpenAICompatibleChatCompletionRequest,
+        data: dict[str, Any],
     ) -> OpenAICompatibleChatCompletionResponseType:
         """
         Expose the handler method of the default provider.
@@ -476,7 +478,7 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
             The Django REST Framework request object.
         user_profile : UserProfile
             The user profile making the request.
-        data : OpenAICompatibleChatCompletionRequest
+        data : dict[str, Any]
             The OpenAI-compatible chat completion request data.
 
         Returns
@@ -491,13 +493,19 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
            providers = OpenAICompatiblePassthroughChatProviders()
            response = providers.openai_handler(request, user_profile, data)
         """
-        return self.openai.handler(request, user_profile, data)
+
+        provider = Provider.objects.filter(name=OPENAI_PROVIDER_NAME).with_read_permission_for(request.user).first()  # type: ignore
+        if not provider:
+            return SmarterHttpResponseNotFound(request=request, error_message="OpenAI provider not found")
+
+        api_key = SecretStr(provider.api_key.get_secret()) if provider.api_key else None
+        return self.openai.handler(request, user_profile, data, api_key=api_key, base_url=provider.base_url)
 
     def googleai_handler(
         self,
         request: Request,
         user_profile: UserProfile,
-        data: OpenAICompatibleChatCompletionRequest,
+        data: dict[str, Any],
     ) -> OpenAICompatibleChatCompletionResponseType:
         """Expose the handler method of the googleai provider"""
         return self.googleai.handler(request, user_profile, data)
@@ -506,7 +514,7 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         self,
         request: Request,
         user_profile: UserProfile,
-        data: OpenAICompatibleChatCompletionRequest,
+        data: dict[str, Any],
     ) -> OpenAICompatibleChatCompletionResponseType:
         """Expose the handler method of the metaai provider"""
         return self.metaai.handler(request, user_profile, data)
@@ -515,7 +523,7 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         self,
         request: Request,
         user_profile: UserProfile,
-        data: OpenAICompatibleChatCompletionRequest,
+        data: dict[str, Any],
     ) -> OpenAICompatibleChatCompletionResponseType:
         """
         Expose the handler method of the default provider

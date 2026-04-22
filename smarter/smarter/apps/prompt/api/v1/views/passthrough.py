@@ -7,22 +7,21 @@ provider backend API.
 import logging
 from http import HTTPStatus
 
+from openai.types.chat.chat_completion import ChatCompletion
 from rest_framework.request import Request
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.provider.services.text_completion.base_classes.protocols import (
-    OpenAICompatibleChatCompletionRequest,
     OpenAICompatiblePassthroughProtocol,
 )
 from smarter.apps.provider.services.text_completion.providers import (
     openai_compatible_passthrough_chat_providers,
 )
+from smarter.common.helpers.console_helpers import formatted_json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
-    SmarterHttpResponseNotFound,
-    SmarterHttpResponseServerError,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
@@ -76,48 +75,6 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
     :raises SmarterHttpResponseBadRequest: If the request body is invalid.
     :raises SmarterJournaledJsonErrorResponse: If the provider API call fails.
 
-    **Valid request body keys include (but are not limited to):**
-
-        - messages: Iterable[ChatCompletionMessageParam]
-        - model: Union[str, ChatModel]
-        - audio: Optional[ChatCompletionAudioParam]
-        - frequency_penalty: Optional[float]
-        - function_call: completion_create_params.FunctionCall
-        - functions: Iterable[completion_create_params.Function]
-        - logit_bias: Optional[Dict[str, int]]
-        - logprobs: Optional[bool]
-        - max_completion_tokens: Optional[int]
-        - max_tokens: Optional[int]
-        - metadata: Optional[Metadata]
-        - modalities: Optional[List[Literal["text", "audio"]]]
-        - n: Optional[int]
-        - parallel_tool_calls: bool
-        - prediction: Optional[ChatCompletionPredictionContentParam]
-        - presence_penalty: Optional[float]
-        - prompt_cache_key: str
-        - prompt_cache_retention: Optional[Literal["in-memory", "24h"]]
-        - reasoning_effort: Optional[ReasoningEffort]
-        - response_format: completion_create_params.ResponseFormat
-        - safety_identifier: str
-        - seed: Optional[int]
-        - service_tier: Optional[Literal["auto", "default", "flex", "scale", "priority"]]
-        - stop: Union[Optional[str], SequenceNotStr[str], None]
-        - store: Optional[bool]
-        - stream: Optional[Literal[False]]
-        - stream_options: Optional[ChatCompletionStreamOptionsParam]
-        - temperature: Optional[float]
-        - tool_choice: ChatCompletionToolChoiceOptionParam
-        - tools: Iterable[ChatCompletionToolUnionParam]
-        - top_logprobs: Optional[int]
-        - top_p: Optional[float]
-        - user: str
-        - verbosity: Optional[Literal["low", "medium", "high"]]
-        - web_search_options: completion_create_params.WebSearchOptions
-        - extra_headers: Headers | None
-        - extra_query: Query | None
-        - extra_body: Body | None
-        - timeout: float | httpx.Timeout | None | NotGiven
-
     .. seealso::
 
         - The OpenAI API documentation for chat completions: https://platform.openai.com/docs/api-reference/chat/create
@@ -128,14 +85,12 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
     handler: OpenAICompatiblePassthroughProtocol
 
     def setup(self, request, *args, **kwargs):
+        self.provider_name = kwargs.pop("provider_name")
         super().setup(request, *args, **kwargs)
-        self.provider_name = self.kwargs.pop("provider_name")
-        try:
-            self.handler = openai_compatible_passthrough_chat_providers.get_handler(self.provider_name)
-        except KeyError:
-            return SmarterHttpResponseNotFound(
-                request=request, error_message=f"Provider '{self.provider_name}' not found"
-            )
+        self.handler = openai_compatible_passthrough_chat_providers.get_handler(self.provider_name)
+        logger.debug(
+            "%s.setup() provider_name: %s and handler: %s", self.formatted_class_name, self.provider_name, self.handler
+        )
 
     def get(self, request: Request, *args, **kwargs):
         return SmarterHttpResponseBadRequest(
@@ -167,27 +122,25 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
         Handle POST requests to the passthrough endpoint for direct LLM
         provider API access.
         """
+        kwargs.pop("provider_name")
+        logger.debug("%s.post() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
 
         # do we know who this is?
         try:
             user_profile = UserProfile.objects.get(user=request.user)
+            logger.debug("%s.post() verified user_profile: %s", self.formatted_class_name, user_profile)
         except UserProfile.DoesNotExist:
             return SmarterHttpResponseForbidden(request=request, error_message="User profile not found")
 
-        # validate the request body to ensure that it conforms to the expected
-        # schema for an OpenAI-compatible chat completion request.
-        try:
-            data = OpenAICompatibleChatCompletionRequest(**request.data)
-        except (TypeError, ValueError) as e:
-            return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error("Unexpected error parsing request data: %s", e)
-            return SmarterHttpResponseServerError(request=request, error_message="Invalid request data format")
-
         # process the request using the appropriate handler for the specified provider.
         try:
-            retval = self.handler(request, user_profile, data, *args, **kwargs)
+            logger.debug(
+                "%s.post() calling handler: %s with data: %s",
+                self.formatted_class_name,
+                self.handler,
+                formatted_json(request.data),
+            )
+            retval = self.handler(request, user_profile, request.data, *args, **kwargs)
         # pylint: disable=broad-except
         except Exception as e:
             logger.error("Error processing passthrough chat request: %s", e)
@@ -200,11 +153,19 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
+        if not isinstance(retval, ChatCompletion):
+            logger.error(
+                "Handler for provider %s did not return a ChatCompletion object. Got: %s",
+                self.provider_name,
+                type(retval),
+            )
+            return retval
+
         # return a journaled JSON response containing the result from the
         # provider, or an error if something went wrong.
         return SmarterJournaledJsonResponse(
             request=request,
-            data=retval,
+            data=retval.model_dump(),
             command=SmarterJournalCliCommands.CHAT,
             thing=SmarterJournalThings.CHAT,
             status=HTTPStatus.OK,

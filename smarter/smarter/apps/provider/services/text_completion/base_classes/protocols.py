@@ -92,39 +92,7 @@ class OpenAICompatibleChatMessage(TypedDict, total=False):
     smarter_is_new: NotRequired[bool]
 
 
-class OpenAICompatibleChatCompletionRequest(TypedDict, total=False):
-    """
-    A TypedDict representing the structure of an OpenAI-compatible chat
-    completion request. This is a small subset of the full OpenAI API
-    parameters, focused on the core fields needed for chat completions.
-
-    .. seealso::
-
-        - The OpenAI API documentation for chat completions: https://platform.openai.com/docs/api-reference/chat/create
-        - :class:`openai.types.chat.chat_completion.ChatCompletion`
-    """
-
-    model: Required[str]
-
-    messages: Required[List[OpenAICompatibleChatMessage]]
-
-    temperature: NotRequired[float]
-
-    top_p: NotRequired[float]
-
-    max_tokens: NotRequired[int]
-
-    stop: NotRequired[Union[str, List[str]]]
-
-    stream: NotRequired[bool]
-
-    # optional fields
-
-    tools: NotRequired[list[dict]]
-
-    tool_choice: NotRequired[Union[str, dict]]
-
-
+# Type alias for OpenAI-compatible chat completion request data
 class OpenAICompatiblePassthroughProtocol(Protocol):
     """
     A Protocol for OpenAI compatible passthrough functions.
@@ -136,7 +104,7 @@ class OpenAICompatiblePassthroughProtocol(Protocol):
     :param user_profile: The user profile making the request.
     :type user_profile: UserProfile
     :param data: The OpenAI-compatible chat completion request data.
-    :type data: OpenAICompatibleChatCompletionRequest
+    :type data: dict[str, Any]
 
     :returns: The response data.
     :rtype: OpenAICompatibleChatCompletionResponseType
@@ -146,7 +114,9 @@ class OpenAICompatiblePassthroughProtocol(Protocol):
         self,
         request: Request,
         user_profile: UserProfile,
-        data: OpenAICompatibleChatCompletionRequest,
+        data: dict[str, Any],
+        *args,
+        **kwargs,
     ) -> OpenAICompatibleChatCompletionResponseType: ...
 
 
@@ -184,7 +154,6 @@ class SmarterChatHandlerProtocol(Protocol):
 __all__ = [
     "SmarterChatHandlerProtocol",
     "OpenAICompatiblePassthroughProtocol",
-    "OpenAICompatibleChatCompletionRequest",
     "OpenAICompatibleChatCompletionResponseType",
     "SmarterChatCompletionResponseType",
 ]
