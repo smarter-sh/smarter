@@ -71,24 +71,28 @@ class BatchCreateUsersResponseModel(BaseModel):
 
 
 class BatchCreateUsersView(AccountViewBase):
-    """Batch user creation view for smarter api."""
+    """
+    Batch user creation view for smarter api.
 
-    def get(self, request: Request, account_id: int):
+    path: /api/v1/accounts/batch-create-users/
+    """
+
+    def get(self, request: Request, *args, **kwargs):
         return HttpResponseBadRequest(
             "GET method is not allowed for this endpoint. Please use POST to batch create users."
         )
 
-    def patch(self, request: Request, account_id: Optional[int] = None):
+    def patch(self, request: Request, *args, **kwargs):
         return HttpResponseBadRequest(
             "PATCH method is not allowed for this endpoint. Please use POST to batch create users."
         )
 
-    def delete(self, request, account_id: int):
+    def delete(self, request: Request, *args, **kwargs):
         return HttpResponseBadRequest(
             "DELETE method is not allowed for this endpoint. Please use POST to batch create users."
         )
 
-    def post(self, request: Request):
+    def post(self, request: Request, *args, **kwargs):
         """
         Handle batch user creation. Receives a list of user data in the
         request body and creates users for the specified account. The process

@@ -52,6 +52,7 @@ class TestUrls(TestAccountMixin):
         self.batch_data = self.get_readonly_json_file(os.path.join(HERE, "data/batch_users.json"))
         self.batch_model = BatchModel(**self.batch_data)  # type: ignore
         self.batch_account = Account.objects.create(account_number=self.batch_model.account_number)
+        self.url = reverse(namespace + ":" + Namespace.batch_create_users)
         logger.debug(f"Created test batch account with account number: {self.batch_account.account_number}")
 
     def tearDown(self):
@@ -66,8 +67,8 @@ class TestUrls(TestAccountMixin):
 
     def test_batch_create_users(self):
         """Test batch user creation."""
-        url = reverse(namespace + ":" + Namespace.batch_create_users)
-        response = self.client.post(url, data=self.batch_data, content_type="application/json")
+        logger.debug(f"Testing batch user creation with url: {self.url} and data: {formatted_json(self.batch_data)}")
+        response = self.client.post(self.url, data=self.batch_data, content_type="application/json")
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIsInstance(response.json(), dict)
 
@@ -90,3 +91,50 @@ class TestUrls(TestAccountMixin):
             self.assertEqual(created_user.status, "success")
             self.assertEqual(created_user.account_number, self.batch_model.account_number)
             self.assertIsNone(created_user.error)
+
+    def test_get_not_allowed(self):
+        """Test GET method is not allowed."""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertIn("GET method is not allowed", response.content.decode())
+
+    def test_patch_not_allowed(self):
+        """Test PATCH method is not allowed."""
+        response = self.client.patch(self.url, data={"foo": "bar"}, content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertIn("PATCH method is not allowed", response.content.decode())
+
+    def test_delete_not_allowed(self):
+        """Test DELETE method is not allowed."""
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertIn("DELETE method is not allowed", response.content.decode())
+
+    def test_post_missing_body(self):
+        """Test POST with missing body returns 400."""
+        response = self.client.post(self.url, data=None, content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertIn("Request body is required", response.content.decode())
+
+    def test_post_invalid_body(self):
+        """Test POST with invalid body returns 400."""
+        # Missing required fields
+        invalid_data = {"foo": "bar"}
+        response = self.client.post(self.url, data=invalid_data, content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertIn("Invalid request data", response.content.decode())
+
+    def test_post_admin_user(self):
+        """Test POST with is_admin True creates admin user."""
+        admin_user = self.batch_model.users[0].model_copy()
+        admin_user.is_admin = True
+        batch_data = {"account_number": self.batch_model.account_number, "users": [admin_user.model_dump()]}
+        response = self.client.post(self.url, data=batch_data, content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        resp_json = response.json()
+        self.assertEqual(len(resp_json["created_users"]), 1)
+        created = resp_json["created_users"][0]
+        self.assertEqual(created["status"], "success")
+        # Optionally, check is_staff or is_superuser if your model supports it
+        user_obj = User.objects.get(username=admin_user.username)
+        self.assertTrue(user_obj.is_staff or user_obj.is_superuser)
