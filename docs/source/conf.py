@@ -51,6 +51,7 @@ def safe_get_field_type(field, include_role=True):
         if to is None:
             return "Unknown"
         return _original_get_field_type(field, include_role=include_role)
+    # pylint: disable=broad-except
     except Exception:
         return "Unknown"
 
