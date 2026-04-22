@@ -14,8 +14,6 @@ from smarter.apps.account.api.v1.views.batch_create_users import (
     BatchModel,
 )
 from smarter.apps.account.const import namespace as account_namespace
-
-# our stuff
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.const import namespace as api_namespace

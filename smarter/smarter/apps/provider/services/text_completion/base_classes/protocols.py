@@ -2,6 +2,11 @@
 Handler protocol for chat providers.
 Defines a fixed Protocol for all chat provider handler functions.
 Ensures that all handler functions have exactly the same signature.
+
+typing.Protocol is used to define a structural type that specifies the expected
+signature of the handler functions, without enforcing a specific class
+hierarchy. This allows for maximum flexibility in how the handler functions are
+implemented, while still ensuring that they conform to the expected interface.
 """
 
 import logging
@@ -90,7 +95,13 @@ class OpenAICompatibleChatMessage(TypedDict, total=False):
 class OpenAICompatibleChatCompletionRequest(TypedDict, total=False):
     """
     A TypedDict representing the structure of an OpenAI-compatible chat
-    completion request.
+    completion request. This is a small subset of the full OpenAI API
+    parameters, focused on the core fields needed for chat completions.
+
+    .. seealso::
+
+        - The OpenAI API documentation for chat completions: https://platform.openai.com/docs/api-reference/chat/create
+        - :class:`openai.types.chat.chat_completion.ChatCompletion`
     """
 
     model: Required[str]
