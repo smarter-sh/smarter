@@ -3,6 +3,7 @@
 
 import logging
 import os
+from typing import Any, cast
 
 from django.test import Client
 from django.urls import reverse
@@ -36,7 +37,9 @@ class TestPassthroughView(TestAccountMixin):
         super().setUp()
         self.client = Client()
         self.client.force_login(self.admin_user)
-        self.prompt_data = self.get_readonly_json_file(os.path.join(HERE, "data", "openai_passthrough_prompt.json"))
+        self.prompt_data: dict[str, Any] = cast(
+            dict[str, Any], self.get_readonly_json_file(os.path.join(HERE, "data", "openai_passthrough_prompt.json"))
+        )
         logger.debug("Loaded prompt data for testing passthrough view: %s", formatted_json(self.prompt_data))
 
         # /api/v1/prompts/passthrough/openai/
@@ -47,6 +50,17 @@ class TestPassthroughView(TestAccountMixin):
         """Test that we can create a chat completion using the passthrough view."""
         response = self.client.post(self.url, data=self.prompt_data, content_type="application/json")
         self.assertEqual(response.status_code, 200)
+        logger.debug(
+            "Received response with status code: %s and content: %s",
+            response.status_code,
+            formatted_json(response.json()),
+        )
+
+    def test_illegal_key(self):
+        """Test that we get a 400 response if we include an illegal key in the request."""
+        self.prompt_data["illegal_key"] = "illegal_value"
+        response = self.client.post(self.url, data=self.prompt_data, content_type="application/json")
+        self.assertEqual(response.status_code, 400)
         logger.debug(
             "Received response with status code: %s and content: %s",
             response.status_code,

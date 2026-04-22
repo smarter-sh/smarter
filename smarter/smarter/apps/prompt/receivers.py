@@ -204,6 +204,10 @@ def handle_chat_response_success(
     )
     if chat:
         create_chat_history.delay(chat.id, request, response, messages)  # type: ignore
+    else:
+        logger.warning(
+            "%s No chat object provided, skipping chat history creation", formatted_text(f"{prefix}.chat_finished")
+        )
 
 
 @receiver(chat_response_failure, dispatch_uid="chat_response_failure")
