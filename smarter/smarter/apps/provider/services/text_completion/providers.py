@@ -250,7 +250,7 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         return self.openai_handler(user_profile, chat, data, plugins=plugins, functions=functions)
 
     def logger_helper(self, verb: str, msg: str):
-        logger.debug("%s %s %s", self.formatted_class_name, verb, msg)
+        logger.debug("%s.default_handler() %s %s", self.formatted_class_name, verb, msg)
 
     @property
     def all_handlers(self) -> Dict[str, SmarterChatHandlerProtocol]:

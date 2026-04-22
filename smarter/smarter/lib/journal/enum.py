@@ -39,9 +39,12 @@ class SmarterJournalApiResponseErrorKeys:
     STACK_TRACE = "stacktrace"
     DESCRIPTION = "description"
     STATUS = "status"
+    STATUS_CODE = "status_code"
     ARGS = "args"
     CAUSE = "cause"
     CONTEXT = "context"
+    THING = "thing"
+    COMMAND = "command"
 
 
 class SCLIResponseMetadata:

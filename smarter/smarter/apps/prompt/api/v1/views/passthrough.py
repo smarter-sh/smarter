@@ -17,9 +17,10 @@ from smarter.apps.provider.services.text_completion.base_classes.protocols impor
 from smarter.apps.provider.services.text_completion.providers import (
     openai_compatible_passthrough_chat_providers,
 )
-from smarter.common.helpers.console_helpers import formatted_json
+from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
+    SmarterHttpErrorResponse,
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
 )
@@ -122,51 +123,53 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
         Handle POST requests to the passthrough endpoint for direct LLM
         provider API access.
         """
+        logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.post()")
         kwargs.pop("provider_name")
-        logger.debug("%s.post() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
+        logger.debug("%s called with args: %s, kwargs: %s", logger_prefix, args, kwargs)
 
         # do we know who this is?
         try:
             user_profile = UserProfile.objects.get(user=request.user)
-            logger.debug("%s.post() verified user_profile: %s", self.formatted_class_name, user_profile)
+            logger.debug("%s verified user_profile: %s", logger_prefix, user_profile)
         except UserProfile.DoesNotExist:
             return SmarterHttpResponseForbidden(request=request, error_message="User profile not found")
 
         # process the request using the appropriate handler for the specified provider.
         try:
             logger.debug(
-                "%s.post() calling handler: %s with data: %s",
-                self.formatted_class_name,
+                "%s calling handler: %s with data: %s",
+                logger_prefix,
                 self.handler,
                 formatted_json(request.data),
             )
             retval = self.handler(request, user_profile, request.data, *args, **kwargs)
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("Error processing passthrough chat request: %s", e)
+            logger.error("%s Error processing request: %s", logger_prefix, e)
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 e=e,
                 error_message=str(e),
                 command=SmarterJournalCliCommands.CHAT,
                 thing=SmarterJournalThings.CHAT,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        if not isinstance(retval, ChatCompletion):
-            logger.error(
-                "Handler for provider %s did not return a ChatCompletion object. Got: %s",
-                self.provider_name,
-                type(retval),
-            )
+        if isinstance(retval, (SmarterHttpErrorResponse, SmarterJournaledJsonResponse)):
             return retval
 
-        # return a journaled JSON response containing the result from the
-        # provider, or an error if something went wrong.
-        return SmarterJournaledJsonResponse(
-            request=request,
-            data=retval.model_dump(),
-            command=SmarterJournalCliCommands.CHAT,
-            thing=SmarterJournalThings.CHAT,
-            status=HTTPStatus.OK,
+        if isinstance(retval, ChatCompletion):
+            logger.debug("%s received ChatCompletion response: %s", logger_prefix, formatted_json(retval.model_dump()))
+            # return a journaled JSON response containing the result from the
+            # provider, or an error if something went wrong.
+            return SmarterJournaledJsonResponse(
+                request=request,
+                data=retval.model_dump(),
+                command=SmarterJournalCliCommands.CHAT,
+                thing=SmarterJournalThings.CHAT,
+                status_code=HTTPStatus.OK,
+            )
+
+        raise ValueError(
+            f"Unexpected return type from handler: {type(retval)}. Expected ChatCompletion or SmarterHttpErrorResponse."
         )
