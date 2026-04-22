@@ -10,6 +10,8 @@ manipulation and unit conversion. These best practices include the following:
 
 - Robust input validation using Pydantic models, with clear error messages for
   invalid inputs.
+- Fully annotated function signatures with type hints for all variables,
+  parameters, and return types.
 - Comprehensive error handling with specific exceptions for different failure
   modes (e.g. API errors, data processing errors), and logging of error details.
 - Use of a WaffleSwitchedLoggerWrapper to enable or disable logging based on a

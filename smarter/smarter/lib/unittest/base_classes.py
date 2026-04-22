@@ -37,7 +37,7 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
         logger.debug(msg)
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
-        cls.name = camel_to_snake("smarterTestBase_" + cls.hash_suffix)
+        cls.name = str(camel_to_snake("smarterTestBase_" + cls.hash_suffix))
         cls.uid = SmarterTestBase.generate_uid()
         cache.clear()
 
