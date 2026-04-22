@@ -17,6 +17,7 @@ from smarter.apps.provider.services.text_completion.base_classes.protocols impor
 from smarter.apps.provider.services.text_completion.providers import (
     openai_compatible_passthrough_chat_providers,
 )
+from smarter.common.exceptions import SmarterIlligalInvocationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
@@ -93,32 +94,34 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
             "%s.setup() provider_name: %s and handler: %s", self.formatted_class_name, self.provider_name, self.handler
         )
 
-    def get(self, request: Request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs) -> SmarterHttpResponseBadRequest:
+        return SmarterHttpResponseBadRequest(
+            request=request, error_message="GET method not supported for passthrough endpoint"
+        )
+
+    def put(self, request: Request, *args, **kwargs) -> SmarterHttpResponseBadRequest:
         return SmarterHttpResponseBadRequest(
             request=request, error_message="PUT method not supported for passthrough endpoint"
         )
 
-    def put(self, request: Request, *args, **kwargs):
-        return SmarterHttpResponseBadRequest(
-            request=request, error_message="PUT method not supported for passthrough endpoint"
-        )
-
-    def delete(self, request: Request, *args, **kwargs):
+    def delete(self, request: Request, *args, **kwargs) -> SmarterHttpResponseBadRequest:
         return SmarterHttpResponseBadRequest(
             request=request, error_message="DELETE method not supported for passthrough endpoint"
         )
 
-    def patch(self, request: Request, *args, **kwargs):
+    def patch(self, request: Request, *args, **kwargs) -> SmarterHttpResponseBadRequest:
         return SmarterHttpResponseBadRequest(
             request=request, error_message="PATCH method not supported for passthrough endpoint"
         )
 
-    def options(self, request: Request, *args, **kwargs):
+    def options(self, request: Request, *args, **kwargs) -> SmarterHttpResponseBadRequest:
         return SmarterHttpResponseBadRequest(
             request=request, error_message="OPTIONS method not supported for passthrough endpoint"
         )
 
-    def post(self, request: Request, *args, **kwargs):
+    def post(
+        self, request: Request, *args, **kwargs
+    ) -> SmarterJournaledJsonResponse | SmarterJournaledJsonErrorResponse | SmarterHttpErrorResponse:
         """
         Handle POST requests to the passthrough endpoint for direct LLM
         provider API access.
@@ -160,8 +163,6 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
 
         if isinstance(retval, ChatCompletion):
             logger.debug("%s received ChatCompletion response: %s", logger_prefix, formatted_json(retval.model_dump()))
-            # return a journaled JSON response containing the result from the
-            # provider, or an error if something went wrong.
             return SmarterJournaledJsonResponse(
                 request=request,
                 data=retval.model_dump(),
@@ -170,6 +171,6 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
                 status_code=HTTPStatus.OK,
             )
 
-        raise ValueError(
+        raise SmarterIlligalInvocationError(
             f"Unexpected return type from handler: {type(retval)}. Expected ChatCompletion or SmarterHttpErrorResponse."
         )
