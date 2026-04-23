@@ -26,6 +26,19 @@ enabling seamless integration with a variety of large language model (LLM) backe
 - Abstracts provider-specific complexities, including authentication and model selection.
 - Enables dynamic handler retrieval for both protocols, facilitating flexible integration patterns.
 
+**Singletons:**
+
+.. py:data:: smarter_compatible_client
+   :type: OpenAICompatibleClientFactory
+
+   Singleton instance of :class:`OpenAICompatibleClientFactory` configured for the Smarter-native protocol.
+   This is the main entry point for consumers needing Smarter-native chat completion handling.
+
+.. py:data:: openai_compatible_client
+   :type: OpenAICompatibleClientFactory
+
+   Singleton instance of :class:`OpenAICompatibleClientFactory` configured for the OpenAI-compatible passthrough protocol.
+   This is the main entry point for consumers needing OpenAI-compatible chat completion handling and passthrough.
 """
 
 import logging
@@ -102,7 +115,23 @@ class ClientTypeEnum(SmarterEnumAbstract):
 
 class OpenAICompatibleClientFactory(SmarterHelperMixin):
     """
-    A newer version of the OpenAICompatiblePassthroughChatProviders class.
+    Service-level factory for OpenAI-compatible chat completion clients.
+
+    This class provides a unified interface for instantiating and managing chat completion clients
+    that support both Smarter-native and OpenAI-compatible passthrough protocols. It enables seamless
+    integration with multiple LLM provider backends, abstracting provider-specific complexities such as
+    authentication, model selection, and handler resolution.
+
+    **Key Features:**
+
+    - Centralized access to all configured chat providers and their handlers.
+    - Supports both Smarter-native and OpenAI-compatible request/response formats.
+    - Provides default provider selection and handler resolution.
+    - Abstracts provider-specific details, including authentication and model selection.
+    - Enables dynamic handler retrieval for both protocols, facilitating flexible integration patterns.
+
+    :param client_type: The type of client to instantiate (``SMARTER`` or ``PASSTHROUGH``).
+    :type client_type: ClientTypeEnum, optional
     """
 
     _client_type: ClientTypeEnum
@@ -115,6 +144,12 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
 
     @property
     def client_type(self) -> ClientTypeEnum:
+        """
+        Returns the client type of this factory instance.
+
+        :return: The client type (``SMARTER`` or ``PASSTHROUGH``).
+        :rtype: ClientTypeEnum
+        """
         return self._client_type
 
     @cached_property
@@ -122,6 +157,10 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         """
         Returns the name of the platform-wide default provider.
         If no default provider is found, it raises a SmarterValueError.
+
+        :return: The name of the default provider.
+        :rtype: str
+        :raises SmarterValueError: If no default provider is found.
         """
 
         provider = Provider.objects.filter(is_default=True, is_active=True).first()  # type: ignore
@@ -130,6 +169,15 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         return provider.name
 
     def get_client_orm_by_provider_name_and_user(self, provider_name: str, user: User) -> Provider:
+        """
+        Retrieves the Provider ORM instance for the given provider name and user.
+
+        :param provider_name: The name of the provider to retrieve.
+        :param user: The user for whom to retrieve the provider.
+        :return: The Provider ORM instance.
+        :rtype: Provider
+        :raises SmarterValueError: If the provider is not found for the user.
+        """
 
         @cache_results()
         def get_cached_provider_orm_by_name_and_username(provider_name: str, username: str) -> Provider:
@@ -158,6 +206,14 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         return get_cached_provider_orm_by_name_and_username(provider_name, user.username)  # type: ignore
 
     def get_openai_client_for_provider(self, provider_name: str, user: User) -> OpenAIPassthroughClient:
+        """
+        Instantiates an OpenAIPassthroughClient for the given provider name and user.
+
+        :param provider_name: The name of the provider for which to instantiate the client.
+        :param user: The user for whom to instantiate the client.
+        :return: An instance of OpenAIPassthroughClient configured for the specified provider and user.
+        :rtype: OpenAIPassthroughClient
+        """
 
         @cache_results()
         def get_cached_openai_client_for_provider(provider_name: str, username: str) -> OpenAIPassthroughClient:
@@ -178,10 +234,12 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         self, request: Request, provider_name: Optional[str] = None, **kwargs
     ) -> OpenAICompatiblePassthroughProtocol:
         """
-        Instantiates a OpenAIPassthroughClient for the given provider name and
-        returns its passthrough handler. The key thing is that whatever handler we use
-        here must implement the OpenAICompatiblePassthroughProtocol which
-        returns OpenAICompatibleChatCompletionResponseType
+        A convenience method to get an OpenAI-compatible passthrough handler by provider name.
+
+        :param request: The incoming HTTP request object.
+        :param provider_name: The name of the provider for which to retrieve the handler. If not provided, the default provider will be used.
+        :return: An OpenAI-compatible passthrough handler function that can be used to process chat completion requests.
+        :rtype: OpenAICompatiblePassthroughProtocol
         """
 
         def get_handler(
@@ -205,6 +263,11 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
     ) -> SmarterChatHandlerProtocol:
         """
         A convenience method to get a handler by provider name.
+
+        :param request: The incoming HTTP request object.
+        :param provider_name: The name of the provider for which to retrieve the handler. If not provided, the default provider will be used.
+        :return: A handler function that can be used to process chat completion requests according to the Smarter chat protocol.
+        :rtype: SmarterChatHandlerProtocol
         """
 
         def get_handler(
@@ -238,6 +301,9 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
     def all(self) -> List[str]:
         """
         Returns a list of all provider names.
+
+        :return: A list of all active provider names.
+        :rtype: List[str]
         """
         return list(Provider.objects.filter(is_active=True).values_list("name", flat=True))  # type: ignore
 
@@ -246,6 +312,11 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
     ) -> Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]:
         """
         A convenience method to get a handler by provider name.
+
+        :param request: The incoming HTTP request object.
+        :param provider_name: The name of the provider for which to retrieve the handler. If not provided, the default provider will be used.
+        :return: A handler function that can be used to process chat completion requests according to the specified protocol.
+        :rtype: Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]
         """
         if self.client_type == ClientTypeEnum.PASSTHROUGH:
             return self.get_passthrough_handler(request=request, provider_name=provider_name, **kwargs)
@@ -256,6 +327,10 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
     ) -> Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]:
         """
         A convenience method to get the default handler.
+
+        :param request: The incoming HTTP request object.
+        :return: A handler function that can be used to process chat completion requests according to the specified protocol.
+        :rtype: Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]
         """
         return self.handler(request=request, provider_name=self.default_handler_name, **kwargs)
 
