@@ -9,35 +9,40 @@ There are a few objectives of this class:
 """
 
 import logging
+import warnings
+from functools import cached_property
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import SecretStr
 from rest_framework.request import Request
+from typing_extensions import deprecated
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
+from smarter.apps.provider.clients import SmarterOpenAIClient
 from smarter.apps.provider.models import Provider
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib.cache import cache_results
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .base_classes.protocols import (
-    OpenAICompatibleChatCompletionResponseType,
-    OpenAICompatiblePassthroughProtocol,
-    SmarterChatCompletionResponseType,
-    SmarterChatHandlerProtocol,
-)
 from .googleai.classes import (
     GoogleAIPassthroughChatProvider,
     GoogleAISmarterChatProvider,
 )
 from .googleai.const import PROVIDER_NAME as GOOGLEAI_PROVIDER_NAME
+from .lib.protocols import (
+    OpenAICompatibleChatCompletionResponseType,
+    OpenAICompatiblePassthroughProtocol,
+    SmarterChatCompletionResponseType,
+    SmarterChatHandlerProtocol,
+)
 from .metaai.classes import MetaAIPassthroughChatProvider, MetaAISmarterChatProvider
 from .metaai.const import PROVIDER_NAME as METAAI_PROVIDER_NAME
 from .openai.classes import OpenAIPassthroughChatProvider, OpenAISmarterChatProvider
@@ -75,6 +80,9 @@ patterns emerge that are confirmed to be cache safe.
 """
 
 
+@deprecated(
+    "SmarterCompatibleChatProviders is deprecated and will be removed in a future release. Please use SmarterCompatibleChatProvidersV2 instead."
+)
 class SmarterCompatibleChatProviders(SmarterHelperMixin):
     """
     Collection of all the chat providers.
@@ -271,10 +279,18 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
             "DEFAULT": default_handler,
         }
 
+    @deprecated(
+        "SmarterCompatibleChatProviders is deprecated and will be removed in a future release. Please use SmarterCompatibleChatProvidersV2 instead."
+    )
     def get_handler(self, provider: Optional[str] = None) -> SmarterChatHandlerProtocol:
         """
         A convenience method to get a handler by provider name.
         """
+        warnings.warn(
+            f"{self.formatted_class_name}.get_handler() is deprecated and will be removed in a future release. Please use SmarterCompatibleChatProvidersV2.get_handler() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if not provider:
             return self.default_handler
 
@@ -293,6 +309,9 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         ]
 
 
+@deprecated(
+    "OpenAICompatiblePassthroughChatProviders is deprecated and will be removed in a future release. Please use OpenAICompatiblePassthroughChatProvidersV2 instead."
+)
 class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
     """
     Collection of all OpenAI-compatible passthrough chat providers.
@@ -400,7 +419,9 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
            openai_provider = providers.openai
            response = openai_provider.handler(request, user_profile, data)
         """
+
         if self._openai is None:
+            # this is just invoking SmarterOpenAIClient() with openai-specific base_url and api_key
             self._openai = OpenAIPassthroughChatProvider()
         return self._openai
 
@@ -564,10 +585,18 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
             "DEFAULT": default_handler,
         }
 
+    @deprecated(
+        "OpenAICompatiblePassthroughChatProviders is deprecated and will be removed in a future release. Please use OpenAICompatiblePassthroughChatProvidersV2."
+    )
     def get_handler(self, provider: Optional[str] = None) -> OpenAICompatiblePassthroughProtocol:
         """
         A convenience method to get a handler by provider name.
         """
+        warnings.warn(
+            f"{self.formatted_class_name}.get_handler() is deprecated and will be removed in a future release. Please use SmarterCompatibleChatProvidersV2.get_handler() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if not provider:
             return self.default_handler
 
@@ -578,13 +607,77 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
 
     @property
     def all(self) -> list[str]:
-        return [
-            self.googleai.provider or "GoogleAi",
-            self.metaai.provider or "MetaAI",
-            self.openai.provider or "OpenAI",
-            self.default.provider or "Default",
-        ]
+        return list(Provider.objects.filter(is_active=True).values_list("name", flat=True))
+
+
+class OpenAICompatiblePassthroughResolver(SmarterHelperMixin):
+    """
+    A newer version of the OpenAICompatiblePassthroughChatProviders class.
+    """
+
+    @cached_property
+    def default_handler_name(self) -> str:
+        """
+        Returns the name of the platform-wide default provider.
+        If no default provider is found, it falls back to OpenAI.
+        """
+
+        @cache_results()
+        def get_cached_provider_name() -> Optional[str]:
+            provider = Provider.objects.filter(is_default=True).first()  # type: ignore
+            if not provider:
+                logger.warning("Default provider not found for user. Falling back to OpenAI.")
+                return OPENAI_PROVIDER_NAME
+            return provider.name
+
+        return get_cached_provider_name()
+
+    def get_handler(
+        self, request: Request, provider: Optional[str] = None, **kwargs
+    ) -> OpenAICompatiblePassthroughProtocol:
+        """
+        Factor function that returns a SmarterOpenAIClient.handler method that is configured
+        from data in the Provider model. If provider is not specified, it will use the default provider.
+        """
+        if not provider:
+            provider = self.default_handler_name
+
+        @cache_results()
+        def get_cached_passthrough_chat_provider(
+            provider_name: str, username: str
+        ) -> Optional[OpenAICompatiblePassthroughProtocol]:
+
+            try:
+                provider_orm = (
+                    Provider.objects.filter(name=provider_name)
+                    .with_read_permission_for(request.user)  # type: ignore
+                    .only("name", "base_url", "api_key")
+                    .first()
+                )  # type: ignore
+                if not provider_orm:
+                    raise Provider.DoesNotExist
+            except Provider.DoesNotExist:
+                logger.warning(f"Default provider not found for user. Falling back to {self.default_handler_name}.")
+                provider_orm = Provider.objects.filter(name=self.default_handler_name).first()  # type: ignore
+            except Provider.MultipleObjectsReturned:
+                provider_orm = Provider.objects.filter(is_default=True).first()  # type: ignore
+                logger.warning(
+                    f"Multiple default providers found for user {username}. Choosing the first one: {provider_orm}."
+                )
+
+            if not provider_orm:
+                raise SmarterValueError("provider not found")
+            api_key = SecretStr(provider_orm.api_key.get_secret()) if provider_orm.api_key else None
+
+            retval = SmarterOpenAIClient(
+                provider=provider_orm.name,
+                base_url=provider_orm.base_url,
+                api_key=api_key.get_secret_value() if api_key else "",
+            )
+            return retval.handler
+
+        return get_cached_passthrough_chat_provider(provider, request.user.username)  # type: ignore
 
 
 smarter_compatible_chat_providers = SmarterCompatibleChatProviders()
-openai_compatible_passthrough_chat_providers = OpenAICompatiblePassthroughChatProviders()
+openai_compatible_passthrough_resolver = OpenAICompatiblePassthroughResolver()

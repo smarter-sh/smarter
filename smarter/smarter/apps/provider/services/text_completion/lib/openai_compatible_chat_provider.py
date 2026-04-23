@@ -57,10 +57,10 @@ from smarter.apps.prompt.signals import (
     chat_response_failure,
     chat_started,
 )
-from smarter.apps.provider.services.text_completion.base_classes.protocols import (
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.apps.provider.services.text_completion.lib.protocols import (
     SmarterChatCompletionResponseType,
 )
-from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.apps.provider.services.text_completion.utils import (
     http_response_factory,
 )
