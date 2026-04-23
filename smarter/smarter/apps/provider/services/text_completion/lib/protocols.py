@@ -1,24 +1,32 @@
 """
-Handler protocol for chat providers.
-Defines a fixed Protocol for all chat provider handler functions.
-Ensures that all handler functions have exactly the same signature.
+===============================
+Chat Provider Handler Protocols
+===============================
 
-typing.Protocol is used to define a structural type that specifies the expected
-signature of the handler functions, without enforcing a specific class
-hierarchy. This allows for maximum flexibility in how the handler functions are
-implemented, while still ensuring that they conform to the expected interface.
+This module defines protocols for chat provider handler functions, ensuring a
+consistent interface across all implementations.
+
+Overview
+--------
+These protocols use :class:`typing.Protocol` to specify the expected function
+signatures for chat provider handlers. This approach enforces structural typing,
+allowing maximum flexibility in implementation while guaranteeing that all
+handlers conform to the required interface.
+
+Key Points:
+
+- All handler functions must have the same signature as defined by the protocols
+   in this module.
+- :class:`typing.Protocol` is used to define these structural types, without
+   enforcing a specific class hierarchy.
+- This ensures interoperability and consistency across different chat provider integrations.
 """
 
-import logging
 from typing import (
     Any,
     List,
-    Literal,
-    NotRequired,
     Optional,
     Protocol,
-    Required,
-    TypedDict,
     Union,
 )
 
@@ -28,30 +36,15 @@ from rest_framework.request import Request
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
-from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
 )
-from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-
-# 3rd party stuff
-
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 OpenAICompatibleChatCompletionResponseType = Union[
     ChatCompletion,
@@ -61,6 +54,15 @@ OpenAICompatibleChatCompletionResponseType = Union[
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 ]
+"""
+OpenAICompatibleChatCompletionResponseType is a type alias that defines the expected
+return type for OpenAI-compatible chat provider handler functions. It can be either a
+ChatCompletion object (representing a successful response) or one of several specific
+error response types, including HTTP 403 Forbidden, HTTP 404 Not Found,
+HTTP 400 Bad Request, or journaled JSON error/response types. This allows
+for consistent handling of both successful and error responses across all
+chat provider handlers that implement the OpenAICompatiblePassthroughProtocol.
+"""
 
 SmarterChatCompletionResponseType = Union[
     dict[str, Any],
@@ -70,29 +72,17 @@ SmarterChatCompletionResponseType = Union[
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 ]
+"""
+SmarterChatCompletionResponseType is a type alias that defines the expected
+return type for Smarter chat provider handler functions. It can be either a
+dictionary (representing a successful response) or one of several specific
+error response types, including HTTP 403 Forbidden, HTTP 404 Not Found,
+HTTP 400 Bad Request, or journaled JSON error/response types. This allows
+for consistent handling of both successful and error responses across all
+chat provider handlers that implement the SmarterChatHandlerProtocol.
+"""
 
 
-class OpenAICompatibleChatMessage(TypedDict, total=False):
-    """
-    A TypedDict abstraction of a chat message, compatible with OpenAI and Smarter extensions.
-    """
-
-    role: Required[Literal["system", "user", "assistant", "tool"]]
-    content: Required[Union[str, list[dict]]]
-
-    # OpenAI optional fields
-    name: NotRequired[str]
-    tool_call_id: NotRequired[str]
-    tool_calls: NotRequired[list[dict]]
-    function_call: NotRequired[dict]
-    audio: NotRequired[str]
-    refusal: NotRequired[str]
-
-    # Smarter/proprietary extensions (used internally, not sent to OpenAI)
-    smarter_is_new: NotRequired[bool]
-
-
-# Type alias for OpenAI-compatible chat completion request data
 class OpenAICompatiblePassthroughProtocol(Protocol):
     """
     A Protocol for OpenAI compatible passthrough functions.
