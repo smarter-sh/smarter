@@ -78,29 +78,8 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
 
 
-# pylint: disable=W0613
-def should_log_caching(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.CACHE_LOGGING
-    )
-
-
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-caching_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_caching)
-
-CACHE_PREFIX = f"{__name__}"
-CACHE_TIMEOUT = 10
-"""
-Cache timeout in seconds for chat providers.
-This is to allow for short-term caching of provider instances. For now, this
-only benefits inner-process calls that lead to multiple instantiatiaons of the
-same provider within a short time frame.
-
-However, the objective to to increase the cache timeout as observed usage
-patterns emerge that are confirmed to be cache safe.
-"""
 
 
 class ClientTypeEnum(SmarterEnumAbstract):
