@@ -665,7 +665,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         """
         logger.debug("%s.handle_plugin_selected() called.", self.formatted_class_name)
         logger.warning(
-            "smarter.apps.provider.services.text_completion.base_classes.OpenAISmarterClient.handler(): plugins selector needs to be refactored to use Django model."
+            "%s.handle_plugin_selected(): plugins selector needs to be refactored to use Django model.",
+            self.formatted_class_name,
         )
         if not isinstance(self.messages, list):
             raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")

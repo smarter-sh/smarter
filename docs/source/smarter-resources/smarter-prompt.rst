@@ -77,7 +77,6 @@ Technical Reference
    prompt/sam
    prompt/const
    prompt/functions
-   prompt/providers
    prompt/signals
    prompt/tasks
    prompt/urls

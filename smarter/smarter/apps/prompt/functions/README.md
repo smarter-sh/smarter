@@ -13,5 +13,5 @@ Contributors: add your new function to the following
 
 See also:
 
-- smarter.apps.provider.services.text_completion.base_classes.OpenAICompatibleChatProvider.process_tool_call()
-- smarter.apps.provider.services.text_completion.base_classes.OpenAICompatibleChatProvider.handle_function_provided()
+- smarter.apps.provider.services.text_completion.lib.OpenAICompatibleChatProvider.process_tool_call()
+- smarter.apps.provider.services.text_completion.lib.OpenAICompatibleChatProvider.handle_function_provided()

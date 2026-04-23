@@ -20,13 +20,9 @@ from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
 from smarter.apps.provider.clients import OpenAIPassthroughClient
 from smarter.apps.provider.models import Provider
-from smarter.apps.provider.services.text_completion.const import (
-    VALID_CHAT_COMPLETION_MODELS,
-)
 from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider import (
     OpenAISmarterClient,
 )
-from smarter.common.conf import smarter_settings
 from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.mixins import SmarterHelperMixin
@@ -40,7 +36,6 @@ from .lib.protocols import (
     SmarterChatCompletionResponseType,
     SmarterChatHandlerProtocol,
 )
-from .openai.const import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 
 
 # pylint: disable=W0613
