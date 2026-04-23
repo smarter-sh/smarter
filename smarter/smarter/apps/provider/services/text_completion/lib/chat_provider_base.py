@@ -10,6 +10,7 @@ from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCallUnion,
 )
+from pydantic import SecretStr
 
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.functions.calculator import (
@@ -27,6 +28,7 @@ from smarter.apps.prompt.models import Chat
 from smarter.apps.prompt.signals import (
     chat_provider_initialized,
 )
+from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.apps.provider.services.text_completion.utils import (
     ensure_system_role_present,
@@ -165,9 +167,10 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     def __init__(
         self,
+        provider: Optional[Provider],
         provider_name: Optional[str],
         base_url: Optional[str],
-        api_key: Optional[str],
+        api_key: Optional[SecretStr],
         default_model: Optional[str],
         default_system_role: Optional[str] = smarter_settings.llm_default_system_role,
         default_temperature: Optional[float] = smarter_settings.llm_default_temperature,
@@ -179,6 +182,8 @@ class SmarterChatProviderBase(ChatDbMixin):
         """
         Initialize the SmarterChatProviderBase with the given parameters.
 
+        :param provider: The Provider instance for the chat provider.
+        :type provider: Provider
         :param provider_name: The name of the chat provider_name (e.g., "openai", "google").
         :type provider_name: str
         :param base_url: The base URL for the chat provider_name's API.
@@ -202,7 +207,11 @@ class SmarterChatProviderBase(ChatDbMixin):
 
 
         """
-        super().__init__(**kwargs)
+        super().__init__(
+            provider=provider,
+            provider_name=provider_name,
+            **kwargs,
+        )
 
         # constructor arguments
         self._default_model = None
@@ -250,7 +259,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         self._chat = kwargs.get("chat")
         self._provider_name = provider_name
         self._base_url = base_url
-        self._api_key = api_key
+        self._api_key = api_key.get_secret_value() if api_key else None
 
         self._default_model = default_model
         self._default_system_role = default_system_role
@@ -420,7 +429,11 @@ class SmarterChatProviderBase(ChatDbMixin):
         :returns: The default model of the chat provider_name.
         :rtype: Optional[str]
         """
-        return self._default_model
+        if self._default_model:
+            return self._default_model
+        if self.provider:
+            return self.provider.default_model
+        return None
 
     @property
     def default_system_role(self) -> Optional[str]:

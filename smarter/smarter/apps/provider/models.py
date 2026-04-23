@@ -165,6 +165,9 @@ class Provider(MetaDataWithOwnershipModel):
         related_name="provider_api_key",
         help_text="The API key for the provider.",
     )
+    default_model = models.CharField(
+        max_length=255, blank=True, null=True, help_text="The default model to use for the provider."
+    )
     connectivity_test_path = models.CharField(
         max_length=255,
         default="",
