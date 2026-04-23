@@ -44,7 +44,7 @@ class TestPassthroughView(TestAccountMixin):
     def get_prompt_data(self, filename: str) -> dict[str, Any]:
         return cast(dict[str, Any], self.get_readonly_json_file(os.path.join(HERE, "data", filename)))
 
-    def test_passthrough_openai(self):
+    def test_passthrough_providers(self):
         """Test that we can create a chat completion using the passthrough view."""
 
         def get_provider_config(provider_name: str):
@@ -55,6 +55,7 @@ class TestPassthroughView(TestAccountMixin):
             return url, prompt_data
 
         for provider in self.providers:
+            provider = provider.lower()
             url, prompt_data = get_provider_config(provider)
             response = self.client.post(url, data=prompt_data, content_type="application/json")
             self.assertEqual(response.status_code, 200)
