@@ -1865,6 +1865,13 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 command=command,
             )
         stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+        logger.debug(
+            "%s Error processing request. thing: %s, command: %s, stack_trace: %s",
+            self.abstract_broker_logger_prefix,
+            self.thing,
+            command,
+            stack_trace,
+        )
         return SmarterJournaledJsonErrorResponse(
             request=self.request,
             thing=self.thing,

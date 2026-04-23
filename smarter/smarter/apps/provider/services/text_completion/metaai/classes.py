@@ -7,9 +7,9 @@ import logging
 from typing_extensions import deprecated
 
 # smarter stuff
-from smarter.apps.provider.clients import SmarterOpenAIClient
+from smarter.apps.provider.clients import OpenAIPassthroughClient
 from smarter.apps.provider.services.text_completion.lib import (
-    SmarterOpenAICompatibleChatProvider,
+    OpenAISmarterClient,
 )
 from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
@@ -31,7 +31,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 @deprecated("Please use the Django ORM model Provider")
-class MetaAISmarterChatProvider(SmarterOpenAICompatibleChatProvider):
+class MetaAISmarterChatProvider(OpenAISmarterClient):
     """
     MetaAI chat provider.
     """

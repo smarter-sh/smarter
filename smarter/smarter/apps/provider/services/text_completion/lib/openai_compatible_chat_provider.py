@@ -93,7 +93,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class SmarterOpenAICompatibleChatProvider(SmarterChatProviderBase):
+class OpenAISmarterClient(SmarterChatProviderBase):
     """
     Chat provider for OpenAI-compatible text completion APIs.
 
@@ -117,7 +117,7 @@ class SmarterOpenAICompatibleChatProvider(SmarterChatProviderBase):
 
         .. code-block:: python
 
-            class MyProvider(SmarterOpenAICompatibleChatProvider):
+            class MyProvider(OpenAISmarterClient):
                 pass
 
             provider = MyProvider()
@@ -665,7 +665,7 @@ class SmarterOpenAICompatibleChatProvider(SmarterChatProviderBase):
         """
         logger.debug("%s.handle_plugin_selected() called.", self.formatted_class_name)
         logger.warning(
-            "smarter.apps.provider.services.text_completion.base_classes.SmarterOpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
+            "smarter.apps.provider.services.text_completion.base_classes.OpenAISmarterClient.handler(): plugins selector needs to be refactored to use Django model."
         )
         if not isinstance(self.messages, list):
             raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")
@@ -1033,4 +1033,9 @@ class SmarterOpenAICompatibleChatProvider(SmarterChatProviderBase):
             response=response,
             messages=self.messages,
         )
-        return http_response_factory(status_code=HTTPStatus.OK, body=response)
+        retval = http_response_factory(status=HTTPStatus.OK, body=response)
+        if not isinstance(retval, dict):
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: http_response_factory() should have returned a dictionary, but instead returned {type(retval)}"
+            )
+        return retval

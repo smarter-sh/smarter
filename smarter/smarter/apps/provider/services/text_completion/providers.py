@@ -18,15 +18,16 @@ from rest_framework.request import Request
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
-from smarter.apps.provider.clients import SmarterOpenAIClient
+from smarter.apps.provider.clients import OpenAIPassthroughClient
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.const import (
     VALID_CHAT_COMPLETION_MODELS,
 )
 from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider import (
-    SmarterOpenAICompatibleChatProvider,
+    OpenAISmarterClient,
 )
 from smarter.common.conf import smarter_settings
+from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib.cache import cache_results
@@ -73,56 +74,82 @@ patterns emerge that are confirmed to be cache safe.
 """
 
 
+class ClientTypeEnum(SmarterEnumAbstract):
+    """
+    Client type distinguishes between the kind of handler we want
+    from the provider.
+    """
+
+    SMARTER = OpenAISmarterClient.__name__
+    PASSTHROUGH = OpenAIPassthroughClient.__name__
+
+
 class OpenAICompatibleClientFactory(SmarterHelperMixin):
     """
     A newer version of the OpenAICompatiblePassthroughChatProviders class.
     """
 
+    _client_type: ClientTypeEnum
+
+    def __init__(self, client_type: Optional[ClientTypeEnum] = ClientTypeEnum.SMARTER):
+        super().__init__()
+        if client_type is not None and client_type not in list(ClientTypeEnum):
+            raise ValueError(f"Invalid client type: {client_type}. Must be one of {list(ClientTypeEnum)}")
+        self._client_type = client_type or ClientTypeEnum.SMARTER
+
+    @property
+    def client_type(self) -> ClientTypeEnum:
+        return self._client_type
+
     @cached_property
     def default_handler_name(self) -> str:
         """
         Returns the name of the platform-wide default provider.
-        If no default provider is found, it falls back to OpenAI.
+        If no default provider is found, it raises a SmarterValueError.
         """
 
-        @cache_results()
-        def get_cached_provider_name() -> Optional[str]:
-            provider = Provider.objects.filter(is_default=True).first()  # type: ignore
-            if not provider:
-                logger.warning("Default provider not found for user. Falling back to OpenAI.")
-                return OPENAI_PROVIDER_NAME
-            return provider.name
+        provider = Provider.objects.filter(is_default=True, is_active=True).first()  # type: ignore
+        if not provider:
+            raise SmarterValueError("Default provider not found")
+        return provider.name
 
-        return get_cached_provider_name()
-
-    def get_openai_client_for_provider(self, provider_name: str, user: User) -> SmarterOpenAIClient:
+    def get_client_orm_by_provider_name_and_user(self, provider_name: str, user: User) -> Provider:
 
         @cache_results()
-        def get_cached_openai_client_for_provider(provider_name: str, username: str) -> SmarterOpenAIClient:
+        def get_cached_provider_orm_by_name_and_username(provider_name: str, username: str) -> Provider:
 
             try:
                 provider_orm = (
-                    Provider.objects.filter(name=provider_name)
+                    Provider.objects.filter(name=provider_name, is_active=True)
                     .with_read_permission_for(user)  # type: ignore
                     .only("name", "base_url", "api_key")
                     .first()
                 )  # type: ignore
                 if not provider_orm:
                     raise Provider.DoesNotExist
-            except Provider.DoesNotExist:
-                logger.warning(f"Default provider not found for user. Falling back to {self.default_handler_name}.")
-                provider_orm = Provider.objects.filter(name=self.default_handler_name).first()  # type: ignore
+            except Provider.DoesNotExist as e:
+                raise SmarterValueError(f"Provider {provider_name} not found for user {user}.") from e
             except Provider.MultipleObjectsReturned:
-                provider_orm = Provider.objects.filter(is_default=True).first()  # type: ignore
+                provider_orm = Provider.objects.filter(is_default=True, is_active=True).first()  # type: ignore
                 logger.warning(
                     f"Multiple default providers found for user {username}. Choosing the first one: {provider_orm}."
                 )
 
             if not provider_orm:
-                raise SmarterValueError("provider not found")
+                raise SmarterValueError(f"Provider {provider_name} not found for user {user}.")
+            return provider_orm
+
+        return get_cached_provider_orm_by_name_and_username(provider_name, user.username)  # type: ignore
+
+    def get_openai_client_for_provider(self, provider_name: str, user: User) -> OpenAIPassthroughClient:
+
+        @cache_results()
+        def get_cached_openai_client_for_provider(provider_name: str, username: str) -> OpenAIPassthroughClient:
+
+            provider_orm = self.get_client_orm_by_provider_name_and_user(provider_name, user)
             api_key = SecretStr(provider_orm.api_key.get_secret()) if provider_orm.api_key else None
 
-            retval = SmarterOpenAIClient(
+            retval = OpenAIPassthroughClient(
                 provider=provider_orm.name,
                 base_url=provider_orm.base_url,
                 api_key=api_key.get_secret_value() if api_key else "",
@@ -135,13 +162,13 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         self, request: Request, provider_name: Optional[str] = None, **kwargs
     ) -> OpenAICompatiblePassthroughProtocol:
         """
-        Instantiates a SmarterOpenAIClient for the given provider name and
+        Instantiates a OpenAIPassthroughClient for the given provider name and
         returns its passthrough handler. The key thing is that whatever handler we use
         here must implement the OpenAICompatiblePassthroughProtocol.
         """
         provider_name = provider_name or self.default_handler_name
         retval = self.get_openai_client_for_provider(provider_name=provider_name, user=request.user)  # type: ignore
-        return retval.passthrough_handler
+        return retval.handler
 
     def get_smarter_handler(self, provider: Optional[str] = None) -> SmarterChatHandlerProtocol:
         """
@@ -157,10 +184,14 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         ) -> SmarterChatCompletionResponseType:
             """Expose the handler method of the default provider"""
 
+            client_orm = self.get_client_orm_by_provider_name_and_user(
+                provider_name=provider or self.default_handler_name, user=user_profile.user  # type: ignore
+            )
+
             BASE_URL = "https://api.openai.com/v1/"  # don't forget the trailing slash
             DEFAULT_MODEL = "gpt-4o-mini"
 
-            smarter_openai_compatible_provider = SmarterOpenAICompatibleChatProvider(
+            smarter_openai_compatible_provider = OpenAISmarterClient(
                 provider=OPENAI_PROVIDER_NAME,
                 base_url=BASE_URL,
                 api_key=smarter_settings.openai_api_key.get_secret_value(),
@@ -171,13 +202,38 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
                 valid_chat_completion_models=VALID_CHAT_COMPLETION_MODELS,
                 add_built_in_tools=False,
             )
-            result = smarter_openai_compatible_provider.handler(
+            handler = smarter_openai_compatible_provider.handler(
                 user_profile, chat, data, plugins=plugins, functions=functions
             )
-            return result
+            return handler
 
         return get_handler
 
+    @cached_property
+    def all(self) -> List[str]:
+        """
+        Returns a list of all provider names.
+        """
+        return list(Provider.objects.filter(is_active=True).values_list("name", flat=True))  # type: ignore
 
-smarter_compatible_chat_providers = OpenAICompatibleClientFactory()
-openai_compatible_client = OpenAICompatibleClientFactory()
+    def handler(
+        self, request: Request, provider_name: Optional[str] = None, **kwargs
+    ) -> Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]:
+        """
+        A convenience method to get a handler by provider name.
+        """
+        if self.client_type == ClientTypeEnum.PASSTHROUGH:
+            return self.get_passthrough_handler(request=request, provider_name=provider_name, **kwargs)
+        return self.get_smarter_handler(provider=provider_name)
+
+    def default_handler(
+        self, request: Request, **kwargs
+    ) -> Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]:
+        """
+        A convenience method to get the default handler.
+        """
+        return self.handler(request=request, provider_name=self.default_handler_name, **kwargs)
+
+
+smarter_compatible_chat_providers = OpenAICompatibleClientFactory(ClientTypeEnum.SMARTER)
+openai_compatible_client = OpenAICompatibleClientFactory(ClientTypeEnum.PASSTHROUGH)

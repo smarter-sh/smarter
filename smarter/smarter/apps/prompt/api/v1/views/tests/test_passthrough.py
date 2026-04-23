@@ -70,6 +70,7 @@ class TestPassthroughView(TestAccountMixin):
     def test_illegal_key(self):
         """Test that we get a 400 response if we include an illegal key in the request."""
 
+        # /api/v1/prompts/passthrough/openai/
         url = reverse(namespace, args=[OPENAI_PROVIDER_NAME])
         prompt_data = self.get_prompt_data("openai_passthrough_prompt.json")
 
