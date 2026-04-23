@@ -176,7 +176,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
                 error_message=str(e),
                 command=SmarterJournalCliCommands.CHAT,
                 thing=SmarterJournalThings.CHAT,
-                status_code=HTTPStatus.BAD_REQUEST,
+                status=HTTPStatus.BAD_REQUEST,
             )
 
         # this is our hoped-for case. The handler should return a ChatCompletion
@@ -188,7 +188,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
                 data=retval.model_dump(),
                 command=SmarterJournalCliCommands.CHAT,
                 thing=SmarterJournalThings.CHAT,
-                status_code=HTTPStatus.OK,
+                status=HTTPStatus.OK,
             )
 
         # catch the various ways that things could have gone wrong. Ideally this

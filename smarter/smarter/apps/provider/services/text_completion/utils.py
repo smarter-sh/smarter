@@ -38,25 +38,25 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-def http_response_factory(status_code: int, body, debug_mode: bool = False) -> Union[list, dict]:
+def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[list, dict]:
     """
     Generate a standardized JSON return dictionary for all possible response scenarios.
 
-    status_code: an HTTP response code. see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    status: an HTTP response code. see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
     body: a JSON dict of http response for status 200, an error dict otherwise.
 
     see https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html
     """
-    if status_code < 100 or status_code > 599:
-        raise SmarterValueError(f"Invalid HTTP response code received: {status_code}")
+    if status < 100 or status > 599:
+        raise SmarterValueError(f"Invalid HTTP response code received: {status}")
 
     retval = {
         "isBase64Encoded": False,
-        "statusCode": status_code,
+        "statusCode": status,
         "headers": {"Content-Type": "application/json"},
     }
 
-    if status_code != 200:
+    if status != 200:
         logger.error("Error: %s", body)
         return retval
 
