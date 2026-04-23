@@ -11,7 +11,7 @@ enabling seamless integration with a variety of large language model (LLM) backe
 1. **Smarter Chat Protocol**
     - Implements: SmarterChatHandlerProtocol
     - Returns: SmarterChatCompletionResponseType
-    - Used for native Smarter chat API requests, supporting advanced features and proprietary extensions.
+    - Used for native Smarter chat API requests, supporting Smarter's extensibility model.
 
 2. **OpenAI-Compatible Passthrough Protocol**
     - Implements: OpenAICompatiblePassthroughProtocol
@@ -25,6 +25,14 @@ enabling seamless integration with a variety of large language model (LLM) backe
 - Provides default provider selection and handler resolution.
 - Abstracts provider-specific complexities, including authentication and model selection.
 - Enables dynamic handler retrieval for both protocols, facilitating flexible integration patterns.
+
+**Common Features:**
+
+- Both protocols support dynamic provider selection based on the incoming request and user context.
+- Handlers for both protocols are designed to abstract away provider-specific details, such as authentication and model selection, allowing for flexible integration patterns.
+- The factory class provides caching for provider ORM retrieval and client instantiation to optimize performance and reduce redundant database queries.
+- Internal billing records are generated in a consistent manner regardless of the protocol used, ensuring accurate usage tracking and billing across all providers.
+- Application-level logging is fully integrated into both protocols, with support for logging based on waffle switches to facilitate debugging and monitoring in production environments.
 
 **Singletons:**
 
