@@ -50,24 +50,24 @@ class TestChatProviders(SmarterTestBase):
             smarter_compatible_chat_providers.metaai.provider = "new_name"  # type: ignore
 
     def verify_providers_get_handler(self):
-        """Test provider get_handler()."""
+        """Test provider get_smarter_handler()."""
 
-        handler = smarter_compatible_chat_providers.get_handler(
+        handler = smarter_compatible_chat_providers.get_smarter_handler(
             provider=smarter_compatible_chat_providers.openai.provider
         )
         self.assertEqual(handler, type(Callable))
 
-        handler = smarter_compatible_chat_providers.get_handler(
+        handler = smarter_compatible_chat_providers.get_smarter_handler(
             provider=smarter_compatible_chat_providers.googleai.provider
         )
         self.assertEqual(handler, type(Callable))
 
-        handler = smarter_compatible_chat_providers.get_handler(
+        handler = smarter_compatible_chat_providers.get_smarter_handler(
             provider=smarter_compatible_chat_providers.metaai.provider
         )
         self.assertEqual(handler, type(Callable))
 
-        handler = smarter_compatible_chat_providers.get_handler()
+        handler = smarter_compatible_chat_providers.get_smarter_handler()
         self.assertEqual(handler, type(Callable))
 
     def verify_providers_all(self):
