@@ -4,21 +4,21 @@ OpenAI chat provider.
 
 import logging
 
-# smarter stuff
 from smarter.apps.provider.services.text_completion.base_classes import (
     OpenAICompatibleChatProvider,
     OpenAICompatiblePassthroughChatProvider,
+)
+from smarter.apps.provider.services.text_completion.const import (
+    VALID_CHAT_COMPLETION_MODELS,
 )
 from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-# smarter chat provider stuff
-from ..const import VALID_CHAT_COMPLETION_MODELS
+from .const import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 
 BASE_URL = "https://api.openai.com/v1/"  # don't forget the trailing slash
-PROVIDER_NAME = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
 
 
@@ -40,7 +40,7 @@ class OpenAISmarterChatProvider(OpenAICompatibleChatProvider):
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args,
-            provider=PROVIDER_NAME,
+            provider=OPENAI_PROVIDER_NAME,
             base_url=BASE_URL,
             api_key=smarter_settings.openai_api_key.get_secret_value(),
             default_model=DEFAULT_MODEL,
@@ -61,7 +61,7 @@ class OpenAIPassthroughChatProvider(OpenAICompatiblePassthroughChatProvider):
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args,
-            provider=PROVIDER_NAME,
+            provider=OPENAI_PROVIDER_NAME,
             base_url=BASE_URL,
             api_key=smarter_settings.openai_api_key.get_secret_value(),
             **kwargs,

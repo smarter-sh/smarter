@@ -24,6 +24,7 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpErrorResponse,
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
+    SmarterHttpResponseNotFound,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
@@ -51,7 +52,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
     """
     Handle POST requests to the passthrough endpoint for direct LLM provider API access.
 
-    path: /api/v1/prompt/chat/passthrough/{provider_name}/
+    path: /api/v1/prompts/passthrough/{provider_name}/
 
     This endpoint allows authenticated users to send arbitrary prompt dicts
     to the underlying LLM provider (such as OpenAI). The request body should
@@ -87,9 +88,24 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
     handler: OpenAICompatiblePassthroughProtocol
 
     def setup(self, request, *args, **kwargs):
+        """
+        Set the provider_name and handler based on the URL kwargs.
+        The handler can be any function that implements the
+        :class:`OpenAICompatiblePassthroughProtocol` interface.
+
+        .. seealso::
+
+            - :class:`OpenAICompatiblePassthroughProtocol`
+        """
         self.provider_name = kwargs.pop("provider_name")
         super().setup(request, *args, **kwargs)
-        self.handler = openai_compatible_passthrough_chat_providers.get_handler(self.provider_name)
+        try:
+            self.handler = openai_compatible_passthrough_chat_providers.get_handler(self.provider_name)
+        except KeyError:
+            logger.error("Provider '%s' not found in openai_compatible_passthrough_chat_providers", self.provider_name)
+            return SmarterHttpResponseNotFound(
+                error_message=f"Provider '{self.provider_name}' not found", request=request
+            )
         logger.debug(
             "%s.setup() provider_name: %s and handler: %s", self.formatted_class_name, self.provider_name, self.handler
         )
@@ -121,7 +137,12 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
 
     def post(
         self, request: Request, *args, **kwargs
-    ) -> SmarterJournaledJsonResponse | SmarterJournaledJsonErrorResponse | SmarterHttpErrorResponse:
+    ) -> (
+        SmarterJournaledJsonResponse
+        | SmarterJournaledJsonErrorResponse
+        | SmarterHttpErrorResponse
+        | SmarterHttpResponseForbidden
+    ):
         """
         Handle POST requests to the passthrough endpoint for direct LLM
         provider API access.
@@ -158,9 +179,8 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        if isinstance(retval, (SmarterHttpErrorResponse, SmarterJournaledJsonResponse)):
-            return retval
-
+        # this is our hoped-for case. The handler should return a ChatCompletion
+        # Pydantic model which we can directly serialize and return to the client.
         if isinstance(retval, ChatCompletion):
             logger.debug("%s received ChatCompletion response: %s", logger_prefix, formatted_json(retval.model_dump()))
             return SmarterJournaledJsonResponse(
@@ -171,6 +191,13 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
                 status_code=HTTPStatus.OK,
             )
 
+        # catch the various ways that things could have gone wrong. Ideally this
+        # will only otherwise return an instance of SmarterJournaledJsonResponse,
+        # but we'll be defensive here and catch any SmarterHttpErrorResponse as well.
+        if isinstance(retval, (SmarterHttpErrorResponse, SmarterJournaledJsonResponse)):
+            return retval
+
+        # if we got here then something has gone terribly wrong.
         raise SmarterIlligalInvocationError(
             f"Unexpected return type from handler: {type(retval)}. Expected ChatCompletion or SmarterHttpErrorResponse."
         )

@@ -40,8 +40,8 @@ from .googleai.classes import (
 from .googleai.const import PROVIDER_NAME as GOOGLEAI_PROVIDER_NAME
 from .metaai.classes import MetaAIPassthroughChatProvider, MetaAISmarterChatProvider
 from .metaai.const import PROVIDER_NAME as METAAI_PROVIDER_NAME
-from .openai.classes import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 from .openai.classes import OpenAIPassthroughChatProvider, OpenAISmarterChatProvider
+from .openai.const import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 
 
 # pylint: disable=W0613
@@ -497,8 +497,8 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         provider = Provider.objects.filter(name=OPENAI_PROVIDER_NAME).with_read_permission_for(request.user).first()  # type: ignore
         if not provider:
             return SmarterHttpResponseNotFound(request=request, error_message="OpenAI provider not found")
-
         api_key = SecretStr(provider.api_key.get_secret()) if provider.api_key else None
+
         return self.openai.handler(request, user_profile, data, api_key=api_key, base_url=provider.base_url)
 
     def googleai_handler(
@@ -508,7 +508,13 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         data: dict[str, Any],
     ) -> OpenAICompatibleChatCompletionResponseType:
         """Expose the handler method of the googleai provider"""
-        return self.googleai.handler(request, user_profile, data)
+
+        provider = Provider.objects.filter(name=GOOGLEAI_PROVIDER_NAME).with_read_permission_for(request.user).first()  # type: ignore
+        if not provider:
+            return SmarterHttpResponseNotFound(request=request, error_message="GoogleAI provider not found")
+        api_key = SecretStr(provider.api_key.get_secret()) if provider.api_key else None
+
+        return self.googleai.handler(request, user_profile, data, api_key=api_key, base_url=provider.base_url)
 
     def metaai_handler(
         self,
@@ -517,7 +523,13 @@ class OpenAICompatiblePassthroughChatProviders(SmarterHelperMixin):
         data: dict[str, Any],
     ) -> OpenAICompatibleChatCompletionResponseType:
         """Expose the handler method of the metaai provider"""
-        return self.metaai.handler(request, user_profile, data)
+
+        provider = Provider.objects.filter(name=METAAI_PROVIDER_NAME).with_read_permission_for(request.user).first()  # type: ignore
+        if not provider:
+            return SmarterHttpResponseNotFound(request=request, error_message="MetaAI provider not found")
+        api_key = SecretStr(provider.api_key.get_secret()) if provider.api_key else None
+
+        return self.metaai.handler(request, user_profile, data, api_key=api_key, base_url=provider.base_url)
 
     def default_handler(
         self,
