@@ -566,7 +566,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=C0415
         from smarter.apps.provider.services.text_completion.providers import (
             SmarterChatHandlerProtocol,
-            smarter_compatible_chat_providers,
+            smarter_compatible_client,
         )
 
         logger.debug(
@@ -595,8 +595,8 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.NOT_FOUND.value,
                 stack_trace=traceback.format_exc(),
             )
-        handler: SmarterChatHandlerProtocol = smarter_compatible_chat_providers.get_smarter_handler(
-            provider=self.chatbot.provider
+        handler: SmarterChatHandlerProtocol = smarter_compatible_client.get_smarter_handler(
+            request=request, provider_name=self.chatbot.provider
         )
         if not self.chat_helper:
             return SmarterJournaledJsonErrorResponse(

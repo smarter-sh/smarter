@@ -33,7 +33,7 @@ from smarter.apps.prompt.signals import (
 )
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.apps.provider.services.text_completion.providers import (
-    smarter_compatible_chat_providers,
+    smarter_compatible_client,
 )
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.django import waffle
@@ -174,11 +174,21 @@ class ProviderBaseClass(TestAccountMixin):
         # create a chatbot that uses the provider
         print(f"Setting up provider {self.provider}")
         self.chatbot = self.chatbot_factory(provider=self.provider)  # type: ignore[assignment]
-        self.handler = smarter_compatible_chat_providers.get_smarter_handler(provider=self.provider)
-        print(f"provider {self.provider} is setup")
 
         self.client = Client()
         self.client.force_login(self.admin_user)  # type: ignore[call-arg]
+
+        from django.test import RequestFactory
+        from rest_framework.request import Request
+
+        factory = RequestFactory()
+        wsgi_request = factory.get("/")
+        wsgi_request.user = self.admin_user
+        request = Request(wsgi_request)  # type: ignore
+        request.user = self.admin_user
+
+        self.handler = smarter_compatible_client.get_smarter_handler(request=request, provider_name=self.provider)
+        print(f"provider {self.provider} is setup")
 
         self.chat = Chat.objects.create(
             session_key=secrets.token_hex(32),
@@ -336,7 +346,7 @@ class ProviderBaseClass(TestAccountMixin):
         try:
             if not self.handler:
                 raise ValueError(
-                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_smarter_handler(provider=...) ?"
+                    "Handler is not set. Did you call smarter_compatible_client.get_smarter_handler(provider=...) ?"
                 )
 
             response = self.handler(
@@ -387,7 +397,7 @@ class ProviderBaseClass(TestAccountMixin):
         try:
             if not self.handler:
                 raise ValueError(
-                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_smarter_handler(provider=...) ?"
+                    "Handler is not set. Did you call smarter_compatible_client.get_smarter_handler(provider=...) ?"
                 )
 
             response = self.handler(
@@ -406,7 +416,7 @@ class ProviderBaseClass(TestAccountMixin):
         try:
             if not self.handler:
                 raise ValueError(
-                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_smarter_handler(provider=...) ?"
+                    "Handler is not set. Did you call smarter_compatible_client.get_smarter_handler(provider=...) ?"
                 )
 
             response = self.handler(

@@ -255,7 +255,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         }
 
         # create a Smarter UI message with the established configuration
-        content = f"Prompt configuration: llm={self.provider}, url={self.url} api_key={self.mask_string(self.api_key)} model={self.model}, temperature={self.temperature}, max_completion_tokens={self.max_completion_tokens}"
+        content = f"Prompt configuration: llm={self.provider_name}, url={self.url} api_key={self.mask_string(self.api_key)} model={self.model}, temperature={self.temperature}, max_completion_tokens={self.max_completion_tokens}"
         if self.tools:
             content = content + f", tool_choice={tool_choice}."
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
@@ -460,7 +460,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self._insert_charge_by_type(CHARGE_TYPE_PROMPT_COMPLETION)
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
-            content=f"{self.provider} prompt charges: {self.prompt_tokens} prompt tokens, {self.completion_tokens} completion tokens = {self.total_tokens} total tokens charged.",
+            content=f"{self.provider_name} prompt charges: {self.prompt_tokens} prompt tokens, {self.completion_tokens} completion tokens = {self.total_tokens} total tokens charged.",
         )
 
         if self.iteration == 1:
