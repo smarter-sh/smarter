@@ -189,20 +189,13 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
             client_orm = self.get_client_orm_by_provider_name_and_user(
                 provider_name=provider_name or self.default_handler_name, user=request.user  # type: ignore
             )
-
-            BASE_URL = "https://api.openai.com/v1/"  # don't forget the trailing slash
-            DEFAULT_MODEL = "gpt-4o-mini"
-
+            api_key = SecretStr(client_orm.api_key.get_secret()) if client_orm.api_key else None
             smarter_openai_compatible_provider = OpenAISmarterClient(
-                provider_name=OPENAI_PROVIDER_NAME,
-                base_url=BASE_URL,
-                api_key=smarter_settings.openai_api_key.get_secret_value(),
-                default_model=DEFAULT_MODEL,
-                default_system_role=smarter_settings.llm_default_system_role,
-                default_temperature=smarter_settings.llm_default_temperature,
-                default_max_tokens=smarter_settings.llm_default_max_tokens,
-                valid_chat_completion_models=VALID_CHAT_COMPLETION_MODELS,
-                add_built_in_tools=False,
+                provider=client_orm,
+                provider_name=client_orm.name,
+                base_url=client_orm.base_url,
+                api_key=api_key,
+                default_model=client_orm.default_model,
             )
             handler = smarter_openai_compatible_provider.handler(
                 user_profile, chat, data, plugins=plugins, functions=functions
