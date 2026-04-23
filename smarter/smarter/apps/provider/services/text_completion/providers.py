@@ -1,11 +1,31 @@
 """
-A chat provider convenience class. This class is a collection of all the chat providers and their handlers.
-It also provides a default provider and handler.
+smarter.apps.provider.services.text_completion.providers
+==================================================================
 
-There are a few objectives of this class:
-1. To provide a single point of access to all the chat providers.
-2. To hide complexity introduced into the provider classes due to Pydantic models.
-3. To provide a default provider and handler.
+Service-level entry point for text completions supporting multiple LLM provider companies.
+This module provides a unified interface for accessing and managing chat completion providers,
+enabling seamless integration with a variety of large language model (LLM) backends.
+
+**Protocols Supported:**
+
+1. **Smarter Chat Protocol**
+    - Implements: SmarterChatHandlerProtocol
+    - Returns: SmarterChatCompletionResponseType
+    - Used for native Smarter chat API requests, supporting advanced features and proprietary extensions.
+
+2. **OpenAI-Compatible Passthrough Protocol**
+    - Implements: OpenAICompatiblePassthroughProtocol
+    - Returns: OpenAICompatibleChatCompletionResponseType
+    - Used for OpenAI-compatible API passthrough, enabling direct proxying to third-party LLM providers.
+
+**Key Features:**
+
+- Centralized access to all configured chat providers and their handlers.
+- Supports both Smarter-native and OpenAI-compatible request/response formats.
+- Provides default provider selection and handler resolution.
+- Abstracts provider-specific complexities, including authentication and model selection.
+- Enables dynamic handler retrieval for both protocols, facilitating flexible integration patterns.
+
 """
 
 import logging
@@ -32,6 +52,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .lib.protocols import (
+    OpenAICompatibleChatCompletionResponseType,
     OpenAICompatiblePassthroughProtocol,
     SmarterChatCompletionResponseType,
     SmarterChatHandlerProtocol,
@@ -159,11 +180,25 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         """
         Instantiates a OpenAIPassthroughClient for the given provider name and
         returns its passthrough handler. The key thing is that whatever handler we use
-        here must implement the OpenAICompatiblePassthroughProtocol.
+        here must implement the OpenAICompatiblePassthroughProtocol which
+        returns OpenAICompatibleChatCompletionResponseType
         """
+
+        def get_handler(
+            request: Request,
+            user_profile: UserProfile,
+            data: dict[str, Any],
+            *args,
+            **kwargs,
+        ) -> OpenAICompatibleChatCompletionResponseType:
+            """Expose the handler method of the default provider"""
+
+            client = self.get_openai_client_for_provider(provider_name=provider_name or self.default_handler_name, user=request.user)  # type: ignore
+            handler = client.handler(request, user_profile, data, *args, **kwargs)
+            return handler
+
         provider_name = provider_name or self.default_handler_name
-        retval = self.get_openai_client_for_provider(provider_name=provider_name, user=request.user)  # type: ignore
-        return retval.handler
+        return get_handler
 
     def get_smarter_handler(
         self, request: Request, provider_name: Optional[str] = None, **kwargs
