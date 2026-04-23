@@ -15,6 +15,7 @@ import logging
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Sum
 
+from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
@@ -81,7 +82,7 @@ def create_charge(*args, **kwargs):
     except UserProfile.DoesNotExist as e:
         raise SmarterValueError(f"user_profile_id {user_profile_id} does not exist, cannot create charge.") from e
     session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
-    provider = kwargs.get("provider")
+    provider_id = kwargs.get("provider_id")
     charge_type = kwargs.get("charge_type")
     prompt_tokens = kwargs.get("prompt_tokens")
     completion_tokens = kwargs.get("completion_tokens")
@@ -89,6 +90,8 @@ def create_charge(*args, **kwargs):
     model = kwargs.get("model")
     reference = kwargs.get("reference")
     prefix = formatted_text(module_prefix + "create_charge()")
+
+    provider = Provider.objects.get(id=provider_id) if provider_id else None
 
     logger.info(
         "%s. user_profile_id %s, charge_type %s, reference %s",

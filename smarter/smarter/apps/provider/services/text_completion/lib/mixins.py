@@ -752,7 +752,7 @@ class ChatDbMixin(AccountMixin):
         create_charge.delay(
             user_profile_id=self.user_profile.id if self.user_profile else None,  # type: ignore
             session_key=self.chat.session_key,
-            provider=provider,
+            provider_id=provider.id,  # type: ignore
             charge_type=charge_type,
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
