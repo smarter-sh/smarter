@@ -134,6 +134,7 @@ class OpenAICompatiblePassthroughChatProvider(ChatDbMixin):
         chat_completion_request.send(sender=self.handler, data=data)
 
         try:
+            logger.debug("%s sending request to %s with data: %s", logger_prefix, openai.base_url, formatted_json(data))
             response = openai.chat.completions.create(**data)
         # pylint: disable=broad-except
         except Exception as e:

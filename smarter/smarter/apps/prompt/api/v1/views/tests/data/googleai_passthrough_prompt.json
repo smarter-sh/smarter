@@ -1,0 +1,16 @@
+{
+    "model": "gemini-2.5-flash-lite",
+    "temperature": 0.50,
+    "max_tokens": 1024,
+    "messages": [
+        {
+            "role": "system",
+            "content": "You are a helpful assistant."
+        },
+        {
+            "role": "user",
+            "content": "Hello world"
+        }
+    ]
+
+}
