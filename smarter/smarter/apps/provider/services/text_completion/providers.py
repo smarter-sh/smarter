@@ -17,7 +17,7 @@ from pydantic import SecretStr
 from rest_framework.request import Request
 from typing_extensions import deprecated
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
 from smarter.apps.provider.clients import SmarterOpenAIClient
@@ -329,25 +329,15 @@ class OpenAICompatiblePassthroughResolver(SmarterHelperMixin):
 
         return get_cached_provider_name()
 
-    def get_handler(
-        self, request: Request, provider: Optional[str] = None, **kwargs
-    ) -> OpenAICompatiblePassthroughProtocol:
-        """
-        Factor function that returns a SmarterOpenAIClient.handler method that is configured
-        from data in the Provider model. If provider is not specified, it will use the default provider.
-        """
-        if not provider:
-            provider = self.default_handler_name
+    def get_openai_client_for_provider(self, provider_name: str, user: User) -> SmarterOpenAIClient:
 
         @cache_results()
-        def get_cached_passthrough_chat_provider(
-            provider_name: str, username: str
-        ) -> Optional[OpenAICompatiblePassthroughProtocol]:
+        def get_cached_openai_client_for_provider(provider_name: str, username: str) -> SmarterOpenAIClient:
 
             try:
                 provider_orm = (
                     Provider.objects.filter(name=provider_name)
-                    .with_read_permission_for(request.user)  # type: ignore
+                    .with_read_permission_for(user)  # type: ignore
                     .only("name", "base_url", "api_key")
                     .first()
                 )  # type: ignore
@@ -371,9 +361,22 @@ class OpenAICompatiblePassthroughResolver(SmarterHelperMixin):
                 base_url=provider_orm.base_url,
                 api_key=api_key.get_secret_value() if api_key else "",
             )
-            return retval.handler
+            return retval
 
-        return get_cached_passthrough_chat_provider(provider, request.user.username)  # type: ignore
+        return get_cached_openai_client_for_provider(provider_name, user.username)  # type: ignore
+
+    def get_passthrough_handler(
+        self, request: Request, provider_name: Optional[str] = None, **kwargs
+    ) -> OpenAICompatiblePassthroughProtocol:
+        """
+        Factor function that returns a SmarterOpenAIClient.handler method that is configured
+        from data in the Provider model. If provider is not specified, it will use the default provider.
+        """
+        if not provider_name:
+            provider_name = self.default_handler_name
+
+        retval = self.get_openai_client_for_provider(provider_name=provider_name, user=request.user)
+        return retval.handler
 
 
 smarter_compatible_chat_providers = SmarterCompatibleChatProviders()

@@ -100,7 +100,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
         self.provider_name = kwargs.pop("provider_name")
         super().setup(request, *args, **kwargs)
         try:
-            self.handler = provider_resolver.get_handler(request, self.provider_name)
+            self.handler = provider_resolver.get_passthrough_handler(request, self.provider_name)
         except KeyError:
             logger.error("Provider '%s' not found in openai_compatible_passthrough_resolver", self.provider_name)
             return SmarterHttpResponseNotFound(
