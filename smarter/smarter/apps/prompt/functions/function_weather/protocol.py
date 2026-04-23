@@ -37,12 +37,12 @@ Two functions are required for implementing this protocol:
     weather data from an API).
 
 The factory function (`weather_tool_factory`) is consumed by
-`OpenAICompatibleChatProvider.handle_function_provided()` during the tool
+`SmarterOpenAICompatibleChatProvider.handle_function_provided()` during the tool
 registration process, which adds the tool definition to the list of available
 tools for the LLM to call.
 
 The implementation function (`get_current_weather`) is executed by
-`OpenAICompatibleChatProvider.process_tool_call()` when the LLM requests
+`SmarterOpenAICompatibleChatProvider.process_tool_call()` when the LLM requests
 this tool following iteration #1 of the conversation.
 
 Overview

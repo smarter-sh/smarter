@@ -93,7 +93,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class OpenAICompatibleChatProvider(SmarterChatProviderBase):
+class SmarterOpenAICompatibleChatProvider(SmarterChatProviderBase):
     """
     Chat provider for OpenAI-compatible text completion APIs.
 
@@ -117,7 +117,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
 
         .. code-block:: python
 
-            class MyProvider(OpenAICompatibleChatProvider):
+            class MyProvider(SmarterOpenAICompatibleChatProvider):
                 pass
 
             provider = MyProvider()
@@ -665,7 +665,7 @@ class OpenAICompatibleChatProvider(SmarterChatProviderBase):
         """
         logger.debug("%s.handle_plugin_selected() called.", self.formatted_class_name)
         logger.warning(
-            "smarter.apps.provider.services.text_completion.base_classes.OpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
+            "smarter.apps.provider.services.text_completion.base_classes.SmarterOpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
         )
         if not isinstance(self.messages, list):
             raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")

@@ -42,7 +42,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
     embedding contextual information about the request and operation performed. It automatically
     attaches metadata such as the API version, the entity ("thing") being operated on, and the
     command executed. When journaling is enabled, it also creates a corresponding journal entry
-    in the database, capturing the request, response, user, and status_code code for audit and traceability.
+    in the database, capturing the request, response, user, and status code for audit and traceability.
 
     Smarter-specific parameters include the original Django request object, the noun ("thing") being
     journaled, the command performed, and the API response data. Standard Django JsonResponse parameters
@@ -81,7 +81,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         thing: Optional[Union[SmarterJournalThings, str]] = None,
         command: Optional[SmarterJournalCliCommands] = None,
         json_dumps_params=None,
-        status_code: int = HTTPStatus.OK.value,
+        status: int = HTTPStatus.OK.value,
         **kwargs,
     ):
         data[SmarterJournalApiResponseKeys.API] = SmarterApiVersions.V1
@@ -155,7 +155,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                     command=command,
                     request=request_data,
                     response=serializable_data,
-                    status=status_code,
+                    status=status,
                 )
                 data[SmarterJournalApiResponseKeys.METADATA] = {
                     SCLIResponseMetadata.KEY: journal.key,
@@ -163,12 +163,12 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
             # pylint: disable=broad-except
             except Exception as e:
                 logger.error(
-                    "%s user=%s, thing=%s, command=%s, status_code=%s\nrequest=%s\nresponse: %s",
+                    "%s user=%s, thing=%s, command=%s, status=%s\nrequest=%s\nresponse: %s",
                     logger_prefix,
                     user,
                     thing,
                     command,
-                    status_code,
+                    status,
                     request,
                     serializable_data,
                 )
@@ -179,7 +179,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
 
         # Only pass allowed kwargs to JsonResponse
         allowed_kwargs = {}
-        allowed_keys = {"content_type", "status", "status_code", "headers", "reason"}
+        allowed_keys = {"content_type", "status", "status", "headers", "reason"}
         for k in list(kwargs.keys()):
             if k in allowed_keys:
                 allowed_kwargs[k] = kwargs.pop(k)
@@ -189,7 +189,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 encoder=encoder,
                 safe=safe,
                 json_dumps_params=json_dumps_params,
-                status=status_code,
+                status=status,
                 **allowed_kwargs,
             )
         else:
@@ -198,7 +198,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 encoder=encoder,
                 safe=safe,
                 json_dumps_params=json_dumps_params,
-                status=status_code,
+                status=status,
                 **allowed_kwargs,
             )
 
@@ -239,7 +239,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
                 "error_class": "ValueError",
                 "stack_trace": "...",
                 "description": "Invalid input",
-                "status_code": 400,
+                "status": 400,
                 "args": "...",
                 "cause": "...",
                 "context": "thing=account, command=create"
@@ -260,7 +260,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         json_dumps_params: Optional[str] = None,
         stack_trace: str = "No stack trace available.",
         description: Optional[str] = None,
-        status_code: int = HTTPStatus.INTERNAL_SERVER_ERROR.value,
+        status: int = HTTPStatus.INTERNAL_SERVER_ERROR.value,
         **kwargs,
     ):
         error_class = e.__class__.__name__ if e else "Unknown Exception"
@@ -273,7 +273,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
                 description = e
 
         url = self.smarter_build_absolute_uri(request) or "Unknown URL"
-        status = str(HTTPStatus(status_code).phrase) if status_code else e.status if hasattr(e, "status") else HTTPStatus.INTERNAL_SERVER_ERROR  # type: ignore[union-attr]
+        status = status or HTTPStatus.INTERNAL_SERVER_ERROR
         args = e.args if isinstance(e, dict) and hasattr(e, "args") else "url=" + url
         cause = str(e.__cause__) if isinstance(e, dict) and hasattr(e, "__cause__") else "Python Exception"
         context = (
@@ -287,7 +287,6 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             SmarterJournalApiResponseErrorKeys.STACK_TRACE: stack_trace,
             SmarterJournalApiResponseErrorKeys.DESCRIPTION: description,
             SmarterJournalApiResponseErrorKeys.STATUS: status,
-            SmarterJournalApiResponseErrorKeys.STATUS_CODE: status_code,
             SmarterJournalApiResponseErrorKeys.ARGS: args,
             SmarterJournalApiResponseErrorKeys.CAUSE: cause,
             SmarterJournalApiResponseErrorKeys.CONTEXT: context,
@@ -306,6 +305,6 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             description=description,
             safe=safe,
             json_dumps_params=json_dumps_params,
-            status_code=status_code,
+            status=status,
             **kwargs,
         )
