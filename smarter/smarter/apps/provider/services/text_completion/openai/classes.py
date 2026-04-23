@@ -6,7 +6,6 @@ import logging
 
 from typing_extensions import deprecated
 
-from smarter.apps.provider.clients import SmarterOpenAIClient
 from smarter.apps.provider.services.text_completion.const import (
     VALID_CHAT_COMPLETION_MODELS,
 )

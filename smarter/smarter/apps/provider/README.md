@@ -10,3 +10,4 @@ Examples of providers:
 - Fireworks AI: https://api.fireworks.ai/inference/v1
 - DeepInfra: https://api.deepinfra.com/v1/openai
 - Anyscale: https://api.endpoints.anyscale.com/v1
+- MetaAI: beuller? beuller? bueller? their api endpoint that is opeai-compatible has vanished. i'm investigating.
