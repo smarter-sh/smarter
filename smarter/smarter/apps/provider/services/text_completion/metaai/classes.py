@@ -50,19 +50,3 @@ class MetaAISmarterChatProvider(OpenAICompatibleChatProvider):
             add_built_in_tools=False,
             **kwargs,
         )
-
-
-@deprecated("Please use the Django ORM model Provider")
-class MetaAIPassthroughChatProvider(SmarterOpenAIClient):
-    """
-    MetaAI passthrough chat provider service.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args,
-            provider=PROVIDER_NAME,
-            base_url=BASE_URL,
-            api_key=smarter_settings.llama_api_key.get_secret_value(),
-            **kwargs,
-        )
