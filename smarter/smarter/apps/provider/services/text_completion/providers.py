@@ -180,14 +180,14 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
                     raise Provider.DoesNotExist
             except Provider.DoesNotExist as e:
                 raise SmarterValueError(f"Provider {provider_name} not found for user {user}.") from e
-            except Provider.MultipleObjectsReturned:
+            except Provider.MultipleObjectsReturned as e:
                 provider_orm = Provider.objects.filter(is_default=True, is_active=True).first()  # type: ignore
+                if not provider_orm:
+                    raise SmarterValueError(f"Provider {provider_name} not found for user {user}.") from e
                 logger.warning(
                     f"Multiple default providers found for user {username}. Choosing the first one: {provider_orm}."
                 )
 
-            if not provider_orm:
-                raise SmarterValueError(f"Provider {provider_name} not found for user {user}.")
             return provider_orm
 
         return get_cached_provider_orm_by_name_and_username(provider_name, user.username)  # type: ignore
