@@ -170,7 +170,9 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         retval = self.get_openai_client_for_provider(provider_name=provider_name, user=request.user)  # type: ignore
         return retval.handler
 
-    def get_smarter_handler(self, provider: Optional[str] = None) -> SmarterChatHandlerProtocol:
+    def get_smarter_handler(
+        self, request: Request, provider_name: Optional[str] = None, **kwargs
+    ) -> SmarterChatHandlerProtocol:
         """
         A convenience method to get a handler by provider name.
         """
@@ -185,14 +187,14 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
             """Expose the handler method of the default provider"""
 
             client_orm = self.get_client_orm_by_provider_name_and_user(
-                provider_name=provider or self.default_handler_name, user=user_profile.user  # type: ignore
+                provider_name=provider_name or self.default_handler_name, user=request.user  # type: ignore
             )
 
             BASE_URL = "https://api.openai.com/v1/"  # don't forget the trailing slash
             DEFAULT_MODEL = "gpt-4o-mini"
 
             smarter_openai_compatible_provider = OpenAISmarterClient(
-                provider=OPENAI_PROVIDER_NAME,
+                provider_name=OPENAI_PROVIDER_NAME,
                 base_url=BASE_URL,
                 api_key=smarter_settings.openai_api_key.get_secret_value(),
                 default_model=DEFAULT_MODEL,
@@ -224,7 +226,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         """
         if self.client_type == ClientTypeEnum.PASSTHROUGH:
             return self.get_passthrough_handler(request=request, provider_name=provider_name, **kwargs)
-        return self.get_smarter_handler(provider=provider_name)
+        return self.get_smarter_handler(request=request, provider_name=provider_name, **kwargs)
 
     def default_handler(
         self, request: Request, **kwargs
@@ -235,5 +237,5 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         return self.handler(request=request, provider_name=self.default_handler_name, **kwargs)
 
 
-smarter_compatible_chat_providers = OpenAICompatibleClientFactory(ClientTypeEnum.SMARTER)
+smarter_compatible_client = OpenAICompatibleClientFactory(ClientTypeEnum.SMARTER)
 openai_compatible_client = OpenAICompatibleClientFactory(ClientTypeEnum.PASSTHROUGH)

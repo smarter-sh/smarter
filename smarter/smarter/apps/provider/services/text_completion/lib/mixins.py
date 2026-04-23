@@ -16,6 +16,7 @@ from smarter.apps.prompt.tasks import (
     create_chat_plugin_usage,
     create_chat_tool_call_history,
 )
+from smarter.apps.provider.models import Provider
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
@@ -84,6 +85,8 @@ class ChatDbMixin(AccountMixin):
         "_charges",
         "_chat_history",
         "_message_history",
+        "_provider_name",
+        "_provider",
         "_ready",
     )
 
@@ -121,6 +124,8 @@ class ChatDbMixin(AccountMixin):
         self._charges: Optional[QuerySet[Charge]] = None
         self._chat_history: Optional[QuerySet[ChatHistory]] = None
         self._message_history: Optional[list[dict]] = None
+        self._provider_name: Optional[str] = kwargs.get("provider_name", None)
+        self._provider: Optional[Provider] = kwargs.get("provider", None)
         self._ready: bool = False
         super().__init__(*args, **kwargs)
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
@@ -522,6 +527,69 @@ class ChatDbMixin(AccountMixin):
             _InternalKeys.TotalTokens: self.db_total_total_tokens,
         }
 
+    @property
+    def provider_name(self) -> Optional[str]:
+        """
+        Get the provider name associated with this provider model.
+
+        This property returns the name of the provider that this model is configured to use.
+        It is typically used to determine which provider's handler to invoke for chat completions.
+
+        Returns
+        -------
+        str or None
+            The name of the provider, or None if not set.
+
+        Example
+        -------
+        .. code-block:: python
+
+            print(provider.provider_name)
+        """
+        if self.provider:
+            return self.provider.name
+        return None
+
+    @property
+    def provider(self) -> Optional[Provider]:
+        """
+        Get the Provider instance associated with this provider model.
+
+        This property returns the `Provider` object that represents the provider
+        configuration for this model. It is typically used to access provider-specific
+        settings and information.
+
+        Returns
+        -------
+        Provider or None
+            The Provider instance associated with this model, or None if not set.
+
+        Example
+        -------
+        .. code-block:: python
+
+            provider_instance = provider.provider
+            if provider_instance:
+                print(provider_instance.name)
+        """
+        if self._provider is None and self._provider_name is not None:
+            self._provider = Provider.objects.filter(is_active=True, name=self.provider_name).with_read_permission_for(self.user_profile.user).first()  # type: ignore
+            if self._provider:
+                logger.debug(
+                    "%s.provider property loaded provider '%s' for user %s.",
+                    self.formatted_class_name,
+                    self._provider.name,
+                    self.user_profile.user.username if self.user_profile and self.user_profile.user else "Unknown",
+                )
+            else:
+                logger.warning(
+                    "%s.provider property could not find an active provider with name '%s' for user %s.",
+                    self.formatted_class_name,
+                    self.provider_name,
+                    self.user_profile.user.username if self.user_profile and self.user_profile.user else "Unknown",
+                )
+        return self._provider
+
     def db_refresh(self):
         """
         Refresh the provider instance and its cached database attributes.
@@ -672,21 +740,12 @@ class ChatDbMixin(AccountMixin):
                 reference="req-12345"
             )
         """
-        logger.debug(
-            "%s.db_insert_charge() called with provider: %s, charge_type: %s, completion_tokens: %d, prompt_tokens: %d, total_tokens: %d, model: %s, reference: %s",
-            self.formatted_class_name,
-            provider,
-            charge_type,
-            completion_tokens,
-            prompt_tokens,
-            total_tokens,
-            model,
-            reference,
-        )
         if not self.account:
             raise SmarterValueError("Account is required to create a charge record.")
         if not self.chat:
             raise SmarterValueError("Chat is required to create a charge record.")
+        if not self.provider:
+            raise SmarterValueError("Provider is required to create a charge record.")
         if not self.user:
             logger.warning("Creating a charge record with no User.")
 

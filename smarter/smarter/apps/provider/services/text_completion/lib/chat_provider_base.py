@@ -33,6 +33,7 @@ from smarter.apps.provider.services.text_completion.utils import (
     get_request_body,
     parse_request,
 )
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
     SmarterValueError,
 )
@@ -64,7 +65,7 @@ class SmarterChatProviderBase(ChatDbMixin):
     This class defines the core interface and shared logic for chat providers
     that interact with ChatBots via the Smarter API, including both the
     Reactapp and deployed ChatBots accessible through named URLs. It is
-    designed to be subclassed by specific provider implementations.
+    designed to be subclassed by specific provider_name implementations.
 
     The API is largely a superset of the OpenAI chat completion API, with
     additional properties and methods for configuring the Reactapp and for
@@ -75,12 +76,12 @@ class SmarterChatProviderBase(ChatDbMixin):
         - Provides a unified interface for chat providers, supporting both OpenAI-compatible and proprietary Smarter features.
         - Handles message thread management, including system prompts, user/assistant messages, and plugin/tool messages.
         - Supports built-in tools (e.g., weather, date calculator) and plugin integration.
-        - Manages provider configuration, validation, and readiness checks.
+        - Manages provider_name configuration, validation, and readiness checks.
         - Tracks token usage and charge insertion for billing/auditing.
 
     **Usage:**
 
-        Subclass this base class to implement a new chat provider. Override or extend methods as needed for provider-specific logic.
+        Subclass this base class to implement a new chat provider_name. Override or extend methods as needed for provider_name-specific logic.
 
     **Example:**
         .. code-block:: python
@@ -93,7 +94,6 @@ class SmarterChatProviderBase(ChatDbMixin):
     """
 
     __slots__ = (
-        "_provider",
         "_default_model",
         "_default_system_role",
         "_default_temperature",
@@ -125,7 +125,6 @@ class SmarterChatProviderBase(ChatDbMixin):
         "available_functions",
     )
 
-    _provider: Optional[str]
     _default_model: Optional[str]
     _default_system_role: Optional[str]
     _default_temperature: Optional[float]
@@ -166,26 +165,25 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     def __init__(
         self,
-        provider: str,
-        base_url: str,
-        api_key: str,
-        default_model: str,
-        default_system_role: str,
-        default_temperature: float,
-        default_max_tokens: int,
-        valid_chat_completion_models: list[str],
-        add_built_in_tools: bool,
-        *args,
+        provider_name: Optional[str],
+        base_url: Optional[str],
+        api_key: Optional[str],
+        default_model: Optional[str],
+        default_system_role: Optional[str] = smarter_settings.llm_default_system_role,
+        default_temperature: Optional[float] = smarter_settings.llm_default_temperature,
+        default_max_tokens: Optional[int] = smarter_settings.llm_default_max_tokens,
+        valid_chat_completion_models: Optional[list[str]] = None,
+        add_built_in_tools: Optional[bool] = False,
         **kwargs,
     ):
         """
         Initialize the SmarterChatProviderBase with the given parameters.
 
-        :param provider: The name of the chat provider (e.g., "openai", "google").
-        :type provider: str
-        :param base_url: The base URL for the chat provider's API.
+        :param provider_name: The name of the chat provider_name (e.g., "openai", "google").
+        :type provider_name: str
+        :param base_url: The base URL for the chat provider_name's API.
         :type base_url: str
-        :param api_key: The API key for authenticating with the chat provider.
+        :param api_key: The API key for authenticating with the chat provider_name.
         :type api_key: str
         :param default_model: The default model to use for chat completions.
         :type default_model: str
@@ -195,16 +193,16 @@ class SmarterChatProviderBase(ChatDbMixin):
         :type default_temperature: float
         :param default_max_tokens: The default maximum number of tokens for chat completions.
         :type default_max_tokens: int
-        :param valid_chat_completion_models: A list of valid chat completion models for the provider.
+        :param valid_chat_completion_models: A list of valid chat completion models for the provider_name.
         :type valid_chat_completion_models: list[str]
-        :param add_built_in_tools: Whether to add built-in tools (weather and date calculator) to the provider.
+        :param add_built_in_tools: Whether to add built-in tools (weather and date calculator) to the provider_name.
         :type add_built_in_tools: bool
 
 
 
 
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
         # constructor arguments
         self._default_model = None
@@ -250,7 +248,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         # initializations
         self.serialized_tool_calls = None
         self._chat = kwargs.get("chat")
-        self._provider = provider
+        self._provider_name = provider_name
         self._base_url = base_url
         self._api_key = api_key
 
@@ -322,7 +320,7 @@ class SmarterChatProviderBase(ChatDbMixin):
 
         if self.valid_chat_completion_models and self.default_model not in self.valid_chat_completion_models:
             raise SmarterValueError(
-                f"Internal error. Invalid default model: {self.default_model} not found in list of valid {self.provider} models {self.valid_chat_completion_models}."
+                f"Internal error. Invalid default model: {self.default_model} not found in list of valid {self.provider_name} models {self.valid_chat_completion_models}."
             )
 
         if not self.account:
@@ -331,9 +329,9 @@ class SmarterChatProviderBase(ChatDbMixin):
     @cached_property
     def ready(self) -> bool:
         """
-        Check if the chat provider is ready to process requests.
+        Check if the chat provider_name is ready to process requests.
 
-        :returns: True if the chat provider is ready, False otherwise.
+        :returns: True if the chat provider_name is ready, False otherwise.
         :rtype: bool
         """
         return bool(self.chat) and bool(self.data) and bool(self.account)
@@ -375,23 +373,12 @@ class SmarterChatProviderBase(ChatDbMixin):
         return formatted_text(f"{__name__}.{SmarterChatProviderBase.__name__}[{id(self)}]")
 
     @property
-    def provider(self) -> Optional[str]:
-        """
-        Get the name of the chat provider. This property
-        returns the internal _provider attribute.
-
-        :returns: The name of the chat provider.
-        :rtype: Optional[str]
-        """
-        return self._provider
-
-    @property
     def base_url(self) -> Optional[str]:
         """
-        Get the base URL of the chat provider. This property
+        Get the base URL of the chat provider_name. This property
         returns the internal _base_url attribute.
 
-        :returns: The base URL of the chat provider.
+        :returns: The base URL of the chat provider_name.
         :rtype: Optional[str]
         """
         return self._base_url
@@ -416,10 +403,10 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def api_key(self) -> Optional[str]:
         """
-        Get the API key of the chat provider. This property
+        Get the API key of the chat provider_name. This property
         returns the unmasked internal _api_key attribute.
 
-        :returns: The unmasked API key of the chat provider.
+        :returns: The unmasked API key of the chat provider_name.
         :rtype: Optional[str]
         """
         return self._api_key
@@ -427,10 +414,10 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_model(self) -> Optional[str]:
         """
-        Get the default model of the chat provider. This property
+        Get the default model of the chat provider_name. This property
         returns the internal _default_model attribute.
 
-        :returns: The default model of the chat provider.
+        :returns: The default model of the chat provider_name.
         :rtype: Optional[str]
         """
         return self._default_model
@@ -438,10 +425,10 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_system_role(self) -> Optional[str]:
         """
-        Get the default system role of the chat provider. This property
+        Get the default system role of the chat provider_name. This property
         returns the internal _default_system_role attribute.
 
-        :returns: The default system role of the chat provider.
+        :returns: The default system role of the chat provider_name.
         :rtype: Optional[str]
         """
         return self._default_system_role
@@ -449,10 +436,10 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_temperature(self) -> Optional[float]:
         """
-        Get the default temperature of the chat provider. This property
+        Get the default temperature of the chat provider_name. This property
         returns the internal _default_temperature attribute.
 
-        :returns: The default temperature of the chat provider.
+        :returns: The default temperature of the chat provider_name.
         :rtype: Optional[float]
         """
         return self._default_temperature
@@ -460,10 +447,10 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_max_tokens(self) -> Optional[int]:
         """
-        Get the default max completion tokens of the chat provider. This property
+        Get the default max completion tokens of the chat provider_name. This property
         returns the internal _default_max_completion_tokens attribute.
 
-        :returns: The default max completion tokens of the chat provider.
+        :returns: The default max completion tokens of the chat provider_name.
         :rtype: Optional[int]
         """
         return self._default_max_completion_tokens
@@ -471,10 +458,10 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def valid_chat_completion_models(self) -> Optional[list[str]]:
         """
-        Get the list of valid chat completion models for the chat provider. This property
+        Get the list of valid chat completion models for the chat provider_name. This property
         returns the internal _valid_chat_completion_models attribute.
 
-        A valid chat completion model is one that is supported by the chat provider's
+        A valid chat completion model is one that is supported by the chat provider_name's
         API for chat completions.
 
         :returns: The list of valid chat completion models.
@@ -572,7 +559,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         """
         if role not in OpenAIMessageKeys.all_roles:
             raise SmarterValueError(
-                f"Internal error. Invalid message role: {role} not found in list of valid {self.provider} message roles {OpenAIMessageKeys.all_roles}."
+                f"Internal error. Invalid message role: {role} not found in list of valid {self.provider_name} message roles {OpenAIMessageKeys.all_roles}."
             )
         if not content and not message:
             raise SmarterValueError(
@@ -610,7 +597,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         :rtype: None
         """
         tool_call_to_json = tool_call.model_dump()
-        content = f"{self.provider} called this tool: {tool_call.function.name}({tool_call.function.arguments})"  # type: ignore
+        content = f"{self.provider_name} called this tool: {tool_call.function.name}({tool_call.function.arguments})"  # type: ignore
         content = content + f"\n\nTool call:\n--------------------\n{json.dumps(tool_call_to_json, indent=4)}"
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 

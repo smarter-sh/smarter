@@ -2,8 +2,6 @@
 Constants for the OpenAI provider.
 """
 
-import openai
-
 
 # pylint: disable=too-few-public-methods
 class OpenAIObjectTypes:
