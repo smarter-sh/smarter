@@ -15,7 +15,7 @@ from smarter.apps.provider.services.text_completion.lib.protocols import (
     OpenAICompatiblePassthroughProtocol,
 )
 from smarter.apps.provider.services.text_completion.providers import (
-    openai_compatible_passthrough_resolver as provider_resolver,
+    openai_compatible_client,
 )
 from smarter.common.exceptions import SmarterIlligalInvocationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
@@ -100,9 +100,9 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
         self.provider_name = kwargs.pop("provider_name")
         super().setup(request, *args, **kwargs)
         try:
-            self.handler = provider_resolver.get_passthrough_handler(request, self.provider_name)
+            self.handler = openai_compatible_client.get_passthrough_handler(request, self.provider_name)
         except KeyError:
-            logger.error("Provider '%s' not found in openai_compatible_passthrough_resolver", self.provider_name)
+            logger.error("Provider '%s' not found in openai_compatible_client", self.provider_name)
             return SmarterHttpResponseNotFound(
                 error_message=f"Provider '{self.provider_name}' not found", request=request
             )

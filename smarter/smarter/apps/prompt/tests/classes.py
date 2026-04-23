@@ -174,7 +174,7 @@ class ProviderBaseClass(TestAccountMixin):
         # create a chatbot that uses the provider
         print(f"Setting up provider {self.provider}")
         self.chatbot = self.chatbot_factory(provider=self.provider)  # type: ignore[assignment]
-        self.handler = smarter_compatible_chat_providers.get_handler(provider=self.provider)
+        self.handler = smarter_compatible_chat_providers.get_smarter_handler(provider=self.provider)
         print(f"provider {self.provider} is setup")
 
         self.client = Client()
@@ -336,7 +336,7 @@ class ProviderBaseClass(TestAccountMixin):
         try:
             if not self.handler:
                 raise ValueError(
-                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_handler(provider=...) ?"
+                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_smarter_handler(provider=...) ?"
                 )
 
             response = self.handler(
@@ -387,7 +387,7 @@ class ProviderBaseClass(TestAccountMixin):
         try:
             if not self.handler:
                 raise ValueError(
-                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_handler(provider=...) ?"
+                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_smarter_handler(provider=...) ?"
                 )
 
             response = self.handler(
@@ -406,7 +406,7 @@ class ProviderBaseClass(TestAccountMixin):
         try:
             if not self.handler:
                 raise ValueError(
-                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_handler(provider=...) ?"
+                    "Handler is not set. Did you call smarter_compatible_chat_providers.get_smarter_handler(provider=...) ?"
                 )
 
             response = self.handler(

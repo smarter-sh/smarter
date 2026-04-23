@@ -595,7 +595,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.NOT_FOUND.value,
                 stack_trace=traceback.format_exc(),
             )
-        handler: SmarterChatHandlerProtocol = smarter_compatible_chat_providers.get_handler(
+        handler: SmarterChatHandlerProtocol = smarter_compatible_chat_providers.get_smarter_handler(
             provider=self.chatbot.provider
         )
         if not self.chat_helper:

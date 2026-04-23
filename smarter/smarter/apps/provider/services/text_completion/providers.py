@@ -280,12 +280,12 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
     @deprecated(
         "SmarterCompatibleChatProviders is deprecated and will be removed in a future release. Please use SmarterCompatibleChatProvidersV2 instead."
     )
-    def get_handler(self, provider: Optional[str] = None) -> SmarterChatHandlerProtocol:
+    def get_smarter_handler(self, provider: Optional[str] = None) -> SmarterChatHandlerProtocol:
         """
         A convenience method to get a handler by provider name.
         """
         warnings.warn(
-            f"{self.formatted_class_name}.get_handler() is deprecated and will be removed in a future release. Please use SmarterCompatibleChatProvidersV2.get_handler() instead.",
+            f"{self.formatted_class_name}.get_smarter_handler() is deprecated and will be removed in a future release. Please use SmarterCompatibleChatProvidersV2.get_smarter_handler() instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -307,7 +307,7 @@ class SmarterCompatibleChatProviders(SmarterHelperMixin):
         ]
 
 
-class OpenAICompatiblePassthroughResolver(SmarterHelperMixin):
+class OpenAICompatibleClientFactory(SmarterHelperMixin):
     """
     A newer version of the OpenAICompatiblePassthroughChatProviders class.
     """
@@ -369,15 +369,22 @@ class OpenAICompatiblePassthroughResolver(SmarterHelperMixin):
         self, request: Request, provider_name: Optional[str] = None, **kwargs
     ) -> OpenAICompatiblePassthroughProtocol:
         """
-        Factor function that returns a SmarterOpenAIClient.handler method that is configured
-        from data in the Provider model. If provider is not specified, it will use the default provider.
+        Instantiates a SmarterOpenAIClient for the given provider name and
+        returns its passthrough handler. The key thing is that whatever handler we use
+        here must implement the OpenAICompatiblePassthroughProtocol.
         """
-        if not provider_name:
-            provider_name = self.default_handler_name
+        provider_name = provider_name or self.default_handler_name
+        retval = self.get_openai_client_for_provider(provider_name=provider_name, user=request.user)  # type: ignore
+        return retval.passthrough_handler
 
-        retval = self.get_openai_client_for_provider(provider_name=provider_name, user=request.user)
-        return retval.handler
+    def get_smarter_handler(self, provider: Optional[str] = None) -> SmarterChatHandlerProtocol:
+        """
+        Instantiates a SmarterOpenAIClient for the given provider name and
+        returns its smarter compatible handler. The key thing is that whatever
+        handler we use here must implement the SmarterChatHandlerProtocol.
+        """
+        pass
 
 
 smarter_compatible_chat_providers = SmarterCompatibleChatProviders()
-openai_compatible_passthrough_resolver = OpenAICompatiblePassthroughResolver()
+openai_compatible_client = OpenAICompatibleClientFactory()

@@ -77,14 +77,14 @@ class SmarterOpenAIClient(SmarterHelperMixin):
         self.base_url = base_url
         self.api_key = api_key
 
-    def handler(
+    def passthrough_handler(
         self,
         request: Request,
         user_profile: UserProfile,
         data: dict[str, Any],
         **kwargs,
     ):
-        logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.handler()")
+        logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.passthrough_handler()")
         response: Optional[ChatCompletion] = None
         provider: Optional[Provider] = None
         if not hasattr(request, "user") or not request.user.is_authenticated:
@@ -121,8 +121,8 @@ class SmarterOpenAIClient(SmarterHelperMixin):
             )
         data = request.data
 
-        chat_started.send(sender=self.handler, request=request, data=data)
-        chat_completion_request.send(sender=self.handler, data=data)
+        chat_started.send(sender=self.passthrough_handler, request=request, data=data)
+        chat_completion_request.send(sender=self.passthrough_handler, data=data)
 
         try:
             logger.debug("%s sending request to %s with data: %s", logger_prefix, openai.base_url, formatted_json(data))
@@ -131,7 +131,7 @@ class SmarterOpenAIClient(SmarterHelperMixin):
         except Exception as e:
             stack_trace = traceback.format_exc()
             chat_response_failure.send(
-                sender=self.handler,
+                sender=self.passthrough_handler,
                 iteration=1,
                 exception=e,
                 first_iteration=data,
@@ -151,8 +151,8 @@ class SmarterOpenAIClient(SmarterHelperMixin):
                 stack_trace=stack_trace,
             )
 
-        chat_completion_response.send(sender=self.handler, request=request, response=response)
-        chat_finished.send(sender=self.handler, request=request, response=response)
+        chat_completion_response.send(sender=self.passthrough_handler, request=request, response=response)
+        chat_finished.send(sender=self.passthrough_handler, request=request, response=response)
 
         response_dict: dict = {"message": "Response is not a ChatCompletion object"}
         if isinstance(response, ChatCompletion):
