@@ -4,10 +4,12 @@ Google AI chat provider.
 
 import logging
 
+from typing_extensions import deprecated
+
 # smarter stuff
-from smarter.apps.provider.services.text_completion.base_classes import (
+from smarter.apps.provider.clients import SmarterOpenAIClient
+from smarter.apps.provider.services.text_completion.lib import (
     OpenAICompatibleChatProvider,
-    OpenAICompatiblePassthroughChatProvider,
 )
 from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
@@ -28,6 +30,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
+@deprecated("Please use the Django ORM model Provider")
 class GoogleAISmarterChatProvider(OpenAICompatibleChatProvider):
     """
     GoogleAI chat provider.
@@ -49,7 +52,8 @@ class GoogleAISmarterChatProvider(OpenAICompatibleChatProvider):
         )
 
 
-class GoogleAIPassthroughChatProvider(OpenAICompatiblePassthroughChatProvider):
+@deprecated("Please use the Django ORM model Provider")
+class GoogleAIPassthroughChatProvider(SmarterOpenAIClient):
     """
     GoogleAI passthrough chat provider service.
     """

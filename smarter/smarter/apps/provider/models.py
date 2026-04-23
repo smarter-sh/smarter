@@ -145,6 +145,7 @@ class Provider(MetaDataWithOwnershipModel):
         null=False,
     )
     # good things
+    is_default = models.BooleanField(default=False, blank=False, null=False)
     is_active = models.BooleanField(default=False, blank=False, null=False)
     is_verified = models.BooleanField(default=False, blank=False, null=False)
     is_featured = models.BooleanField(default=False, blank=False, null=False)

@@ -53,6 +53,7 @@ from pydantic import (
 )
 from pydantic import __version__ as pydantic_version
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing_extensions import deprecated
 
 # smarter stuff
 from smarter.common.api import SmarterApiVersions
@@ -256,6 +257,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Anthropic API key.
         """
+        warnings.warn(
+            "`anthropic_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if v is None:
             return settings_defaults.ANTHROPIC_API_KEY
 
@@ -1961,6 +1967,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Gemini API key.
         """
+        warnings.warn(
+            "`gemini_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if str(v) in THE_EMPTY_SET:
             return settings_defaults.GEMINI_API_KEY
         if not isinstance(v, SecretStr):
@@ -2109,6 +2120,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Llama API key.
         """
+        warnings.warn(
+            "`llama_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if str(v) in THE_EMPTY_SET:
             return settings_defaults.LLAMA_API_KEY
 
@@ -2543,6 +2559,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated OpenAI API key.
         """
+        warnings.warn(
+            "`openai_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if str(v) in THE_EMPTY_SET and settings_defaults.OPENAI_API_KEY is not None:
             return settings_defaults.OPENAI_API_KEY
 

@@ -4,12 +4,14 @@ OpenAI chat provider.
 
 import logging
 
-from smarter.apps.provider.services.text_completion.base_classes import (
-    OpenAICompatibleChatProvider,
-    OpenAICompatiblePassthroughChatProvider,
-)
+from typing_extensions import deprecated
+
+from smarter.apps.provider.clients import SmarterOpenAIClient
 from smarter.apps.provider.services.text_completion.const import (
     VALID_CHAT_COMPLETION_MODELS,
+)
+from smarter.apps.provider.services.text_completion.lib import (
+    OpenAICompatibleChatProvider,
 )
 from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
@@ -32,6 +34,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
+@deprecated("Please use the Django ORM model Provider")
 class OpenAISmarterChatProvider(OpenAICompatibleChatProvider):
     """
     OpenAI chat provider.
@@ -53,7 +56,8 @@ class OpenAISmarterChatProvider(OpenAICompatibleChatProvider):
         )
 
 
-class OpenAIPassthroughChatProvider(OpenAICompatiblePassthroughChatProvider):
+@deprecated("Please use the Django ORM model Provider")
+class OpenAIPassthroughChatProvider(SmarterOpenAIClient):
     """
     OpenAI passthrough chat provider service.
     """
