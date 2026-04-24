@@ -12,10 +12,10 @@ from django.urls import path
 from smarter.common.utils import camel_case_object_name
 
 from .const import namespace
-from .views import (
+from .views.terminal import TerminalEmulatorView
+from .views.views import (
     ChatAppWorkbenchView,
     ChatConfigView,
-    ManifestDropZoneView,
     PromptLandingView,
     PromptListView,
     PromptManifestView,
@@ -58,32 +58,26 @@ class PromptReverseViews:
 
     namespace = namespace
 
-    prompt_manifest_by_hashed_id = camel_case_object_name(PromptManifestView)
-    prompt_chat_by_hashed_id = camel_case_object_name(ChatAppWorkbenchView)
-    prompt_config_by_hashed_id = camel_case_object_name(ChatConfigView)
-    prompt_landing_by_hashed_id = camel_case_object_name(PromptLandingView)
-    apply = "apply"
+    manifest_by_hashed_id = camel_case_object_name(PromptManifestView)
+    chat_by_hashed_id = camel_case_object_name(ChatAppWorkbenchView)
+    config_by_hashed_id = camel_case_object_name(ChatConfigView)
+    landing_by_hashed_id = camel_case_object_name(PromptLandingView)
+    terminal_emulator = camel_case_object_name(TerminalEmulatorView)
 
 
 urlpatterns = [
     path("", PromptListView.as_view(), name="listview"),
-    path("chatbots/<str:hashed_id>/", PromptLandingView.as_view(), name=PromptReverseViews.prompt_landing_by_hashed_id),
+    path("chatbots/<str:hashed_id>/", PromptLandingView.as_view(), name=PromptReverseViews.landing_by_hashed_id),
     path(
         "chatbots/<str:hashed_id>/manifest/",
         PromptManifestView.as_view(),
-        name=PromptReverseViews.prompt_manifest_by_hashed_id,
+        name=PromptReverseViews.manifest_by_hashed_id,
     ),
     path(
         "chatbots/<str:hashed_id>/chat/",
         ChatAppWorkbenchView.as_view(),
-        name=PromptReverseViews.prompt_chat_by_hashed_id,
+        name=PromptReverseViews.chat_by_hashed_id,
     ),
-    path(
-        "chatbots/<str:hashed_id>/config/", ChatConfigView.as_view(), name=PromptReverseViews.prompt_config_by_hashed_id
-    ),
-    path(
-        "manifest/apply/",
-        ManifestDropZoneView.as_view(),
-        name=PromptReverseViews.apply,
-    ),
+    path("chatbots/<str:hashed_id>/config/", ChatConfigView.as_view(), name=PromptReverseViews.config_by_hashed_id),
+    path("terminal/", TerminalEmulatorView.as_view(), name=PromptReverseViews.terminal_emulator),
 ]

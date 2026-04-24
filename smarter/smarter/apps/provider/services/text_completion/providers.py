@@ -10,11 +10,13 @@ enabling seamless integration with a variety of large language model (LLM) backe
 
 1. **Smarter Chat Protocol**
     - Implements: SmarterChatHandlerProtocol
+    - Indirect service layer for /api/v1/prompts/smarter/<str:provider>/
     - Returns: SmarterChatCompletionResponseType
     - Used for native Smarter chat API requests, supporting Smarter's extensibility model.
 
 2. **OpenAI-Compatible Passthrough Protocol**
     - Implements: OpenAICompatiblePassthroughProtocol
+    - Indirect service layer for /api/v1/prompts/passthrough/<str:provider>/
     - Returns: OpenAICompatibleChatCompletionResponseType
     - Used for OpenAI-compatible API passthrough, enabling direct proxying to third-party LLM providers.
 
