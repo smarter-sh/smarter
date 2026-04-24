@@ -82,7 +82,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     redis-tools \
     libmariadb-dev \
     mariadb-client \
-    libncurses6 && \
+    libncurses6 \
+    groff \
+    less \
+    less && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
@@ -232,5 +235,7 @@ FROM collect_assets AS serve_application
 
 WORKDIR /home/smarter_user/smarter
 USER smarter_user
-CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:9357"]
+# CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:9357"]
+# CMD ["gunicorn", "smarter.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:9357", "--workers", "4"]
+CMD ["uvicorn", "smarter.asgi:application", "--host", "0.0.0.0", "--port", "9357"]
 EXPOSE 8000

@@ -46,6 +46,7 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistorySerializer,
 )
 from smarter.apps.prompt.models import Chat, ChatHelper
+from smarter.apps.prompt.signals import chat_config_invoked, chat_session_invoked
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
@@ -77,8 +78,6 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-
-from .signals import chat_config_invoked, chat_session_invoked
 
 MAX_RETURNED_PLUGINS = 10
 PROMPT_LIST_CACHE_TIMEOUT = smarter_settings.cache_expiration
@@ -188,18 +187,6 @@ class SmarterChatSession(SmarterHelperMixin):
         if retval.endswith("/config/"):
             retval = retval[:-8]
         return retval
-
-
-class ManifestDropZoneView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    A simple view that renders a page with a manifest drop zone
-    for plugin development.
-    """
-
-    template_path = "prompt/manifest-apply.html"
-
-    def get(self, request: HttpRequest, *args, **kwargs):
-        return render(request, self.template_path, context={})
 
 
 class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
@@ -929,7 +916,7 @@ class PromptManifestView(DocsBaseView):
             self.formatted_class_name,
             self.url,
             self.account,
-            self.user_profile.user,
+            self.user_profile.user,  # type: ignore
             self.chatbot,
         )
 

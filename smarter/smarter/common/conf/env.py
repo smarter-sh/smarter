@@ -54,6 +54,8 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         """
         if val is None:
             return default
+        if val == DEFAULT_MISSING_VALUE:
+            return None
         if isinstance(default, str):
             return val.strip() if val is not None else default
         if isinstance(default, bool):

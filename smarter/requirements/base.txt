@@ -27,6 +27,8 @@ anyio==4.13.0
     #   openai
 asgiref==3.11.1
     # via
+    #   channels
+    #   channels-redis
     #   django
     #   django-cors-headers
 attrs==26.1.0
@@ -69,6 +71,12 @@ cffi==2.0.0
     # via
     #   cryptography
     #   pynacl
+channels==4.3.2
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   channels-redis
+channels-redis==4.3.0
+    # via -r smarter/requirements/in/base.in
 charset-normalizer==3.4.7
     # via
     #   niquests
@@ -106,6 +114,7 @@ distro==1.9.0
 django==6.0.4
     # via
     #   -r smarter/requirements/in/base.in
+    #   channels
     #   django-celery-beat
     #   django-cors-headers
     #   django-debug-toolbar
@@ -278,6 +287,8 @@ marshmallow==3.26.2
     # via dataclasses-json
 more-itertools==11.0.2
     # via inflect
+msgpack==1.1.2
+    # via channels-redis
 multidict==6.7.1
     # via
     #   aiohttp
@@ -421,6 +432,7 @@ rapidfuzz==3.14.5
 redis==7.4.0
     # via
     #   celery-redbeat
+    #   channels-redis
     #   django-redis
 regex==2026.4.4
     # via

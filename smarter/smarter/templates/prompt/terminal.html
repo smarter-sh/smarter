@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div id="smarter-terminal-emulator-root"></div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  <script
+    type="module"
+    src="{% static 'terminal_emulator/assets/index.js' %}">
+  </script>
+{% endblock %}

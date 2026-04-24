@@ -16,6 +16,8 @@ botocore                                # AWS CLI SDK core
 cachetools                              # Python object caching library
 celery                                  # asynchronous task queue. works with redis.
 celery-redbeat                          # scheduled asynchronous tasks
+channels                                # web socket support for Django ASGI
+channels-redis                          # Redis ASGI support
 dnspython                               # DNS toolkit for Python
 mysqlclient                             # MySQL client
 paramiko                                # SSH2 protocol library

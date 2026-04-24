@@ -73,7 +73,8 @@ from smarter.apps.account.models import (
     get_resolved_user,
 )
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
+from smarter.apps.api.console_urls import ManifestDropZoneView
+from smarter.apps.api.console_urls import namespace as console_namespace
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.connection.models import ConnectionBase
@@ -85,6 +86,7 @@ from smarter.apps.secret.models import Secret
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
+from smarter.common.utils import camel_case_object_name
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -373,10 +375,12 @@ def file_drop_zone(request: "HttpRequest") -> dict:
 
     @cache_results()
     def get_cached_file_drop_zone_context() -> dict:
+        api_apply_path_name = ":".join([console_namespace, camel_case_object_name(ManifestDropZoneView)])
+        api_apply_path = reverse(api_apply_path_name)
         retval = {
             "drop_zone": {
                 "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
-                "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
+                "api_apply_path": api_apply_path,
                 "workbench_list_path": reverse("prompt:listview"),
                 "plugin_list_path": reverse("plugin:plugin_listview"),
                 "connection_list_path": reverse("connection:connection_listview"),

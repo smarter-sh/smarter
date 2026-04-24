@@ -31,7 +31,8 @@ from smarter.apps.account.views.password_management import (
     PasswordResetRequestView,
     PasswordResetView,
 )
-from smarter.apps.api import urls as api_urls
+from smarter.apps.api import api_urls
+from smarter.apps.api import console_urls as api_drop_zone_urls
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.connection import urls as connection_urls
@@ -55,7 +56,7 @@ from smarter.apps.plugin import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt import urls as prompt_urls
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
-from smarter.apps.prompt.views import ChatConfigView
+from smarter.apps.prompt.views.views import ChatConfigView
 from smarter.apps.provider import urls as provider_urls
 from smarter.apps.provider.const import namespace as provider_namespace
 from smarter.apps.secret import urls as secret_urls
@@ -155,6 +156,7 @@ urlpatterns = [
     # -----------------------------------
     # root paths
     # -----------------------------------
+    path("apply/", include(api_drop_zone_urls, namespace=api_namespace)),
     path("account/", include(account_urls, namespace=account_namespace)),
     path("admin/docs/", include(admindocs_urls)),
     path("admin/", admin.site.urls, name="django_admin"),

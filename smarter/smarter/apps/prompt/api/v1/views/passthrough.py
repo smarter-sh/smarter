@@ -11,6 +11,7 @@ from openai.types.chat.chat_completion import ChatCompletion
 from rest_framework.request import Request
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.lib.protocols import (
     OpenAICompatiblePassthroughProtocol,
 )
@@ -101,7 +102,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
         super().setup(request, *args, **kwargs)
         try:
             self.handler = openai_compatible_client.get_passthrough_handler(request, self.provider_name)
-        except KeyError:
+        except (KeyError, Provider.DoesNotExist):
             logger.error("Provider '%s' not found in openai_compatible_client", self.provider_name)
             return SmarterHttpResponseNotFound(
                 error_message=f"Provider '{self.provider_name}' not found", request=request

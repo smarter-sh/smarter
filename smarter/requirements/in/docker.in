@@ -13,4 +13,4 @@
 -r constraints.in
 -r base.in
 
-gunicorn
+uvicorn
