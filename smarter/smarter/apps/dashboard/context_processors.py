@@ -74,7 +74,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.console_urls import ManifestDropZoneView
-from smarter.apps.api.console_urls import namespace as console_namespace
+from smarter.apps.api.const import console_namespace
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.connection.models import ConnectionBase
@@ -88,8 +88,6 @@ from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NA
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.common.utils import camel_case_object_name
 from smarter.lib.cache import cache_results
-from smarter.lib.django import waffle
-from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
