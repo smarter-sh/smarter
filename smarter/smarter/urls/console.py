@@ -33,6 +33,7 @@ from smarter.apps.account.views.password_management import (
 )
 from smarter.apps.api import api_urls
 from smarter.apps.api import console_urls as api_drop_zone_urls
+from smarter.apps.api.const import console_namespace as console_api_namespace
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.connection import urls as connection_urls
@@ -65,8 +66,7 @@ from smarter.apps.vectorstore import urls as vectorstore_urls
 from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.logger_helpers import formatted_text
-from smarter.lib.django import waffle
-from smarter.lib.django.waffle import SmarterSwitchAdmin, SmarterWaffleSwitches
+from smarter.lib.django.waffle import SmarterSwitchAdmin
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +156,7 @@ urlpatterns = [
     # -----------------------------------
     # root paths
     # -----------------------------------
-    path("apply/", include(api_drop_zone_urls, namespace=api_namespace)),
+    path("apply/", include(api_drop_zone_urls, namespace=console_api_namespace)),
     path("account/", include(account_urls, namespace=account_namespace)),
     path("admin/docs/", include(admindocs_urls)),
     path("admin/", admin.site.urls, name="django_admin"),

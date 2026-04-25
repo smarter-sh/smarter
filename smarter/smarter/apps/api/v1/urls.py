@@ -67,8 +67,8 @@ urlpatterns = [
     path("plugins/", include(plugin_urls, namespace=plugin_namespace)),
     path("prompts/", include(prompt_urls, namespace=prompt_namespace)),
     path("providers/", include(provider_urls, namespace=provider_namespace)),
-    path("tests/", include(tests_urls, namespace="tests")),
     path("secrets/", include(secret_urls, namespace=secret_namespace)),
+    path("tests/", include(tests_urls, namespace="tests")),
 ]
 
 if smarter_settings.enable_vectorstore:

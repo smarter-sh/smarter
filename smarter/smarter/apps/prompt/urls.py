@@ -14,8 +14,6 @@ from django.urls import path
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_case_object_name
-from smarter.lib.django import waffle
-from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .const import namespace
 from .views.terminal import TerminalEmulatorView
