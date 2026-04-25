@@ -88,6 +88,7 @@ click==8.3.2
     #   click-plugins
     #   click-repl
     #   nltk
+    #   uvicorn
 click-didyoumean==0.3.1
     # via celery
 click-plugins==1.1.1.2
@@ -183,12 +184,11 @@ google-genai==1.73.0
     # via -r smarter/requirements/in/base.in
 googlemaps==4.10.0
     # via -r smarter/requirements/in/base.in
-gunicorn==25.3.0
-    # via -r smarter/requirements/in/docker.in
 h11==0.16.0
     # via
     #   httpcore
     #   urllib3-future
+    #   uvicorn
 httpcore==1.0.9
     # via httpx
 httpx==0.28.1
@@ -333,7 +333,6 @@ ormsgpack==1.12.2
 packaging==24.2
     # via
     #   drf-yasg
-    #   gunicorn
     #   kombu
     #   langchain-core
     #   langsmith
@@ -563,6 +562,8 @@ uuid-utils==0.14.1
     # via
     #   langchain-core
     #   langsmith
+uvicorn==0.46.0
+    # via -r smarter/requirements/in/docker.in
 validators==0.35.0
     # via -r smarter/requirements/in/base.in
 vine==5.1.0

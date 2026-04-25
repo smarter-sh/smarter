@@ -46,7 +46,7 @@ services:
         ENVIRONMENT: ${ENVIRONMENT}
         COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
     image: smarter
-    command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:9357 --timeout 120
+    command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- uvicorn smarter.asgi:application --host 0.0.0.0 --port 9357
     volumes:
       - type: bind
         source: ./smarter

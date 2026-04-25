@@ -17,6 +17,7 @@ from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import is_async_context
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.request import SmarterRequestMixin
@@ -98,22 +99,29 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
 
         admin_user_profile = None
         # this can happen on fresh installations where migrations have not yet run.
-        try:
-            admin_user_profile = get_cached_smarter_admin_user_profile()
-            SmarterRequestMixin.__init__(
-                self,
-                request=None,
-                user=admin_user_profile.user,
-                user_profile=admin_user_profile,
-                account=admin_user_profile.account,
-                *args,
-                **kwargs,
-            )
-            self._ready = True
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error("%s.__init__() could not get admin user profile: %s", self.formatted_class_name, str(e))
+        if is_async_context():
             SmarterRequestMixin.__init__(self, *args, **kwargs)
+            logger.warning(
+                "%s.__init__() could not get admin user profile because we're in an async context. SmarterRequestMixin initialized without user context. This may cause issues with ChatBot requests.",
+                self.formatted_class_name,
+            )
+        else:
+            try:
+                admin_user_profile = get_cached_smarter_admin_user_profile()
+                SmarterRequestMixin.__init__(
+                    self,
+                    request=None,
+                    user=admin_user_profile.user,
+                    user_profile=admin_user_profile,
+                    account=admin_user_profile.account,
+                    *args,
+                    **kwargs,
+                )
+                self._ready = True
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("%s.__init__() could not get admin user profile: %s", self.formatted_class_name, str(e))
+                SmarterRequestMixin.__init__(self, *args, **kwargs)
 
     @property
     def ready(self) -> bool:
@@ -222,7 +230,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         if hasattr(request, "user") and request.user is not None:
             # not expecting for this to actually be set, but just in case
             # strip it out before passing downstream.
-            request.user = None
+            setattr(request, "user", None)
         return super().process_request(request)
 
     def process_view(self, request, callback, callback_args, callback_kwargs):
