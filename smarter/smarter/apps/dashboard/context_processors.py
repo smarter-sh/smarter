@@ -465,9 +465,9 @@ def base(request: "HttpRequest") -> dict:
                 "username": username,
                 "is_superuser": is_superuser,
                 "is_staff": is_staff,
-                "is_vectorstore_enabled": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_VECTORSTORE),
-                "is_file_drop_zone_enabled": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_FILE_DROP_ZONE),
-                "is_terminal_app_enabled": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_TERMINAL_APP),
+                "is_vectorstore_enabled": smarter_settings.enable_vectorstore,
+                "is_file_drop_zone_enabled": smarter_settings.enable_file_drop_zone,
+                "is_terminal_app_enabled": smarter_settings.enabled_terminal_app,
                 "profile_image_url": (
                     user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
                 ),

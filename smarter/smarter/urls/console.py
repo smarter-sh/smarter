@@ -172,6 +172,7 @@ urlpatterns = [
     path("session-test/", session_test_view, name="session_test"),
     path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     path("secret/", include(secret_urls, namespace=secret_namespace)),
+    path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
     # -----------------------------------
     # Chatbots.
     # mcdaniel: 2026-01-31: are these even reachable anymore?
@@ -220,10 +221,6 @@ urlpatterns = [
     path("social-auth/", include(social_django_urls, namespace="social_auth")),
 ]
 
-if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_VECTORSTORE):
-    urlpatterns += [
-        path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
-    ]
 
 # mcdaniel 2026-01-20: converting static() to list(static(...)) to fix
 # Sphinx doc build error: 'TypeError: can only concatenate list (not "static") to list

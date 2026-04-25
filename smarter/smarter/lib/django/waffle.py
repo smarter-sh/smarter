@@ -45,7 +45,7 @@ from dataclasses import dataclass
 
 import waffle as waffle_orig
 from django.apps import apps
-from django.core.exceptions import AppRegistryNotReady
+from django.core.exceptions import AppRegistryNotReady, SynchronousOnlyOperation
 from django.db import connections
 from django.db.utils import OperationalError, ProgrammingError
 from waffle.admin import SwitchAdmin
@@ -177,8 +177,6 @@ class SmarterWaffleSwitches:
     ENABLE_ACCOUNT_REGISTRATION = "enable_account_registration"
     """Enables account registration link."""
 
-    ENABLE_FILE_DROP_ZONE = "enable_file_drop_zone"
-
     ENABLE_LOGIN_FOOTER_LINKS = "enable_login_footer_links"
     """Enables additional links in the login page footer, such as 'Legal' and 'Contact'."""
 
@@ -208,12 +206,6 @@ class SmarterWaffleSwitches:
 
     ENABLE_LOG_VIEW_IN_BROWSER = "enable_log_view_in_browser"
     """Enables the 'View Logs in Browser' feature for easier access to log files during development and debugging."""
-
-    ENABLE_TERMINAL_APP = "enable_terminal_emulator_app"
-    """Enables the terminal emulator feature."""
-
-    ENABLE_VECTORSTORE = "enable_vectorstore"
-    """Enables the vectorstore feature, which may include support for vector databases and related functionality."""
 
     MANIFEST_LOGGING = "log_manifest_brokers"
     """Enables detailed diagnostic logging for manifest initialization, validation and brokered operations."""
@@ -323,16 +315,6 @@ class SmarterWaffleSwitches:
             comment="Enables the 'View Logs in Browser' feature for easier access to log files during development and debugging.",
             default=False,
         ),
-        ENABLE_TERMINAL_APP: SmarterWaffleSwitch(
-            name=ENABLE_TERMINAL_APP,
-            comment="Enables the terminal emulator feature in the authenticated dashboard.",
-            default=False,
-        ),
-        ENABLE_VECTORSTORE: SmarterWaffleSwitch(
-            name=ENABLE_VECTORSTORE,
-            comment="Enables the Smarter Vectorstore Django app, which may includes support for vector databases. Requires app restart.",
-            default=False,
-        ),
         ENABLE_OAUTH2: SmarterWaffleSwitch(
             name=ENABLE_OAUTH2,
             comment="Enables OAuth2 authentication support.",
@@ -346,11 +328,6 @@ class SmarterWaffleSwitches:
         ENABLE_ACCOUNT_REGISTRATION: SmarterWaffleSwitch(
             name=ENABLE_ACCOUNT_REGISTRATION,
             comment="Enables account registration link.",
-            default=False,
-        ),
-        ENABLE_FILE_DROP_ZONE: SmarterWaffleSwitch(
-            name=ENABLE_FILE_DROP_ZONE,
-            comment="Enables the file drop zone feature in the authenticated dashboard.",
             default=False,
         ),
         ENABLE_LOGIN_FOOTER_LINKS: SmarterWaffleSwitch(
@@ -476,7 +453,9 @@ def is_database_ready(alias="default"):
             return False
         db_state.ready = True
         return db_state.ready
-    except OperationalError:
+    except (OperationalError, SynchronousOnlyOperation):
+        # we'll get SynchronousOnlyOperation whenever an ASGI asynchronous
+        # context tries to interact with the database. Main culprit is middleware.
         return False
     except ProgrammingError:
         return False
@@ -510,7 +489,7 @@ def switch_is_active(switch_name: str) -> bool:
 
     try:
         if not is_database_ready():
-            logger.warning("%s Database not ready, assuming switch %s is inactive.", prefix, switch_name)
+            logger.debug("%s Database not ready, assuming switch %s is inactive.", prefix, switch_name)
             return False
     # pylint: disable=broad-except
     except Exception as e:

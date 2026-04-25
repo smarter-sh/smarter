@@ -1,11 +1,14 @@
 """URL configuration for the web platform."""
 
+import logging
+
 from django.urls import include, path
 from django.views.generic.base import RedirectView
 
 from smarter.apps.account.views.dashboard import urls as account_dashboard_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
+from smarter.common.helpers.logger_helpers import formatted_text
 
 from .const import namespace
 from .views.authentication import (
@@ -20,6 +23,8 @@ from .views.authentication import (
 )
 from .views.dashboard.api_keys import APIKeyListView
 from .views.dashboard.users import UsersView, UserView
+
+logger = logging.getLogger(__name__)
 
 
 class AccountNamedUrls:
@@ -85,3 +90,5 @@ if smarter_settings.environment == SmarterEnvironments.LOCAL:
     from .views.email import EmailWelcomeView
 
     urlpatterns.append(path("email/welcome/<first_name>/", EmailWelcomeView.as_view(), name="welcome"))
+    logger_prefix = formatted_text(__name__)
+    logger.debug("%s added %s URL pattern to Account app URLs.", logger_prefix, "welcome")
