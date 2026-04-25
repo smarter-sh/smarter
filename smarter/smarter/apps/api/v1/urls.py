@@ -23,6 +23,8 @@ Namespaces are used for each included URL configuration to avoid naming conflict
 
 """
 
+import logging
+
 from django.urls import include, path
 
 from smarter.apps.account.api.v1 import urls as account_urls
@@ -41,11 +43,13 @@ from smarter.apps.provider.const import namespace as provider_namespace
 from smarter.apps.secret.api.v1 import urls as secret_urls
 from smarter.apps.secret.const import namespace as secret_namespace
 from smarter.apps.vectorstore.api.v1 import urls as vectorstore_urls
-from smarter.lib.django import waffle
-from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.common.conf import smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 
 from .cli.const import namespace as cli_namespace
 from .const import namespace
+
+logger = logging.getLogger(__name__)
 
 app_name = namespace
 
@@ -67,7 +71,13 @@ urlpatterns = [
     path("secrets/", include(secret_urls, namespace=secret_namespace)),
 ]
 
-if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_VECTORSTORE):
+if smarter_settings.enable_vectorstore:
     urlpatterns += [
         path("vectorstores/", include(vectorstore_urls, namespace="vectorstore")),
     ]
+    logger.info("%s Vectorstore API endpoints enabled.", formatted_text(__name__))
+else:
+    logger.info(
+        "%s Vectorstore API endpoints have been disabled. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
+        formatted_text(__name__),
+    )

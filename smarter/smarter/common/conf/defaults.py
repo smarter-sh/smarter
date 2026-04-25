@@ -163,6 +163,10 @@ class SettingsDefaults:
     EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com", is_required=True)
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
+    ENABLE_FILE_DROP_ZONE: bool = bool_environment_variable("ENABLE_FILE_DROP_ZONE", True)
+    ENABLE_VECTORSTORE: bool = bool_environment_variable("ENABLE_VECTORSTORE", True)
+    ENABLE_TERMINAL_APP: bool = bool_environment_variable("ENABLE_TERMINAL_APP", True)
+
     fernet = get_env("FERNET_ENCRYPTION_KEY", default=None, is_secret=True)
     if fernet is None:
         warnings.warn(

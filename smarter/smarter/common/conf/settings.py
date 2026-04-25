@@ -53,7 +53,6 @@ from pydantic import (
 )
 from pydantic import __version__ as pydantic_version
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing_extensions import deprecated
 
 # smarter stuff
 from smarter.common.api import SmarterApiVersions
@@ -1847,6 +1846,87 @@ class Settings(BaseSettings):
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"email_admin is not a valid EmailStr: {v}")
         return v
+
+    enable_file_drop_zone: bool = Field(
+        settings_defaults.ENABLE_FILE_DROP_ZONE,
+        description="True if the file drop zone feature is enabled based on the current environment.",
+        title="Enable File Drop Zone",
+    )
+    """Determines if the file drop zone feature is enabled based on the current environment.
+    Returns:
+        bool: True if the file drop zone is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_file_drop_zone")
+    def parse_enable_file_drop_zone(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_file_drop_zone' field.
+        Args:
+            v (Optional[Union[bool, str]]): the enable_file_drop_zone value to validate
+        Returns:
+            bool: The validated enable_file_drop_zone.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_FILE_DROP_ZONE
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_file_drop_zone: {v}")
+
+    enable_vectorstore: bool = Field(
+        settings_defaults.ENABLE_VECTORSTORE,
+        description="True if the vectorstore feature is enabled based on the current environment.",
+        title="Enable Vectorstore",
+    )
+    """Determines if the vectorstore feature is enabled based on the current environment.
+    Returns:
+        bool: True if the vectorstore is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_vectorstore")
+    def parse_enable_vectorstore(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_vectorstore' field.
+        Args:
+            v (Optional[Union[bool, str]]): the enable_vectorstore value to validate
+        Returns:
+            bool: The validated enable_vectorstore.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_VECTORSTORE
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_vectorstore: {v}")
+
+    enabled_terminal_app: bool = Field(
+        settings_defaults.ENABLE_TERMINAL_APP,
+        description="True if the terminal app feature is enabled based on the current environment.",
+        title="Enabled Terminal App",
+    )
+    """Determines if the terminal app feature is enabled based on the current environment.
+    Returns:
+        bool: True if the terminal app is enabled, False otherwise.
+    """
+
+    @before_field_validator("enabled_terminal_app")
+    def parse_enabled_terminal_app(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enabled_terminal_app' field.
+        Args:
+            v (Optional[Union[bool, str]]): the enabled_terminal_app value to validate
+        Returns:
+            bool: The validated enabled_terminal_app.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_TERMINAL_APP
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enabled_terminal_app: {v}")
 
     environment: str = Field(
         settings_defaults.ENVIRONMENT,
