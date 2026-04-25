@@ -10,6 +10,8 @@ how we got here:
 from django.urls import path
 
 from smarter.common.utils import camel_case_object_name
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .const import namespace
 from .views.terminal import TerminalEmulatorView
@@ -79,5 +81,9 @@ urlpatterns = [
         name=PromptReverseViews.chat_by_hashed_id,
     ),
     path("chatbots/<str:hashed_id>/config/", ChatConfigView.as_view(), name=PromptReverseViews.config_by_hashed_id),
-    path("terminal/", TerminalEmulatorView.as_view(), name=PromptReverseViews.terminal_emulator),
 ]
+
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_TERMINAL_APP):
+    urlpatterns.append(
+        path("terminal/", TerminalEmulatorView.as_view(), name=PromptReverseViews.terminal_emulator),
+    )

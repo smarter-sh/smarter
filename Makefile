@@ -79,7 +79,7 @@ collectstatic:
 	@echo "==============================================================================="
 	@echo "Collecting static files on local filesystem ..."
 	@echo "==============================================================================="
-	cd smarter/terminal_emulator && npm run build
+	cd smarter/react/terminal_emulator && npm run build
 	python smarter/manage.py collectstatic --noinput
 
 test:
