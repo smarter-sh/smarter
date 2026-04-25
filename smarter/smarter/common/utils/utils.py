@@ -12,6 +12,7 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 
 """
 
+import asyncio
 import csv
 import hashlib
 import logging
@@ -41,6 +42,14 @@ def should_log_verbose(level):
 
 
 verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
+
+
+def is_async_context():
+    try:
+        asyncio.get_running_loop()
+        return True
+    except RuntimeError:
+        return False
 
 
 def hash_factory(length: int = 16) -> str:

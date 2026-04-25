@@ -40,6 +40,8 @@ logger_prefix = formatted_text(__name__)
 
 load_dotenv()
 
+logger.debug("%s Smarter version: %s", logger_prefix, smarter_version)
+
 
 # pylint: disable=W0621
 def smart_cast(value, default_value):
@@ -692,7 +694,7 @@ MIDDLEWARE = [
     "smarter.lib.django.middleware.excessive_404.SmarterBlockExcessive404Middleware",
     #
     # -------------------------------
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     # this replaces django.middleware.csrf.SmarterCsrfViewMiddleware
