@@ -1041,9 +1041,9 @@ class PromptListView(SmarterAuthenticatedWebView):
                 "shared_chatbots": shared_chatbots,
             },
             "reverse_views": {
-                "manifest": f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_manifest_by_hashed_id}",
-                "chat": f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_chat_by_hashed_id}",
-                "config": f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_config_by_hashed_id}",
+                "manifest": f"{PromptReverseViews.namespace}:{PromptReverseViews.manifest_by_hashed_id}",
+                "chat": f"{PromptReverseViews.namespace}:{PromptReverseViews.chat_by_hashed_id}",
+                "config": f"{PromptReverseViews.namespace}:{PromptReverseViews.config_by_hashed_id}",
             },
         }
         verbose_logger.debug(
