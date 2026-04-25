@@ -1,6 +1,15 @@
-# React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Smarter Terminal Emulator Tabbed Window. React + TypeScript + Vite
+
+This is the source code for the green-screen style terminal emluator window
+tabs located at [http://localhost:9357/workbench/terminal/](http://localhost:9357/
+workbench/terminal/). The individual tabs are:
+
+- A copy-paste area that receives LLM prompt JSON that is assumed to be in the
+format of the provider. This is passthrough functionality. Minimal validation
+is performed;
+- A read-only response window;
+- A read-only server log window.
 
 Currently, two official plugins are available:
 
@@ -9,11 +18,13 @@ Currently, two official plugins are available:
 
 ## React Compiler
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The React Compiler is not enabled on this template because of its impact on
+dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
 ## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+If you are developing a production application, we recommend updating the
+configuration to enable type-aware lint rules:
 
 ```js
 export default defineConfig([

@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   base: "/static/terminal_emulator/",
   build: {
-    outDir: "../smarter/static/terminal_emulator",
+    outDir: "../../smarter/static/terminal_emulator",
     emptyOutDir: true,
     rollupOptions: {
       output: {

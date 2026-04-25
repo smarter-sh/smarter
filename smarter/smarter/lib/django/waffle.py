@@ -177,6 +177,8 @@ class SmarterWaffleSwitches:
     ENABLE_ACCOUNT_REGISTRATION = "enable_account_registration"
     """Enables account registration link."""
 
+    ENABLE_FILE_DROP_ZONE = "enable_file_drop_zone"
+
     ENABLE_LOGIN_FOOTER_LINKS = "enable_login_footer_links"
     """Enables additional links in the login page footer, such as 'Legal' and 'Contact'."""
 
@@ -206,6 +208,9 @@ class SmarterWaffleSwitches:
 
     ENABLE_LOG_VIEW_IN_BROWSER = "enable_log_view_in_browser"
     """Enables the 'View Logs in Browser' feature for easier access to log files during development and debugging."""
+
+    ENABLE_TERMINAL_APP = "enable_terminal_emulator_app"
+    """Enables the terminal emulator feature."""
 
     ENABLE_VECTORSTORE = "enable_vectorstore"
     """Enables the vectorstore feature, which may include support for vector databases and related functionality."""
@@ -318,6 +323,11 @@ class SmarterWaffleSwitches:
             comment="Enables the 'View Logs in Browser' feature for easier access to log files during development and debugging.",
             default=False,
         ),
+        ENABLE_TERMINAL_APP: SmarterWaffleSwitch(
+            name=ENABLE_TERMINAL_APP,
+            comment="Enables the terminal emulator feature in the authenticated dashboard.",
+            default=False,
+        ),
         ENABLE_VECTORSTORE: SmarterWaffleSwitch(
             name=ENABLE_VECTORSTORE,
             comment="Enables the Smarter Vectorstore Django app, which may includes support for vector databases. Requires app restart.",
@@ -336,6 +346,11 @@ class SmarterWaffleSwitches:
         ENABLE_ACCOUNT_REGISTRATION: SmarterWaffleSwitch(
             name=ENABLE_ACCOUNT_REGISTRATION,
             comment="Enables account registration link.",
+            default=False,
+        ),
+        ENABLE_FILE_DROP_ZONE: SmarterWaffleSwitch(
+            name=ENABLE_FILE_DROP_ZONE,
+            comment="Enables the file drop zone feature in the authenticated dashboard.",
             default=False,
         ),
         ENABLE_LOGIN_FOOTER_LINKS: SmarterWaffleSwitch(
