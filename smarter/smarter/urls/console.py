@@ -33,7 +33,7 @@ from smarter.apps.account.views.password_management import (
 )
 from smarter.apps.api import api_urls
 from smarter.apps.api import console_urls as api_drop_zone_urls
-from smarter.apps.api.const import console_namespace as console_api_namespace
+from smarter.apps.api.const import console_namespace as api_console_namespace
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.connection import urls as connection_urls
@@ -65,6 +65,7 @@ from smarter.apps.secret.const import namespace as secret_namespace
 from smarter.apps.vectorstore import urls as vectorstore_urls
 from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.lib.django.waffle import SmarterSwitchAdmin
 
@@ -152,11 +153,11 @@ name_prefix = "console"
 
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="dashboard:dashboard"), name=f"{name_prefix}_home"),
     # -----------------------------------
     # root paths
     # -----------------------------------
-    path("apply/", include(api_drop_zone_urls, namespace=console_api_namespace)),
+    path("", RedirectView.as_view(pattern_name="dashboard:dashboard"), name=f"{name_prefix}_home"),
+    path("apply/", include(api_drop_zone_urls, namespace=api_console_namespace)),
     path("account/", include(account_urls, namespace=account_namespace)),
     path("admin/docs/", include(admindocs_urls)),
     path("admin/", admin.site.urls, name="django_admin"),
@@ -227,8 +228,8 @@ urlpatterns = [
 #
 urlpatterns += list(static(settings.STATIC_URL, document_root=settings.STATIC_ROOT))
 
-# question: should this be limited to localhost only?
-if smarter_settings.debug_mode and not "test" in sys.argv:
+if smarter_settings.environment == SmarterEnvironments.LOCAL and smarter_settings.debug_mode and not "test" in sys.argv:
+    # we need to limit this to local because the debug toolbar is only installed on the local build
     # debug_model == True does not not guarantee that the debug toolbar is actually installed
     try:
         import debug_toolbar

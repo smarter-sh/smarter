@@ -32,6 +32,7 @@ service-account.b64
 
 # application local dev run-time data
 # -------------------------------------
+.ruff_cache
 celerybeat-schedule
 mysql-data
 db.sqlite3
