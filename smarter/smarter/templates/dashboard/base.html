@@ -344,6 +344,27 @@
 								</div>
 								<!--end:Menu item Workbench -->
 
+                                <!--begin:Menu item Terminal Emulator -->
+                                {% if dashboard.is_terminal_app_enabled %}
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="{% url 'prompt:terminal_emulator_view' %}" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-screen fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Terminal Emulator</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+                                {% endif %}
+								<!--end:Menu item Terminal Emulator -->
+
+
+
                                 <!--begin:Menu item Apply -->
 								<div class="menu-item">
 									<!--begin:Menu link-->
@@ -437,25 +458,6 @@
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item Secrets -->
-
-                                <!--begin:Menu item Terminal Emulator -->
-                                {% if dashboard.is_terminal_app_enabled %}
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="{% url 'prompt:terminal_emulator_view' %}" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-screen fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Terminal Emulator</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-                                {% endif %}
-								<!--end:Menu item Terminal Emulator -->
 
                                 <!--begin:Menu item Vectorstores -->
                                 {% if dashboard.is_vectorstore_enabled %}
