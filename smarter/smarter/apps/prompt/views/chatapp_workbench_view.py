@@ -1,6 +1,10 @@
 # pylint: disable=W0613,C0302
 """
-Views for the React chat component used in the Smarter web application.
+ChatAppWorkbenchView is a Django class-based view responsible for serving the
+main chat application page within the Smarter dashboard web app. It integrates
+the ReactJS chat UI with the Django template system by injecting a React build
+artifact snippet (served from an AWS Cloudfront CDN) into the Django-rendered
+HTML template. The React app then takes over the UI from there.
 """
 
 import logging

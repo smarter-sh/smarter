@@ -1,6 +1,6 @@
 # pylint: disable=W0613,C0302
 """
-Views for the React chat component used in the Smarter web application.
+PromptLandingView is a Django class-based view that serves as the base URL
 """
 
 import logging
