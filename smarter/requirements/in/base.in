@@ -11,6 +11,7 @@
 
 # General back end
 # ------------
+whitenoise                              # general asset compression for both asgi and wsgi, and static file serving for wsgi
 boto3                                   # AWS CLI SDK
 botocore                                # AWS CLI SDK core
 cachetools                              # Python object caching library
@@ -86,5 +87,4 @@ docutils                                # required by Django for django.contrib.
 drf-yasg                                # Swagger API documentation
 lxml                                    # parser for Wagtail page compression
 markdown                                # Markdown reader/parser
-whitenoise                              # static file serving
 pillow                                  # for provider.Provider.logo:
