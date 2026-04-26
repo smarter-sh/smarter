@@ -1,21 +1,20 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
   // runtime builds are saved into the Django static directory so that these
   // files can be included in the Django collectstatic process and served by
   // Django at runtime. On the other hand, in development we want to rely on
   // Vite's dev server to serve these files, so we set the base to '/'.
-  base: process.env.NODE_ENV === 'development' ? '/' : '/static/prompt_passthrough/',
+  base: command === "serve" ? "/" : "/static/react/prompt_passthrough/",
   build: {
-    outDir: "../../smarter/static/prompt_passthrough",
+    outDir: "../../smarter/static/react/prompt_passthrough",
     emptyOutDir: true,
     rollupOptions: {
       output: {
         entryFileNames: "assets/index.js",
-        assetFileNames: "assets/[name][extname]",
+        // assetFileNames: "assets/[name][extname]",
       },
     },
   },
@@ -31,7 +30,7 @@ export default defineConfig({
   // environment as possible.
   server: {
     proxy: {
-      '/api': 'http://localhost:9357',
+      "/api": "http://localhost:9357",
       "/assets": {
         target: "http://localhost:9357", // Django dev server
         changeOrigin: true,
@@ -42,12 +41,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => `/static${path}`,
       },
-      "/static/prompt_passthrough/": {
+      "/static/react/prompt_passthrough/": {
         target: "http://localhost:5173",
         changeOrigin: true,
-          rewrite: (path) =>
-          path.replace(/^\/static\/prompt_passthrough\//, "/"),
+        rewrite: (path) => path.replace(/^\/static\/prompt_passthrough\//, "/"),
       },
     },
   },
-});
+}));
