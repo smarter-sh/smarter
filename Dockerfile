@@ -235,7 +235,5 @@ FROM collect_assets AS serve_application
 
 WORKDIR /home/smarter_user/smarter
 USER smarter_user
-# CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:9357"]
-# CMD ["gunicorn", "smarter.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:9357", "--workers", "4"]
-CMD ["uvicorn", "smarter.asgi:application", "--host", "0.0.0.0", "--port", "9357"]
+CMD ["uvicorn", "smarter.asgi:application", "--host", "0.0.0.0", "--port", "9357", "--workers", "2"]
 EXPOSE 8000

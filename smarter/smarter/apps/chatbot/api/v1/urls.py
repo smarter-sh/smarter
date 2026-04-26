@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from smarter.apps.prompt.views.views import ChatConfigView
+from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.utils import camel_case_object_name
 
 from .const import namespace
