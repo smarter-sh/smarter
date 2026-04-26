@@ -25,7 +25,7 @@ from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.docs.views.base import DocsError
 from smarter.apps.plugin.plugin.base import SmarterPluginError
-from smarter.apps.prompt.views.views import SmarterChatappViewError
+from smarter.apps.prompt.views.chatapp_workbench_view import SmarterChatappViewError
 from smarter.common.const import (
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
 )

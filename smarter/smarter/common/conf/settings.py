@@ -1901,8 +1901,8 @@ class Settings(BaseSettings):
 
         raise SmarterConfigurationError(f"could not validate enable_vectorstore: {v}")
 
-    enabled_terminal_app: bool = Field(
-        settings_defaults.ENABLE_TERMINAL_APP,
+    enable_server_logs: bool = Field(
+        settings_defaults.ENABLE_SERVER_LOGS,
         description="True if the terminal app feature is enabled based on the current environment.",
         title="Enabled Terminal App",
     )
@@ -1911,22 +1911,22 @@ class Settings(BaseSettings):
         bool: True if the terminal app is enabled, False otherwise.
     """
 
-    @before_field_validator("enabled_terminal_app")
+    @before_field_validator("enable_server_logs")
     def parse_enabled_terminal_app(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'enabled_terminal_app' field.
+        """Validates the 'enable_server_logs' field.
         Args:
-            v (Optional[Union[bool, str]]): the enabled_terminal_app value to validate
+            v (Optional[Union[bool, str]]): the enable_server_logs value to validate
         Returns:
-            bool: The validated enabled_terminal_app.
+            bool: The validated enable_server_logs.
         """
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.ENABLE_TERMINAL_APP
+            return settings_defaults.ENABLE_SERVER_LOGS
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate enabled_terminal_app: {v}")
+        raise SmarterConfigurationError(f"could not validate enable_server_logs: {v}")
 
     environment: str = Field(
         settings_defaults.ENVIRONMENT,

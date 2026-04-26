@@ -13,7 +13,7 @@ from smarter.lib.django.views import (
 )
 
 
-class TerminalEmulatorView(SmarterAuthenticatedNeverCachedWebView):
+class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
     """
     View for rendering the terminal emulation page, which is used in the web console
     """
@@ -25,7 +25,7 @@ class TerminalEmulatorView(SmarterAuthenticatedNeverCachedWebView):
         """
 
         context = {"page_title": "Terminal"}
-        self.template_path = "prompt/terminal.html"
+        self.template_path = "react/terminal-emulator.html"
         return render(request, self.template_path, context=context)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:

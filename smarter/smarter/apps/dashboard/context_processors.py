@@ -73,11 +73,11 @@ from smarter.apps.account.models import (
     get_resolved_user,
 )
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.api.console_urls import ManifestDropZoneView
-from smarter.apps.api.const import console_namespace
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.connection.models import ConnectionBase
+from smarter.apps.dashboard.const import namespace as dashboard_namespace
+from smarter.apps.dashboard.views.manifest_drop_zone import ManifestDropZoneView
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
@@ -373,7 +373,7 @@ def file_drop_zone(request: "HttpRequest") -> dict:
 
     @cache_results()
     def get_cached_file_drop_zone_context() -> dict:
-        api_apply_path_name = ":".join([console_namespace, camel_case_object_name(ManifestDropZoneView)])
+        api_apply_path_name = ":".join([dashboard_namespace, camel_case_object_name(ManifestDropZoneView)])
         api_apply_path = reverse(api_apply_path_name)
         retval = {
             "drop_zone": {
@@ -465,7 +465,7 @@ def base(request: "HttpRequest") -> dict:
                 "is_staff": is_staff,
                 "is_vectorstore_enabled": smarter_settings.enable_vectorstore,
                 "is_file_drop_zone_enabled": smarter_settings.enable_file_drop_zone,
-                "is_terminal_app_enabled": smarter_settings.enabled_terminal_app,
+                "is_enabled_server_logs": smarter_settings.enable_server_logs,
                 "profile_image_url": (
                     user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
                 ),

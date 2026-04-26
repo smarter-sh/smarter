@@ -31,9 +31,7 @@ from smarter.apps.account.views.password_management import (
     PasswordResetRequestView,
     PasswordResetView,
 )
-from smarter.apps.api import api_urls
-from smarter.apps.api import console_urls as api_drop_zone_urls
-from smarter.apps.api.const import console_namespace as api_console_namespace
+from smarter.apps.api import urls
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.connection import urls as connection_urls
@@ -57,7 +55,7 @@ from smarter.apps.plugin import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt import urls as prompt_urls
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
-from smarter.apps.prompt.views.views import ChatConfigView
+from smarter.apps.prompt.views import ChatConfigView
 from smarter.apps.provider import urls as provider_urls
 from smarter.apps.provider.const import namespace as provider_namespace
 from smarter.apps.secret import urls as secret_urls
@@ -157,11 +155,10 @@ urlpatterns = [
     # root paths
     # -----------------------------------
     path("", RedirectView.as_view(pattern_name="dashboard:dashboard"), name=f"{name_prefix}_home"),
-    path("apply/", include(api_drop_zone_urls, namespace=api_console_namespace)),
     path("account/", include(account_urls, namespace=account_namespace)),
     path("admin/docs/", include(admindocs_urls)),
     path("admin/", admin.site.urls, name="django_admin"),
-    path("api/", include(api_urls, namespace=api_namespace)),
+    path("api/", include(urls, namespace=api_namespace)),
     path("connection/", include(connection_urls, namespace=connection_namespace)),
     path("dashboard/", include(dashboard_urls, namespace=dashboard_namespace)),
     path("docs/", include(docs_urls, namespace=docs_namespace)),

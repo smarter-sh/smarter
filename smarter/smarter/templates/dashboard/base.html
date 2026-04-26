@@ -344,11 +344,11 @@
 								</div>
 								<!--end:Menu item Workbench -->
 
-                                <!--begin:Menu item Terminal Emulator -->
-                                {% if dashboard.is_terminal_app_enabled %}
+                                <!--begin:Menu item Server Logs -->
+                                {% if dashboard.is_enabled_server_logs %}
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="{% url 'prompt:terminal_emulator_view' %}" target="_self">
+									<a class="menu-link" href="{% url 'dashboard:terminal_emulator_log_view' %}" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-screen fs-2">
 												<span class="path1"></span>
@@ -356,19 +356,19 @@
 												<span class="path3"></span>
 											</i>
 										</span>
-										<span class="menu-title">Terminal Emulator</span>
+										<span class="menu-title">Server Logs</span>
 									</a>
 									<!--end:Menu link-->
 								</div>
                                 {% endif %}
-								<!--end:Menu item Terminal Emulator -->
+								<!--end:Menu item Server Logs -->
 
 
 
                                 <!--begin:Menu item Apply -->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="{% url 'console_api:manifest_drop_zone_view' %}" target="_self">
+									<a class="menu-link" href="{% url 'dashboard:manifest_drop_zone_view' %}" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-add-files fs-2">
 												<span class="path1"></span>

@@ -4,10 +4,10 @@ URLs for Smarter Api.
 
 from django.urls import include, path
 
-from smarter.apps.api import api_urls
+from smarter.apps.api import urls
 
 urlpatterns = [
-    path("", include(api_urls)),
+    path("", include(urls)),
 ]
 
 __all__ = ["urlpatterns"]

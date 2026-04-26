@@ -7,25 +7,18 @@ how we got here:
  - /workbench/<str:name>/config/
 """
 
-import logging
-
 from django.urls import path
 
-from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_case_object_name
 
 from .const import namespace
-from .views.terminal import TerminalEmulatorView
-from .views.views import (
+from .views import (
     ChatAppWorkbenchView,
     ChatConfigView,
     PromptLandingView,
     PromptListView,
     PromptManifestView,
 )
-
-logger = logging.getLogger(__name__)
 
 app_name = namespace
 
@@ -68,7 +61,6 @@ class PromptReverseViews:
     chat_by_hashed_id = camel_case_object_name(ChatAppWorkbenchView)
     config_by_hashed_id = camel_case_object_name(ChatConfigView)
     landing_by_hashed_id = camel_case_object_name(PromptLandingView)
-    terminal_emulator = camel_case_object_name(TerminalEmulatorView)
 
 
 urlpatterns = [
@@ -86,15 +78,3 @@ urlpatterns = [
     ),
     path("chatbots/<str:hashed_id>/config/", ChatConfigView.as_view(), name=PromptReverseViews.config_by_hashed_id),
 ]
-
-if smarter_settings.enabled_terminal_app:
-    urlpatterns.append(
-        path("terminal-app/", TerminalEmulatorView.as_view(), name=PromptReverseViews.terminal_emulator),
-    )
-    logger_prefix = formatted_text(__name__)
-    logger.info("%s Terminal app url endpoint enabled.", logger_prefix)
-else:
-    logger.info(
-        "%s Terminal app is disabled. Set env `SMARTER_ENABLE_TERMINAL_APP=true` to enable the terminal emulator endpoint at /terminal-app/.",
-        formatted_text(__name__),
-    )

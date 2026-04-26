@@ -26,7 +26,7 @@ Endpoints
 from django.urls import path
 
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
-from smarter.apps.prompt.views.views import ChatConfigView
+from smarter.apps.prompt.views import ChatConfigView
 
 urlpatterns = [
     path("", ChatConfigView.as_view(), name="console_home"),

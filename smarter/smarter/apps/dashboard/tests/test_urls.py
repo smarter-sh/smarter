@@ -59,12 +59,12 @@ class TestDashboard(TestAccountMixin):
 
     def test_changelog(self):
         """Test changelog view."""
-        reverse_url = reverse(f"{namespace}:changelog")
+        reverse_url = reverse(f"{namespace}:change_log_view")
         response = self.client.get(reverse_url)
         self.assertIn(response.status_code, [200, 301, 302])
 
     def test_notifications(self):
         """Test notifications view."""
-        reverse_url = reverse(f"{namespace}:notifications")
+        reverse_url = reverse(f"{namespace}:notifications_view")
         response = self.client.get(reverse_url)
         self.assertIn(response.status_code, [200, 301, 302])
