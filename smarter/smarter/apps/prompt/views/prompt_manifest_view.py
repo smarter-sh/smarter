@@ -1,16 +1,14 @@
 # pylint: disable=W0613,C0302
 """
-Views for the React chat component used in the Smarter web application.
+PromptManifestView is a Django class-based view that renders a detail view of
+a SAM manifest for a chatbot.
 """
 
 import logging
 from typing import Optional
 
 import yaml
-from django.http import (
-    HttpRequest,
-    HttpResponse,
-)
+from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds

@@ -344,6 +344,40 @@
 								</div>
 								<!--end:Menu item Workbench -->
 
+                                <!--begin:Menu item Apply -->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="{% url 'dashboard:manifest_drop_zone_view' %}" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-add-files fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Apply Manifest</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item Apply -->
+
+                                <!--begin:Menu item Prompt Passthrough -->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="{% url 'dashboard:prompt_passthrough_view' %}" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-add-files fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Prompt Passthrough</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item Prompt Passthrough -->
+
                                 <!--begin:Menu item Server Logs -->
                                 {% if dashboard.is_enabled_server_logs %}
 								<div class="menu-item">
@@ -363,24 +397,6 @@
                                 {% endif %}
 								<!--end:Menu item Server Logs -->
 
-
-
-                                <!--begin:Menu item Apply -->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="{% url 'dashboard:manifest_drop_zone_view' %}" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-add-files fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Apply Manifest</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item Apply -->
 
                                 <!--begin:Menu item Providers -->
 								<div class="menu-item">

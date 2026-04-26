@@ -14,9 +14,15 @@ from smarter.common.utils import camel_case_object_name
 
 from .const import namespace
 from .streams import stream_global_logs
-from .views.dashboard import ChangeLogView, DashboardView, EmailAdded, NotificationsView
-from .views.logs import TerminalEmulatorLogView
-from .views.manifest_drop_zone import ManifestDropZoneView
+from .views import (
+    ChangeLogView,
+    DashboardView,
+    EmailAdded,
+    ManifestDropZoneView,
+    NotificationsView,
+    PromptPassthroughView,
+    TerminalEmulatorLogView,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +42,7 @@ class DashboardNames:
     changelog = camel_case_object_name(ChangeLogView)
     email_added = camel_case_object_name(EmailAdded)
     manifest_drop_zone = camel_case_object_name(ManifestDropZoneView)
+    prompt_passthrough = camel_case_object_name(PromptPassthroughView)
 
 
 urlpatterns = [
@@ -49,6 +56,7 @@ urlpatterns = [
     path("notifications/", NotificationsView.as_view(), name=DashboardNames.notifications),
     path("email-added/", EmailAdded.as_view(), name=DashboardNames.email_added),
     path("apply/", ManifestDropZoneView.as_view(), name=DashboardNames.manifest_drop_zone),
+    path("prompt/", PromptPassthroughView.as_view(), name=DashboardNames.prompt_passthrough),
 ]
 
 if smarter_settings.enable_server_logs:

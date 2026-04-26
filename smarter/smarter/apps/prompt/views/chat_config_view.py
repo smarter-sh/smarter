@@ -1,6 +1,8 @@
 # pylint: disable=W0613,C0302
 """
-Views for the React chat component used in the Smarter web application.
+ChatConfigView is a Django class-based view responsible for providing
+configuration data to the ReactJS chat UI component in the Smarter
+web application.
 """
 
 import logging

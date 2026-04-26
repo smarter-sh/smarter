@@ -1,6 +1,11 @@
 # pylint: disable=W0613,C0302
 """
-Views for the React chat component used in the Smarter web application.
+PromptListView is a Django class-based view that serves the list of ChatBots
+for the Smarter workbench web console. It is responsible for fetching the
+ChatBots associated with the authenticated user, as well as any shared ChatBots,
+and rendering them in a template. The view is protected and requires the user
+to be authenticated. It also includes caching to keep the workbench snappy while
+avoiding appearing stale.
 """
 
 import logging
