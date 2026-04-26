@@ -22,7 +22,7 @@ function App() {
             </div>
           </div>
           <div className="col-12">
-            <h1 className="display-5">Terminal Emulator App</h1>
+            <h1 className="display-5">Terminal Emulator Component</h1>
             <p className="lead">
               Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
             </p>
