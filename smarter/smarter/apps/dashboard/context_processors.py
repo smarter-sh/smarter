@@ -464,8 +464,8 @@ def base(request: "HttpRequest") -> dict:
                 "is_superuser": is_superuser,
                 "is_staff": is_staff,
                 "is_vectorstore_enabled": smarter_settings.enable_vectorstore,
-                "is_file_drop_zone_enabled": smarter_settings.enable_file_drop_zone,
-                "is_enabled_server_logs": smarter_settings.enable_server_logs,
+                "is_file_drop_zone_enabled": smarter_settings.enable_dashboard_apply,
+                "is_enabled_server_logs": smarter_settings.enable_dashboard_server_logs,
                 "profile_image_url": (
                     user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
                 ),

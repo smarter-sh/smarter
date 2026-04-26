@@ -55,11 +55,9 @@ urlpatterns = [
     path("changelog/", ChangeLogView.as_view(), name=DashboardNames.changelog),
     path("notifications/", NotificationsView.as_view(), name=DashboardNames.notifications),
     path("email-added/", EmailAdded.as_view(), name=DashboardNames.email_added),
-    path("apply/", ManifestDropZoneView.as_view(), name=DashboardNames.manifest_drop_zone),
-    path("prompt/", PromptPassthroughView.as_view(), name=DashboardNames.prompt_passthrough),
 ]
 
-if smarter_settings.enable_server_logs:
+if smarter_settings.enable_dashboard_server_logs:
     # enable end points for the React terminal emulator logs view and its associated log stream
     urlpatterns.append(
         path("logs/", TerminalEmulatorLogView.as_view(), name=DashboardNames.logs),
@@ -71,6 +69,34 @@ if smarter_settings.enable_server_logs:
     logger.info("%s Server logs app url endpoint enabled.", logger_prefix)
 else:
     logger.info(
-        "%s Server logs app is disabled. Set env `SMARTER_ENABLE_SERVER_LOGS=true` to enable the server logs endpoint at /logs/.",
+        "%s Server logs app is disabled. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=true` to enable the server logs endpoint at /logs/.",
+        formatted_text(__name__),
+    )
+
+if smarter_settings.enable_dashboard_passthrough_prompt:
+    urlpatterns.append(
+        path("prompt/", PromptPassthroughView.as_view(), name=DashboardNames.prompt_passthrough),
+    )
+    logger.info(
+        "%s Dashboard prompt passthrough endpoint enabled.",
+        formatted_text(__name__),
+    )
+else:
+    logger.info(
+        "%s Dashboard prompt passthrough endpoint is disabled. Set env `SMARTER_ENABLE_DASHBOARD_PASSTHROUGH_PROMPT=true` to enable the LLM prompt API passthrough request/response endpoint at /prompt/.",
+        formatted_text(__name__),
+    )
+
+if smarter_settings.enable_dashboard_apply:
+    urlpatterns.append(
+        path("apply/", ManifestDropZoneView.as_view(), name=DashboardNames.manifest_drop_zone),
+    )
+    logger.info(
+        "%s Dashboard apply drop zone endpoint enabled. This allows users to apply manifests by dragging and dropping files onto the dashboard. Set env `SMARTER_ENABLE_DASHBOARD_APPLY=false` to disable.",
+        formatted_text(__name__),
+    )
+else:
+    logger.info(
+        "%s Dashboard apply drop zone endpoint is disabled. Set env `SMARTER_ENABLE_DASHBOARD_APPLY=true` to enable the manifest drop zone at /apply/.",
         formatted_text(__name__),
     )
