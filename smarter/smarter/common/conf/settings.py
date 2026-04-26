@@ -1847,8 +1847,8 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"email_admin is not a valid EmailStr: {v}")
         return v
 
-    enable_file_drop_zone: bool = Field(
-        settings_defaults.ENABLE_FILE_DROP_ZONE,
+    enable_dashboard_apply: bool = Field(
+        settings_defaults.ENABLE_DASHBOARD_APPLY,
         description="True if the file drop zone feature is enabled based on the current environment.",
         title="Enable File Drop Zone",
     )
@@ -1857,22 +1857,22 @@ class Settings(BaseSettings):
         bool: True if the file drop zone is enabled, False otherwise.
     """
 
-    @before_field_validator("enable_file_drop_zone")
-    def parse_enable_file_drop_zone(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'enable_file_drop_zone' field.
+    @before_field_validator("enable_dashboard_apply")
+    def parse_enable_dashboard_apply(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_dashboard_apply' field.
         Args:
-            v (Optional[Union[bool, str]]): the enable_file_drop_zone value to validate
+            v (Optional[Union[bool, str]]): the enable_dashboard_apply value to validate
         Returns:
-            bool: The validated enable_file_drop_zone.
+            bool: The validated enable_dashboard_apply.
         """
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.ENABLE_FILE_DROP_ZONE
+            return settings_defaults.ENABLE_DASHBOARD_APPLY
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate enable_file_drop_zone: {v}")
+        raise SmarterConfigurationError(f"could not validate enable_dashboard_apply: {v}")
 
     enable_vectorstore: bool = Field(
         settings_defaults.ENABLE_VECTORSTORE,
@@ -1901,8 +1901,8 @@ class Settings(BaseSettings):
 
         raise SmarterConfigurationError(f"could not validate enable_vectorstore: {v}")
 
-    enable_server_logs: bool = Field(
-        settings_defaults.ENABLE_SERVER_LOGS,
+    enable_dashboard_server_logs: bool = Field(
+        settings_defaults.ENABLE_DASHBOARD_SERVER_LOGS,
         description="True if the terminal app feature is enabled based on the current environment.",
         title="Enabled Terminal App",
     )
@@ -1911,22 +1911,49 @@ class Settings(BaseSettings):
         bool: True if the terminal app is enabled, False otherwise.
     """
 
-    @before_field_validator("enable_server_logs")
+    @before_field_validator("enable_dashboard_server_logs")
     def parse_enabled_terminal_app(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'enable_server_logs' field.
+        """Validates the 'enable_dashboard_server_logs' field.
         Args:
-            v (Optional[Union[bool, str]]): the enable_server_logs value to validate
+            v (Optional[Union[bool, str]]): the enable_dashboard_server_logs value to validate
         Returns:
-            bool: The validated enable_server_logs.
+            bool: The validated enable_dashboard_server_logs.
         """
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.ENABLE_SERVER_LOGS
+            return settings_defaults.ENABLE_DASHBOARD_SERVER_LOGS
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate enable_server_logs: {v}")
+        raise SmarterConfigurationError(f"could not validate enable_dashboard_server_logs: {v}")
+
+    enable_dashboard_passthrough_prompt: bool = Field(
+        settings_defaults.ENABLE_DASHBOARD_PASSTHROUGH_PROMPT,
+        description="True if the passthrough prompt feature is enabled based on the current environment.",
+        title="Enable Passthrough Prompt",
+    )
+    """Determines if the passthrough prompt feature is enabled based on the current environment.
+    Returns:
+        bool: True if the passthrough prompt is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_dashboard_passthrough_prompt")
+    def parse_enable_dashboard_passthrough_prompt(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_dashboard_passthrough_prompt' field.
+        Args:
+            v (Optional[Union[bool, str]]): the enable_dashboard_passthrough_prompt value to validate
+        Returns:
+            bool: The validated enable_dashboard_passthrough_prompt.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_DASHBOARD_PASSTHROUGH_PROMPT
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_dashboard_passthrough_prompt: {v}")
 
     environment: str = Field(
         settings_defaults.ENVIRONMENT,

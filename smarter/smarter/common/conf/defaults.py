@@ -163,9 +163,10 @@ class SettingsDefaults:
     EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com", is_required=True)
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
-    ENABLE_FILE_DROP_ZONE: bool = bool_environment_variable("ENABLE_FILE_DROP_ZONE", True)
     ENABLE_VECTORSTORE: bool = bool_environment_variable("ENABLE_VECTORSTORE", True)
-    ENABLE_SERVER_LOGS: bool = bool_environment_variable("ENABLE_SERVER_LOGS", True)
+    ENABLE_DASHBOARD_APPLY: bool = bool_environment_variable("ENABLE_DASHBOARD_APPLY", True)
+    ENABLE_DASHBOARD_SERVER_LOGS: bool = bool_environment_variable("ENABLE_DASHBOARD_SERVER_LOGS", True)
+    ENABLE_DASHBOARD_PASSTHROUGH_PROMPT: bool = bool_environment_variable("ENABLE_DASHBOARD_PASSTHROUGH_PROMPT", True)
 
     fernet = get_env("FERNET_ENCRYPTION_KEY", default=None, is_secret=True)
     if fernet is None:
