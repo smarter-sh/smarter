@@ -34,27 +34,3 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
         the Provider passthrough service.
         """
         return HttpResponse(status=404)  # Not yet implemented.
-
-    def patch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """
-        This endpoint is not used for the terminal view, as all communication
-        is done via WebSockets. However, we define it to satisfy the requirements
-        of the SmarterAuthenticatedNeverCachedWebView base class.
-        """
-        return HttpResponse(status=405)  # Method Not Allowed
-
-    def delete(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """
-        This endpoint is not used for the terminal view, as all communication
-        is done via WebSockets. However, we define it to satisfy the requirements
-        of the SmarterAuthenticatedNeverCachedWebView base class.
-        """
-        return HttpResponse(status=405)  # Method Not Allowed
-
-    def put(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """
-        This endpoint is not used for the terminal view, as all communication
-        is done via WebSockets. However, we define it to satisfy the requirements
-        of the SmarterAuthenticatedNeverCachedWebView base class.
-        """
-        return HttpResponse(status=405)  # Method Not Allowed

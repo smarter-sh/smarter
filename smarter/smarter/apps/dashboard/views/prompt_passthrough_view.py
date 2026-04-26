@@ -1,30 +1,12 @@
 # pylint: disable=W0613,C0302
 """ """
 
-import logging
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import render
 
-from smarter.common.conf import smarter_settings
-from smarter.lib.django import waffle
-from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
-from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-
-
-def should_log_verbose(level):
-    """Check if logging should be done based on the waffle switch."""
-    return smarter_settings.verbose_logging
-
-
-verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
+from smarter.lib.django.views import (
+    SmarterAuthenticatedNeverCachedWebView,
+)
 
 
 class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
@@ -51,3 +33,20 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
     """
 
     template_path = "prompt/passthrough.html"
+
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """
+        View for rendering the Monaco terminal emulation page
+        which only receives JSON dicts of LLM prompts.
+        """
+
+        context = {"page_title": "Terminal"}
+        self.template_path = "react/prompt-passthrough.html"
+        return render(request, self.template_path, context=context)
+
+    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """
+        Receives a LLM prompt JSON dict from the frontend and sends this to
+        the Provider passthrough service.
+        """
+        return HttpResponse(status=404)  # Not yet implemented.
