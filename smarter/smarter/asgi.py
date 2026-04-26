@@ -18,10 +18,11 @@ from django.contrib.staticfiles.handlers import ASGIStaticFilesHandler
 from django.core.asgi import get_asgi_application
 
 from smarter.common.conf import smarter_settings
-from smarter.urls import consumers
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
 
+
+from smarter import consumers
 
 django_asgi_app = get_asgi_application()
 static_asgi_app = ASGIStaticFilesHandler(django_asgi_app)
