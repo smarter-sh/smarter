@@ -1,21 +1,20 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
   // runtime builds are saved into the Django static directory so that these
   // files can be included in the Django collectstatic process and served by
   // Django at runtime. On the other hand, in development we want to rely on
   // Vite's dev server to serve these files, so we set the base to '/'.
-  base: process.env.NODE_ENV === 'development' ? '/' : '/static/terminal_emulator/',
+  base: command === "serve" ? "/" : "/static/react/terminal_emulator/",
   build: {
-    outDir: "../../smarter/static/terminal_emulator",
+    outDir: "../../smarter/static/react/terminal_emulator",
     emptyOutDir: true,
     rollupOptions: {
       output: {
         entryFileNames: "assets/index.js",
-        assetFileNames: "assets/[name][extname]",
+        // assetFileNames: "assets/[name][extname]",
       },
     },
   },
@@ -31,7 +30,7 @@ export default defineConfig({
   // environment as possible.
   server: {
     proxy: {
-      '/api': 'http://localhost:9357',
+      "/api": "http://localhost:9357",
       "/assets": {
         target: "http://localhost:9357", // Django dev server
         changeOrigin: true,
@@ -42,12 +41,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => `/static${path}`,
       },
-      "/static/terminal_emulator/": {
+      "/static/react/terminal_emulator/": {
         target: "http://localhost:5173",
         changeOrigin: true,
-          rewrite: (path) =>
-          path.replace(/^\/static\/terminal_emulator\//, "/"),
+        rewrite: (path) => path.replace(/^\/static\/terminal_emulator\//, "/"),
       },
     },
   },
-});
+}));
