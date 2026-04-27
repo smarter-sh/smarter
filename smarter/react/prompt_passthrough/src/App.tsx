@@ -6,9 +6,11 @@ function App() {
   return (
     <>
       <Hero />
-      <section id="next-steps" className="container py-5">
-        <div className="row g-5 d-flex">
+      <section id="next-steps" className="container">
+        <div className="row g-5 d-flex mb-5">
           <Prompt />
+        </div>
+        <div className="row g-5 d-flex">
           <Response />
         </div>
       </section>
