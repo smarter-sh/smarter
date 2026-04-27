@@ -1,3 +1,5 @@
+import './styles.css';
+
 
 function Hero() {
 
@@ -10,7 +12,7 @@ function Hero() {
             </div>
           </div>
           <div className="col-12">
-            <h3 className="pt-5 text-start">Prompt Passthrough Component</h3>
+            <h4 className="pt-5 text-start">Prompt Passthrough Component</h4>
           </div>
         </div>
       </section>
