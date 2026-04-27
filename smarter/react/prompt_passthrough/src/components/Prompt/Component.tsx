@@ -21,7 +21,6 @@ function Prompt() {
   ) => {
     setEditor(editorInstance);
   };
-
   const handleLLMProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLLMProvider(e.target.value);
     const template = getTemplateJson(templateId, e.target.value);
@@ -38,7 +37,7 @@ function Prompt() {
     <div className="col-lg-12">
       <div className="card shadow-sm">
         <div className="card-header d-flex justify-content-center align-items-center">
-          <h4 className="mt-4 p-4">LLM Request JSON</h4>
+          <h4 className="mt-4 p-4">LLM Provider API Passthrough Request</h4>
           <div className="row w-100 mt-3 mb-2">
             <div className="col-6">
               <LLMProviderSelector
@@ -73,9 +72,8 @@ function Prompt() {
 
         <div className="card-body">
           <Toolbar editor={editor} />
-
           <Editor
-            height="750px"
+            height="500px"
             defaultLanguage="json"
             theme="vs-dark"
             value={requestJson}
