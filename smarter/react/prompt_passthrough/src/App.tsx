@@ -6,6 +6,16 @@
 import Hero from "./components/Hero";
 import Prompt from "./components/Prompt";
 
+interface AppProps {
+  apiUrl: string;
+  csrfCookieName: string;
+  csrftoken: string;
+  djangoSessionCookieName: string;
+  cookieDomain: string;
+  llmProviderId: string;
+  templateId: string;
+}
+
 function App({
   apiUrl,
   csrfCookieName,
@@ -14,15 +24,7 @@ function App({
   cookieDomain,
   llmProviderId,
   templateId,
-}: {
-  apiUrl: string;
-  csrfCookieName: string;
-  csrftoken: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
-  llmProviderId: string;
-  templateId: string;
-}) {
+}: AppProps) {
   return (
     <>
       <section className="mt-5 container" id="prompt-passthrough">
