@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig(({ command }) => ({
   plugins: [react()],
@@ -8,6 +9,11 @@ export default defineConfig(({ command }) => ({
   // Django at runtime. On the other hand, in development we want to rely on
   // Vite's dev server to serve these files, so we set the base to '/'.
   base: command === "serve" ? "/" : "/static/react/prompt_passthrough/",
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
   build: {
     outDir: "../../smarter/static/react/prompt_passthrough",
     emptyOutDir: true,

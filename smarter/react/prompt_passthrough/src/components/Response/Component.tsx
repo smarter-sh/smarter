@@ -18,39 +18,23 @@
 import "./styles.css";
 import SuccessEmoji, {success_style} from "./status_success";
 import FailureEmoji, {failure_style} from "./status_failure";
+import WorkingEmoji, {working_style} from "./status_working";
 
 function Response({ apiResponse }: { apiResponse: { status: number; body: any } | null }) {
-  const http_response_status = apiResponse?.status ?? 200;
-  const responseJson = apiResponse?.body ?? {
-    id: "chatcmpl-abc123",
-    object: "chat.completion",
-    created: 1714243200,
-    model: "gpt-4o-mini",
-    choices: [
-      {
-        index: 0,
-        message: {
-          role: "assistant",
-          content: "Hello! How can I assist you today?",
-        },
-        finish_reason: "stop",
-      },
-    ],
-    usage: {
-      prompt_tokens: 12,
-      completion_tokens: 9,
-      total_tokens: 21,
-    },
-  };
-
+  const http_response_status = apiResponse?.status ?? 0;
+  const responseJson = apiResponse?.body ?? null;
   const status_style =
     http_response_status >= 200 && http_response_status < 300
       ? success_style
+      : http_response_status === 0
+      ? working_style
       : failure_style;
 
   const status_emoji =
     http_response_status >= 200 && http_response_status < 300
       ? <SuccessEmoji />
+      : http_response_status === 0
+      ? <WorkingEmoji />
       : <FailureEmoji />;
 
   return (

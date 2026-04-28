@@ -11,6 +11,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterMiddlewareMixin
+from smarter.common.utils import is_async_context
 from smarter.lib.cache import cache_results
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
@@ -180,7 +181,9 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         self.sensitive_files = SENSITIVE_FILES
 
     def __call__(self, request):
-        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
+        if not is_async_context() and not waffle.switch_is_active(
+            SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES
+        ):
             return self.get_response(request)
 
         request_path = request.path.lower()
