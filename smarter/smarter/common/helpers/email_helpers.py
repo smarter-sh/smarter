@@ -204,6 +204,15 @@ class EmailHelper(metaclass=Singleton):
                 msg["From"],
                 msg["To"],
             )
+        except SystemExit as e:
+            logger.error(
+                "%s system exit error while attempting to send email. error: %s from: %s to. %s",
+                EmailHelper.logger_prefix,
+                e,
+                msg["From"],
+                msg["To"],
+            )
+            raise
 
 
 email_helper = EmailHelper()

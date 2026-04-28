@@ -33,6 +33,7 @@ def base(request):
         try:
             user_profile = UserProfile.get_cached_object(user=request.user)
         except UserProfile.DoesNotExist:
+            user_profile = None
             logger.warning("UserProfile.DoesNotExist: user_profile not found for user %s", request.user)
 
         account_authenticated_context = {

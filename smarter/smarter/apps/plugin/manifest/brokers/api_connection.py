@@ -7,8 +7,11 @@ from typing import TYPE_CHECKING, Optional, Type
 
 from django.core.exceptions import MultipleObjectsReturned
 
-from smarter.apps.account.models import Secret
-from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.account.models import Secret, UserProfile
+from smarter.apps.account.utils import (
+    get_cached_admin_user_for_account,
+    smarter_cached_objects,
+)
 from smarter.apps.plugin.manifest.enum import SAMApiConnectionSpecConnectionKeys
 from smarter.apps.plugin.manifest.models.api_connection.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.api_connection.enum import AuthMethods
@@ -613,12 +616,23 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
 
         except ApiConnection.DoesNotExist:
-            logger.debug(
-                "%s.connection() no ApiConnection found for account %s and name %s",
-                self.formatted_class_name,
-                self.account,
-                name,
-            )
+            try:
+                if self.user_profile:
+                    admin_user = UserProfile.admin_for_account(self.user_profile.account)
+                    admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
+                    self._connection = ApiConnection.objects.get(user_profile=admin_user_profile, name=name)
+            except ApiConnection.DoesNotExist:
+                try:
+                    self._connection = ApiConnection.objects.get(
+                        user_profile=smarter_cached_objects.smarter_admin_user_profile, name=name
+                    )
+                except ApiConnection.DoesNotExist:
+                    logger.debug(
+                        "%s.connection() no ApiConnection found for account %s and name %s",
+                        self.formatted_class_name,
+                        self.account,
+                        name,
+                    )
 
         if not self._connection:
             if self._manifest:

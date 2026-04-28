@@ -32,6 +32,7 @@ from smarter.apps.account.signals import (
 )
 from smarter.apps.account.utils import (
     get_user_profiles_for_account,
+    smarter_cached_objects,
 )
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterException
@@ -413,13 +414,26 @@ class SecretTransformer(SmarterHelperMixin):
             logger.warning("%s.secret() User profile is not set.", self.formatted_class_name)
             return None
 
-        self._secret = Secret.get_cached_object(name=self.name, user_profile=self.user_profile)
+        try:
+            self._secret = Secret.objects.get(name=self.name, user_profile=self.user_profile)
+        except Secret.DoesNotExist:
+            admin_user = UserProfile.admin_for_account(self.user_profile.account)
+            admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
+            try:
+                self._secret = Secret.objects.get(name=self.name, user_profile=admin_user_profile)
+            except Secret.DoesNotExist:
+                try:
+                    self._secret = Secret.objects.get(
+                        name=self.name, user_profile=smarter_cached_objects.smarter_admin_user_profile
+                    )
+                except Secret.DoesNotExist:
+                    pass
         if self._secret:
             logger.debug(
                 "%s.secret() initialized Django ORM Secret %s for user profile %s.",
                 self.formatted_class_name,
-                self.name,
-                self.user_profile,
+                self._secret.name,
+                self._secret.user_profile,
             )
             return self._secret
 
