@@ -69,23 +69,24 @@ from django.urls import reverse
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
     Account,
-    Secret,
-    User,
     UserProfile,
     get_resolved_user,
 )
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
+from smarter.apps.connection.models import ConnectionBase
+from smarter.apps.dashboard.const import namespace as dashboard_namespace
+from smarter.apps.dashboard.views.manifest_drop_zone import ManifestDropZoneView
 from smarter.apps.plugin.models import (
-    ConnectionBase,
     PluginMeta,
 )
 from smarter.apps.provider.models import Provider
+from smarter.apps.secret.models import Secret
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
+from smarter.common.utils import camel_case_object_name
 from smarter.lib.cache import cache_results
 
 if TYPE_CHECKING:
@@ -123,7 +124,7 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
 
     @cache_results()
     def _get_pending_deployments(user_profile_id: int) -> int:
-        return ChatBot.objects.filter(user_profile__id=user_profile_id, deployed=False).count() or 0
+        return ChatBot.objects.filter(deployed=False).with_ownership_permission_for(user=user_profile.user).count() or 0  # type: ignore
 
     if not user_profile:
         logger.warning("%s.get_pending_deployments() called without user_profile. Returning None.", logger_prefix)
@@ -131,7 +132,7 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
     if invalidate and user_profile:
         _get_pending_deployments.invalidate(user_profile.id)  # type: ignore
 
-    return _get_pending_deployments(user_profile.id)
+    return _get_pending_deployments(user_profile.id)  # type: ignore
 
 
 def get_chatbots(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
@@ -192,7 +193,7 @@ def get_plugins(invalidate: bool = False, user_profile: Optional[UserProfile] = 
     if not user_profile:
         logger.warning("%s.get_plugins() called without user_profile. Returning None.", logger_prefix)
         return 0
-    retval = PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=invalidate, user_profile_id=user_profile.id)
+    retval = PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=invalidate, user_profile_id=user_profile.id)  # type: ignore
     return len(retval)
 
 
@@ -231,7 +232,7 @@ def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] =
     if invalidate and user_profile:
         _get_api_keys.invalidate(user_profile.id)  # type: ignore
 
-    return _get_api_keys(user_profile.id)
+    return _get_api_keys(user_profile.id)  # type: ignore
 
 
 def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
@@ -269,7 +270,7 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
     if invalidate and user_profile:
         _get_custom_domains.invalidate(user_profile.id)  # type: ignore
 
-    return _get_custom_domains(user_profile.id)
+    return _get_custom_domains(user_profile.id)  # type: ignore
 
 
 def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
@@ -297,7 +298,7 @@ def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile
         invalidate,
         user_profile,
     )
-    retval = ConnectionBase.get_cached_connections_for_user(invalidate=invalidate, user=user_profile.cached_user) or []
+    retval = ConnectionBase.get_cached_connections_for_user(invalidate=invalidate, user=user_profile.user) or []
     return len(retval)
 
 
@@ -322,7 +323,7 @@ def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = 
         return 0
 
     logger.debug(
-        "%s.get_secrets() called with invalidate=%s for user_profile_id=%s", logger_prefix, invalidate, user_profile.id
+        "%s.get_secrets() called with invalidate=%s for user_profile_id=%s", logger_prefix, invalidate, user_profile.id  # type: ignore
     )
     return Secret.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
 
@@ -349,9 +350,9 @@ def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] 
         "%s.get_providers() called with invalidate=%s for user_profile_id=%s",
         logger_prefix,
         invalidate,
-        user_profile.id,
+        user_profile.id,  # type: ignore
     )
-    retval = Provider.get_cached_providers_for_user(invalidate=invalidate, user=user_profile.cached_user) or []
+    retval = Provider.get_cached_providers_for_user(invalidate=invalidate, user=user_profile.user) or []
     return len(retval)
 
 
@@ -372,13 +373,15 @@ def file_drop_zone(request: "HttpRequest") -> dict:
 
     @cache_results()
     def get_cached_file_drop_zone_context() -> dict:
+        api_apply_path_name = ":".join([dashboard_namespace, camel_case_object_name(ManifestDropZoneView)])
+        api_apply_path = reverse(api_apply_path_name)
         retval = {
             "drop_zone": {
                 "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
-                "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
-                "workbench_list_path": reverse("prompt_workbench:listview"),
+                "api_apply_path": api_apply_path,
+                "workbench_list_path": reverse("prompt:listview"),
                 "plugin_list_path": reverse("plugin:plugin_listview"),
-                "connection_list_path": reverse("plugin:connection_listview"),
+                "connection_list_path": reverse("connection:connection_listview"),
                 "provider_list_path": reverse("provider:provider_listview"),
             }
         }
@@ -408,14 +411,20 @@ def base(request: "HttpRequest") -> dict:
     :rtype: dict
     """
     logger.debug("%s.base() called.", logger_prefix)
-    user = request.user
-    resolved_user = get_resolved_user(user)
-    user_profile: Optional[UserProfile] = None
-    if resolved_user and getattr(resolved_user, "is_authenticated", False):
-        user_profile = UserProfile.get_cached_object(user=resolved_user)  # type: ignore
+    user = None
+    user_profile = None
+    resolved_user = None
+    if hasattr(request, "user"):
+        user = request.user
+        resolved_user = get_resolved_user(user)
+        user_profile: Optional[UserProfile] = None
+        if resolved_user and getattr(resolved_user, "is_authenticated", False):
+            user_profile = UserProfile.get_cached_object(user=resolved_user)  # type: ignore
+        else:
+            user = None
 
     @cache_results()
-    def get_cached_context(user: Optional[User]) -> dict:
+    def get_cached_context(username: Optional[str]) -> dict:
         """
         Constructs and returns the cached dashboard context for the specified user.
 
@@ -437,12 +446,12 @@ def base(request: "HttpRequest") -> dict:
         username = "anonymous"
         is_superuser = False
         is_staff = False
-        if user_profile and user_profile.cached_user.is_authenticated:
+        if user_profile and user_profile.user.is_authenticated:
             try:
-                user_email = user_profile.cached_user.email
-                username = user_profile.cached_user.username
-                is_superuser = user_profile.cached_user.is_superuser
-                is_staff = user_profile.cached_user.is_staff
+                user_email = user_profile.user.email
+                username = user_profile.user.username
+                is_superuser = user_profile.user.is_superuser
+                is_staff = user_profile.user.is_staff
             except AttributeError:
                 # technically, this is supposed to be impossible due to the is_authenticated check
                 pass
@@ -454,18 +463,19 @@ def base(request: "HttpRequest") -> dict:
                 "username": username,
                 "is_superuser": is_superuser,
                 "is_staff": is_staff,
+                "is_vectorstore_enabled": smarter_settings.enable_vectorstore,
+                "is_file_drop_zone_enabled": smarter_settings.enable_dashboard_apply,
+                "is_enabled_server_logs": smarter_settings.enable_dashboard_server_logs,
                 "profile_image_url": (
                     user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
                 ),
-                "first_name": (
-                    user_profile.cached_user.first_name if user_profile and user_profile.cached_user.first_name else ""
-                ),
-                "last_name": (
-                    user_profile.cached_user.last_name if user_profile and user_profile.cached_user.last_name else ""
-                ),
+                "first_name": (user_profile.user.first_name if user_profile and user_profile.user.first_name else ""),
+                "last_name": (user_profile.user.last_name if user_profile and user_profile.user.last_name else ""),
                 "product_name": SMARTER_PRODUCT_NAME,
                 "company_name": smarter_settings.root_domain,
                 "smarter_version": "v" + __version__,
+                "python_version": smarter_settings.python_version,
+                "django_version": smarter_settings.django_version,
                 "current_year": current_year,
                 "my_resources_pending_deployments": (
                     get_pending_deployments(user_profile=user_profile) if user_profile else 0
@@ -481,7 +491,7 @@ def base(request: "HttpRequest") -> dict:
         }
         return cached_context
 
-    context = get_cached_context(user=resolved_user)  # type: ignore[assignment]
+    context = get_cached_context(username=resolved_user.username if resolved_user else "missing")  # type: ignore[assignment]
     return context
 
 
@@ -579,8 +589,7 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
     The context includes:
 
     - URLs for the terms of service, privacy policy, and cookie policy documents.
-    - A dynamically generated copyright notice that includes the current year
-    and corporate name.
+    - A dynamically generated copyright notice that includes the current year and corporate name.
 
     All values are sourced from Django settings, allowing for easy
     customization and environment-specific overrides.
@@ -677,9 +686,9 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     ###########################################################################
     if user_profile:
         Account.get_cached_object(invalidate=True, pk=user_profile.account.id)
-        UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)
-        PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=True, user_profile_id=user_profile.id)
-        get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id, invalidate=True)
+        UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)  # type: ignore
+        PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=True, user_profile_id=user_profile.id)  # type: ignore
+        get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id, invalidate=True)  # type: ignore
 
     ###########################################################################
     # context invalidations
@@ -712,7 +721,7 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
 
     DashboardView.dispatch.invalidate(request)
 
-    url = reverse("prompt_workbench:listview")
+    url = reverse("prompt:listview")
     request = factory.get(url)
     logger.debug(
         "%s.cache_invalidations() Created invalidation request for URL %s: %s",

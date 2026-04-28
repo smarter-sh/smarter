@@ -45,7 +45,7 @@ from dataclasses import dataclass
 
 import waffle as waffle_orig
 from django.apps import apps
-from django.core.exceptions import AppRegistryNotReady
+from django.core.exceptions import AppRegistryNotReady, SynchronousOnlyOperation
 from django.db import connections
 from django.db.utils import OperationalError, ProgrammingError
 from waffle.admin import SwitchAdmin
@@ -58,11 +58,11 @@ try:
 except ImportError:
     MySQLdbOperationalError = None
 
-from smarter.common.helpers.console_helpers import formatted_text_green
+from smarter.common.helpers.console_helpers import formatted_text
 
 logger = logging.getLogger(__name__)
-prefix = formatted_text_green(f"{__name__}.switch_is_active()")
-cache_prefix = f"{__name__}"
+prefix = f"{formatted_text(__name__)}.switch_is_active()"
+cache_prefix = __name__
 
 
 # pylint: disable=C0115
@@ -141,6 +141,9 @@ class SmarterWaffleSwitches:
     CACHE_LOGGING = "log_caching"
     """Enables detailed logging for caching operations including cache hits, misses, and errors."""
 
+    CONNECTION_LOGGING = "log_connection"
+    """Enables logging throughout the smarter.app.connection namespace."""
+
     PROMPT_LOGGING = "log_prompt"
     """Enables logging throughout the smarter.app.prompt namespace."""
 
@@ -152,6 +155,12 @@ class SmarterWaffleSwitches:
 
     CHATBOT_HELPER_LOGGING = "log_chatbothelper"
     """Enables logging within the smarter.apps.chatbot.model.ChatBotHelper class."""
+
+    SECRET_LOGGING = "log_secret"
+    """Enables logging throughout the smarter.app.secret namespace."""
+
+    VECTORSTORE_LOGGING = "log_vectorstore"
+    """Enables logging throughout the smarter.app.vectorstore namespace."""
 
     CSRF_SUPPRESS_FOR_CHATBOTS = "disable_csrf_middleware_for_chatbots"
     """Disables CSRF middleware checks for chat completion endpoints."""
@@ -194,6 +203,9 @@ class SmarterWaffleSwitches:
 
     ENABLE_SMARTER_PAGE_CACHING = "enable_smarter_page_caching"
     """Enables the Smarter user-based page caching decorator for user-facing pages to improve performance."""
+
+    ENABLE_LOG_VIEW_IN_BROWSER = "enable_log_view_in_browser"
+    """Enables the 'View Logs in Browser' feature for easier access to log files during development and debugging."""
 
     MANIFEST_LOGGING = "log_manifest_brokers"
     """Enables detailed diagnostic logging for manifest initialization, validation and brokered operations."""
@@ -263,6 +275,21 @@ class SmarterWaffleSwitches:
             comment="Enables logging throughout the smarter.app.chatbot namespace.",
             default=True,
         ),
+        CONNECTION_LOGGING: SmarterWaffleSwitch(
+            name=CONNECTION_LOGGING,
+            comment="Enables logging throughout the smarter.app.connection namespace.",
+            default=True,
+        ),
+        SECRET_LOGGING: SmarterWaffleSwitch(
+            name=SECRET_LOGGING,
+            comment="Enables logging throughout the smarter.app.secret namespace.",
+            default=True,
+        ),
+        VECTORSTORE_LOGGING: SmarterWaffleSwitch(
+            name=VECTORSTORE_LOGGING,
+            comment="Enables logging throughout the smarter.app.vectorstore namespace.",
+            default=True,
+        ),
         CHATBOT_HELPER_LOGGING: SmarterWaffleSwitch(
             name=CHATBOT_HELPER_LOGGING,
             comment="Enables logging within the smarter.apps.chatbot.model.ChatBotHelper class.",
@@ -281,6 +308,11 @@ class SmarterWaffleSwitches:
         ENABLE_JOURNAL: SmarterWaffleSwitch(
             name=ENABLE_JOURNAL,
             comment="Enables the Smarter Journal feature.",
+            default=False,
+        ),
+        ENABLE_LOG_VIEW_IN_BROWSER: SmarterWaffleSwitch(
+            name=ENABLE_LOG_VIEW_IN_BROWSER,
+            comment="Enables the 'View Logs in Browser' feature for easier access to log files during development and debugging.",
             default=False,
         ),
         ENABLE_OAUTH2: SmarterWaffleSwitch(
@@ -371,7 +403,7 @@ class SmarterWaffleSwitches:
         TASK_LOGGING: SmarterWaffleSwitch(
             name=TASK_LOGGING,
             comment="Enables logging in all Celery tasks throughout the Smarter codebase.",
-            default=False,
+            default=True,
         ),
         VALIDATOR_LOGGING: SmarterWaffleSwitch(
             name=VALIDATOR_LOGGING,
@@ -421,7 +453,9 @@ def is_database_ready(alias="default"):
             return False
         db_state.ready = True
         return db_state.ready
-    except OperationalError:
+    except (OperationalError, SynchronousOnlyOperation):
+        # we'll get SynchronousOnlyOperation whenever an ASGI asynchronous
+        # context tries to interact with the database. Main culprit is middleware.
         return False
     except ProgrammingError:
         return False
@@ -455,7 +489,7 @@ def switch_is_active(switch_name: str) -> bool:
 
     try:
         if not is_database_ready():
-            logger.warning("%s Database not ready, assuming switch %s is inactive.", prefix, switch_name)
+            logger.debug("%s Database not ready, assuming switch %s is inactive.", prefix, switch_name)
             return False
     # pylint: disable=broad-except
     except Exception as e:

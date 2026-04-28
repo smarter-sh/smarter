@@ -2,13 +2,19 @@
 
 # pylint: disable=W0718,W0212
 
+import unittest
 from unittest.mock import MagicMock, PropertyMock, patch
 from urllib.parse import urlsplit
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.lib.django import waffle
 from smarter.lib.django.middleware.cors import SmarterCorsMiddleware
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
+@unittest.skipUnless(
+    waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS), "CORS middleware is not enabled"
+)
 class TestSmarterCorsMiddleware(TestAccountMixin):
     """Test the SmarterCorsMiddleware class."""
 

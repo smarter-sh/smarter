@@ -5,4 +5,5 @@ Views
    :maxdepth: 1
 
    views/history
-   views/providers
+   views/smarter-chat
+   views/paththrough-chat

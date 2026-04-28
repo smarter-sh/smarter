@@ -256,6 +256,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Anthropic API key.
         """
+        warnings.warn(
+            "`anthropic_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if v is None:
             return settings_defaults.ANTHROPIC_API_KEY
 
@@ -1842,6 +1847,114 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"email_admin is not a valid EmailStr: {v}")
         return v
 
+    enable_dashboard_apply: bool = Field(
+        settings_defaults.ENABLE_DASHBOARD_APPLY,
+        description="True if the file drop zone feature is enabled based on the current environment.",
+        title="Enable File Drop Zone",
+    )
+    """Determines if the file drop zone feature is enabled based on the current environment.
+    Returns:
+        bool: True if the file drop zone is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_dashboard_apply")
+    def parse_enable_dashboard_apply(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_dashboard_apply' field.
+        Args:
+            v (Optional[Union[bool, str]]): the enable_dashboard_apply value to validate
+        Returns:
+            bool: The validated enable_dashboard_apply.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_DASHBOARD_APPLY
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_dashboard_apply: {v}")
+
+    enable_vectorstore: bool = Field(
+        settings_defaults.ENABLE_VECTORSTORE,
+        description="True if the vectorstore feature is enabled based on the current environment.",
+        title="Enable Vectorstore",
+    )
+    """Determines if the vectorstore feature is enabled based on the current environment.
+    Returns:
+        bool: True if the vectorstore is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_vectorstore")
+    def parse_enable_vectorstore(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_vectorstore' field.
+        Args:
+            v (Optional[Union[bool, str]]): the enable_vectorstore value to validate
+        Returns:
+            bool: The validated enable_vectorstore.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_VECTORSTORE
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_vectorstore: {v}")
+
+    enable_dashboard_server_logs: bool = Field(
+        settings_defaults.ENABLE_DASHBOARD_SERVER_LOGS,
+        description="True if the terminal app feature is enabled based on the current environment.",
+        title="Enabled Terminal App",
+    )
+    """Determines if the terminal app feature is enabled based on the current environment.
+    Returns:
+        bool: True if the terminal app is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_dashboard_server_logs")
+    def parse_enabled_terminal_app(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_dashboard_server_logs' field.
+        Args:
+            v (Optional[Union[bool, str]]): the enable_dashboard_server_logs value to validate
+        Returns:
+            bool: The validated enable_dashboard_server_logs.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_DASHBOARD_SERVER_LOGS
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_dashboard_server_logs: {v}")
+
+    enable_dashboard_passthrough_prompt: bool = Field(
+        settings_defaults.ENABLE_DASHBOARD_PASSTHROUGH_PROMPT,
+        description="True if the passthrough prompt feature is enabled based on the current environment.",
+        title="Enable Passthrough Prompt",
+    )
+    """Determines if the passthrough prompt feature is enabled based on the current environment.
+    Returns:
+        bool: True if the passthrough prompt is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_dashboard_passthrough_prompt")
+    def parse_enable_dashboard_passthrough_prompt(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_dashboard_passthrough_prompt' field.
+        Args:
+            v (Optional[Union[bool, str]]): the enable_dashboard_passthrough_prompt value to validate
+        Returns:
+            bool: The validated enable_dashboard_passthrough_prompt.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_DASHBOARD_PASSTHROUGH_PROMPT
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_dashboard_passthrough_prompt: {v}")
+
     environment: str = Field(
         settings_defaults.ENVIRONMENT,
         description="The deployment environment for the platform.",
@@ -1961,6 +2074,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Gemini API key.
         """
+        warnings.warn(
+            "`gemini_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if str(v) in THE_EMPTY_SET:
             return settings_defaults.GEMINI_API_KEY
         if not isinstance(v, SecretStr):
@@ -2109,6 +2227,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Llama API key.
         """
+        warnings.warn(
+            "`llama_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if str(v) in THE_EMPTY_SET:
             return settings_defaults.LLAMA_API_KEY
 
@@ -2543,6 +2666,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated OpenAI API key.
         """
+        warnings.warn(
+            "`openai_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if str(v) in THE_EMPTY_SET and settings_defaults.OPENAI_API_KEY is not None:
             return settings_defaults.OPENAI_API_KEY
 

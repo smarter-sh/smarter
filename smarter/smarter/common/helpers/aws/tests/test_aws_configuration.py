@@ -16,7 +16,6 @@ sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 # our stuff
 from smarter.common.helpers.aws.aws import AWSBase
-from smarter.common.helpers.aws.exceptions import AWSNotReadyError
 
 
 # pylint: disable=too-many-public-methods

@@ -42,6 +42,8 @@ class SmarterJournalApiResponseErrorKeys:
     ARGS = "args"
     CAUSE = "cause"
     CONTEXT = "context"
+    THING = "thing"
+    COMMAND = "command"
 
 
 class SCLIResponseMetadata:
@@ -87,7 +89,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
     ACCOUNT = "Account"
     """Smarter Account resource. A Django ORM model instance."""
 
-    AUTH_TOKEN = "AuthToken"
+    AUTH_TOKEN = "SmarterAuthToken"
     """Smarter Authentication Token resource. A Django DRF Knox subclass ORM model instance."""
 
     USER = "User"
@@ -117,6 +119,9 @@ class SmarterJournalThings(SmarterEnumAbstract):
     SECRET = "Secret"
     """Smarter Secret resource. A Django ORM model instance."""
 
+    VECTORSTORE = "Vectorstore"
+    """Smarter Vectorstore resource. A Django ORM model instance."""
+
     @classmethod
     def choices(cls) -> list[tuple[str, str]]:
         """Django model choices for SmarterJournalThings."""
@@ -137,6 +142,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.CHATBOT.value, cls.CHATBOT.value),
             (cls.PROVIDER.value, cls.PROVIDER.value),
             (cls.SECRET.value, cls.SECRET.value),
+            (cls.VECTORSTORE.value, cls.VECTORSTORE.value),
         ]
 
 

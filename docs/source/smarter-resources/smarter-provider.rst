@@ -44,6 +44,7 @@ Technical Reference
    provider/serializers
    provider/const
    provider/management-commands
+   provider/services
    provider/signals
    provider/tasks
    provider/utils

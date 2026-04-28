@@ -5,7 +5,7 @@ Overview
 --------
 
 Plugins provide a `declarative <https://en.wikipedia.org/wiki/Declarative_programming>`__ `yaml <https://en.wikipedia.org/wiki/YAML>`__ `manifest <https://kubernetes.io/docs/concepts/overview/working-with-objects/>`__ alternative to programming in Python in order to
-extend :doc:`LLM tool functionality <plugins/how-tools-work>`. :doc:`Smarter Application Manifests (SAM) <../smarter-framework/pydantic/smarter-manifests>`
+extend :doc:`LLM tool functionality <plugins/how-tools-work>`. :doc:`Smarter Application Manifests (SAM) <../smarter-framework/smarter-manifests>`
 are used to :doc:`define Smarter Plugins <plugins/how-it-works>`, which can be used to provide three powerful kinds of
 enterprise data integrations, two of which require a ``Connection`` resource as well as a ``Secret``
 resource to store authentication credentials:
@@ -18,8 +18,8 @@ resource to store authentication credentials:
 
 **Connection Types**
 
- - :doc:`plugins/connection/api`: Connect to REST APIs.
- - :doc:`plugins/connection/sql`: Connect to SQL databases.
+ - :doc:`connection/resources/api`: Connect to REST APIs.
+ - :doc:`connection/resources/sql`: Connect to SQL databases.
 
 Plugins are fundamentally more feature rich than traditional :doc:`LLM function tools <plugins/how-tools-work>`. A Smarter Plugin manifest
 defines not only what proprietary data is being made available to the LLM, but also the LLM prompt specification itself
@@ -109,6 +109,7 @@ Technical Reference
    plugins/const
    plugins/nlp
    plugins/signals
+   plugins/receivers
    plugins/tasks
    plugins/utils
    plugins/views

@@ -63,7 +63,19 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         domain = get_current_site(request).domain
         uid = self.user_to_uidb64(user)
         slug = reverse(reverse_link, kwargs={"uidb64": uid, "token": token})
-        protocol = "https" if hasattr(request, "is_secure") and request.is_secure() else "http"
+
+        # try to determine the protocol (http or https) from the originating
+        # request. default to https if it cannot be determined
+        try:
+            proto_header = request.META.get("HTTP_X_FORWARDED_PROTO")
+            if proto_header:
+                protocol = proto_header.split(",")[0].strip()
+            else:
+                protocol = "https" if hasattr(request, "is_secure") and request.is_secure() else "http"
+        # pylint: disable=broad-except
+        except Exception:
+            protocol = "https"
+
         url = protocol + "://" + domain + slug
         return url
 

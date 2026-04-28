@@ -1,14 +1,9 @@
 """Smarter API V1 Manifests Enumerations."""
 
 import logging
-from typing import Optional
-from urllib.parse import urlparse
 
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
-)
-from smarter.apps.account.manifest.models.secret.const import (
-    MANIFEST_KIND as SECRET_MANIFEST_KIND,
 )
 from smarter.apps.account.manifest.models.user.const import (
     MANIFEST_KIND as USER_MANIFEST_KIND,
@@ -16,14 +11,14 @@ from smarter.apps.account.manifest.models.user.const import (
 from smarter.apps.chatbot.manifest.models.chatbot.const import (
     MANIFEST_KIND as CHATBOT_MANIFEST_KIND,
 )
-from smarter.apps.plugin.manifest.models.api_connection.const import (
+from smarter.apps.connection.manifest.models.api_connection.const import (
     MANIFEST_KIND as APICONNECTION_MANIFEST_KIND,
+)
+from smarter.apps.connection.manifest.models.sql_connection.const import (
+    MANIFEST_KIND as SQLCONNECTION_MANIFEST_KIND,
 )
 from smarter.apps.plugin.manifest.models.api_plugin.const import (
     MANIFEST_KIND as APIPLUGIN_MANIFEST_KIND,
-)
-from smarter.apps.plugin.manifest.models.sql_connection.const import (
-    MANIFEST_KIND as SQLCONNECTION_MANIFEST_KIND,
 )
 from smarter.apps.plugin.manifest.models.sql_plugin.const import (
     MANIFEST_KIND as SQLPLUGIN_MANIFEST_KIND,
@@ -45,6 +40,12 @@ from smarter.apps.prompt.manifest.models.chat_tool_call.const import (
 )
 from smarter.apps.provider.manifest.models.provider.const import (
     MANIFEST_KIND as PROVIDER_MANIFEST_KIND,
+)
+from smarter.apps.secret.manifest.models.secret.const import (
+    MANIFEST_KIND as SECRET_MANIFEST_KIND,
+)
+from smarter.apps.vectorstore.manifest.models.vectorstore.const import (
+    MANIFEST_KIND as VECTORSTORE_MANIFEST_KIND,
 )
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
@@ -133,6 +134,9 @@ class SAMKinds(SmarterEnumAbstract):
     # provider resources
     PROVIDER = PROVIDER_MANIFEST_KIND
 
+    # vectorstore resources
+    VECTORSTORE = VECTORSTORE_MANIFEST_KIND
+
     @classmethod
     def str_to_kind(cls, kind_str: str) -> "SAMKinds":
         """
@@ -155,46 +159,3 @@ class SAMKinds(SmarterEnumAbstract):
     @classmethod
     def all_connections(cls):
         return [cls.API_CONNECTION, cls.SQL_CONNECTION]
-
-    @classmethod
-    def all_slugs(cls):
-        return cls.singular_slugs() + cls.plural_slugs()
-
-    @classmethod
-    def singular_slugs(cls):
-        return [slug.lower() for slug in cls.all()]
-
-    @classmethod
-    def plural_slugs(cls):
-        return [f"{slug.lower()}s" for slug in cls.all()]
-
-    @classmethod
-    def from_url(cls, url) -> Optional[str]:
-        """
-        Extract the manifest kind from a URL.
-
-        example::
-
-            http://localhost:9357/api/v1/cli/example_manifest/Account/
-            http://platform.smarter.sh/api/v1/cli/whoami/
-        """
-        if isinstance(url, bytes):
-            url = url.decode("utf-8")
-        parsed_url = urlparse(url)
-        path = parsed_url.path
-        if isinstance(path, bytes):
-            path = path.decode("utf-8")
-        slugs = path.split("/")
-        if not "api" in slugs:
-            return None
-        if "whoami" in slugs:
-            return None
-        if "status" in slugs:
-            return None
-        if "version" in slugs:
-            return None
-        for slug in slugs:
-            this_slug = str(slug).lower()
-            if this_slug in cls.all_slugs():
-                return this_slug
-        logger.warning("SAMKinds.from_url() could not extract manifest kind from URL: %s", url)

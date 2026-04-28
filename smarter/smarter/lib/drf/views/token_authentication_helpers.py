@@ -53,40 +53,13 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
     def __init__(self, *args, **kwargs):
         """Initialize the SmarterAdminListAPIView."""
         super().__init__(*args, **kwargs)
-        request = kwargs.pop("request", None)
+        self.request = kwargs.pop("request", None)
         user = kwargs.pop("user", None)
         account = kwargs.pop("account", None)
         user_profile = kwargs.pop("user_profile", None)
         SmarterRequestMixin.__init__(
-            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+            self, request=self.request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
-
-    def initial(self, request, *args, **kwargs):
-        """Extend initial() DRF view method. Initialize the view with the request and any additional arguments.
-
-        This is the earliest point in the DRF view lifecycle where the request object is available.
-        Up to this point our SmarterRequestMixin, and AccountMixin classes are only partially
-        initialized. This method takes care of the rest of the initialization.
-
-
-        Args:
-            request (HttpRequest): The incoming HTTP request.
-        """
-        if not self.is_requestmixin_ready:
-            logger.debug(
-                "%s.initial() - completing initialization of SmarterRequestMixin with request: %s",
-                self.formatted_class_name,
-                request.build_absolute_uri(),
-            )
-            self.smarter_request = request
-        logger.debug(
-            "%s.initial() - request: %s, args: %s, kwargs: %s",
-            self.formatted_class_name,
-            self.request,
-            args,
-            kwargs,
-        )
-        super().initial(self.request, *args, **kwargs)
 
     def setup(self, request: Request, *args, **kwargs):
         """Extend setup() DRF view method. Setup the view. This is called by Django before dispatch() and is used to
@@ -119,6 +92,33 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
             self.user_profile,
             is_authenticated_request(request),
         )
+
+    def initial(self, request, *args, **kwargs):
+        """Extend initial() DRF view method. Initialize the view with the request and any additional arguments.
+
+        This is the earliest point in the DRF view lifecycle where the request object is available.
+        Up to this point our SmarterRequestMixin, and AccountMixin classes are only partially
+        initialized. This method takes care of the rest of the initialization.
+
+
+        Args:
+            request (HttpRequest): The incoming HTTP request.
+        """
+        if not self.is_requestmixin_ready:
+            logger.debug(
+                "%s.initial() - completing initialization of SmarterRequestMixin with request: %s",
+                self.formatted_class_name,
+                request.build_absolute_uri(),
+            )
+            self.smarter_request = request
+        logger.debug(
+            "%s.initial() - request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            self.request,
+            args,
+            kwargs,
+        )
+        super().initial(self.request, *args, **kwargs)
 
 
 class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
@@ -250,7 +250,7 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
         Returns:
             bool: True if the user is not a superuser, False otherwise.
         """
-        if not self.user_profile or not self.user_profile.cached_user.is_superuser:
+        if not self.user_profile or not self.user_profile.user.is_superuser:
             return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
         return False
 

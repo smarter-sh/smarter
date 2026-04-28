@@ -12,6 +12,7 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 
 """
 
+import asyncio
 import csv
 import hashlib
 import logging
@@ -41,6 +42,14 @@ def should_log_verbose(level):
 
 
 verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
+
+
+def is_async_context():
+    try:
+        asyncio.get_running_loop()
+        return True
+    except RuntimeError:
+        return False
 
 
 def hash_factory(length: int = 16) -> str:
@@ -663,6 +672,17 @@ def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, li
     return retval
 
 
+def camel_case_object_name(obj) -> str:
+    """
+    Convert CamelCase to snake_case for URL naming.
+
+    :param name: The CamelCase string to convert.
+    :return: The converted snake_case string.
+    :rtype: str
+    """
+    return str(camel_to_snake(obj.__name__))
+
+
 def rfc1034_compliant_str(val) -> str:
     """
     Generates a RFC 1034-compliant name string suitable for use as a DNS label or resource identifier.
@@ -815,6 +835,7 @@ def bool_environment_variable(var_name: str, default: bool) -> bool:
 
 __all__ = [
     "bool_environment_variable",
+    "camel_case_object_name",
     "camel_to_snake",
     "camel_to_snake_dict",
     "dict_is_contained_in",

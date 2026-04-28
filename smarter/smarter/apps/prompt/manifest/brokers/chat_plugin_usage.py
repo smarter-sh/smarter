@@ -13,7 +13,6 @@ from smarter.apps.prompt.manifest.models.chat_plugin_usage.model import (
     SAMChatPluginUsage,
 )
 from smarter.apps.prompt.models import Chat, ChatPluginUsage
-from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -37,7 +36,7 @@ from smarter.lib.manifest.enum import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and waffle.switch_is_active(
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) or waffle.switch_is_active(
         SmarterWaffleSwitches.MANIFEST_LOGGING
     )
 

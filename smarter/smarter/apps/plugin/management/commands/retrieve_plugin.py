@@ -24,7 +24,7 @@ class Command(SmarterCommand):
         parser.add_argument("--name", type=str, required=True, help="The name of the plugin to retrieve.")
 
     def handle(self, *args, **options):
-        """delete the plugin."""
+        """retrieve the plugin."""
         self.handle_begin()
 
         account_number = options["account_number"]
@@ -82,7 +82,7 @@ class Command(SmarterCommand):
                 f"manage.py retrieve_plugin: Plugin {name} does not exist.",
             )
 
-        controller = PluginController(account=account, user=user, user_profile=user_profile, plugin_meta=plugin_meta)  # type: ignore
+        controller = PluginController(user_profile=user_profile, plugin_meta=plugin_meta)  # type: ignore
         plugin = controller.obj
         if not plugin:
             self.handle_completed_failure(

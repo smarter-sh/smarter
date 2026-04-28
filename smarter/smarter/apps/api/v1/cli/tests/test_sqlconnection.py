@@ -7,18 +7,19 @@ from urllib.parse import urlencode
 
 from django.urls import reverse
 
-from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.factories import secret_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.plugin.manifest.models.sql_connection.enum import (
+from smarter.apps.connection.manifest.models.sql_connection.enum import (
     DbEngines,
     DBMSAuthenticationMethods,
 )
-from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
-from smarter.apps.plugin.models import SqlConnection
+from smarter.apps.connection.manifest.models.sql_connection.model import (
+    SAMSqlConnection,
+)
+from smarter.apps.connection.models import SqlConnection
+from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -34,7 +35,7 @@ KIND = SAMKinds.SQL_CONNECTION.value
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and waffle.switch_is_active(
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) or waffle.switch_is_active(
         SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 

@@ -27,7 +27,7 @@ from .models import PluginSelectorHistory
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) and waffle.switch_is_active(
+    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) or waffle.switch_is_active(
         SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 
@@ -105,19 +105,23 @@ def create_plugin_selector_history(*args, **kwargs):
 
     user = None
     user_profile = None
+    user_profile_id = kwargs.get("user_profile_id")
+    if user_profile_id:
+        user_profile = UserProfile.get_cached_object(user_profile_id=user_profile_id)
     user_id = kwargs.get("user_id")
-    if user_id:
+    if user_id and not user_profile:
         user = get_cached_user_for_user_id(user_id=user_id)
         user_profile = UserProfile.get_cached_object(user=user) if user else None
-
+    if not user_profile:
+        raise SmarterPluginError(
+            f"UserProfile could not be resolved for user_id: {user_id}, user_profile_id: {user_profile_id}"
+        )
     plugin_id = kwargs.get("plugin_id")
     plugin_meta = cached_plugin_by_id(plugin_id) if plugin_id else None
     try:
         # to catch a race situation in unit tests.
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.cached_account,  # type: ignore[arg-type]
-            user=user,  # type: ignore[arg-type]
             plugin_meta=plugin_meta,
         )
         if not plugin_controller or not plugin_controller.plugin:

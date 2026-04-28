@@ -4,11 +4,11 @@ import logging
 import os
 from typing import ClassVar, List, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, model_validator
 
+from smarter.apps.connection.models import SqlConnection
 from smarter.apps.plugin.manifest.models.common import Parameter, TestValue
 from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
-from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -68,8 +68,22 @@ class SAMSqlPluginSpec(SAMPluginCommonSpec):
         ..., description=f"{class_identifier}.selector[obj]: the SqlData to use for the {MANIFEST_KIND}"
     )
 
-    @field_validator("connection")
-    def validate_limit(cls, v):
+    @model_validator(mode="after")
+    def validate_connection(self):
+        """
+        Validate that the connection value is a valid cleanstring and that at
+        least 1 record exists in the SqlConnection table with the given name.
+
+        If the model includes an authenticated user then also validate that at
+        least 1 record exists in the SqlConnection table with the given name that
+        is accessible by the authenticated user.
+        """
+        v = self.connection
         if not SmarterValidator.is_valid_cleanstring(v):
             raise SAMValidationError(f"connection '{v}' must be a valid cleanstring with no illegal characters.")
-        return v
+        sql_connections = SqlConnection.objects.filter(name=v)
+        if self.user:
+            sql_connections = sql_connections.with_read_permission_for(user=self.user)
+        if not sql_connections.exists():
+            raise SAMValidationError(f"connection '{v}' does not exist or is not accessible.")
+        return self

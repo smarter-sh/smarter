@@ -34,6 +34,7 @@ from .views.json_schema import (
     DocsJsonSchemaSqlConnectionView,
     DocsJsonSchemaSqlView,
     DocsJsonSchemaUserView,
+    DocsJsonSchemaVectorstoreView,
 )
 from .views.manifest import (
     DocsExampleManifestAccountView,
@@ -51,6 +52,7 @@ from .views.manifest import (
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestSqlView,
     DocsExampleManifestUserView,
+    DocsExampleManifestVectorstoreView,
 )
 from .views.views import JsonSchemasView, ManifestsView
 
@@ -152,6 +154,11 @@ urlpatterns = [
         DocsJsonSchemaProviderView.as_view(),
         name=json_schema_name(SAMKinds.PROVIDER.value),
     ),
+    path(
+        json_schema_path(SAMKinds.VECTORSTORE.value),
+        DocsJsonSchemaVectorstoreView.as_view(),
+        name=json_schema_name(SAMKinds.VECTORSTORE.value),
+    ),
     # -------------------------------------------------------------------------
     # example manifests
     # -------------------------------------------------------------------------
@@ -229,6 +236,11 @@ urlpatterns = [
         manifest_path(SAMKinds.PROVIDER.value),
         DocsExampleManifestProviderView.as_view(),
         name=manifest_name(SAMKinds.PROVIDER.value),
+    ),
+    path(
+        manifest_path(SAMKinds.VECTORSTORE.value),
+        DocsExampleManifestVectorstoreView.as_view(),
+        name=manifest_name(SAMKinds.VECTORSTORE.value),
     ),
     # -------------------------------------------------------------------------
     # manifests landing page

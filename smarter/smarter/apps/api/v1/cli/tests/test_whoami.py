@@ -7,7 +7,6 @@ from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
@@ -22,7 +21,7 @@ from .base_class import ApiV1CliTestBase
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and waffle.switch_is_active(
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) or waffle.switch_is_active(
         SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 

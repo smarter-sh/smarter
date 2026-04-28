@@ -9,9 +9,23 @@ from logging import getLogger
 from typing import List, Optional, Union
 
 from django.utils.text import slugify
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PrivateAttr,
+    field_validator,
+    model_validator,
+)
 
+from smarter.apps.account.models import (
+    User,
+    UserProfile,
+    get_resolved_user,
+    is_authenticated_user,
+)
 from smarter.common.api import SmarterApiVersions
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
@@ -19,6 +33,7 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 
 logger = getLogger(__name__)
+logger_prefix = formatted_text(__name__)
 
 VALID_ANNOTATION_VALUE_TYPES_SET = (
     str,
@@ -44,11 +59,46 @@ AnnotationValueType = Union[
 class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
     """Smarter API Base Pydantic Model."""
 
+    _user: Optional[User] = PrivateAttr(default=None)
+    _user_profile: Optional[UserProfile] = PrivateAttr(default=None)
+
     model_config = ConfigDict(
         from_attributes=True,  # allow model to be initialized from class attributes
         arbitrary_types_allowed=True,  # allow Field attributed to be created from custom class types
         frozen=True,  # models are read-only
     )
+
+    def __init__(self, **data):
+        """
+        Add support for passing a 'user' argument when initializing the model,
+        which will be stored in a private attribute.
+        """
+        user_profile = data.pop("user_profile", None)
+        if isinstance(user_profile, UserProfile):
+            self._user_profile = user_profile
+            logger.debug(
+                "%s initialized with user_profile: %s", logger_prefix + f".{self.__class__.__name__}", user_profile
+            )
+            self._user = user_profile.user
+            logger.debug("%s user set from user_profile: %s", logger_prefix + f".{self.__class__.__name__}", self._user)
+        else:
+            user = data.pop("user", None)
+            super().__init__(**data)
+            if user is not None:
+                user = get_resolved_user(user)
+                if is_authenticated_user(user):  # type: ignore
+                    self._user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
+                    if isinstance(self._user_profile, UserProfile):
+                        logger.debug(
+                            "%s initialized with user: %s, resolved user_profile: %s",
+                            logger_prefix + f".{self.__class__.__name__}",
+                            user,
+                            self._user_profile,
+                        )
+                        self._user = user_profile.user
+                        logger.debug(
+                            "%s initialized with user: %s", logger_prefix + f".{self.__class__.__name__}", user
+                        )
 
     @model_validator(mode="before")
     def coerce_none_strings(cls, data):
@@ -57,6 +107,16 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
                 if v in ("None", ""):
                     data[k] = None
         return data
+
+    @property
+    def user(self) -> Optional[User]:
+        """Get the user associated with this manifest, if any."""
+        return self._user
+
+    @property
+    def user_profile(self) -> Optional[UserProfile]:
+        """Get the user profile associated with this manifest, if any."""
+        return self._user_profile
 
 
 class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
@@ -123,7 +183,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         if slugified != v:
             logger.warning(
                 "%s.name '%s' is not URL-friendly. Converting to URL-friendly format: %s. Please use URL-friendly characters for names.",
-                cls.__name__,
+                logger_prefix + f".{cls.__name__}",
                 v,
                 slugified,
             )
@@ -132,7 +192,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
             snake_case_name = camel_to_snake(v)
             logger.warning(
                 "%s.name '%s' is not in snake_case. Converting to snake_case: %s. Please use snake_case for names.",
-                cls.__name__,
+                logger_prefix + f".{cls.__name__}",
                 v,
                 snake_case_name,
             )
@@ -277,16 +337,18 @@ class AbstractSAMSpecBase(SmarterBasePydanticModel, abc.ABC):
 class AbstractSAMStatusBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Status base class. Expected to be subclassed by specific manifest classes."""
 
-    recordLocator: Optional[str] = Field(
-        None,
+    recordLocator: str = Field(
+        ...,
         description="recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",
     )
 
     created: datetime.datetime = Field(
+        ...,
         description="The date in which this resource was created. Read only.",
     )
 
     modified: datetime.datetime = Field(
+        ...,
         description="The date in which this resource was most recently changed. Read only.",
     )
 

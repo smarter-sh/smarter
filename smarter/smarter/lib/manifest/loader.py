@@ -413,7 +413,9 @@ class SAMLoader(SmarterHelperMixin):
 
     @property
     def name(self) -> str:
-        return self.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown-name")
+        if self.manifest_metadata:
+            return self.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown-name")
+        return "unknown-name"
 
     @property
     def source(self) -> str:

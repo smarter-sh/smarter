@@ -6,65 +6,82 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.13.3
-    # via llamaai
+aiohttp==3.13.5
+    # via
+    #   aiohttp-retry
+    #   langchain-community
+    #   llamaai
+    #   pinecone
+aiohttp-retry==2.9.1
+    # via pinecone
 aiosignal==1.4.0
     # via aiohttp
 amqp==5.3.1
     # via kombu
 annotated-types==0.7.0
     # via pydantic
-anyio==4.12.1
+anyio==4.13.0
     # via
     #   google-genai
     #   httpx
     #   openai
-asgiref==3.11.0
+asgiref==3.11.1
     # via
+    #   channels
+    #   channels-redis
     #   django
     #   django-cors-headers
-attrs==25.4.0
+attrs==26.1.0
     # via
     #   aiohttp
     #   cattrs
     #   requests-cache
 bcrypt==5.0.0
     # via paramiko
-beautifulsoup4==4.13.3
+beautifulsoup4==4.14.3
     # via -r smarter/requirements/in/base.in
 billiard==4.2.4
     # via celery
-boto3==1.42.33
+boto3==1.42.89
     # via -r smarter/requirements/in/base.in
-botocore==1.42.33
+botocore==1.42.89
     # via
     #   -r smarter/requirements/in/base.in
     #   boto3
     #   s3transfer
-cachetools==6.2.4
+cachetools==7.0.5
     # via -r smarter/requirements/in/base.in
-cattrs==25.3.0
+cattrs==26.1.0
     # via requests-cache
-celery==5.6.2
+celery==5.6.3
     # via
     #   -r smarter/requirements/in/base.in
     #   celery-redbeat
     #   django-celery-beat
 celery-redbeat==2.3.3
     # via -r smarter/requirements/in/base.in
-certifi==2026.1.4
+certifi==2026.2.25
     # via
     #   httpcore
     #   httpx
     #   mailchimp-marketing
+    #   pinecone
     #   requests
 cffi==2.0.0
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.4
-    # via requests
-click==8.3.1
+channels==4.3.2
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   channels-redis
+channels-redis==4.3.0
+    # via -r smarter/requirements/in/base.in
+charset-normalizer==3.4.7
+    # via
+    #   niquests
+    #   requests
+click==8.3.2
     # via
     #   celery
     #   click-didyoumean
@@ -77,13 +94,15 @@ click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
-cron-descriptor==2.0.6
+cron-descriptor==1.4.5
     # via django-celery-beat
-cryptography==46.0.3
+cryptography==46.0.7
     # via
     #   google-auth
     #   paramiko
     #   pyjwt
+dataclasses-json==0.6.7
+    # via langchain-community
 defusedxml==0.7.1
     # via
     #   python3-openid
@@ -92,9 +111,10 @@ distro==1.9.0
     # via
     #   google-genai
     #   openai
-django==5.2.10
+django==6.0.4
     # via
     #   -r smarter/requirements/in/base.in
+    #   channels
     #   django-celery-beat
     #   django-cors-headers
     #   django-debug-toolbar
@@ -108,11 +128,11 @@ django==5.2.10
     #   djangorestframework
     #   drf-yasg
     #   social-auth-app-django
-django-celery-beat==2.8.1
+django-celery-beat==2.9.0
     # via -r smarter/requirements/in/base.in
 django-cors-headers==4.9.0
     # via -r smarter/requirements/in/base.in
-django-debug-toolbar==6.2.0
+django-debug-toolbar==6.3.0
     # via -r smarter/requirements/in/base.in
 django-filter==25.2
     # via -r smarter/requirements/in/base.in
@@ -120,7 +140,7 @@ django-hosts==7.0.0
     # via -r smarter/requirements/in/base.in
 django-redis==6.0.0
     # via -r smarter/requirements/in/base.in
-django-rest-knox==5.0.2
+django-rest-knox==5.0.4
     # via -r smarter/requirements/in/base.in
 django-storages==1.14.6
     # via -r smarter/requirements/in/base.in
@@ -130,43 +150,54 @@ django-timezone-field==7.2.1
     # via django-celery-beat
 django-waffle==5.0.0
     # via -r smarter/requirements/in/base.in
-djangorestframework==3.16.1
+djangorestframework==3.17.1
     # via
     #   -r smarter/requirements/in/base.in
     #   django-rest-knox
     #   drf-yasg
-dnspython==2.7.0
+dnspython==2.8.0
     # via
     #   -r smarter/requirements/in/base.in
     #   email-validator
 docutils==0.22.4
     # via -r smarter/requirements/in/base.in
-drf-yasg==1.21.10
+drf-yasg==1.21.15
     # via -r smarter/requirements/in/base.in
 email-validator==2.3.0
     # via -r smarter/requirements/in/base.in
-filelock==3.20.3
+filelock==3.25.2
     # via tldextract
 flatbuffers==25.9.23
     # via openmeteo-sdk
+flexcache==0.3
+    # via pint
+flexparser==0.4
+    # via pint
 frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-google-auth[requests]==2.48.0rc0
+google-auth[requests]==2.49.2
     # via google-genai
-google-genai==1.62.0
+google-genai==1.73.0
     # via -r smarter/requirements/in/base.in
 googlemaps==4.10.0
     # via -r smarter/requirements/in/base.in
 h11==0.16.0
-    # via httpcore
+    # via
+    #   httpcore
+    #   urllib3-future
 httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via
     #   google-genai
+    #   langchain-pinecone
+    #   langgraph-sdk
+    #   langsmith
     #   openai
+httpx-sse==0.4.3
+    # via langchain-community
 idna==3.11
     # via
     #   anyio
@@ -176,13 +207,15 @@ idna==3.11
     #   tldextract
     #   url-normalize
     #   yarl
-inflect==7.4.0
+inflect==7.5.0
     # via -r smarter/requirements/in/base.in
 inflection==0.5.1
     # via drf-yasg
-invoke==2.2.1
+invoke==3.0.3
     # via paramiko
-jiter==0.12.0
+jh2==5.0.11
+    # via urllib3-future
+jiter==0.14.0
     # via openai
 jmespath==1.1.0
     # via
@@ -190,58 +223,139 @@ jmespath==1.1.0
     #   botocore
 joblib==1.5.3
     # via nltk
+jsonpatch==1.33
+    # via langchain-core
+jsonpointer==3.1.1
+    # via jsonpatch
 kombu==5.6.2
     # via celery
+langchain==1.2.15
+    # via -r smarter/requirements/in/base.in
+langchain-classic==1.0.3
+    # via langchain-community
+langchain-community==0.4.1
+    # via -r smarter/requirements/in/base.in
+langchain-core==1.2.28
+    # via
+    #   langchain
+    #   langchain-classic
+    #   langchain-community
+    #   langchain-openai
+    #   langchain-pinecone
+    #   langchain-text-splitters
+    #   langgraph
+    #   langgraph-checkpoint
+    #   langgraph-prebuilt
+langchain-openai==1.1.12
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   langchain-pinecone
+langchain-pinecone==0.2.13
+    # via -r smarter/requirements/in/base.in
+langchain-text-splitters==1.1.1
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   langchain-classic
+langgraph==1.1.6
+    # via langchain
+langgraph-checkpoint==4.0.1
+    # via
+    #   langgraph
+    #   langgraph-prebuilt
+langgraph-prebuilt==1.0.9
+    # via langgraph
+langgraph-sdk==0.3.13
+    # via langgraph
+langsmith==0.7.30
+    # via
+    #   langchain-classic
+    #   langchain-community
+    #   langchain-core
 lark==1.3.1
     # via python-hcl2
-levenshtein==0.27.1
+levenshtein==0.27.3
     # via python-levenshtein
 llamaai==0.1.27
     # via -r smarter/requirements/in/base.in
-lxml==6.0.0
+lxml==6.0.4
     # via -r smarter/requirements/in/base.in
 mailchimp-marketing==3.0.80
     # via -r smarter/requirements/in/base.in
-markdown==3.8
+markdown==3.10.2
     # via -r smarter/requirements/in/base.in
-more-itertools==10.8.0
+marshmallow==3.26.2
+    # via dataclasses-json
+more-itertools==11.0.2
     # via inflect
-multidict==6.7.0
+msgpack==1.1.2
+    # via channels-redis
+multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
-mysqlclient==2.2.7
+mypy-extensions==1.1.0
+    # via typing-inspect
+mysqlclient==2.2.8
     # via -r smarter/requirements/in/base.in
 nest-asyncio==1.6.0
     # via llamaai
-nltk==3.9.1
+niquests==3.18.6
+    # via openmeteo-requests
+nltk==3.9.4
     # via
     #   -r smarter/requirements/in/base.in
     #   textblob
-numpy==2.4.1
-    # via pandas
+numpy==2.4.4
+    # via
+    #   langchain-community
+    #   langchain-pinecone
+    #   pandas
 oauthlib==3.3.1
     # via
     #   requests-oauthlib
     #   social-auth-core
-openai==1.101.0
+openai==2.31.0
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   langchain-openai
+openmeteo-requests==1.7.5
     # via -r smarter/requirements/in/base.in
-openmeteo-requests==1.3.0
-    # via -r smarter/requirements/in/base.in
-openmeteo-sdk==1.25.0
+openmeteo-sdk==1.26.0
     # via openmeteo-requests
-packaging==26.0
+orjson==3.11.8
+    # via
+    #   langgraph-sdk
+    #   langsmith
+ormsgpack==1.12.2
+    # via langgraph-checkpoint
+packaging==24.2
     # via
     #   drf-yasg
     #   kombu
-pandas==2.3.2
+    #   langchain-core
+    #   langsmith
+    #   marshmallow
+    #   pinecone-plugin-assistant
+pandas==3.0.2
     # via -r smarter/requirements/in/base.in
 paramiko==4.0.0
     # via -r smarter/requirements/in/base.in
-pillow==11.3.0
+pillow==12.2.0
     # via -r smarter/requirements/in/base.in
-platformdirs==4.5.1
-    # via requests-cache
+pinecone[asyncio]==7.3.0
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   langchain-pinecone
+pinecone-plugin-assistant==1.8.0
+    # via pinecone
+pinecone-plugin-interface==0.0.7
+    # via pinecone
+pint==0.25.3
+    # via -r smarter/requirements/in/base.in
+platformdirs==4.9.6
+    # via
+    #   pint
+    #   requests-cache
 prompt-toolkit==3.0.52
     # via click-repl
 propcache==0.4.1
@@ -250,27 +364,33 @@ propcache==0.4.1
     #   yarl
 psutil==7.2.2
     # via -r smarter/requirements/in/base.in
-pyasn1==0.6.2
-    # via
-    #   pyasn1-modules
-    #   rsa
+pyasn1==0.6.3
+    # via pyasn1-modules
 pyasn1-modules==0.4.2
     # via google-auth
-pycountry==24.6.1
+pycountry==26.2.16
     # via -r smarter/requirements/in/base.in
 pycparser==3.0
     # via cffi
-pydantic==2.12.5
+pydantic==2.13.0
     # via
     #   -r smarter/requirements/in/base.in
     #   google-genai
+    #   langchain
+    #   langchain-classic
+    #   langchain-core
+    #   langchain-pinecone
+    #   langgraph
+    #   langsmith
     #   openai
     #   pydantic-settings
-pydantic-core==2.41.5
+pydantic-core==2.46.0
     # via pydantic
-pydantic-settings==2.12.0
-    # via -r smarter/requirements/in/base.in
-pyjwt[crypto]==2.10.1
+pydantic-settings==2.13.1
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   langchain-community
+pyjwt[crypto]==2.12.1
     # via
     #   pyjwt
     #   social-auth-core
@@ -285,61 +405,74 @@ python-dateutil==2.9.0.post0
     #   celery-redbeat
     #   mailchimp-marketing
     #   pandas
-python-dotenv==1.1.1
+    #   pinecone
+python-dotenv==1.2.2
     # via
     #   -r smarter/requirements/in/base.in
     #   pydantic-settings
-python-hcl2==7.3.1
+python-hcl2==8.1.2
     # via -r smarter/requirements/in/base.in
-python-levenshtein==0.27.1
+python-levenshtein==0.27.3
     # via -r smarter/requirements/in/base.in
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2025.2
-    # via
-    #   drf-yasg
-    #   pandas
-pyyaml==6.0.2
+pytz==2026.1.post1
+    # via drf-yasg
+pyyaml==6.0.3
     # via
     #   -r smarter/requirements/in/base.in
     #   drf-yasg
-rapidfuzz==3.14.3
+    #   langchain-classic
+    #   langchain-community
+    #   langchain-core
+qh3==1.7.1
+    # via urllib3-future
+rapidfuzz==3.14.5
     # via levenshtein
-redis==7.1.0
+redis==7.4.0
     # via
     #   celery-redbeat
+    #   channels-redis
     #   django-redis
-regex==2026.1.15
+regex==2026.4.4
     # via
     #   nltk
     #   python-hcl2
-requests==2.32.5
+    #   tiktoken
+requests==2.33.1
     # via
     #   -r smarter/requirements/in/base.in
     #   google-auth
     #   google-genai
     #   googlemaps
+    #   langchain-classic
+    #   langchain-community
+    #   langsmith
     #   llamaai
     #   mailchimp-marketing
-    #   openmeteo-requests
+    #   pinecone-plugin-assistant
     #   requests-cache
     #   requests-file
     #   requests-oauthlib
+    #   requests-toolbelt
     #   retry-requests
     #   social-auth-core
+    #   tiktoken
     #   tldextract
-requests-cache==1.2.1
+requests-cache==1.3.1
     # via -r smarter/requirements/in/base.in
 requests-file==3.0.1
     # via tldextract
 requests-oauthlib==2.0.0
     # via social-auth-core
+requests-toolbelt==1.0.0
+    # via langsmith
 retry-requests==2.0.0
     # via -r smarter/requirements/in/base.in
-rsa==4.9.1
-    # via google-auth
 s3transfer==0.16.0
     # via boto3
+simsimd==6.5.16
+    # via langchain-pinecone
 six==1.17.0
     # via
     #   mailchimp-marketing
@@ -350,48 +483,63 @@ sniffio==1.3.1
     #   openai
 social-auth-app-django==5.7.0
     # via -r smarter/requirements/in/base.in
-social-auth-core==4.8.3
+social-auth-core==4.8.5
     # via social-auth-app-django
 soupsieve==2.8.3
     # via beautifulsoup4
+sqlalchemy==2.0.49
+    # via
+    #   langchain-classic
+    #   langchain-community
 sqlparse==0.5.5
     # via
     #   django
     #   django-debug-toolbar
-tenacity==9.1.2
+tenacity==9.1.4
     # via
     #   celery-redbeat
     #   google-genai
-textblob==0.19.0
+    #   langchain-community
+    #   langchain-core
+textblob==0.20.0
     # via -r smarter/requirements/in/base.in
+tiktoken==0.12.0
+    # via langchain-openai
 tldextract==5.3.1
     # via -r smarter/requirements/in/base.in
-tqdm==4.67.1
+tqdm==4.67.3
     # via
     #   nltk
     #   openai
-typeguard==4.4.4
+typeguard==4.5.1
     # via inflect
 typing-extensions==4.15.0
     # via
     #   beautifulsoup4
     #   cattrs
-    #   cron-descriptor
+    #   flexcache
+    #   flexparser
     #   google-genai
+    #   langchain-core
     #   openai
+    #   pinecone
+    #   pint
     #   pydantic
     #   pydantic-core
+    #   sqlalchemy
     #   typeguard
+    #   typing-inspect
     #   typing-inspection
+typing-inspect==0.9.0
+    # via dataclasses-json
 typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
-tzdata==2025.3
+tzdata==2026.1
     # via
     #   django-celery-beat
     #   kombu
-    #   pandas
 tzlocal==5.3.1
     # via celery
 uritemplate==4.2.0
@@ -402,9 +550,16 @@ urllib3==2.6.3
     # via
     #   botocore
     #   mailchimp-marketing
+    #   pinecone
     #   requests
     #   requests-cache
     #   retry-requests
+urllib3-future==2.19.908
+    # via niquests
+uuid-utils==0.14.1
+    # via
+    #   langchain-core
+    #   langsmith
 validators==0.35.0
     # via -r smarter/requirements/in/base.in
 vine==5.1.0
@@ -412,11 +567,19 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.3.1
+wassima==2.0.6
+    # via niquests
+wcwidth==0.6.0
     # via prompt-toolkit
-websockets==15.0.1
+websockets==16.0
     # via google-genai
-whitenoise==6.9.0
+whitenoise==6.12.0
     # via -r smarter/requirements/in/base.in
-yarl==1.22.0
+xxhash==3.6.0
+    # via
+    #   langgraph
+    #   langsmith
+yarl==1.23.0
     # via aiohttp
+zstandard==0.25.0
+    # via langsmith

@@ -1,7 +1,8 @@
-Views
-======
+Prompt Views
+==============
 
-.. automodule:: smarter.apps.prompt.views
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+   :maxdepth: 2
+
+   views/views
+   views/terminal

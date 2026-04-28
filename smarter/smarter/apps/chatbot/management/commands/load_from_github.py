@@ -142,7 +142,7 @@ class Command(SmarterCommand):
             manifest.metadata.name,
             self.user_profile,
         )
-        controller = PluginController(account=self.account, user=self.user, user_profile=self.user_profile, manifest=manifest)  # type: ignore
+        controller = PluginController(user_profile=self.user_profile, manifest=manifest)  # type: ignore
         plugin = controller.obj
         return plugin
 

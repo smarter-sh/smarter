@@ -40,6 +40,8 @@ logger_prefix = formatted_text(__name__)
 
 load_dotenv()
 
+logger.debug("%s Smarter version: %s", logger_prefix, smarter_version)
+
 
 # pylint: disable=W0621
 def smart_cast(value, default_value):
@@ -627,6 +629,14 @@ times when deploying ChatBots/Agents.
 See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#std:setting-task_time_limit
 """
 
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+"""
+A Celery setting that prevents Celery workers from hijacking the root logger. This is set to False
+to allow Celery logs to be integrated with the overall Smarter logging configuration without interference.
+
+See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#std:setting-worker_hijack_root_logger
+"""
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -645,11 +655,14 @@ INSTALLED_APPS = [
     "smarter.apps.account",
     "smarter.apps.api",
     "smarter.apps.chatbot",
-    "smarter.apps.prompt",
+    "smarter.apps.connection",
     "smarter.apps.dashboard",
     "smarter.apps.docs",
     "smarter.apps.plugin",
+    "smarter.apps.prompt",
     "smarter.apps.provider",
+    "smarter.apps.secret",
+    "smarter.apps.vectorstore",
     # 3rd party apps
     # -------------------------------
     "rest_framework",
@@ -681,7 +694,7 @@ MIDDLEWARE = [
     "smarter.lib.django.middleware.excessive_404.SmarterBlockExcessive404Middleware",
     #
     # -------------------------------
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     # this replaces django.middleware.csrf.SmarterCsrfViewMiddleware
@@ -718,10 +731,12 @@ if smarter_settings.debug_mode and not "test" in sys.argv:
     INSTALLED_APPS += [
         "debug_toolbar",
     ]
+    logger.debug(formatted_text_green("Debug mode is ON. debug_toolbar is added to INSTALLED_APPS."))
 
     MIDDLEWARE += [
         "debug_toolbar.middleware.DebugToolbarMiddleware",
     ]
+    logger.debug(formatted_text_green("Debug mode is ON. debug_toolbar middleware is enabled."))
 
 
 ROOT_HOSTCONF = "smarter.hosts"
@@ -1267,7 +1282,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "timestamped": {
-            "format": "%(asctime)s - %(levelname)s - %(message)s",
+            "format": "%(asctime)s - %(levelname)s - %(processName)s - %(message)s",
             "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
         },
     },
@@ -1277,48 +1292,28 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "timestamped",
         },
+        "redis": {
+            "level": smarter_settings.log_level_name,
+            "class": "smarter.lib.logging.RedisLogHandler",
+            "formatter": "timestamped",
+        },
     },
     "root": {
-        "handlers": ["default"],
+        "handlers": ["default", "redis"],
         "level": smarter_settings.log_level_name,
     },
     "loggers": {
-        "django": {
-            "handlers": ["default"],
+        "celery": {
             "level": smarter_settings.log_level_name,
             "propagate": True,
-        },
-        "django_hosts": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-        },
-        "django.security.DisallowedHost": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-            "propagate": False,
-        },
-        "django.template": {
-            "handlers": ["default"],
-            "level": "ERROR",
-            "propagate": False,
-        },
-        "celery": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-            "propagate": False,
         },
         "celery.task": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-            "propagate": True,
-        },
-        "celery.beat": {
-            "handlers": ["default"],
             "level": smarter_settings.log_level_name,
             "propagate": True,
         },
     },
 }
+
 logging.config.dictConfig(LOGGING)
 
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
@@ -1481,26 +1476,27 @@ to "True". If set to True, tags will be treated as case insensitive
 # step 2: load environment variables from .env file (if present)
 ASCII_CONTROL_CHAR_REGEX = re.compile(r"[\x00-\x1F\x7F]")
 """
-Process environment variables to override settings values
+Process environment variables to override settings values.
 
 This allows for 12-factor style configuration via environment variables.
 Environment variable values are cast to the same data type as the
-existing Django and/or Smarter setting value.
+existing Django or Smarter setting value.
 
 The basic process is:
-----------------------
-1. set default settings values, above.
-2. load environment variables from .env file (if present) and os.environ
-3. map environment variables to Django settings by removing the "DJANGO_"
-   prefix, and for any environment variable that matches an existing Django
-   setting, cast the value to the same type as the existing setting value
-   and override the default setting value. For anything else
-   analyze the passed value to attempt to infer the intended data type and
-   usage, and create a new setting with that name and value if it does
-   not already exist.
 
-   * Note that Django settings are prefixed with "DJANGO_"
-     and Smarter settings are prefixed with "SMARTER_".
+1. Set default settings values.
+2. Load environment variables from a .env file (if present) and os.environ.
+3. Map environment variables to Django settings by removing the ``DJANGO_``
+   prefix. For any environment variable that matches an existing Django
+   setting, cast the value to the same type as the existing setting value
+   and override the default.
+
+   For anything else, analyze the passed value to infer the intended data
+   type and create a new setting if it does not already exist.
+
+Note:
+Django settings are prefixed with ``DJANGO_`` and Smarter settings
+are prefixed with ``SMARTER_``.
 """
 
 # step 3: override settings from environment variables

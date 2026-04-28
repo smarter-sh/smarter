@@ -32,7 +32,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 # pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ class ProviderDetailView(DocsBaseView):
 
     """
 
-    template_path = "provider/manifest_detail.html"
+    template_path = "common/manifest_detail.html"
     provider: Optional[Provider] = None
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
@@ -192,6 +192,13 @@ class ProviderListView(SmarterAuthenticatedNeverCachedWebView):
     providers: Sequence[Provider]
 
     def get(self, request: WSGIRequest, *args, **kwargs):
+        """
+        Handle GET requests to render the provider list view.
+        This method retrieves all providers available to the authenticated user and renders them in a card-based layout
+        """
+
+        logger.debug("%s.get() called with args=%s, kwargs=%s", self.formatted_class_name, args, kwargs)
+
         self.smarter_request = request
         if not isinstance(request.user, User):
             logger.error(

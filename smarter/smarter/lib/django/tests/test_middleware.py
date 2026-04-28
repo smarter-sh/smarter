@@ -1,17 +1,24 @@
 """Test SmarterBlockSensitiveFilesMiddleware."""
 
+import unittest
 from http import HTTPStatus
 
 from django.http import HttpResponse
 from django.test import RequestFactory
 
 from smarter.apps.account.mixins import AccountMixin
+from smarter.lib.django import waffle
 from smarter.lib.django.middleware.sensitive_files import (
     SmarterBlockSensitiveFilesMiddleware,
 )
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
+@unittest.skipUnless(
+    waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES),
+    "Sensitive files middleware is not enabled",
+)
 class TestSmarterBlockSensitiveFilesMiddleware(SmarterTestBase, AccountMixin):
     """Test SmarterBlockSensitiveFilesMiddleware."""
 

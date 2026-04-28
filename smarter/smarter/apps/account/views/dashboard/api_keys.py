@@ -96,7 +96,7 @@ class APIKeyView(APIKeyBase):
         except SmarterAuthToken.DoesNotExist:
             return self._handle_create(request)
 
-        if not apikey.has_permissions(user=request.user):
+        if not SmarterAuthToken.objects.filter(key_id=key_id).with_ownership_permission_for(user=request.user).exists():
             return http.JsonResponse(
                 status=HTTPStatus.FORBIDDEN, data={"error": "You are not allowed to view this api key"}
             )
@@ -170,7 +170,11 @@ class APIKeyView(APIKeyBase):
             # cases where we received a uuid identifier for an existing api key
             apikey = SmarterAuthToken.objects.get(key_id=key_id)
             apikey_form = APIKeyForm(instance=apikey)
-            if not apikey.has_permissions(user=request.user):
+            if (
+                not SmarterAuthToken.objects.filter(key_id=key_id)
+                .with_ownership_permission_for(user=request.user)
+                .exists()
+            ):
                 return http.JsonResponse(
                     status=HTTPStatus.FORBIDDEN.value, data={"error": "You are not allowed to view this api key"}
                 )
@@ -207,7 +211,7 @@ class APIKeyView(APIKeyBase):
             apikey = SmarterAuthToken.objects.get(key_id=key_id)
         except SmarterAuthToken.DoesNotExist:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "API Key not found"})
-        if not apikey.has_permissions(user=request.user):
+        if not SmarterAuthToken.objects.filter(key_id=key_id).with_ownership_permission_for(user=request.user).exists():
             return SmarterHttpResponseForbidden(
                 request=request, error_message="You are not allowed to delete this api key"
             )

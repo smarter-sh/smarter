@@ -176,7 +176,7 @@ Prompt the model with a coding task.
 
 
 Step 7: Installation Verification checklist
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - ``SMARTER_ANTHROPIC_API_KEY`` exists in ``.env``.
 - ``smarter apply`` exits without manifest errors.

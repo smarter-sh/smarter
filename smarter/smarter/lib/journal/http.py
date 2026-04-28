@@ -8,6 +8,7 @@ from typing import Optional, Union
 from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
+from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json
@@ -80,14 +81,16 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         thing: Optional[Union[SmarterJournalThings, str]] = None,
         command: Optional[SmarterJournalCliCommands] = None,
         json_dumps_params=None,
+        status: int = HTTPStatus.OK.value,
         **kwargs,
     ):
-        status = kwargs.get("status", HTTPStatus.OK.value)
         data[SmarterJournalApiResponseKeys.API] = SmarterApiVersions.V1
-        data[SmarterJournalApiResponseKeys.THING] = str(thing)
         data[SmarterJournalApiResponseKeys.METADATA] = {
             SCLIResponseMetadata.COMMAND: str(command),
+            SmarterJournalApiResponseKeys.THING: str(thing),
         }
+
+        logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.__init__()")
 
         def anonymous_serialized_request(request) -> dict:
             """
@@ -98,7 +101,8 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
             except AttributeError:
                 url = self.smarter_build_absolute_uri(request) or "Unknown URL"
                 logger.error(
-                    "SmarterJournaledJsonResponse() HttpAnonymousRequestSerializer could not serialize request data for %s",
+                    "%s HttpAnonymousRequestSerializer could not serialize request data for %s",
+                    logger_prefix,
                     url,
                 )
                 return {}
@@ -112,7 +116,8 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
             except AttributeError:
                 url = self.smarter_build_absolute_uri(request) or "Unknown URL"
                 logger.error(
-                    "SmarterJournaledJsonResponse() HttpAuthenticatedRequestSerializer could not serialize request data for %s",
+                    "%s HttpAuthenticatedRequestSerializer could not serialize request data for %s",
+                    logger_prefix,
                     url,
                 )
                 return {}
@@ -150,7 +155,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                     command=command,
                     request=request_data,
                     response=serializable_data,
-                    status_code=status,
+                    status=status,
                 )
                 data[SmarterJournalApiResponseKeys.METADATA] = {
                     SCLIResponseMetadata.KEY: journal.key,
@@ -158,7 +163,8 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
             # pylint: disable=broad-except
             except Exception as e:
                 logger.error(
-                    "user=%s, thing=%s, command=%s, status_code=%s\nrequest=%s\nresponse: %s",
+                    "%s user=%s, thing=%s, command=%s, status=%s\nrequest=%s\nresponse: %s",
+                    logger_prefix,
                     user,
                     thing,
                     command,
@@ -166,9 +172,35 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                     request,
                     serializable_data,
                 )
-                logger.error("SmarterJournaledJsonResponse()__init__() could not create journal entry: %s", e)
+                logger.error("%s could not create journal entry: %s", logger_prefix, e)
 
-        super().__init__(data=data, encoder=encoder, safe=safe, json_dumps_params=json_dumps_params, **kwargs)
+        if not isinstance(data, (dict, list)):
+            logger.error("%s data argument is not dict or list: %s", logger_prefix, type(data))
+
+        # Only pass allowed kwargs to JsonResponse
+        allowed_kwargs = {}
+        allowed_keys = {"content_type", "status", "status", "headers", "reason"}
+        for k in list(kwargs.keys()):
+            if k in allowed_keys:
+                allowed_kwargs[k] = kwargs.pop(k)
+        if isinstance(data, (dict, list)):
+            super().__init__(
+                data=data,
+                encoder=encoder,
+                safe=safe,
+                json_dumps_params=json_dumps_params,
+                status=status,
+                **allowed_kwargs,
+            )
+        else:
+            super().__init__(
+                data={"response": data},
+                encoder=encoder,
+                safe=safe,
+                json_dumps_params=json_dumps_params,
+                status=status,
+                **allowed_kwargs,
+            )
 
 
 class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
@@ -220,7 +252,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
     def __init__(
         self,
         request: HttpRequest,
-        e: Exception,
+        e: Optional[Exception],
         encoder=SmarterJSONEncoder,
         safe: bool = True,
         thing: Optional[Union[SmarterJournalThings, str]] = None,
@@ -228,9 +260,9 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         json_dumps_params: Optional[str] = None,
         stack_trace: str = "No stack trace available.",
         description: Optional[str] = None,
+        status: int = HTTPStatus.INTERNAL_SERVER_ERROR.value,
         **kwargs,
     ):
-        status = kwargs.get("status", None)
         error_class = e.__class__.__name__ if e else "Unknown Exception"
         if description is None:
             if isinstance(e, Exception) and hasattr(e, "message"):
@@ -241,7 +273,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
                 description = e
 
         url = self.smarter_build_absolute_uri(request) or "Unknown URL"
-        status = str(status) if status else e.status if hasattr(e, "status") else HTTPStatus.INTERNAL_SERVER_ERROR  # type: ignore[union-attr]
+        status = status or HTTPStatus.INTERNAL_SERVER_ERROR
         args = e.args if isinstance(e, dict) and hasattr(e, "args") else "url=" + url
         cause = str(e.__cause__) if isinstance(e, dict) and hasattr(e, "__cause__") else "Python Exception"
         context = (
@@ -258,8 +290,11 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             SmarterJournalApiResponseErrorKeys.ARGS: args,
             SmarterJournalApiResponseErrorKeys.CAUSE: cause,
             SmarterJournalApiResponseErrorKeys.CONTEXT: context,
+            SmarterJournalApiResponseErrorKeys.THING: str(thing),
+            SmarterJournalApiResponseErrorKeys.COMMAND: str(command),
         }
-        logger.error(data[SmarterJournalApiResponseKeys.ERROR])
+        logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.__init__()")
+        logger.error("%s %s", logger_prefix, formatted_json(data))
 
         super().__init__(
             request=request,
@@ -267,7 +302,9 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             command=command,
             data=data,
             encoder=encoder,
+            description=description,
             safe=safe,
             json_dumps_params=json_dumps_params,
+            status=status,
             **kwargs,
         )

@@ -7,7 +7,6 @@ from typing import ClassVar, Optional
 
 from pydantic import EmailStr, Field, field_validator
 
-from smarter.apps.provider.manifest.models.provider.const import MANIFEST_KIND
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -15,11 +14,13 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
 
+from .const import MANIFEST_KIND
+
 
 # pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) and waffle.switch_is_active(
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) or waffle.switch_is_active(
         SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 

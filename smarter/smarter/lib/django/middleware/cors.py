@@ -20,6 +20,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_LOCAL_PORT, SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.common.utils import is_async_context
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -94,7 +95,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
 
     def __call__(self, request: HttpRequest) -> Union[HttpResponseBase, Awaitable[HttpResponseBase]]:
 
-        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
+        if not is_async_context() and not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
             return super().__call__(request)
 
         host = request.get_host()

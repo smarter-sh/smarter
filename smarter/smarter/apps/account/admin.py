@@ -4,12 +4,10 @@
 import logging
 from typing import Optional
 
-from django import forms
 from django.contrib.auth.admin import UserAdmin
-
-# from django.contrib import admin
+from django.core.exceptions import FieldError
+from django.db.models import QuerySet
 from django.http.request import HttpRequest
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
@@ -17,24 +15,135 @@ from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
     SmarterStaffOnlyModelAdmin,
     SmarterSuperUserOnlyModelAdmin,
-    smarter_filter_queryset_for_user,
     smarter_is_staff,
     smarter_restricted_admin_site,
 )
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.mixins import SmarterHelperMixin
 
 from .models import (
     Account,
     AccountContact,
     Charge,
     DailyBillingRecord,
-    PaymentMethod,
-    Secret,
     UserProfile,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def smarter_filter_queryset_for_user_profile(
+    user_profile: UserProfile,
+    qs: QuerySet,
+    account_filter=None,
+    user_profile_filter: Optional[str] = "user_profile",
+) -> QuerySet:
+    """
+    Helper method to filter a queryset based on the user's role and ownership
+    of the objects in the queryset. Queryset is assumed to have a user_profile
+    field that is a foreign key to the UserProfile model.
+
+    FIX NOTE: refactor this to use SmarterQuerySetWithPermissions()
+
+    .. warning::
+
+        This function only works for models that inherit from
+        smarter.apps.account.models.MetaDataWithOwnershipModel
+    """
+    logger_prefix = formatted_text(f"{__file__}.smarter_filter_queryset_for_user_profile()")
+    logger.debug(
+        "%s: Filtering queryset for user %s with role %s",
+        logger_prefix,
+        user_profile.user,
+        "superuser" if user_profile.user.is_superuser else "staff" if user_profile.user.is_staff else "customer",
+    )
+
+    # 1.) no user_profile, no queryset.
+    if not user_profile:
+        logger.debug(
+            "%s: No user profile found for user %s, returning empty queryset", logger_prefix, user_profile.user
+        )
+        return qs.none()
+
+    # 2.) if the user is a superuser, return all chatbots.
+    if user_profile.user.is_superuser:
+        logger.debug("%s: User %s is superuser, returning unfiltered queryset", logger_prefix, user_profile.user)
+        return qs
+
+    # 3.) if user is staff then select all chatbots for the account of the user.
+    if user_profile.user.is_staff:
+        logger.debug(
+            "%s: User %s is staff, filtering queryset for account %s",
+            logger_prefix,
+            user_profile.user,
+            user_profile.account,
+        )
+        try:
+            if user_profile_filter is not None:
+                return qs.filter(**{user_profile_filter: user_profile})
+            else:
+                logger.error("user_profile_filter is None, cannot filter queryset")
+                return qs.none()
+        except FieldError as e:
+            logger.error("Error filtering queryset for staff user %s: %s", user_profile.user, e)
+            return qs.none()
+
+    # 4.) if the user is a Customer then select all chatbots owned by the
+    # user + all chatbots shared with the user which are chatbots owned
+    # by an admin user of the account (could be more than one).
+    logger.debug(
+        "%s: User %s is customer, filtering queryset for owned and shared objects", logger_prefix, user_profile.user
+    )
+    admin_user = UserProfile.admin_for_account(account=user_profile.account)
+    admin_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
+    if user_profile_filter:
+        try:
+            qs_owned = qs.filter(**{user_profile_filter: user_profile})
+            logger.debug(
+                "%s: User %s owns %d objects in the queryset", logger_prefix, user_profile.user, qs_owned.count()
+            )
+        except FieldError as e:
+            logger.error("Error filtering queryset for owned objects for user %s: %s", user_profile.user, e)
+            qs_owned = qs.none()
+
+        try:
+            qs_shared = qs.filter(**{user_profile_filter: admin_profile})
+            logger.debug(
+                "%s: User %s has %d shared objects in the queryset", logger_prefix, user_profile.user, qs_shared.count()
+            )
+        except FieldError as e:
+            logger.error("Error filtering queryset for shared objects for user %s: %s", user_profile.user, e)
+            qs_shared = qs.none()
+    else:
+        logger.debug(
+            "%s: No user_profile_filter provided, filtering queryset based on account affiliation for user %s",
+            logger_prefix,
+            user_profile.user,
+        )
+        return qs.filter(**{user_profile_filter: user_profile}) if user_profile_filter is not None else qs.none()
+
+    if account_filter:
+        try:
+            qs_owned = qs_owned.filter(**{account_filter: user_profile.cached_account})  # type: ignore
+            qs_shared = qs_shared.filter(**{account_filter: user_profile.cached_account})  # type: ignore
+            logger.debug(
+                "%s: After applying account filter, user %s has %d owned and %d shared objects in the queryset",
+                logger_prefix,
+                user_profile.user,
+                qs_owned.count(),
+                qs_shared.count(),
+            )
+        except FieldError as e:
+            logger.error("Error applying account filter for user %s: %s", user_profile.user, e)
+            return qs.none()
+
+    logger.debug(
+        "%s: Returning combined queryset with %d owned and %d shared objects for user %s",
+        logger_prefix,
+        qs_owned.count(),
+        qs_shared.count(),
+        user_profile.user,
+    )
+    return qs_owned | qs_shared
 
 
 # @admin.register(Account)
@@ -52,11 +161,9 @@ class AccountAdmin(SmarterStaffOnlyModelAdmin):
     def get_queryset(self, request: HttpRequest):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user,
+        return smarter_filter_queryset_for_user_profile(
+            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
             qs=qs,
-            account_filter="id",
-            user_profile_filter=None,
         )
 
 
@@ -75,11 +182,9 @@ class AccountContactAdmin(SmarterStaffOnlyModelAdmin):
     def get_queryset(self, request: HttpRequest):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user,
+        return smarter_filter_queryset_for_user_profile(
+            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
             qs=qs,
-            account_filter="account",
-            user_profile_filter=None,
         )
 
 
@@ -95,8 +200,7 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
 
     list_display = (
         "created_at",
-        "account",
-        "user",
+        "user_profile",
         "provider",
         "model",
         "charge_type",
@@ -106,11 +210,9 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
     def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user,
+        return smarter_filter_queryset_for_user_profile(
+            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
             qs=qs,
-            account_filter="account",
-            user_profile_filter=None,
         )
 
 
@@ -136,280 +238,10 @@ class DailyBillingRecordAdmin(SmarterCustomerModelAdmin):
     def get_queryset(self, request: HttpRequest):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user,
-            qs=qs,
-            account_filter="account",
-            user_profile_filter=None,
-        )
-
-
-# @admin.register(PaymentMethod)
-class PaymentMethodModelAdmin(SmarterStaffOnlyModelAdmin):
-    """Payment method model admin."""
-
-    model = PaymentMethod
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
-    list_display = ("name", "created_at", "updated_at")
-
-    def get_queryset(self, request: HttpRequest):
-        user = get_resolved_user(request.user)  # type: ignore
-        qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user,
-            qs=qs,
-            account_filter="account",
-            user_profile_filter=None,
-        )
-
-
-class SecretAdminForm(forms.ModelForm):
-    """Custom form for SecretAdmin to handle the transient 'value' field."""
-
-    value = forms.CharField(
-        required=False,
-        widget=forms.PasswordInput(render_value=True),
-        help_text="Put your secret here...",
-    )
-
-    model = Secret
-    list_display = ["name", "user_profile", "description", "expires_at", "value"]
-    logger_prefix = formatted_text(f"{__name__}.SecretAdminForm()")
-
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop("user", None)  # Expecting the user to be passed in via kwargs
-        logger.debug("%s Initializing SecretAdminForm with args: %s and kwargs: %s", self.logger_prefix, args, kwargs)
-        super().__init__(*args, **kwargs)
-        if not self.user or not isinstance(self.user, User) or not self.user.is_authenticated:
-            logger.error(
-                "%s SecretAdminForm initialized without an authenticated user. All fields will be read-only.",
-                self.logger_prefix,
-            )
-            for field in self.fields.values():
-                field.disabled = True
-            return
-
-        def has_permission():
-            return False
-
-        if self.instance and self.instance.pk:
-            logger.debug("%s Initializing SecretAdminForm for existing Secret: %s", self.logger_prefix, self.instance)
-            try:
-                if has_permission():
-                    instance: Secret = self.instance
-                    self.fields["value"].initial = instance.get_secret(update_last_accessed=False)
-                else:
-                    logger.debug(
-                        "%s User %s does not have permission to view the Secret value. Setting 'value' field to '********'.",
-                        self.logger_prefix,
-                        self.user,
-                    )
-                    self.fields["value"].initial = "********"
-            # pylint: disable=broad-except
-            except Exception as e:
-                logger.exception(
-                    "%s Failed to initialize 'value' field for Secret with id %s. Got the following error: %s",
-                    self.logger_prefix,
-                    self.instance.pk,
-                    e,
-                )
-                self.fields["value"].initial = None
-
-    def clean(self):
-        """Ensure the transient 'value' field is included in cleaned_data."""
-        cleaned_data = super().clean()
-        if not cleaned_data or "value" not in cleaned_data:
-            raise forms.ValidationError("The 'value' field is required.")
-        return cleaned_data
-
-    def clean_value(self):
-        value = self.cleaned_data.get("value")
-        if value and not isinstance(value, str):
-            raise forms.ValidationError("The value must be a string.")
-        return value
-
-
-# @admin.register(Secret)
-class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
-    """
-    Secret model admin. This is a primary Smarter resource, that descends
-    directly from MetaDataWithOwnershipModel. Visibility of Secrets is
-    determined by ownership and role.
-    """
-
-    logger_prefix = formatted_text(f"{__name__}.SecretAdmin()")
-    request: HttpRequest
-    user: User
-    user_profile: UserProfile
-
-    model = Secret
-
-    form = SecretAdminForm
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-        "last_accessed",
-        "display_value",
-    )
-    fields = (
-        "name",
-        "user_profile",
-        "description",
-        "expires_at",
-        "display_value",
-    )
-    list_display = ("user_profile", "name", "description", "created_at", "updated_at", "last_accessed", "expires_at")
-
-    def changelist_view(self, request, extra_context=None):
-        self.request = request
-        return super().changelist_view(request, extra_context=extra_context)
-
-    def change_view(self, request, object_id, form_url="", extra_context=None):
-        self.request = request
-        return super().change_view(request, object_id, form_url, extra_context=extra_context)
-
-    def display_value(self, obj: Secret):
-        """
-        Display the secret value as '********' for users who do not have
-        permission to view it.
-        """
-
-        def has_permission() -> bool:
-            """
-            Determine if the current user has permission to view the Secret value.
-             - Superusers can view all secrets.
-             - The owner of the secret can view it.
-             - All other users cannot view the secret value.
-            """
-            logger.debug(
-                "%s.has_permission() Checking permissions for user %s to view Secret %s",
-                self.logger_prefix,
-                self.user,
-                str(obj),
-            )
-            if not isinstance(obj, Secret):
-                logger.error(
-                    "%s.has_permission() called with an object that is not a Secret instance: %s",
-                    self.logger_prefix,
-                    obj,
-                )
-                return False
-            if not self.user.is_authenticated:
-                logger.debug(
-                    "%s.has_permission() User %s is not authenticated and does not have permission to view the Secret value.",
-                    self.logger_prefix,
-                    self.user,
-                )
-                return False
-            obj_user_profile: UserProfile = obj.user_profile
-            if self.user.is_superuser:
-                logger.debug(
-                    "%s.has_permission() User %s is a superuser and has permission to view the Secret value.",
-                    self.logger_prefix,
-                    self.user,
-                )
-                return True
-            if obj_user_profile.user == self.user:
-                logger.debug(
-                    "%s.has_permission() User %s is the owner of the Secret and has permission to view the Secret value.",
-                    self.logger_prefix,
-                    self.user,
-                )
-                return True
-            logger.debug(
-                "%s.has_permission() User %s does not have permission to view the Secret value.",
-                self.logger_prefix,
-                self.user,
-            )
-            return False
-
-        logger.debug("%s.display_value() called for Secret: %s", self.logger_prefix, str(obj))
-        if not isinstance(obj, Secret):
-            logger.error(
-                "%s.display_value() called with an object that is not a Secret instance: %s",
-                self.logger_prefix,
-                obj,
-            )
-            return "********"
-
-        if not hasattr(self.request, "user"):
-            logger.error(
-                "%s.display_value() called without a request user. Cannot determine permissions to display Secret value.",
-                self.logger_prefix,
-            )
-            return "********"
-
-        self.user = self.request.user
-        self.user_profile = UserProfile.get_cached_object(user=self.user)  # type: ignore
-        retval = obj.get_secret(update_last_accessed=False)
-        logger.debug(
-            "%s.display_value() Retrieved secret value for Secret %s. Checking permissions for user %s. Actual value: %s",
-            self.logger_prefix,
-            str(obj),
-            self.user,
-            self.mask_string(retval),
-        )
-
-        if has_permission():
-            logger.debug(
-                "%s.display_value() User %s has permission to view the Secret value. Displaying actual value.",
-                self.logger_prefix,
-                self.user,
-            )
-            return retval
-
-        logger.debug(
-            "%s.display_value() User %s does not have permission to view the Secret value. Displaying masked value.",
-            self.logger_prefix,
-            self.user,
-        )
-
-        return self.mask_string(retval)
-
-    display_value.short_description = "Value"
-
-    def get_form(self, request, obj=None, change=False, **kwargs):
-        # Get the base form class
-        form = super().get_form(request, obj, change=change, **kwargs)
-
-        # Create a dynamic subclass to inject the request/user at initialization
-        class CustomForm(form):
-            def __init__(self, *args, **kwargs):
-                # Inject custom kwargs here
-                kwargs["user"] = request.user
-                super().__init__(*args, **kwargs)
-
-        return CustomForm
-
-    def save_model(self, request: HttpRequest, obj: Secret, form: SecretAdminForm, change):
-        value = form.cleaned_data.get("value")
-        if value:
-            obj.encrypted_value = Secret.encrypt(value=value)
-        super().save_model(request, obj, form, change)
-
-    def get_queryset(self, request: HttpRequest):
-        user = get_resolved_user(request.user)  # type: ignore
-        qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user,
+        return smarter_filter_queryset_for_user_profile(
+            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
             qs=qs,
         )
-
-
-class CustomPasswordWidget(forms.Widget):
-    """Custom widget for the password field in the UserChangeForm."""
-
-    def render(self, name, value, attrs=None, renderer=None):
-        """
-        use a placeholder and let the admin render the anchor correctly
-        This works because the admin will replace __pk__ with the actual user id
-        """
-        url = "../password/"  # relative to the change page, works in Django admin
-        return mark_safe(f'<a href="{url}" style="color: blue;">CHANGE PASSWORD</a>')  # nosec
 
 
 class RestrictedUserAdmin(UserAdmin):
@@ -447,6 +279,9 @@ class RestrictedUserAdmin(UserAdmin):
         """
         if not hasattr(request, "user") or not request.user.is_authenticated:
             return False
+        if not isinstance(request.user, User):
+            logger.warning("Unexpected user type in RestrictedUserAdmin.has_delete_permission: %s", type(request.user))
+            return False
         if request.user.is_superuser:
             return True
         return False
@@ -456,7 +291,12 @@ class RestrictedUserAdmin(UserAdmin):
         Allow change permissions for superusers and to
         staff users if they are changing a user within their own account.
         """
-        if not hasattr(request, "user") or not request.user.is_authenticated:
+        if not hasattr(request, "user"):
+            return False
+        if not isinstance(request.user, User):
+            logger.warning("Unexpected user type in RestrictedUserAdmin.has_change_permission: %s", type(request.user))
+            return False
+        if not request.user.is_authenticated:
             return False
         if request.user.is_superuser:
             return True
@@ -539,6 +379,12 @@ class RestrictedUserProfileAdmin(SmarterSuperUserOnlyModelAdmin):
     # permission is limited to superusers.
     def get_queryset(self, request: HttpRequest):
         qs = super().get_queryset(request)
+        if not isinstance(request.user, User):
+            logger.warning("Unexpected user type in RestrictedUserProfileAdmin.get_queryset: %s", type(request.user))
+            return qs.none()
+        if not request.user.is_authenticated:
+            return qs.none()
+
         if request.user.is_superuser:
             return qs
         return qs.none()
@@ -548,7 +394,5 @@ smarter_restricted_admin_site.register(Account, AccountAdmin)
 smarter_restricted_admin_site.register(AccountContact, AccountContactAdmin)
 smarter_restricted_admin_site.register(Charge, ChargeAdmin)
 smarter_restricted_admin_site.register(DailyBillingRecord, DailyBillingRecordAdmin)
-smarter_restricted_admin_site.register(PaymentMethod, PaymentMethodModelAdmin)
-smarter_restricted_admin_site.register(Secret, SecretAdmin)
 smarter_restricted_admin_site.register(UserProfile, RestrictedUserProfileAdmin)
 smarter_restricted_admin_site.register(User, RestrictedUserAdmin)

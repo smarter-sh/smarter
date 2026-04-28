@@ -18,6 +18,7 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    :caption: Technical Reference
 
    smarter-framework/getting-started
+   smarter-framework/smarter-manifests
    smarter-framework/guides
    smarter-framework/aws
    smarter-framework/docker

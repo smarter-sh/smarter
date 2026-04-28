@@ -1,4 +1,4 @@
-"""Smarter API PLugin Manifest - enumerated datatypes."""
+"""Smarter API Provider Manifest - enumerated datatypes."""
 
 from smarter.common.enum import SmarterEnumAbstract
 

@@ -89,7 +89,7 @@ class Command(SmarterCommand):
             logger.debug("%s - Creating Stackademy Sql Chatbot...", logger_prefix)
             sql_file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml",
-                "smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml",
+                "smarter/apps/connection/data/sample-connections/smarter-test-db.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml",
             ]
@@ -101,7 +101,7 @@ class Command(SmarterCommand):
             logger.debug("%s - Creating Stackademy Api Chatbot...", logger_prefix)
             api_file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-api.yaml",
-                "smarter/apps/plugin/data/sample-connections/smarter-test-api.yaml",
+                "smarter/apps/connection/data/sample-connections/smarter-test-api.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-plugin-api.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-chatbot-api.yaml",
             ]

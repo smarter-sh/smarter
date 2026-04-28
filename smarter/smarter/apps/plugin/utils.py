@@ -88,7 +88,7 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
     data: Optional[dict] = None
     if not isinstance(user_profile, UserProfile):
         raise SmarterValueError("User profile is required to add example plugins.")
-    username: str = user_profile.cached_user.username
+    username: str = user_profile.user.username
     output = io.StringIO()
     error_output = io.StringIO()
 
@@ -107,8 +107,8 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             os.path.join(
                 "smarter", "apps", "account", "data", "example-manifests", "secret-smarter-test-db-proxy-password.yaml"
             ),
-            os.path.join("smarter", "apps", "plugin", "data", "sample-connections", "smarter-test-db.yaml"),
-            os.path.join("smarter", "apps", "plugin", "data", "sample-connections", "smarter-test-api.yaml"),
+            os.path.join("smarter", "apps", "connection", "data", "sample-connections", "smarter-test-db.yaml"),
+            os.path.join("smarter", "apps", "connection", "data", "sample-connections", "smarter-test-api.yaml"),
         ]
         for file_path in file_paths:
             apply(file_path)
@@ -124,8 +124,6 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             data = yaml.safe_load(yaml_data)
             plugin_controller = PluginController(
                 user_profile=user_profile,
-                account=user_profile.cached_account,  # type: ignore[arg-type]
-                user=user_profile.cached_user,  # type: ignore[arg-type]
                 manifest=data,  # type: ignore[arg-type]
             )
             # we do this to ensure that that plugin can instantiate correctly.
