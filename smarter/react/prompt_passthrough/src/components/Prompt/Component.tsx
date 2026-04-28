@@ -1,21 +1,22 @@
 /**
  * Prompt Component
  *
- * This component provides a user interface for constructing and sending passthrough API requests
- * to various LLM (Large Language Model) providers. It features:
- * - Provider and template selection via dropdowns
- * - Dynamic display of the target API endpoint
- * - Monaco-based JSON editor for request payloads
- * - Toolbar for editor actions
- * - "SEND" button (UI only; sending logic not included here)
+ * Provides a UI for constructing and sending passthrough API requests
+ * to various LLM providers. Features include:
+ * - LLM provider and template selection via dropdowns
+ * - Display of the resolved target API endpoint
+ * - Monaco-based JSON editor for composing request payloads
+ * - Editor toolbar for common actions
+ * - SEND button that POSTs the request and displays the response
  *
- * State is managed for the selected provider, template, editor instance, and request JSON.
- * The component is styled using Bootstrap classes and custom CSS.
+ * CSRF token validation is performed via cookie lookup before each request.
+ * The API response is rendered by the Response component below the editor.
  *
  * Dependencies:
- * - @monaco-editor/react for the code editor
- * - Toolbar, LLMProviderSelector, TemplateSelector (local components)
- * - getTemplateJson, getApiUrl (utility functions)
+ * - @monaco-editor/react — code editor
+ * - @/components/Toolbar, LLMProviderSelector, TemplateSelector, Response — UI components
+ * - @/lib/cookie, @/lib/django — CSRF and fetch utilities
+ * - ./templates, ./llmApis — request template and URL helpers
  */
 import { useState } from "react";
 import type * as monaco from "monaco-editor";
