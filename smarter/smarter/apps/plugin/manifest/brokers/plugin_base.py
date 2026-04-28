@@ -425,12 +425,24 @@ class SAMPluginBaseBroker(AbstractBroker):
                 self.user_profile,
             )
         except PluginMeta.DoesNotExist:
-            logger.debug(
-                "%s.plugin_meta() - PluginMeta does not exist for name=%s and user_profile=%s",
-                logger_prefix,
-                self.name,
-                self.user_profile,
-            )
+            try:
+                self._plugin_meta = PluginMeta.objects.get(
+                    user_profile__account=self.account,
+                    name=self.name,
+                )
+            except PluginMeta.DoesNotExist:
+                try:
+                    self._plugin_meta = PluginMeta.objects.get(
+                        user_profile=smarter_cached_objects.smarter_admin_user_profile,
+                        name=self.name,
+                    )
+                except PluginMeta.DoesNotExist:
+                    logger.debug(
+                        "%s.plugin_meta() - PluginMeta does not exist for name=%s and user_profile=%s",
+                        logger_prefix,
+                        self.name,
+                        self.user_profile,
+                    )
             if self._manifest:
                 logger.warning(
                     "%s.plugin_meta() - created ORM instance from manifest for name=%s, user_profile=%s. This should be done elsewhere.",

@@ -4168,6 +4168,61 @@ class Settings(BaseSettings):
         """
         return get_semantic_version()
 
+    @cached_property
+    def python_version(self) -> str:
+        """
+        Current version of Python running the Smarter platform codebase.
+
+        Example:
+            >>> print(smarter_settings.python_version)
+            '3.10.12'
+        """
+        try:
+            # pylint: disable=import-outside-toplevel
+            import platform as sys_platform
+
+            return sys_platform.python_version()
+        # pylint: disable=broad-except
+        except Exception:  # catch broad exceptions to avoid any issues with retrieving Python version
+            return "Unknown Python version"
+
+    @cached_property
+    def django_version(self) -> str:
+        """
+        Current version of Django installed in the Smarter platform codebase.
+
+        Example:
+            >>> print(smarter_settings.django_version)
+            '4.2.7'
+        """
+        try:
+            # pylint: disable=import-outside-toplevel
+            import django
+
+            return django.get_version()
+        # pylint: disable=broad-except
+        except ImportError:
+            return "Django not installed"
+        except Exception:  # catch broad exceptions to avoid any issues with retrieving Django version
+            return "Unknown Django version"
+
+    @property
+    def cache_path(self) -> str:
+        """
+        Return the path to the cache directory.
+
+        Example:
+            >>> print(smarter_settings.cache_path)
+            '/home/smarter_user/.cache'
+
+        Note:
+            This is based on the Dockerfile located in the root of the repository.
+            Settings are `chmod -R 700 /home/smarter_user/.cache`
+            See ./Dockerfile for more information.
+
+        """
+        return "/home/smarter_user/.cache"
+
     def to_json(self) -> dict[str, Any]:
         """
         Dump all settings. Useful for debugging and logging.

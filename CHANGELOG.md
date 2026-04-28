@@ -6,6 +6,54 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.223](https://github.com/smarter-sh/smarter/compare/v0.13.222...v0.13.223) (2026-04-19)
+
+### Bug Fixes
+
+* force a new release ([b9cd7d7](https://github.com/smarter-sh/smarter/commit/b9cd7d7a5e07bf6b12eda6fa24da36240b3bd6d7))
+
+## [0.13.222](https://github.com/smarter-sh/smarter/compare/v0.13.221...v0.13.222) (2026-04-17)
+
+### Bug Fixes
+
+* monkey patch def secret() until v0.14 is released ([e63651a](https://github.com/smarter-sh/smarter/commit/e63651a378ec9890b9bef11199318992b5dcf943))
+
+## [0.13.221](https://github.com/smarter-sh/smarter/compare/v0.13.220...v0.13.221) (2026-04-17)
+
+### Bug Fixes
+
+* temporary monkey patch until v0.14 is released ([ba51ec6](https://github.com/smarter-sh/smarter/commit/ba51ec6b234cc05c41359b1790feed0468ea63b9))
+
+## [0.13.220](https://github.com/smarter-sh/smarter/compare/v0.13.219...v0.13.220) (2026-04-16)
+
+### Bug Fixes
+
+* switch to redis cache ([0261451](https://github.com/smarter-sh/smarter/commit/0261451a096b6e64208db46de99a338f109c9354))
+
+## [0.13.219](https://github.com/smarter-sh/smarter/compare/v0.13.218...v0.13.219) (2026-04-16)
+
+### Bug Fixes
+
+* give the cache a filename ([b95cfdb](https://github.com/smarter-sh/smarter/commit/b95cfdb07866ac013ea80721b086106f9a5e56aa))
+
+## [0.13.218](https://github.com/smarter-sh/smarter/compare/v0.13.217...v0.13.218) (2026-04-16)
+
+### Bug Fixes
+
+* AttributeError: 'NoneType' object has no attribute 'validate' ([2c1820c](https://github.com/smarter-sh/smarter/commit/2c1820c42406311ad0074d1e33044b1929be7f4a))
+
+## [0.13.217](https://github.com/smarter-sh/smarter/compare/v0.13.216...v0.13.217) (2026-04-16)
+
+### Bug Fixes
+
+* requests cache path ([52e55da](https://github.com/smarter-sh/smarter/commit/52e55da18dd49db7653dc0e70c2ef1dd49c6d180))
+
+## [0.13.216](https://github.com/smarter-sh/smarter/compare/v0.13.215...v0.13.216) (2026-04-15)
+
+### Bug Fixes
+
+* misc post-deployment bugs ([a7e6b52](https://github.com/smarter-sh/smarter/commit/a7e6b520f452885dcb91bd2419113dd8d53f866d))
+
 ## [0.13.215](https://github.com/smarter-sh/smarter/compare/v0.13.214...v0.13.215) (2026-04-08)
 
 ### Bug Fixes

@@ -22,7 +22,7 @@ class Command(SmarterCommand):
     """
 
     def initialize_account(
-        self, account_number: str, username: str, email: str, password: Optional[str], company_name: str
+        self, account_number: str, username: str, email: str, password: Optional[str], company_name: Optional[str]
     ) -> bool:
         """
         Initialize a single account with the provided information. Optionally
