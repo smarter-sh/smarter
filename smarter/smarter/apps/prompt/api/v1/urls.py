@@ -22,6 +22,10 @@ This module defines the URL patterns for the prompt API, which includes routes f
 
 from django.urls import path
 
+from smarter.apps.api.const import namespace as api_namespace
+from smarter.apps.api.v1.const import namespace as v1_namespace
+from smarter.apps.prompt.const import namespace as prompt_namespace
+
 from .const import namespace
 from .views.history import (
     ChatHistoryListView,
@@ -39,6 +43,8 @@ app_name = namespace
 
 class PromptAPINamespace:
     """Namespace for prompt API endpoints."""
+
+    namespace = ":".join([api_namespace, v1_namespace, prompt_namespace])
 
     chat = "chat"
     chathistory_list = "chathistory_list"

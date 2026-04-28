@@ -4,7 +4,16 @@
 {% block dashboard_content %}
   {{ block.super }}
 
-  <div id="smarter-prompt-passthrough-root"></div>
+  <div
+    id="{{ passthrough.root_id }}"
+    smarter-csrf-cookie-name="{{ passthrough.csrf_cookie_name }}"
+    django-csrftoken="{{ csrf_token }}"
+    smarter-django-session-cookie-name="{{ passthrough.django_session_cookie_name }}"
+    smarter-cookie-domain="{{ passthrough.cookie_domain }}"
+    smarter-api-path="{{ passthrough.api_url }}"
+    smarter-llm-provider-id="{{ passthrough.llm_provider_id }}"
+    smarter-template-id="{{ passthrough.template_id }}">
+  </div>
 
 {% endblock %}
 

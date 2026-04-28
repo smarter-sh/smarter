@@ -1,10 +1,27 @@
+/**
+ * Response Component
+ *
+ * Renders a formatted HTTP response preview for the prompt passthrough UI.
+ * This component currently uses mock response data and a mock HTTP status code
+ * to demonstrate how success and failure states appear in the interface.
+ *
+ * Features:
+ * - Displays an HTTP status code in the card header
+ * - Applies conditional status styling based on status range (2xx vs non-2xx)
+ * - Shows a success or failure emoji indicator
+ * - Pretty-prints JSON response payload content for readability
+ *
+ * Notes:
+ * - `http_response_status` and `responseJson` are currently hardcoded placeholders.
+ * - In production usage, these values should come from API call state/props.
+ */
 import "./styles.css";
 import SuccessEmoji, {success_style} from "./status_success";
 import FailureEmoji, {failure_style} from "./status_failure";
 
-function Response() {
-  const http_response_status = 200;
-  const responseJson = {
+function Response({ apiResponse }: { apiResponse: { status: number; body: any } | null }) {
+  const http_response_status = apiResponse?.status ?? 200;
+  const responseJson = apiResponse?.body ?? {
     id: "chatcmpl-abc123",
     object: "chat.completion",
     created: 1714243200,
