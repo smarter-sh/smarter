@@ -20,8 +20,10 @@ Two caching strategies are used:
 
 import logging
 import re
-import uuid
 from typing import Optional
+
+from django.db.models import Q
+from typing_extensions import deprecated
 
 from smarter.apps.account.models import (
     Account,
@@ -123,7 +125,9 @@ class SmarterCachedObjects:
 
         if not self._smarter_admin_user_profile:
             try:
-                user_profile = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first()
+                user_profile = (
+                    UserProfile.objects.filter(account=self.smarter_account).filter(user__is_superuser=True).first()
+                )
                 self._smarter_admin_user_profile = user_profile
                 logger.debug(
                     "%s initialized %s",
@@ -151,7 +155,8 @@ class SmarterCachedObjects:
 
         @cache_results()
         def _requery_admin_user(class_name=SmarterCachedObjects.__name__) -> None:
-            self._admin_user.refresh_from_db()
+            if self._admin_user:
+                self._admin_user.refresh_from_db()
             logger.debug(
                 "%s re-queried %s",
                 formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.admin_user()"),
@@ -425,14 +430,16 @@ def get_cached_admin_user_for_account(
     @cache_results()
     def _admin_user_for_account_number(account_number: str, class_name=User.__name__) -> User:
         # reinstantiate the account
-        account = Account.get_cached_object(account_number=account_number)
-        if not account:
+        try:
+            account = Account.objects.get(account_number=account_number)
+        except Account.DoesNotExist as e:
             raise SmarterConfigurationError(
                 f"Failed to retrieve account with number {account_number}. Please ensure the account exists and is configured correctly."
-            )
+            ) from e
         console_prefix = formatted_text(f"{__name__}.get_cached_admin_user_for_account()")
         user_profile = (
-            UserProfile.objects.filter(account=account, user__is_staff=True)
+            UserProfile.objects.filter(account=account)
+            .filter(Q(user__is_staff=True) | Q(user__is_superuser=True))
             .select_related("user", "account")
             .order_by("pk")
             .first()
@@ -584,17 +591,20 @@ def get_user_profiles_for_account(account: Account) -> Optional[list[UserProfile
     return list(user_profiles)
 
 
+@deprecated(
+    "This function is deprecated and may be removed in a future release. Please use with_ownership_permission_for() instead."
+)
 def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[UserProfile]:
     """
     Get a list of valid owners for the given user profile.
 
     This function retrieves all user profiles associated with the same account as the provided user profile.
-    These profiles are considered valid owners for plugins created by the user.
+    These profiles are considered valid owners for ORM resources created by the user.
 
     :param user_profile: The `UserProfile` instance representing the user.
     :type user_profile: UserProfile
 
-    :return: A list of `UserProfile` instances that are valid plugin owners.
+    :return: A list of `UserProfile` instances that are valid ORM resource owners.
     :rtype: list[UserProfile]
 
     .. seealso::

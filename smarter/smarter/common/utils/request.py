@@ -21,7 +21,7 @@ logger_prefix = formatted_text(__name__)
 RequestType = Union["HttpRequest", "Request", "WSGIRequest"]
 
 
-# pylint: disable=W0613
+# pylint: disable=W0613,C0415
 def should_log_verbose(level):
     """Check if logging should be done based on the waffle switch."""
     from smarter.common.conf import smarter_settings
@@ -125,7 +125,7 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         url = smarter_build_absolute_uri(request)
         if is_valid_request_object and has_user and has_is_authenticated:
             retval = request.user.is_authenticated
-            logger.debug(
+            verbose_logger.debug(
                 "%s.is_authenticated_request() Request is_authenticated: %s URL: %s, user: %s",
                 logger_prefix,
                 retval,
@@ -134,13 +134,13 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
             )
         else:
             retval = False
-            logger.debug(
+            verbose_logger.debug(
                 "%s.is_authenticated_request() Request is not authenticated - returning False URL: %s",
                 logger_prefix,
                 url,
             )
         if hasattr(request, SMARTER_IS_INTERNAL_API_REQUEST):
-            logger.debug(
+            verbose_logger.debug(
                 "%s.is_authenticated_request() Request has SMARTER_IS_INTERNAL_API_REQUEST=%s",
                 logger_prefix,
                 getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False),
@@ -150,13 +150,13 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         if hasattr(request, "headers") and request.headers is not None:
             auth_header = request.headers.get("Authorization")
             if auth_header:
-                logger.debug(
+                verbose_logger.debug(
                     "%s.is_authenticated_request() Request has Authorization header (first 4 chars): %s",
                     logger_prefix,
                     str(auth_header)[:4],
                 )
             else:
-                logger.debug(
+                verbose_logger.debug(
                     "%s.is_authenticated_request() Request does not have Authorization header",
                     logger_prefix,
                 )

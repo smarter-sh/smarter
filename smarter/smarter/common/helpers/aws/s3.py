@@ -3,8 +3,6 @@
 import logging
 from typing import Optional
 
-import botocore.exceptions
-
 from .aws import AWSBase
 
 logger = logging.getLogger(__name__)

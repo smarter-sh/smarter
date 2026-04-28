@@ -49,6 +49,7 @@ class Command(SmarterCommand):
         proper DNS verification and deployment status.
         """
 
+        # FIX NOTE: this needs to be implemented by username rather than account number or company name.
         self.handle_begin()
 
         account_number = options["account_number"]

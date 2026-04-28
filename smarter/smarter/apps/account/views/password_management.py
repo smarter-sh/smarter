@@ -30,6 +30,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
@@ -52,12 +53,12 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
     template_path = "account/authentication/password-reset-request.html"
     email_template_path = "account/authentication/email/password-reset.html"
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         form = PasswordResetRequestView.EmailForm()
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         form = PasswordResetRequestView.EmailForm(request.POST)
         if not form.is_valid():
             return SmarterHttpResponseBadRequest(request=request, error_message="Email address is invalid.")
@@ -67,6 +68,10 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
         except User.DoesNotExist:
             # Do not reveal if the email is not in the system.
             return HttpResponse("", status=HTTPStatus.OK.value)
+        except User.MultipleObjectsReturned:
+            # In the rare case that multiple users have the same email, we can still send the reset email to one of them.
+            logger.warning("Multiple users found with email %s. Sending password reset email to one of them.", email)
+            user = User.objects.filter(email=email).first()
 
         password_reset_link = self.expiring_token.encode_link(
             request=request, user=user, reverse_link=AccountNamedUrls.PASSWORD_RESET_LINK

@@ -1,10 +1,14 @@
 """URL configuration for the web platform."""
 
+import logging
+
 from django.urls import include, path
 from django.views.generic.base import RedirectView
 
+from smarter.apps.account.views.dashboard import urls as account_dashboard_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
+from smarter.common.helpers.logger_helpers import formatted_text
 
 from .const import namespace
 from .views.authentication import (
@@ -19,6 +23,8 @@ from .views.authentication import (
 )
 from .views.dashboard.api_keys import APIKeyListView
 from .views.dashboard.users import UsersView, UserView
+
+logger = logging.getLogger(__name__)
 
 
 class AccountNamedUrls:
@@ -66,12 +72,11 @@ urlpatterns = [
         RedirectView.as_view(url="/dashboard/account/dashboard/", permanent=False),
         name="dashboard_account_dashboard",
     ),
-    path("api/", include("smarter.apps.account.api.urls", namespace=namespace)),
     path("api-keys/", APIKeyListView.as_view(), name=AccountNamedUrls.API_KEYS_LIST),
     path("login/", LoginView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGIN),
     path("logout/", LogoutView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGOUT),
     path("inactive/", AccountInactiveView.as_view(), name=AccountNamedUrls.ACCOUNT_INACTIVE),
-    path("dashboard/", include("smarter.apps.account.views.dashboard.urls")),
+    path("dashboard/", include(account_dashboard_urls)),
     # account lifecycle
     path("register/", AccountRegisterView.as_view(), name=AccountNamedUrls.ACCOUNT_REGISTER),
     path("activation/", AccountActivationEmailView.as_view(), name=AccountNamedUrls.ACCOUNT_ACTIVATION),
@@ -85,3 +90,5 @@ if smarter_settings.environment == SmarterEnvironments.LOCAL:
     from .views.email import EmailWelcomeView
 
     urlpatterns.append(path("email/welcome/<first_name>/", EmailWelcomeView.as_view(), name="welcome"))
+    logger_prefix = formatted_text(__name__)
+    logger.debug("%s added %s URL pattern to Account app URLs.", logger_prefix, "welcome")

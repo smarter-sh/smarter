@@ -2,17 +2,23 @@
 URLs for Smarter web console.
 """
 
+import logging
+import sys
+
 from django.apps import apps
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.admin.exceptions import AlreadyRegistered
+from django.contrib.admindocs import urls as admindocs_urls
 from django.http import JsonResponse
 from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 from django.views.static import serve
+from social_django import urls as social_django_urls
 from waffle import get_waffle_switch_model
 
+from smarter.apps.account import urls as account_urls
 from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.urls import AccountNamedUrls
 from smarter.apps.account.views.authentication import (
@@ -25,13 +31,18 @@ from smarter.apps.account.views.password_management import (
     PasswordResetRequestView,
     PasswordResetView,
 )
+from smarter.apps.api import urls
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
+from smarter.apps.connection import urls as connection_urls
+from smarter.apps.connection.const import namespace as connection_namespace
+from smarter.apps.dashboard import urls as dashboard_urls
 from smarter.apps.dashboard.admin import (
     SmarterSuperUserOnlyModelAdmin,
     smarter_restricted_admin_site,
 )
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
+from smarter.apps.docs import urls as docs_urls
 from smarter.apps.docs.const import namespace as docs_namespace
 from smarter.apps.docs.views.webserver import (
     FaviconView,
@@ -40,12 +51,23 @@ from smarter.apps.docs.views.webserver import (
     RobotsTxtView,
     SitemapXmlView,
 )
+from smarter.apps.plugin import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
+from smarter.apps.prompt import urls as prompt_urls
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
+from smarter.apps.provider import urls as provider_urls
 from smarter.apps.provider.const import namespace as provider_namespace
+from smarter.apps.secret import urls as secret_urls
+from smarter.apps.secret.const import namespace as secret_namespace
+from smarter.apps.vectorstore import urls as vectorstore_urls
+from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SmarterEnvironments
+from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.lib.django.waffle import SmarterSwitchAdmin
+
+logger = logging.getLogger(__name__)
 
 
 def session_test_view(request):
@@ -88,6 +110,7 @@ SMARTER_APP_LABELS = [
     "plugin",
     "prompt",
     "provider",
+    "vectorstore",
 ]
 """
 app labels that are independently registered at the app level
@@ -124,27 +147,30 @@ for model in models:
         pass
 
 
-name_prefix = "root"
+name_prefix = "console"
 
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="dashboard:dashboard"), name=f"{name_prefix}_home"),
     # -----------------------------------
     # root paths
     # -----------------------------------
-    path("account/", include("smarter.apps.account.urls", namespace=account_namespace)),
-    path("admin/docs/", include("django.contrib.admindocs.urls")),
+    path("", RedirectView.as_view(pattern_name="dashboard:dashboard"), name=f"{name_prefix}_home"),
+    path("account/", include(account_urls, namespace=account_namespace)),
+    path("admin/docs/", include(admindocs_urls)),
     path("admin/", admin.site.urls, name="django_admin"),
-    path("api/", include("smarter.apps.api.urls", namespace=api_namespace)),
-    path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
-    path("docs/", include("smarter.apps.docs.urls", namespace=docs_namespace)),
+    path("api/", include(urls, namespace=api_namespace)),
+    path("connection/", include(connection_urls, namespace=connection_namespace)),
+    path("dashboard/", include(dashboard_urls, namespace=dashboard_namespace)),
+    path("docs/", include(docs_urls, namespace=docs_namespace)),
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
-    path("plugin/", include("smarter.apps.plugin.urls", namespace=plugin_namespace)),
-    path("provider/", include("smarter.apps.provider.urls", namespace=provider_namespace)),
+    path("plugin/", include(plugin_urls, namespace=plugin_namespace)),
+    path("provider/", include(provider_urls, namespace=provider_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
     path("session-test/", session_test_view, name="session_test"),
-    path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
+    path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
+    path("secret/", include(secret_urls, namespace=secret_namespace)),
+    path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
     # -----------------------------------
     # Chatbots.
     # mcdaniel: 2026-01-31: are these even reachable anymore?
@@ -190,16 +216,17 @@ urlpatterns = [
     # -----------------------------------
     # routes for 3rd party apps
     # -----------------------------------
-    path("social-auth/", include("social_django.urls", namespace="social_auth")),
+    path("social-auth/", include(social_django_urls, namespace="social_auth")),
 ]
+
 
 # mcdaniel 2026-01-20: converting static() to list(static(...)) to fix
 # Sphinx doc build error: 'TypeError: can only concatenate list (not "static") to list
 #
 urlpatterns += list(static(settings.STATIC_URL, document_root=settings.STATIC_ROOT))
 
-# question: should this be limited to localhost only?
-if smarter_settings.debug_mode:
+if smarter_settings.environment == SmarterEnvironments.LOCAL and smarter_settings.debug_mode and not "test" in sys.argv:
+    # we need to limit this to local because the debug toolbar is only installed on the local build
     # debug_model == True does not not guarantee that the debug toolbar is actually installed
     try:
         import debug_toolbar
@@ -207,8 +234,15 @@ if smarter_settings.debug_mode:
         urlpatterns += [
             path("__debug__/", include(debug_toolbar.urls)),
         ]
+        logger.debug(
+            "%s Debug mode is enabled, and debug_toolbar is installed. Added debug_toolbar URLs to urlpatterns.",
+            formatted_text(__name__),
+        )
     except ImportError:
-        pass
+        logger.warning(
+            "%s Debug mode is enabled, but debug_toolbar is not installed. Install debug_toolbar to use the Django Debug Toolbar.",
+            formatted_text(__name__),
+        )
 
 
 __all__ = ["urlpatterns"]

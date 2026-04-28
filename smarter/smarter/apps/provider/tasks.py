@@ -9,8 +9,6 @@ future high-traffic scenarios.
 
 import logging
 
-from django.conf import settings
-
 from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -23,7 +21,7 @@ from .verification import verify_provider_model as verification_verify_provider_
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) and waffle.switch_is_active(
+    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) or waffle.switch_is_active(
         SmarterWaffleSwitches.PROVIDER_LOGGING
     )
 

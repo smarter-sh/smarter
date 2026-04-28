@@ -17,7 +17,6 @@ from smarter.apps.account.manifest.models.account.spec import (
 )
 from smarter.lib import json
 from smarter.lib.manifest.broker import (
-    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
 )
 from smarter.lib.manifest.enum import SAMMetadataKeys
@@ -370,7 +369,7 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         Test describe method raises not found for missing account.
         """
         request = self.request
-        request._body = None  # pylint: disable=protected-acces
+        request._body = None  # type: ignore
         self._broker = self.SAMBrokerClass(request)
         # with self.assertRaises(SAMBrokerErrorNotFound):
         #     self.broker.describe(request, {"name": "nonexistent-account"})

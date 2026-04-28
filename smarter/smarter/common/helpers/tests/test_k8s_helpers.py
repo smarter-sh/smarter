@@ -17,8 +17,8 @@ from string import Template
 from unittest.mock import MagicMock, patch
 
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
-from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
+from smarter.common.helpers.aws_helpers import AWSRoute53, aws_helper
 from smarter.common.helpers.console_helpers import formatted_text_red
 from smarter.common.helpers.k8s_helpers import (
     KubernetesHelper,
@@ -51,13 +51,18 @@ class Testk8sHelpers(SmarterTestBase):
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        self.environment = SmarterEnvironments.ALPHA
-        self.api_domain = f"{self.environment}.api.{smarter_settings.root_domain}"
+        self.environment = smarter_settings.environment
+        self.api_domain = smarter_settings.root_api_domain
         self.cluster_issuer = self.api_domain
         self.account_number = SMARTER_ACCOUNT_NUMBER
         self.hostname = f"test-k8s-helpers.{self.account_number}.{self.cluster_issuer}"
         self.namespace = f"{smarter_settings.platform_name}-platform-{self.environment}"
         self.helper = KubernetesHelper()
+
+        if not isinstance(aws_helper.route53, AWSRoute53):
+            self.skipTest("AWS Route53 helper not available, skipping DNS setup")
+
+        aws_helper.route53.get_or_create_hosted_zone(self.api_domain)
 
         # get-or-create the subdomain for the test: ty7xlk2i.alpha.api.smarter.sh
         aws_helper.route53.create_domain_a_record(hostname=self.hostname, api_host_domain=self.api_domain)

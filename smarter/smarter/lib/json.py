@@ -109,6 +109,8 @@ class SmarterJSONEncoder(json.JSONEncoder):
             return duration_iso_string(o)
         elif isinstance(o, (decimal.Decimal, uuid.UUID, Promise)):
             return str(o)
+        elif isinstance(o, set):
+            return list(o)
         else:
             # Handle Django's GenericRelatedObjectManager and Django's
             # TaggableManager without importing them directly in order to avoid

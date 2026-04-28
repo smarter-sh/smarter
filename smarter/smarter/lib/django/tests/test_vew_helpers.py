@@ -3,7 +3,6 @@
 from http import HTTPStatus
 from unittest.mock import MagicMock, Mock, patch
 
-from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse
 from django.test import RequestFactory
 

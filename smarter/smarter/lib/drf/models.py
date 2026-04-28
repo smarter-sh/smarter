@@ -8,11 +8,14 @@ from typing import Optional
 from django.db import models
 from django.utils import timezone
 from knox import crypto
-from knox.models import AuthToken, AuthTokenManager
+from knox.models import AuthToken
 from knox.settings import CONSTANTS
+from taggit.managers import TaggableManager
+from taggit.models import TaggedItemBase
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
     User,
     UserProfile,
 )
@@ -22,12 +25,26 @@ from smarter.lib.cache import cache_results
 
 logger = getLogger(__name__)
 
-
 ###############################################################################
 # API Key Management
 ###############################################################################
-class SmarterAuthTokenManager(AuthTokenManager, models.Manager):
-    """API Key manager."""
+
+
+class StringPKTaggedItem(TaggedItemBase):
+    """
+    Custom TaggedItemBase with a string primary key for object_id.
+    """
+
+    object_id = models.CharField(max_length=128, db_index=True)
+
+
+class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
+    """
+    API Key manager. This is a custom manager derived from a combination of
+    Knox's AuthTokenManager and and Smarter's SmarterQuerySetWithPermissions
+    Queryset to provide both knox token management functionality as well as
+    Smarter's permission-based querying behavior.
+    """
 
     def create(
         self,
@@ -112,7 +129,6 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     .. warning::
 
         - Ensure that API keys are managed securely. Deactivated keys cannot be used for authentication.
-        - The `has_permissions` method checks if a user is staff or superuser before allowing management actions.
 
     Related Models
     --------------
@@ -132,6 +148,11 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     key_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     last_used_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    tags = TaggableManager(
+        blank=True,
+        help_text="Tags for categorizing and organizing this resource.",
+        through=StringPKTaggedItem,
+    )
 
     @property
     def identifier(self):
@@ -143,14 +164,6 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         if self.created is None:
             self.created = timezone.now()
         super().save(*args, **kwargs)
-
-    def has_permissions(self, user) -> bool:
-        """Determine if the authenticated user has permissions to manage this key."""
-        if not hasattr(user, "is_authenticated") or not user.is_authenticated:
-            return False
-        if not hasattr(user, "is_staff") or not hasattr(user, "is_superuser"):
-            return False
-        return user.is_staff or user.is_superuser
 
     def activate(self):
         """Activate the API key."""

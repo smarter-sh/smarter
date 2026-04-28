@@ -51,7 +51,7 @@ class Command(SmarterCommand):
         def verify_switch(switch_name):
             """Initialize a switch."""
             if not Switch.objects.filter(name=switch_name).exists():
-                switch_defaults: SmarterWaffleSwitch = waffle_switches.switches[switch_name]
+                switch_defaults: SmarterWaffleSwitch = waffle_switches.switches[switch_name]  # type: ignore
                 if switch_defaults.default:
                     call_command("waffle_switch", switch_name, "on", "--create")
                 else:
@@ -62,8 +62,8 @@ class Command(SmarterCommand):
                 print(f"Created switch {switch_name}")
             else:
                 switch = Switch.objects.get(name=switch_name)
-                if switch.note != waffle_switches.switches[switch_name].comment:
-                    switch.note = waffle_switches.switches[switch_name].comment
+                if switch.note != waffle_switches.switches[switch_name].comment:  # type: ignore
+                    switch.note = waffle_switches.switches[switch_name].comment  # type: ignore
                     switch.save()
                     print(f"Updated comment for switch {switch_name}")
                 print(f"Verified switch {switch_name}")

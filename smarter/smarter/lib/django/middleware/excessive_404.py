@@ -3,18 +3,15 @@ Middleware to block clients that trigger excessive 404 responses.
 """
 
 import logging
-from collections.abc import Awaitable
 from http import HTTPStatus
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseForbidden
-from django.http.request import HttpRequest
-from django.http.response import HttpResponseBase
 
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterMiddlewareMixin
-from smarter.common.utils import is_authenticated_request
+from smarter.common.utils import is_async_context, is_authenticated_request
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -88,7 +85,9 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         :returns: The original response, or a 403 Forbidden response if the client has exceeded the allowed number of 404 responses.
         :rtype: django.http.HttpResponse
         """
-        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
+        if not is_async_context() and not waffle.switch_is_active(
+            SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404
+        ):
             return response
 
         # skip if the response is anything other than a 404

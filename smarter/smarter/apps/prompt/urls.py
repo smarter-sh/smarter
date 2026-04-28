@@ -7,16 +7,14 @@ how we got here:
  - /workbench/<str:name>/config/
 """
 
-from django.urls import include, path
+from django.urls import path
 
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import camel_case_object_name
 
-from .api.const import namespace as api_namespace
 from .const import namespace
 from .views import (
     ChatAppWorkbenchView,
     ChatConfigView,
-    ManifestDropZoneView,
     PromptLandingView,
     PromptListView,
     PromptManifestView,
@@ -59,44 +57,24 @@ class PromptReverseViews:
 
     namespace = namespace
 
-    @staticmethod
-    def camel_case(obj) -> str:
-        """
-        Convert CamelCase to snake_case for URL naming.
-
-        :param name: The CamelCase string to convert.
-        :return: The converted snake_case string.
-        :rtype: str
-        """
-        return str(camel_to_snake(obj.__name__))
-
-    prompt_manifest_by_hashed_id = camel_case(PromptManifestView)
-    prompt_chat_by_hashed_id = camel_case(ChatAppWorkbenchView)
-    prompt_config_by_hashed_id = camel_case(ChatConfigView)
-    prompt_landing_by_hashed_id = camel_case(PromptLandingView)
-    apply = "apply"
+    manifest_by_hashed_id = camel_case_object_name(PromptManifestView)
+    chat_by_hashed_id = camel_case_object_name(ChatAppWorkbenchView)
+    config_by_hashed_id = camel_case_object_name(ChatConfigView)
+    landing_by_hashed_id = camel_case_object_name(PromptLandingView)
 
 
 urlpatterns = [
     path("", PromptListView.as_view(), name="listview"),
-    path("api/", include("smarter.apps.prompt.api.urls", namespace=api_namespace)),
-    path("chatbots/<str:hashed_id>/", PromptLandingView.as_view(), name=PromptReverseViews.prompt_landing_by_hashed_id),
+    path("chatbots/<str:hashed_id>/", PromptLandingView.as_view(), name=PromptReverseViews.landing_by_hashed_id),
     path(
         "chatbots/<str:hashed_id>/manifest/",
         PromptManifestView.as_view(),
-        name=PromptReverseViews.prompt_manifest_by_hashed_id,
+        name=PromptReverseViews.manifest_by_hashed_id,
     ),
     path(
         "chatbots/<str:hashed_id>/chat/",
         ChatAppWorkbenchView.as_view(),
-        name=PromptReverseViews.prompt_chat_by_hashed_id,
+        name=PromptReverseViews.chat_by_hashed_id,
     ),
-    path(
-        "chatbots/<str:hashed_id>/config/", ChatConfigView.as_view(), name=PromptReverseViews.prompt_config_by_hashed_id
-    ),
-    path(
-        "manifest/apply/",
-        ManifestDropZoneView.as_view(),
-        name=PromptReverseViews.apply,
-    ),
+    path("chatbots/<str:hashed_id>/config/", ChatConfigView.as_view(), name=PromptReverseViews.config_by_hashed_id),
 ]

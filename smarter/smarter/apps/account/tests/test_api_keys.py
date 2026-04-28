@@ -1,10 +1,14 @@
 # pylint: disable=wrong-import-position
 """Test SmarterAuthToken."""
 
+import logging
+
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.drf.models import SmarterAuthToken
 
 from .mixins import TestAccountMixin
+
+logger = logging.getLogger(__name__)
 
 
 class TestSmarterAuthToken(TestAccountMixin):
@@ -19,6 +23,8 @@ class TestSmarterAuthToken(TestAccountMixin):
             name="testToken" + self.hash_suffix,
             description="testToken" + self.hash_suffix,
         )
+
+        logger.debug("Created record with pk: %s", token_record.pk)
 
         # validate that token_key is not None
         self.assertIsNotNone(token_key)

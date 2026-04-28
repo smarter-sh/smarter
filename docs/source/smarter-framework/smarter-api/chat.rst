@@ -20,7 +20,7 @@ URL Patterns
 ChatConfigView Class Reference
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: smarter.apps.prompt.views.ChatConfigView
+.. autoclass:: smarter.apps.prompt.views.views.ChatConfigView
     :members:
     :undoc-members:
     :show-inheritance:

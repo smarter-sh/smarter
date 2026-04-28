@@ -102,7 +102,7 @@ class DashboardView(SmarterAuthenticatedWebView):
 
     def get(self, request: WSGIRequest, *args, **kwargs):
         if kwargs.get("invalidate_cache", False):
-            self.invalidate(request=request, *args, **kwargs)
+            self.invalidate_cached_properties()
         if is_authenticated_request(request):
             return super().get(request, *args, **kwargs)
         return redirect(reverse("login_view"))

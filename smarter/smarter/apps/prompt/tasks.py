@@ -9,7 +9,6 @@ future high-traffic scenarios.
 
 import logging
 
-from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import smarter_settings
@@ -25,7 +24,7 @@ from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) and waffle.switch_is_active(
+    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) or waffle.switch_is_active(
         SmarterWaffleSwitches.PROMPT_LOGGING
     )
 
@@ -69,47 +68,6 @@ def create_chat(session_key, chatbot_id):
     """
     chatbot = ChatBot.objects.get(id=chatbot_id)
     Chat.objects.create(session_key=session_key, chatbot=chatbot)
-
-
-@app.task(
-    autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
-)
-def update_chat(*args, **kwargs):
-    """
-    Update chat record with flattened LLM response.
-    """
-    chat_id = kwargs.get("chat_id", None)
-    if chat_id is None:
-        return
-    try:
-        chat = Chat.objects.get(id=chat_id)
-    except Chat.DoesNotExist:
-        chat = None
-
-    if chat is not None:
-        try:
-            account_id = kwargs.get("account_id", chat.account.id if chat.account else None)
-            if account_id is not None:
-                chat.account = Account.get_cached_object(pk=account_id)
-        except Account.DoesNotExist:
-            chat.account = None
-
-        try:
-            chatbot_id = kwargs.get("chatbot_id", chat.chatbot.id if chat.chatbot else None)
-            if chatbot_id is not None:
-                chat.chatbot = ChatBot.objects.get(id=chatbot_id)
-        except ChatBot.DoesNotExist:
-            chat.chatbot = None
-
-        chat.ip_address = kwargs.get("ip_address", chat.ip_address)
-        chat.user_agent = kwargs.get("user_agent", chat.user_agent)
-        chat.url = kwargs.get("url", chat.url)
-        chat.request = kwargs.get("request", chat.request)
-        chat.response = kwargs.get("response", chat.response)
-        chat.save()
 
 
 @app.task(

@@ -7,7 +7,7 @@ import os
 from typing import Optional
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.plugin.manifest.models.common.connection.model import (
+from smarter.apps.connection.manifest.models.common.connection.model import (
     SAMConnectionCommon,
 )
 from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
@@ -87,14 +87,6 @@ class TestPluginClassBase(TestAccountMixin):
     def load_manifest(self, filename: str) -> None:
         self.manifest_path = os.path.join(HERE, "mock_data", filename)
         self.assertIsNotNone(self.manifest)
-
-
-class TestConnectionBase(TestPluginClassBase):
-    """Base class for testing connection models."""
-
-    @property
-    def model(self) -> SAMConnectionCommon:
-        raise NotImplementedError("Subclasses must implement this method")
 
 
 class TestPluginBase(TestPluginClassBase):

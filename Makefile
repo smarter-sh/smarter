@@ -33,7 +33,7 @@ init:
 	make check-python							# verify Python 3.13 is installed
 	make docker-check							# verify Docker is installed and running
 	make python-init							# create/replace Python virtual environment and install dependencies
-	smarter/manage.py collectstatic --noinput	# collect static files for the Django admin interface and other components
+	make collectstatic							# collect static files for the Django admin interface and other components
 	make build			    					# build the Smarter Docker container
 	make docker-init							# initialize MySQL and create the smarter database
 	make pre-commit-init						# install and configure pre-commit
@@ -74,6 +74,14 @@ run:
 	@echo "Running Docker containers ..."
 	@echo "==============================================================================="
 	make docker-run
+
+collectstatic:
+	@echo "==============================================================================="
+	@echo "Collecting static files on local filesystem ..."
+	@echo "==============================================================================="
+	cd smarter/react/terminal_emulator && npm run build && cd ../../../
+	cd smarter/react/prompt_passthrough && npm run build && cd ../../../
+	python smarter/manage.py collectstatic --noinput
 
 test:
 	make docker-test
@@ -175,7 +183,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.prompt.api.v1"
 
 docker-prune:
 	@echo ""

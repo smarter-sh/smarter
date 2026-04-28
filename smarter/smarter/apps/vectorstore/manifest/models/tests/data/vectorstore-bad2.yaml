@@ -1,0 +1,68 @@
+apiVersion: smarter.sh/v1
+kind: Vectorstore
+metadata:
+  annotations:
+  - smarter.sh/vectorstore: example_provider
+  - smarter.sh/created_by: smarter_provider_broker
+  description: an example vectorstore manifest for the Smarter API Vectorstore
+  name: acme_llm_company
+  tags:
+  - example
+  - vectorstore
+  - smarter-api
+  version: 1.0.0
+spec:
+  backend_IS_MISSING: pinecone
+  connection: example_api_connection
+  embeddings:
+    allowed_special:
+    - <special2>
+    - <special1>
+    api_key: example_api_key
+    api_version: 2024-01-01
+    base_url: https://api.example-embeddings.com
+    check_embedding_ctx_length: true
+    chunk_size: 1000
+    config: {}
+    default_headers:
+      Default-Header: DefaultValue
+    default_query:
+      default_param: default_value
+    deployment: example_deployment
+    dimensions: 1536
+    disallowed_special:
+    - <disallowed1>
+    - <disallowed2>
+    embedding_ctx_length: 8191
+    headers:
+      Custom-Header: Value
+    max_retries: 2
+    model_kwargs:
+      param1: value1
+      param2: value2
+    openai_api_type: example_api_type
+    openai_proxy: https://proxy.example.com
+    organization: example_org
+    provider: openai
+    provider_model: text-embedding-ada-002
+    retry_max_seconds: 20
+    retry_min_seconds: 4
+    show_progress_bar: false
+    skip_empty: false
+    tiktoken_enabled: true
+    tiktoken_model_name: example-tiktoken-model
+    timeout: 30.0
+  indexModel:
+    deletion_protection: disabled
+    dimension: 1536
+    metric: cosine
+    spec:
+      cloud: AWS
+      region: us-east-1
+    timeout: 30
+    vector_type: sparse
+  is_active: true
+  vectorstore:
+    distance_strategy: COSINE
+    namespace: example_namespace
+    text_key: example_key_id

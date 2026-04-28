@@ -4,8 +4,9 @@ import logging
 import os
 from typing import Any, ClassVar, List, Optional, Union
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
+from smarter.apps.connection.models import ApiConnection
 from smarter.apps.plugin.manifest.models.api_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.common import (
     Parameter,
@@ -28,6 +29,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
@@ -105,15 +107,29 @@ class SAMApiPluginSpec(SAMPluginCommonSpec):
 
     connection: str = Field(
         ...,
-        description=f"{class_identifier}.selector[obj]: the name of an existing SqlConnector to use for the {MANIFEST_KIND}",
+        description=f"{class_identifier}.selector[obj]: the name of an existing ApiConnection to use for the {MANIFEST_KIND}",
     )
 
     apiData: ApiData = Field(
         ..., description=f"{class_identifier}.selector[obj]: the ApiData to use for the {MANIFEST_KIND}"
     )
 
-    @field_validator("connection")
-    def validate_connection(cls, v):
+    @model_validator(mode="after")
+    def validate_connection(self):
+        """
+        Validate that the connection value is a valid cleanstring and that at
+        least 1 record exists in the ApiConnection table with the given name.
+
+        If the model includes an authenticated user then also validate that at
+        least 1 record exists in the ApiConnection table with the given name that
+        is accessible by the authenticated user.
+        """
+        v = self.connection
         if not SmarterValidator.is_valid_cleanstring(v):
-            raise SAMValidationError(f"Connection, '{v}' must be a valid cleanstring.")
-        return v
+            raise SAMValidationError(f"connection '{v}' must be a valid cleanstring with no illegal characters.")
+        api_connections = ApiConnection.objects.filter(name=v)
+        if self.user:
+            api_connections = api_connections.with_read_permission_for(user=self.user)
+        if not api_connections.exists():
+            raise SAMValidationError(f"connection '{v}' does not exist or is not accessible.")
+        return self

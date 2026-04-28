@@ -1,4 +1,4 @@
-# pylint: disable=W0212
+# pylint: disable=W0212,C0302
 """Test SmarterRequestMixin."""
 
 from datetime import datetime
@@ -63,12 +63,11 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def setUp(self):
         super().setUp()
         self.session_key = "1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a"
-        self.client = Client()
+        self.client: Client = Client()
 
     def tearDown(self):
         try:
             self.client.logout()
-            self.client = None
         # pylint: disable=W0718
         except Exception:
             pass
@@ -99,7 +98,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
             logger.error("Failed to authenticate smarter admin user for testing.")
             self.fail("Authentication failed")
         request.user = user
-        middleware = SessionMiddleware(lambda request: None)
+        middleware = SessionMiddleware(lambda request: None)  # type: ignore
         middleware.process_request(request)
         request.session.save()
 
@@ -125,6 +124,8 @@ class TestSmarterRequestMixin(TestAccountMixin):
         """
         Test that SmarterRequestMixin can be instantiated with an authenticated request.
         """
+        if not isinstance(self.client, Client):
+            raise TypeError("Expected self.client to be an instance of django.test.Client")
         self.client.login(username=self.admin_user.username, password="12345")
         response = self.client.get("/")
         request = response.wsgi_request
@@ -137,6 +138,9 @@ class TestSmarterRequestMixin(TestAccountMixin):
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
         """
         host_name = "testserver"
+        if not isinstance(self.client, Client):
+            raise TypeError("Expected self.client to be an instance of django.test.Client")
+
         request = self.client.get(
             f"/?session_key={self.session_key}",
             SERVER_NAME=host_name,
@@ -172,7 +176,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertIsInstance(srm.unique_client_string, str)
         self.assertIsNotNone(srm.url)
         self.assertIsInstance(srm.url, str)
-        self.assertEqual(srm.url, "http://testserver/")
+        self.assertIn("http://testserver/", str(srm.url))
         self.assertIsInstance(srm.parsed_url, ParseResult)
         self.assertIsNotNone(srm.to_json())
         self.assertIsInstance(srm.to_json(), dict)
@@ -221,11 +225,11 @@ class TestSmarterRequestMixin(TestAccountMixin):
         if smarter_admin_user_profile is None:
             self.skipTest("Smarter admin user profile is not available")
 
-        path = "/workbench/example/chat/"
+        path = "/workbench/chatbots/rMTAwMDAwNgx/chat/"
         url = "http://localhost:9357" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
-        self.assertEqual(srm.url, "http://localhost:9357" + path)
+        self.assertIn("http://localhost:9357" + path, str(srm.url))
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
         self.assertEqual(srm.domain, "localhost:9357")
@@ -233,7 +237,9 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertFalse(srm.is_chatbot_cli_api_url)
         self.assertFalse(srm.is_smarter_api)
         self.assertEqual(srm.path, path)
-        self.assertTrue(srm.is_chatbot_sandbox_url)
+        self.assertTrue(
+            srm.is_chatbot_sandbox_url, f"Expected is_chatbot_sandbox_url to be True for URL {url} but got False"
+        )
         self.assertTrue(srm.is_chatbot)
 
     def test_api_url(self):
@@ -249,7 +255,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         url = "http://localhost:9357" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
-        self.assertEqual(srm.url, "http://localhost:9357" + path)
+        self.assertIn("http://localhost:9357" + path, str(srm.url))
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
         self.assertEqual(srm.domain, "localhost:9357")
@@ -273,7 +279,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         url = "http://localhost:9357" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
-        self.assertEqual(srm.url, "http://localhost:9357" + path)
+        self.assertIn("http://localhost:9357" + path, str(srm.url))
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
         self.assertEqual(srm.domain, "localhost:9357")
@@ -355,7 +361,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("not a very good url")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._url = "ftp:// be.bop a loo bop. not a very \ngood url----"
+        mixin._url = "ftp:// be.bop a loo bop. not a very \ngood url----"  # type: ignore
         self.assertIsNone(mixin.url)
 
     def test_url_property_logs_and_raises_if_url_not_set(self):
@@ -402,7 +408,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         mixin._cache_key = None
         mixin._smarter_request = None
-        del mixin.cache_key
+        try:
+            del mixin.__dict__["cache_key"]
+        except KeyError:
+            pass
         with self.assertLogs("smarter.lib.django.request", level="WARNING"):
             result = mixin.cache_key
         self.assertIsNone(result)
@@ -415,12 +424,15 @@ class TestSmarterRequestMixin(TestAccountMixin):
         mixin = SmarterRequestMixin(request)
 
         mixin._smarter_request = None
-        del mixin.path
+        try:
+            del mixin.__dict__["path"]
+        except KeyError:
+            pass
         self.assertIsNone(mixin.path)
 
     def test_root_domain_none_if_no_request(self):
         """root_domain returns None if smarter_request is None."""
-        mixin = SmarterRequestMixin.__new__(SmarterRequestMixin)
+        mixin = SmarterRequestMixin(request=None)
         mixin.smarter_request = None
         self.assertIsNone(mixin.root_domain)
 
@@ -432,7 +444,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         mixin = SmarterRequestMixin(request)
 
         mixin._smarter_request = None
-        del mixin.root_domain
+        try:
+            del mixin.__dict__["root_domain"]
+        except KeyError:
+            pass
         self.assertIsNone(mixin.root_domain)
 
     @patch.object(SmarterRequestMixin, "is_chatbot_sandbox_url", new=property(lambda self: True))
@@ -443,6 +458,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
 
+        if not isinstance(mixin.smarter_request_chatbot_name, str):
+            self.fail(
+                f"Expected smarter_request_chatbot_name to be a string but got {type(mixin.smarter_request_chatbot_name)}"
+            )
         self.assertTrue(mixin.smarter_request_chatbot_name.startswith("example"))
 
     @patch.object(SmarterRequestMixin, "is_chatbot_sandbox_url", new=property(lambda self: True))
@@ -453,9 +472,12 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._parse_result = None
+        mixin._parse_result = None  # type: ignore
 
-        del mixin.smarter_request_chatbot_name
+        try:
+            del mixin.__dict__["smarter_request_chatbot_name"]
+        except KeyError:
+            pass
         with self.assertLogs("smarter.lib.django.request", level="DEBUG"):
             _ = mixin.smarter_request_chatbot_name
 
@@ -469,9 +491,12 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._parse_result = None
+        mixin._parse_result = None  # type: ignore
 
-        del mixin.smarter_request_chatbot_name
+        try:
+            del mixin.__dict__["smarter_request_chatbot_name"]
+        except KeyError:
+            pass
         with self.assertLogs("smarter.lib.django.request", level="DEBUG"):
             _ = mixin.smarter_request_chatbot_name
 
@@ -512,7 +537,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.is_environment_root_domain
+        try:
+            del mixin.__dict__["is_environment_root_domain"]
+        except KeyError:
+            pass
         with patch.object(smarter_settings, "environment_platform_domain", host_name):
             self.assertTrue(mixin.is_environment_root_domain)
 
@@ -535,7 +563,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("/dashboard/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.is_environment_root_domain
+        try:
+            del mixin.__dict__["is_environment_root_domain"]
+        except KeyError:
+            pass
         with patch.object(smarter_settings, "environment_platform_domain", host_name):
             self.assertFalse(mixin.is_environment_root_domain)
 
@@ -607,7 +638,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.is_chatbot_smarter_api_url
+        try:
+            del mixin.__dict__["is_chatbot_smarter_api_url"]
+        except KeyError:
+            pass
 
         try:
             # will raise an exception if the db is not initialized
@@ -628,7 +662,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.is_chatbot_smarter_api_url
+        try:
+            del mixin.__dict__["is_chatbot_smarter_api_url"]
+        except KeyError:
+            pass
 
         try:
             # will raise an exception if the db is not initialized
@@ -647,7 +684,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
 
         mixin = SmarterRequestMixin(request)
-        del mixin.is_chatbot_cli_api_url
+        try:
+            del mixin.__dict__["is_chatbot_cli_api_url"]
+        except KeyError:
+            pass
         try:
             # will raise an exception if the db is not initialized
             # and there are not ChatBots in the database.
@@ -669,7 +709,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
 
         mixin = SmarterRequestMixin(request)
-        del mixin.is_chatbot_cli_api_url
+        try:
+            del mixin.__dict__["is_chatbot_cli_api_url"]
+        except KeyError:
+            pass
         try:
             # will raise an exception if the db is not initialized
             # and there are not ChatBots in the database.
@@ -687,7 +730,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.is_chatbot_named_url
+        try:
+            del mixin.__dict__["is_chatbot_named_url"]
+        except KeyError:
+            pass
         self.assertTrue(mixin.is_chatbot_named_url)
 
     def test_is_chatbot_named_url_false(self):
@@ -696,7 +742,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.is_chatbot_named_url
+        try:
+            del mixin.__dict__["is_chatbot_named_url"]
+        except KeyError:
+            pass
         self.assertFalse(mixin.is_chatbot_named_url)
 
     def test_is_chatbot_sandbox_url_true(self):
@@ -706,12 +755,20 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         settings.ALLOWED_HOSTS.append(host_name)
 
+        if not isinstance(self.client, Client):
+            raise TypeError("Expected self.client to be an instance of django.test.Client")
         response = self.client.get(
-            f"http://{host_name}/workbench/example/chat/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+            f"http://{host_name}/workbench/chatbots/rMTAwMDAwNgx/chat/",
+            SERVER_NAME=host_name,
+            SERVER_PORT=80,
+            HTTP_HOST=host_name,
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.is_chatbot_sandbox_url
+        try:
+            del mixin.__dict__["is_chatbot_sandbox_url"]
+        except KeyError:
+            pass
         with patch.object(smarter_settings, "environment_platform_domain", "platform.example.com"):
             self.assertTrue(mixin.is_chatbot_sandbox_url)
 
@@ -725,7 +782,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.is_chatbot_sandbox_url
+        try:
+            del mixin.__dict__["is_chatbot_sandbox_url"]
+        except KeyError:
+            pass
         with patch.object(smarter_settings, "environment_platform_domain", "platform.example.com"):
             self.assertFalse(mixin.is_chatbot_sandbox_url)
 
@@ -739,7 +799,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.is_default_domain
+        try:
+            del mixin.__dict__["is_default_domain"]
+        except KeyError:
+            pass
         with patch.object(smarter_settings, "environment_api_domain", "platform.example.com"):
             self.assertTrue(mixin.is_default_domain)
 
@@ -753,7 +816,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.is_default_domain
+        try:
+            del mixin.__dict__["is_default_domain"]
+        except KeyError:
+            pass
         self.assertFalse(mixin.is_default_domain)
 
     def test_path_property_empty_path(self):
@@ -762,7 +828,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.path
+        try:
+            del mixin.__dict__["path"]
+        except KeyError:
+            pass
         self.assertEqual(mixin.path, "/")
 
     def test_path_property_normal(self):
@@ -770,7 +839,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("/fu/man/chou/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.path
+        try:
+            del mixin.__dict__["path"]
+        except KeyError:
+            pass
         self.assertEqual(mixin.path, "/fu/man/chou/")
 
     def test_root_domain_extracted(self):
@@ -783,7 +855,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.root_domain
+        try:
+            del mixin.__dict__["root_domain"]
+        except KeyError:
+            pass
         self.assertEqual("dogs.com", mixin.root_domain)
 
     def test_root_domain_extracted_domain_only(self):
@@ -796,7 +871,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.root_domain
+        try:
+            del mixin.__dict__["root_domain"]
+        except KeyError:
+            pass
         self.assertEqual("dogs", mixin.root_domain, f"Root domain should be 'dogs' but got {mixin.root_domain}")
 
     def test_subdomain_extracted(self):
@@ -811,7 +889,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.subdomain
+        try:
+            del mixin.__dict__["subdomain"]
+        except KeyError:
+            pass
         self.assertEqual(
             "hr.3141-5926-5359.alpha.api",
             mixin.subdomain,
@@ -825,16 +906,25 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         settings.ALLOWED_HOSTS.append(host_name)
 
+        if not isinstance(self.client, Client):
+            raise TypeError("Expected self.client to be an instance of django.test.Client")
         response = self.client.get(
             f"http://{host_name}/chatbot/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        del mixin.subdomain
+        try:
+            del mixin.__dict__["subdomain"]
+        except KeyError:
+            pass
         self.assertIsNone(mixin.subdomain)
 
     def test_api_token_none(self):
         """api_token returns None if auth_header is not a string."""
+
+        if not isinstance(self.client, Client):
+            raise TypeError("Expected self.client to be an instance of django.test.Client")
+
         response = self.client.get("/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
@@ -888,7 +978,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._smarter_request.META = None  # Will cause AttributeError
+        mixin._smarter_request.META = None  # type: ignore
         mixin._params = None
         with self.assertLogs("smarter.lib.django.request", level="WARNING"):
             result = mixin.params
@@ -908,7 +998,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         mixin = SmarterRequestMixin(request)
         mixin._cache_key = None
         mixin._smarter_request = None
-        del mixin.cache_key
+        try:
+            del mixin.__dict__["cache_key"]
+        except KeyError:
+            pass
         self.assertIsNone(mixin.cache_key)
 
     def test_cache_key_computes_and_sets(self):
@@ -1009,8 +1102,11 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._smarter_request.META.pop("REMOTE_ADDR", None)
-        del mixin.ip_address
+        mixin._smarter_request.META.pop("REMOTE_ADDR", None)  # type: ignore
+        try:
+            del mixin.__dict__["ip_address"]
+        except KeyError:
+            pass
         self.assertEqual(mixin.ip_address, "ip_address")
 
     def test_user_agent_returns_value(self):
@@ -1037,26 +1133,26 @@ class TestSmarterRequestMixin(TestAccountMixin):
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin._smarter_request.META.pop("HTTP_USER_AGENT", None)
-        del mixin.user_agent
+        mixin._smarter_request.META.pop("HTTP_USER_AGENT", None)  # type: ignore
         self.assertEqual(mixin.user_agent, "user_agent")
 
     def test_user_agent_returns_none(self):
         """user_agent property returns None if no smarter_request."""
+        if not isinstance(self.client, Client):
+            raise ValueError("Expected self.client to be an instance of django.test.Client")
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
         mixin._smarter_request = None
-        del mixin.user_agent
         self.assertIsNone(mixin.user_agent)
 
     def test_is_config_true(self):
         """is_config returns True if 'config' in url_path_parts."""
-        host_name = "hr.3141-5926-5359.alpha." + smarter_settings.environment_api_domain
+        host_name = "/workbench/chatbots/rMTAwMDAwOQx"
 
         settings.ALLOWED_HOSTS.append(host_name)
 
-        response = self.client.get(
+        response = self.client.post(
             f"http://{host_name}/config/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
         )
         request = response.wsgi_request

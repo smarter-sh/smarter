@@ -3,8 +3,6 @@
 # python stuff
 import logging
 
-import botocore.exceptions
-
 from smarter.common.conf import smarter_settings
 
 from .aws import AWSBase

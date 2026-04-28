@@ -1,10 +1,11 @@
 # pylint: disable=W0212
 """Admin configuration for the chatbot app."""
 
-from smarter.apps.account.models import get_resolved_user
+import logging
+
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
-    smarter_filter_queryset_for_user,
     smarter_restricted_admin_site,
 )
 
@@ -17,6 +18,8 @@ from .models import (
     ChatBotPlugin,
     ChatBotRequests,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ChatBotAdmin(SmarterCustomerModelAdmin):
@@ -55,8 +58,9 @@ class ChatBotAdmin(SmarterCustomerModelAdmin):
     def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-
-        return smarter_filter_queryset_for_user(user=user, qs=qs)
+        if not isinstance(user, User):
+            return qs.none()
+        return ChatBot.objects.with_ownership_permission_for(user=user)
 
 
 class ChatBotRequestsAdmin(SmarterCustomerModelAdmin):
@@ -76,13 +80,9 @@ class ChatBotRequestsAdmin(SmarterCustomerModelAdmin):
     def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-
-        return smarter_filter_queryset_for_user(
-            user=user,
-            qs=qs,
-            account_filter="chatbot__user_profile__account",
-            user_profile_filter="chatbot__user_profile",
-        )
+        if not isinstance(user, User):
+            return qs.none()
+        return ChatBot.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
 
 
 class ChatBotCustomDomainAdmin(SmarterCustomerModelAdmin):
@@ -106,6 +106,8 @@ class ChatBotCustomDomainAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
         if user.is_authenticated:
             return qs
         else:
@@ -129,6 +131,9 @@ class ChatBotCustomDomainDNSAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
+
         if user.is_authenticated:
             return qs
         else:
@@ -152,6 +157,8 @@ class ChatBotAPIKeyAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
         if user.is_authenticated:
             return qs
         else:
@@ -175,13 +182,11 @@ class ChatBotPluginAdmin(SmarterCustomerModelAdmin):
     def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
 
-        return smarter_filter_queryset_for_user(
-            user=user,
-            qs=qs,
-            account_filter="chatbot__user_profile__account",
-            user_profile_filter="chatbot__user_profile",
-        )
+        chatbots = ChatBot.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return ChatBotPlugin.objects.filter(chatbot__in=chatbots)
 
 
 class ChatBotFunctionsAdmin(SmarterCustomerModelAdmin):
@@ -201,13 +206,11 @@ class ChatBotFunctionsAdmin(SmarterCustomerModelAdmin):
     def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
 
-        return smarter_filter_queryset_for_user(
-            user=user,
-            qs=qs,
-            account_filter="chatbot__user_profile__account",
-            user_profile_filter="chatbot__user_profile",
-        )
+        chatbots = ChatBot.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return ChatBotFunctions.objects.filter(chatbot__in=chatbots)
 
 
 smarter_restricted_admin_site.register(ChatBot, ChatBotAdmin)

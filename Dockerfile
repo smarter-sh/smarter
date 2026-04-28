@@ -82,7 +82,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     redis-tools \
     libmariadb-dev \
     mariadb-client \
-    libncurses6 && \
+    libncurses6 \
+    groff \
+    less \
+    less && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
@@ -224,13 +227,13 @@ RUN if [ "$COLLECT_STATIC_FILES" = "true" ]; then python manage.py collectstatic
 
 ################################# final #######################################
 # This is the final stage that will be used to run the application.
-# Gunicorn is used as the application server.
-# "smarter.wsgi:application" is the WSGI application callable and corresponds
-# to the "application" variable in smarter/wsgi.py.
+# Uvicorn is used as the application server.
+# "smarter.asgi:application" is the ASGI application callable and corresponds
+# to the "application" variable in smarter/asgi.py.
 # The application will listen on all interfaces (0.0.0.0).
 FROM collect_assets AS serve_application
 
 WORKDIR /home/smarter_user/smarter
 USER smarter_user
-CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:9357"]
+CMD ["uvicorn", "smarter.asgi:application", "--host", "0.0.0.0", "--port", "9357", "--workers", "2"]
 EXPOSE 8000

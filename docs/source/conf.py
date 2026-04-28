@@ -35,9 +35,30 @@ if not smarter_settings.environment:
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.local"
 
 import django
+from sphinxcontrib_django.docstrings import classes, field_utils
 
 django.setup()
 
+
+_original_get_field_type = field_utils.get_field_type
+
+
+def safe_get_field_type(field, include_role=True):
+
+    try:
+        rel = getattr(field, "remote_field", None)
+        to = getattr(rel, "model", None) if rel else None
+        if to is None:
+            return "Unknown"
+        return _original_get_field_type(field, include_role=include_role)
+    # pylint: disable=broad-except
+    except Exception:
+        return "Unknown"
+
+
+# patch BOTH
+field_utils.get_field_type = safe_get_field_type
+classes.get_field_type = safe_get_field_type
 
 project = "Smarter Documentation"
 
@@ -116,3 +137,7 @@ autodoc_mock_imports = [
     "django.template.loader",
     "django.utils",
 ]
+autodoc_type_aliases = {
+    "pydantic.types.JsonValue": "JsonValue",
+    "JsonValue": "JsonValue",
+}

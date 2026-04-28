@@ -17,6 +17,7 @@ from rest_framework import serializers
 from smarter.apps.account.models import (
     Account,
     MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
     User,
     UserProfile,
 )
@@ -148,6 +149,8 @@ class ChatBotCustomDomain(MetaDataWithOwnershipModel):
 
     class Meta:
         verbose_name_plural = "ChatBot Custom Domains"
+
+    objects: MetaDataWithOwnershipModelManager["ChatBotCustomDomain"] = MetaDataWithOwnershipModelManager()
 
     #: The AWS Hosted Zone ID associated with this custom domain. This ID is used for DNS management via AWS Route 53.
     #: Example: "Z1234567890ABCDEF"
@@ -293,12 +296,14 @@ def validate_provider(value):
     :returns: None
     """
     # pylint: disable=C0415
-    from smarter.apps.prompt.providers.providers import chat_providers
+    from smarter.apps.provider.services.text_completion.providers import (
+        smarter_compatible_client,
+    )
 
-    if not value in chat_providers.all:
+    if not value in smarter_compatible_client.all:
         raise ValidationError(
             "%(value)s is not a valid provider. Valid providers are: %(providers)s",
-            params={"value": value, "providers": str(chat_providers.all)},
+            params={"value": value, "providers": str(smarter_compatible_client.all)},
         )
 
 
@@ -389,6 +394,8 @@ class ChatBot(MetaDataWithOwnershipModel):
         REQUESTED = "Requested", "Requested"
         ISSUED = "Issued", "Issued"
         FAILED = "Failed", "Failed"
+
+    # objects: MetaDataWithOwnershipModelManager["ChatBot"] = MetaDataWithOwnershipModelManager()
 
     #: The subdomain DNS record associated with this ChatBot.
     #: Example: ChatBotCustomDomainDNS(id=1, domain="my-chatbot.example.com")
@@ -711,7 +718,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         # pylint: disable=C0415
         from smarter.apps.prompt.urls import PromptReverseViews
 
-        path = reverse(f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_landing_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        path = reverse(f"{PromptReverseViews.namespace}:{PromptReverseViews.landing_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url
@@ -914,12 +921,14 @@ class ChatBot(MetaDataWithOwnershipModel):
     @classmethod
     def get_cached_object(
         cls,
+        *args,
         invalidate: Optional[bool] = False,
         pk: Optional[int] = None,
         name: Optional[str] = None,
         user: Optional[User] = None,
         user_profile: Optional[UserProfile] = None,
         account: Optional[Account] = None,
+        **kwargs,
     ) -> "ChatBot":
         """
         Retrieve a model instance using caching to optimize performance.
@@ -957,7 +966,7 @@ class ChatBot(MetaDataWithOwnershipModel):
             invalidate,
         )
 
-        retval = super().get_cached_object(invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account)  # type: ignore[assignment]
+        retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, user=user, user_profile=user_profile, account=account, **kwargs)  # type: ignore[assignment]
         if retval is None:
             raise ChatBot.DoesNotExist(f"{cls.__name__} matching query does not exist.")
         return retval  # type: ignore[return-value]
@@ -992,9 +1001,9 @@ class ChatBot(MetaDataWithOwnershipModel):
             user_profile_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["ChatBot"]:
             return (
-                cls.objects.prefetch_related("tags")
+                cls.objects.with_read_permission_for(user=user_profile.user)  # type: ignore
+                .prefetch_related("tags")
                 .select_related("user_profile", "user_profile__account", "user_profile__user")
-                .filter(user_profile_id=user_profile_id)
             )
 
         if invalidate and user_profile:
@@ -1320,9 +1329,7 @@ class ChatBotPlugin(TimestampedModel):
         user_profile = UserProfile.get_cached_object(invalidate=False, user=admin_user)
         loader = SAMLoader(manifest=data)
         manifest = SAMPluginCommon(**loader.json_data)  # type: ignore[call-arg]
-        plugin_controller = PluginController(
-            account=chatbot.user_profile.cached_account, user=admin_user, user_profile=user_profile, manifest=manifest
-        )
+        plugin_controller = PluginController(user_profile=user_profile, manifest=manifest)
         plugin = plugin_controller.plugin
         if not plugin or plugin.plugin_meta is None:
             raise SmarterValueError("ChatBotPlugin.load() failed to load plugin from data file")
@@ -1354,10 +1361,8 @@ class ChatBotPlugin(TimestampedModel):
         retval = []
         for chatbot_plugin in chatbot_plugins:
             plugin_controller = PluginController(
-                account=chatbot.user_profile.cached_account,
-                user=admin_user,
-                plugin_meta=chatbot_plugin.plugin_meta,
                 user_profile=user_profile,
+                plugin_meta=chatbot_plugin.plugin_meta,
             )
             if not plugin_controller or not plugin_controller.plugin:
                 raise SmarterValueError(

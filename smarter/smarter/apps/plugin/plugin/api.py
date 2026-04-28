@@ -17,7 +17,7 @@ A PLugin that uses a remote REST API server to retrieve its return data
     :language: yaml
     :caption: 1.) Example Smarter Secret Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/sample-connections/smarter-test-api.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-api.yaml
     :language: yaml
     :caption: 2.) Example Smarter API Connection Manifest
 
@@ -37,6 +37,7 @@ from typing import Any, Optional, Type, Union
 
 from django.core.exceptions import MultipleObjectsReturned
 
+from smarter.apps.connection.models import ApiConnection
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
@@ -65,7 +66,7 @@ from smarter.apps.plugin.manifest.models.common.plugin.spec import (
 from smarter.apps.plugin.manifest.models.common.plugin.status import (
     SAMPluginCommonStatus,
 )
-from smarter.apps.plugin.models import ApiConnection, PluginDataApi, PluginMeta
+from smarter.apps.plugin.models import PluginDataApi, PluginMeta
 from smarter.apps.plugin.serializers import PluginApiSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
@@ -723,7 +724,7 @@ class ApiPlugin(PluginBase):
         :raises SmarterConfigurationError: If the plugin is not ready.
         :raises NotImplementedError: If the method is not implemented in a subclass.
         """
-        if not self.user.is_staff:
+        if not self.user or not self.user.is_staff:
             raise SmarterApiPluginError("Only account admins can apply static plugins.")
 
         if not self.ready:

@@ -35,7 +35,7 @@
 			<!--end::sidebar mobile toggle-->
 			<!--begin::Mobile logo-->
 			<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
-				<a href="{% url 'root_home' %}" class="d-lg-none">
+				<a href="{% url 'console_home' %}" class="d-lg-none">
 					<img alt="Logo" src="{{ branding.cdn_logo_url }}"
 						class="theme-light-show h-60px" />
 					<img alt="Logo" src="{{ branding.cdn_logo_url }}"
@@ -266,7 +266,7 @@
 			<!--begin::Logo-->
 			<div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
 				<!--begin::Logo image-->
-				<a href="{% url 'root_home' %}">
+				<a href="{% url 'console_home' %}">
 					<img alt="Logo" src="{{ branding.cdn_logo_url }}"
 						class="h-75px app-sidebar-logo-default" />
 				</a>
@@ -330,7 +330,7 @@
                                 <!--begin:Menu item Workbench -->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="{% url 'prompt_workbench:listview' %}" target="_self">
+									<a class="menu-link" href="{% url 'prompt:listview' %}" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-message-programming fs-2">
 												<span class="path1"></span>
@@ -347,9 +347,9 @@
                                 <!--begin:Menu item Apply -->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="{% url 'prompt_workbench:apply' %}" target="_self">
+									<a class="menu-link" href="{% url 'dashboard:manifest_drop_zone_view' %}" target="_self">
 										<span class="menu-icon">
-											<i class="ki-duotone ki-add-files fs-2">
+											<i class="ki-duotone ki-gear fs-2">
 												<span class="path1"></span>
 												<span class="path2"></span>
 												<span class="path3"></span>
@@ -361,12 +361,49 @@
 								</div>
 								<!--end:Menu item Apply -->
 
+                                <!--begin:Menu item Prompt Passthrough -->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="{% url 'dashboard:prompt_passthrough_view' %}" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-code fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Prompt Passthrough</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item Prompt Passthrough -->
+
+                                <!--begin:Menu item Server Logs -->
+                                {% if dashboard.is_enabled_server_logs %}
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="{% url 'dashboard:terminal_emulator_log_view' %}" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-archive fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Server Logs</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+                                {% endif %}
+								<!--end:Menu item Server Logs -->
+
+
                                 <!--begin:Menu item Providers -->
 								<div class="menu-item">
 									<!--begin:Menu link-->
 									<a class="menu-link" href="{% url 'provider:provider_listview' %}" target="_self">
 										<span class="menu-icon">
-											<i class="ki-duotone ki-gear fs-2">
+											<i class="ki-duotone ki-shop fs-2">
 												<span class="path1"></span>
 												<span class="path2"></span>
 												<span class="path3"></span>
@@ -407,7 +444,7 @@
                                 <!--begin:Menu item Connections -->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="{% url 'plugin:connection_listview' %}" target="_self">
+									<a class="menu-link" href="{% url 'connection:connection_listview' %}" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-password-check fs-2">
 												<span class="path1"></span>
@@ -424,7 +461,7 @@
                                 <!--begin:Menu item Secrets -->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="{% url 'account:dashboard_account_secrets' %}" target="_self">
+									<a class="menu-link" href="{% url 'secret:dashboard_secrets' %}" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-lock fs-2">
 												<span class="path1"></span>
@@ -436,7 +473,27 @@
 									</a>
 									<!--end:Menu link-->
 								</div>
-								<!--end:Menu item-->
+								<!--end:Menu item Secrets -->
+
+                                <!--begin:Menu item Vectorstores -->
+                                {% if dashboard.is_vectorstore_enabled %}
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="{% url 'vectorstore:list_view' %}" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-data fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Vectorstores</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+                                {% endif %}
+								<!--end:Menu item Vectorstores -->
+
 
                                 <!--begin:Menu item Api Keys -->
 								<div class="menu-item">
@@ -458,7 +515,7 @@
                                 <!--begin:Menu item Custom Domains -->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="{% url 'plugin:connection_listview' %}" target="_self">
+									<a class="menu-link" href="{% url 'connection:connection_listview' %}" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-arrow-circle-right fs-2">
 												<span class="path1"></span>

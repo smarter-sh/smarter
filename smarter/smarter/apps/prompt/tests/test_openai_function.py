@@ -18,17 +18,19 @@ from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
-from smarter.apps.prompt.providers.const import OpenAIMessageKeys
-from smarter.common.utils import get_readonly_yaml_file
-
-from ..models import Chat, ChatHistory, ChatPluginUsage
-from ..providers.providers import chat_providers
-from ..signals import (
+from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage
+from smarter.apps.prompt.signals import (
     chat_completion_response,
     chat_finished,
     chat_response_failure,
     chat_started,
 )
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.apps.provider.services.text_completion.providers import (
+    smarter_compatible_client,
+)
+from smarter.common.utils import get_readonly_yaml_file
+
 from ..tests.test_setup import get_test_file, get_test_file_path
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -38,7 +40,7 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 CELERY_WAIT = 1
 
-handler = chat_providers.openai_handler
+handler = smarter_compatible_client.openai_handler
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -97,8 +99,6 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
 
         plugin_controller = PluginController(
             user_profile=self.user_profile,
-            account=self.account,
-            user=self.admin_user,
             manifest=plugin_data,
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -270,7 +270,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         # TODO: THIS SELECTION CRITERIA IS PATHETIC.
         chat = ChatHistory.objects.order_by("-id").first()
         self.assertIsNotNone(chat)
-        url = reverse("prompt_workbench:api:v1:chathistory", kwargs={"pk": chat.id})
+        url = reverse("prompt:api:v1:chathistory", kwargs={"pk": chat.id})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)

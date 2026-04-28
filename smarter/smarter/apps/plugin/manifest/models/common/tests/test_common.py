@@ -2,8 +2,6 @@
 
 import logging
 
-from pydantic_core import ValidationError as PydanticValidationError
-
 from smarter.apps.plugin.manifest.models.common import (
     Parameter,
     ParameterType,
@@ -12,7 +10,6 @@ from smarter.apps.plugin.manifest.models.common import (
     UrlParam,
 )
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 logger = logging.getLogger(__name__)

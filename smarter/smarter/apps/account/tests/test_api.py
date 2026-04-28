@@ -7,19 +7,17 @@ from http import HTTPStatus
 from django.test import Client
 from django.urls import reverse
 
-from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # our stuff
-from ..models import PaymentMethod
 from .mixins import TestAccountMixin
 
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and waffle.switch_is_active(
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) or waffle.switch_is_active(
         SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 
@@ -36,16 +34,6 @@ class TestUrls(TestAccountMixin):
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        self.payment_method = PaymentMethod.objects.create(
-            account=self.account,
-            name="Test Payment Method",
-            stripe_id="1234567890",
-            card_type="visa",
-            card_last_4="1234",
-            card_exp_month="12",
-            card_exp_year="2024",
-            is_default=True,
-        )
         self.client = Client()
         self.client.force_login(self.admin_user)
 
@@ -55,12 +43,6 @@ class TestUrls(TestAccountMixin):
             self.client.logout()
 
         self.client = None
-        try:
-            self.payment_method.delete()
-
-        # pylint: disable=W0718
-        except Exception:
-            pass
 
         super().tearDown()
 
@@ -149,70 +131,3 @@ class TestUrls(TestAccountMixin):
         self.assertIsInstance(json_data, dict)
         self.assertEqual(json_data.get("email"), self.admin_user.email)
         self.assertEqual(json_data.get("username"), self.admin_user.username)
-
-    def test_account_payment_methods(self):
-        """test that we can see the payment methods associated with an account."""
-        response = self.client.get(reverse(self.namespace + "account_payment_methods_list_view"))
-
-        redirect_url = response.get("Location")
-        msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
-        self.assertEqual(response.status_code, HTTPStatus.OK, msg=msg)
-
-        json_data = response.json()
-        logger.info("test_account_payment_methods json_data: %s", json_data)
-        output = [
-            {
-                "id": 443,
-                "createdAt": "2025-05-23T14:56:21.572330Z",
-                "updatedAt": "2025-05-23T14:56:21.572342Z",
-                "name": "Test Payment Method",
-                "stripeId": "1234567890",
-                "cardType": "visa",
-                "cardLast4": "1234",
-                "cardExpMonth": "12",
-                "cardExpYear": "2024",
-                "isDefault": True,
-                "account": 5437,
-            }
-        ]
-
-        self.assertIsInstance(json_data, list)
-        for payment_method in json_data:
-            if payment_method.get("name") == self.payment_method.name:
-                self.assertEqual(payment_method.get("cardType"), self.payment_method.card_type)
-                break
-            self.fail("payment method not found in list")
-
-    def test_account_payment_methods_index(self):
-        """test that we can see the payment methods associated with an account."""
-        response = self.client.get(
-            reverse(self.namespace + "account_payment_method_view", args=[str(self.payment_method.id)])
-        )
-
-        redirect_url = response.get("Location")
-        msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
-        self.assertEqual(response.status_code, HTTPStatus.OK, msg=msg)
-
-        json_data = response.json()
-        logger.info("test_account_payment_methods_index json_data: %s", json_data)
-        output = {
-            "id": 444,
-            "createdAt": "2025-05-23T14:56:21.853593Z",
-            "updatedAt": "2025-05-23T14:56:21.853610Z",
-            "name": "Test Payment Method",
-            "stripeId": "1234567890",
-            "cardType": "visa",
-            "cardLast4": "1234",
-            "cardExpMonth": "12",
-            "cardExpYear": "2024",
-            "isDefault": True,
-            "account": 5437,
-        }
-        self.assertTrue(type(json_data) in (list, dict))
-
-        self.assertEqual(json_data.get("name"), self.payment_method.name)
-        self.assertEqual(json_data.get("cardType"), self.payment_method.card_type)
-        self.assertEqual(json_data.get("cardLast4"), self.payment_method.card_last_4)
-        self.assertEqual(json_data.get("cardExpMonth"), self.payment_method.card_exp_month)
-        self.assertEqual(json_data.get("cardExpYear"), self.payment_method.card_exp_year)
-        self.assertEqual(json_data.get("isDefault"), self.payment_method.is_default)

@@ -233,7 +233,7 @@ This div is rendered by the Django template engine from the template above,
 and all of its attributes are generated from the context variable created in
 `ChatAppWorkbenchView.dispatch() <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/views.py#L639>`__. See below.
 
-.. literalinclude:: ../../../smarter/smarter/apps/prompt/views.py
+.. literalinclude:: ../../../smarter/smarter/apps/prompt/views/views.py
   :language: python
   :lines: 750-775
 

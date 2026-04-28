@@ -6,7 +6,6 @@ import logging
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
-from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

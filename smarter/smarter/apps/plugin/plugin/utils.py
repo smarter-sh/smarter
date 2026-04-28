@@ -72,8 +72,6 @@ class Plugins:
         for plugin in PluginMeta.objects.filter(user_profile=self.user_profile):
             plugin_controller = PluginController(
                 user_profile=self.user_profile,
-                account=self.account,
-                user=user,
                 plugin_meta=plugin,
             )
             if not plugin_controller or not plugin_controller.plugin:
@@ -87,8 +85,6 @@ class Plugins:
         for plugin in PluginMeta.objects.filter(user_profile=smarter_admin_user_profile):
             plugin_controller = PluginController(
                 user_profile=smarter_admin_user_profile,
-                account=smarter_admin_user_profile.account,
-                user=smarter_admin_user_profile.user,
                 plugin_meta=plugin,
             )
             if not plugin_controller or not plugin_controller.plugin:

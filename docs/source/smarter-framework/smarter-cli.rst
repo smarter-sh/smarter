@@ -88,7 +88,7 @@ Related API endpoints
 Manifest Spec
 -------------
 
-See :doc:`Smarter Manifest Specification <pydantic/smarter-manifests>`
+See :doc:`Smarter Manifest Specification <smarter-manifests>`
 
 
 Kind
@@ -105,7 +105,7 @@ Kind
 - `SqlConnection <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
 - `ApiConnection <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
 - `User <../smarter/smarter/apps/account/api/v1/manifests/>`__
-- `Secret <../smarter/smarter/apps/account/api/v1/manifests/>`__
+- `Secret <../smarter/smarter/apps/secret/api/v1/manifests/>`__
 
 Broker Model
 ~~~~~~~~~~~~

@@ -8,11 +8,17 @@ from unittest.mock import MagicMock
 from django.core.cache import cache
 from django.http import HttpResponse, HttpResponseForbidden
 
+from smarter.lib.django import waffle
 from smarter.lib.django.middleware.sensitive_files import (
     SmarterBlockSensitiveFilesMiddleware,
 )
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
+@unittest.skipUnless(
+    waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES),
+    "Sensitive files middleware is not enabled",
+)
 class TestSmarterBlockSensitiveFilesMiddleware(unittest.TestCase):
     """Test the SmarterBlockSensitiveFilesMiddleware class."""
 

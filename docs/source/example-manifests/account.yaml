@@ -1,29 +1,25 @@
 apiVersion: smarter.sh/v1
 kind: Account
 metadata:
-  accountNumber: 1234-5678-9012
-  description: an example Account manifest
-  name: Example_account
+  accountNumber: 1853-6300-0000
+  description: AI Workflow Automation 2: Workflow Tools 2025W2 TCAIT_VX 0520 001 (April 14 to 27, 2026 DAP20)
+  name: dap20_185363
   version: 1.0.0
   tags:
-    - example
-    - demo
-    - test
+    - dap20
+    - ubc
   annotations:
-    - smarter.sh/contact/usage: for testing and demonstration purposes only
     - smarter.sh/contact/creator: Lawrence McDaniel
-    - smarter.sh/contact/priority: low
-
 spec:
   config:
     address1: 1 Main St
     address2: Suite 100
     city: Cambridge
-    companyName: Humble Geniuses, Inc.
-    country: USA
-    currency: USD
+    companyName: DAP20 - 185363
+    country: CAN
+    currency: CAD
     language: en-US
-    phoneNumber: 617-555-1212
+    phoneNumber: 617-834-6172
     postalCode: 02139
     state: MA
     timezone: America/New_York

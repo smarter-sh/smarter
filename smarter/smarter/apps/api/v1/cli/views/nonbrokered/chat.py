@@ -16,8 +16,8 @@ from rest_framework.request import Request
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.prompt.models import Chat, ChatHistory
-from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.apps.prompt.views import ChatConfigView
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError
@@ -583,7 +583,8 @@ This is a Non-brokered operation.
 
         # validate the chatbot name, as this is the most likely point of failure
         try:
-            ChatBot.objects.get(name=name, account=self.account)
+            if not ChatBot.objects.filter(name=name).with_read_permission_for(self.request.user).exists():  # type: ignore
+                raise ChatBot.DoesNotExist()
         except ChatBot.DoesNotExist as e:
             return SmarterJournaledJsonErrorResponse(
                 request=request,

@@ -78,7 +78,7 @@ class Command(SmarterCommand):
             )
             return
         manifest = SAMStaticPlugin(**loader.pydantic_model_dump())
-        controller = PluginController(account=account, user=user, user_profile=user_profile, manifest=manifest)  # type: ignore
+        controller = PluginController(user_profile=user_profile, manifest=manifest)  # type: ignore
         plugin = controller.obj
 
         if plugin and plugin.ready:

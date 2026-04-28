@@ -43,7 +43,7 @@ The cli is designed to work with a manifest utf-8 text document, in yaml or json
 - [SqlConnection](../smarter/smarter/apps/plugin/api/v1/manifests/)
 - [ApiConnection](../smarter/smarter/apps/plugin/api/v1/manifests/)
 - [User](../smarter/smarter/apps/account/api/v1/manifests/)
-- [Secret](../smarter/smarter/apps/account/api/v1/manifests/)
+- [Secret](../smarter/smarter/apps/secret/api/v1/manifests/)
 
 ### Broker Model
 

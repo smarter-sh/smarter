@@ -74,6 +74,8 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
         """Return default kwargs for broker methods."""
         if not self.ready:
             raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before ready state")
+        if not self.broker.manifest:
+            raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before manifest is set")
         return {
             SAMMetadataKeys.NAME.value: self.broker.manifest.metadata.name,
         }
@@ -104,25 +106,25 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
         """Test that the broker instance is immutable after initialization."""
 
         with self.assertRaises(AttributeError):
-            self.broker.kind = "NewKind"
+            self.broker.kind = "NewKind"  # type: ignore
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.name = "NewManifestName"
+            self.broker.manifest.metadata.name = "NewManifestName"  # type: ignore
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.annotations = []
+            self.broker.manifest.metadata.annotations = []  # type: ignore
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.tags = []
+            self.broker.manifest.metadata.tags = []  # type: ignore
 
         # test any field in spec.config
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.companyName = "New Company Name"
+            self.broker.manifest.spec.config.companyName = "New Company Name"  # type: ignore
 
         # test any field in status
-        if self.broker.manifest.status:
+        if self.broker.manifest.status:  # type: ignore
             with self.assertRaises(ValidationError):
-                self.broker.manifest.status.adminAccount = None
+                self.broker.manifest.status.adminAccount = None  # type: ignore
 
     def test_ready(self):
         """Test that the test setup is ready."""
@@ -169,7 +171,7 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
 
     def test_manifest_model_initialization(self):
         """Test that the manifest property can initialize a SAMSmarterAuthToken model."""
-        sam_account = SAMSmarterAuthToken(**self.broker.manifest.model_dump())
+        sam_account = SAMSmarterAuthToken(**self.broker.manifest.model_dump())  # type: ignore
         self.assertIsInstance(sam_account, SAMSmarterAuthToken)
 
     def test_formatted_class_name(self):
@@ -258,6 +260,11 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
         def sort_annotations(annotations):
             return sorted(annotations, key=lambda d: sorted(d.items()))
 
+        if not self.broker.manifest:
+            self.fail("Broker manifest is not set. Cannot compare annotations.")
+        if not self.broker.smarter_auth_token:
+            self.fail("Broker smarter_auth_token is not set. Cannot compare annotations.")
+
         manifest_annotations = json.dumps(sort_annotations(self.broker.manifest.metadata.annotations or []))
         account_annotations = json.dumps(sort_annotations(self.broker.smarter_auth_token.annotations or []))
         self.assertEqual(
@@ -294,7 +301,6 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
 
     def test_delete(self):
         """Stub: test delete method."""
-        pass
 
     def test_deploy(self):
         """
@@ -321,22 +327,24 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
         with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.chat(self.request, **self.kwargs)  # type: ignore
 
+    # pylint: disable=W0212
     def test_delete_smarter_auth_token_not_found(self):
         """
         test delete method raises not found for missing smarter_auth_token.
         """
-        self.request._body = None  # pylint: disable=protected-access
+        self.request._body = None  # type: ignore
         self._broker = self.SAMBrokerClass(self.request)
 
         with self.assertRaises(SAMBrokerErrorNotReady):
             self.broker.delete(self.request, {"name": "nonexistent-smarter_auth_token"})  # type: ignore
 
+    # pylint: disable=W0212
     def test_describe_smarter_auth_token_not_found(self):
         """
         Test describe method raises not found for missing smarter_auth_token.
         """
         request = self.request
-        request._body = None  # pylint: disable=protected-access
+        request._body = None  # type: ignore
         self._broker = self.SAMBrokerClass(request)
         with self.assertRaises(SAMBrokerErrorNotFound):
             self.broker.describe(request, {"name": "nonexistent-smarter_auth_token"})  # type: ignore
@@ -352,25 +360,40 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
         # Modify the manifest to have an invalid timezone
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.timezone = "Invalid/Timezone"
+            self.broker.manifest.spec.config.timezone = "Invalid/Timezone"  # type: ignore
 
     def test_invalid_currency(self):
         """Test that applying a manifest with an invalid currency raises an error."""
         # Modify the manifest to have an invalid currency
 
+        if not self.broker.manifest or not self.broker.manifest.spec or not self.broker.manifest.spec.config:
+            self.fail(
+                "Broker manifest or manifest spec or manifest spec config is not set. Cannot modify currency for test."
+            )
+
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.currency = "INVALID"
+            self.broker.manifest.spec.config.currency = "INVALID"  # type: ignore
 
     def test_invalid_language(self):
         """Test that applying a manifest with an invalid language raises an error."""
         # Modify the manifest to have an invalid language
 
+        if not self.broker.manifest or not self.broker.manifest.spec or not self.broker.manifest.spec.config:
+            self.fail(
+                "Broker manifest or manifest spec or manifest spec config is not set. Cannot modify language for test."
+            )
+
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.language = "xx-XX"
+            self.broker.manifest.spec.config.language = "xx-XX"  # type: ignore
 
     def test_invalid_country(self):
         """Test that applying a manifest with an invalid country raises an error."""
         # Modify the manifest to have an invalid country
 
+        if not self.broker.manifest or not self.broker.manifest.spec or not self.broker.manifest.spec.config:
+            self.fail(
+                "Broker manifest or manifest spec or manifest spec config is not set. Cannot modify country for test."
+            )
+
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.country = "XX"
+            self.broker.manifest.spec.config.country = "XX"  # type: ignore

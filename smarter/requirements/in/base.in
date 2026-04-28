@@ -11,11 +11,14 @@
 
 # General back end
 # ------------
+whitenoise                              # general asset compression for both asgi and wsgi, and static file serving for wsgi
 boto3                                   # AWS CLI SDK
 botocore                                # AWS CLI SDK core
 cachetools                              # Python object caching library
 celery                                  # asynchronous task queue. works with redis.
 celery-redbeat                          # scheduled asynchronous tasks
+channels                                # web socket support for Django ASGI
+channels-redis                          # Redis ASGI support
 dnspython                               # DNS toolkit for Python
 mysqlclient                             # MySQL client
 paramiko                                # SSH2 protocol library
@@ -32,39 +35,46 @@ pycountry                               # ISO country, subdivision, language, cu
 
 # Django
 # ------------
-Django~=5.0
+Django
 django-debug-toolbar                    # a configurable set of panels that display various debug information about the current request/response.
                                         # We need this in base so that we can toggle DEBUG_MODE.
-django-redis~=6.0                       # object caching
+django-redis                            # object caching
 django-celery-beat                      # scheduled asynchronous tasks
-djangorestframework~=3.0                # for creating REST APIs on top of Django
+djangorestframework                     # for creating REST APIs on top of Django
 django-filter                           # REST API filtering
-django-hosts~=7.0                       # Dynamic and static host resolving for Django. Maps hostnames to URLconfs.
-django-taggit~=6.0                      # Smarter Plugin tagging
-django-rest-knox~=5.0                   # Token authentication for REST APIs
-django-cors-headers~=4.0                # Cross-origin resource sharing
+django-hosts                            # Dynamic and static host resolving for Django. Maps hostnames to URLconfs.
+django-taggit                           # Smarter Plugin tagging
+django-rest-knox                        # Token authentication for REST APIs
+django-cors-headers                     # Cross-origin resource sharing
 django-storages                         # Django storage subsystem
-django-waffle~=5.0                      # Feature flagging
+django-waffle                           # Feature flagging
 social-auth-app-django                  # Social authentication for Django
 
 # Manifest support, and for working with data
 # ------------
-pandas~=2.0                             # Data manipulation for data science stuff
+pandas                                  # Data manipulation for data science stuff
 pydantic                                # best data validation library ever!
-pydantic-settings~=2.0                  # settings management
+pydantic-settings                       # settings management
 email-validator                         # Pydantic email validator for EmailStr
+pint                                    # Define, operate and manipulate physical quantities:
 
 # LLM support
 # ------------
-openai~=1.0                             # OpenAI API
+langchain~=1.2.0                        # -----------------------------
+langchain_community                     # for pinecone vectorstore backend
+langchain_openai                        #
+langchain_pinecone                      #
+langchain-text-splitters                # -----------------------------
+openai~=2.31.0                          # OpenAI API
+pinecone                                # Pinecone vector database support
 google-genai                            # Google Generative AI API
 llamaai                                 # Llama AI API
-googlemaps~=4.0                         # Google Maps API for weather function calling feature
-openmeteo-requests~=1.0                 # OpenMeteo API for weather data for weather function calling feature
+googlemaps                              # Google Maps API for weather function calling feature
+openmeteo-requests                      # OpenMeteo API for weather data for weather function calling feature
 
 # Natural language processing
 # ------------
-pyyaml~=6.0                             # YAML parser
+pyyaml                                  # YAML parser
 python-Levenshtein                      # Levenshtein distance calculation for LLMs
 nltk~=3.0                               # Natural Language Toolkit
 textblob                                # Text processing library
@@ -72,10 +82,9 @@ inflect                                 # Pluralization and singularization
 
 # CMS and web publishing tools
 # ------------
-beautifulsoup4~=4.0                     # HTML parser for Wagtail page compression
+beautifulsoup4                          # HTML parser for Wagtail page compression
 docutils                                # required by Django for django.contrib.admindocs
-drf-yasg~=1.0                           # Swagger API documentation
-lxml~=6.0                               # parser for Wagtail page compression
-markdown~=3.0                           # Markdown reader/parser
-whitenoise~=6.0                         # static file serving
-pillow~=11.0                            # for provider.Provider.logo:
+drf-yasg                                # Swagger API documentation
+lxml                                    # parser for Wagtail page compression
+markdown                                # Markdown reader/parser
+pillow                                  # for provider.Provider.logo:

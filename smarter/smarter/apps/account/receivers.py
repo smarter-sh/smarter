@@ -4,7 +4,6 @@
 import logging
 
 from django.contrib.auth.signals import user_logged_in
-from django.core import serializers
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
@@ -17,17 +16,9 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import AbstractBroker
 
-from .manifest.transformers.secret import SecretTransformer
-from .models import Account, Charge, DailyBillingRecord, Secret, User, UserProfile
+from .models import Account, Charge, DailyBillingRecord, User, UserProfile
 from .signals import (
     broker_ready,
-    secret_accessed,
-    secret_created,
-    secret_deleted,
-    secret_inializing,
-    secret_ready,
-    secret_saved,
-    secret_updated,
 )
 from .utils import get_cached_default_account
 
@@ -52,12 +43,15 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
       if not, create one with the default account.
     """
     logger.info("%s User logged in: %s", formatted_text(f"{module_prefix}.user_logged_in()"), user)
-    user_profile = UserProfile.get_cached_object(user=user)
-    if not user_profile:
-        logger.warning("User profile not found for user: %s", user)
+    try:
+        UserProfile.objects.get(user=user)
+    except UserProfile.DoesNotExist:
         account = get_cached_default_account()
-        user_profile = UserProfile.objects.create(name=user.username, user=user, account=account)
+        UserProfile.objects.create(name=user.username, user=user, account=account)
         logger.info("Created UserProfile for user: %s with default account: %s", user, account)
+    except UserProfile.MultipleObjectsReturned:
+        # this is fine. the same user can have multiple UserProfiles if they belong to multiple accounts
+        pass
 
 
 @receiver(post_save, sender=User)
@@ -78,6 +72,9 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
         user_profile = UserProfile.get_cached_object(user=instance)
         cache_invalidations(user_profile=user_profile)
     except UserProfile.DoesNotExist:
+        pass
+    except UserProfile.MultipleObjectsReturned:
+        # this is fine. the same user can have multiple UserProfiles if they belong to multiple accounts
         pass
 
 
@@ -160,136 +157,6 @@ def daily_billing_record_post_save(sender: DailyBillingRecord, instance: DailyBi
         formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
         daily_billing_record_json,
         created,
-    )
-
-
-@receiver(post_save, sender=Secret)
-def secret_post_save(sender: Secret, instance: Secret, created, **kwargs):
-    """Signal receiver for created/saved of Secret model."""
-    secret_json = json.dumps(model_to_dict(instance))
-    logger.info(
-        "%s Secret: %s, id: %s created: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.secret_post_save()"),
-        secret_json,
-        instance.id,  # type: ignore
-        created,
-        instance.user_profile,
-    )
-
-
-@receiver(post_delete, sender=Secret)
-def secret_post_delete(sender: Secret, instance: Secret, **kwargs):
-    """Signal receiver for deleted of Secret model."""
-    logger.info(
-        "%s Secret: %s, id: %s",
-        formatted_text(f"{module_prefix}.secret_post_delete()"),
-        instance,
-        instance.id,  # type: ignore
-    )
-
-
-@receiver(secret_created)
-def secret_created_receiver(sender, secret: Secret, **kwargs):
-    """Signal receiver for secret_created signal."""
-    logger.info(
-        "%s.%s Secret: %s id: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.secret_created()"),
-        type(sender),
-        str(secret),
-        secret.id,  # type: ignore
-        secret.user_profile,
-    )
-
-
-@receiver(secret_deleted)
-def secret_deleted_receiver(sender, secret_id, secret_name, **kwargs):
-    """Signal receiver for secret_deleted signal."""
-    logger.info(
-        "%s.%s Secret: %s, name: %s",
-        formatted_text(f"{module_prefix}.secret_deleted()"),
-        type(sender),
-        secret_id,
-        secret_name,
-    )
-
-
-@receiver(secret_ready)
-def secret_ready_receiver(sender, secret: SecretTransformer, **kwargs):
-    """Signal receiver for secret_ready signal."""
-    logger.info(
-        "%s.%s Secret: %s, id: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.secret_ready()"),
-        type(sender),
-        str(secret),
-        secret.id,
-        secret.user_profile,
-    )
-
-
-@receiver(secret_accessed)
-def secret_accessed_receiver(sender, secret: Secret, user_profile: UserProfile, **kwargs):
-    """Signal receiver for secret_accessed signal."""
-    logger.info(
-        "%s.%s Secret: %s, id: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.secret_accessed()"),
-        type(sender),
-        str(secret),
-        secret.id,  # type: ignore
-        user_profile,
-    )
-
-
-@receiver(secret_inializing)
-def secret_inializing_receiver(sender, secret_name: str, user_profile: UserProfile, **kwargs):
-    """Signal receiver for secret_inializing signal."""
-    logger.info(
-        "%s.%s name: %s, user_profile: %s",
-        formatted_text(f"{module_prefix}.secret_inializing()"),
-        type(sender),
-        secret_name,
-        user_profile,
-    )
-
-
-@receiver(secret_saved)
-def secret_saved_receiver(sender, secret: SecretTransformer, user_profile: UserProfile, **kwargs):
-    """Signal receiver for secret_saved signal."""
-    if not secret.secret:
-        raise ValueError("secret.secret is None in secret_saved_receiver")
-
-    json_data = serializers.serialize("json", [secret.secret])
-    tags = list(secret.secret.tags_list) if secret and hasattr(secret.secret, "tags") else []
-
-    logger.info(
-        "%s.%s Secret: %s, id: %s, user_profile: %s, dump: %s, tags: %s",
-        formatted_text(f"{module_prefix}.secret_saved()"),
-        type(sender),
-        str(secret),
-        secret.id,
-        user_profile,
-        json_data,
-        tags,
-    )
-
-
-@receiver(secret_updated)
-def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: UserProfile, **kwargs):
-    """Signal receiver for secret_updated signal."""
-    if not secret.secret:
-        raise ValueError("secret.secret is None in secret_updated_receiver")
-
-    json_data = serializers.serialize("json", [secret.secret])
-    tags = list(secret.secret.tags_list) if secret and hasattr(secret.secret, "tags") else []
-
-    logger.info(
-        "%s.%s secret_updated signal received. instance: %s, id: %s, user_profile: %s, dump: %s, tags: %s",
-        formatted_text(f"{module_prefix}.secret_updated()"),
-        type(sender),
-        str(secret),
-        secret.id,
-        user_profile,
-        json_data,
-        tags,
     )
 
 
