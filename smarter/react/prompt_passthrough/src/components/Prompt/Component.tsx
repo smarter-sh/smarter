@@ -20,24 +20,45 @@
 import { useState } from "react";
 import type * as monaco from "monaco-editor";
 import Editor from "@monaco-editor/react";
-import Toolbar from "../Toolbar/Component";
-import LLMProviderSelector from "../LLMProviderSelector";
-import TemplateSelector from "../TemplateSelector/Component";
-import Response from "../Response";
+import Toolbar from "@/components/Toolbar";
+import LLMProviderSelector from "@/components/LLMProviderSelector";
+import TemplateSelector from "@/components/TemplateSelector/";
+import Response from "@/components/Response";
 import getTemplateJson from "./templates";
-import getApiUrl, {getSmarterApiUrlSlug} from "./llmApis";
-import { getCookie } from "./cookie";
+import getApiUrl, { getSmarterApiUrlSlug } from "./llmApis";
+import getCookie from "@/lib/cookie";
+import fetchDjangoUrl from "@/lib/django";
 
 import "./styles.css";
 
-
-function Prompt({ apiUrl, csrfCookieName, csrftoken, djangoSessionCookieName, cookieDomain, defaultLLMProviderId, defaultTemplateId }: { apiUrl: string; csrfCookieName: string; csrftoken: string; djangoSessionCookieName: string; cookieDomain: string; defaultLLMProviderId: string | undefined; defaultTemplateId: string | undefined }) {
-  const [requestJson, setRequestJson] = useState(getTemplateJson(defaultTemplateId ?? "1", defaultLLMProviderId ?? "1"));
+function Prompt({
+  apiUrl,
+  csrfCookieName,
+  csrftoken,
+  djangoSessionCookieName,
+  cookieDomain,
+  defaultLLMProviderId,
+  defaultTemplateId,
+}: {
+  apiUrl: string;
+  csrfCookieName: string;
+  csrftoken: string;
+  djangoSessionCookieName: string;
+  cookieDomain: string;
+  defaultLLMProviderId: string | undefined;
+  defaultTemplateId: string | undefined;
+}) {
+  const [requestJson, setRequestJson] = useState(
+    getTemplateJson(defaultTemplateId ?? "1", defaultLLMProviderId ?? "1"),
+  );
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [llmProviderId, setLLMProvider] = useState(defaultLLMProviderId ?? "1");
   const [templateId, setTemplateId] = useState(defaultTemplateId ?? "1");
-  const [apiResponse, setApiResponse] = useState<{ status: number; body: any } | null>(null);
+  const [apiResponse, setApiResponse] = useState<{
+    status: number;
+    body: any;
+  } | null>(null);
 
   const handleEditorDidMount = (
     editorInstance: monaco.editor.IStandaloneCodeEditor,
@@ -58,36 +79,34 @@ function Prompt({ apiUrl, csrfCookieName, csrftoken, djangoSessionCookieName, co
   const handleSend = async () => {
     console.log("Sending request. apiUrl:", apiUrl);
 
-    const userAgent = "SmarterChat/1.0";
-    const applicationJson = "application/json";
-    const authToken = getCookie({ name: djangoSessionCookieName, expiration: null, domain: cookieDomain, value: null }, "") || "";
-    const csrftokenFromCookie = getCookie({ name: csrfCookieName, expiration: null, domain: cookieDomain, value: null }, "") || "";
+    const csrftokenFromCookie =
+      getCookie(
+        {
+          name: csrfCookieName,
+          expiration: null,
+          domain: cookieDomain,
+          value: null,
+        },
+        "",
+      ) || "";
     if (csrftokenFromCookie !== csrftoken) {
-        console.warn("CSRF token mismatch. Cookie value:", csrftokenFromCookie, "Expected value:", csrftoken);
+      console.warn(
+        "CSRF token mismatch. Cookie value:",
+        csrftokenFromCookie,
+        "Expected value:",
+        csrftoken,
+      );
     }
-    const requestHeaders = {
-      Accept: applicationJson,
-      "Content-Type": applicationJson,
-      "X-CSRFToken": csrftoken,
-      Origin: window.location.origin,
-      // Cookie: requestCookies,
-      Authorization: `Bearer ${authToken}`,
-      "User-Agent": userAgent,
-    };
-
-
     const providerSlug = getSmarterApiUrlSlug(llmProviderId);
     const url = new URL(providerSlug + "/", apiUrl).toString();
-
-    console.log("API URL:", url);
-    console.log("Request JSON:", requestJson);
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: requestHeaders,
-      body: requestJson,
-    });
-
+    const res = await fetchDjangoUrl(
+      requestJson,
+      url,
+      csrftoken,
+      djangoSessionCookieName,
+      csrfCookieName,
+      cookieDomain,
+    );
     const data = await res.json();
 
     console.log("API Response Status:", res.status);
@@ -95,9 +114,6 @@ function Prompt({ apiUrl, csrfCookieName, csrftoken, djangoSessionCookieName, co
 
     setApiResponse({ status: res.status, body: data });
   };
-
-
-
 
   return (
     <>
@@ -131,7 +147,11 @@ function Prompt({ apiUrl, csrfCookieName, csrftoken, djangoSessionCookieName, co
                   />
                 </div>
                 <div className="col-3 d-flex align-items-center justify-content-end">
-                  <button className="btn btn-primary w-100" type="button" onClick={handleSend}>
+                  <button
+                    className="btn btn-primary w-100"
+                    type="button"
+                    onClick={handleSend}
+                  >
                     SEND
                   </button>
                 </div>
