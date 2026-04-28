@@ -12,3 +12,17 @@ export default function getApiUrl(llmProviderId: string) {
         return "https://api.openai.com/v1";
     }
 }
+
+
+export function getSmarterApiUrlSlug(llmProviderId: string) {
+    switch (llmProviderId) {
+      case "1":
+        return "openai";
+      case "2":
+        return "anthropic";
+      case "3":
+        return "googleai";
+      default:
+        return "openai";
+    }
+}

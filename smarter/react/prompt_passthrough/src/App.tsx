@@ -1,21 +1,44 @@
+/**
+ * LLM API Prompt Passthrough
+ * Used to send raw JSON prompts to LLM APIs and display raw JSON responses.
+ *
+ */
 import Hero from "./components/Hero";
 import Prompt from "./components/Prompt";
-import Response from "./components/Response";
 
-function App() {
+function App({
+  apiUrl,
+  csrfCookieName,
+  csrftoken,
+  djangoSessionCookieName,
+  cookieDomain,
+  llmProviderId,
+  templateId,
+}: {
+  apiUrl: string;
+  csrfCookieName: string;
+  csrftoken: string;
+  djangoSessionCookieName: string;
+  cookieDomain: string;
+  llmProviderId: string;
+  templateId: string;
+}) {
   return (
     <>
-      <Hero />
       <section id="next-steps" className="container">
-        <div className="row g-5 d-flex mb-5">
-          <Prompt />
-        </div>
-        <div className="row g-5 d-flex">
-          <Response />
+        <div className="mt-5">
+          <Hero />
+          <Prompt
+            apiUrl={apiUrl}
+            csrfCookieName={csrfCookieName}
+            csrftoken={csrftoken}
+            djangoSessionCookieName={djangoSessionCookieName}
+            cookieDomain={cookieDomain}
+            defaultLLMProviderId={llmProviderId}
+            defaultTemplateId={templateId}
+          />
         </div>
       </section>
-      <div className="my-5"></div>
-      <section id="spacer"></section>
     </>
   );
 }
