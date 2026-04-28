@@ -32,6 +32,16 @@ import fetchDjangoUrl from "@/lib/django";
 
 import "./styles.css";
 
+interface PromptProps {
+  apiUrl: string;
+  csrfCookieName: string;
+  csrftoken: string;
+  djangoSessionCookieName: string;
+  cookieDomain: string;
+  defaultLLMProviderId: string | undefined;
+  defaultTemplateId: string | undefined;
+}
+
 function Prompt({
   apiUrl,
   csrfCookieName,
@@ -40,15 +50,7 @@ function Prompt({
   cookieDomain,
   defaultLLMProviderId,
   defaultTemplateId,
-}: {
-  apiUrl: string;
-  csrfCookieName: string;
-  csrftoken: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
-  defaultLLMProviderId: string | undefined;
-  defaultTemplateId: string | undefined;
-}) {
+}: PromptProps) {
   const [requestJson, setRequestJson] = useState(
     getTemplateJson(defaultTemplateId ?? "1", defaultLLMProviderId ?? "1"),
   );

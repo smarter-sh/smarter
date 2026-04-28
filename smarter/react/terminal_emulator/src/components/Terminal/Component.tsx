@@ -1,6 +1,16 @@
 
 import './styles.css';
 
+interface TerminalEmulatorProps {
+  apiUrl: string;
+  csrfCookieName: string;
+  csrftoken: string;
+  djangoSessionCookieName: string;
+  cookieDomain: string;
+  defaultLLMProviderId: string | undefined;
+  defaultTemplateId: string | undefined;
+}
+
 function TerminalEmulator({
   apiUrl,
   csrfCookieName,
@@ -9,15 +19,7 @@ function TerminalEmulator({
   cookieDomain,
   defaultLLMProviderId,
   defaultTemplateId,
-}: {
-  apiUrl: string;
-  csrfCookieName: string;
-  csrftoken: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
-  defaultLLMProviderId: string | undefined;
-  defaultTemplateId: string | undefined;
-}) {
+}: TerminalEmulatorProps) {
 
   return (
     <>
