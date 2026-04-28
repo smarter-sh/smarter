@@ -1,15 +1,8 @@
+# Smarter Terminal Emulator app. React + TypeScript + Vite
 
-# Smarter Terminal Emulator Tabbed Window. React + TypeScript + Vite
-
-This is the source code for the green-screen style terminal emluator window
-tabs located at [http://localhost:9357/workbench/terminal/](http://localhost:9357/
-workbench/terminal/). The individual tabs are:
-
-- A copy-paste area that receives LLM prompt JSON that is assumed to be in the
-format of the provider. This is passthrough functionality. Minimal validation
-is performed;
-- A read-only response window;
-- A read-only server log window.
+This is the source code for the Terminal Emulator app located
+at [http://localhost:9357/workbench/passthrough/](http://localhost:9357/
+workbench/passthrough/).
 
 Currently, two official plugins are available:
 

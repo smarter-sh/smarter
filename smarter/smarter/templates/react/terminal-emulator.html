@@ -4,7 +4,16 @@
 {% block dashboard_content %}
   {{ block.super }}
 
-  <div id="smarter-terminal-emulator-root"></div>
+  <div
+    id="{{ terminal.root_id }}"
+    smarter-csrf-cookie-name="{{ terminal.csrf_cookie_name }}"
+    django-csrftoken="{{ csrf_token }}"
+    smarter-django-session-cookie-name="{{ terminal.django_session_cookie_name }}"
+    smarter-cookie-domain="{{ terminal.cookie_domain }}"
+    smarter-api-path="{{ terminal.api_url }}"
+    smarter-llm-provider-id="{{ terminal.llm_provider_id }}"
+    smarter-template-id="{{ terminal.template_id }}">
+  </div>
 
 {% endblock %}
 
