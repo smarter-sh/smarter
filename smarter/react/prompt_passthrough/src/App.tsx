@@ -25,19 +25,17 @@ function App({
 }) {
   return (
     <>
-      <section id="next-steps" className="container">
-        <div className="mt-5">
-          <Hero />
-          <Prompt
-            apiUrl={apiUrl}
-            csrfCookieName={csrfCookieName}
-            csrftoken={csrftoken}
-            djangoSessionCookieName={djangoSessionCookieName}
-            cookieDomain={cookieDomain}
-            defaultLLMProviderId={llmProviderId}
-            defaultTemplateId={templateId}
-          />
-        </div>
+      <section className="mt-5 container" id="prompt-passthrough">
+        <Hero />
+        <Prompt
+          apiUrl={apiUrl}
+          csrfCookieName={csrfCookieName}
+          csrftoken={csrftoken}
+          djangoSessionCookieName={djangoSessionCookieName}
+          cookieDomain={cookieDomain}
+          defaultLLMProviderId={llmProviderId}
+          defaultTemplateId={templateId}
+        />
       </section>
     </>
   );
