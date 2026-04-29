@@ -2,7 +2,6 @@
 """Smarter API Chatbot Manifest handler"""
 
 import datetime
-import logging
 from typing import List, Optional, Type
 
 from django.db import transaction
@@ -11,6 +10,7 @@ from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 from taggit.managers import TaggableManager
 
+import smarter.lib.logging as logging
 from smarter.apps.account.utils import (
     smarter_cached_objects,
     valid_resource_owners_for_user,
@@ -34,12 +34,10 @@ from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import settings_defaults
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
@@ -54,17 +52,9 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGetData,
 )
 
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.MANIFEST_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.CHATBOT_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
+)
 
 MAX_RESULTS = 1000
 
@@ -202,7 +192,7 @@ class SAMChatbotBroker(AbstractBroker):
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self.manifest.metadata.name if self.manifest and self.manifest.metadata else None,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:
@@ -313,7 +303,7 @@ class SAMChatbotBroker(AbstractBroker):
             logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
             tags = data.pop("tags", [])
             self._chatbot = ChatBot.objects.create(**data)
-            if tags:
+            if self._chatbot and tags:
                 self._chatbot.tags.set(tags)
             self._created = True
             logger.warning(
@@ -439,6 +429,10 @@ class SAMChatbotBroker(AbstractBroker):
         :raises SAMBrokerErrorNotReady: If the manifest is not loaded or cannot be found.
         :raises SAMChatbotBrokerError: If the manifest configuration cannot be converted to a dictionary.
         """
+        if not self.manifest:
+            raise SAMBrokerErrorNotReady(
+                f"Manifest not loaded for {self.kind} broker. Cannot convert to Django ORM.", thing=self.kind
+            )
         metadata = super().manifest_to_django_orm()
 
         config_dump = self.manifest.spec.config.model_dump()
@@ -488,6 +482,16 @@ class SAMChatbotBroker(AbstractBroker):
         - :py:class:`smarter.apps.chatbot.manifest.models.chatbot.spec.SAMChatbotSpec`
         - :py:class:`smarter.apps.chatbot.manifest.models.chatbot.status.SAMChatbotStatus`
         """
+        if not self.account:
+            raise SAMBrokerErrorNotReady(
+                f"Account not loaded for {self.kind} broker. Cannot convert Django ORM to manifest dict.",
+                thing=self.kind,
+            )
+        if not self.user_profile:
+            raise SAMBrokerErrorNotReady(
+                f"User profile not loaded for {self.kind} broker. Cannot convert Django ORM to manifest dict.",
+                thing=self.kind,
+            )
         if not self.chatbot:
             logger.warning(
                 "%s.django_orm_to_manifest_dict() called without a ChatBot. This could affect broker operations.",
@@ -522,7 +526,7 @@ class SAMChatbotBroker(AbstractBroker):
         spec = SAMChatbotSpec(config=spec_config, plugins=plugin_names, functions=function_names, apiKey=api_key)
         status = SAMChatbotStatus(
             accountNumber=self.account.account_number,
-            username=self.user_profile.cached_user.username,
+            username=self.user_profile.user.username,
             recordLocator=self.chatbot.record_locator,
             created=self.chatbot.created_at,
             modified=self.chatbot.updated_at,
@@ -645,7 +649,7 @@ class SAMChatbotBroker(AbstractBroker):
             )
             return self._manifest
         if self._chatbot:
-            self._manifest = self.django_orm_to_manifest_dict()
+            self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
             if self._manifest:
                 logger.debug(
                     "%s.manifest() initialized from loader for existing ChatBot %s with name %s",
@@ -679,7 +683,7 @@ class SAMChatbotBroker(AbstractBroker):
 
         # 1.) invalidate the ChatBot cache itself.
         # -----------------------------
-        ChatBot.get_cached_object(pk=self.chatbot.id, invalidate=True)
+        ChatBot.get_cached_object(pk=self.chatbot.id, invalidate=True)  # type: ignore
 
         # 2.) invalidate anything else in which the chatbot is part of. this could
         # include listviews, the plugins, functions and api keys.
@@ -690,15 +694,15 @@ class SAMChatbotBroker(AbstractBroker):
         # -----------------------------
         chatbot_functions = ChatBotFunctions.objects.filter(chatbot=self.chatbot)
         for chatbot_function in chatbot_functions:
-            ChatBotFunctions.get_cached_object(pk=chatbot_function.id, invalidate=True)
+            ChatBotFunctions.get_cached_object(pk=chatbot_function.id, invalidate=True)  # type: ignore
 
         chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot)
         for chatbot_plugin in chatbot_plugins:
-            ChatBotPlugin.get_cached_object(pk=chatbot_plugin.id, invalidate=True)
+            ChatBotPlugin.get_cached_object(pk=chatbot_plugin.id, invalidate=True)  # type: ignore
 
         chatbot_api_keys = ChatBotAPIKey.objects.filter(chatbot=self.chatbot)
         for chatbot_api_key in chatbot_api_keys:
-            ChatBotAPIKey.get_cached_object(pk=chatbot_api_key.id, invalidate=True)
+            ChatBotAPIKey.get_cached_object(pk=chatbot_api_key.id, invalidate=True)  # type: ignore
 
         return super().cache_invalidations()
 

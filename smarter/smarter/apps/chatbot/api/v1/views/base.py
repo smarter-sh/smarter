@@ -1,7 +1,6 @@
 # pylint: disable=W0611
 """ChatBot api/v1/chatbots base view, for invoking a ChatBot."""
 
-import logging
 import traceback
 from http import HTTPStatus
 from typing import List, Optional
@@ -14,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 
+import smarter.lib.logging as logging
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.chatbot.models import (
@@ -29,7 +29,6 @@ from smarter.apps.prompt.models import ChatHelper
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import is_authenticated_request
-from smarter.lib.django import waffle
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
@@ -41,18 +40,9 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
-from smarter.lib.json import SmarterJSONEncoder
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+base_logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CHATBOT_LOGGING])
+logger = base_logger
 
 
 # pylint: disable=too-many-instance-attributes

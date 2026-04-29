@@ -6,7 +6,6 @@ These tasks are long-running and/or i/o intensive operations that are managed by
 They are intended to be called asynchronously from the main application.
 """
 
-import logging
 import os
 import time
 from string import Template
@@ -15,6 +14,7 @@ from urllib.parse import urlparse
 
 import dns.resolver
 
+import smarter.lib.logging as logging
 from smarter.apps.account.models import Account, AccountContact, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
@@ -34,9 +34,7 @@ from smarter.common.helpers.aws.route53 import AWSRoute53
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
-from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.workers.celery import app
 
 from .exceptions import SmarterChatBotException
@@ -76,16 +74,9 @@ from .signals import (
     pre_verify_domain,
 )
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.CHATBOT_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.CHATBOT_LOGGING]
+)
 logger_prefix = formatted_text(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -174,10 +165,11 @@ def create_chatbot_request(chatbot_id: int, request_data: dict):
         sender=create_chatbot_request, chatbot_id=chatbot_id, request_data=request_data, task_id=task_id
     )
     logger.info(
-        "%s - chatbot %s",
+        "%s - chatbot %s task_id: %s received request data: %s",
         logger_prefix + f".{create_chatbot_request.__name__}() task_id: %s",
         chatbot_id,
         task_id,
+        request_data,
     )
     chatbot = ChatBot.objects.get(id=chatbot_id)
     session_key = request_data.get(SMARTER_CHAT_SESSION_KEY_NAME)
@@ -215,7 +207,7 @@ def register_custom_domain(account_id: int, domain_name: str):
     domain_name = aws_helper.aws.domain_resolver(domain_name)
 
     logger.info(
-        "%s - Account %s %s attempting to register custom domain %s",
+        "%s - Account %s %s attempting to register custom domain %s task_id: %s",
         logger_prefix + f".{register_custom_domain.__name__}() task_id: %s",
         account.company_name,
         account.account_number,
@@ -330,7 +322,7 @@ def create_custom_domain_dns_record(
     task_id = create_custom_domain_dns_record.request.id
 
     logger.info(
-        "%s - creating DNS record %s %s for ChatBotCustomDomain %s",
+        "%s - creating DNS record %s %s for ChatBotCustomDomain %s task_id: %s",
         logger_prefix + ".create_custom_domain_dns_record() task_id: %s",
         record_type,
         record_name,
@@ -726,7 +718,7 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
         )
         return
 
-    logger.info(f"{fn_name} a_record: {a_record}")
+    logger.info("%s a_record: %s task_id: %s", fn_name, a_record, task_id)
     record_type = a_record.get("Type", "A")
     record_ttl = a_record.get("TTL", smarter_settings.chatbot_tasks_default_ttl)
     alias_target = a_record.get("AliasTarget")
