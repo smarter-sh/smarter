@@ -1,3 +1,7 @@
+"""
+admin.py - Custom Django Admin for Waffle Switches
+"""
+
 from waffle.admin import SwitchAdmin
 
 

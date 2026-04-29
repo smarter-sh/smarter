@@ -1,3 +1,7 @@
+"""
+is_database_ready() - Check if the database is ready by verifying the connection and the existence of the waffle_switch table.
+"""
+
 from django.core.exceptions import SynchronousOnlyOperation
 from django.db import connections
 from django.db.utils import OperationalError, ProgrammingError
