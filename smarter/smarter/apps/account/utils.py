@@ -18,13 +18,13 @@ Two caching strategies are used:
 
 """
 
-import logging
 import re
 from typing import Optional
 
 from django.db.models import Q
 from typing_extensions import deprecated
 
+import smarter.lib.logging as logging
 from smarter.apps.account.models import (
     Account,
     User,
@@ -34,24 +34,15 @@ from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
-from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 HERE = formatted_text(__name__)
 
 
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.CACHE_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
+)
 
 LRU_CACHE_MAX_SIZE = 128
 SMARTER_ACCOUNT_NUMBER_PATTERN = re.compile(SmarterValidator.SMARTER_ACCOUNT_NUMBER_REGEX)
@@ -59,6 +50,7 @@ SMARTER_ACCOUNT_NUMBER_PATTERN = re.compile(SmarterValidator.SMARTER_ACCOUNT_NUM
 
 # commonly fetched objects
 # ----------------------------
+# pylint: disable=W0613
 class SmarterCachedObjects:
     """
     Lazy instantiations of cached objects for the smarter account. This is a
@@ -277,7 +269,7 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
         for user_profile in user_profiles:
             if not isinstance(user_profile, UserProfile):
                 raise SmarterConfigurationError(f"Expected UserProfile instance, got {type(user_profile)}")
-            if user_profile.account.is_default_account and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+            if user_profile.account.is_default_account:
                 logger.debug(
                     "%s.get_cached_account_for_user() retrieving and caching default account %s for user %s",
                     HERE,

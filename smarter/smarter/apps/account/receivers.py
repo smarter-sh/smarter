@@ -1,19 +1,16 @@
 # pylint: disable=unused-argument
 """Django signal receivers for account app."""
 
-import logging
-
 from django.contrib.auth.signals import user_logged_in
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
+import smarter.lib.logging as logging
 from smarter.apps.dashboard.context_processors import cache_invalidations
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
-from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import AbstractBroker
 
 from .models import Account, Charge, DailyBillingRecord, User, UserProfile
@@ -22,15 +19,9 @@ from .signals import (
 )
 from .utils import get_cached_default_account
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.ACCOUNT_LOGGING]
+)
 
 module_prefix = f"{__name__}"
 

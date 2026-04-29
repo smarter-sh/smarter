@@ -3,27 +3,17 @@
 # pylint: disable=W0613
 
 
-import logging
-
 from django.dispatch import receiver
 from rest_framework.request import Request
 
+import smarter.lib.logging as logging
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .signals import api_request_completed, api_request_initiated
 from .v1.cli.views.base import CliBaseApiView
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
 
 # api_request_initiated.send(sender=self.__class__, instance=self, request=request)

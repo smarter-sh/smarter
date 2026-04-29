@@ -2,7 +2,6 @@
 Batch user creation view for smarter api.
 """
 
-import logging
 from typing import List, Optional
 
 from django.core.management import call_command
@@ -13,21 +12,12 @@ from django.http import (
 from pydantic import BaseModel, EmailStr
 from rest_framework.request import Request
 
-from smarter.lib.django import waffle
+import smarter.lib.logging as logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base import AccountViewBase
 
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
 
 
 class UserModel(BaseModel):
@@ -70,6 +60,7 @@ class BatchCreateUsersResponseModel(BaseModel):
     created_users: List[CreatedUserModel]
 
 
+# pylint: disable=W0613
 class BatchCreateUsersView(AccountViewBase):
     """
     Batch user creation view for smarter api.
@@ -170,7 +161,7 @@ class BatchCreateUsersView(AccountViewBase):
             batch_data = BatchModel(**data)
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error(f"Invalid request data: {e}")
+            logger.error("Invalid request data: %s", e)
             return HttpResponseBadRequest(f"Invalid request data: {e}")
 
         response = BatchCreateUsersResponseModel(created_users=[])
@@ -179,7 +170,10 @@ class BatchCreateUsersView(AccountViewBase):
         for user in batch_data.users:
             i += 1
             logger.debug(
-                f"Processing batch user creation for account number: {account_number} ({i}/{len(batch_data.users)}) users."
+                "Processing batch user creation for account number: %s (%d/%d) users.",
+                account_number,
+                i,
+                len(batch_data.users),
             )
             try:
                 params: dict[str, str | bool] = {
@@ -202,7 +196,13 @@ class BatchCreateUsersView(AccountViewBase):
             # pylint: disable=broad-except
             except Exception as e:
                 logger.error(
-                    f"Error creating user {user.username} {user.email} {user.first_name} {user.last_name} for account {account_number}: {e}"
+                    "Error creating user %s %s %s %s for account %s: %s",
+                    user.username,
+                    user.email,
+                    user.first_name,
+                    user.last_name,
+                    account_number,
+                    e,
                 )
                 response.created_users.append(
                     CreatedUserModel(**user.model_dump(), account_number=account_number, status="failure", error=str(e))
@@ -210,6 +210,8 @@ class BatchCreateUsersView(AccountViewBase):
                 continue
 
         logger.debug(
-            f"Batch user creation completed for account number: {account_number}. Created {len(response.created_users)} users."
+            "Batch user creation completed for account number: %s. Created %d users.",
+            account_number,
+            len(response.created_users),
         )
         return JsonResponse(response.model_dump())
