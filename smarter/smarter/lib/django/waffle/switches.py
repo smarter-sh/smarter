@@ -1,5 +1,5 @@
 """
-Module: smarter.lib.django.waffle.switches
+SmarterWaffleSwitches - Predefined, centrally managed Waffle switches for the Smarter Platform.
 """
 
 from dataclasses import dataclass

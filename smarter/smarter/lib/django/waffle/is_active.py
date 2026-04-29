@@ -1,3 +1,7 @@
+"""
+switch_is_active() - Check if a Waffle switch is active with caching and database readiness checks.
+"""
+
 import logging
 
 import waffle as waffle_orig

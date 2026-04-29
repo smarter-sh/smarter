@@ -681,6 +681,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django_hosts.middleware.HostsRequestMiddleware",
+    "smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware",
     # this replaces corsheaders.middleware.CorsMiddleware"
     "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
     # this replaces django.middleware.security.SecurityMiddleware
