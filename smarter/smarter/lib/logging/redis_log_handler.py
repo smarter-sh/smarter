@@ -300,6 +300,8 @@ class RedisLogHandler(logging.Handler):
         job_id = job_id_context.get()
 
         try:
+            # Respect Django logging formatter configuration (e.g. asctime/levelname)
+            # for Redis-streamed log output.
             log_entry = self.format(record)
 
             payload = {
