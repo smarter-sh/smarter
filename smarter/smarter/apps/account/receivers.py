@@ -58,14 +58,9 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
         instance,
         created,
     )
-    try:
-        user_profile = UserProfile.get_cached_object(user=instance)
+    user_profiles = UserProfile.objects.filter(user=instance)
+    for user_profile in user_profiles:
         cache_invalidations(user_profile=user_profile)
-    except UserProfile.DoesNotExist:
-        pass
-    except UserProfile.MultipleObjectsReturned:
-        # this is fine. the same user can have multiple UserProfiles if they belong to multiple accounts
-        pass
 
 
 @receiver(post_delete, sender=User)

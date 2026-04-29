@@ -4,7 +4,6 @@ SmarterMiddlewareMixin: A mixin for middleware classes with helper functions.
 
 import ipaddress
 import re
-import uuid
 from typing import Optional
 
 from django.utils.deprecation import MiddlewareMixin
@@ -175,23 +174,6 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
             return True
 
         return False
-
-    def job_id_factory(self, prefix: str = "job") -> str:
-        """
-        Factory method to generate a unique job ID.
-
-        This method creates a unique identifier for jobs or tasks, using
-        a specified prefix and a random UUID. The resulting ID is
-        formatted as "{prefix}_{uuid}". This is used primarily for
-        managing subscriptions to Server-Sent Events (SSE) channels,
-        for ensuring that each subscription has a unique identifier.
-
-        :param prefix: The prefix to use for the job ID (default is "job").
-        :type prefix: str
-        :return: A unique job ID string.
-        :rtype: str
-        """
-        return f"{prefix}_{str(uuid.uuid4())}"
 
 
 __all__ = [

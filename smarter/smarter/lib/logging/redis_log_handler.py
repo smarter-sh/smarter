@@ -12,7 +12,7 @@ Main Components
 
 - ``RedisLogHandler``: A custom logging handler that publishes log records to Redis channels, supporting both job-specific and global log streams.
 - ``job_id_factory``: Utility function to generate unique job IDs for associating logs with specific jobs or tasks.
-- ``current_job_id``: Context variable for tracking the current job ID within the logging context.
+- ``job_id_context``: Context variable for tracking the current job ID within the logging context.
 - ``GLOBAL_LOG_CHANNEL``: The Redis channel name used for publishing all logs globally.
 
 Features
@@ -32,14 +32,6 @@ Example Usage
         # configure the Django logging to use the RedisLogHandler
         #
         LOGGING = {
-            "version": 1,
-            "disable_existing_loggers": False,
-            "formatters": {
-                "timestamped": {
-                    "format": "%(asctime)s - %(levelname)s - %(processName)s - %(message)s",
-                    "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
-                },
-            },
             "handlers": {
                 "default": {
                     "level": smarter_settings.log_level_name,
@@ -51,11 +43,7 @@ Example Usage
                     "class": "smarter.lib.logging.RedisLogHandler",  # <--- Use the RedisLogHandler
                     "formatter": "timestamped",
                 },
-            },
-            "root": {
-                "handlers": ["default", "redis"],  # <--- Add the RedisLogHandler to the root logger
-                "level": smarter_settings.log_level_name,
-            },
+            }
 
 .. attention::
 
@@ -72,10 +60,10 @@ Example Usage
     # NOTE: this is technically possible but not a great idea.
     #
     import logging
-    from smarter.lib.logging.redis_log_handler import RedisLogHandler, current_job_id, job_id_factory
+    from smarter.lib.logging.redis_log_handler import RedisLogHandler, job_id_context, job_id_factory
 
     # Set the current job ID (typically in a Celery task or similar context)
-    current_job_id.set(job_id_factory("task"))
+    job_id_context.set(job_id_factory("task"))
 
     # Configure the logger
     logger = logging.getLogger("my_logger")
@@ -87,24 +75,51 @@ Example Usage
 """
 
 import atexit
-import contextvars
-import logging
 import os
 import queue
 import threading
 import uuid
+from contextvars import ContextVar
 
-import redis
+from django.core.exceptions import ImproperlyConfigured
+from django_redis import get_redis_connection
 
-from smarter.lib import json
+from smarter.lib import json, logging
 
 GLOBAL_LOG_CHANNEL = "logs:global"
 MAX_BATCH = 100
+MAX_QUEUE_SIZE = 10000
+LOG_QUEUE_TIMEOUT = 0.05
+WORKER_QUEUE_TIMEOUT = 1.00
+
+logger = logging.getLogger(__name__)
+logger_prefix = logging.formatted_text(__name__)
+
+_redis_cache_holder = {"client": None}
+job_id_context: ContextVar[str | None] = ContextVar("job_id", default=None)
+log_queue = queue.Queue(maxsize=MAX_QUEUE_SIZE)
 
 
-r = redis.Redis(host="localhost", port=6379, db=0)
-current_job_id: contextvars.ContextVar[str | None] = contextvars.ContextVar("job_id", default=None)
-log_queue = queue.Queue(maxsize=10000)
+def get_redis_cache():
+    """
+    Lazily retrieves the configured Redis cache connection.
+
+    During early process startup (for example management command bootstrap),
+    Django settings may not yet be configured. In that case this returns None
+    and callers should safely skip publishing.
+    """
+    cached_client = _redis_cache_holder["client"]
+    if cached_client is not None:
+        return cached_client
+
+    logger.debug("%s Attempting to retrieve Redis cache connection.", logger_prefix)
+    try:
+        _redis_cache_holder["client"] = get_redis_connection("default")
+        logger.info("%s Successfully retrieved Redis cache connection.", logger_prefix)
+    except ImproperlyConfigured:
+        logger.warning("%s Redis cache is not configured. Logs will not be published to Redis.", logger_prefix)
+        return None
+    return _redis_cache_holder["client"]
 
 
 def flush(buffer) -> None:
@@ -120,7 +135,14 @@ def flush(buffer) -> None:
     :type buffer: list
     :return: None
     """
-    pipe = r.pipeline()
+    logger.debug("%s Flushing %d log entries to Redis.", logger_prefix, len(buffer))
+    cache = get_redis_cache()
+    if cache is None:
+        for _ in buffer:
+            log_queue.task_done()
+        return
+
+    pipe = cache.pipeline()
     for payload in buffer:
         pipe.publish(payload["channel"], payload["data"])
         log_queue.task_done()
@@ -128,7 +150,7 @@ def flush(buffer) -> None:
         pipe.execute()
     # pylint: disable=broad-except
     except Exception:
-        pass
+        logger.exception("%s Failed to execute Redis pipeline.", logger_prefix, exc_info=True)
 
 
 def redis_worker() -> None:
@@ -146,11 +168,12 @@ def redis_worker() -> None:
     :param None: No parameters are required for this function.
     :return: None
     """
+    logger.debug("%s Starting Redis log worker thread.", logger_prefix)
     buffer = []
 
     while True:
         try:
-            item = log_queue.get(timeout=0.05)
+            item = log_queue.get(timeout=LOG_QUEUE_TIMEOUT)
             if item is None:
                 log_queue.task_done()
                 break
@@ -162,7 +185,14 @@ def redis_worker() -> None:
             pass
 
         if buffer:
-            pipe = r.pipeline()
+            cache = get_redis_cache()
+            if cache is None:
+                for _ in buffer:
+                    log_queue.task_done()
+                buffer.clear()
+                continue
+
+            pipe = cache.pipeline()
 
             for payload in buffer:
                 pipe.publish(payload["channel"], payload["data"])
@@ -172,7 +202,11 @@ def redis_worker() -> None:
                 pipe.execute()
             # pylint: disable=broad-except
             except Exception:
-                pass
+                logger.warning(
+                    "%s Failed to execute Redis pipeline. This is expected with ci-cd and collectstatic operations.",
+                    logger_prefix,
+                )
+                break
 
             buffer.clear()
 
@@ -196,11 +230,12 @@ def shutdown() -> None:
     :param None: No parameters are required for this function.
     :return: None
     """
+    logger.debug("%s Shutting down Redis log worker thread.", logger_prefix)
     try:
         log_queue.put_nowait(None)
     except queue.Full:
-        pass
-    worker_thread.join(timeout=1)
+        logger.exception("%s Failed to signal Redis log worker thread for shutdown.", logger_prefix, exc_info=True)
+    worker_thread.join(timeout=WORKER_QUEUE_TIMEOUT)
 
 
 # Register the shutdown function to be called when the process exits, ensuring
@@ -232,7 +267,7 @@ class RedisLogHandler(logging.Handler):
 
     This handler supports both job-specific and global log channels:
 
-    - If a job ID is present in the :obj:`current_job_id` context variable, the log record is published to
+    - If a job ID is present in the :obj:`job_id_context` context variable, the log record is published to
         the Redis channel ``logs:{job_id}``, where ``{job_id}`` is the unique identifier for the job or task.
     - All log records are also published to the global channel defined by :obj:`GLOBAL_LOG_CHANNEL` (``logs:global``),
         which can be used for system-wide log aggregation or UI log feeds.
@@ -248,7 +283,7 @@ class RedisLogHandler(logging.Handler):
     See Also
     --------
     job_id_factory : Function to generate unique job IDs.
-    current_job_id : Context variable for the current job ID.
+    job_id_context : Context variable for the current job ID.
     GLOBAL_LOG_CHANNEL : Name of the global Redis log channel.
     """
 
@@ -265,7 +300,7 @@ class RedisLogHandler(logging.Handler):
         :param record: The log record to be emitted.
         :type record: logging.LogRecord
         """
-        job_id = current_job_id.get()
+        job_id = job_id_context.get()
 
         try:
             log_entry = self.format(record)
@@ -311,12 +346,12 @@ class RedisLogHandler(logging.Handler):
                 print(f"Dropped {RedisLogHandler.dropped_logs} logs")
         # pylint: disable=broad-except
         except Exception:
-            pass
+            logger.exception("%s Failed to emit log record.", logger_prefix, exc_info=True)
 
 
 __all__ = [
     "GLOBAL_LOG_CHANNEL",
-    "current_job_id",
+    "job_id_context",
     "RedisLogHandler",
     "job_id_factory",
 ]

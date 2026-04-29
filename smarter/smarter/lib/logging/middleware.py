@@ -2,9 +2,14 @@
 Middleware to set a unique job ID for each request's logging context.
 """
 
+from contextvars import Token
+from typing import Awaitable
+
+from django.http import HttpRequest, HttpResponseBase
+
 from smarter.common.mixins import SmarterMiddlewareMixin
 
-from .redis_log_handler import current_job_id, job_id_factory
+from .redis_log_handler import job_id_context, job_id_factory
 
 
 class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
@@ -16,11 +21,14 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
         super().__init__(get_response)
         self.get_response = get_response
 
-    def __call__(self, request):
-        # Set a unique job ID for this request's context
-        token = current_job_id.set(job_id_factory("request"))
+    def __call__(self, request: HttpRequest) -> Awaitable[HttpResponseBase] | HttpResponseBase:
+        """
+        Set a unique job ID for this request's logging context.
+        """
+        job_id: str = job_id_factory(prefix=request.__class__.__name__)
+        token: Token = job_id_context.set(job_id)
         try:
             response = self.get_response(request)
         finally:
-            current_job_id.reset(token)  # clean up after the request
+            job_id_context.reset(token)
         return response

@@ -8,15 +8,17 @@ other command line tools.
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
+from django.urls import reverse
 
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
 )
 
 
+# pylint: disable=C0415
 class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
     """
-    View for rendering the terminal emulation page, which is used in the web console
+    View for rendering the React component terminal emulator.
     """
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
@@ -24,6 +26,9 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
         View for rendering the Monaco terminal emulation page
         which only receives JSON dicts of LLM prompts.
         """
+        from .names import LogsNames
+
+        reverse_name = ":".join([LogsNames.namespace, LogsNames.stream])
 
         context = {
             "terminal": {
@@ -31,9 +36,7 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
                 "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "api_url": None,  # DELETE ME PLEASE
-                "llm_provider_id": "1",
-                "template_id": "1",
+                "api_url": reverse(reverse_name),  # the WebSocket endpoint with the log data stream.
             }
         }
         self.template_path = "react/terminal-emulator.html"

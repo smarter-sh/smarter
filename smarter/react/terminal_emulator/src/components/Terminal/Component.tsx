@@ -1,4 +1,5 @@
 
+import { useLogStream } from './logStream';
 import './styles.css';
 
 interface TerminalEmulatorProps {
@@ -7,8 +8,6 @@ interface TerminalEmulatorProps {
   csrftoken: string;
   djangoSessionCookieName: string;
   cookieDomain: string;
-  defaultLLMProviderId: string | undefined;
-  defaultTemplateId: string | undefined;
 }
 
 function TerminalEmulator({
@@ -17,22 +16,46 @@ function TerminalEmulator({
   csrftoken,
   djangoSessionCookieName,
   cookieDomain,
-  defaultLLMProviderId,
-  defaultTemplateId,
 }: TerminalEmulatorProps) {
+
+  const { logs, connected, error } = useLogStream(apiUrl);
 
   return (
     <>
-      <h4>Terminal Emulator Component</h4>
-      <p>{apiUrl}</p>
-      <p>{csrfCookieName}</p>
-      <p>{csrftoken}</p>
-      <p>{djangoSessionCookieName}</p>
-      <p>{cookieDomain}</p>
-      <p>{defaultLLMProviderId}</p>
-      <p>{defaultTemplateId}</p>
-    </>
-  );
+      <section className="terminal-emulator">
+        <div className="row">
+          <div className="col-12">
+            <h4>Terminal Emulator Component</h4>
+            <p>apiUrl: {apiUrl}</p>
+            <p>csrfCookieName: {csrfCookieName}</p>
+            <p>djangoSessionCookieName: {djangoSessionCookieName}</p>
+            <p>cookieDomain: {cookieDomain}</p>
+            <p>csrftoken: {csrftoken}</p>
+            <p>Connected: {connected ? "Yes" : "No"}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="terminal-emulator">
+         <div className="row">
+           <div className="col-12">
+             <h4>Logs</h4>
+           </div>
+         </div>
+         {error && <p>Error: {error}</p>}
+         <ul>
+           {logs.map((log, index) => (
+             <li key={index}>
+               {log.timestamp && <span>{new Date(log.timestamp).toLocaleTimeString()} - </span>}
+               {log.level && <span>[{log.level}] </span>}
+               {log.logger && <span>{log.logger}: </span>}
+               {log.message}
+             </li>
+           ))}
+         </ul>
+       </section>
+     </>
+   );
 }
 
 export default TerminalEmulator;
