@@ -8,7 +8,7 @@ from smarter.common.utils import camel_case_object_name
 from .const import namespace as logs_namespace
 from .consumers import RedisLogConsumer
 from .reactapp import TerminalEmulatorLogView
-from .streams import stream_global_logs
+from .streams import stream_user_logs
 
 
 class LogsNames:
@@ -19,5 +19,5 @@ class LogsNames:
     namespace = ":".join([dashboard_namespace, logs_namespace])
 
     logs = camel_case_object_name(TerminalEmulatorLogView)
-    stream = camel_case_object_name(stream_global_logs)
+    stream = camel_case_object_name(stream_user_logs)
     consumer = camel_case_object_name(RedisLogConsumer)

@@ -12,7 +12,7 @@ from .names import LogsNames
 
 # from .consumers import RedisLogConsumer
 from .reactapp import TerminalEmulatorLogView
-from .streams import stream_global_logs
+from .streams import stream_user_logs
 
 app_name = namespace
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ if smarter_settings.enable_dashboard_server_logs:
         path("", TerminalEmulatorLogView.as_view(), name=LogsNames.logs),
     )
     urlpatterns.append(
-        path("api/stream/", stream_global_logs, name=LogsNames.stream),
+        path("api/stream/", stream_user_logs, name=LogsNames.stream),
     )
     # urlpatterns.append(
     #     path("api/consumer/", RedisLogConsumer.as_asgi(), name=LogsNames.consumer),  # type: ignore

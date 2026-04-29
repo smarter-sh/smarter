@@ -12,7 +12,7 @@ Main Components
 
 - ``RedisLogHandler``: A custom logging handler that publishes log records to Redis channels, supporting both job-specific and global log streams.
 - ``job_id_factory``: Utility function to generate unique job IDs for associating logs with specific jobs or tasks.
-- ``job_id_context``: Context variable for tracking the current job ID within the logging context.
+- ``user_id_context``: Context variable for tracking the current job ID within the logging context.
 - ``GLOBAL_LOG_CHANNEL``: The Redis channel name used for publishing all logs globally.
 
 Features
@@ -60,10 +60,10 @@ Example Usage
     # NOTE: this is technically possible but not a great idea.
     #
     import logging
-    from smarter.lib.logging.redis_log_handler import RedisLogHandler, job_id_context, job_id_factory
+    from smarter.lib.logging.redis_log_handler import RedisLogHandler, user_id_context, job_id_factory
 
     # Set the current job ID (typically in a Celery task or similar context)
-    job_id_context.set(job_id_factory("task"))
+    user_id_context.set(job_id_factory("task"))
 
     # Configure the logger
     logger = logging.getLogger("my_logger")
@@ -80,13 +80,16 @@ import queue
 import threading
 import uuid
 from contextvars import ContextVar
+from typing import Any
 
 from django.core.exceptions import ImproperlyConfigured
 from django_redis import get_redis_connection
 
 from smarter.lib import json, logging
 
-GLOBAL_LOG_CHANNEL = "logs:global"
+CONTEXT_NAME = "user_id"
+CHANNEL_PREFIX = "logs:"
+GLOBAL_LOG_CHANNEL = "global"
 MAX_BATCH = 100
 MAX_QUEUE_SIZE = 10000
 LOG_QUEUE_TIMEOUT = 0.05
@@ -96,8 +99,26 @@ logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 
 _redis_cache_holder = {"client": None}
-job_id_context: ContextVar[str | None] = ContextVar("job_id", default=None)
+user_id_context: ContextVar[str | None] = ContextVar(CONTEXT_NAME, default=None)
 log_queue = queue.Queue(maxsize=MAX_QUEUE_SIZE)
+
+
+def get_user_context(user: Any) -> str:
+    """
+    Retrieves the current user context for logging.
+
+    This function accesses the :obj:`user_id_context` context variable to get the current user ID or job ID
+    associated with the logging context. This is used by the :obj:`RedisLogHandler` to determine which Redis
+    channel to publish log records to, allowing for both job-specific and global log streams.
+
+    :return: The current user context (user ID or job ID) for logging.
+    :rtype: str | None
+    """
+    # pylint: disable=C0415
+    from smarter.apps.account.models import get_resolved_user
+
+    user = get_resolved_user(user)
+    return f"{user.__class__.__name__}.{user.id}"
 
 
 def get_redis_cache():
@@ -143,6 +164,12 @@ def flush(buffer) -> None:
     pipe = cache.pipeline()
     for payload in buffer:
         pipe.publish(payload["channel"], payload["data"])
+        pipe.xadd(
+            f"stream:{payload['channel']}",
+            {"data": payload["data"]},
+            maxlen=MAX_QUEUE_SIZE,
+            approximate=True,
+        )
         log_queue.task_done()
     try:
         pipe.execute()
@@ -194,6 +221,12 @@ def redis_worker() -> None:
 
             for payload in buffer:
                 pipe.publish(payload["channel"], payload["data"])
+                pipe.xadd(
+                    f"stream:{payload['channel']}",
+                    {"data": payload["data"]},
+                    maxlen=MAX_QUEUE_SIZE,
+                    approximate=True,
+                )
                 log_queue.task_done()
 
             try:
@@ -264,8 +297,8 @@ class RedisLogHandler(logging.Handler):
 
     This handler supports both job-specific and global log channels:
 
-    - If a job ID is present in the :obj:`job_id_context` context variable, the log record is published to
-        the Redis channel ``logs:{job_id}``, where ``{job_id}`` is the unique identifier for the job or task.
+    - If a job ID is present in the :obj:`user_id_context` context variable, the log record is published to
+        the Redis channel ``logs:{user_id}``, where ``{user_id}`` is the unique identifier for the job or task.
     - All log records are also published to the global channel defined by :obj:`GLOBAL_LOG_CHANNEL` (``logs:global``),
         which can be used for system-wide log aggregation or UI log feeds.
 
@@ -280,7 +313,7 @@ class RedisLogHandler(logging.Handler):
     See Also
     --------
     job_id_factory : Function to generate unique job IDs.
-    job_id_context : Context variable for the current job ID.
+    user_id_context : Context variable for the current job ID.
     GLOBAL_LOG_CHANNEL : Name of the global Redis log channel.
     """
 
@@ -297,7 +330,7 @@ class RedisLogHandler(logging.Handler):
         :param record: The log record to be emitted.
         :type record: logging.LogRecord
         """
-        job_id = job_id_context.get()
+        user_id = user_id_context.get()
 
         try:
             # Respect Django logging formatter configuration (e.g. asctime/levelname)
@@ -320,10 +353,10 @@ class RedisLogHandler(logging.Handler):
             # is viewable from the UI.
             #
             # enqueue instead of blocking
-            if job_id:
+            if user_id:
                 log_queue.put_nowait(
                     {
-                        "channel": f"logs:{job_id}",
+                        "channel": f"{CHANNEL_PREFIX}:{user_id}",
                         "data": data,
                     }
                 )
@@ -334,7 +367,7 @@ class RedisLogHandler(logging.Handler):
             # all log output.
             log_queue.put_nowait(
                 {
-                    "channel": GLOBAL_LOG_CHANNEL,
+                    "channel": f"{CHANNEL_PREFIX}:{GLOBAL_LOG_CHANNEL}",
                     "data": data,
                 }
             )
@@ -349,8 +382,9 @@ class RedisLogHandler(logging.Handler):
 
 
 __all__ = [
+    "get_user_context",
     "GLOBAL_LOG_CHANNEL",
-    "job_id_context",
+    "user_id_context",
     "RedisLogHandler",
     "job_id_factory",
 ]

@@ -17,15 +17,19 @@ from redis.exceptions import RedisError
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
-from smarter.lib.logging import GLOBAL_LOG_CHANNEL
+from smarter.lib.logging import get_user_context, job_id_factory
 
 logger = logging.getLogger(__name__)
 
 
 # pylint: disable=W0613
 @login_required
-def stream_global_logs(request):
-    logger_prefix = logging.formatted_text(f"{__name__}.stream_global_logs()")
+def stream_user_logs(request):
+
+    # either locates a user, or generates a unique job ID that is guaranteed to not have
+    # any log data associated with it.
+    user_context = get_user_context(request.user) if request.user.is_authenticated else job_id_factory()
+    logger_prefix = logging.formatted_text(f"{__name__}.stream_user_logs()")
     logger.info("%s called", logger_prefix)
 
     if not smarter_settings.enable_dashboard_server_logs:
@@ -38,8 +42,8 @@ def stream_global_logs(request):
     try:
         redis_cache = get_redis_connection("default")
         pubsub = redis_cache.pubsub()
-        pubsub.subscribe(GLOBAL_LOG_CHANNEL)
-        logger.info("%s Subscribed to Redis channel '%s' for log streaming.", logger_prefix, GLOBAL_LOG_CHANNEL)
+        pubsub.subscribe(user_context)
+        logger.info("%s Subscribed to Redis channel '%s' for log streaming.", logger_prefix, user_context)
     except RedisError:
         logger.exception("%s Failed to connect to Redis for log streaming.", logger_prefix, exc_info=True)
         return HttpResponse(
