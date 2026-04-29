@@ -34,11 +34,15 @@ AccountNumberType = Optional[str]
 ApiTokenType = Optional[bytes]
 
 
+def should_log_verbose(level) -> bool:
+    return smarter_settings.verbose_logging
+
+
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING])
 verbose_logger = logging.getSmarterLogger(
     __name__,
     all_switches=[SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING],
-    condition_func=lambda: smarter_settings.verbose_logging,
+    condition_func=should_log_verbose,
 )
 
 
