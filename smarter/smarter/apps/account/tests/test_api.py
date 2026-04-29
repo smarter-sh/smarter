@@ -1,29 +1,20 @@
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
-import logging
 from http import HTTPStatus
 
 from django.test import Client
 from django.urls import reverse
 
-from smarter.lib.django import waffle
+import smarter.lib.logging as logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # our stuff
 from .mixins import TestAccountMixin
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.PLUGIN_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
+)
 
 
 class TestUrls(TestAccountMixin):

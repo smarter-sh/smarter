@@ -1,13 +1,13 @@
 # pylint: disable=W0718
 """Smarter API Account Manifest handler"""
 
-import logging
 import traceback
 from typing import TYPE_CHECKING, Optional, Type
 
 from django.core import serializers
 from rest_framework.serializers import ModelSerializer
 
+import smarter.lib.logging as logging
 from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.account.metadata import SAMAccountMetadata
 from smarter.apps.account.manifest.models.account.model import SAMAccount
@@ -22,11 +22,9 @@ from smarter.apps.account.utils import (
     smarter_cached_objects,
 )
 from smarter.lib import json
-from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
@@ -45,16 +43,9 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.MANIFEST_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
+)
 
 
 MAX_RESULTS = 1000
