@@ -112,10 +112,8 @@ def get_redis_cache():
     if cached_client is not None:
         return cached_client
 
-    logger.debug("%s Attempting to retrieve Redis cache connection.", logger_prefix)
     try:
         _redis_cache_holder["client"] = get_redis_connection("default")
-        logger.info("%s Successfully retrieved Redis cache connection.", logger_prefix)
     except ImproperlyConfigured:
         logger.warning("%s Redis cache is not configured. Logs will not be published to Redis.", logger_prefix)
         return None
@@ -230,7 +228,6 @@ def shutdown() -> None:
     :param None: No parameters are required for this function.
     :return: None
     """
-    logger.debug("%s Shutting down Redis log worker thread.", logger_prefix)
     try:
         log_queue.put_nowait(None)
     except queue.Full:
