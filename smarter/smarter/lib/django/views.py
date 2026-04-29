@@ -1,6 +1,5 @@
 """Django template and view helper functions."""
 
-import logging
 import re
 from functools import wraps
 from http import HTTPStatus
@@ -18,28 +17,22 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
+from smarter.lib import logging
 from smarter.lib.cache import lazy_cache
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
-
-
-# pylint: disable=W0613
 def should_log_verbose(level):
     """Check if logging should be done based on the waffle switch."""
-    return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
+    return smarter_settings.verbose_logging
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VIEW_LOGGING])
+verbose_logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.VIEW_LOGGING], condition_func=should_log_verbose
+)
 logger_prefix = formatted_text(__name__)
 logger_prefix_invalidations = formatted_text_blue(f"{__name__}.smarter_cache_page_by_user.invalidate()")
 

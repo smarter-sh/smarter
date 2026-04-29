@@ -51,11 +51,19 @@ from logging import (
     warning,
 )
 
+from smarter.common.helpers.console_helpers import (
+    formatted_json,
+    formatted_text,
+    formatted_text_blue,
+    formatted_text_green,
+    formatted_text_red,
+)
+
 from .get_smarter_logger import getSmarterLogger
 from .redis_log_handler import (
     GLOBAL_LOG_CHANNEL,
     RedisLogHandler,
-    current_job_id,
+    job_id_context,
     job_id_factory,
 )
 from .streaming_file_handler import StreamingFileHandler
@@ -63,7 +71,7 @@ from .waffle_switched_logger import WaffleSwitchedLoggerWrapper
 
 __all__ = [
     "WaffleSwitchedLoggerWrapper",
-    "current_job_id",
+    "job_id_context",
     "job_id_factory",
     "StreamingFileHandler",
     "RedisLogHandler",
@@ -94,6 +102,11 @@ __all__ = [
     "debug",
     "disable",
     "error",
+    "formatted_text",
+    "formatted_json",
+    "formatted_text_blue",
+    "formatted_text_green",
+    "formatted_text_red",
     "exception",
     "fatal",
     "getLevelName",

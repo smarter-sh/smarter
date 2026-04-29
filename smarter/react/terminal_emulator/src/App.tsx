@@ -12,8 +12,6 @@ interface AppProps {
   csrftoken: string;
   djangoSessionCookieName: string;
   cookieDomain: string;
-  llmProviderId: string;
-  templateId: string;
 }
 
 function App({
@@ -22,8 +20,6 @@ function App({
   csrftoken,
   djangoSessionCookieName,
   cookieDomain,
-  llmProviderId,
-  templateId,
 }: AppProps) {
   return (
     <>
@@ -35,8 +31,6 @@ function App({
           csrftoken={csrftoken}
           djangoSessionCookieName={djangoSessionCookieName}
           cookieDomain={cookieDomain}
-          defaultLLMProviderId={llmProviderId}
-          defaultTemplateId={templateId}
         />
       </section>
     </>
