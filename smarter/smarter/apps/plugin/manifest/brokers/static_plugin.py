@@ -178,7 +178,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self._manifest.metadata.name,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:
@@ -477,7 +477,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             return None
 
         try:
-            data = PluginDataStatic.get_cached_data_by_plugin(plugin=self.plugin_meta)
+            self._plugin_data = PluginDataStatic.get_cached_data_by_plugin(plugin=self.plugin_meta)
             logger.debug(
                 "%s.plugin_data() PluginDataStatic object retrieved for %s %s",
                 self.formatted_class_name,
@@ -854,6 +854,12 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
+        if not self.user:
+            raise SAMBrokerError(
+                message="User not authenticated. Cannot apply static plugin.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
         if not self.user.is_staff:
             raise SAMBrokerError(
                 message="Only account admins can apply static plugins.",
@@ -861,6 +867,12 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 command=SmarterJournalCliCommands.APPLY,
             )
 
+        if not self.plugin:
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} plugin not initialized. Cannot apply",
+                thing=self.kind,
+                command=command,
+            )
         if self.plugin.ready:
             # the Plugin class was initialized with enough data to bring
             # itself to a ready state, meaning that no create/save is needed.
@@ -964,6 +976,12 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
 
+        if not self.user:
+            raise SAMBrokerError(
+                message="User not authenticated. Cannot delete static plugin.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
         if not self.user.is_staff:
             raise SAMBrokerError(
                 message="Only account admins can delete static plugins.",
