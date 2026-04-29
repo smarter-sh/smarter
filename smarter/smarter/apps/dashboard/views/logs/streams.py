@@ -17,7 +17,11 @@ from redis.exceptions import RedisError
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
-from smarter.lib.logging import get_user_context, job_id_factory
+from smarter.lib.logging.redis_log_handler import (
+    build_channel,
+    get_user_context,
+    job_id_factory,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +46,9 @@ def stream_user_logs(request):
     try:
         redis_cache = get_redis_connection("default")
         pubsub = redis_cache.pubsub()
-        pubsub.subscribe(user_context)
-        logger.info("%s Subscribed to Redis channel '%s' for log streaming.", logger_prefix, user_context)
+        channel = build_channel(user_context)
+        pubsub.subscribe(channel)
+        logger.info("%s Subscribed to Redis channel '%s' for log streaming.", logger_prefix, channel)
     except RedisError:
         logger.exception("%s Failed to connect to Redis for log streaming.", logger_prefix, exc_info=True)
         return HttpResponse(

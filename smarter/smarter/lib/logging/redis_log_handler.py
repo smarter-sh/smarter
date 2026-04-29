@@ -88,7 +88,7 @@ from django_redis import get_redis_connection
 from smarter.lib import json, logging
 
 CONTEXT_NAME = "user_id"
-CHANNEL_PREFIX = "logs:"
+CHANNEL_PREFIX = "logs"
 GLOBAL_LOG_CHANNEL = "global"
 MAX_BATCH = 100
 MAX_QUEUE_SIZE = 10000
@@ -101,6 +101,27 @@ logger_prefix = logging.formatted_text(__name__)
 _redis_cache_holder = {"client": None}
 user_id_context: ContextVar[str | None] = ContextVar(CONTEXT_NAME, default=None)
 log_queue = queue.Queue(maxsize=MAX_QUEUE_SIZE)
+
+
+def build_channel(name: str) -> str:
+    """Build a normalized Redis pubsub channel name."""
+    return f"{CHANNEL_PREFIX}:{name}"
+
+
+def stream_key(channel: str) -> str:
+    """Build the Redis stream key for a pubsub channel."""
+    return f"stream:{channel}"
+
+
+def get_user_channel() -> str | None:
+    """
+    Return the current user channel suffix from context.
+
+    This value is expected to be a stable user identity string
+    (for example "User.123") and is reused across requests for
+    that same user.
+    """
+    return user_id_context.get()
 
 
 def get_user_context(user: Any) -> str:
@@ -118,7 +139,7 @@ def get_user_context(user: Any) -> str:
     from smarter.apps.account.models import get_resolved_user
 
     user = get_resolved_user(user)
-    return f"{user.__class__.__name__}.{user.id}"
+    return f"{user.__class__.__name__}.{user.username}"
 
 
 def get_redis_cache():
@@ -154,7 +175,6 @@ def flush(buffer) -> None:
     :type buffer: list
     :return: None
     """
-    logger.debug("%s Flushing %d log entries to Redis.", logger_prefix, len(buffer))
     cache = get_redis_cache()
     if cache is None:
         for _ in buffer:
@@ -164,12 +184,7 @@ def flush(buffer) -> None:
     pipe = cache.pipeline()
     for payload in buffer:
         pipe.publish(payload["channel"], payload["data"])
-        pipe.xadd(
-            f"stream:{payload['channel']}",
-            {"data": payload["data"]},
-            maxlen=MAX_QUEUE_SIZE,
-            approximate=True,
-        )
+        pipe.xadd(stream_key(payload["channel"]), {"data": payload["data"]})
         log_queue.task_done()
     try:
         pipe.execute()
@@ -210,35 +225,7 @@ def redis_worker() -> None:
             pass
 
         if buffer:
-            cache = get_redis_cache()
-            if cache is None:
-                for _ in buffer:
-                    log_queue.task_done()
-                buffer.clear()
-                continue
-
-            pipe = cache.pipeline()
-
-            for payload in buffer:
-                pipe.publish(payload["channel"], payload["data"])
-                pipe.xadd(
-                    f"stream:{payload['channel']}",
-                    {"data": payload["data"]},
-                    maxlen=MAX_QUEUE_SIZE,
-                    approximate=True,
-                )
-                log_queue.task_done()
-
-            try:
-                pipe.execute()
-            # pylint: disable=broad-except
-            except Exception:
-                logger.warning(
-                    "%s Failed to execute Redis pipeline. This is expected with ci-cd and collectstatic operations.",
-                    logger_prefix,
-                )
-                break
-
+            flush(buffer)
             buffer.clear()
 
 
@@ -330,7 +317,7 @@ class RedisLogHandler(logging.Handler):
         :param record: The log record to be emitted.
         :type record: logging.LogRecord
         """
-        user_id = user_id_context.get()
+        user_id = get_user_channel()
 
         try:
             # Respect Django logging formatter configuration (e.g. asctime/levelname)
@@ -356,7 +343,7 @@ class RedisLogHandler(logging.Handler):
             if user_id:
                 log_queue.put_nowait(
                     {
-                        "channel": f"{CHANNEL_PREFIX}:{user_id}",
+                        "channel": build_channel(user_id),
                         "data": data,
                     }
                 )
@@ -367,7 +354,7 @@ class RedisLogHandler(logging.Handler):
             # all log output.
             log_queue.put_nowait(
                 {
-                    "channel": f"{CHANNEL_PREFIX}:{GLOBAL_LOG_CHANNEL}",
+                    "channel": build_channel(GLOBAL_LOG_CHANNEL),
                     "data": data,
                 }
             )

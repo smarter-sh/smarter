@@ -681,7 +681,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django_hosts.middleware.HostsRequestMiddleware",
-    "smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware",
     # this replaces corsheaders.middleware.CorsMiddleware"
     "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
     # this replaces django.middleware.security.SecurityMiddleware
@@ -706,6 +705,10 @@ MIDDLEWARE = [
     # -------------------------------
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
+    # to manage logging context by user. This has to run AFTER
+    # authentication middleware so that it can get the user info for logging context.
+    # -------------------------------
+    "smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware",
     # to manage ALLOWED_HOSTS
     # -------------------------------
     "smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware",
