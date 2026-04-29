@@ -20,7 +20,7 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       output: {
         entryFileNames: "assets/index.js",
-        // assetFileNames: "assets/[name][extname]",
+        chunkFileNames: "assets/[name].js",
       },
     },
   },
@@ -36,7 +36,7 @@ export default defineConfig(({ command }) => ({
   // environment as possible.
   server: {
     proxy: {
-      "/api": "http://localhost:9357",
+      "/dashboard/logs/api": "http://localhost:9357",
       "/assets": {
         target: "http://localhost:9357", // Django dev server
         changeOrigin: true,
