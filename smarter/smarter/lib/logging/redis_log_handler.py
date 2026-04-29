@@ -95,6 +95,13 @@ MAX_QUEUE_SIZE = 10000
 LOG_QUEUE_TIMEOUT = 0.05
 WORKER_QUEUE_TIMEOUT = 1.00
 
+USER_STREAM_TTL_SECONDS = (
+    60 * 60 * 24
+)  # one day default for user streams since they are typically lower volume and may be useful for debugging over a longer time horizon.
+GLOBAL_STREAM_TTL_SECONDS = (
+    60 * 60 * 1
+)  # one hour default for global stream since it's typically higher volume and used for short-term UI feed rather than long-term storage.
+
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 
@@ -113,7 +120,14 @@ def stream_key(channel: str) -> str:
     return f"stream:{channel}"
 
 
-def get_user_channel() -> str | None:
+def stream_ttl_seconds(channel: str) -> int | None:
+    """Return TTL policy for a channel stream key."""
+    if channel == build_channel(GLOBAL_LOG_CHANNEL):
+        return GLOBAL_STREAM_TTL_SECONDS
+    return USER_STREAM_TTL_SECONDS
+
+
+def get_user_channel() -> str:
     """
     Return the current user channel suffix from context.
 
@@ -121,7 +135,7 @@ def get_user_channel() -> str | None:
     (for example "User.123") and is reused across requests for
     that same user.
     """
-    return user_id_context.get()
+    return user_id_context.get() or job_id_factory()
 
 
 def get_user_context(user: Any) -> str:
@@ -133,7 +147,7 @@ def get_user_context(user: Any) -> str:
     channel to publish log records to, allowing for both job-specific and global log streams.
 
     :return: The current user context (user ID or job ID) for logging.
-    :rtype: str | None
+    :rtype: str
     """
     # pylint: disable=C0415
     from smarter.apps.account.models import get_resolved_user
@@ -183,8 +197,13 @@ def flush(buffer) -> None:
 
     pipe = cache.pipeline()
     for payload in buffer:
-        pipe.publish(payload["channel"], payload["data"])
-        pipe.xadd(stream_key(payload["channel"]), {"data": payload["data"]})
+        channel = payload["channel"]
+        key = stream_key(channel)
+        pipe.publish(channel, payload["data"])
+        pipe.xadd(key, {"data": payload["data"]})
+        ttl = stream_ttl_seconds(channel)
+        if ttl is not None:
+            pipe.expire(key, ttl)
         log_queue.task_done()
     try:
         pipe.execute()
@@ -338,15 +357,12 @@ class RedisLogHandler(logging.Handler):
             # specific job ID. These are typically initiated
             # inside Celery tasks in cases where the log output
             # is viewable from the UI.
-            #
-            # enqueue instead of blocking
-            if user_id:
-                log_queue.put_nowait(
-                    {
-                        "channel": build_channel(user_id),
-                        "data": data,
-                    }
-                )
+            log_queue.put_nowait(
+                {
+                    "channel": build_channel(user_id),
+                    "data": data,
+                }
+            )
 
             # Publish the log entry to a global Redis channel
             # for all logs. This is the feed for the optional
