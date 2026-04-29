@@ -21,6 +21,12 @@ export default defineConfig(({ command }) => ({
       output: {
         entryFileNames: "assets/index.js",
         chunkFileNames: "assets/[name].js",
+        manualChunks(id) {
+          if (id.includes("node_modules/xterm") || id.includes("node_modules/@xterm")) {
+            return "xterm";
+          }
+          return undefined;
+        },
       },
     },
   },

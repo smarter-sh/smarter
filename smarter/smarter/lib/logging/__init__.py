@@ -63,15 +63,17 @@ from .get_smarter_logger import getSmarterLogger
 from .redis_log_handler import (
     GLOBAL_LOG_CHANNEL,
     RedisLogHandler,
-    job_id_context,
+    get_user_context,
     job_id_factory,
+    user_id_context,
 )
 from .streaming_file_handler import StreamingFileHandler
 from .waffle_switched_logger import WaffleSwitchedLoggerWrapper
 
 __all__ = [
+    "get_user_context",
     "WaffleSwitchedLoggerWrapper",
-    "job_id_context",
+    "user_id_context",
     "job_id_factory",
     "StreamingFileHandler",
     "RedisLogHandler",

@@ -9,7 +9,7 @@ from django.http import HttpRequest, HttpResponseBase
 
 from smarter.common.mixins import SmarterMiddlewareMixin
 
-from .redis_log_handler import job_id_context, job_id_factory
+from .redis_log_handler import get_user_context, job_id_factory, user_id_context
 
 
 class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
@@ -25,10 +25,14 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
         """
         Set a unique job ID for this request's logging context.
         """
-        job_id: str = job_id_factory(prefix=request.__class__.__name__)
-        token: Token = job_id_context.set(job_id)
+        if hasattr(request, "user") and request.user.is_authenticated:
+            context = get_user_context(request.user)
+        else:
+            context = job_id_factory()
+
+        token: Token = user_id_context.set(context)
         try:
             response = self.get_response(request)
         finally:
-            job_id_context.reset(token)
+            user_id_context.reset(token)
         return response

@@ -11,7 +11,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper, job_id_context
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper, user_id_context
 from smarter.workers.celery import app
 
 
@@ -43,7 +43,7 @@ def embed_and_load_pdf(self) -> bool:
     Celery task to load pdf documents into a vectorstore.
     """
     job_id = self.request.id
-    token = job_id_context.set(job_id)
+    token = user_id_context.set(job_id)
 
     try:
         db = VectorestoreMeta.objects.first()
@@ -60,4 +60,4 @@ def embed_and_load_pdf(self) -> bool:
         logger.error(f"{logger_prefix} Error occurred: {e}")
         return False
     finally:
-        job_id_context.reset(token)
+        user_id_context.reset(token)
