@@ -244,6 +244,18 @@ class SAMConnectionBaseBroker(AbstractBroker):
         logger.info(
             "%s.apply() called with request: %s", self.formatted_class_name, smarter_build_absolute_uri(request=request)
         )
+        if not self.user:
+            raise SAMBrokerErrorNotReady(
+                f"Authenticated user not found in request. Cannot apply manifest for {self.kind} broker.",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+        if not isinstance(self.manifest, self.SAMModelClass):
+            raise SAMBrokerErrorNotReady(
+                f"Manifest not loaded. Cannot apply manifest for {self.kind} broker.",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.APPLY,
+            )
         super().apply(request, kwargs)
 
         if not self.user.is_staff:

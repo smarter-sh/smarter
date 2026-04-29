@@ -192,11 +192,15 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             )
         if self._chatbot_helper:
             logger.debug(
-                "%s: %s ChatBotHelper reinitializing user: %s, account: %s",
+                "%s: %s ChatBotHelper reinitializing user_profile: %s",
+                self.formatted_class_name,
+                self._chatbot_helper,
+                self.user_profile,
             )
             self._url = urlparse(self._chatbot_helper.url)  # type: ignore
             self._user = self._chatbot_helper.user
             self._account = self._chatbot_helper.account
+            self._user_profile = self._chatbot_helper.user_profile
         logger.debug(
             "%s: %s initialized with url: %s id: %s",
             self.formatted_class_name,

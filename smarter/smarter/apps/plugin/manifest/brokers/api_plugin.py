@@ -152,7 +152,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self._manifest.metadata.name,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:
@@ -324,13 +324,13 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             api_data = self.plugin_data_orm2pydantic()
             if not api_data:
                 raise SAMPluginBrokerError(
-                    f"{self.formatted_class_name} manifest() failed to build api_data for {self.kind} {self.plugin_meta.name}",
+                    f"{self.formatted_class_name} manifest() failed to build api_data for {self.kind} {self._plugin_meta.name}",
                     thing=self.kind,
                 )
             spec = self.plugin_api_spec_orm2pydantic()
             if not spec:
                 raise SAMPluginBrokerError(
-                    f"{self.formatted_class_name} manifest() failed to build spec for {self.kind} {self.plugin_meta.name}",
+                    f"{self.formatted_class_name} manifest() failed to build spec for {self.kind} {self._plugin_meta.name}",
                     thing=self.kind,
                 )
             status = self.plugin_status_pydantic()
@@ -610,7 +610,10 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                 )
             )
         self._api_data = ApiData(
-            apiQuery=self.plugin_data.api_query if self.plugin_data else "",
+            endpoint=self.plugin_data.endpoint if self.plugin_data else "",
+            urlParams=self.plugin_data.url_params if self.plugin_data else None,  # type: ignore
+            headers=self.plugin_data.headers if self.plugin_data else None,  # type: ignore
+            body=self.plugin_data.body if self.plugin_data else None,
             parameters=parameters,
             testValues=test_values,
             limit=self.plugin_data.limit if self.plugin_data else 0,
@@ -877,7 +880,12 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
-
+        if not self.user:
+            raise SAMBrokerError(
+                message="User not authenticated. Cannot delete api plugin.",
+                thing=self.kind,
+                command=command,
+            )
         if not self.user.is_staff:
             raise SAMBrokerError(
                 message="Only account admins can delete api plugins.",

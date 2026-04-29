@@ -152,7 +152,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self._manifest.metadata.name,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:
@@ -324,13 +324,13 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             sql_data = self.plugin_data_orm2pydantic()
             if not sql_data:
                 raise SAMPluginBrokerError(
-                    f"{self.formatted_class_name} manifest() failed to build sql_data for {self.kind} {self.plugin_meta.name}",
+                    f"{self.formatted_class_name} manifest() failed to build sql_data for {self.kind} {self._plugin_meta.name}",
                     thing=self.kind,
                 )
             spec = self.plugin_sql_spec_orm2pydantic()
             if not spec:
                 raise SAMPluginBrokerError(
-                    f"{self.formatted_class_name} manifest() failed to build spec for {self.kind} {self.plugin_meta.name}",
+                    f"{self.formatted_class_name} manifest() failed to build spec for {self.kind} {self._plugin_meta.name}",
                     thing=self.kind,
                 )
             status = self.plugin_status_pydantic()
@@ -869,7 +869,12 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
-
+        if not self.user:
+            raise SAMBrokerError(
+                message="User not authenticated. Cannot delete sql plugin.",
+                thing=self.kind,
+                command=command,
+            )
         if not self.user.is_staff:
             raise SAMBrokerError(
                 message="Only account admins can delete sql plugins.",
