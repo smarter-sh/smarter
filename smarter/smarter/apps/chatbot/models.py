@@ -1,7 +1,6 @@
 # pylint: disable=W0613,C0115,C0302
 """All models for the OpenAI Function Calling API app."""
 
-import logging
 import warnings
 from functools import cached_property
 from typing import Any, List, Optional, Type
@@ -14,6 +13,7 @@ from django.urls import reverse
 from rest_framework import serializers
 
 # our stuff
+import smarter.lib.logging as logging
 from smarter.apps.account.models import (
     Account,
     MetaDataWithOwnershipModel,
@@ -51,7 +51,6 @@ from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.loader import SAMLoader
 
 from .signals import (
@@ -68,19 +67,8 @@ from .signals import (
 CACHE_PREFIX = "ChatBotHelper_"
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
-
-
-def should_log_chatbot_helper(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-chatbot_helper_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_chatbot_helper)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CHATBOT_LOGGING])
+chatbot_helper_logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING])
 
 
 # -----------------------------------------------------------------------------
@@ -1965,7 +1953,10 @@ class ChatBotHelper(SmarterRequestMixin):
         if self.chatbot_name and self.user_profile:
             self.chatbot = ChatBot.get_cached_object(name=self.chatbot_name, user_profile=self.user_profile)
             chatbot_helper_logger.debug(
-                f"chatbot_id() initialized self.chatbot_id={self.chatbot_id} from name={ self.chatbot_name } and account={ self.account }"
+                "chatbot_id() initialized self.chatbot_id=%s from name=%s and account=%s",
+                self._chatbot_id,
+                self.chatbot_name,
+                self.account,
             )
             return self._chatbot_id
 
@@ -1980,7 +1971,7 @@ class ChatBotHelper(SmarterRequestMixin):
         self.chatbot = chatbot
         if self._chatbot:
             chatbot_helper_logger.debug(
-                f"@chatbot_id.setter initialized self.chatbot_id={self.chatbot_id} from chatbot_id"
+                "@chatbot_id.setter initialized self.chatbot_id=%s from chatbot_id=%s", self._chatbot_id, chatbot_id
             )
 
     @property
@@ -2263,7 +2254,7 @@ class ChatBotHelper(SmarterRequestMixin):
         # cheapest possibility
         if self._chatbot_id:
             self.chatbot = ChatBot.get_cached_object(pk=self._chatbot_id)
-            chatbot_helper_logger.debug(f"initialized chatbot {self._chatbot} from chatbot_id {self.chatbot_id}")
+            chatbot_helper_logger.debug("initialized chatbot %s from chatbot_id %s", self._chatbot, self.chatbot_id)
             return self._chatbot
 
         # our expected case
@@ -2271,7 +2262,7 @@ class ChatBotHelper(SmarterRequestMixin):
             try:
                 self.chatbot = ChatBot.get_cached_object(name=self.name, user_profile=self.user_profile)
                 chatbot_helper_logger.debug(
-                    f"initialized chatbot {self._chatbot} from account {self.account} and name {self.name}"
+                    "initialized chatbot %s from account %s and name %s", self._chatbot, self.account, self.name
                 )
                 return self._chatbot
             except ChatBot.DoesNotExist:
@@ -2294,7 +2285,9 @@ class ChatBotHelper(SmarterRequestMixin):
             self._chatbot_id = self._chatbot.id  # type: ignore[assignment]
             self._name = self._chatbot.name
             chatbot_helper_logger.debug(
-                f"@chatbot.setter initialized self.chatbot_id={self.chatbot_id} and self.name={self.name} from chatbot"
+                "@chatbot.setter initialized self.chatbot_id=%s and self.name=%s from chatbot",
+                self._chatbot_id,
+                self._name,
             )
         else:
             self._chatbot_id = None

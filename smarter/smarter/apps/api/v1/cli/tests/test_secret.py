@@ -1,6 +1,5 @@
 """Test Api v1 CLI commands for secret"""
 
-import logging
 import os
 from datetime import datetime
 from http import HTTPStatus
@@ -12,16 +11,15 @@ from dateutil.relativedelta import relativedelta
 from django.db.models.signals import post_delete
 from django.urls import reverse
 
+import smarter.lib.logging as logging
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.secret.manifest.brokers.secret import SAMSecret
 from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.lib import json
-from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import (
     SAMKeys,
     SAMMetadataKeys,
@@ -32,16 +30,9 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from .base_class import ApiV1CliTestBase
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.PLUGIN_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.API_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
+)
 
 
 KIND = SAMKinds.SECRET.value

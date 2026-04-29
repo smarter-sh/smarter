@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'chat' view"""
 
-import logging
 import traceback
 from http import HTTPStatus
 from typing import Any, Optional
@@ -13,6 +12,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
 
+import smarter.lib.logging as logging
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.prompt.models import Chat, ChatHistory
@@ -35,7 +35,6 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMMetadataKeys, SCLIResponseGet
 
 from ..base import APIV1CLIViewError, CliBaseApiView
@@ -51,13 +50,7 @@ from ..swagger import (
 CACHE_EXPIRATION = 24 * 60 * 60  # 24 hours
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
 
 class APIV1CLIChatViewError(APIV1CLIViewError):

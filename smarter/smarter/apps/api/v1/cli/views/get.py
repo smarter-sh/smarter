@@ -1,14 +1,11 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'get' view"""
 
-import logging
-
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
-from smarter.lib.django import waffle
+import smarter.lib.logging as logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base import CliBaseApiView
 from .swagger import (
@@ -17,14 +14,7 @@ from .swagger import (
     EXAMPLE_GET_RESPONSE,
 )
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
 
 class ApiV1CliGetApiView(CliBaseApiView):
