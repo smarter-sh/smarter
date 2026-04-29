@@ -1,7 +1,6 @@
 """SqlConnection model"""
 
 import io
-import logging
 import tempfile
 from http import HTTPStatus
 from socket import socket
@@ -35,23 +34,13 @@ from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.utils import camel_to_snake
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .connection_base import ConnectionBase
 
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CONNECTION_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
 logger_prefix = formatted_text(f"{__name__}")
 
 

@@ -15,8 +15,8 @@ from django.http import (
 from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import UserProfile
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base import AccountListViewBase, AccountViewBase

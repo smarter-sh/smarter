@@ -13,7 +13,6 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.chatbot.models import (
@@ -29,6 +28,7 @@ from smarter.apps.prompt.models import ChatHelper
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import is_authenticated_request
+from smarter.lib import logging
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (

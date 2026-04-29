@@ -4,7 +4,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
-import smarter.lib.logging as logging
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.connection.manifest.models.api_connection.const import MANIFEST_KIND
 from smarter.apps.connection.manifest.models.api_connection.enum import AuthMethods
@@ -28,7 +27,7 @@ from smarter.apps.connection.serializers import ApiConnectionSerializer
 from smarter.apps.plugin.manifest.enum import SAMApiConnectionSpecConnectionKeys
 from smarter.apps.secret.models import Secret
 from smarter.common.utils import camel_to_snake
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse

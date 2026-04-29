@@ -9,10 +9,10 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.handlers.wsgi import WSGIRequest
 from django.test import RequestFactory
 
-import smarter.lib.logging as logging
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain, ChatBotHelper
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CHATBOT_LOGGING])

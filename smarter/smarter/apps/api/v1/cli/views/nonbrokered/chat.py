@@ -12,7 +12,6 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
 
-import smarter.lib.logging as logging
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.prompt.models import Chat, ChatHistory
@@ -21,7 +20,7 @@ from smarter.apps.provider.services.text_completion.const import OpenAIMessageKe
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator

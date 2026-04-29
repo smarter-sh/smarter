@@ -8,8 +8,8 @@ from http import HTTPStatus
 
 from django.http import JsonResponse
 
-import smarter.lib.logging as logging
 from smarter.apps.chatbot.models import ChatBot
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base import ChatBotApiBaseViewSet

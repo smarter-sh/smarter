@@ -10,7 +10,6 @@ from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 from taggit.managers import TaggableManager
 
-import smarter.lib.logging as logging
 from smarter.apps.account.utils import (
     smarter_cached_objects,
     valid_resource_owners_for_user,
@@ -34,6 +33,7 @@ from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import settings_defaults
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalCliCommands

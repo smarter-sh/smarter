@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Optional, Type
 from django.core import serializers
 from rest_framework.serializers import ModelSerializer
 
-import smarter.lib.logging as logging
 from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.account.metadata import SAMAccountMetadata
 from smarter.apps.account.manifest.models.account.model import SAMAccount
@@ -21,7 +20,7 @@ from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import (
     smarter_cached_objects,
 )
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse

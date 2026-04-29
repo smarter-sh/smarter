@@ -2,7 +2,6 @@
 Connection models utils
 """
 
-import logging
 from typing import Union
 
 from smarter.apps.account.models import User
@@ -10,23 +9,14 @@ from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
-from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .api_connection import ApiConnection
 from .sql_connection import SqlConnection
 
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CONNECTION_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
 logger_prefix = formatted_text(f"{__name__}")
 
 

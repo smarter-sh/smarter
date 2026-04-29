@@ -5,7 +5,7 @@ logger: A logger instance for the mixins, with conditional logging based on a wa
 from django.apps import apps
 from django.core.exceptions import AppRegistryNotReady
 
-import smarter.lib.logging as logging
+from smarter.lib import logging
 
 # guard against Sphinx doc build circular import errors
 mixin_logging_is_active: bool = False

@@ -5,9 +5,9 @@ from http import HTTPStatus
 
 from django import forms, http
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import Account, UserProfile
 from smarter.common.utils import get_readonly_csv_file
+from smarter.lib import logging
 from smarter.lib.django.views import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 

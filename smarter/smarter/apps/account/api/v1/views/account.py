@@ -11,9 +11,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import Account, UserProfile
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base import AccountListViewBase, AccountViewBase

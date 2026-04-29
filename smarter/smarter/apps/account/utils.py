@@ -24,7 +24,6 @@ from typing import Optional
 from django.db.models import Q
 from typing_extensions import deprecated
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import (
     Account,
     User,
@@ -33,6 +32,7 @@ from smarter.apps.account.models import (
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches

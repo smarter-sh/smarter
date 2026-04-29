@@ -14,12 +14,12 @@ import datetime
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Sum
 
-import smarter.lib.logging as logging
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 # Smarter stuff

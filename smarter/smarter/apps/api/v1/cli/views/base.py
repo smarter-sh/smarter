@@ -12,7 +12,6 @@ from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.api.signals import (
     api_request_completed,
@@ -45,7 +44,7 @@ from smarter.common.utils import (
     mask_string,
     smarter_build_absolute_uri,
 )
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
 from smarter.lib.django.waffle import SmarterWaffleSwitches

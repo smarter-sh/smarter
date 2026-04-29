@@ -10,11 +10,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,

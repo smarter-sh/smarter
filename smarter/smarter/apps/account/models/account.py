@@ -12,13 +12,12 @@ from django.template.loader import render_to_string
 from django.test.client import RequestFactory
 from django.utils.functional import SimpleLazyObject
 
-import smarter.lib.logging as logging
-
 # our stuff
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.models import MetaDataModel, TimestampedModel

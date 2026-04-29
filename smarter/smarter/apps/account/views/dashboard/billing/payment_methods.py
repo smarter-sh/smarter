@@ -8,7 +8,7 @@ from http import HTTPStatus
 
 from django import forms, http
 
-import smarter.lib.logging as logging
+from smarter.lib import logging
 from smarter.lib.django.views import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 

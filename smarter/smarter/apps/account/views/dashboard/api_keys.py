@@ -9,9 +9,8 @@ from django import forms, http
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import UserProfile
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,

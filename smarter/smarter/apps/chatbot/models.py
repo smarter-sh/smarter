@@ -12,8 +12,6 @@ from django.http import HttpRequest
 from django.urls import reverse
 from rest_framework import serializers
 
-# our stuff
-import smarter.lib.logging as logging
 from smarter.apps.account.models import (
     Account,
     MetaDataWithOwnershipModel,
@@ -42,7 +40,9 @@ from smarter.common.helpers.console_helpers import (
 )
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.common.utils import rfc1034_compliant_str, smarter_build_absolute_uri
-from smarter.lib import json
+
+# our stuff
+from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle

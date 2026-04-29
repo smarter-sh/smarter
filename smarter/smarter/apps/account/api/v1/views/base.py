@@ -3,10 +3,10 @@
 
 from django.http.response import HttpResponseForbidden
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.serializers import AccountSerializer
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
