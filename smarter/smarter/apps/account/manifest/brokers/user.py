@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, Optional, Type
 from django.core import serializers
 from django.db import transaction
 
-import smarter.lib.logging as logging
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.user.metadata import SAMUserMetadata
 from smarter.apps.account.manifest.models.user.model import SAMUser
@@ -21,7 +20,7 @@ from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import (
     get_cached_smarter_admin_user_profile,
 )
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse

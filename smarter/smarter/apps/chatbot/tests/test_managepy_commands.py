@@ -5,7 +5,6 @@ import time
 
 from django.core.management import call_command
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import Account
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey
@@ -18,6 +17,7 @@ from smarter.apps.chatbot.signals import (
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
 

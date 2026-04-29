@@ -4,9 +4,8 @@ import datetime
 import os
 from pathlib import Path
 
-import smarter.lib.logging as logging
 from smarter.common.utils import get_readonly_csv_file
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 

@@ -14,7 +14,6 @@ from urllib.parse import urlparse
 
 import dns.resolver
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import Account, AccountContact, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
@@ -34,6 +33,7 @@ from smarter.common.helpers.aws.route53 import AWSRoute53
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
 

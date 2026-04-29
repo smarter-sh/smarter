@@ -1,3 +1,10 @@
+"""
+getSmarterLogger() - A utility function to retrieve a logger instance with
+optional Waffle switch control. This function allows for dynamic control over
+logging output based on the state of specified Waffle switches or a custom
+condition.
+"""
+
 from logging import Logger, getLogger
 from typing import Callable, Optional, Union
 

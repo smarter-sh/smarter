@@ -1,6 +1,5 @@
 """Smarter API V1 Manifests Enumerations."""
 
-import smarter.lib.logging as logging
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
 )
@@ -47,6 +46,7 @@ from smarter.apps.vectorstore.manifest.models.vectorstore.const import (
     MANIFEST_KIND as VECTORSTORE_MANIFEST_KIND,
 )
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.manifest.models.auth_token.const import (
     MANIFEST_KIND as AUTH_TOKEN_MANIFEST_KIND,

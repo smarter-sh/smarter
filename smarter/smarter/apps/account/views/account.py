@@ -1,7 +1,7 @@
 # pylint: disable=C0115
 """Django views"""
 
-import smarter.lib.logging as logging
+from smarter.lib import logging
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 

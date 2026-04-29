@@ -12,7 +12,7 @@ from django.http import (
 from pydantic import BaseModel, EmailStr
 from rest_framework.request import Request
 
-import smarter.lib.logging as logging
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base import AccountViewBase

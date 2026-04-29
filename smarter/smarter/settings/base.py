@@ -1282,21 +1282,25 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "timestamped": {
+        "verbose": {
             "format": "%(asctime)s - %(levelname)s - %(processName)s - %(message)s",
             "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
+        },
+        "truncated": {
+            "format": "%(asctime)s %(levelname)s %(message)s",
+            "datefmt": "[%Y-%m-%d %H:%M:%S]",
         },
     },
     "handlers": {
         "default": {
             "level": smarter_settings.log_level_name,
             "class": "logging.StreamHandler",
-            "formatter": "timestamped",
+            "formatter": "verbose",
         },
         "redis": {
             "level": smarter_settings.log_level_name,
             "class": "smarter.lib.logging.RedisLogHandler",
-            "formatter": "timestamped",
+            "formatter": "truncated",
         },
     },
     "root": {

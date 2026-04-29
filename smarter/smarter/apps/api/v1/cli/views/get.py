@@ -4,7 +4,7 @@
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
-import smarter.lib.logging as logging
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base import CliBaseApiView

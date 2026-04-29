@@ -6,7 +6,7 @@ from http import HTTPStatus
 from django.test import Client
 from django.urls import reverse
 
-import smarter.lib.logging as logging
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 # our stuff

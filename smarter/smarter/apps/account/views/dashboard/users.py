@@ -7,9 +7,8 @@ from django import forms, http
 from django.db import transaction
 from django.shortcuts import redirect
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import User, UserProfile
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 

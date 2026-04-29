@@ -5,7 +5,6 @@ This module contains views to implement the card-style list view
 in the Smarter Dashboard.
 """
 
-import logging
 from typing import Optional
 
 import yaml
@@ -24,23 +23,15 @@ from smarter.apps.docs.views.base import DocsBaseView
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.utils.request import is_authenticated_request
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CONNECTION_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
 
 
 class ConnectionDetailView(DocsBaseView):

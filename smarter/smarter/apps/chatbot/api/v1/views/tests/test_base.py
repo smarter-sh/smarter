@@ -6,12 +6,11 @@ from django.http import HttpRequest
 from django.test import RequestFactory
 from rest_framework.test import APIClient
 
-import smarter.lib.logging as logging
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.utils import get_readonly_yaml_file
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.loader import SAMLoader
 

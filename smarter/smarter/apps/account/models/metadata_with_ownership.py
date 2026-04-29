@@ -8,11 +8,10 @@ from django.db import models
 from django.db.models.expressions import Combinable
 from django.db.models.query import Prefetch
 
-import smarter.lib.logging as logging
-
 # our stuff
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches

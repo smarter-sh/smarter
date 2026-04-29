@@ -6,7 +6,6 @@ from urllib.parse import urlencode
 
 from django.urls import reverse
 
-import smarter.lib.logging as logging
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.connection.manifest.models.sql_connection.enum import (
@@ -20,7 +19,7 @@ from smarter.apps.connection.models import SqlConnection
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.tests.factories import secret_factory
 from smarter.common.api import SmarterApiVersions
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys

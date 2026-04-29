@@ -1,16 +1,14 @@
 """Smarter API Manifest - ApiConnection.spec"""
 
-import logging
 import os
 from typing import ClassVar, Optional
 
 from pydantic import Field, field_validator
 
 from smarter.apps.connection.manifest.models.api_connection.const import MANIFEST_KIND
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
 
@@ -20,14 +18,7 @@ filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CONNECTION_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
 
 
 class ApiConnection(SmarterBasePydanticModel):

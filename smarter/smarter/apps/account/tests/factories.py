@@ -3,7 +3,6 @@
 import uuid
 from typing import Optional
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import (
     Account,
     User,
@@ -11,6 +10,7 @@ from smarter.apps.account.models import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake, hash_factory
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 HERE = formatted_text(__name__)

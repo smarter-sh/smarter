@@ -11,12 +11,11 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.api.signals import api_request_completed
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base import AccountListViewBase, AccountViewBase

@@ -7,10 +7,9 @@ from typing import TYPE_CHECKING, Optional
 from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 
-import smarter.lib.logging as logging
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys

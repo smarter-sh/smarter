@@ -10,7 +10,6 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.chatbot.models import (
     ChatBot,
@@ -27,7 +26,7 @@ from smarter.apps.chatbot.serializers import (
     ChatBotSerializer,
 )
 from smarter.apps.plugin.models import PluginMeta
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.drf.views.token_authentication_helpers import (

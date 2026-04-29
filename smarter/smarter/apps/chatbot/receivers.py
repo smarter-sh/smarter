@@ -6,11 +6,10 @@ from typing import Optional
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
-import smarter.lib.logging as logging
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import plugin_deleting
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.broker import AbstractBroker
 

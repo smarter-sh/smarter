@@ -6,8 +6,8 @@
 from django.dispatch import receiver
 from rest_framework.request import Request
 
-import smarter.lib.logging as logging
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .signals import api_request_completed, api_request_initiated

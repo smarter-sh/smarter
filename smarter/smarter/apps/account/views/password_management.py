@@ -7,11 +7,11 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
-import smarter.lib.logging as logging
 from smarter.apps.account.models import User
 from smarter.apps.account.urls import AccountNamedUrls
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,

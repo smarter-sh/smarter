@@ -8,10 +8,10 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from requests import Response
 
-import smarter.lib.logging as logging
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.broker import AbstractBroker
 
