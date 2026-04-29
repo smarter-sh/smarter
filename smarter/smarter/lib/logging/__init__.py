@@ -68,7 +68,7 @@ def getSmarterLogger(
     name=None,
     any_switches: Optional[list[str]] = None,
     all_switches: Optional[list[str]] = None,
-    condition_func: Optional[Callable[[], bool]] = None,
+    condition_func: Optional[Callable] = None,
 ) -> Union[Logger, WaffleSwitchedLoggerWrapper]:
     """
     Python's logging module enhanced with optional Waffle switch control. If
@@ -100,8 +100,12 @@ def getSmarterLogger(
             and all(switch_is_active(switch) for switch in all_switches)
         )
 
-    def eval_switches() -> bool:
-        return eval_any_switches() or eval_all_switches() or (condition_func() if condition_func is not None else False)
+    def eval_switches(level) -> bool:
+        return (
+            eval_any_switches()
+            or eval_all_switches()
+            or (condition_func(level) if condition_func is not None else False)
+        )
 
     def switches_are_provided() -> bool:
         return (isinstance(any_switches, list) and len(any_switches) > 0) or (

@@ -4,8 +4,8 @@ from django.apps import apps
 
 from smarter.lib.django.waffle import (
     SmarterWaffleSwitches,
-    is_database_ready,
-    switch_is_active,
+    is_active,
+    ready,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -20,28 +20,28 @@ class TestSwitchIsActive(SmarterTestBase):
         # Test that a valid switch returns a boolean (True or False)
         switches = SmarterWaffleSwitches().all
         for switch in switches:
-            result = switch_is_active(switch)
+            result = is_active(switch)
             self.assertIsInstance(result, bool, f"Switch '{switch}' did not return a bool")
 
     def test_invalid_switch_returns_false(self):
         # Test that an invalid switch name returns False
-        self.assertFalse(switch_is_active("not_a_real_switch"))
-        self.assertFalse(switch_is_active(""))
-        self.assertFalse(switch_is_active(None))
-        self.assertFalse(switch_is_active(12345))
+        self.assertFalse(is_active("not_a_real_switch"))
+        self.assertFalse(is_active(""))
+        self.assertFalse(is_active(None))
+        self.assertFalse(is_active(12345))
 
     def test_switch_name_type(self):
         # Test that non-string types return False
-        self.assertFalse(switch_is_active(None))
-        self.assertFalse(switch_is_active(123))
-        self.assertFalse(switch_is_active([]))
-        self.assertFalse(switch_is_active({}))
+        self.assertFalse(is_active(None))
+        self.assertFalse(is_active(123))
+        self.assertFalse(is_active([]))
+        self.assertFalse(is_active({}))
 
     def test_switch_is_active_db_ready(self):
         # If the DB is ready, valid switches should return bool
-        if is_database_ready():
+        if ready():
             for switch in SmarterWaffleSwitches().all:
-                result = switch_is_active(switch)
+                result = is_active(switch)
                 self.assertIsInstance(result, bool)
         else:
             self.skipTest("Database is not ready")
@@ -51,7 +51,7 @@ class TestSwitchIsActive(SmarterTestBase):
         # This is hard to simulate without patching, so just check that when ready, valid switches work
         if apps.ready:
             for switch in SmarterWaffleSwitches().all:
-                self.assertIsInstance(switch_is_active(switch), bool)
+                self.assertIsInstance(is_active(switch), bool)
         else:
             self.skipTest("App registry is not ready")
 
@@ -63,10 +63,10 @@ class TestSwitchIsActive(SmarterTestBase):
     def test_switch_is_active_error_handling(self):
         # Should not raise exceptions for any input
         try:
-            switch_is_active("not_a_real_switch")
-            switch_is_active(None)
-            switch_is_active(123)
-            switch_is_active("")
+            is_active("not_a_real_switch")
+            is_active(None)
+            is_active(123)
+            is_active("")
         # pylint: disable=broad-except
         except Exception as e:
             self.fail(f"switch_is_active raised an exception: {e}")

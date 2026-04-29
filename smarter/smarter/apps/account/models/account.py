@@ -36,11 +36,15 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 ResolvedUserType = Optional[Union[User, AbstractUser, AnonymousUser]]
 
 
+def should_log_verbose(level) -> bool:
+    return smarter_settings.verbose_logging
+
+
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
 verbose_logger = logging.getSmarterLogger(
     __name__,
     any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING],
-    condition_func=lambda: smarter_settings.verbose_logging,
+    condition_func=should_log_verbose,
 )
 
 
