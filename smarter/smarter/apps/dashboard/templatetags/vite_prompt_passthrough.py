@@ -15,14 +15,14 @@ Functions
 ---------
 - load_manifest(): Loads and caches the Vite manifest as a dictionary.
 - collect_css(manifest, key, seen=None): Recursively collects CSS files for a manifest entry and its imports.
-- terminal_emulator_vite_assets(entry="index.html"): Django template tag that returns the JS and CSS assets for a given Vite entry.
+- prompt_passthrough_vite_assets(entry="index.html"): Django template tag that returns the JS and CSS assets for a given Vite entry.
 
 Example
 -------
 In a Django template, use the provided tag to get asset paths:
 
-  {% load vite_terminal_emulator %}
-  {% terminal_emulator_vite_assets "index.html" as assets %}
+  {% load vite_prompt_passthrough %}
+  {% prompt_passthrough_vite_assets "index.html" as assets %}
   {% for css_file in assets.css %}
     <link class="smarter" rel="stylesheet" href="{% static css_file %}">
   {% endfor %}
@@ -90,7 +90,7 @@ def load_manifest() -> dict[str, Any]:
     :return: The Vite manifest loaded from the static files directory.
     :rtype: dict[str, Any]
     """
-    manifest_path = os.path.join(settings.STATIC_ROOT, "react/terminal_emulator/manifest.json")
+    manifest_path = os.path.join(settings.STATIC_ROOT, "react/prompt_passthrough/manifest.json")
     with open(manifest_path, encoding="utf-8") as f:
         retval = json.load(f)
         logger.debug("%s.load_manifest() Loaded Vite manifest: %s", logger_prefix, logging.formatted_json(retval))
@@ -125,7 +125,7 @@ def collect_css(manifest: dict[str, Any], key: str, seen: set[str] | None = None
 
 @register.simple_tag
 @cache_results()
-def terminal_emulator_vite_assets(entry: str = "index.html") -> dict[str, Any]:
+def prompt_passthrough_vite_assets(entry: str = "index.html") -> dict[str, Any]:
     """
     Load CSS and JS files for a Vite entry point from the manifest.
 
@@ -163,6 +163,6 @@ def terminal_emulator_vite_assets(entry: str = "index.html") -> dict[str, Any]:
     }
 
     logger.debug(
-        "%s.terminal_emulator_vite_assets() entry=%s assets=%s", logger_prefix, entry, logging.formatted_json(assets)
+        "%s.prompt_passthrough_vite_assets() entry=%s assets=%s", logger_prefix, entry, logging.formatted_json(assets)
     )
     return assets

@@ -28,6 +28,10 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
         """
         View for rendering the Monaco terminal emulation page
         which only receives JSON dicts of LLM prompts.
+
+        :param request: The HTTP request object from the client.
+        :return: An HttpResponse rendering the terminal emulator page with the appropriate context.
+        :rtype: HttpResponse
         """
         from .names import LogsNames
 
@@ -46,10 +50,3 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
 
         logger.debug("%s.get() Rendering terminal emulator with context: %s", self.formatted_class_name, context)
         return render(request, self.template_path, context=context)
-
-    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """
-        Receives a LLM prompt JSON dict from the frontend and sends this to
-        the Provider passthrough service.
-        """
-        return HttpResponse(status=404)  # Not yet implemented.

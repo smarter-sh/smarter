@@ -1,3 +1,11 @@
+// ----------------------------------------------------------------------------
+// TerminalEmulator Component.
+//
+// This component renders a terminal emulator using xterm.js and connects to a
+// log stream API. It displays incoming log messages in real-time and shows
+// connection status. The component is styled to resemble a classic terminal
+// window and is responsive to container size changes.
+// ----------------------------------------------------------------------------
 import { useEffect, useRef } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";

@@ -3,7 +3,12 @@
 
 {% block style_extra %}
   {{ block.super }}
-    src="{% static 'react/prompt_passthrough/assets/styles.css' %}">
+
+  <!-- Vite assets for the terminal emulator -->
+  {% prompt_passthrough_vite_assets "index.html" as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/prompt_passthrough/' %}{{ css_file }}">
+  {% endfor %}
 {% endblock %}
 
 {% block dashboard_content %}
@@ -23,8 +28,9 @@
 {% endblock %}
 
 {% block javascript_extra %}
-  <script
-    type="module"
-    src="{% static 'react/prompt_passthrough/assets/index.js' %}">
-  </script>
+  {{ block.super }}
+
+  <!-- Vite assets for the terminal emulator -->
+  {% prompt_passthrough_vite_assets "index.html" as assets %}
+  <script class="smarter" type="module" src="{% static 'react/prompt_passthrough/' %}{{ assets.js }}"></script>
 {% endblock %}
