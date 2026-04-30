@@ -80,7 +80,7 @@ import queue
 import threading
 import uuid
 from contextvars import ContextVar
-from typing import Any
+from typing import Any, Union
 
 from django.core.exceptions import ImproperlyConfigured
 from django_redis import get_redis_connection
@@ -108,6 +108,38 @@ logger_prefix = logging.formatted_text(__name__)
 _redis_cache_holder = {"client": None}
 user_id_context: ContextVar[str | None] = ContextVar(CONTEXT_NAME, default=None)
 log_queue = queue.Queue(maxsize=MAX_QUEUE_SIZE)
+
+
+def redis_is_ready() -> bool:
+    """Check if the Redis cache is ready to accept connections."""
+    cache = get_redis_cache()
+    if cache is None:
+        return False
+    try:
+        cache.ping()
+        return True
+    # pylint: disable=broad-except
+    except Exception:
+        logger.warning("%s Redis cache is not responding. Logs will not be published to Redis.", logger_prefix)
+        return False
+
+
+def job_id_factory(prefix: str = "job") -> str:
+    """
+    Factory method to generate a unique job ID.
+
+    This method creates a unique identifier for jobs or tasks, using
+    a specified prefix and a random UUID. The resulting ID is
+    formatted as "{prefix}_{uuid}". This is used primarily for
+    managing subscriptions to Server-Sent Events (SSE) channels,
+    for ensuring that each subscription has a unique identifier.
+
+    :param prefix: The prefix to use for the job ID (default is "job").
+    :type prefix: str
+    :return: A unique job ID string.
+    :rtype: str
+    """
+    return f"{prefix}_{str(uuid.uuid4())}"
 
 
 def build_channel(name: str) -> str:
@@ -156,7 +188,7 @@ def get_user_context(user: Any) -> str:
     return f"{user.__class__.__name__}.{user.username}"
 
 
-def get_redis_cache():
+def get_redis_cache() -> Any:
     """
     Lazily retrieves the configured Redis cache connection.
 
@@ -189,6 +221,11 @@ def flush(buffer) -> None:
     :type buffer: list
     :return: None
     """
+    if not redis_is_ready():
+        for _ in buffer:
+            log_queue.task_done()
+        return
+
     cache = get_redis_cache()
     if cache is None:
         for _ in buffer:
@@ -227,6 +264,10 @@ def redis_worker() -> None:
     :param None: No parameters are required for this function.
     :return: None
     """
+    if not redis_is_ready():
+        logger.warning("%s Redis cache is not ready. Redis log worker thread will not start.", logger_prefix)
+        return
+
     logger.debug("%s Starting Redis log worker thread.", logger_prefix)
     buffer = []
 
@@ -267,6 +308,10 @@ def shutdown() -> None:
     :param None: No parameters are required for this function.
     :return: None
     """
+    if not worker_thread.is_alive():
+        return
+    if not redis_is_ready():
+        return
     try:
         log_queue.put_nowait(None)
     except queue.Full:
@@ -277,24 +322,6 @@ def shutdown() -> None:
 # Register the shutdown function to be called when the process exits, ensuring
 # that the worker thread is signaled to stop and any remaining logs are flushed.
 atexit.register(shutdown)
-
-
-def job_id_factory(prefix: str = "job") -> str:
-    """
-    Factory method to generate a unique job ID.
-
-    This method creates a unique identifier for jobs or tasks, using
-    a specified prefix and a random UUID. The resulting ID is
-    formatted as "{prefix}_{uuid}". This is used primarily for
-    managing subscriptions to Server-Sent Events (SSE) channels,
-    for ensuring that each subscription has a unique identifier.
-
-    :param prefix: The prefix to use for the job ID (default is "job").
-    :type prefix: str
-    :return: A unique job ID string.
-    :rtype: str
-    """
-    return f"{prefix}_{str(uuid.uuid4())}"
 
 
 class RedisLogHandler(logging.Handler):

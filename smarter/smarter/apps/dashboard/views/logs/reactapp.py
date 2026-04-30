@@ -10,9 +10,12 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 
+from smarter.lib import logging
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=C0415
@@ -40,6 +43,8 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
             }
         }
         self.template_path = "react/terminal-emulator.html"
+
+        logger.debug("%s.get() Rendering terminal emulator with context: %s", self.formatted_class_name, context)
         return render(request, self.template_path, context=context)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:

@@ -1,6 +1,11 @@
 {% extends "dashboard/base.html" %}
 {% load static %}
 
+{% block style_extra %}
+  {{ block.super }}
+    src="{% static 'react/prompt_passthrough/assets/styles.css' %}">
+{% endblock %}
+
 {% block dashboard_content %}
   {{ block.super }}
 

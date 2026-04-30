@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { FitAddon } from "@xterm/addon-fit";
-import { Terminal } from "xterm";
-import "xterm/css/xterm.css";
+import { Terminal } from "@xterm/xterm";
+import "@xterm/xterm/css/xterm.css";
 import { useLogStream } from "./logStream";
 import "./styles.css";
 
@@ -65,7 +65,11 @@ function TerminalEmulator({
     term.loadAddon(fitAddon);
 
     term.open(terminalContainerRef.current);
-    fitAddon.fit();
+    // defer fit until after browser layout
+    let rafId = requestAnimationFrame(() => {
+      fitAddon.fit();
+    });
+
     term.writeln("\x1b[2mWaiting for log stream...\x1b[0m");
 
     terminalRef.current = term;
@@ -83,6 +87,7 @@ function TerminalEmulator({
     window.addEventListener("resize", handleResize);
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener("resize", handleResize);
       resizeObserver.disconnect();
       fitAddonRef.current = null;

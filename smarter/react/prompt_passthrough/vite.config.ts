@@ -20,6 +20,13 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       output: {
         entryFileNames: "assets/index.js",
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.names?.some((n) => n.endsWith(".css"))) {
+            return "assets/styles.css";
+          }
+          return "assets/[name][extname]";
+        },
+
         chunkFileNames: "assets/[name].js",
       },
     },
