@@ -9,9 +9,10 @@ messages arrive.
 
 import asyncio
 from http import HTTPStatus
+from typing import Union
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
 from django_redis import get_redis_connection
 from redis.exceptions import RedisError
 
@@ -28,7 +29,14 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=W0613
 @login_required
-def stream_user_logs(request):
+def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpResponse]:
+    """
+    Stream log messages for the authenticated user in real-time using Server-Sent Events (SSE).
+
+    :param request: The HTTP request object from the client.
+    :return: A StreamingHttpResponse that streams log messages or an HttpResponse if streaming is unavailable.
+    :rtype: Union[StreamingHttpResponse, HttpResponse]
+    """
 
     # either locates a user, or generates a unique job ID that is guaranteed to not have
     # any log data associated with it.

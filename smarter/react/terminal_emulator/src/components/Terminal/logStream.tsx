@@ -1,3 +1,10 @@
+//-----------------------------------------------------------------------------
+// Log Stream Hook.
+//
+// This hook connects to a log stream API using Server-Sent Events (SSE) and
+// manages the state of incoming log messages, connection status, and errors.
+// It provides a simple interface for components to consume real-time log data.
+//-----------------------------------------------------------------------------
 import { useEffect, useRef, useState } from "react";
 
 type LogEvent = {

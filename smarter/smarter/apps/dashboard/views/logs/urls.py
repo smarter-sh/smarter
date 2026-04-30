@@ -28,6 +28,8 @@ if smarter_settings.enable_dashboard_server_logs:
     urlpatterns.append(
         path("api/stream/", stream_user_logs, name=LogsNames.stream),
     )
+
+    # Note: future use of WebSockets for real-time log streaming.
     # urlpatterns.append(
     #     path("api/consumer/", RedisLogConsumer.as_asgi(), name=LogsNames.consumer),  # type: ignore
     # )
