@@ -15,6 +15,7 @@ export default defineConfig(({ command }) => ({
     },
   },
   build: {
+    manifest: "manifest.json",
     outDir: "../../smarter/static/react/terminal_emulator",
     emptyOutDir: true,
     rollupOptions: {

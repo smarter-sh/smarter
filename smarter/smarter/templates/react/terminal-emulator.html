@@ -1,5 +1,15 @@
 {% extends "dashboard/base.html" %}
 {% load static %}
+{% load vite_terminal_emulator %}
+
+
+{% block style_extra %}
+  {{ block.super }}
+  {% terminal_emulator_vite_assets "index.html" as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static css_file %}">
+  {% endfor %}
+{% endblock %}
 
 {% block dashboard_content %}
   {{ block.super }}
@@ -16,8 +26,6 @@
 {% endblock %}
 
 {% block javascript_extra %}
-  <script
-    type="module"
-    src="{% static 'react/terminal_emulator/assets/index.js' %}">
-  </script>
+  {% terminal_emulator_vite_assets "index.html" as assets %}
+  <script class="smarter" type="module" src="{% static 'react/terminal_emulator/' %}{{ assets.js }}"></script>
 {% endblock %}

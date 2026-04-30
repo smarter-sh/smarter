@@ -115,15 +115,15 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
     :return: The number of pending chatbot deployments for the user.
     :rtype: int
     """
-    logger.debug(
-        "%s.get_pending_deployments() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
 
     @cache_results()
     def _get_pending_deployments(user_profile_id: int) -> int:
+        logger.debug(
+            "%s.get_pending_deployments() called with invalidate=%s for user_profile_id=%s",
+            logger_prefix,
+            invalidate,
+            user_profile,
+        )
         return ChatBot.objects.filter(deployed=False).with_ownership_permission_for(user=user_profile.user).count() or 0  # type: ignore
 
     if not user_profile:
@@ -157,12 +157,6 @@ def get_chatbots(invalidate: bool = False, user_profile: Optional[UserProfile] =
         logger.warning("%s.get_chatbots() called without user_profile. Returning None.", logger_prefix)
         return 0
 
-    logger.debug(
-        "%s.get_chatbots() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
     chatbots = ChatBot.get_cached_objects(invalidate=invalidate, user_profile=user_profile)
     return len(chatbots)
 
@@ -184,12 +178,6 @@ def get_plugins(invalidate: bool = False, user_profile: Optional[UserProfile] = 
     :return: The number of plugins belonging to the user.
     :rtype: int
     """
-    logger.debug(
-        "%s.get_plugins() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
     if not user_profile:
         logger.warning("%s.get_plugins() called without user_profile. Returning None.", logger_prefix)
         return 0
@@ -214,15 +202,15 @@ def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] =
     :return: The number of API keys belonging to the user.
     :rtype: int
     """
-    logger.debug(
-        "%s.get_api_keys() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
 
     @cache_results()
     def _get_api_keys(user_profile_id: int) -> int:
+        logger.debug(
+            "%s.get_api_keys() called with invalidate=%s for user_profile_id=%s",
+            logger_prefix,
+            invalidate,
+            user_profile,
+        )
         return ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
 
     if not user_profile:
@@ -252,15 +240,15 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
     :return: The number of custom domains belonging to the user.
     :rtype: int
     """
-    logger.debug(
-        "%s.get_custom_domains() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
 
     @cache_results()
     def _get_custom_domains(user_profile_id: int) -> int:
+        logger.debug(
+            "%s.get_custom_domains() called with invalidate=%s for user_profile_id=%s",
+            logger_prefix,
+            invalidate,
+            user_profile,
+        )
         return ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
 
     if not user_profile:
@@ -292,12 +280,6 @@ def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile
         logger.warning("%s.get_connections() called without user_profile. Returning None.", logger_prefix)
         return 0
 
-    logger.debug(
-        "%s.get_connections() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
     retval = ConnectionBase.get_cached_connections_for_user(invalidate=invalidate, user=user_profile.user) or []
     return len(retval)
 
@@ -322,9 +304,6 @@ def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = 
         logger.warning("%s.get_secrets() called without user_profile. Returning None.", logger_prefix)
         return 0
 
-    logger.debug(
-        "%s.get_secrets() called with invalidate=%s for user_profile_id=%s", logger_prefix, invalidate, user_profile.id  # type: ignore
-    )
     return Secret.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
 
 
@@ -346,12 +325,6 @@ def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] 
         logger.warning("%s.get_providers() called without user_profile. Returning 0.", logger_prefix)
         return 0
 
-    logger.debug(
-        "%s.get_providers() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile.id,  # type: ignore
-    )
     retval = Provider.get_cached_providers_for_user(invalidate=invalidate, user=user_profile.user) or []
     return len(retval)
 
@@ -369,10 +342,10 @@ def file_drop_zone(request: "HttpRequest") -> dict:
     :return: A dictionary containing the file drop zone context variable.
     :rtype: dict
     """
-    logger.debug("%s.file_drop_zone() called.", logger_prefix)
 
     @cache_results()
     def get_cached_file_drop_zone_context() -> dict:
+        logger.debug("%s.file_drop_zone() called.", logger_prefix)
         api_apply_path_name = ":".join([dashboard_namespace, camel_case_object_name(ManifestDropZoneView)])
         api_apply_path = reverse(api_apply_path_name)
         retval = {
@@ -410,7 +383,6 @@ def base(request: "HttpRequest") -> dict:
     :return: A dictionary containing the dashboard context variables.
     :rtype: dict
     """
-    logger.debug("%s.base() called.", logger_prefix)
     user = None
     user_profile = None
     resolved_user = None
@@ -441,6 +413,7 @@ def base(request: "HttpRequest") -> dict:
         :return: A dictionary containing the dashboard context variables for the user.
         :rtype: dict
         """
+        logger.debug("%s.base() called.", logger_prefix)
         current_year = datetime.now().year
         user_email = "anonymous@mail.edu"
         username = "anonymous"
@@ -520,10 +493,10 @@ def branding(request: "HttpRequest") -> dict:
 
     This processor is intended to be added to the ``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings, making the ``branding`` context variable available in all templates rendered by Django that inherit from ``base.html``.
     """
-    logger.debug("%s.branding() called.", logger_prefix)
 
     @cache_results()
     def get_cached_context() -> dict:
+        logger.debug("%s.branding() called.", logger_prefix)
         current_year = datetime.now().year
         root_url = request.build_absolute_uri("/").rstrip("/")
         context = {
@@ -600,7 +573,6 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
         {{ footer.plans_url }}
         {{ footer.contact_url }}
     """
-    logger.debug("%s.footer() called.", logger_prefix)
     context = {
         "footer": {
             "about_url": smarter_settings.marketing_site_url,
@@ -654,7 +626,6 @@ def prompt_list_context(request: "HttpRequest") -> dict:
     DEPRECATED: This context processor is slated for removal in future releases as
     the underlying issues with Wagtail integration are resolved.
     """
-    logger.debug("%s.prompt_list_context() called.", logger_prefix)
     return {"prompt_list": {"smarter_admin": smarter_cached_objects.smarter_admin, "chatbot_helpers": []}}
 
 

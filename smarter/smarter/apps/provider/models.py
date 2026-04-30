@@ -496,11 +496,9 @@ class Provider(MetaDataWithOwnershipModel):
         """Get cached providers for a user."""
         logger_prefix = formatted_text(__name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()")
 
-        logger.debug("%s.get_cached_providers_for_user() called with %s", logger_prefix, user)
-
         @cache_results()
         def cached_providers_by_user_id(user_id: int) -> Sequence["Provider"]:
-            logger.debug("%s.cached_providers_by_user_id() cache miss for user_id: %s", logger_prefix, user_id)
+            logger.debug("%s cache miss for user_id: %s", logger_prefix, user_id)
             retval = Provider.objects.with_read_permission_for(user_profile.user)
             return list(retval) if retval else []
 
@@ -508,7 +506,7 @@ class Provider(MetaDataWithOwnershipModel):
             user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
         except UserProfile.DoesNotExist:
             logger.error(
-                "%s.get_cached_providers_for_user() UserProfile does not exist for user: %s. This is a bug.",
+                "%s UserProfile does not exist for user: %s. This is a bug.",
                 logger_prefix,
                 user,
             )
