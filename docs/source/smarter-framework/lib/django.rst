@@ -18,9 +18,8 @@ For more information about Django, see the `official Django documentation <https
 
 .. toctree::
    :maxdepth: 1
-   :caption: Smarter Django Extensions
+   :caption: Technical References
 
-   django/drf
    django/hosts
    django/http
    django/manage

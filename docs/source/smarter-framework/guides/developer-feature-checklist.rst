@@ -54,6 +54,6 @@ Style Guide Checklist
 ---------------------
 1. Run pre-commit hooks prior to pushing your code
 2. Add your documentation to docs/source and test with make sphinx-docs
-3. Ensure that your logging entries conform to the `Smarter logging style guidelines <../smarter-logging.html>`__
+3. Ensure that your logging entries conform to the `Smarter logging style guidelines <../lib/logging.html>`__
 4. Ensure that all classes and functions have Sphinx-compatible docstrings.
 5. Ensure that your code adheres to PEP 8 style guidelines.

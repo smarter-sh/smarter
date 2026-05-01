@@ -7,3 +7,4 @@ File-based Streaming Log Handler
    :private-members:
    :inherited-members:
    :show-inheritance:
+   :noindex:
