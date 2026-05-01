@@ -129,7 +129,7 @@ To integrate the Smarter Chat Component into your web page, you should
 - include a DOM element with the React app id where you want the chat component to render.
 - include the app-loader.js script near the bottom of your html page
 
-.. literalinclude:: ../../../smarter/smarter/templates/prompt/workbench.html
+.. literalinclude:: ../../../../smarter/smarter/templates/prompt/workbench.html
    :language: html
    :caption: smarter/templates/prompt/workbench.html
 

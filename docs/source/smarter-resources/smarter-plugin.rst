@@ -5,7 +5,7 @@ Overview
 --------
 
 Plugins provide a `declarative <https://en.wikipedia.org/wiki/Declarative_programming>`__ `yaml <https://en.wikipedia.org/wiki/YAML>`__ `manifest <https://kubernetes.io/docs/concepts/overview/working-with-objects/>`__ alternative to programming in Python in order to
-extend :doc:`LLM tool functionality <plugins/how-tools-work>`. :doc:`Smarter Application Manifests (SAM) <../smarter-framework/smarter-manifests>`
+extend :doc:`LLM tool functionality <plugins/how-tools-work>`. :doc:`Smarter Application Manifests (SAM) <../smarter-framework/lib/manifests>`
 are used to :doc:`define Smarter Plugins <plugins/how-it-works>`, which can be used to provide three powerful kinds of
 enterprise data integrations, two of which require a ``Connection`` resource as well as a ``Secret``
 resource to store authentication credentials:
@@ -65,7 +65,7 @@ the tool should be presented to the LLM.
     - :doc:`Smarter API Manifest (SAM) <../smarter-framework/smarter-api>`
     - :doc:`Smarter Chatbot <../smarter-resources/smarter-chatbot>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
-    - :doc:`Smarter React UI <../smarter-framework/smarter-react-ui>`
+    - :doc:`Smarter React UI <../react-integration/smarter-chat>`
 
 Usage
 -----

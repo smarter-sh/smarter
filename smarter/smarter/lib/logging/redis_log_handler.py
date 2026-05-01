@@ -120,7 +120,9 @@ def redis_is_ready() -> bool:
         return True
     # pylint: disable=broad-except
     except Exception:
-        logger.warning("%s Redis cache is not responding. Logs will not be published to Redis.", logger_prefix)
+        logger.warning(
+            "%s.redis_is_ready() Redis cache is not responding. Logs will not be published to Redis.", logger_prefix
+        )
         return False
 
 
@@ -203,7 +205,9 @@ def get_redis_cache() -> Any:
     try:
         _redis_cache_holder["client"] = get_redis_connection("default")
     except ImproperlyConfigured:
-        logger.warning("%s Redis cache is not configured. Logs will not be published to Redis.", logger_prefix)
+        logger.warning(
+            "%s.get_redis_cache() Redis cache is not configured. Logs will not be published to Redis.", logger_prefix
+        )
         return None
     return _redis_cache_holder["client"]
 
@@ -246,7 +250,7 @@ def flush(buffer) -> None:
         pipe.execute()
     # pylint: disable=broad-except
     except Exception:
-        logger.exception("%s Failed to execute Redis pipeline.", logger_prefix, exc_info=True)
+        logger.exception("%s.flush() Failed to execute Redis pipeline.", logger_prefix, exc_info=True)
 
 
 def redis_worker() -> None:
@@ -265,10 +269,12 @@ def redis_worker() -> None:
     :return: None
     """
     if not redis_is_ready():
-        logger.warning("%s Redis cache is not ready. Redis log worker thread will not start.", logger_prefix)
+        logger.warning(
+            "%s.redis_worker() Redis cache is not ready. Redis log worker thread will not start.", logger_prefix
+        )
         return
 
-    logger.debug("%s Starting Redis log worker thread.", logger_prefix)
+    logger.debug("%s.redis_worker() Starting Redis log worker thread.", logger_prefix)
     buffer = []
 
     while True:
@@ -315,7 +321,9 @@ def shutdown() -> None:
     try:
         log_queue.put_nowait(None)
     except queue.Full:
-        logger.exception("%s Failed to signal Redis log worker thread for shutdown.", logger_prefix, exc_info=True)
+        logger.exception(
+            "%s.shutdown() Failed to signal Redis log worker thread for shutdown.", logger_prefix, exc_info=True
+        )
     worker_thread.join(timeout=WORKER_QUEUE_TIMEOUT)
 
 
@@ -408,7 +416,7 @@ class RedisLogHandler(logging.Handler):
                 print(f"Dropped {RedisLogHandler.dropped_logs} logs")
         # pylint: disable=broad-except
         except Exception:
-            logger.exception("%s Failed to emit log record.", logger_prefix, exc_info=True)
+            logger.exception("%s.emit() Failed to emit log record.", logger_prefix, exc_info=True)
 
 
 __all__ = [

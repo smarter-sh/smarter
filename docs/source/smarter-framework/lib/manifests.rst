@@ -44,11 +44,11 @@ The modules and classes below establish the foundation of Smarter's SAM data mod
    :maxdepth: 2
    :caption: Technical References
 
-   smarter-manifests/example-manifest
-   smarter-manifests/enum
-   smarter-manifests/pydantic-models
-   smarter-manifests/sam-loader
-   smarter-manifests/controller
-   smarter-manifests/broker-model
-   smarter-manifests/error-handling
-   smarter-manifests/validation-strategy
+   manifests/example-manifest
+   manifests/enum
+   manifests/pydantic-models
+   manifests/sam-loader
+   manifests/controller
+   manifests/broker-model
+   manifests/error-handling
+   manifests/validation-strategy

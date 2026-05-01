@@ -23,7 +23,7 @@ Usage examples::
     # Invalidate the cache for specific input parameters
     expensive_function.invalidate(1, 2)
 
-.. literalinclude:: ../../../../smarter/smarter/lib/cache.py
+.. literalinclude:: ../../../../../smarter/smarter/lib/cache.py
    :language: python
    :lines: 295-
    :caption: Smarter cache_results() decorator implementation

@@ -21,7 +21,7 @@ Usage examples::
     # Get a value from the cache
     value = cache.get('my_key')
 
-.. literalinclude:: ../../../../smarter/smarter/lib/cache.py
+.. literalinclude:: ../../../../../smarter/smarter/lib/cache.py
    :language: python
    :lines: 74-302
    :caption: Smarter LazyCache implementation

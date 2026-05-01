@@ -1,7 +1,6 @@
-Views
-======
 
-.. automodule:: smarter.apps.prompt.views
+
+.. automodule:: smarter.apps.dashboard.views.dashboard
     :members:
     :undoc-members:
     :show-inheritance:

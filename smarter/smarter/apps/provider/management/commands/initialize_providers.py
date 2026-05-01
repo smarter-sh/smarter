@@ -18,7 +18,7 @@ from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.apps.secret.models import Secret
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
-from smarter.common.mixins import json
+from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)

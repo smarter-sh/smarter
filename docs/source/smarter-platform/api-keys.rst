@@ -5,7 +5,7 @@ Smarter API keys are used to authenticate and authorize access to Smarter AI res
 They are independently managed from the AI resources themselves, allowing for better security and flexibility.
 
 Smarter API key are created on the Django knox TokenAuthentication system, a popular and well-supported authentication system for Django REST Framework.
-See `smarter/lib/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/token_authentication.py>`_
+See `smarter/lib/django/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/drf/token_authentication.py>`_
 for more details. Smarter adds a toggle to enable/disable API keys without deleting them, allowing for temporary suspension of access if needed.
 
 Creating API Keys
@@ -65,7 +65,7 @@ to the same Account as the resource being accessed.
 Smarter Chat React Component
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-API Backend: see `smarter/lib/drf/views/token_authentication_helpers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/views/token_authentication_helpers.py>`_
+API Backend: see `smarter/lib/django/drf/views/token_authentication_helpers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/drf/views/token_authentication_helpers.py>`_
 
 .. code-block:: python
 

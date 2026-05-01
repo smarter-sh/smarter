@@ -15,19 +15,9 @@ import "./styles.css";
 
 interface TerminalEmulatorProps {
   apiUrl: string;
-  csrfCookieName: string;
-  csrftoken: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
 }
 
-function TerminalEmulator({
-  apiUrl,
-  csrfCookieName,
-  csrftoken,
-  djangoSessionCookieName,
-  cookieDomain,
-}: TerminalEmulatorProps) {
+function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
   const { logs, connected, error } = useLogStream(apiUrl);
   const terminalContainerRef = useRef<HTMLDivElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
@@ -141,21 +131,6 @@ function TerminalEmulator({
 
   return (
     <>
-      <section className="terminal-emulator">
-        <div className="row">
-          <div className="col-12">
-            <h4>Terminal Emulator Component</h4>
-            <p>apiUrl: {apiUrl}</p>
-            <p>csrfCookieName: {csrfCookieName}</p>
-            <p>djangoSessionCookieName: {djangoSessionCookieName}</p>
-            <p>cookieDomain: {cookieDomain}</p>
-            <p>csrftoken: {csrftoken}</p>
-            <p>Connected: {connected ? "Yes" : "No"}</p>
-          </div>
-        </div>
-      </section>
-
-
       <section className="terminal-window" aria-label="Log terminal">
         <div className="terminal-window__header">
           <div className="terminal-window__controls" aria-hidden="true">

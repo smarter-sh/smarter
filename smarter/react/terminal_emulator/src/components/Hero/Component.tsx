@@ -6,7 +6,7 @@ function Hero() {
 
   return (
     <>
-      <h3>Terminal Emulator Hero</h3>
+      <h3>Server Logs</h3>
     </>
   );
 }
