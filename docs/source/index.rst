@@ -50,7 +50,7 @@ A :doc:`declarative <smarter-framework/lib/manifests>` AI :doc:`resource managem
 
 - **Cloud-Native Application Framework**
 
-  - Built on :doc:`Django <smarter-framework/lib/django>`, :doc:`Django REST Framework <smarter-framework/lib/django/drf>`, :doc:`Pydantic <smarter-framework/pydantic>`.
+  - Built on :doc:`Django <smarter-framework/lib/django>`, :doc:`Django REST Framework <smarter-framework/lib/drf>`, :doc:`Pydantic <smarter-framework/pydantic>`.
   - Automated :doc:`AWS cloud infrastructure <smarter-framework/aws>` and :doc:`Kubernetes <smarter-framework/kubernetes>` management.
   - ReactJS component-based :doc:`UI integration solution <smarter-framework/react-integration/smarter-chat>` that works for any web page.
   - Build AI tools that connect to enterprise resources like :doc:`Sql databases <smarter-resources/plugins/plugin/sql>` and :doc:`REST APIs <smarter-resources/plugins/plugin/api>`.
