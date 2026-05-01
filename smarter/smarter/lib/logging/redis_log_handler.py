@@ -7,6 +7,9 @@ enabling real-time log streaming for distributed systems. It is designed to work
 job IDs, allowing logs to be associated with specific jobs or tasks (such as Celery tasks), as well as
 to a global log channel for system-wide log aggregation.
 
+This handler is used for the Terminal Emulator real-time log view in the Smarter
+web console.
+
 Main Components
 ---------------
 

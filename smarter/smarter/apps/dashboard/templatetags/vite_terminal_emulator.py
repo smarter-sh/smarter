@@ -19,50 +19,50 @@ Functions
 
 Example
 -------
-In a Django template, use the provided tag to get asset paths:
+In a Django template, use the provided tag to get asset paths::
 
-  {% load vite_terminal_emulator %}
-  {% terminal_emulator_vite_assets "index.html" as assets %}
-  {% for css_file in assets.css %}
-    <link class="smarter" rel="stylesheet" href="{% static css_file %}">
-  {% endfor %}
+    {% load vite_terminal_emulator %}
+    {% terminal_emulator_vite_assets "index.html" as assets %}
+    {% for css_file in assets.css %}
+        <link class="smarter" rel="stylesheet" href="{% static css_file %}">
+    {% endfor %}
 
 Example Vite Manifest
 ---------------------
-A typical vite manifest.json looks like this:
+A typical vite manifest.json looks like this::
 
     {
-    "_rolldown-runtime.js": {
-        "file": "assets/rolldown-runtime.js",
-        "name": "rolldown-runtime"
-    },
-    "_xterm-TdnZ7DQy.css": {
-        "file": "assets/xterm-TdnZ7DQy.css",
-        "src": "_xterm-TdnZ7DQy.css"
-    },
-    "_xterm.js": {
-        "file": "assets/xterm.js",
-        "name": "xterm",
-        "imports": [
-        "_rolldown-runtime.js"
-        ],
-        "css": [
-        "assets/xterm-TdnZ7DQy.css"
-        ]
-    },
-    "index.html": {
-        "file": "assets/index.js",
-        "name": "index",
-        "src": "index.html",
-        "isEntry": true,
-        "imports": [
-        "_rolldown-runtime.js",
-        "_xterm.js"
-        ],
-        "css": [
-        "assets/index-DvLY75bJ.css"
-        ]
-    }
+        "_rolldown-runtime.js": {
+            "file": "assets/rolldown-runtime.js",
+            "name": "rolldown-runtime"
+        },
+        "_xterm-TdnZ7DQy.css": {
+            "file": "assets/xterm-TdnZ7DQy.css",
+            "src": "_xterm-TdnZ7DQy.css"
+        },
+        "_xterm.js": {
+            "file": "assets/xterm.js",
+            "name": "xterm",
+            "imports": [
+                "_rolldown-runtime.js"
+            ],
+            "css": [
+                "assets/xterm-TdnZ7DQy.css"
+            ]
+        },
+        "index.html": {
+            "file": "assets/index.js",
+            "name": "index",
+            "src": "index.html",
+            "isEntry": true,
+            "imports": [
+                "_rolldown-runtime.js",
+                "_xterm.js"
+            ],
+            "css": [
+                "assets/index-DvLY75bJ.css"
+            ]
+        }
     }
 """
 
@@ -138,16 +138,15 @@ def terminal_emulator_vite_assets(entry: str = "index.html") -> dict[str, Any]:
     :return: A dictionary containing the JS file and a list of CSS files.
     :rtype: dict[str, Any]
 
-
-    :example:
+    Example output::
 
         {
             "js": "assets/index.js",
             "css": [
                 "assets/index-DvLY75bJ.css",
                 "assets/xterm-TdnZ7DQy.css"
+            ]
         }
-
     """
     manifest = load_manifest()
     entry_data = manifest.get(entry, {})

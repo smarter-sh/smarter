@@ -39,7 +39,7 @@ See :doc:`lib/django/hosts` for more details.
 
 .. toctree::
   :maxdepth: 1
-  :caption: Smarter API Technical Reference
+  :caption: Technical Reference
 
   smarter-api/documentation
   smarter-api/cli
