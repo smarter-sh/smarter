@@ -1,4 +1,4 @@
-Smarter React UI
+Smarter Chat
 ===================
 
 The Smarter project maintains a React-based drop-in chat component that can be integrated into
