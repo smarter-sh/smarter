@@ -91,7 +91,7 @@ Django Security Features
           },
       ]
 
-- **Authentication Backends and Social Auth**. Supports multiple authentication methods including social authentication. See `Authentication Backends <https://docs.djangoproject.com/en/stable/topics/auth/customizing/#authentication-backends>`_. Smarter uses only two authentication backends (plus social auth), with the principal one being Smarter Token-based authentication, see `smarter/lib/django/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/drf/token_authentication.py>`_. In aggregate the following authentication backends are used:
+- **Authentication Backends and Social Auth**. Supports multiple authentication methods including social authentication. See `Authentication Backends <https://docs.djangoproject.com/en/stable/topics/auth/customizing/#authentication-backends>`_. Smarter uses only two authentication backends (plus social auth), with the principal one being Smarter Token-based authentication, see `smarter/lib/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/token_authentication.py>`_. In aggregate the following authentication backends are used:
 
   .. code-block:: python
 
@@ -161,7 +161,7 @@ Smarter Authentication
 Smarter implements a proprietary token-based authentication mechanism for its API endpoints
 which is based on Django knox. This enables enhanced Journal support as well as log warnings
 for API keys that have exceeded their maximum lifetime.
-See `smarter/lib/django/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/drf/token_authentication.py>`_ and `smarter/lib/django/drf/middleware.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/drf/middleware.py>`_ for details.
+See `smarter/lib/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/token_authentication.py>`_ and `smarter/lib/drf/middleware.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/middleware.py>`_ for details.
 
 
 Audit Logging

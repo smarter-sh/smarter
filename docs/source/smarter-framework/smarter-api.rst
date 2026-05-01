@@ -3,7 +3,7 @@ Smarter API
 
 The Smarter API provides support for :doc:`AI text prompts <../smarter-resources/smarter-prompt>`,
 the :doc:`command-line interface (CLI) <../smarter-platform/cli>`, as well as
-limited support for anciallary UI features. The API is built on :doc:`Django REST Framework <lib/django/drf>` and
+limited support for anciallary UI features. The API is built on :doc:`Django REST Framework <lib/drf>` and
 includes a rich set of enterprise features for enhanced security, audit capability,
 and performance optimization.
 

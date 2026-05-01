@@ -849,7 +849,7 @@ authentication backend.
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#authentication-backends
-- https://docs.smarter.sh/en/latest/developers/architecture/lib/django/drf.html
+- https://docs.smarter.sh/en/latest/developers/architecture/lib/drf.html
 """
 
 SOCIAL_AUTH_CREATE_USERS = False
