@@ -79,7 +79,7 @@
 }
 
 .terminal-window__body {
-  height: 420px;
+  min-height: 750px;
   overflow: hidden;
   padding: 0;
   background:

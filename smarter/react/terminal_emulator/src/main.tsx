@@ -30,10 +30,6 @@ createRoot(rootEl).render(
   <StrictMode>
     <App
       apiUrl={apiUrl}
-      csrfCookieName={csrfCookieName}
-      csrftoken={csrftoken}
-      djangoSessionCookieName={djangoSessionCookieName}
-      cookieDomain={cookieDomain}
     />
   </StrictMode>,
 );

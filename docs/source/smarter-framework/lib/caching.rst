@@ -16,7 +16,7 @@ function outputs based on their input parameters.
     :maxdepth: 2
     :caption: Smarter Caching Architecture
 
-    smarter-caching/decorator
-    smarter-caching/invalidators
-    smarter-caching/lazy-cache
-    smarter-caching/class-based-caching
+    caching/decorator
+    caching/invalidators
+    caching/lazy-cache
+    caching/class-based-caching

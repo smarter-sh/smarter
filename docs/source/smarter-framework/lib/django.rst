@@ -20,6 +20,7 @@ For more information about Django, see the `official Django documentation <https
    :maxdepth: 1
    :caption: Smarter Django Extensions
 
+   django/drf
    django/hosts
    django/http
    django/manage
@@ -31,5 +32,6 @@ For more information about Django, see the `official Django documentation <https
    django/tasks
    django/templates
    django/token-generators
-   django/view-helpers
    django/validators
+   django/view-helpers
+   django/waffle

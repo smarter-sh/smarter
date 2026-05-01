@@ -8,7 +8,7 @@ The Smarter Framework supports multiple hosts using the `django-hosts <https://d
    :undoc-members:
    :exclude-members: host_patterns
 
-.. literalinclude:: ../../../../smarter/smarter/hosts.py
+.. literalinclude:: ../../../../../smarter/smarter/hosts.py
    :language: python
    :linenos:
    :lines: 66-

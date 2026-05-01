@@ -44,7 +44,11 @@ from typing import TYPE_CHECKING
 
 from .is_active import switch_is_active
 from .ready import is_database_ready
-from .switches import SmarterWaffleSwitches, smarter_waffle_switches
+from .switches import (
+    SmarterWaffleSwitch,
+    SmarterWaffleSwitches,
+    smarter_waffle_switches,
+)
 
 if TYPE_CHECKING:
     from .admin import SmarterSwitchAdmin
@@ -71,6 +75,7 @@ def __getattr__(name):
 
 
 __all__ = [
+    "SmarterWaffleSwitch",
     "SmarterWaffleSwitches",
     "SmarterSwitchAdmin",
     "switch_is_active",
