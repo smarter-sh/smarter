@@ -9,7 +9,7 @@ and :doc:`frontend user interfaces <smarter-framework/react-integration/smarter-
 implement these layers do certainly vary considerably, most of the
 work of the Smarter Project consists of the backend API services, written in
 :doc:`Python <smarter-framework/python>` on the :doc:`Django web framework <smarter-framework/lib/django>`,
-:doc:`Django REST Framework (DRF) <smarter-framework/lib/django/drf>`, and :doc:`Pydantic <smarter-framework/pydantic>`,
+:doc:`Django REST Framework (DRF) <smarter-framework/lib/drf>`, and :doc:`Pydantic <smarter-framework/pydantic>`,
 leveraging the strengths of each to provide a robust and flexible foundation for building enterprise class applications.
 
 

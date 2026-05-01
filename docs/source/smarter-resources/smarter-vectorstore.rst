@@ -21,7 +21,7 @@ and embedding services, ensuring that the process of generating and storing
 embeddings is both modular and extensible.
 
 The module emphasizes operational readiness and logging, using feature
-flags (:doc:`waffle switches <../smarter-framework/smarter-waffle>`) to control logging behavior and providing detailed debug
+flags (:doc:`waffle switches <../smarter-framework/lib/django/waffle>`) to control logging behavior and providing detailed debug
 information throughout its methods. It supports advanced document processing
 workflows, such as loading and embedding PDF documents, by leveraging tools like
 PyPDFLoader and RecursiveCharacterTextSplitter to split documents into manageable

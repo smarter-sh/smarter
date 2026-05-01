@@ -6,11 +6,11 @@ Smarter Framework Library
    :maxdepth: 1
    :caption: Technical Reference
 
+   lib/django
+   lib/drf
    lib/caching
    lib/json
    lib/celery-config
-   lib/django
-   lib/drf
    lib/journal
    lib/logging
    lib/manifests
