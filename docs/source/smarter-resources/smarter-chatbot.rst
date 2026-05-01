@@ -30,7 +30,7 @@ ChatBots are managed with the :doc:`Smarter command-line interface (CLI) <../sma
     - :doc:`Smarter Plugin <../smarter-resources/smarter-plugin>`
     - :doc:`Smarter Prompt <../smarter-resources/smarter-prompt>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
-    - :doc:`Smarter React UI <../smarter-framework/react-integration/smarter-chat>`
+    - :doc:`Smarter Chat <../smarter-framework/react-integration/smarter-chat>`
 
 Usage
 --------

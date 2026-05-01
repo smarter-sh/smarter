@@ -61,7 +61,7 @@ Json Object Keys
 
   - :doc:`Example Prompt Request <./example-request>`
   - :doc:`Django Hosts <../../../smarter-framework/lib/django/hosts>`
-  - :doc:`Smarter React UI <../../../smarter-framework/react-integration/smarter-chat>`
+  - :doc:`Smarter Chat <../../../smarter-framework/react-integration/smarter-chat>`
   - class reference :py:class:`smarter.apps.prompt.views.views.ChatConfigView`
 
 Example JSON Object

@@ -46,8 +46,8 @@ template-based web pages. At a high level, the strategy involves:
   :maxdepth: 1
   :caption: Code Samples
 
-  react-integration/example-view
+  react-integration/example-vite
   react-integration/example-template-tag
   react-integration/example-template
+  react-integration/example-view
   react-integration/example-react-mount
-  react-integration/example-vite

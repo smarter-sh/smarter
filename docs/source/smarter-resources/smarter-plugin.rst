@@ -65,7 +65,7 @@ the tool should be presented to the LLM.
     - :doc:`Smarter API Manifest (SAM) <../smarter-framework/smarter-api>`
     - :doc:`Smarter Chatbot <../smarter-resources/smarter-chatbot>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
-    - :doc:`Smarter React UI <../smarter-framework/react-integration/smarter-chat>`
+    - :doc:`Smarter Chat <../smarter-framework/react-integration/smarter-chat>`
 
 Usage
 -----
