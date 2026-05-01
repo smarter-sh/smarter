@@ -10,10 +10,10 @@ to a global log channel for system-wide log aggregation.
 Main Components
 ---------------
 
-- ``RedisLogHandler``: A custom logging handler that publishes log records to Redis channels, supporting both job-specific and global log streams.
-- ``job_id_factory``: Utility function to generate unique job IDs for associating logs with specific jobs or tasks.
-- ``user_id_context``: Context variable for tracking the current job ID within the logging context.
-- ``GLOBAL_LOG_CHANNEL``: The Redis channel name used for publishing all logs globally.
+- ``smarter.lib.logging.redis_log_handler.RedisLogHandler``: A custom logging handler that publishes log records to Redis channels, supporting both job-specific and global log streams.
+- ``smarter.lib.logging.redis_log_handler.job_id_factory``: Utility function to generate unique job IDs for associating logs with specific jobs or tasks.
+- ``smarter.lib.logging.redis_log_handler.user_id_context``: Context variable for tracking the current job ID within the logging context.
+- ``smarter.lib.logging.redis_log_handler.GLOBAL_LOG_CHANNEL``: The Redis channel name used for publishing all logs globally.
 
 Features
 --------

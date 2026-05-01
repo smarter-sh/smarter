@@ -13,8 +13,8 @@ function outputs based on their input parameters.
 
 
 .. toctree::
-    :maxdepth: 2
-    :caption: Smarter Caching Architecture
+    :maxdepth: 1
+    :caption: Technical References
 
     caching/decorator
     caching/invalidators

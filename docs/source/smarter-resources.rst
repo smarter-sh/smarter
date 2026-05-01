@@ -25,7 +25,7 @@ Smarter considers the entire lifecycle of an AI resource, from declaration throu
 deployment, scaling, monitoring, maintenance, change management, and its eventual sunsetting. Smarter considers the technical
 capabilities of the various team member roles, and provides usable tools and abstractions for each.
 
-- Prompt engineers work with Smarter  :doc:`YAML manifests <smarter-framework/lib/manifests>` and the :doc:`Smarter CLI <smarter-framework/cli>`.
+- Prompt engineers work with Smarter  :doc:`YAML manifests <smarter-framework/lib/manifests>` and the :doc:`Smarter CLI <smarter-framework/smarter-cli>`.
 - Business Process Analysts work with Smarter's MySQL database and reporting tools.
 - Application developers work with Python and the :doc:`Smarter Application Framework <smarter-framework>`, and it's built-in :doc:`REST APIs <smarter-framework/smarter-api>`.
 - Data scientists work with Python

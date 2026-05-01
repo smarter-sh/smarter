@@ -41,7 +41,7 @@ resources defined in the manifests in sync to the declaration of the manifest.
 The modules and classes below establish the foundation of Smarter's SAM data models.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Technical References
 
    manifests/example-manifest
