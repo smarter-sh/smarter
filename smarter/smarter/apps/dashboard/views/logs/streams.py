@@ -1,10 +1,34 @@
 """
-Server-Sent Events (SSE) view for streaming logs in real-time.
+SSE log streaming views for dashboard clients.
 
-This view subscribes to a Redis channel where log messages are published and
-streams them to the client using Server-Sent Events (SSE).
-The client can listen to this stream and update the UI in real-time as new log
-messages arrive.
+This module provides a login-protected Django view,
+:func:`stream_user_logs`, that streams server log output to the browser using
+Server-Sent Events (SSE).
+
+The view subscribes to a Redis Pub/Sub channel derived from the authenticated
+user context and forwards log records to connected clients in SSE format.
+
+Behavior
+--------
+
+- Uses the ``default`` Redis connection configured through ``django-redis``.
+- Verifies ``smarter_settings.enable_dashboard_server_logs`` before opening a
+    stream.
+- Emits a retry hint and keepalive comments to keep long-lived connections
+    healthy through intermediate proxies.
+- Closes the Redis Pub/Sub connection when the stream terminates.
+
+SSE payload format
+------------------
+
+- ``retry: 3000`` is sent once when a client first connects.
+- Each log line is sent as ``data: <line>`` followed by a blank line.
+- ``: keepalive`` comments are sent during idle periods.
+
+See Also
+--------
+
+- :mod:`smarter.lib.logging.redis_log_handler`
 """
 
 import asyncio
@@ -31,11 +55,32 @@ logger = logging.getLogger(__name__)
 @login_required
 def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpResponse]:
     """
-    Stream log messages for the authenticated user in real-time using Server-Sent Events (SSE).
+    Stream per-user server logs over Server-Sent Events (SSE).
 
-    :param request: The HTTP request object from the client.
-    :return: A StreamingHttpResponse that streams log messages or an HttpResponse if streaming is unavailable.
-    :rtype: Union[StreamingHttpResponse, HttpResponse]
+    This endpoint opens a Redis Pub/Sub subscription for the current user
+    context and forwards incoming messages as SSE frames. When no message is
+    available, keepalive comments are emitted so that long-lived connections
+    remain active through reverse proxies.
+
+    :param request: Incoming HTTP request. The view requires authentication
+        via :func:`django.contrib.auth.decorators.login_required`.
+    :type request: django.http.HttpRequest
+    :returns:
+        A streaming SSE response when log streaming is available; otherwise a
+        plain-text non-streaming response describing why streaming is disabled
+        or unavailable.
+    :rtype: Union[django.http.StreamingHttpResponse, django.http.HttpResponse]
+
+    :status 200: Streaming response created successfully.
+    :status 503: Redis is unavailable and a stream cannot be created.
+
+    :responseheader Content-Type: ``text/event-stream`` for streaming responses.
+    :responseheader Cache-Control: ``no-cache`` for streaming responses.
+    :responseheader X-Accel-Buffering: ``no`` for streaming responses.
+
+    :note:
+        If ``smarter_settings.enable_dashboard_server_logs`` is false, the
+        function returns a plain-text response and does not connect to Redis.
     """
 
     # either locates a user, or generates a unique job ID that is guaranteed to not have

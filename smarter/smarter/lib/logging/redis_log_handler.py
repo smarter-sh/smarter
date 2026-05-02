@@ -83,7 +83,7 @@ import queue
 import threading
 import uuid
 from contextvars import ContextVar
-from typing import Any, Union
+from typing import Any
 
 from django.core.exceptions import ImproperlyConfigured
 from django_redis import get_redis_connection
@@ -123,9 +123,6 @@ def redis_is_ready() -> bool:
         return True
     # pylint: disable=broad-except
     except Exception:
-        logger.warning(
-            "%s.redis_is_ready() Redis cache is not responding. Logs will not be published to Redis.", logger_prefix
-        )
         return False
 
 
@@ -271,11 +268,6 @@ def redis_worker() -> None:
     :param None: No parameters are required for this function.
     :return: None
     """
-    if not redis_is_ready():
-        logger.warning(
-            "%s.redis_worker() Redis cache is not ready. Redis log worker thread will not start.", logger_prefix
-        )
-        return
 
     logger.debug("%s.redis_worker() Starting Redis log worker thread.", logger_prefix)
     buffer = []
