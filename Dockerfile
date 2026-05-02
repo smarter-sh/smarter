@@ -181,7 +181,7 @@ ENV PATH="/home/smarter_user/venv/bin:$PATH"
 # https://github.com/smarter-sh/smarter-deploy repo that is used to deploy
 # smarter locally for non-developers.
 COPY ./smarter/requirements requirements
-RUN pip install --upgrade pip && \
+RUN pip install pip==25.3 setuptools wheel pip-tools && \
   pip install --no-cache-dir -r requirements/docker.txt
 
 # Install Python dependencies for the local environment for cases where
