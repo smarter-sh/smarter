@@ -1,5 +1,5 @@
 """
-SSE log streaming views for dashboard clients.
+Mostly GitHub Copilot vibecoded SSE log streaming views for dashboard clients.
 
 This module provides a login-protected Django view,
 :func:`stream_user_logs`, that streams server log output to the browser using
@@ -159,8 +159,12 @@ async def _replay_stream_history(redis_cache: Any, channel: str) -> AsyncIterato
     replayed_entries = 0
 
     while replayed_entries < STREAM_REPLAY_MAX_ENTRIES:
+        # Cap each XREVRANGE call to avoid fetching more than what's left in our budget.
         remaining = STREAM_REPLAY_MAX_ENTRIES - replayed_entries
         batch_size = min(STREAM_REPLAY_BATCH_SIZE, remaining)
+
+        # Read backwards from upper_bound so we can page through history in reverse
+        # without re-fetching entries we've already seen.
         entries = await asyncio.to_thread(
             redis_cache.xrevrange,
             key,
@@ -169,20 +173,28 @@ async def _replay_stream_history(redis_cache: Any, channel: str) -> AsyncIterato
             count=batch_size,
         )
         if not entries:
+            # No more entries in the stream; stop paging.
             break
 
         replayed_entries += len(entries)
 
         for entry_id, payload in entries:
+            # Redis field keys may be bytes or str depending on client decode settings.
             raw = payload.get("data", payload.get(b"data", ""))
             decoded = _decode_redis_payload(raw)
             if _should_skip_stream_internal_log(decoded):
+                # Advance the cursor past this entry even though we're dropping it,
+                # so the next batch starts from the correct position.
                 upper_bound = f"({_decode_redis_payload(entry_id)}"
                 continue
             try:
                 all_entries.append(json.loads(decoded))
             except (ValueError, TypeError):
+                # Not valid JSON — wrap it in a plain message envelope so the client
+                # always receives a consistent object shape.
                 all_entries.append({"message": decoded})
+            # The "(" prefix makes the bound exclusive, preventing the current entry
+            # from being returned again in the next XREVRANGE call.
             upper_bound = f"({_decode_redis_payload(entry_id)}"
 
     all_entries.reverse()
@@ -190,7 +202,6 @@ async def _replay_stream_history(redis_cache: Any, channel: str) -> AsyncIterato
     yield f"event: bulk\ndata: {json.dumps(all_entries)}\n\n"
 
 
-# pylint: disable=W0613
 @login_required
 def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpResponse]:
     """

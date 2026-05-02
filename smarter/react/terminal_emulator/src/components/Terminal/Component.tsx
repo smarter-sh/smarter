@@ -13,6 +13,8 @@ import "@xterm/xterm/css/xterm.css";
 import { useLogStream } from "./logStream";
 import "./styles.css";
 
+// These strings are internal SSE stream status messages emitted by the server. They can
+// appear in replay history from older log entries and should never surface to dashboard users.
 const SUPPRESSED_STARTUP_LINES = new Set(["Waiting for log stream...", "[stream] connected"]);
 
 interface TerminalEmulatorProps {
@@ -108,7 +110,7 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
 
     const nextMessages = nextLogs
       .map((log) => log.message)
-      .filter((message) => !SUPPRESSED_STARTUP_LINES.has(message.trim()));
+      .filter((message) => !SUPPRESSED_STARTUP_LINES.has(message.trim())); // drop internal stream noise
     lastLogIndexRef.current = logs.length;
 
     if (!nextMessages.length) {
