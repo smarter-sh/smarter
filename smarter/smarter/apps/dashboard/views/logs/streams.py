@@ -40,6 +40,7 @@ from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
 from django_redis import get_redis_connection
 from redis.exceptions import RedisError
 
+from smarter.apps.account.models import get_resolved_user
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.logging.redis_log_handler import (
@@ -85,7 +86,11 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
 
     # either locates a user, or generates a unique job ID that is guaranteed to not have
     # any log data associated with it.
-    user_context = get_user_context(request.user) if request.user.is_authenticated else job_id_factory()
+    user = get_resolved_user(request.user)
+    if not user:
+        raise ValueError("Authenticated user not found in database.")
+    username = user.username if hasattr(user, "username") and user.is_authenticated else None
+    user_context = get_user_context(username) if username else job_id_factory()
     logger_prefix = logging.formatted_text(f"{__name__}.stream_user_logs()")
     logger.info("%s called", logger_prefix)
 

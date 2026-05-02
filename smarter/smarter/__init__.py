@@ -2,7 +2,12 @@
 Smarter - A declarative platform for managing AI resources.
 """
 
+import pymysql
+
 from .__version__ import __version__ as _version
+
+pymysql.install_as_MySQLdb()
+
 
 __title__ = "smarter"
 __description__ = "A declarative platform for managing AI resources."
