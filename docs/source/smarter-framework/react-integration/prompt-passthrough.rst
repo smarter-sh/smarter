@@ -12,6 +12,6 @@ Because this project is implemented in TSX rather than Python, this page uses
 Core Prompt Component
 ---------------------
 
-.. literalinclude:: ../../../../smarter/smarter/react/prompt_passthrough/src/components/Prompt/Component.tsx
-   :language: typescript
-   :caption: smarter/react/prompt_passthrough/src/components/Prompt/Component.tsx
+.. literalinclude:: ../../../../smarter/react/prompt_passthrough/src/components/Prompt/Component.tsx
+   :language: tsx
+   :force:

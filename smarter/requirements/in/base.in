@@ -20,7 +20,8 @@ celery-redbeat                          # scheduled asynchronous tasks
 channels                                # web socket support for Django ASGI
 channels-redis                          # Redis ASGI support
 dnspython                               # DNS toolkit for Python
-mysqlclient                             # MySQL client
+mariadb                                 # MySQL-compatible client
+pymysql                                 # for Django mysql compatibility
 paramiko                                # SSH2 protocol library
 psutil                                  # a cross-platform library for retrieving information on running processes and system utilization
 python-hcl2                             # Terraform hcl parser for reading Terraform tfvars files
