@@ -172,7 +172,7 @@ def get_user_channel() -> str:
     return user_id_context.get() or job_id_factory()
 
 
-def get_user_context(username: str) -> str:
+def get_user_context(user: Any) -> str:
     """
     Retrieves the current user context for logging.
 
@@ -183,10 +183,11 @@ def get_user_context(username: str) -> str:
     :return: The current user context (user ID or job ID) for logging.
     :rtype: str
     """
-    # pylint: disable=C0415
-    from smarter.apps.account.models import get_resolved_user
-
-    return f"{username.__class__.__name__}.{username}"
+    if hasattr(user, "username"):
+        username = user.username
+    else:
+        username = str(user)
+    return f"{user.__class__.__name__}.{username}"
 
 
 def get_redis_cache() -> Any:

@@ -2,16 +2,18 @@
 Middleware to block clients that trigger excessive 404 responses.
 """
 
+import inspect
 import logging
 from http import HTTPStatus
 
+from asgiref.sync import markcoroutinefunction, sync_to_async
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseForbidden
 
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterMiddlewareMixin
-from smarter.common.utils import is_async_context, is_authenticated_request
+from smarter.common.utils import is_authenticated_request
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -62,11 +64,21 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         ]
     """
 
+    sync_capable = True
+    async_capable = True
+
     THROTTLE_LIMIT = 25
     """The maximum number of allowed 404 responses from a single unauthenticated client IP within the timeout period before blocking is triggered."""
 
     THROTTLE_TIMEOUT = 600  # seconds (10 minutes)
     """The duration of the timeout window in seconds during which 404 responses are counted and blocking is enforced."""
+
+    def __init__(self, get_response):
+        super().__init__(get_response)
+        self.get_response = get_response
+        self.is_async = inspect.iscoroutinefunction(get_response)
+        if self.is_async:
+            markcoroutinefunction(self)
 
     @property
     def formatted_class_name(self) -> str:
@@ -85,9 +97,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         :returns: The original response, or a 403 Forbidden response if the client has exceeded the allowed number of 404 responses.
         :rtype: django.http.HttpResponse
         """
-        if not is_async_context() and not waffle.switch_is_active(
-            SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404
-        ):
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
             return response
 
         # skip if the response is anything other than a 404
@@ -99,6 +109,45 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
             return response
 
         logger.debug("%s.process_response(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
+
+        client_ip = self.get_client_ip(request)
+        if not client_ip:
+            return response
+
+        throttle_key = f"excessive_404_throttle:{client_ip}"
+        blocked_count = cache.get(throttle_key, 0)
+        if blocked_count >= self.THROTTLE_LIMIT:
+            logger.warning("%s Throttled client %s after %d 404s", self.formatted_class_name, client_ip, blocked_count)
+            return HttpResponseForbidden(
+                f"You have been blocked due to too many invalid requests from your IP. Try again later or contact {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
+            )
+
+        try:
+            blocked_count = cache.incr(throttle_key)
+        except ValueError:
+            cache.set(throttle_key, 1, timeout=self.THROTTLE_TIMEOUT)
+            blocked_count = 1
+        else:
+            cache.set(throttle_key, blocked_count, timeout=self.THROTTLE_TIMEOUT)
+
+        return response
+
+    async def async_process_response(self, request: WSGIRequest, response):
+        """
+        Async entry point for ASGI deployments. Mirrors :meth:`process_response`.
+        """
+        if not await sync_to_async(waffle.switch_is_active)(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
+            return response
+
+        if response.status_code != HTTPStatus.NOT_FOUND:
+            return response
+
+        if is_authenticated_request(request):
+            return response
+
+        logger.debug(
+            "%s.async_process_response(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request)
+        )
 
         client_ip = self.get_client_ip(request)
         if not client_ip:

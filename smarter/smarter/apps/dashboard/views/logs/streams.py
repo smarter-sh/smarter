@@ -87,12 +87,12 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     # either locates a user, or generates a unique job ID that is guaranteed to not have
     # any log data associated with it.
     user = get_resolved_user(request.user)
-    if not user:
-        raise ValueError("Authenticated user not found in database.")
-    username = user.username if hasattr(user, "username") and user.is_authenticated else None
-    user_context = get_user_context(username) if username else job_id_factory()
+    if not user or not user.is_authenticated:
+        user_context = job_id_factory()
+    else:
+        user_context = get_user_context(user)
     logger_prefix = logging.formatted_text(f"{__name__}.stream_user_logs()")
-    logger.info("%s called", logger_prefix)
+    logger.info("%s called for user_context='%s'", logger_prefix, user_context)
 
     if not smarter_settings.enable_dashboard_server_logs:
         return HttpResponse(

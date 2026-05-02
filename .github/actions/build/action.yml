@@ -77,6 +77,11 @@ runs:
         fi
         echo "TAG=$TAG" >> $GITHUB_ENV
 
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v4
+      with:
+        platforms: arm64
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v4
 
@@ -160,11 +165,6 @@ runs:
           DATESTAMP="${DATESTAMP}.${GITHUB_REF_NAME}"
         fi
         echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v4
-      with:
-        platforms: arm64
 
     - name: Build and push to AWS ECR
       id: docker-build-ecr
