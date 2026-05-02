@@ -24,6 +24,7 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
+        args: [--no-error-on-unmatched-pattern]
         exclude: "^smarter/|^helm/|^docs/source/example-manifests/"
   - repo: https://github.com/psf/black
     rev: 26.3.1
