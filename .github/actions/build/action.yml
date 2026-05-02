@@ -161,6 +161,11 @@ runs:
         fi
         echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
 
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v4
+      with:
+        platforms: arm64
+
     - name: Build and push to AWS ECR
       id: docker-build-ecr
       uses: docker/build-push-action@v6
