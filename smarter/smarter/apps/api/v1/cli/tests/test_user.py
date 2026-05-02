@@ -1,6 +1,5 @@
 """Test Api v1 CLI commands for User"""
 
-import logging
 from http import HTTPStatus
 from urllib.parse import urlencode
 
@@ -10,10 +9,9 @@ from django.urls import reverse
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from .base_class import ApiV1CliTestBase
@@ -21,15 +19,9 @@ from .base_class import ApiV1CliTestBase
 KIND = SAMKinds.USER.value
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.PLUGIN_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.API_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
+)
 
 
 class TestApiCliV1User(ApiV1CliTestBase):
@@ -106,7 +98,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
-        logger.info(f"base response: {response}, Status: {status}")
+        logger.info("base response: %s, Status: %s", response, status)
 
         expected = {
             "data": {
@@ -249,7 +241,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
-        logger.info(f"base response: {response}, Status: {status}")
+        logger.info("base response: %s, Status: %s", response, status)
 
         path = reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -268,7 +260,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
-        logger.info(f"base response: {response}, Status: {status}")
+        logger.info("base response: %s, Status: %s", response, status)
 
         path = reverse(self.namespace + ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -282,6 +274,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
         """Test logs command"""
         path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
+        logger.info("base response: %s, Status: %s", response, status)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)

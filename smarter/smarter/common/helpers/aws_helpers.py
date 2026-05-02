@@ -17,7 +17,8 @@ Individual services are accessed lazily via properties on the AWSInfrastructureC
 import logging
 from typing import Optional
 
-from ..mixins import Singleton
+from smarter.common.mixins import Singleton
+
 from .aws.acm import AWSCertificateManager
 from .aws.api_gateway import AWSAPIGateway
 from .aws.aws import AWSBase
@@ -33,7 +34,6 @@ from .aws.s3 import AWSSimpleStorageSystem
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=too-many-instance-attributes
 class AWSInfrastructureConfig(metaclass=Singleton):
     """
     Provides a unified, singleton-based interface for accessing AWS services within the application.

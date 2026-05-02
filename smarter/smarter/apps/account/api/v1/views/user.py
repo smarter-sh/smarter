@@ -1,7 +1,6 @@
 # pylint: disable=W0707,W0718,W0613
 """User views for smarter api."""
 
-import logging
 from http import HTTPStatus
 from typing import Optional
 
@@ -16,21 +15,12 @@ from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.api.signals import api_request_completed
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base import AccountListViewBase, AccountViewBase
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
 
 class UserView(AccountViewBase):
@@ -142,7 +132,7 @@ class UserListView(AccountListViewBase):
 
 def validate_request_body(request: Request):
     # do a cursory check of the request data
-    logger.debug("%s.validate_request_body() - request body: %s", request.body)
+    logger.debug("%s.validate_request_body() - request body: %s", __name__, request.body)
     try:
         data = json.loads(request.body)
         if not isinstance(data, dict):
@@ -163,7 +153,7 @@ def validate_request_body(request: Request):
 
 
 def eval_permissions(request, user_to_update: User, user_to_update_profile: Optional[UserProfile] = None):
-    logger.debug("%s.eval_permissions() - request: %s", request)
+    logger.debug("%s.eval_permissions() - request: %s", __name__, request)
     user = get_resolved_user(request.user)
     if user is None:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
@@ -221,7 +211,7 @@ def get_user(request, user_id: Optional[int] = None):
 
     request_user = get_resolved_user(request.user)
     if request_user is None:
-        logger.debug("UserListView.get_queryset() - user not found for request: %s", self.request)
+        logger.debug("UserListView.get_queryset() - user not found for request: %s", request)
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
     # if the user is a superuser, they can get any user
     if request_user.is_superuser:
@@ -339,23 +329,23 @@ def update_user(request: Request):
 
 def delete_user(request: Request, user_id: Optional[int] = None):
     """delete a user by id."""
-    logger.debug("%s.delete_user() - user_id: %s, request: %s", request, user_id, request)
+    logger.debug("%s.delete_user() - user_id: %s, request: %s", __name__, user_id, request)
     try:
         if user_id:
             user = User.objects.get(id=user_id)
         else:
             user = request.user
     except User.DoesNotExist:
-        logger.debug("UserListView.get_queryset() - user not found for request: %s", self.request)
+        logger.debug("%s.delete_user() - user not found for request: %s", __name__, request)
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
 
     try:
         with transaction.atomic():
             UserProfile.objects.get(user=user).delete()
             user.delete()
-            logger.debug("UserListView.get_queryset() - user deleted successfully: %s", user)
+            logger.debug("%s.delete_user() - user deleted successfully: %s", __name__, user)
     except Exception as e:
-        logger.debug("UserListView.get_queryset() - error deleting user: %s", e)
+        logger.debug("%s.delete_user() - error deleting user: %s", __name__, e)
         return JsonResponse(
             {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value
         )

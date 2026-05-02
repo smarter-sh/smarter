@@ -1,7 +1,5 @@
 """Smarter API V1 Manifests Enumerations."""
 
-import logging
-
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
 )
@@ -48,22 +46,14 @@ from smarter.apps.vectorstore.manifest.models.vectorstore.const import (
     MANIFEST_KIND as VECTORSTORE_MANIFEST_KIND,
 )
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.manifest.models.auth_token.const import (
     MANIFEST_KIND as AUTH_TOKEN_MANIFEST_KIND,
 )
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SmarterEnumAbstract
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
 
 class SAMKinds(SmarterEnumAbstract):

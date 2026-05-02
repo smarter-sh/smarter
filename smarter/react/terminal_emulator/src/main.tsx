@@ -13,8 +13,6 @@ const djangoSessionCookieName = rootEl.getAttribute(
 );
 const cookieDomain =
   rootEl.getAttribute("smarter-cookie-domain") || window.location.hostname;
-const llmProviderId = rootEl.getAttribute("smarter-llm-provider-id") || "1";
-const templateId = rootEl.getAttribute("smarter-template-id") || "1";
 
 if (!apiUrl) throw new Error("API URL not found in root element attributes");
 if (!csrfCookieName)
@@ -32,12 +30,6 @@ createRoot(rootEl).render(
   <StrictMode>
     <App
       apiUrl={apiUrl}
-      csrfCookieName={csrfCookieName}
-      csrftoken={csrftoken}
-      djangoSessionCookieName={djangoSessionCookieName}
-      cookieDomain={cookieDomain}
-      llmProviderId={llmProviderId}
-      templateId={templateId}
     />
   </StrictMode>,
 );

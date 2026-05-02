@@ -19,7 +19,15 @@
   </head>
   <body>
     <!-- only used for development via 'npm run dev' -->
-    <div id="smarter-prompt-passthrough-root"></div>
+    <div
+      id="smarter-prompt-passthrough-root"
+      smarter-csrf-cookie-name="csrftoken"
+      django-csrftoken="1UNIA5jlXRTUifBGjVT3yKCn2On8MNzrFiVxN65QVrl6vPZKPx1AC15NcT07RB88"
+      smarter-django-session-cookie-name="sessionid"
+      smarter-api-path="/api/v1/prompts/passthrough/"
+      smarter-llm-provider-id="1"
+      smarter-template-id="1">
+    ></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
   <script src="/assets/plugins/global/plugins.bundle.js"></script>

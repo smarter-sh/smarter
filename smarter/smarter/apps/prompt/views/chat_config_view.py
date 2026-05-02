@@ -383,16 +383,6 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
         else:
             chatbot_id = kwargs.pop("chatbot_id", None)
 
-        logger.debug(
-            "%s.dispatch() called with request=%s, chatbot_id=%s, session_key=%s chatbot_name=%s user_profile=%s",
-            self.formatted_class_name,
-            request.build_absolute_uri(),
-            chatbot_id,
-            self.session_key,
-            self.chatbot_name,
-            self.user_profile,
-        )
-
         if chatbot_id is not None:
             try:
                 self._chatbot = ChatBot.get_cached_object(pk=chatbot_id)

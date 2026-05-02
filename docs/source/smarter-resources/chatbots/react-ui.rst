@@ -2,5 +2,5 @@ React UI
 =============
 
 
-See :doc:`Smarter React UI <../../smarter-framework/smarter-react-ui>` for details on integrating
+See :doc:`Smarter Chat <../../smarter-framework/react-integration/smarter-chat>` for details on integrating
 the Smarter React Chat Component into your web applications.

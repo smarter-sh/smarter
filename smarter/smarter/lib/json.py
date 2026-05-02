@@ -1,13 +1,25 @@
 """
-Overridden JSON utilities. The effective modifications are
-- Use SmarterJSONEncoder as the default encoder
-- Standardize indentation to 2 characters
-- Use str as the default for non-serializable objects
-- Support for additional types in SmarterJSONEncoder:
-  - datetime.datetime, datetime.date, datetime.time, datetime.timedelta
-  - decimal.Decimal
-  - uuid.UUID
-  - Django TaggableManager
+Overridden JSON utilities for the Smarter platform.
+
+This module wraps the standard :mod:`json` library with the following enhancements:
+
+- Uses :class:`SmarterJSONEncoder` as the default encoder.
+- Standardizes indentation to 2 characters.
+- Falls back to :func:`str` for non-serializable objects.
+
+:class:`SmarterJSONEncoder` adds serialization support for the following types:
+
+- :class:`datetime.datetime`, :class:`datetime.date`, :class:`datetime.time`, :class:`datetime.timedelta`
+- :class:`decimal.Decimal`
+- :class:`uuid.UUID`
+- ``taggit.managers.TaggableManager``
+
+The following symbols are re-exported unmodified from :mod:`json`:
+
+- :exc:`~json.JSONDecodeError`
+- :class:`~json.JSONDecoder`
+- :func:`~json.load`
+- :func:`~json.loads`
 """
 
 import datetime

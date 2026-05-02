@@ -1,0 +1,118 @@
+:root {
+  --terminal-bg: #1b1f24;
+  --terminal-panel: #22272e;
+  --terminal-border: #323a45;
+  --terminal-text: #d9e1ea;
+  --terminal-muted: #8b98a7;
+  --terminal-green: #7bd88f;
+  --terminal-yellow: #ffd580;
+  --terminal-red: #ff8f8f;
+  --terminal-cyan: #78dce8;
+}
+
+.terminal-window {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid var(--terminal-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--terminal-bg);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  color: var(--terminal-text);
+  font-family: "JetBrains Mono", "SFMono-Regular", "Menlo", monospace;
+}
+
+.terminal-window__header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, #2a3038 0%, #232931 100%);
+  border-bottom: 1px solid var(--terminal-border);
+}
+
+.terminal-window__controls {
+  display: flex;
+  gap: 8px;
+}
+
+.terminal-window__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.terminal-window__dot--close {
+  background: #ff5f56;
+}
+
+.terminal-window__dot--minimize {
+  background: #ffbd2e;
+}
+
+.terminal-window__dot--maximize {
+  background: #27c93f;
+}
+
+.terminal-window__title {
+  text-align: center;
+  color: var(--terminal-muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.terminal-window__status {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.terminal-window__status.is-online {
+  color: var(--terminal-green);
+}
+
+.terminal-window__status.is-offline {
+  color: var(--terminal-red);
+}
+
+.terminal-window__body {
+  flex: 1 1 auto;
+  height: 750px;
+  overflow: hidden;
+  padding: 0;
+  background:
+    radial-gradient(circle at top right, rgba(123, 216, 143, 0.08), transparent 28%),
+    linear-gradient(180deg, #1b1f24 0%, #171b20 100%);
+}
+
+.terminal-window__xterm {
+  height: 100%;
+  width: 100%;
+}
+
+.terminal-window__error {
+  margin: 0 0 12px;
+  color: var(--terminal-red);
+}
+
+.terminal-window__xterm .xterm-viewport::-webkit-scrollbar {
+  width: 10px;
+}
+
+.terminal-window__xterm .xterm-viewport::-webkit-scrollbar-track {
+  background: #161a1f;
+}
+
+.terminal-window__xterm .xterm-viewport::-webkit-scrollbar-thumb {
+  background: #39424d;
+  border-radius: 999px;
+}
+
+.terminal-window__xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: #4a5663;
+}

@@ -1,7 +1,6 @@
 # pylint: disable=W0718,C0302
 """Smarter Api ApiConnection Manifest handler"""
 
-import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
@@ -28,12 +27,10 @@ from smarter.apps.connection.serializers import ApiConnectionSerializer
 from smarter.apps.plugin.manifest.enum import SAMApiConnectionSpecConnectionKeys
 from smarter.apps.secret.models import Secret
 from smarter.common.utils import camel_to_snake
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
@@ -52,16 +49,9 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CONNECTION_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.MANIFEST_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
+)
 
 
 class SAMApiConnectionBroker(SAMConnectionBaseBroker):

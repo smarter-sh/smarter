@@ -115,13 +115,6 @@ class PromptManifestView(DocsBaseView):
         :returns: Rendered HTML page with chatbot manifest details, or an error response if the chatbot is not found or parameters are invalid.
         :rtype: HttpResponse
         """
-        logger.debug(
-            "%s.dispatch() called with request=%s, args=%s, kwargs=%s",
-            self.formatted_class_name,
-            request.build_absolute_uri(),
-            args,
-            kwargs,
-        )
 
         hashed_id = kwargs.pop("hashed_id", None)
         chatbot_id = ChatBot.id_from_hashed_id(hashed_id) if hashed_id else None

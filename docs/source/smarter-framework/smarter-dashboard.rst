@@ -19,9 +19,11 @@ experience for your users.
    :caption: Dashboard Technical Reference
 
 
-   dashboard/models
    dashboard/const
    dashboard/context_processors
+   dashboard/models
+   dashboard/receivers
    dashboard/signals
+   dashboard/templatetags
    dashboard/urls
    dashboard/views

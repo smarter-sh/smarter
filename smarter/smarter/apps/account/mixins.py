@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """A helper class that provides setters/getters for account and user."""
 
-import logging
 from typing import Optional, Union
 
 from django.contrib.auth.models import AnonymousUser
@@ -12,13 +11,12 @@ from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import mask_string
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.token_authentication import (
     SmarterAnonymousUser,
     SmarterTokenAuthentication,
 )
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import Account, User, UserProfile
 from .serializers import (
@@ -36,20 +34,16 @@ AccountNumberType = Optional[str]
 ApiTokenType = Optional[bytes]
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING)
+def should_log_verbose(level) -> bool:
+    return smarter_settings.verbose_logging
 
 
-# pylint: disable=W0613
-def should_log_verbose(level):
-    """Check if logging should be done based on the waffle switch."""
-    return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING])
+verbose_logger = logging.getSmarterLogger(
+    __name__,
+    all_switches=[SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING],
+    condition_func=should_log_verbose,
+)
 
 
 class AccountMixin(SmarterHelperMixin):

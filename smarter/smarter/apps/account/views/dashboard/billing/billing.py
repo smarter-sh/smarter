@@ -1,28 +1,18 @@
 """Billing Views for the account dashboard."""
 
 import datetime
-import logging
 import os
 from pathlib import Path
 
 from smarter.common.utils import get_readonly_csv_file
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .billing_addresses import BillingAddressesView, BillingAddressForm
 from .payment_methods import PaymentMethodForm, PaymentMethodsView
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 DASHBOARD = str(Path(HERE).parent)

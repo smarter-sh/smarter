@@ -25,12 +25,12 @@ Usage
 
   - :doc:`Example Prompt Config <./example-config>`
   - :doc:`Example Prompt Response <./example-response>`
-  - :doc:`Django Hosts <../../smarter-framework/django/hosts>`
-  - :doc:`Smarter React UI <../../smarter-framework/smarter-react-ui>`
+  - :doc:`Django Hosts <../../smarter-framework/lib/django/hosts>`
+  - :doc:`Smarter Chat <../../smarter-framework/react-integration/smarter-chat>`
   - class reference :py:class:`smarter.apps.prompt.views.ChatAppWorkbenchView`
 
 
 Example JSON Object
 --------------------
 
-.. literalinclude:: ../../../../smarter/smarter/apps/prompt/data/request.json
+   .. literalinclude:: ../../../../smarter/smarter/apps/prompt/data/request.json

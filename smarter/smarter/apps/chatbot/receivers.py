@@ -1,7 +1,6 @@
 """Django Signal Receivers for chatbot."""
 
 # pylint: disable=W0613,C0115
-import logging
 from typing import Optional
 
 from django.db.models.signals import post_save, pre_delete
@@ -10,10 +9,8 @@ from django.dispatch import receiver
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import plugin_deleting
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import AbstractBroker
 
 from .models import (
@@ -67,14 +64,7 @@ from .tasks import (
     undeploy_default_api,
 )
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
 module_prefix = __name__
 
@@ -229,7 +219,7 @@ def handle_chatbot_undeploy(sender, chatbot: Optional[ChatBot] = None, **kwargs)
 
     logger.info("%s - %s", prefix, chatbot if chatbot else "No chatbot instance provided")
     if chatbot:
-        undeploy_default_api.delay(chatbot_id=chatbot.id)
+        undeploy_default_api.delay(chatbot_id=chatbot.id)  # type: ignore[union-attr]
 
 
 @receiver(chatbot_deploy, dispatch_uid="chatbot_deploy")
@@ -241,7 +231,7 @@ def handle_chatbot_deploy(sender, **kwargs):
     logger.info("%s signal received - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
     if chatbot:
         logger.info("%s deploying chatbot - %s", prefix, chatbot.hostname)
-        deploy_default_api.delay(chatbot_id=chatbot.id)
+        deploy_default_api.delay(chatbot_id=chatbot.id)  # type: ignore[union-attr]
 
 
 @receiver(chatbot_deployed, dispatch_uid="chatbot_deployed")

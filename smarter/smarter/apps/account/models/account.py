@@ -1,6 +1,5 @@
 """Account models."""
 
-import logging
 import os
 import random
 from typing import TYPE_CHECKING, Optional, Union
@@ -18,12 +17,12 @@ from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.models import MetaDataModel, TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 if TYPE_CHECKING:
     try:
@@ -36,20 +35,16 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 ResolvedUserType = Optional[Union[User, AbstractUser, AnonymousUser]]
 
 
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
+def should_log_verbose(level) -> bool:
+    return smarter_settings.verbose_logging
 
 
-def should_verbose_log(level):
-    """Check if verbose logging should be done based on the waffle switch."""
-    return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_verbose_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
+verbose_logger = logging.getSmarterLogger(
+    __name__,
+    any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING],
+    condition_func=should_log_verbose,
+)
 
 
 def welcome_email_context(first_name: str) -> dict:

@@ -1,6 +1,5 @@
 """Test Api v1 CLI commands for ApiConnection"""
 
-import logging
 from http import HTTPStatus
 from typing import Optional
 from urllib.parse import urlencode
@@ -18,10 +17,9 @@ from smarter.apps.plugin.manifest.enum import (
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.tests.factories import secret_factory
 from smarter.common.api import SmarterApiVersions
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from .base_class import ApiV1CliTestBase
@@ -29,15 +27,9 @@ from .base_class import ApiV1CliTestBase
 KIND = SAMKinds.API_CONNECTION.value
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.PLUGIN_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.API_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
+)
 
 
 class TestApiCliV1ApiConnection(ApiV1CliTestBase):

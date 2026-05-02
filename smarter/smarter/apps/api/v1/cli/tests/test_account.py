@@ -1,6 +1,5 @@
 """Test Api v1 CLI commands for account"""
 
-import logging
 from http import HTTPStatus
 from urllib.parse import urlencode
 
@@ -11,11 +10,9 @@ from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from .base_class import ApiV1CliTestBase
@@ -23,13 +20,7 @@ from .base_class import ApiV1CliTestBase
 KIND = SAMKinds.ACCOUNT.value
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 logger_prefix = formatted_text(f"{__name__}.TestApiCliV1Account")
 
 
@@ -132,7 +123,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
-        logger.info(f"base response: {response}, Status: {status}")
+        logger.info("base response: %s, Status: %s", response, status)
         expected = {
             "data": {
                 "apiVersion": "smarter.sh/v1",
@@ -205,12 +196,12 @@ class TestApiCliV1Account(ApiV1CliTestBase):
 
         # convert the data back to yaml, since this is what the cli usually receives
         manifest = yaml.dump(data)
-        logger.debug(f"Modified manifest to apply: {manifest}")
+        logger.debug("Modified manifest to apply: %s", manifest)
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply)
 
         logger.info("2.) apply the modified manifest to update the existing Account")
         response, status = self.get_response(path=path, manifest=manifest)
-        logger.info(f"Modified response: {response}, Status: {status}")
+        logger.info("Modified response: %s, Status: %s", response, status)
         expected = {
             "data": {
                 "account": {"accountNumber": "5829-4032-4255"},
@@ -319,7 +310,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
-        logger.info(f"Re-queried response: {response}, Status: {status}")
+        logger.info("Re-queried response: %s, Status: %s", response, status)
 
         expected = {
             "data": {
@@ -413,10 +404,10 @@ class TestApiCliV1Account(ApiV1CliTestBase):
 
             for item in data["items"]:
                 if not isinstance(item, dict):
-                    logger.error(f"Item is not a dict: {item} {type(item)}")
+                    logger.error("Item is not a dict: %s %s", item, type(item))
                     return False
                 if set(item.keys()) != title_names:
-                    logger.error(f"Item keys do not match title names: {item.keys()} vs {title_names}")
+                    logger.error("Item keys do not match title names: %s vs %s", item.keys(), title_names)
                     return False
 
             return True

@@ -1,6 +1,5 @@
 """Smarter API command-line interface Base class API view"""
 
-import logging
 import re
 import traceback
 from http import HTTPStatus
@@ -45,8 +44,7 @@ from smarter.common.utils import (
     mask_string,
     smarter_build_absolute_uri,
 )
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -57,7 +55,6 @@ from smarter.lib.journal.enum import (
     SmarterJournalEnumException,
 )
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
@@ -71,15 +68,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from .swagger import BUG_REPORT
 
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
 
 class APIV1CLIViewError(SmarterException):
@@ -540,7 +529,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 exc_info=True,
             )
             raise SmarterConfigurationError(
-                f"{self.formatted_class_name} error during initialization: could not set request object."
+                "%s error during initialization: could not set request object." % self.formatted_class_name
             ) from e
 
         logger.debug("hi mom")
@@ -625,7 +614,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             )
         if not self.ready:
             logger.warning(
-                f"{self.logger_prefix}.initial() is not in a ready state. This might affect some operations."
+                "%s.initial() is not in a ready state. This might affect some operations.", self.logger_prefix
             )
 
         # Manifest parsing and broker instantiation are lazy implementations.
@@ -712,8 +701,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         https://www.django-rest-framework.org/api-guide/views/#view-methods
             DRF documentation on view methods and the dispatch process.
         """
-        logger.debug("%s.dispatch() called with args %s and kwargs %s", self.logger_prefix, args, kwargs)
-
         if self.is_internal_api_request(request):
             logger.debug(
                 "%s.dispatch() - internal api request. Disabling CSRF checks: %s",

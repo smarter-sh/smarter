@@ -9,7 +9,6 @@ future high-traffic scenarios.
 
 # python stuff
 import datetime
-import logging
 
 # django stuff
 from django.db import DatabaseError, IntegrityError, transaction
@@ -20,9 +19,8 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # Smarter stuff
 from smarter.workers.celery import app
@@ -30,16 +28,9 @@ from smarter.workers.celery import app
 # Account stuff
 from .models import Charge, DailyBillingRecord, UserProfile
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.ACCOUNT_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.ACCOUNT_LOGGING]
+)
 module_prefix = "smarter.apps.account.tasks."
 
 
