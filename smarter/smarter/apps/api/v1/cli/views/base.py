@@ -701,8 +701,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         https://www.django-rest-framework.org/api-guide/views/#view-methods
             DRF documentation on view methods and the dispatch process.
         """
-        logger.debug("%s.dispatch() called with args %s and kwargs %s", self.logger_prefix, args, kwargs)
-
         if self.is_internal_api_request(request):
             logger.debug(
                 "%s.dispatch() - internal api request. Disabling CSRF checks: %s",

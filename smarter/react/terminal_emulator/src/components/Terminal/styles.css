@@ -11,6 +11,8 @@
 }
 
 .terminal-window {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 100%;
   border: 1px solid var(--terminal-border);
@@ -79,7 +81,8 @@
 }
 
 .terminal-window__body {
-  min-height: 750px;
+  flex: 1 1 auto;
+  height: 750px;
   overflow: hidden;
   padding: 0;
   background:
