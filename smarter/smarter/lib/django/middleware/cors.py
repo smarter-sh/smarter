@@ -1,15 +1,31 @@
 """
 This module contains the middleware for handling CORS headers for the application.
 It adds chatbot urls to the CORS_ALLOWED_ORIGINS list at run-time.
+
+**Sync / async dual support**
+
+Django's middleware contract requires a middleware to be callable with either a
+sync or async ``get_response`` callable.  This class detects which variant was
+injected at construction time and marks itself as a coroutine function via
+:func:`asgiref.sync.markcoroutinefunction` when needed, so ASGI servers can
+``await`` it correctly.  The two code paths are:
+
+- **Sync** — :meth:`__call__` runs inline, setting per-request state and
+  delegating to :meth:`corsheaders.middleware.CorsMiddleware.__call__`.
+- **Async** — :meth:`__call__` returns the coroutine from :meth:`__acall__`,
+  which awaits :meth:`corsheaders.middleware.CorsMiddleware.__acall__` so the
+  event loop is never blocked.
 """
 
+import inspect
 import logging
 import re
 from collections.abc import Awaitable
 from functools import cached_property, lru_cache
-from typing import Optional, Pattern, Sequence, Union
+from typing import Optional, Pattern, Sequence
 from urllib.parse import SplitResult, urlsplit
 
+from asgiref.sync import markcoroutinefunction, sync_to_async
 from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware
 from django.http import HttpRequest
@@ -20,7 +36,6 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_LOCAL_PORT, SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.common.utils import is_async_context
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -48,6 +63,8 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     The middleware also provides additional logic to handle internal IP addresses, health check
     endpoints, and logging for debugging and auditing purposes.
 
+    :cvar sync_capable: Declares WSGI compatibility to Django's middleware loader.
+    :cvar async_capable: Declares ASGI compatibility to Django's middleware loader.
     :cvar _url: The parsed URL (as a :class:`urllib.parse.SplitResult`) for the current request, or None.
     :vartype _url: Optional[SplitResult]
     :cvar _chatbot: The chatbot instance associated with the current request, or None.
@@ -77,25 +94,38 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             ...
         ]
 
-    :param request: The incoming HTTP request object.
-    :type request: django.http.HttpRequest
+    :param get_response: The next callable in the Django middleware chain, provided
+        by the framework.  May be a regular callable or a coroutine function.
+    :type get_response: Callable
 
     :returns: The HTTP response object, potentially with CORS headers added.
     :rtype: django.http.response.HttpResponseBase or Awaitable[HttpResponseBase]
     """
 
+    sync_capable = True
+    async_capable = True
+
     _url: Optional[SplitResult] = None
     _chatbot: Optional[ChatBot] = None
     request: Optional[HttpRequest] = None
+
+    def __init__(self, get_response):
+        super().__init__(get_response)
+        self.get_response = get_response
+        self.is_async = inspect.iscoroutinefunction(get_response)
+        if self.is_async:
+            markcoroutinefunction(self)
 
     @property
     def formatted_class_name(self) -> str:
         """Return the formatted class name for logging purposes."""
         return formatted_text(f"{__name__}.{SmarterCorsMiddleware.__name__}")
 
-    def __call__(self, request: HttpRequest) -> Union[HttpResponseBase, Awaitable[HttpResponseBase]]:
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        if self.is_async:
+            return self.__acall__(request)
 
-        if not is_async_context() and not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
             return super().__call__(request)
 
         host = request.get_host()
@@ -124,7 +154,39 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
         self._url = None
         self._chatbot = None
         self.request = request
-        return super().__call__(request)  # Ensure the response is returned
+        return super().__call__(request)
+
+    async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
+        if not await sync_to_async(waffle.switch_is_active)(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
+            return await super().__acall__(request)
+
+        host = request.get_host()
+        if not host:
+            return SmarterHttpResponseServerError(
+                request=request,
+                error_message="Internal error (500) - could not parse request.",
+            )
+
+        # Short-circuit for health checks
+        if request.path.replace("/", "") in self.amnesty_urls:
+            return await super().__acall__(request)
+
+        # Short-circuit for any requests born from internal IP address hosts
+        # This is unlikely, but not impossible.
+        if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
+            logger.debug(
+                "%s %s identified as an internal IP address, exiting.",
+                self.formatted_class_name,
+                self.smarter_build_absolute_uri(request),
+            )
+            return await super().__acall__(request)
+
+        url = self.smarter_build_absolute_uri(request)
+        logger.debug("%s.__acall__() - url=%s", self.formatted_class_name, url)
+        self._url = None
+        self._chatbot = None
+        self.request = request
+        return await super().__acall__(request)
 
     @property
     def chatbot(self) -> Optional[ChatBot]:
