@@ -66,7 +66,7 @@ langchain_community                     # for pinecone vectorstore backend
 langchain_openai                        #
 langchain_pinecone                      #
 langchain-text-splitters                # -----------------------------
-openai~=2.31.0                          # OpenAI API
+openai~=2.31                            # OpenAI API
 pinecone                                # Pinecone vector database support
 google-genai                            # Google Generative AI API
 llamaai                                 # Llama AI API

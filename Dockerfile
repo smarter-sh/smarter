@@ -80,14 +80,14 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     unzip \
     procps \
     redis-tools \
-    libmariadb-dev \
-    mariadb-client \
     libncurses6 \
     groff \
     less \
     less && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
+
+FROM system_packages AS kubectl
 
 # Install kubectl, required for smarter/common/helpers/k8s_helpers.py used for ChatBot/Agent
 # deployments in which dedicated Kubernetes ingress and TLS certificates are created. There
@@ -102,6 +102,25 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 
+FROM kubectl AS mariadb_connector
+
+# Install MariaDB Connector/C.
+# See
+# - https://mariadb.com/docs/connectors/mariadb-connector-c/install-mariadb-connector-c
+# - https://mariadb.com/downloads/
+
+ARG MARIADB_VERSION=12.2
+RUN curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup && \
+    chmod +x mariadb_repo_setup && \
+    ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}" && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends libmariadb-dev mariadb-client && \
+    rm -f mariadb_repo_setup && \
+    rm -rf /var/lib/apt/lists/*
+
+
+FROM mariadb_connector AS aws_cli
+
 # install aws cli, required for smarter/common/helpers/aws/
 # We rely extensively on AWS support, for Route53, S3, Simple Email Service,
 # Elastic Kubernetes Service, etc. There are AWS CLI builds for both
@@ -115,8 +134,10 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
     ./aws/install && \
     rm -rf awscliv2.zip aws
 
+
 ############################## create app user #################################
-FROM system_packages AS user_setup
+FROM mariadb_connector AS user_setup
+
 
 # Create a non-root user to run the application
 RUN adduser --disabled-password --gecos '' smarter_user
