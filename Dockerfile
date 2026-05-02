@@ -103,23 +103,24 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
 
 FROM kubectl AS mariadb_connector
 
-# Install MariaDB Connector/C.
+# Install MariaDB.
+# installs libmariadb-dev libmariadb-dev-compat mariadb-client, Connector/C and mariadb_config.
 # See
 # - https://mariadb.com/docs/connectors/mariadb-connector-c/install-mariadb-connector-c
 # - https://mariadb.com/downloads/
 
 ARG MARIADB_VERSION=12.2
+ENV MARIADB_CONFIG=/usr/bin/mariadb_config
+ENV MARIADB_CONFIG_ALTERNATIVE=/usr/local/bin/mariadb_config
 RUN curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup && \
     chmod +x mariadb_repo_setup && \
     ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}" && \
     apt-get update && \
     apt-get install -y --no-install-recommends libmariadb-dev libmariadb-dev-compat mariadb-client && \
+    test -x "$MARIADB_CONFIG" || (echo "mariadb_config not found at $MARIADB_CONFIG" && exit 1) && \
+    ln -sf "$MARIADB_CONFIG" "$MARIADB_CONFIG_ALTERNATIVE" && \
     rm -f mariadb_repo_setup && \
     rm -rf /var/lib/apt/lists/*
-
-ENV MARIADB_CONFIG=/usr/bin/mariadb_config
-RUN test -x /usr/bin/mariadb_config || (echo "mariadb_config not found at /usr/bin/mariadb_config" && exit 1) && \
-    ln -sf /usr/bin/mariadb_config /usr/local/bin/mariadb_config
 
 
 FROM mariadb_connector AS aws_cli
