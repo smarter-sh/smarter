@@ -42,7 +42,7 @@ Dependencies:
 
 from typing import TYPE_CHECKING
 
-from .is_active import switch_is_active
+from .is_active import async_switch_is_active, switch_is_active
 from .ready import is_database_ready
 from .switches import (
     SmarterWaffleSwitch,
@@ -65,6 +65,8 @@ def __getattr__(name):
         return SmarterSwitchAdmin
     if name == "switch_is_active":
         return switch_is_active
+    if name == "async_switch_is_active":
+        return async_switch_is_active
     if name == "is_database_ready":
         return is_database_ready
     if name == "SmarterWaffleSwitches":
@@ -79,6 +81,7 @@ __all__ = [
     "SmarterWaffleSwitches",
     "SmarterSwitchAdmin",
     "switch_is_active",
+    "async_switch_is_active",
     "is_database_ready",
     "smarter_waffle_switches",
 ]

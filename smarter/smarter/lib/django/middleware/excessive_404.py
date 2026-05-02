@@ -6,7 +6,7 @@ import inspect
 import logging
 from http import HTTPStatus
 
-from asgiref.sync import markcoroutinefunction, sync_to_async
+from asgiref.sync import markcoroutinefunction
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseForbidden
 
@@ -136,7 +136,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         """
         Async entry point for ASGI deployments. Mirrors :meth:`process_response`.
         """
-        if not await sync_to_async(waffle.switch_is_active)(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
+        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
             return response
 
         if response.status_code != HTTPStatus.NOT_FOUND:
