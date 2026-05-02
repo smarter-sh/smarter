@@ -6,23 +6,27 @@
 // connection status. The component is styled to resemble a classic terminal
 // window and is responsive to container size changes.
 // ----------------------------------------------------------------------------
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { useLogStream } from "./logStream";
 import "./styles.css";
 
+const SUPPRESSED_STARTUP_LINES = new Set(["Waiting for log stream...", "[stream] connected"]);
+
 interface TerminalEmulatorProps {
   apiUrl: string;
 }
 
 function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
-  const { logs, connected, error } = useLogStream(apiUrl);
+  const { logs, connected, error, isInitializing } = useLogStream(apiUrl);
+  const [showLoading, setShowLoading] = useState(false);
   const terminalContainerRef = useRef<HTMLDivElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const lastLogIndexRef = useRef(0);
+  const initBufferRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (!terminalContainerRef.current) {
@@ -68,8 +72,6 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
       fitAddon.fit();
     });
 
-    term.writeln("\x1b[2mWaiting for log stream...\x1b[0m");
-
     terminalRef.current = term;
     fitAddonRef.current = fitAddon;
 
@@ -104,22 +106,41 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
       return;
     }
 
-    nextLogs.forEach((log) => {
-      terminalRef.current?.writeln(log.message);
-    });
-
+    const nextMessages = nextLogs
+      .map((log) => log.message)
+      .filter((message) => !SUPPRESSED_STARTUP_LINES.has(message.trim()));
     lastLogIndexRef.current = logs.length;
-  }, [logs]);
 
-  useEffect(() => {
-    if (!terminalRef.current) {
+    if (!nextMessages.length) {
       return;
     }
 
-    if (connected) {
-      terminalRef.current.writeln("\x1b[32m[stream] connected\x1b[0m");
+    if (isInitializing) {
+      initBufferRef.current.push(...nextMessages);
+      return;
     }
-  }, [connected]);
+
+    const bufferedMessages = initBufferRef.current;
+    initBufferRef.current = [];
+    const allMessages = bufferedMessages.concat(nextMessages);
+    const batchedOutput = `${allMessages.join("\r\n")}\r\n`;
+    terminalRef.current.write(batchedOutput);
+  }, [isInitializing, logs]);
+
+  useEffect(() => {
+    if (!isInitializing) {
+      setShowLoading(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowLoading(true);
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [isInitializing]);
 
   useEffect(() => {
     if (!terminalRef.current || !error) {
@@ -147,6 +168,12 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
         </div>
 
         <div className="terminal-window__body" role="log" aria-live="polite">
+          {showLoading && (
+            <div className="terminal-window__loading" aria-label="Loading logs">
+              <span className="terminal-window__loading-spinner" aria-hidden="true" />
+              <span>Loading logs…</span>
+            </div>
+          )}
           <div ref={terminalContainerRef} className="terminal-window__xterm" />
         </div>
       </section>{" "}

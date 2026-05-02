@@ -32,8 +32,9 @@ See Also
 """
 
 import asyncio
+import json
 from http import HTTPStatus
-from typing import Union
+from typing import Any, AsyncIterator, Iterator, Union
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
@@ -47,9 +48,146 @@ from smarter.lib.logging.redis_log_handler import (
     build_channel,
     get_user_context,
     job_id_factory,
+    stream_key,
 )
 
 logger = logging.getLogger(__name__)
+STREAM_REPLAY_BATCH_SIZE = 500
+STREAM_REPLAY_MAX_ENTRIES = 2000
+
+
+def _decode_redis_payload(raw: Any) -> str:
+    """
+    Normalize Redis pubsub or stream payloads into text.
+
+    Redis messages may be bytes or strings depending on the client configuration
+    and the source of the message (Pub/Sub vs stream). This helper ensures that
+    the payload is always returned as a string for consistent processing in the
+    log streaming view.
+
+    :param raw: The raw payload from Redis, which may be a bytes, bytearray, or str.
+    :type raw: Any
+    :return: The decoded payload as a string.
+    :rtype: str
+    """
+    return raw.decode() if isinstance(raw, (bytes, bytearray)) else str(raw)
+
+
+def _iter_sse_data_frames(data: str) -> Iterator[str]:
+    """
+    Render one payload into SSE data frames.
+
+    SSE frames must be sent as lines prefixed with ``data:`` and terminated by a
+    blank line. If the payload contains multiple lines, each line is sent as a
+    separate ``data:`` line to ensure proper rendering in SSE clients.
+
+    :param data: The log message payload to be sent as SSE frames.
+    :type data: str
+    :yields: Individual lines of the payload formatted as SSE data frames, followed by a blank line.
+    :rtype: Iterator[str]
+    """
+    lines = data.splitlines() or [""]
+    for line in lines:
+        yield f"data: {line}\n"
+    yield "\n"
+
+
+def _should_skip_stream_internal_log(payload_text: str) -> bool:
+    """
+    Return True when a payload is the stream endpoint logging about itself.
+
+    These records are implementation noise for dashboard users and should not
+    be forwarded back into the same terminal stream.
+    """
+    stream_marker = f"{__name__}.stream_user_logs()"
+
+    if stream_marker in payload_text:
+        return True
+
+    if " DEBUG " in payload_text:
+        return True
+
+    try:
+        payload_json = json.loads(payload_text)
+    except (ValueError, TypeError):
+        return False
+
+    if not isinstance(payload_json, dict):
+        return False
+
+    logger_name = str(payload_json.get("logger", ""))
+    level = str(payload_json.get("level", payload_json.get("levelname", ""))).upper()
+    message = str(payload_json.get("message", ""))
+    return logger_name == __name__ or stream_marker in message or level == "DEBUG"
+
+
+async def _replay_stream_history(redis_cache: Any, channel: str) -> AsyncIterator[str]:
+    """
+    Replay persisted Redis stream entries as SSE frames before live Pub/Sub.
+
+    This helper reads the Redis stream associated with the supplied log
+    channel and yields each stored payload using the same SSE framing as the
+    live Pub/Sub path. Entries are fetched in batches using ``XRANGE`` and a
+    moving lower-bound so that the stream backlog is replayed in order without
+    re-emitting previously seen entries.
+
+    :param redis_cache:
+        Redis client obtained from ``django-redis``. The client must provide
+        an ``xrange`` method compatible with Redis stream reads.
+    :type redis_cache: Any
+    :param channel:
+        Redis Pub/Sub channel name whose persisted stream mirror should be
+        replayed, for example ``"logs:User.admin"``.
+    :type channel: str
+    :yields:
+        Individual SSE frame fragments for each persisted log payload. Each
+        payload is emitted as one or more ``data:`` lines followed by a blank
+        line terminator.
+    :rtype: AsyncIterator[str]
+
+    :raises redis.exceptions.RedisError:
+        Propagated when the underlying Redis ``XRANGE`` call fails.
+
+    :note:
+        The function stops once Redis returns an empty batch, which indicates
+        there are no more persisted entries to replay before switching to the
+        live Pub/Sub stream.
+    """
+    key = stream_key(channel)
+    upper_bound = "+"
+    all_entries: list[Any] = []
+    replayed_entries = 0
+
+    while replayed_entries < STREAM_REPLAY_MAX_ENTRIES:
+        remaining = STREAM_REPLAY_MAX_ENTRIES - replayed_entries
+        batch_size = min(STREAM_REPLAY_BATCH_SIZE, remaining)
+        entries = await asyncio.to_thread(
+            redis_cache.xrevrange,
+            key,
+            max=upper_bound,
+            min="-",
+            count=batch_size,
+        )
+        if not entries:
+            break
+
+        replayed_entries += len(entries)
+
+        for entry_id, payload in entries:
+            raw = payload.get("data", payload.get(b"data", ""))
+            decoded = _decode_redis_payload(raw)
+            if _should_skip_stream_internal_log(decoded):
+                upper_bound = f"({_decode_redis_payload(entry_id)}"
+                continue
+            try:
+                all_entries.append(json.loads(decoded))
+            except (ValueError, TypeError):
+                all_entries.append({"message": decoded})
+            upper_bound = f"({_decode_redis_payload(entry_id)}"
+
+    all_entries.reverse()
+
+    yield f"event: bulk\ndata: {json.dumps(all_entries)}\n\n"
 
 
 # pylint: disable=W0613
@@ -115,11 +253,34 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
             status=HTTPStatus.SERVICE_UNAVAILABLE,
         )
 
-    async def event_stream():
+    async def event_stream() -> AsyncIterator[str]:
+        """
+        Generator function that yields SSE frames for log streaming.
+
+        This function first replays any persisted log entries from the Redis stream
+        associated with the user's log channel, yielding each entry as SSE frames.
+        After the backlog is replayed, it enters a loop that waits for new messages
+        from the Redis Pub/Sub subscription. Incoming messages are also yielded as
+        SSE frames. If no message is received within the Pub/Sub timeout, a keepalive
+        comment is emitted to maintain the connection.
+
+        The generator ensures that the Redis Pub/Sub connection is properly closed
+        when the stream is terminated, even if exceptions occur during streaming.
+
+        :yields:
+            SSE-formatted strings representing log messages or keepalive comments.
+        :rtype: AsyncIterator[str]
+        """
         try:
             logger.info("%s.event_stream() Starting log stream event generator.", logger_prefix)
             # Ask the browser to retry quickly if disconnected.
             yield "retry: 3000\n\n"
+
+            try:
+                async for event in _replay_stream_history(redis_cache, channel):
+                    yield event
+            except RedisError:
+                logger.exception("%s Failed to replay Redis stream history for log streaming.", logger_prefix)
 
             while True:
                 message = await asyncio.to_thread(
@@ -130,11 +291,11 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
 
                 if message and message.get("type") == "message":
                     raw = message.get("data", "")
-                    data = raw.decode() if isinstance(raw, (bytes, bytearray)) else str(raw)
-                    lines = data.splitlines() or [""]
-                    for line in lines:
-                        yield f"data: {line}\n"
-                    yield "\n"
+                    decoded = _decode_redis_payload(raw)
+                    if _should_skip_stream_internal_log(decoded):
+                        continue
+                    for frame in _iter_sse_data_frames(decoded):
+                        yield frame
                 else:
                     # Keep idle connections alive through proxies.
                     yield ": keepalive\n\n"

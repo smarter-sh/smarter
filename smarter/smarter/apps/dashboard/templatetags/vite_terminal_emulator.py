@@ -80,9 +80,10 @@ logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(f"{__name__}")
 
 register = template.Library()
+CACHE_TIMEOUT = 30  # Cache timeout in seconds for manifest and asset collection
 
 
-@cache_results()
+@cache_results(timeout=CACHE_TIMEOUT)
 def load_manifest() -> dict[str, Any]:
     """
     Load and cache the Vite manifest as a dictionary.
@@ -97,7 +98,7 @@ def load_manifest() -> dict[str, Any]:
         return retval
 
 
-@cache_results()
+@cache_results(timeout=CACHE_TIMEOUT)
 def collect_css(manifest: dict[str, Any], key: str, seen: set[str] | None = None) -> list[str]:
     """
     Recursively collect CSS from a manifest entry and its imports.
@@ -124,7 +125,7 @@ def collect_css(manifest: dict[str, Any], key: str, seen: set[str] | None = None
 
 
 @register.simple_tag
-@cache_results()
+@cache_results(timeout=CACHE_TIMEOUT)
 def terminal_emulator_vite_assets(entry: str = "index.html") -> dict[str, Any]:
     """
     Load CSS and JS files for a Vite entry point from the manifest.
