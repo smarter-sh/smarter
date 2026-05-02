@@ -6,6 +6,8 @@ This allows for more flexible logging behavior based on runtime conditions.
 import logging
 from typing import Any, Callable, Optional
 
+from django.core.exceptions import SynchronousOnlyOperation
+
 
 class WaffleSwitchedLoggerWrapper:
     """
@@ -42,7 +44,10 @@ class WaffleSwitchedLoggerWrapper:
             return False
 
         if self._condition_func:
-            return self._condition_func(level)
+            try:
+                return self._condition_func(level)
+            except SynchronousOnlyOperation:
+                return False
 
         return True
 

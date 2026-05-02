@@ -6,7 +6,7 @@ import logging
 import re
 import urllib.parse
 
-from asgiref.sync import markcoroutinefunction, sync_to_async
+from asgiref.sync import markcoroutinefunction
 from django.http import HttpResponseForbidden
 
 from smarter.common.conf import smarter_settings
@@ -284,7 +284,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         )
 
     async def __acall__(self, request):
-        if not await sync_to_async(waffle.switch_is_active)(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
+        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
             return await self.get_response(request)  # type: ignore[misc]
 
         request_path = request.path.lower()

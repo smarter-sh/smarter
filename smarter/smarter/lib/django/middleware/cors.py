@@ -25,7 +25,7 @@ from functools import cached_property, lru_cache
 from typing import Optional, Pattern, Sequence
 from urllib.parse import SplitResult, urlsplit
 
-from asgiref.sync import markcoroutinefunction, sync_to_async
+from asgiref.sync import markcoroutinefunction
 from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware
 from django.http import HttpRequest
@@ -157,7 +157,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
         return super().__call__(request)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
-        if not await sync_to_async(waffle.switch_is_active)(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
+        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
             return await super().__acall__(request)
 
         host = request.get_host()
