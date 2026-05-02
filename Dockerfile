@@ -82,7 +82,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     redis-tools \
     libncurses6 \
     groff \
-    less \
     less && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
@@ -114,9 +113,13 @@ RUN curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariad
     chmod +x mariadb_repo_setup && \
     ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}" && \
     apt-get update && \
-    apt-get install -y --no-install-recommends libmariadb-dev mariadb-client && \
+    apt-get install -y --no-install-recommends libmariadb-dev libmariadb-dev-compat mariadb-client && \
     rm -f mariadb_repo_setup && \
     rm -rf /var/lib/apt/lists/*
+
+ENV MARIADB_CONFIG=/usr/bin/mariadb_config
+RUN test -x /usr/bin/mariadb_config || (echo "mariadb_config not found at /usr/bin/mariadb_config" && exit 1) && \
+    ln -sf /usr/bin/mariadb_config /usr/local/bin/mariadb_config
 
 
 FROM mariadb_connector AS aws_cli
