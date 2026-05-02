@@ -5,7 +5,6 @@ manifest and schema.
 """
 
 import os
-from logging import getLogger
 from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urlparse
 
@@ -21,7 +20,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterException
 from smarter.common.utils import is_authenticated_request
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
     SmarterWebHtmlView,
@@ -33,7 +32,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
     from rest_framework.views import AsView
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 # note: this is the path from the Docker container, not the GitHub repo.
 DOCS_PATH = "/home/smarter_user/data/docs/"
@@ -58,6 +57,10 @@ class DocsBaseView(SmarterAuthenticatedWebView):
     kind: Optional[SAMKinds] = None
     context: dict = {}
     kwargs: Optional[dict] = None
+
+    @property
+    def formatted_class_name(self):
+        return logging.formatted_text(f"{__name__}.{DocsBaseView.__name__}")
 
     def get_brokered_json_response(
         self, reverse_name: str, view: "AsView", request: "HttpRequest", *args, **kwargs

@@ -4,7 +4,7 @@ Smarter VectorStore
 Smarter VectorStore is a Django application that provides a framework for managing vector stores
 from a variety of vendors, running both locally and in the cloud. It is designed for ease of
 use and flexibility. It is fully integrated into the Smarter Framework, namely the
-:doc:`Smarter Application Manifest (SAM) <../smarter-framework/smarter-manifests>` yaml manifest-based API.
+:doc:`Smarter Application Manifest (SAM) <../smarter-framework/lib/manifests>` yaml manifest-based API.
 
 The Smarter Vectorstore Django app provides a robust service layer for managing
 vector databases, abstracting the complexities of provisioning, deleting, and
@@ -21,7 +21,7 @@ and embedding services, ensuring that the process of generating and storing
 embeddings is both modular and extensible.
 
 The module emphasizes operational readiness and logging, using feature
-flags (:doc:`waffle switches <../smarter-framework/smarter-waffle>`) to control logging behavior and providing detailed debug
+flags (:doc:`waffle switches <../smarter-framework/lib/django/waffle>`) to control logging behavior and providing detailed debug
 information throughout its methods. It supports advanced document processing
 workflows, such as loading and embedding PDF documents, by leveraging tools like
 PyPDFLoader and RecursiveCharacterTextSplitter to split documents into manageable

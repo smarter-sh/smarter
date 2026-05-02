@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Django signal receivers for plugin app."""
 
-import logging
 from typing import Optional, Union
 
 from django.db.models.signals import post_save, pre_delete
@@ -9,10 +8,8 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import AbstractBroker
 
 from .models import (
@@ -39,14 +36,7 @@ from .signals import (
 )
 from .tasks import create_plugin_selector_history
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
 prefix = "smarter.apps.plugin.receivers."
 

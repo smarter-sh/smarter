@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command }: { command: string }) => ({
   plugins: [react()],
   // runtime builds are saved into the Django static directory so that these
   // files can be included in the Django collectstatic process and served by
@@ -15,12 +15,27 @@ export default defineConfig(({ command }) => ({
     },
   },
   build: {
+    // ------------------------------------------------------------------------
+    // The manifest is needed for hosting builds from Django (both dev and prod).
+    // It is used by Django to determine the correct file names to include
+    // in the HTML template. This is necessary because Vite includes a
+    // hash in the file names for cache busting.
+    // ------------------------------------------------------------------------
+    manifest: "manifest.json",
+    // ------------------------------------------------------------------------
+    // we're placing our build output in the primary Django static directory so
+    // that these files are automatically included in the Django collectstatic
+    // process and served by Django at runtime.
+    //
+    // In development, we rely on Vite's dev server to serve these files, so we
+    // set the outDir to a directory that is not used by the Django dev server.
+    // ------------------------------------------------------------------------
     outDir: "../../smarter/static/react/prompt_passthrough",
     emptyOutDir: true,
     rollupOptions: {
       output: {
         entryFileNames: "assets/index.js",
-        // assetFileNames: "assets/[name][extname]",
+        chunkFileNames: "assets/[name].js",
       },
     },
   },
@@ -40,17 +55,17 @@ export default defineConfig(({ command }) => ({
       "/assets": {
         target: "http://localhost:9357", // Django dev server
         changeOrigin: true,
-        rewrite: (path) => `/static${path}`,
+        rewrite: (path: string) => `/static${path}`,
       },
       "/common-styles.css": {
         target: "http://localhost:9357",
         changeOrigin: true,
-        rewrite: (path) => `/static${path}`,
+        rewrite: (path: string) => `/static${path}`,
       },
       "/static/react/prompt_passthrough/": {
         target: "http://localhost:5173",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/static\/prompt_passthrough\//, "/"),
+        rewrite: (path: string) => path.replace(/^\/static\/prompt_passthrough\//, "/"),
       },
     },
   },

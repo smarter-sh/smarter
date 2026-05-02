@@ -29,7 +29,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
-from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+from smarter.lib.django.waffle import SmarterWaffleSwitches, is_active
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__)
@@ -77,7 +77,7 @@ def verify_payment_status(username) -> bool:
         pass
 
     # check to see if multitenant authentication is enabled
-    if not switch_is_active(SmarterWaffleSwitches.ENABLE_MULTITENANT_AUTHENTICATION):
+    if not is_active(SmarterWaffleSwitches.ENABLE_MULTITENANT_AUTHENTICATION):
         logger.info(
             "%s.verify_payment_status() Multitenant authentication is disabled; skipping payment status check for user %s. You can enable multitenant authentication by activating the corresponding waffle switch in the Django admin console.",
             logger_prefix,

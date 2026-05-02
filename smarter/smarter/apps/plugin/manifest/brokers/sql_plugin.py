@@ -1,7 +1,6 @@
 # pylint: disable=W0718
 """Smarter API SqlPlugin Manifest handler"""
 
-import logging
 from typing import TYPE_CHECKING, Optional, Type
 
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
@@ -20,12 +19,10 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
 )
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta
 from smarter.apps.plugin.plugin.sql import SqlPlugin
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
@@ -39,16 +36,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.MANIFEST_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 
 
 class SAMSqlPluginBroker(SAMPluginBaseBroker):
@@ -164,7 +152,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self._manifest.metadata.name,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:
@@ -336,13 +324,13 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             sql_data = self.plugin_data_orm2pydantic()
             if not sql_data:
                 raise SAMPluginBrokerError(
-                    f"{self.formatted_class_name} manifest() failed to build sql_data for {self.kind} {self.plugin_meta.name}",
+                    f"{self.formatted_class_name} manifest() failed to build sql_data for {self.kind} {self._plugin_meta.name}",
                     thing=self.kind,
                 )
             spec = self.plugin_sql_spec_orm2pydantic()
             if not spec:
                 raise SAMPluginBrokerError(
-                    f"{self.formatted_class_name} manifest() failed to build spec for {self.kind} {self.plugin_meta.name}",
+                    f"{self.formatted_class_name} manifest() failed to build spec for {self.kind} {self._plugin_meta.name}",
                     thing=self.kind,
                 )
             status = self.plugin_status_pydantic()
@@ -881,7 +869,12 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
-
+        if not self.user:
+            raise SAMBrokerError(
+                message="User not authenticated. Cannot delete sql plugin.",
+                thing=self.kind,
+                command=command,
+            )
         if not self.user.is_staff:
             raise SAMBrokerError(
                 message="Only account admins can delete sql plugins.",

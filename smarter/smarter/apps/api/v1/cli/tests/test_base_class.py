@@ -1,6 +1,5 @@
 """Test Api v1 CLI base class for brokered commands"""
 
-import logging
 from http import HTTPStatus
 from typing import Any
 from urllib.parse import urlencode
@@ -10,23 +9,14 @@ from rest_framework.test import APIClient
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
 
 from .base_class import ApiV1CliTestBase
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
 
 class TestApiCliV1BaseClass(ApiV1CliTestBase):
@@ -56,7 +46,11 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
         Prepare and get a response from an api/v1/ endpoint.
         """
         logger.info(
-            f"TestApiCliV1BaseClass.authentication_scenarios() testing API endpoint: {path}, wrong_key: {wrong_key}, missing_key: {missing_key}, session_authentication: {session_authentication}"
+            "TestApiCliV1BaseClass.authentication_scenarios() testing API endpoint: %s, wrong_key: %s, missing_key: %s, session_authentication: %s",
+            path,
+            wrong_key,
+            missing_key,
+            session_authentication,
         )
         client = APIClient()
         headers_wrong_key = {"HTTP_AUTHORIZATION": "Token WRONG_KEY"}
@@ -76,7 +70,7 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
 
         response_content = response.content.decode("utf-8")
         response_json = json.loads(response_content)
-        logger.info(f"Response from {path}: Status Code: {response.status_code},\n{response_json}")
+        logger.info("Response from %s: Status Code: %s,\n%s", path, response.status_code, response_json)
         return response_json, response.status_code
 
     def test_baseauthentication_with_apikey(self):

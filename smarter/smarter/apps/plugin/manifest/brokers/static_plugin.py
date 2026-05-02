@@ -1,7 +1,6 @@
 # pylint: disable=W0718,C0302
 """Smarter API StaticPlugin Manifest handler"""
 
-import logging
 from datetime import datetime, timezone
 from typing import Optional, Type
 
@@ -36,12 +35,10 @@ from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.signals import broker_ready
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
@@ -51,17 +48,7 @@ from smarter.lib.manifest.broker import (
 from . import SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
 
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.MANIFEST_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 
 
 class SAMStaticPluginBroker(SAMPluginBaseBroker):
@@ -191,7 +178,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self._manifest.metadata.name,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:
@@ -490,7 +477,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             return None
 
         try:
-            data = PluginDataStatic.get_cached_data_by_plugin(plugin=self.plugin_meta)
+            self._plugin_data = PluginDataStatic.get_cached_data_by_plugin(plugin=self.plugin_meta)
             logger.debug(
                 "%s.plugin_data() PluginDataStatic object retrieved for %s %s",
                 self.formatted_class_name,
@@ -867,6 +854,12 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
+        if not self.user:
+            raise SAMBrokerError(
+                message="User not authenticated. Cannot apply static plugin.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
         if not self.user.is_staff:
             raise SAMBrokerError(
                 message="Only account admins can apply static plugins.",
@@ -874,6 +867,12 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 command=SmarterJournalCliCommands.APPLY,
             )
 
+        if not self.plugin:
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} plugin not initialized. Cannot apply",
+                thing=self.kind,
+                command=command,
+            )
         if self.plugin.ready:
             # the Plugin class was initialized with enough data to bring
             # itself to a ready state, meaning that no create/save is needed.
@@ -977,6 +976,12 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
 
+        if not self.user:
+            raise SAMBrokerError(
+                message="User not authenticated. Cannot delete static plugin.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
         if not self.user.is_staff:
             raise SAMBrokerError(
                 message="Only account admins can delete static plugins.",

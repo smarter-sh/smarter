@@ -1,7 +1,6 @@
 # pylint: disable=W0718,C0302
 """Smarter API SqlPlugin Manifest handler"""
 
-import logging
 from typing import Any, Optional, Type
 
 from django.core import serializers
@@ -34,12 +33,10 @@ from smarter.apps.plugin.models import (
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.signals import broker_ready
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -50,17 +47,7 @@ from smarter.lib.manifest.enum import (
 
 from . import PluginSerializer, SAMPluginBrokerError
 
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.MANIFEST_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 logger_prefix = formatted_text(__name__ + ".SAMPluginBaseBroker")
 
 

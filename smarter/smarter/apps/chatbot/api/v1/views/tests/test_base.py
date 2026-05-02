@@ -1,6 +1,5 @@
 """Test ChatBotApiBaseViewSet"""
 
-import logging
 import os
 
 from django.http import HttpRequest
@@ -11,10 +10,8 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.utils import get_readonly_yaml_file
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.loader import SAMLoader
 
 from ..base import ChatBotApiBaseViewSet
@@ -22,13 +19,7 @@ from ..base import ChatBotApiBaseViewSet
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CHATBOT_LOGGING])
 
 
 # pylint: disable=too-many-instance-attributes

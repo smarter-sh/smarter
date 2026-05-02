@@ -40,7 +40,7 @@ Json Object Keys
   identifier for :py:class:`smarter.apps.prompt.models.Chat`.
 
 - **sandbox_model**: true if the chat session is operating inside of the Smarter Prompt Engineer Workbench environment.
-- **debug_mode**: true if the :doc:`Smarter Waffle switch <../../smarter-framework/smarter-waffle>` ``enable_reactapp_debug_mode`` is enabled
+- **debug_mode**: true if the :doc:`Smarter Waffle switch <../../../smarter-framework/lib/django/waffle>` ``enable_reactapp_debug_mode`` is enabled
   (see :py:class:`smarter.lib.django.waffle.SmarterWaffleSwitches`).
 
 - **chatbot** : Exactly one :doc:`chatbot <../smarter-chatbot>` is associated with a chat session. This serialization
@@ -60,13 +60,13 @@ Json Object Keys
 .. seealso::
 
   - :doc:`Example Prompt Request <./example-request>`
-  - :doc:`Django Hosts <../../smarter-framework/django/hosts>`
-  - :doc:`Smarter React UI <../../smarter-framework/smarter-react-ui>`
+  - :doc:`Django Hosts <../../../smarter-framework/lib/django/hosts>`
+  - :doc:`Smarter Chat <../../../smarter-framework/react-integration/smarter-chat>`
   - class reference :py:class:`smarter.apps.prompt.views.views.ChatConfigView`
 
 Example JSON Object
 --------------------
 
-.. literalinclude:: ../../../../smarter/smarter/apps/prompt/data/chat_config.json
+.. literalinclude:: ../../../../../smarter/smarter/smarter/apps/prompt/data/chat_config.json
    :language: json
    :caption: Example Chat Configuration JSON Object

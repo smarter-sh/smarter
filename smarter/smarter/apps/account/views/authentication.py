@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Django Authentication views."""
 
-import logging
 import traceback
 from typing import Optional, Union
 
@@ -15,6 +14,7 @@ from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
@@ -35,18 +35,10 @@ from smarter.lib.django.views import (
     redirect_and_expire_cache,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.VIEW_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.VIEW_LOGGING]
+)
 
 
 # ------------------------------------------------------------------------------

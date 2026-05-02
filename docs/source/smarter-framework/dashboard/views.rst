@@ -1,7 +1,10 @@
 Views
 =======
 
-.. automodule:: smarter.apps.dashboard.views.dashboard
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+   :maxdepth: 1
+
+   views/dashboard
+   views/logs
+   views/manifest-drop-zone
+   views/prompt-passthrough

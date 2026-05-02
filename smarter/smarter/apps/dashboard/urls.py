@@ -13,16 +13,12 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_case_object_name
 
 from .const import namespace
-from .streams import stream_global_logs
-from .views import (
-    ChangeLogView,
-    DashboardView,
-    EmailAdded,
-    ManifestDropZoneView,
-    NotificationsView,
-    PromptPassthroughView,
-    TerminalEmulatorLogView,
-)
+from .views.dashboard import ChangeLogView, DashboardView, EmailAdded, NotificationsView
+from .views.logs import urls as logs_urls
+from .views.manifest_drop_zone import ManifestDropZoneView
+
+# from .views.profile import ProfileLanguageView, ProfileView
+from .views.prompt_passthrough_view import PromptPassthroughView
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +32,6 @@ class DashboardNames:
 
     namespace = namespace
 
-    logs = camel_case_object_name(TerminalEmulatorLogView)
-    logs_stream = camel_case_object_name(stream_global_logs)
     notifications = camel_case_object_name(NotificationsView)
     changelog = camel_case_object_name(ChangeLogView)
     email_added = camel_case_object_name(EmailAdded)
@@ -47,6 +41,7 @@ class DashboardNames:
 
 urlpatterns = [
     path("", DashboardView.as_view(), name="dashboard"),
+    path("logs/", include(logs_urls, namespace=logs_urls.app_name)),
     path("account/", include(account_urls)),
     path("plugins/", include(plugin_urls)),
     path("profile/", include(urls_profile)),
@@ -56,22 +51,6 @@ urlpatterns = [
     path("notifications/", NotificationsView.as_view(), name=DashboardNames.notifications),
     path("email-added/", EmailAdded.as_view(), name=DashboardNames.email_added),
 ]
-
-if smarter_settings.enable_dashboard_server_logs:
-    # enable end points for the React terminal emulator logs view and its associated log stream
-    urlpatterns.append(
-        path("logs/", TerminalEmulatorLogView.as_view(), name=DashboardNames.logs),
-    )
-    urlpatterns.append(
-        path("logs/stream/", stream_global_logs, name=DashboardNames.logs_stream),
-    )
-    logger_prefix = formatted_text(__name__)
-    logger.info("%s Server logs app url endpoint enabled.", logger_prefix)
-else:
-    logger.info(
-        "%s Server logs app is disabled. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=true` to enable the server logs endpoint at /logs/.",
-        formatted_text(__name__),
-    )
 
 if smarter_settings.enable_dashboard_passthrough_prompt:
     urlpatterns.append(

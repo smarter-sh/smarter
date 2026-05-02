@@ -1,7 +1,6 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
 
-import logging
 from functools import cached_property
 from typing import Any, Optional, Union
 
@@ -19,22 +18,22 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
+def should_log_verbose(level) -> bool:
+    return smarter_settings.verbose_logging
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])
+logger_verbose = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING], condition_func=should_log_verbose
+)
 
 
 class Chat(MetaDataWithOwnershipModel):
@@ -276,7 +275,7 @@ class ChatHelper(SmarterRequestMixin):
         :raises SmarterValueError: If neither a session key nor a ChatBot instance is provided.
         :raises SmarterConfigurationError: If there is an error creating a new Chat object.
         """
-        logger.debug(
+        logger_verbose.debug(
             "%s.__init__() - received request: %s session_key: %s, chatbot: %s",
             self.formatted_class_name,
             self.smarter_build_absolute_uri(request),
@@ -298,8 +297,8 @@ class ChatHelper(SmarterRequestMixin):
             )
 
         if chatbot:
-            logger.debug("%s.__init__() received ChatBot instance: %s", self.formatted_class_name, chatbot)
-            logger.debug(
+            logger_verbose.debug("%s.__init__() received ChatBot instance: %s", self.formatted_class_name, chatbot)
+            logger_verbose.debug(
                 "%s.__init__() - reinitializing account from chatbot.account: %s",
                 self.formatted_class_name,
                 self.account,
@@ -308,16 +307,16 @@ class ChatHelper(SmarterRequestMixin):
 
         if session_key:
             self._session_key = session_key
-            logger.debug(
+            logger_verbose.debug(
                 "%s.__init__() - setting session_key to %s from session_key parameter",
                 self.formatted_class_name,
                 self._session_key,
             )
         if self.session_key:
-            logger.debug("%s.__init__() received session_key: %s", self.formatted_class_name, session_key)
+            logger_verbose.debug("%s.__init__() received session_key: %s", self.formatted_class_name, session_key)
             self._chat = self.get_cached_chat()
 
-        logger.debug(
+        logger_verbose.debug(
             "%s.__init__() - %s with session_key: %s, chat: %s",
             self.formatted_class_name,
             "is ready" if self.ready else "is not ready",
@@ -495,7 +494,7 @@ class ChatHelper(SmarterRequestMixin):
 
         chat: Chat = cache.get(self.session_key)  # type: ignore[assignment]
         if chat:
-            logger.debug(
+            logger_verbose.debug(
                 "%s - retrieved cached Chat: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
             )
             return chat
@@ -503,7 +502,7 @@ class ChatHelper(SmarterRequestMixin):
         if self.session_key:
             try:
                 chat = Chat.objects.get(session_key=self.session_key)
-                logger.debug(
+                logger_verbose.debug(
                     "%s - retrieved Chat instance: %s session_key: %s",
                     self.formatted_class_name,
                     chat,
@@ -536,7 +535,7 @@ class ChatHelper(SmarterRequestMixin):
 
         cache.set(key=self.session_key, value=chat, timeout=smarter_settings.chat_cache_expiration or 300)
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger.debug(
+            logger_verbose.debug(
                 "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
             )
 

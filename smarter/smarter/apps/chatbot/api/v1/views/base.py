@@ -1,7 +1,6 @@
 # pylint: disable=W0611
 """ChatBot api/v1/chatbots base view, for invoking a ChatBot."""
 
-import logging
 import traceback
 from http import HTTPStatus
 from typing import List, Optional
@@ -29,7 +28,7 @@ from smarter.apps.prompt.models import ChatHelper
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import is_authenticated_request
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
@@ -41,18 +40,9 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
-from smarter.lib.json import SmarterJSONEncoder
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+base_logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CHATBOT_LOGGING])
+logger = base_logger
 
 
 # pylint: disable=too-many-instance-attributes
@@ -202,11 +192,15 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             )
         if self._chatbot_helper:
             logger.debug(
-                "%s: %s ChatBotHelper reinitializing user: %s, account: %s",
+                "%s: %s ChatBotHelper reinitializing user_profile: %s",
+                self.formatted_class_name,
+                self._chatbot_helper,
+                self.user_profile,
             )
             self._url = urlparse(self._chatbot_helper.url)  # type: ignore
             self._user = self._chatbot_helper.user
             self._account = self._chatbot_helper.account
+            self._user_profile = self._chatbot_helper.user_profile
         logger.debug(
             "%s: %s initialized with url: %s id: %s",
             self.formatted_class_name,
