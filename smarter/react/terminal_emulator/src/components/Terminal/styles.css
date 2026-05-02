@@ -85,6 +85,7 @@
   height: 750px;
   overflow: hidden;
   padding: 0;
+  position: relative;
   background:
     radial-gradient(circle at top right, rgba(123, 216, 143, 0.08), transparent 28%),
     linear-gradient(180deg, #1b1f24 0%, #171b20 100%);
@@ -98,6 +99,33 @@
 .terminal-window__error {
   margin: 0 0 12px;
   color: var(--terminal-red);
+}
+
+.terminal-window__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--terminal-bg);
+  color: var(--terminal-muted);
+  font-size: 0.9rem;
+  z-index: 10;
+}
+
+@keyframes terminal-spin {
+  to { transform: rotate(360deg); }
+}
+
+.terminal-window__loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--terminal-border);
+  border-top-color: var(--terminal-cyan);
+  border-radius: 50%;
+  animation: terminal-spin 0.7s linear infinite;
 }
 
 .terminal-window__xterm .xterm-viewport::-webkit-scrollbar {
