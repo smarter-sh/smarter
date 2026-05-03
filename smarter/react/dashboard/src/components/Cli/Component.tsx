@@ -4,11 +4,9 @@
 import "./styles.css";
 
 interface CliProps {
-  apiUrl: string;
 }
 
-function Cli({ apiUrl }: CliProps) {
-  console.log("Rendering Cli with apiUrl:", apiUrl);
+function Cli({  }: CliProps) {
   return (
     <>
       <section id="cli" aria-label="CLI" className="col-xl-4 mb-5 mb-xl-10">

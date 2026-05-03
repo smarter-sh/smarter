@@ -4,11 +4,9 @@
 import "./styles.css";
 
 interface ContributeProps {
-  apiUrl: string;
 }
 
-function Contribute({ apiUrl }: ContributeProps) {
-  console.log("Rendering Contribute with apiUrl:", apiUrl);
+function Contribute({  }: ContributeProps) {
   return (
     <>
       {/* begin::Engage widget 4 */}

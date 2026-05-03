@@ -4,11 +4,9 @@
 import "./styles.css";
 
 interface SelfHostProps {
-  apiUrl: string;
 }
 
-function SelfHost({ apiUrl }: SelfHostProps) {
-  console.log("Rendering SelfHost with apiUrl:", apiUrl);
+function SelfHost({  }: SelfHostProps) {
   return (
     <>
         {/* begin::Engage widget 4 */}
