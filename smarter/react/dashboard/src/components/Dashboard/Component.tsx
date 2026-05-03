@@ -13,10 +13,23 @@ import Contribute from "../Contribute/Component";
 import YTVideo from "../YTVideo/Component";
 
 interface DashboardProps {
-  apiUrl: string;
+  myResourcesApiUrl: string;
+  serviceHealthApiUrl: string;
+  csrfCookieName: string;
+  csrftoken: string;
+  djangoSessionCookieName: string;
+  cookieDomain: string;
 }
 
-function Dashboard({ apiUrl }: DashboardProps) {
+function Dashboard({ myResourcesApiUrl, serviceHealthApiUrl, csrfCookieName, csrftoken, djangoSessionCookieName, cookieDomain }: DashboardProps) {
+  console.log("Dashboard props:", {
+    myResourcesApiUrl,
+    serviceHealthApiUrl,
+    csrfCookieName,
+    csrftoken,
+    djangoSessionCookieName,
+    cookieDomain,
+  });
   return (
     <>
       <section
@@ -29,19 +42,19 @@ function Dashboard({ apiUrl }: DashboardProps) {
           className="app-container container-xxl"
         >
           <div className="row g-5 g-xl-10 mt-3">
-            <MyResources apiUrl={apiUrl} />
+            <MyResources apiUrl={myResourcesApiUrl} />
             <div className="col-xl-8 mb-5 mb-xl-10">
               <div className="row g-5 g-xl-10">
-                <ServiceHealth apiUrl={apiUrl} />
-                <CertificateProgram apiUrl={apiUrl} />
+                <ServiceHealth apiUrl={serviceHealthApiUrl} />
+                <CertificateProgram apiUrl={serviceHealthApiUrl} />
               </div>
-              <VSCodeExtension apiUrl={apiUrl} />
+              <VSCodeExtension />
             </div>
           </div>
 
           <div className="row g-5 g-xl-10 align-items-stretch">
-            <Sdk apiUrl={apiUrl} />
-            <Cli apiUrl={apiUrl} />
+            <Sdk />
+            <Cli />
           </div>
 
           <div className="row g-5 g-xl-10 align-items-stretch">
@@ -49,19 +62,19 @@ function Dashboard({ apiUrl }: DashboardProps) {
               className="col-xl-6 mb-5 mb-xl-10"
               style={{ minHeight: "300px" }}
             >
-              <SelfHost apiUrl={apiUrl} />
+              <SelfHost />
             </div>
             <div
               className="col-xl-6 mb-5 mb-xl-10"
               style={{ minHeight: "300px" }}
             >
-              <Contribute apiUrl={apiUrl} />
+              <Contribute />
             </div>
           </div>
 
           <div className="row g-5 g-xl-10">
-            <YTVideo apiUrl={apiUrl} />
-            <YTVideo apiUrl={apiUrl} />
+            <YTVideo videoId="aXMlmOaKsqwe4y-k" />
+            <YTVideo videoId="gKoD60Za16YNuMgm" />
           </div>
         </div>
       </section>

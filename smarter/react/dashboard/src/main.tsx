@@ -4,7 +4,6 @@ import App from "./App.tsx";
 const rootEl = document.getElementById("smarter-dashboard-root");
 if (!rootEl) throw new Error("Root element not found");
 
-const apiUrl = rootEl.getAttribute("smarter-api-path");
 const csrfCookieName = rootEl.getAttribute("smarter-csrf-cookie-name");
 const csrftoken = rootEl.getAttribute("django-csrftoken");
 const djangoSessionCookieName = rootEl.getAttribute(
@@ -13,7 +12,11 @@ const djangoSessionCookieName = rootEl.getAttribute(
 const cookieDomain =
   rootEl.getAttribute("smarter-cookie-domain") || window.location.hostname;
 
-if (!apiUrl) throw new Error("API URL not found in root element attributes");
+const myResourcesApiUrl = rootEl.getAttribute("smarter-my-resources-api-url");
+const serviceHealthApiUrl = rootEl.getAttribute("smarter-service-health-api-url");
+
+if (!myResourcesApiUrl) throw new Error("My Resources API URL not found in root element attributes");
+if (!serviceHealthApiUrl) throw new Error("Service Health API URL not found in root element attributes");
 if (!csrfCookieName)
   throw new Error("CSRF token not found in root element attributes");
 if (!djangoSessionCookieName)
@@ -27,6 +30,11 @@ if (!csrftoken)
 
 createRoot(rootEl).render(
   <App
-    apiUrl={apiUrl}
+    myResourcesApiUrl={myResourcesApiUrl}
+    serviceHealthApiUrl={serviceHealthApiUrl}
+    csrfCookieName={csrfCookieName}
+    csrftoken={csrftoken}
+    djangoSessionCookieName={djangoSessionCookieName}
+    cookieDomain={cookieDomain}
   />,
 );

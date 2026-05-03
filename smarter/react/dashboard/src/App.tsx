@@ -6,14 +6,26 @@
 import Dashboard from "./components/Dashboard";
 
 interface AppProps {
-  apiUrl: string;
+  myResourcesApiUrl: string;
+  serviceHealthApiUrl: string;
+  csrfCookieName: string;
+  csrftoken: string;
+  djangoSessionCookieName: string;
+  cookieDomain: string;
 }
 
-function App({ apiUrl }: AppProps) {
+function App({ myResourcesApiUrl, serviceHealthApiUrl, csrfCookieName, csrftoken, djangoSessionCookieName, cookieDomain }: AppProps) {
   return (
     <>
       <section className="mt-5 container" id="dashboard">
-        <Dashboard apiUrl={apiUrl} />
+        <Dashboard
+          myResourcesApiUrl={myResourcesApiUrl}
+          serviceHealthApiUrl={serviceHealthApiUrl}
+          csrfCookieName={csrfCookieName}
+          csrftoken={csrftoken}
+          djangoSessionCookieName={djangoSessionCookieName}
+          cookieDomain={cookieDomain}
+        />
       </section>
     </>
   );

@@ -4,11 +4,9 @@
 import "./styles.css";
 
 interface VSCodeExtensionProps {
-  apiUrl: string;
 }
 
-function VSCodeExtension({ apiUrl }: VSCodeExtensionProps) {
-  console.log("VSCodeExtension component received apiUrl:", apiUrl);
+function VSCodeExtension({  }: VSCodeExtensionProps) {
   return (
     <>
       {/* begin::Download VS Code Extension widget 4 */}
@@ -72,7 +70,7 @@ function VSCodeExtension({ apiUrl }: VSCodeExtensionProps) {
             {/* end::Wrapper */}
             {/* begin::Illustration */}
             <img
-              src="{% static 'images/vs-code-logo.png' %}"
+              src="/static/images/vs-code-logo.png"
               className="position-absolute me-5 mt-3 top-0 end-0 h-100px pt-3"
               alt=""
             />

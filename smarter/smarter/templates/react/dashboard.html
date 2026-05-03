@@ -25,9 +25,11 @@
     django-csrftoken="{{ csrf_token }}"
     smarter-django-session-cookie-name="{{ dashboard.django_session_cookie_name }}"
     smarter-cookie-domain="{{ dashboard.cookie_domain }}"
-    smarter-api-path="{{ dashboard.api_url }}"
     smarter-llm-provider-id="{{ dashboard.llm_provider_id }}"
-    smarter-template-id="{{ dashboard.template_id }}">
+    smarter-template-id="{{ dashboard.template_id }}"
+    smarter-my-resources-api-url="{{ dashboard.my_resources_api_url }}"
+    smarter-service-health-api-url="{{ dashboard.service_health_api_url }}"
+    >
   </div>
 
 {% endblock %}

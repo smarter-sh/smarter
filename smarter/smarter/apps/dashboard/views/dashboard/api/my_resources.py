@@ -57,12 +57,13 @@ these are automatically included by Sphinx's ``automodule`` directive. For
 detailed API documentation, refer to the generated documentation for each function.
 """
 
-import logging
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from http import HTTPStatus
+from typing import Optional
 from urllib.parse import urljoin
 
+from django.http import HttpRequest, JsonResponse
 from django.test import RequestFactory
 from django.urls import reverse
 
@@ -73,25 +74,260 @@ from smarter.apps.account.models import (
     get_resolved_user,
 )
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
+from smarter.apps.connection.models import ConnectionBase
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
 from smarter.apps.dashboard.views.manifest_drop_zone import ManifestDropZoneView
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
+from smarter.apps.provider.models import Provider
+from smarter.apps.secret.models import Secret
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.common.utils import camel_case_object_name
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
-
-if TYPE_CHECKING:
-    from django.http import HttpRequest
-
+from smarter.lib.django.views import (
+    SmarterAuthenticatedWebView,
+)
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__)
 logger_prefix_cache_invalidations = formatted_text_blue(f"{__name__}.cache_invalidations()")
+
+
+def get_pending_deployments(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the number of chatbot deployments that are pending for the specified user.
+
+    This function queries the database for all chatbot instances associated with the
+    user's account that have not yet been deployed. The result is used to inform users
+    of outstanding deployment actions required on their dashboard.
+
+    The result is cached for a short duration to minimize database load and
+    improve dashboard responsiveness.
+
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :param user_profile: UserProfile instance. The user profile whose pending deployments are to be counted.
+    :type user_profile: UserProfile
+    :return: The number of pending chatbot deployments for the user.
+    :rtype: int
+    """
+
+    @cache_results()
+    def _get_pending_deployments(user_profile_id: int) -> int:
+        logger.debug(
+            "%s.get_pending_deployments() called with invalidate=%s for user_profile_id=%s",
+            logger_prefix,
+            invalidate,
+            user_profile,
+        )
+        return ChatBot.objects.filter(deployed=False).with_ownership_permission_for(user=user_profile.user).count() or 0  # type: ignore
+
+    if not user_profile:
+        logger.warning("%s.get_pending_deployments() called without user_profile. Returning None.", logger_prefix)
+        return 0
+    if invalidate and user_profile:
+        _get_pending_deployments.invalidate(user_profile.id)  # type: ignore
+
+    return _get_pending_deployments(user_profile.id)  # type: ignore
+
+
+def get_chatbots(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the total number of chatbots associated with the specified user.
+
+    This function queries the database for all chatbot instances linked to
+    the user's account, regardless of deployment status. The resulting count
+    is used to display the user's available chatbots on the dashboard.
+
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
+
+    :param user_profile: UserProfile instance. The user profile whose chatbots are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+
+    :return: The number of chatbots belonging to the user.
+    :rtype: int
+    """
+    if not user_profile:
+        logger.warning("%s.get_chatbots() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
+    chatbots = ChatBot.get_cached_objects(invalidate=invalidate, user_profile=user_profile)
+    return len(chatbots)
+
+
+def get_plugins(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the total number of plugins associated with the specified user.
+
+    This function queries the database for all plugin metadata records linked
+    to the user's account. The resulting count is used to display the user's
+    available plugins on the dashboard.
+
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
+
+    :param user_profile: UserProfile instance. The user profile whose plugins are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :return: The number of plugins belonging to the user.
+    :rtype: int
+    """
+    if not user_profile:
+        logger.warning("%s.get_plugins() called without user_profile. Returning None.", logger_prefix)
+        return 0
+    retval = PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=invalidate, user_profile_id=user_profile.id)  # type: ignore
+    return len(retval)
+
+
+def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the total number of API keys associated with the specified user.
+
+    This function queries the database for all API key records linked to
+    chatbots owned by the user's account. The resulting count is used to
+    display the user's available API keys on the dashboard.
+
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
+
+    :param user_profile: UserProfile instance. The user profile whose API keys are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :return: The number of API keys belonging to the user.
+    :rtype: int
+    """
+
+    @cache_results()
+    def _get_api_keys(user_profile_id: int) -> int:
+        logger.debug(
+            "%s.get_api_keys() called with invalidate=%s for user_profile_id=%s",
+            logger_prefix,
+            invalidate,
+            user_profile,
+        )
+        return ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+
+    if not user_profile:
+        logger.warning("%s.get_api_keys() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
+    if invalidate and user_profile:
+        _get_api_keys.invalidate(user_profile.id)  # type: ignore
+
+    return _get_api_keys(user_profile.id)  # type: ignore
+
+
+def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the total number of custom domains associated with the specified user.
+
+    This function queries the database for all custom domain records linked
+    to chatbots owned by the user's account. The resulting count is used to
+    display the user's available custom domains on the dashboard.
+
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
+
+    :param user_profile: UserProfile instance. The user profile whose custom domains are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :return: The number of custom domains belonging to the user.
+    :rtype: int
+    """
+
+    @cache_results()
+    def _get_custom_domains(user_profile_id: int) -> int:
+        logger.debug(
+            "%s.get_custom_domains() called with invalidate=%s for user_profile_id=%s",
+            logger_prefix,
+            invalidate,
+            user_profile,
+        )
+        return ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+
+    if not user_profile:
+        logger.warning("%s.get_custom_domains() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
+    if invalidate and user_profile:
+        _get_custom_domains.invalidate(user_profile.id)  # type: ignore
+
+    return _get_custom_domains(user_profile.id)  # type: ignore
+
+
+def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the total number of API and SQL connections associated with the specified user.
+
+    This function queries the database for all API and SQL connection records linked to the user's account. The resulting count is used to display the user's available connections on the dashboard.
+
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
+
+    :param user_profile: UserProfile instance. The user profile whose connections are to be counted.
+    :type user_profile: UserProfile
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :return: The number of API and SQL connections belonging to the user.
+    :rtype: int
+    """
+    if not user_profile:
+        logger.warning("%s.get_connections() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
+    retval = ConnectionBase.get_cached_connections_for_user(invalidate=invalidate, user=user_profile.user) or []
+    return len(retval)
+
+
+@cache_results()
+def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the total number of secrets associated with the specified user's profile.
+
+    This function queries the database for all secret records linked to the user's profile.
+    The resulting count is used to display the user's available secrets on the dashboard.
+
+    The result is cached for a short duration to reduce database queries and
+    improve dashboard performance.
+
+    :param user_profile: The user profile whose secrets are to be counted.
+    :type user_profile: UserProfile
+    :return: The number of secrets belonging to the user profile.
+    :rtype: int
+    """
+    if not user_profile:
+        logger.warning("%s.get_secrets() called without user_profile. Returning None.", logger_prefix)
+        return 0
+
+    return Secret.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
+
+
+def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+    """
+    Returns the total number of providers associated with the specified user's account.
+
+    This function queries the database for all provider records linked to the user's account.
+    The resulting count is used to display the user's available providers on the dashboard.
+
+    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+
+    :param user_profile: The user profile whose providers are to be counted.
+    :type user_profile: UserProfile
+    :return: The number of providers belonging to the user account + those belonging to the official smarter admin.
+    :rtype: int
+    """
+    if not user_profile:
+        logger.warning("%s.get_providers() called without user_profile. Returning 0.", logger_prefix)
+        return 0
+
+    retval = Provider.get_cached_providers_for_user(invalidate=invalidate, user=user_profile.user) or []
+    return len(retval)
 
 
 def file_drop_zone(request: "HttpRequest") -> dict:
@@ -215,6 +451,16 @@ def base(request: "HttpRequest") -> dict:
                 "python_version": smarter_settings.python_version,
                 "django_version": smarter_settings.django_version,
                 "current_year": current_year,
+                "my_resources_pending_deployments": (
+                    get_pending_deployments(user_profile=user_profile) if user_profile else 0
+                ),
+                "my_resources_chatbots": get_chatbots(user_profile=user_profile) if user_profile else 0,
+                "my_resources_plugins": get_plugins(user_profile=user_profile) if user_profile else 0,
+                "my_resources_api_keys": get_api_keys(user_profile=user_profile) if user_profile else 0,
+                "my_resources_custom_domains": get_custom_domains(user_profile=user_profile) if user_profile else 0,
+                "my_resources_connections": get_connections(user_profile=user_profile) if user_profile else 0,
+                "my_resources_secrets": get_secrets(user_profile=user_profile) if user_profile else 0,
+                "my_resources_providers": get_providers(user_profile=user_profile) if user_profile else 0,
             }
         }
         return cached_context
@@ -417,6 +663,18 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
         get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id, invalidate=True)  # type: ignore
 
     ###########################################################################
+    # context invalidations
+    ###########################################################################
+    get_pending_deployments(invalidate=True, user_profile=user_profile)
+    get_chatbots(invalidate=True, user_profile=user_profile)
+    get_plugins(invalidate=True, user_profile=user_profile)
+    get_api_keys(invalidate=True, user_profile=user_profile)
+    get_custom_domains(invalidate=True, user_profile=user_profile)
+    get_connections(invalidate=True, user_profile=user_profile)
+    get_secrets(invalidate=True, user_profile=user_profile)
+    get_providers(invalidate=True, user_profile=user_profile)
+
+    ###########################################################################
     # page cache invalidations
     ###########################################################################
     factory = RequestFactory()
@@ -444,3 +702,25 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
         request,
     )
     request.user = user_profile.user
+
+
+# pylint: disable=W0613
+class MyResourcesView(SmarterAuthenticatedWebView):
+    """
+    API view for the "My Resources" React component on the dashboard.
+
+    """
+
+    def post(self, request: HttpRequest, *args, **kwargs):
+
+        user = get_resolved_user(request.user)
+        user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
+
+        retval = {
+            "pending_deployments": get_pending_deployments(user_profile=user_profile) if user_profile else 0,
+            "chatbots": get_chatbots(user_profile=user_profile) if user_profile else 0,
+            "plugins": get_plugins(user_profile=user_profile) if user_profile else 0,
+            "connections": get_connections(user_profile=user_profile) if user_profile else 0,
+            "providers": get_providers(user_profile=user_profile) if user_profile else 0,
+        }
+        return JsonResponse(retval, status=HTTPStatus.OK)

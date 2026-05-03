@@ -1,20 +1,69 @@
-// ----------------------------------------------------------------------------
-// MyResources Component.
-// ----------------------------------------------------------------------------
+import { useEffect, useState } from "react";
 import "./styles.css";
 
 interface MyResourcesProps {
   apiUrl: string;
 }
 
-function MyResources({ apiUrl }: MyResourcesProps) {
-  console.log("MyResources component received apiUrl:", apiUrl);
+interface MyResourcesData {
+  pending_deployments: number;
+  chatbots: number;
+  plugins: number;
+  connections: number;
+  providers: number;
+}
 
-  const my_resources_pending_deployments = 3; // Example value, replace with actual data
-  const my_resources_chatbots = 5; // Example value, replace with actual data
-  const my_resources_plugins = 2; // Example value, replace with actual data
-  const my_resources_connections = 4; // Example value, replace with actual data
-  const my_resources_providers = 6; // Example value, replace with actual data
+function MyResources({ apiUrl }: MyResourcesProps) {
+  const [data, setData] = useState<MyResourcesData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function load() {
+      try {
+        console.log("Loading My Resources from API:", apiUrl);
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch(apiUrl, {
+          method: "POST",
+          credentials: "same-origin",
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
+
+        if (!res.ok) {
+          throw new Error("Request failed: " + res.status);
+        }
+
+        const json = (await res.json()) as MyResourcesData;
+        console.log("Loaded My Resources data:", json);
+        setData(json);
+      } catch (err) {
+        console.error("Error loading My Resources:", err);
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        console.log("Finished loading My Resources");
+        setLoading(false);
+      }
+    }
+
+    load();
+    return () => controller.abort();
+  }, [apiUrl]);
+
+  const my_resources_pending_deployments = data?.pending_deployments ?? 0;
+  const my_resources_chatbots = data?.chatbots ?? 0;
+  const my_resources_plugins = data?.plugins ?? 0;
+  const my_resources_connections = data?.connections ?? 0;
+  const my_resources_providers = data?.providers ?? 0;
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Failed to load resources: {error}</div>;
+
 
   return (
     <>
