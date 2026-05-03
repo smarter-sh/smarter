@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 
-const rootEl = document.getElementById("smarter-terminal-emulator-root");
+const rootEl = document.getElementById("smarter-dashboard-root");
 if (!rootEl) throw new Error("Root element not found");
 
 const apiUrl = rootEl.getAttribute("smarter-api-path");
