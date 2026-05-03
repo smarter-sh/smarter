@@ -13,7 +13,8 @@
     "@monaco-editor/react": "^4.7.0",
     "process": "^0.11.10",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "react-youtube": "^10.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

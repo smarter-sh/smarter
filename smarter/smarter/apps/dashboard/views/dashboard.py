@@ -4,9 +4,10 @@
 import html
 
 from django import forms
+from django.conf import settings
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
@@ -14,13 +15,14 @@ from django.views.decorators.cache import cache_control
 from smarter.apps.dashboard.models import EmailContactList
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
 from smarter.common.utils import is_authenticated_request
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
     SmarterWebHtmlView,
     smarter_cache_page_by_user,
 )
 
+logger = logging.getLogger(__name__)
 DASHBOARD_CACHE_TIMEOUT = 10  # 10 seconds. keeps the dashboard snappy while avoiding appearing stale.
 
 
@@ -98,11 +100,24 @@ class NotificationsView(SmarterAuthenticatedWebView):
 class DashboardView(SmarterAuthenticatedWebView):
     """Public Access Dashboard view"""
 
-    template_path = "dashboard/authenticated.html"
+    # template_path = "dashboard/authenticated.html"
+    template_path = "react/dashboard.html"
 
     def get(self, request: WSGIRequest, *args, **kwargs):
-        if kwargs.get("invalidate_cache", False):
-            self.invalidate_cached_properties()
-        if is_authenticated_request(request):
-            return super().get(request, *args, **kwargs)
-        return redirect(reverse("login_view"))
+
+        if not is_authenticated_request(request):
+            return redirect(reverse("login_view"))
+
+        context = {
+            "dashboard": {
+                "root_id": "smarter-dashboard-root",
+                "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
+                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
+                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
+                "api_url": None,
+            }
+        }
+        self.template_path = "react/dashboard.html"
+
+        logger.debug("%s.get() Rendering dashboard with context: %s", self.formatted_class_name, context)
+        return render(request, self.template_path, context=context)
