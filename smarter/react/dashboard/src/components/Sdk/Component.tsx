@@ -11,8 +11,7 @@ function Sdk({ apiUrl }: SdkProps) {
   console.log("Rendering Sdk with apiUrl:", apiUrl);
   return (
     <>
-      <section className="sdk" aria-label="SDK">
-        <div className="col-xl-4 mb-5 mb-xl-10">
+        <div id="sdk" aria-label="SDK" className="col-xl-4 mb-5 mb-xl-10">
           {/* begin::SDKs */}
           <div className="card border-transparent" data-bs-theme="light">
             {/* begin::Body */}
@@ -42,7 +41,7 @@ function Sdk({ apiUrl }: SdkProps) {
                     >
                       <span>
                         <img
-                          src="/assets/media/framework-logos/react.png"
+                          src="/static/assets/media/framework-logos/react.png"
                           className="h-10px"
                           alt=""
                         />
@@ -67,7 +66,7 @@ function Sdk({ apiUrl }: SdkProps) {
                     >
                       <span>
                         <img
-                          src="/images/python-logo.png"
+                          src="/static/images/python-logo.png"
                           className="h-10px"
                           alt=""
                         />
@@ -80,12 +79,12 @@ function Sdk({ apiUrl }: SdkProps) {
               {/* end::Action */}
               {/* begin::Illustrations */}
               <img
-                src="/images/npm-logo.png"
+                src="/static/images/npm-logo.png"
                 className="position-absolute me-3 top-0 end-0 h-75px pt-3"
                 alt=""
               />
               <img
-                src="/images/pypi-logo-small.svg"
+                src="/static/images/pypi-logo-small.svg"
                 className="position-absolute me-5 bottom-0 end-0 h-75px pt-3 mb-3"
                 alt=""
               />
@@ -105,7 +104,6 @@ function Sdk({ apiUrl }: SdkProps) {
             </h2>
           </div>
         </div>
-      </section>
     </>
   );
 }
