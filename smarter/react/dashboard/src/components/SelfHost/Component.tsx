@@ -11,9 +11,9 @@ function SelfHost({ apiUrl }: SelfHostProps) {
   console.log("Rendering SelfHost with apiUrl:", apiUrl);
   return (
     <>
-      <section className="self-host" aria-label="SelfHost">
         {/* begin::Engage widget 4 */}
         <div
+          id="self-host" aria-label="SelfHost"
           className="card border-transparent h-100"
           data-bs-theme="light"
           style={{ backgroundColor: "#1C325E" }}
@@ -37,12 +37,12 @@ function SelfHost({ apiUrl }: SelfHostProps) {
               {/* end::Title */}
               {/* begin::Illustration */}
               <img
-                src="/assets/media/illustrations/sigma-1/14-dark-white-bkg.png"
+                src="/static/assets/media/illustrations/sigma-1/14-dark-white-bkg.png"
                 className="position-absolute me-3 bottom-0 end-0 w-100"
                 alt=""
               />
               <img
-                src="/images/docker-logo.png"
+                src="/static/images/docker-logo.png"
                 className="position-absolute top-50 end-0 me-20 w-100px"
                 style={{ transform: "translateY(-100%)" }}
                 alt=""
@@ -120,7 +120,6 @@ function SelfHost({ apiUrl }: SelfHostProps) {
           {/* end::Body */}
         </div>
         {/* end::Engage widget 4 */}
-      </section>
     </>
   );
 }
