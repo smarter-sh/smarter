@@ -74,7 +74,6 @@ from smarter.apps.plugin.models import (
 )
 from smarter.apps.provider.models import Provider
 from smarter.apps.secret.models import Secret
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.views import (
@@ -82,8 +81,7 @@ from smarter.lib.django.views import (
 )
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__)
-logger_prefix_cache_invalidations = formatted_text_blue(f"{__name__}.cache_invalidations()")
+logger_prefix = logging.formatted_text(__name__)
 
 
 def get_pending_deployments(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
@@ -272,7 +270,6 @@ def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile
     return len(retval)
 
 
-@cache_results()
 def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
     Returns the total number of secrets associated with the specified user's profile.

@@ -1,18 +1,69 @@
 // ----------------------------------------------------------------------------
 // ServiceHealth Component.
 // ----------------------------------------------------------------------------
+import { useEffect, useState } from "react";
 import "./styles.css";
 
 interface ServiceHealthProps {
   apiUrl: string;
 }
 
+interface ServiceHealthData {
+  smarter_version: string;
+  django_version: string;
+  python_version: string;
+}
+
 function ServiceHealth({ apiUrl }: ServiceHealthProps) {
-  const smarter_version = "1.0.0"; // Example value, replace with actual data
-  const django_version = "4.2.0"; // Example value, replace with actual data
-  const python_version = "3.10.0"; // Example value, replace with actual data
+  const [data, setData] = useState<ServiceHealthData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function load() {
+      try {
+        console.log("Loading Service Health from API:", apiUrl);
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch(apiUrl, {
+          method: "POST",
+          credentials: "same-origin",
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
+
+        if (!res.ok) {
+          throw new Error("Request failed: " + res.status);
+        }
+
+        const json = (await res.json()) as ServiceHealthData;
+        console.log("Loaded Service Health data:", json);
+        setData(json);
+      } catch (err) {
+        console.error("Error loading Service Health:", err);
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        console.log("Finished loading Service Health");
+        setLoading(false);
+      }
+    }
+
+    load();
+    return () => controller.abort();
+  }, [apiUrl]);
+
+  const smarter_version = data?.smarter_version ?? "0.0.0";
+  const django_version = data?.django_version ?? "0.0.0";
+  const python_version = data?.python_version ?? "0.0.0";
 
   console.log("ServiceHealth component received apiUrl:", apiUrl);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Failed to load service health: {error}</div>;
 
   return (
     <>
