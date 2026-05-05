@@ -43,21 +43,23 @@ ARG ENVIRONMENT=local
 ENV ENVIRONMENT=$ENVIRONMENT
 
 ############################## install system packages #################################
-# build-essential           needed to build some python packages, but not included in 3.13-slim-trixie
-# libssl-dev                ... ditto ...
-# libffi-dev                ... ditto ...
-# python3-dev               ... ditto ...
-# pkg-config                ... ditto ...
+# build-essential           needed to compile Python packages with native extensions
+# libssl-dev                needed by Python packages that link against OpenSSL
+# libffi-dev                needed by Python packages that link against libffi
+# python3-dev               provides Python headers for building native extensions
+# pkg-config                helps build scripts locate system libraries
 # ------
-# ca-certificates           needed for SSL/TLS support in http requests but not included in 3.13-slim-trixie
-# python-dev-is-python3     helper package to ensure that the 'python' command points to python3
-# default-mysql-client      needed for Django mysql backend support
-# libmariadb-dev            needed for default-mysql-client python package
-# git                       used in manage.py commands
-# ------
-# curl                      used below in this Dockerfile to download files
-# unzip                     used below in this Dockerfile to install aws cli
-# procps                    provides the 'ps' command, used for liveness/readiness probes of the beat pod in kubernetes
+# ca-certificates           enables SSL/TLS certificate validation in HTTP clients
+# python-dev-is-python3     ensures the 'python' command resolves to python3
+# wget                      used to download build artifacts in later stages
+# git                       used by manage.py commands and dependency installs
+# curl                      used below in this Dockerfile to download kubectl and AWS CLI
+# unzip                     used below in this Dockerfile to install AWS CLI
+# procps                    provides the 'ps' command for container health checks
+# redis-tools               provides Redis CLI utilities for diagnostics and admin tasks
+# libncurses6               runtime library required by terminal-oriented utilities
+# groff                     enables formatted 'aws help' output
+# less                      pager used by AWS CLI help and other terminal tools
 FROM linux_base AS system_packages
 
 # Install system packages
