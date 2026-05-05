@@ -3,18 +3,32 @@ Developer Setup Guide
 
 Smarter follows opinionated code style policies for most of the
 technologies in this repo. With that in mind, following is how to
-correctly setup your local development environment. Before attempting to
+correctly setup your local development environment.
+
+
+Prerequisites
+---------------
+
+Before attempting to
 setup this project you should ensure that the following prerequisites
 are installed in your local environment:
 
 - Docker Desktop or Docker CE 25x or later
 - Docker Compose
-- Node: 20 or later
-- python: 3.10 or later
+- Node: 24 or later
+- python: 3.13 or later
 - git: 2.x or later
 - make: 3.8 or later
 
-And if you work on cloud infrastructure then you’ll also need these:
+You should also review and execute the following script to ensure that you have
+all of the necessary macOS system dependencies for building Python packages.
+
+.. code:: console
+
+bash ./scripts/install-macos-python-build-deps.sh
+
+
+Lastly, if you work on cloud infrastructure then you’ll also need these:
 
 - terraform latest
 - terragrunt latest
