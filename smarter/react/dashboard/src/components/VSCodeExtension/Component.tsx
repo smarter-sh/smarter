@@ -40,7 +40,7 @@ function VSCodeExtension({  }: VSCodeExtensionProps) {
             <div className="position-relative fs-2x z-index-2 fw-bold text-white mb-0">
               {/* begin::Title */}
               <span className="me-2">
-                Get the
+                Get the{' '}
                 <span className="position-relative d-inline-block text-danger mb-2">
                   <a
                     href="https://marketplace.visualstudio.com/items?itemName=Querium.smarter-manifest"
