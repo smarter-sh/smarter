@@ -9,9 +9,48 @@ interface ServiceHealthProps {
 }
 
 interface ServiceHealthData {
+  linux_distribution: string;
   smarter_version: string;
   django_version: string;
   python_version: string;
+  pydantic_version: string;
+  drf_version: string;
+}
+
+interface HealthCheckItemProps {
+  label: string;
+}
+
+function HealthCheckItem({ label }: HealthCheckItemProps) {
+  return (
+    <span className="d-flex align-items-center fs-7 fw-bold text-gray-500 mb-2">
+      <i className="smarter-health-checks ki-duotone ki-check fs-6 me-2">
+        <span className="path1"></span>
+        <span className="path2"></span>
+      </i>
+      {label}
+    </span>
+  );
+}
+
+function ServiceHealthChecks() {
+  return (
+    <div className="d-flex align-items-center mb-5">
+      <div className="row m-0">
+        <h4 className="fw-bold text-gray-800 mb-3">Backend Service Health</h4>
+        <div className="d-flex d-grid gap-5">
+          <div className="d-flex flex-column flex-shrink-0 me-4">
+            <HealthCheckItem label="Compute" />
+            <HealthCheckItem label="Network" />
+          </div>
+          <div className="d-flex flex-column flex-shrink-0">
+            <HealthCheckItem label="Data Storage" />
+            <HealthCheckItem label="Ingress" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function ServiceHealth({ apiUrl }: ServiceHealthProps) {
@@ -59,6 +98,10 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
   const smarter_version = data?.smarter_version ?? "0.0.0";
   const django_version = data?.django_version ?? "0.0.0";
   const python_version = data?.python_version ?? "0.0.0";
+  const pydantic_version = data?.pydantic_version ?? "0.0.0";
+  const drf_version = data?.drf_version ?? "0.0.0";
+  const linux_distribution =
+    data?.linux_distribution ?? "Unknown Linux distribution";
 
   console.log("ServiceHealth component received apiUrl:", apiUrl);
 
@@ -73,108 +116,35 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
         aria-label="ServiceHealth"
         className="col-xl-6 mb-xl-10"
       >
-        {/* begin::Slider Widget 1 */}
-        <div
-          id="kt_sliders_widget_1_slider"
-          className="card card-flush carousel carousel-custom carousel-stretch slide h-xl-100"
-          data-bs-ride="carousel"
-          data-bs-interval="5000"
-        >
+        <div className="card card-flush h-xl-100">
           {/* begin::Header */}
           <div className="card-header pt-5">
             {/* begin::Title */}
-            <h4 className="card-title d-flex align-items-start flex-column">
-              <span className="card-label fw-bold text-gray-800">
-                Smarter {smarter_version}
-              </span>
-              <span className="text-gray-500 mt-1 fs-9">
-                Python {python_version} / Django {django_version}
-              </span>
-              <span className="text-gray-500 mt-1 fw-bold fs-7">
-                Backend Service Health
-              </span>
-            </h4>
+            <div className="row">
+              <div className="col-12 border-bottom border-gray-200 pb-2 mb-2">
+                <h4 className="card-title card-label fw-bold text-gray-800">
+                  Smarter v{smarter_version}
+                </h4>
+              </div>
+              <div className="col-12 fw-bold text-gray-500 fs-6 mt-1">
+                {linux_distribution}
+              </div>
+            </div>
             {/* end::Title */}
           </div>
           {/* end::Header */}
           {/* begin::Body */}
           <div className="card-body py-6">
-            {/* begin::Item */}
-            <div className="carousel-item active show">
-              {/* begin::Wrapper */}
-              <div className="d-flex align-items-center mb-5">
-                {/* begin::Chart */}
-                <div className="w-80px flex-shrink-0 me-2">
-                  <div
-                    className="min-h-auto ms-n3"
-                    id="kt_slider_widget_smarter_health"
-                    style={{ height: "100px" }}
-                  ></div>
-                </div>
-                {/* end::Chart */}
-                {/* begin::Info */}
-                <div className="m-0">
-                  {/* begin::Subtitle */}
-                  <h4 className="fw-bold text-gray-800 mb-3">Infrastructure</h4>
-                  {/* end::Subtitle */}
-                  {/* begin::Items */}
-                  <div className="d-flex d-grid gap-5">
-                    {/* begin::Item */}
-                    <div className="d-flex flex-column flex-shrink-0 me-4">
-                      {/* begin::Section */}
-                      <span className="d-flex align-items-center fs-7 fw-bold text-gray-500 mb-2">
-                        <i className="smarter-health-checks ki-duotone ki-check fs-6 me-2">
-                          <span className="path1"></span>
-                          <span className="path2"></span>
-                        </i>
-                        Compute
-                      </span>
-                      {/* end::Section */}
-                      {/* begin::Section */}
-                      <span className="d-flex align-items-center text-gray-500 fw-bold fs-7">
-                        <i className="smarter-health-checks ki-duotone ki-check fs-6 me-2">
-                          <span className="path1"></span>
-                          <span className="path2"></span>
-                        </i>
-                        Network
-                      </span>
-                      {/* end::Section */}
-                    </div>
-                    {/* end::Item */}
-                    {/* begin::Item */}
-                    <div className="d-flex flex-column flex-shrink-0">
-                      {/* begin::Section */}
-                      <span className="d-flex align-items-center fs-7 fw-bold text-gray-500 mb-2">
-                        <i className="smarter-health-checks ki-duotone ki-check fs-6 me-2">
-                          <span className="path1"></span>
-                          <span className="path2"></span>
-                        </i>
-                        Data Storage
-                      </span>
-                      {/* end::Section */}
-                      {/* begin::Section */}
-                      <span className="d-flex align-items-center text-gray-500 fw-bold fs-7">
-                        <i className="smarter-health-checks ki-duotone ki-check fs-6 me-2">
-                          <span className="path1"></span>
-                          <span className="path2"></span>
-                        </i>
-                        Ingress
-                      </span>
-                      {/* end::Section */}
-                    </div>
-                    {/* end::Item */}
-                  </div>
-                  {/* end::Items */}
-                </div>
-                {/* end::Info */}
-              </div>
-              {/* end::Wrapper */}
+            <ServiceHealthChecks />
+            <div className="row">
+              <span className="col-12 text-gray-500 text-center mt-5 mb-0 pb-0 fs-9">
+                Python {python_version} / Django {django_version} / Pydantic{" "}
+                {pydantic_version} / DRF {drf_version}
+              </span>
             </div>
-            {/* end::Item */}
           </div>
           {/* end::Body */}
         </div>
-        {/* end::Slider Widget 1 */}
       </div>
       {/* end::Col */}
     </>

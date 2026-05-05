@@ -80,10 +80,10 @@ collectstatic:
 	@echo "Collecting static files on local filesystem ..."
 	@echo "==============================================================================="
 	rm -r -f smarter/staticfiles/react/
-	cd smarter/react/prompt_list && npm run build && cd ../../../
-	cd smarter/react/terminal_emulator && npm run build && cd ../../../
-	cd smarter/react/prompt_passthrough && npm run build && cd ../../../
-	cd smarter/react/dashboard && npm run build && cd ../../../
+	cd smarter/react/prompt_list && npm install && npm run build && cd ../../../
+	cd smarter/react/terminal_emulator && npm install && npm run build && cd ../../../
+	cd smarter/react/prompt_passthrough && npm install && npm run build && cd ../../../
+	cd smarter/react/dashboard && npm install && npm run build && cd ../../../
 	python smarter/manage.py collectstatic --noinput
 
 test:

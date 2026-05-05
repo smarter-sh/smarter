@@ -73,8 +73,8 @@ function Dashboard({ myResourcesApiUrl, serviceHealthApiUrl, csrfCookieName, csr
           </div>
 
           <div className="row g-5 g-xl-10">
-            <YTVideo videoId="aXMlmOaKsqwe4y-k" />
-            <YTVideo videoId="gKoD60Za16YNuMgm" />
+            <YTVideo videoId="YtVxkjHzZrE" />
+            <YTVideo videoId="G2RSCzxxupE" />
           </div>
         </div>
       </section>
