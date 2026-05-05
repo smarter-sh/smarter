@@ -1,3 +1,22 @@
+
+/**
+ * MyResources dashboard widget.
+ *
+ * This component fetches and displays user resource metrics from a backend API,
+ * including pending deployments, chatbots, plugins, connections, and
+ * providers, then renders them in a dashboard card layout.
+ *
+ * :param apiUrl: Endpoint used to request My Resources data.
+ * :type apiUrl: str
+ *
+ * :returns: A JSX element representing loading, error, or resource summary
+ *     states for the My Resources widget.
+ * :rtype: JSX.Element
+ *
+ * :example:
+ *
+ *     <MyResources apiUrl="https://customer.smarter.sh/dashboard/api/my-resources" />
+ */
 import { useEffect, useState } from "react";
 import "./styles.css";
 

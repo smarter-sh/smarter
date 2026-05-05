@@ -1,6 +1,21 @@
-// ----------------------------------------------------------------------------
-// SDK Component.
-// ----------------------------------------------------------------------------
+/**
+ * Sdk dashboard widget.
+ *
+ * This component renders developer SDK resource links and related branding
+ * assets, including references to the React NPM package and Python PyPI
+ * library.
+ *
+ * :param props: Component props.
+ * :type props: SdkProps
+ *
+ * :returns: A JSX fragment containing SDK resource links and supporting banner
+ *     content.
+ * :rtype: JSX.Element
+ *
+ * :example:
+ *
+ *     <Sdk />
+ */
 import "./styles.css";
 
 interface SdkProps {

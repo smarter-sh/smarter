@@ -1,6 +1,22 @@
-// ----------------------------------------------------------------------------
-// DownloadNpm Component.
-// ----------------------------------------------------------------------------
+/**
+ * DownloadNpm dashboard widget.
+ *
+ * This component renders a promotional card for the Smarter React chat package
+ * published on NPM, including a direct external download link and brand
+ * illustration.
+ *
+ * :param apiUrl: Base API URL supplied by the parent context. This value is
+ *     currently logged for diagnostics and reserved for future API-backed
+ *     enhancements.
+ * :type apiUrl: str
+ *
+ * :returns: A JSX fragment containing the NPM download call-to-action widget.
+ * :rtype: JSX.Element
+ *
+ * :example:
+ *
+ *     <DownloadNpm apiUrl="https://customer.smarter.sh/dashboard/api/npm" />
+ */
 import "./styles.css";
 
 interface DownloadNpmProps {
