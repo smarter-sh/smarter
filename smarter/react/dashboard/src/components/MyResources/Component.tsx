@@ -96,7 +96,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                 <div className="fs-4 text-white">
                   {my_resources_pending_deployments > 0 && (
                     <>
-                      <span className="opacity-75">You have</span>
+                      <span className="opacity-75">You have</span>{' '}
                       <span className="position-relative d-inline-block">
                         <a
                           href={data?.chatbots_url}
@@ -108,7 +108,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                         <span className="position-absolute opacity-50 bottom-0 start-0 border-2 border-body border-bottom w-100"></span>
                         {/* end::Separator */}
                       </span>
-                      <span className="opacity-75">
+                      <span className="opacity-75">{' '}
                         {my_resources_pending_deployments > 1
                           ? "deployments"
                           : "deployment"}
