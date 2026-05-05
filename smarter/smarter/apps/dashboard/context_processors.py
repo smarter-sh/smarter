@@ -79,6 +79,7 @@ from smarter.apps.dashboard.views.manifest_drop_zone import ManifestDropZoneView
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
+from smarter.apps.prompt.urls import PromptReverseViews
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
@@ -117,7 +118,7 @@ def file_drop_zone(request: "HttpRequest") -> dict:
             "drop_zone": {
                 "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
                 "api_apply_path": api_apply_path,
-                "workbench_list_path": reverse("prompt:listview"),
+                "workbench_list_path": reverse(":".join([PromptReverseViews.namespace, PromptReverseViews.listview])),
                 "plugin_list_path": reverse("plugin:plugin_listview"),
                 "connection_list_path": reverse("connection:connection_listview"),
                 "provider_list_path": reverse("provider:provider_listview"),
@@ -435,7 +436,9 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
 
     DashboardView.dispatch.invalidate(request)
 
-    url = reverse("prompt:listview")
+    reverse_name = ":".join([PromptReverseViews.namespace, PromptReverseViews.listview])
+
+    url = reverse(reverse_name)
     request = factory.get(url)
     logger.debug(
         "%s.cache_invalidations() Created invalidation request for URL %s: %s",

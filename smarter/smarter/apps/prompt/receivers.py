@@ -33,7 +33,7 @@ from .signals import (
     llm_tool_responded,
 )
 from .tasks import create_chat_history
-from .views import ChatConfigView, SmarterChatSession
+from .views.detailview import ChatConfigView, SmarterChatSession
 
 
 def should_log(level):

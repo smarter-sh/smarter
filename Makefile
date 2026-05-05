@@ -80,6 +80,7 @@ collectstatic:
 	@echo "Collecting static files on local filesystem ..."
 	@echo "==============================================================================="
 	rm -r -f smarter/staticfiles/react/
+	cd smarter/react/prompt_list && npm run build && cd ../../../
 	cd smarter/react/terminal_emulator && npm run build && cd ../../../
 	cd smarter/react/prompt_passthrough && npm run build && cd ../../../
 	cd smarter/react/dashboard && npm run build && cd ../../../

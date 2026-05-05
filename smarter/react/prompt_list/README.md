@@ -1,4 +1,8 @@
-# Smarter Dashboard app. React + TypeScript + Vite
+# Smarter Chatbots List app. React + TypeScript + Vite
+
+This is the source code for the Terminal Emulator app located
+at [http://localhost:9357/workbench/](http://localhost:9357/
+workbench/passthrough/).
 
 Currently, two official plugins are available:
 
