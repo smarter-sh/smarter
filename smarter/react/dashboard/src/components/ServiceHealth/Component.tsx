@@ -1,6 +1,22 @@
-// ----------------------------------------------------------------------------
-// ServiceHealth Component.
-// ----------------------------------------------------------------------------
+/**
+ * ServiceHealth dashboard widget.
+ *
+ * This component fetches backend service metadata from an API endpoint and
+ * renders platform health details, infrastructure checks, GitHub status, and
+ * runtime version information in a dashboard card.
+ *
+ * :param apiUrl: Endpoint used to request service health and platform version
+ *     data.
+ * :type apiUrl: str
+ *
+ * :returns: A JSX element that renders loading, error, or service health
+ *     dashboard content.
+ * :rtype: JSX.Element
+ *
+ * :example:
+ *
+ *     <ServiceHealth apiUrl="https://api.smarter.sh/health" />
+ */
 import { useEffect, useState } from "react";
 import HealthRing from "./HealthRing";
 import GitHubStatus from "./GitHubStatus";

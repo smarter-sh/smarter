@@ -1,6 +1,20 @@
-// ----------------------------------------------------------------------------
-// SelfHost Component.
-// ----------------------------------------------------------------------------
+/**
+ * SelfHost dashboard widget.
+ *
+ * This component renders a self-hosting call-to-action card for Smarter,
+ * including installation guidance and deployment option links for Docker,
+ * Kubernetes, and Terraform.
+ *
+ * :param props: Component props.
+ * :type props: SelfHostProps
+ *
+ * :returns: A JSX fragment containing the self-hosting engagement widget.
+ * :rtype: JSX.Element
+ *
+ * :example:
+ *
+ *     <SelfHost />
+ */
 import "./styles.css";
 
 interface SelfHostProps {

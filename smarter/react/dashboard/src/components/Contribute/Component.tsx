@@ -1,6 +1,20 @@
-// ----------------------------------------------------------------------------
-// Contribute Component.
-// ----------------------------------------------------------------------------
+/**
+ * Contribute dashboard widget.
+ *
+ * This component renders a dashboard contribution-focused card that encourages community
+ * participation in the Smarter project, highlights repository activity badges,
+ * and presents supporting visual illustration content.
+ *
+ * :param props: Component props.
+ * :type props: ContributeProps
+ *
+ * :returns: A JSX fragment containing the contribution engagement widget.
+ * :rtype: JSX.Element
+ *
+ * :example:
+ *
+ *     <Contribute />
+ */
 import "./styles.css";
 
 interface ContributeProps {

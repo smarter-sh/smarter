@@ -1,6 +1,22 @@
-// ----------------------------------------------------------------------------
-// CertificateProgram Component.
-// ----------------------------------------------------------------------------
+/**
+ * CertificateProgram dashboard widget.
+ *
+ * This component renders a dashboard Bootstrap carousel card that showcases available
+ * certification tracks and exposes call-to-action links for details and
+ * applications.
+ *
+ * :param apiUrl: Base API URL passed in by the parent context. This value is
+ *     currently logged for diagnostics and reserved for future data-driven
+ *     content loading.
+ * :type apiUrl: str
+ *
+ * :returns: A JSX fragment containing the certification programs widget.
+ * :rtype: JSX.Element
+ *
+ * :example:
+ *
+ *     <CertificateProgram apiUrl="https://customer.smarter.sh/dashboard/api/certificate-program" />
+ */
 import "./styles.css";
 
 interface CertificateProgramProps {
@@ -8,7 +24,7 @@ interface CertificateProgramProps {
 }
 
 function CertificateProgram({ apiUrl }: CertificateProgramProps) {
-  console.log("Rendering SelfHost with apiUrl:", apiUrl);
+  console.log("Rendering CertificateProgram with apiUrl:", apiUrl);
 
   return (
     <>

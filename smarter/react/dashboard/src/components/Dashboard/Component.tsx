@@ -1,6 +1,37 @@
-// ----------------------------------------------------------------------------
-// Dashboard Component.
-// ----------------------------------------------------------------------------
+/**
+ * Dashboard root layout component.
+ *
+ * This component composes the main dashboard view by arranging resource,
+ * service, certification, tooling, hosting, contribution, and media widgets
+ * into responsive Bootstrap grid sections.
+ *
+ * :param myResourcesApiUrl: API endpoint used by the MyResources widget.
+ * :type myResourcesApiUrl: str
+ * :param serviceHealthApiUrl: API endpoint used by the ServiceHealth widget.
+ * :type serviceHealthApiUrl: str
+ * :param csrfCookieName: Cookie name used for CSRF integration.
+ * :type csrfCookieName: str
+ * :param csrftoken: CSRF token value for authenticated requests.
+ * :type csrftoken: str
+ * :param djangoSessionCookieName: Django session cookie name.
+ * :type djangoSessionCookieName: str
+ * :param cookieDomain: Domain scope applied to cookie operations.
+ * :type cookieDomain: str
+ *
+ * :returns: A JSX fragment containing the complete dashboard composition.
+ * :rtype: JSX.Element
+ *
+ * :example:
+ *
+ *     <Dashboard
+ *       myResourcesApiUrl="https://customer.smarter.sh/dashboard/api/my-resources"
+ *       serviceHealthApiUrl="https://customer.smarter.sh/dashboard/api/service-health"
+ *       csrfCookieName="csrftoken"
+ *       csrftoken="token-value"
+ *       djangoSessionCookieName="sessionid"
+ *       cookieDomain=".smarter.sh"
+ *     />
+ */
 import "./styles.css";
 import MyResources from "../MyResources/Component";
 import ServiceHealth from "../ServiceHealth/Component";

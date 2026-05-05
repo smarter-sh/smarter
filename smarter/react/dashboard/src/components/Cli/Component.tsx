@@ -1,6 +1,20 @@
-// ----------------------------------------------------------------------------
-// CLI Component.
-// ----------------------------------------------------------------------------
+/**
+ * Cli dashboard widget.
+ *
+ * This component renders a compact dashboard call-to-action card for the Smarter
+ * command-line interface, including links to download the CLI and open
+ * documentation resources.
+ *
+ * :param props: Component props.
+ * :type props: CliProps
+ *
+ * :returns: A JSX fragment containing the CLI promotion widget.
+ * :rtype: JSX.Element
+ *
+ * :example:
+ *
+ *     <Cli />
+ */
 import "./styles.css";
 
 interface CliProps {

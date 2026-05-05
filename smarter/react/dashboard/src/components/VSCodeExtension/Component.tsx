@@ -1,6 +1,21 @@
-// ----------------------------------------------------------------------------
-// VSCodeExtension Component.
-// ----------------------------------------------------------------------------
+/**
+ * VSCodeExtension dashboard widget.
+ *
+ * This component renders a promotional card for the Smarter Manifest VS Code
+ * extension, including direct links to the Visual Studio Marketplace listing
+ * and official documentation.
+ *
+ * :param props: Component props.
+ * :type props: VSCodeExtensionProps
+ *
+ * :returns: A JSX fragment containing the VS Code extension call-to-action
+ *     widget.
+ * :rtype: JSX.Element
+ *
+ * :example:
+ *
+ *     <VSCodeExtension />
+ */
 import "./styles.css";
 
 interface VSCodeExtensionProps {
