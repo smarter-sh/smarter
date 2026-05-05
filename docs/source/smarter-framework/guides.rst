@@ -4,6 +4,7 @@ Developer Guides
 .. toctree::
    :maxdepth: 1
 
+   guides/developer-setup
    guides/contributing
    guides/developer-feature-checklist
    guides/documentation
