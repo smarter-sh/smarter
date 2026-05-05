@@ -23,11 +23,11 @@ function SelfHost({  }: SelfHostProps) {
               <div className="position-relative fs-2x z-index-2 fw-bold text-white mb-7">
                 <span className="position-relative d-inline-block text-danger">
                   <a
-                    href="https://github.com/smarter-sh/smarter-deploy"
+                    href="https://docs.smarter.sh/en/latest/smarter-platform/installation.html"
                     target="_blank"
                     className="btn btn-primary fw-semibold me-2 opacity-75-hover"
                   >
-                    Quickstart
+                    Installation Guide
                   </a>
                   <span className="me-2"> Self-host Smarter</span>
                 </span>
