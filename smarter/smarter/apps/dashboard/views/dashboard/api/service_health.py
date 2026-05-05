@@ -23,7 +23,10 @@ class ServiceHealthView(SmarterAuthenticatedWebView):
 
         retval = {
             "smarter_version": smarter_settings.version,
+            "linux_distribution": smarter_settings.linux_distribution,
             "django_version": smarter_settings.django_version,
             "python_version": smarter_settings.python_version,
+            "pydantic_version": smarter_settings.pydantic_version,
+            "drf_version": smarter_settings.drf_version,
         }
         return JsonResponse(retval, status=HTTPStatus.OK)
