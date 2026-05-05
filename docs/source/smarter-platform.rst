@@ -24,13 +24,11 @@ The Smarter platform's fundamental building blocks to this extent are:
    :maxdepth: 1
    :caption: Platform Administration Guide
 
-   smarter-platform/quick-start
-   smarter-platform/production-deployment
+   smarter-platform/installation
+   smarter-platform/django-admin
    smarter-platform/prerequisites
    smarter-platform/trouble-shooting
    smarter-platform/cloud-infrastructure
-   smarter-platform/installation
-   smarter-platform/django-admin
    smarter-platform/url-patterns
    smarter-platform/account-management
    smarter-platform/user-management

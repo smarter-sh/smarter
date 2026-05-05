@@ -187,7 +187,7 @@ ReactJS component js and css build bundles.
 
 See the script tag at the very bottom of the Django template below.
 
-.. literalinclude:: ../../../smarter/smarter/templates/prompt/workbench.html
+.. literalinclude:: ../../../../smarter/smarter/templates/prompt/workbench.html
   :language: html
 
 The rendered html template will include a script tag similar to the following
@@ -233,7 +233,7 @@ This div is rendered by the Django template engine from the template above,
 and all of its attributes are generated from the context variable created in
 `ChatAppWorkbenchView.dispatch() <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/prompt/views/detailview/chatapp_workbench_view.py#L160>`__. See below.
 
-.. literalinclude:: ../../../smarter/smarter/apps/prompt/views/detailview/chatapp_workbench_view.py
+.. literalinclude:: ../../../../smarter/smarter/apps/prompt/views/detailview/chatapp_workbench_view.py
   :language: python
   :lines: 160-
 
