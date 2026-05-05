@@ -1,0 +1,45 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load vite_dashboard %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the dashboard
+  see: smarter.apps.dashboard.templatetags.vite_dashboard.
+  reads the vite manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% dashboard_vite_assets "index.html" as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/dashboard/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ react_dashboard.root_id }}"
+    smarter-csrf-cookie-name="{{ react_dashboard.csrf_cookie_name }}"
+    django-csrftoken="{{ csrf_token }}"
+    smarter-django-session-cookie-name="{{ react_dashboard.django_session_cookie_name }}"
+    smarter-cookie-domain="{{ react_dashboard.cookie_domain }}"
+    smarter-my-resources-api-url="{{ react_dashboard.my_resources_api_url }}"
+    smarter-service-health-api-url="{{ react_dashboard.service_health_api_url }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the prompt dashboard
+  see: smarter.apps.dashboard.templatetags.vite_dashboard.
+  reads the vite manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% dashboard_vite_assets "index.html" as assets %}
+  <script class="smarter" type="module" src="{% static 'react/dashboard/' %}{{ assets.js }}"></script>
+{% endblock %}

@@ -14,6 +14,8 @@ from smarter.common.utils import camel_case_object_name
 
 from .const import namespace
 from .views.dashboard import ChangeLogView, DashboardView, EmailAdded, NotificationsView
+from .views.dashboard.api.my_resources import MyResourcesView
+from .views.dashboard.api.service_health import ServiceHealthView
 from .views.logs import urls as logs_urls
 from .views.manifest_drop_zone import ManifestDropZoneView
 
@@ -37,10 +39,14 @@ class DashboardNames:
     email_added = camel_case_object_name(EmailAdded)
     manifest_drop_zone = camel_case_object_name(ManifestDropZoneView)
     prompt_passthrough = camel_case_object_name(PromptPassthroughView)
+    api_my_resources = camel_case_object_name(MyResourcesView)
+    api_service_health = camel_case_object_name(ServiceHealthView)
 
 
 urlpatterns = [
-    path("", DashboardView.as_view(), name="dashboard"),
+    path("", DashboardView.as_view(), name=namespace),
+    path("api/my-resources/", MyResourcesView.as_view(), name=DashboardNames.api_my_resources),
+    path("api/service-health/", ServiceHealthView.as_view(), name=DashboardNames.api_service_health),
     path("logs/", include(logs_urls, namespace=logs_urls.app_name)),
     path("account/", include(account_urls)),
     path("plugins/", include(plugin_urls)),

@@ -4315,6 +4315,71 @@ class Settings(BaseSettings):
             return "Unknown Python version"
 
     @cached_property
+    def pydantic_version(self) -> str:
+        """
+        Current version of Pydantic running the Smarter platform codebase.
+
+        Example:
+            >>> print(smarter_settings.pydantic_version)
+            '2.10.4'
+        """
+        try:
+            # pylint: disable=import-outside-toplevel
+            import pydantic
+
+            return pydantic.__version__
+        # pylint: disable=broad-except
+        except Exception:  # catch broad exceptions to avoid any issues with retrieving Pydantic version
+            return "Unknown Pydantic version"
+
+    @cached_property
+    def drf_version(self) -> str:
+        """
+        Current version of Django REST Framework running the Smarter platform codebase.
+
+        Example:
+            >>> print(smarter_settings.drf_version)
+            '3.14.0'
+        """
+        try:
+            # pylint: disable=import-outside-toplevel
+            import rest_framework
+
+            return rest_framework.VERSION
+        # pylint: disable=broad-except
+        except Exception:  # catch broad exceptions to avoid any issues with retrieving DRF version
+            return "Unknown DRF version"
+
+    @cached_property
+    def linux_distribution(self) -> str:
+        """
+        Current Linux distribution running the Smarter platform codebase.
+
+        Example:
+            >>> print(smarter_settings.linux_distribution)
+            'Ubuntu 20.04.6 LTS (Focal Fossa)'
+
+        Note:
+            This is based on the platform module's linux_distribution function, which is deprecated in Python 3.8 and removed in Python 3.10.
+            As a result, this method uses a fallback approach to attempt to retrieve Linux distribution information from common files like /etc/os-release.
+            If the platform module's linux_distribution function is available, it will be used; otherwise, the fallback approach will be attempted.
+            Due to the deprecation and removal of linux_distribution, the returned value may be "Unknown Linux distribution" in some environments or Python versions.
+        """
+        try:
+            # pylint: disable=import-outside-toplevel
+            import platform
+
+            if hasattr(platform, "platform"):
+                return " ".join(
+                    platform.platform().split("-")[:2]
+                )  # Get the first two components of the platform string
+            else:
+                return "Unknown Linux distribution"
+        # pylint: disable=broad-except
+        except Exception:
+            return "Unknown Linux distribution"
+
+    @cached_property
     def django_version(self) -> str:
         """
         Current version of Django installed in the Smarter platform codebase.

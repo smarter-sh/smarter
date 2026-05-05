@@ -3,8 +3,10 @@ switch_is_active() - Check if a Waffle switch is active with caching and databas
 """
 
 import logging
+from importlib import import_module
 
 import waffle as waffle_orig
+from asgiref.sync import sync_to_async
 from django.apps import apps
 from django.core.exceptions import AppRegistryNotReady
 from django.db.utils import OperationalError, ProgrammingError
@@ -16,13 +18,19 @@ from .switches import smarter_waffle_switches
 
 logger = logging.getLogger(__name__)
 
-# Also catch MySQLdb.OperationalError for lower-level DB errors
+# Also catch driver-specific DB errors for lower-level connector failures.
 try:
-    import MySQLdb
-
-    MySQLdbOperationalError = MySQLdb.OperationalError
+    MySQLdbOperationalError = import_module("MySQLdb").OperationalError
 except ImportError:
     MySQLdbOperationalError = None
+
+try:
+    mariadb = import_module("mariadb")
+    MariaDBOperationalError = mariadb.OperationalError
+    MariaDBProgrammingError = mariadb.ProgrammingError
+except ImportError:
+    MariaDBOperationalError = None
+    MariaDBProgrammingError = None
 
 prefix = f"{formatted_text(__name__)}.switch_is_active()"
 
@@ -68,7 +76,15 @@ def switch_is_active(switch_name: str) -> bool:
         logger.error("%s switch_name '%s' is not a valid SmarterWaffleSwitches attribute", prefix, switch_name)
         return False
     db_exceptions = tuple(
-        t for t in (OperationalError, ProgrammingError, MySQLdbOperationalError) if t is not None
+        t
+        for t in (
+            OperationalError,
+            ProgrammingError,
+            MySQLdbOperationalError,
+            MariaDBOperationalError,
+            MariaDBProgrammingError,
+        )
+        if t is not None
     ) or (Exception,)
     try:
         return waffle_orig.switch_is_active(switch_name)
@@ -77,3 +93,16 @@ def switch_is_active(switch_name: str) -> bool:
             "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True
         )
         return False
+
+
+async def async_switch_is_active(switch_name: str) -> bool:
+    """
+    Async-safe wrapper around :func:`switch_is_active`.
+
+    Django's ORM-backed Waffle lookup is synchronous. Under ASGI callers should
+    await this helper instead of calling :func:`switch_is_active` directly.
+    ``thread_sensitive=True`` keeps the work on Django's thread-sensitive sync
+    executor so connection-local state remains safe.
+    """
+
+    return await sync_to_async(switch_is_active, thread_sensitive=True)(switch_name)

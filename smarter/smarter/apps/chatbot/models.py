@@ -806,7 +806,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         # pylint: disable=C0415
         from smarter.apps.prompt.urls import PromptReverseViews
 
-        path = reverse(f"{PromptReverseViews.namespace}:{PromptReverseViews.prompt_chat_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        path = reverse(f"{PromptReverseViews.namespace}:{PromptReverseViews.chat_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url

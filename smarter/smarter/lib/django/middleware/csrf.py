@@ -4,10 +4,12 @@ SmarterCsrfViewMiddleware. It adds the ability to add the ChatBot's URL to the l
 trusted origins for CSRF protection.
 """
 
+import inspect
 import logging
 from collections import defaultdict
 from urllib.parse import urlparse
 
+from asgiref.sync import markcoroutinefunction
 from django.conf import settings
 from django.http import HttpResponseForbidden
 from django.middleware.csrf import CsrfViewMiddleware
@@ -17,7 +19,6 @@ from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import is_async_context
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.request import SmarterRequestMixin
@@ -84,9 +85,12 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
     :rtype: django.http.HttpResponse or None
     """
 
+    sync_capable = True
+    async_capable = True
+
     _ready: bool = False
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, get_response, *args, **kwargs):
         """
         Initialize the SmarterCsrfViewMiddleware.
 
@@ -95,12 +99,15 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         request is for a ChatBot.
         """
         logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
-        super().__init__(*args, **kwargs)
+        super().__init__(get_response, *args, **kwargs)
+        self.is_async = inspect.iscoroutinefunction(get_response)
+        if self.is_async:
+            markcoroutinefunction(self)
 
         admin_user_profile = None
         # this can happen on fresh installations where migrations have not yet run.
-        if is_async_context():
-            SmarterRequestMixin.__init__(self, *args, **kwargs)
+        if self.is_async:
+            SmarterRequestMixin.__init__(self, get_response, *args, **kwargs)
             logger.warning(
                 "%s.__init__() could not get admin user profile because we're in an async context. SmarterRequestMixin initialized without user context. This may cause issues with ChatBot requests.",
                 self.formatted_class_name,
@@ -110,6 +117,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
                 admin_user_profile = get_cached_smarter_admin_user_profile()
                 SmarterRequestMixin.__init__(
                     self,
+                    get_response,
                     request=None,
                     user=admin_user_profile.user,
                     user_profile=admin_user_profile,
@@ -121,7 +129,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             # pylint: disable=broad-except
             except Exception as e:
                 logger.error("%s.__init__() could not get admin user profile: %s", self.formatted_class_name, str(e))
-                SmarterRequestMixin.__init__(self, *args, **kwargs)
+                SmarterRequestMixin.__init__(self, get_response, *args, **kwargs)
 
     @property
     def ready(self) -> bool:

@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 
@@ -27,9 +26,7 @@ if (!csrftoken)
   throw new Error("CSRF token value not found in root element attributes");
 
 createRoot(rootEl).render(
-  <StrictMode>
-    <App
-      apiUrl={apiUrl}
-    />
-  </StrictMode>,
+  <App
+    apiUrl={apiUrl}
+  />,
 );

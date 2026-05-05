@@ -55,8 +55,8 @@ module_prefix = f"{__name__}"
 def user_logged_in_receiver(sender, request, user: User, **kwargs):
     """
     Signal receiver for user login.
-    - verify that a UserProfile record exists for the user.
-      if not, create one with the default account.
+        Verify that a UserProfile record exists for the user.
+        If not, create one with the default account.
     """
     logger.info("%s User logged in: %s", formatted_text(f"{module_prefix}.user_logged_in()"), user)
     try:

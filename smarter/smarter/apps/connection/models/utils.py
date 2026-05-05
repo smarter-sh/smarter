@@ -20,7 +20,7 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 logger_prefix = formatted_text(f"{__name__}")
 
 
-def get_cached_connection_by_name_and_kind(
+def get_cached_connection_detail_view_and_kind(
     user: User, kind: SAMKinds, name: str, invalidate: bool = False
 ) -> Union[ApiConnection, SqlConnection]:
     """
@@ -43,8 +43,8 @@ def get_cached_connection_by_name_and_kind(
 
     .. code-block:: python
 
-        sql_conn = ConnectionBase.get_cached_connection_by_name_and_kind(user, SAMKinds.SQL_CONNECTION, "hr_database")
-        api_conn = ConnectionBase.get_cached_connection_by_name_and_kind(user, SAMKinds.API_CONNECTION, "inventory_api")
+        sql_conn = ConnectionBase.get_cached_connection_detail_view_and_kind(user, SAMKinds.SQL_CONNECTION, "hr_database")
+        api_conn = ConnectionBase.get_cached_connection_detail_view_and_kind(user, SAMKinds.API_CONNECTION, "inventory_api")
 
     See also:
 
@@ -54,7 +54,7 @@ def get_cached_connection_by_name_and_kind(
     - :func:`smarter.apps.account.utils.get_cached_account_for_user`
     """
 
-    logger.debug("%s.get_cached_connection_by_name_and_kind: Retrieving connection for user_id=%s, kind=%s, name=%s, invalidate=%s", logger_prefix, user.id if user else None, kind, name, invalidate)  # type: ignore[union-attr]
+    logger.debug("%s.get_cached_connection_detail_view_and_kind: Retrieving connection for user_id=%s, kind=%s, name=%s, invalidate=%s", logger_prefix, user.id if user else None, kind, name, invalidate)  # type: ignore[union-attr]
 
     @cache_results()
     def cached_sqlconnection_by_id_and_name(account_id: int, name: str) -> Union["SqlConnection", None]:
