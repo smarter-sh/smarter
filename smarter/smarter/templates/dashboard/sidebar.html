@@ -1,0 +1,537 @@
+{% load static %}
+
+<div
+  id="kt_app_sidebar"
+  class="app-sidebar flex-column"
+  data-kt-drawer="true"
+  data-kt-drawer-name="app-sidebar"
+  data-kt-drawer-activate="{default: true, lg: false}"
+  data-kt-drawer-overlay="true"
+  data-kt-drawer-width="225px"
+  data-kt-drawer-direction="start"
+  data-kt-drawer-toggle="#kt_app_sidebar_mobile_toggle"
+>
+  <!--begin::Logo-->
+  <div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
+    <!--begin::Logo image-->
+    <a href="{% url 'console_home' %}">
+      <img
+        alt="Logo"
+        src="{{ branding.cdn_logo_url }}"
+        class="h-75px app-sidebar-logo-default"
+      />
+    </a>
+    <!--end::Logo image-->
+    <!--begin::Sidebar toggle-->
+    <div
+      id="kt_app_sidebar_toggle"
+      class="app-sidebar-toggle btn btn-icon btn-sm h-30px w-30px rotate"
+      data-kt-toggle="true"
+      data-kt-toggle-state="active"
+      data-kt-toggle-target="body"
+      data-kt-toggle-name="app-sidebar-minimize"
+    >
+      <i class="ki-duotone ki-double-left fs-2 rotate-180">
+        <span class="path1"></span>
+        <span class="path2"></span>
+      </i>
+    </div>
+    <!--end::Sidebar toggle-->
+  </div>
+  <!--end::Logo-->
+  <!--begin::sidebar menu-->
+  <div class="app-sidebar-menu overflow-hidden flex-column-fluid">
+    <!--begin::Menu wrapper-->
+    <div id="kt_app_sidebar_menu_wrapper" class="app-sidebar-wrapper">
+      <!--begin::Scroll wrapper-->
+      <div
+        id="kt_app_sidebar_menu_scroll"
+        class="hover-scroll-y my-5 mx-3"
+        data-kt-scroll="true"
+        data-kt-scroll-activate="true"
+        data-kt-scroll-height="auto"
+        data-kt-scroll-dependencies="#kt_app_sidebar_logo, #kt_app_sidebar_footer"
+        data-kt-scroll-wrappers="#kt_app_sidebar_menu"
+        data-kt-scroll-offset="5px"
+        data-kt-scroll-save-state="true"
+      >
+        <!--begin::Menu-->
+        <div
+          class="menu menu-column menu-rounded menu-sub-indention fw-semibold"
+          id="#kt_app_sidebar_menu"
+          data-kt-menu="true"
+          data-kt-menu-expand="false"
+        >
+          <!--begin::Menu-->
+          {% block menu %}
+          <div
+            class="menu menu-column menu-rounded menu-sub-indention fw-semibold"
+            id="#kt_app_sidebar_menu"
+            data-kt-menu="true"
+            data-kt-menu-expand="false"
+          >
+            <!--begin:Menu item Workbench-->
+            <div class="here menu-item pt-5">
+              <!--begin:Menu content-->
+              <div class="menu-content">
+                <span class="menu-heading here fw-bold text-uppercase fs-7"
+                  >Workbench</span
+                >
+              </div>
+              <!--end:Menu content-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item Dashboard-->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'dashboard:dashboard' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-category fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Dashboard</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item Workbench -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'prompt:prompt_list_view' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-message-programming fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Workbench</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item Workbench -->
+
+            <!--begin:Menu item Apply -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'dashboard:manifest_drop_zone_view' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-gear fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Apply Manifest</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item Apply -->
+
+            <!--begin:Menu item Prompt Passthrough -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'dashboard:prompt_passthrough_view' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-code fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Prompt Passthrough</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item Prompt Passthrough -->
+
+            <!--begin:Menu item Server Logs -->
+            {% if dashboard.is_enabled_server_logs %}
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'dashboard:logs:terminal_emulator_log_view' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-archive fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Server Logs</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            {% endif %}
+            <!--end:Menu item Server Logs -->
+
+            <!--begin:Menu item Providers -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'provider:provider_list_view' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-shop fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Providers</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item Plugins-->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'plugin:plugin_list_view' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-cube-2 fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                    <span class="path4"></span>
+                    <span class="path5"></span>
+                    <span class="path6"></span>
+                    <span class="path7"></span>
+                    <span class="path8"></span>
+                    <span class="path9"></span>
+                    <span class="path10"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Plugins</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item Connections -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'connection:connection_list_view' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-password-check fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Connections</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item Secrets -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'secret:dashboard_secrets' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-lock fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Secrets</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item Secrets -->
+
+            <!--begin:Menu item Vectorstores -->
+            {% if dashboard.is_vectorstore_enabled %}
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'vectorstore:list_view' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-data fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Vectorstores</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            {% endif %}
+            <!--end:Menu item Vectorstores -->
+
+            <!--begin:Menu item Api Keys -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'account:api_keys_list' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-key fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Api Keys</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item Custom Domains -->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'connection:connection_list_view' %}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-arrow-circle-right fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Custom Domains</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item Documentation-->
+            <div class="here menu-item pt-5">
+              <!--begin:Menu content-->
+              <div class="menu-content">
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-abstract-26 fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                  </i>
+                </span>
+                <span class="menu-heading here fw-bold text-uppercase fs-7"
+                  >Documentation</span
+                >
+              </div>
+              <!--end:Menu content-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item:Read the Docs-->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ branding.smarter_project_docs_url }}"
+                target="_blank"
+              >
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title">Read the Docs</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item:Read the Docs-->
+
+            <!--begin:Menu item:Project web site-->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a class="menu-link" href="https://smarter.sh" target="_blank">
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title">Project Web Site</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item:Project web site-->
+
+            <!--begin:Menu item Example Manifests-->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'docs:example_manifests' %}"
+                target="_self"
+              >
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title">Example Manifests</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item-->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'docs:schema-swagger-ui' %}"
+                target="_self"
+              >
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title">Swagger Api Docs</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item-->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'docs:schema-redoc-ui' %}"
+                target="_self"
+              >
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title">Redoc</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item Json Schemas-->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{% url 'docs:json_schemas' %}"
+                target="_self"
+              >
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title">Json Schemas</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item Change Log -->
+            <div class="menu-item">
+              <!--begin:Menu link Change Log-->
+              <a
+                class="menu-link"
+                href="https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md"
+                target="_blank"
+              >
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title"
+                  >GitHub Change Log {{ dashboard.smarter_version }}</span
+                >
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+
+            <!--begin:Menu item Settings-->
+            {% if user.is_superuser %}
+            <div class="menu-item pt-5">
+              <!--begin:Menu content-->
+              <div class="menu-content">
+                <span class="menu-heading fw-bold text-uppercase fs-7"
+                  >Settings</span
+                >
+              </div>
+              <!--end:Menu content-->
+            </div>
+            {% endif %}
+
+            <!--begin:Menu item Account -->
+            {% if user.is_superuser %}
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="/dashboard/account/dashboard/overview/"
+              >
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title">Account</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            {% endif %}
+            <!--end:Menu item-->
+
+            <!--begin:Menu item Django admin-->
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a class="menu-link" href="/admin/" target="_self">
+                <span class="menu-bullet">
+                  <span class="bullet bullet-dot"></span>
+                </span>
+                <span class="menu-title">Django Admin</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            <!--end:Menu item-->
+          </div>
+          {% endblock %}
+          <!--end::Menu-->
+        </div>
+        <!--end::Menu-->
+      </div>
+      <!--end::Scroll wrapper-->
+    </div>
+    <!--end::Menu wrapper-->
+  </div>
+  <!--end::sidebar menu-->
+</div>
