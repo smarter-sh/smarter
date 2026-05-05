@@ -43,7 +43,8 @@ Choose the installation method that best suits your needs.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Installation Guide
+   :caption: Self-Service Installation Guides
 
    installation/quick-start
    installation/production-deployment
+   ../smarter-framework/guides/developer-setup
