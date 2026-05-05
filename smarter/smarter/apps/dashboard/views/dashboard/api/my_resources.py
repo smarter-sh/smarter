@@ -61,6 +61,7 @@ from http import HTTPStatus
 from typing import Optional
 
 from django.http import HttpRequest, JsonResponse
+from django.urls import reverse
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
@@ -69,10 +70,14 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.connection.models import ConnectionBase
+from smarter.apps.connection.urls import ConnectionReverseViews
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
+from smarter.apps.plugin.urls import PluginReverseViews
+from smarter.apps.prompt.urls import PromptReverseViews
 from smarter.apps.provider.models import Provider
+from smarter.apps.provider.urls import ProviderReverseViews
 from smarter.apps.secret.models import Secret
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
@@ -323,14 +328,25 @@ class MyResourcesView(SmarterAuthenticatedWebView):
 
     def post(self, request: HttpRequest, *args, **kwargs):
 
+        prompt_reverse_name = ":".join([PromptReverseViews.namespace, PromptReverseViews.listview])
+        plugin_reverse_name = ":".join([PluginReverseViews.namespace, PluginReverseViews.listview])
+        connection_reverse_name = ":".join([ConnectionReverseViews.namespace, ConnectionReverseViews.listview])
+        provider_reverse_name = ":".join([ProviderReverseViews.namespace, ProviderReverseViews.listview])
+
         user = get_resolved_user(request.user)
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
 
         retval = {
-            "pending_deployments": get_pending_deployments(user_profile=user_profile) if user_profile else 0,
-            "chatbots": get_chatbots(user_profile=user_profile) if user_profile else 0,
-            "plugins": get_plugins(user_profile=user_profile) if user_profile else 0,
-            "connections": get_connections(user_profile=user_profile) if user_profile else 0,
-            "providers": get_providers(user_profile=user_profile) if user_profile else 0,
+            "pending_deployments": get_pending_deployments(user_profile=user_profile),
+            "chatbots_qty": get_chatbots(user_profile=user_profile),
+            "chatbots_url": reverse(prompt_reverse_name),
+            "plugins_qty": get_plugins(user_profile=user_profile),
+            "plugins_url": reverse(plugin_reverse_name),
+            "connections_qty": get_connections(user_profile=user_profile),
+            "connections_url": reverse(connection_reverse_name),
+            "providers_qty": get_providers(user_profile=user_profile),
+            "providers_url": reverse(provider_reverse_name),
         }
+
+        logger.debug("%s.post() returning: %s", self.formatted_class_name, logging.formatted_json(retval))
         return JsonResponse(retval, status=HTTPStatus.OK)

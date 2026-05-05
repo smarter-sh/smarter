@@ -3,7 +3,7 @@
  * Used to send raw JSON prompts to LLM APIs and display raw JSON responses.
  *
  */
-import PromptList from "./components/PromptList";
+import Prompts from "./components/Prompts";
 
 interface AppProps {
   myResourcesApiUrl: string;
@@ -17,7 +17,7 @@ function App({ myResourcesApiUrl, csrfCookieName, csrftoken, djangoSessionCookie
   return (
     <>
       <section className="mt-5 container" id="prompt-list">
-        <PromptList
+        <Prompts
           myResourcesApiUrl={myResourcesApiUrl}
           csrfCookieName={csrfCookieName}
           csrftoken={csrftoken}
