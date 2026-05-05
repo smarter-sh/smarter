@@ -79,5 +79,6 @@ Technical Reference
    prompt/functions
    prompt/signals
    prompt/tasks
+   prompt/templatetags
    prompt/urls
    prompt/views
