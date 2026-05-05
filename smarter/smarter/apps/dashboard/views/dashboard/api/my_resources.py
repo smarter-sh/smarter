@@ -1,7 +1,7 @@
 # pylint: disable=W0613
 """
-smarter.apps.dashboard.context_processors
-=========================================
+smarter.apps.dashboard.views.dashboard.api.my_resources
+=========================================================
 
 This module provides custom Django context processors for the Smarter dashboard
 application. These context processors are designed to inject additional context

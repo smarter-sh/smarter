@@ -226,6 +226,7 @@ def base(request: "HttpRequest") -> dict:
                 "current_year": current_year,
             }
         }
+        logger.debug("%s.base() Constructed dashboard context for user %s: %s", logger_prefix, username, cached_context)
         return cached_context
 
     context = get_cached_context(username=resolved_user.username if resolved_user else "missing")  # type: ignore[assignment]
