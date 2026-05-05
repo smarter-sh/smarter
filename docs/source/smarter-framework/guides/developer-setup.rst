@@ -25,7 +25,7 @@ all of the necessary macOS system dependencies for building Python packages.
 
 .. code:: console
 
-bash ./scripts/install-macos-python-build-deps.sh
+  bash ./scripts/install-macos-python-build-deps.sh
 
 
 Lastly, if you work on cloud infrastructure then you’ll also need these:
@@ -33,6 +33,9 @@ Lastly, if you work on cloud infrastructure then you’ll also need these:
 - terraform latest
 - terragrunt latest
 - awscli: latest
+
+Launch the Smarter Platform
+----------------------------
 
 .. code:: console
 
@@ -48,6 +51,10 @@ Lastly, if you work on cloud infrastructure then you’ll also need these:
    make init    # initialize dev environment, build & init docker.
    make build   # builds and configures all docker containers
    make run     # runs all docker containers and starts a local web server on port 8000
+
+
+Work With Source Code
+-------------------------
 
 To preserve your own sanity, don’t spend time formatting your Python,
 Terraform, JS or any other source code because pre-commit invokes
@@ -151,7 +158,7 @@ The Terraform code in this repo generates several sets of sensitive data
 that are persisted to `Kubernetes Secrets <https://kubernetes.io/docs/concepts/configuration/secret/>`__.
 This configuration data is tightly integrated to the CI/CD build and
 deploy workflows, and fully automates configuration of all back end
-services on which Smarter relies including for example, MySQL, SMTP
+services on which Smarter relies including for example, MariaDB, SMTP
 Email, AWS S3, AWS Elastic Container Registry, and Kubernetes itself.
 
 .. figure::
@@ -202,7 +209,7 @@ files located in the root of this repo:
 - `docker-compose.yml <https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml>`__:
   This simulates the Helm deployment charts used for Kubernetes based
   staging and production environment. It defines all services that
-  makeup the application stack, including MySQL and Redis.
+  makeup the application stack, including MariaDB and Redis.
 - `Helm Chart <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/>`__:
   Smarter is deployed to Kubernetes via this locally managed Helm chart.
   You can use this as a reference for questions regarding ports, network
@@ -338,13 +345,13 @@ environments. The bastion server has preconfigured kubectl cli as well
 as a nice ascii gui-based application named k9s that is especially
 helpful if you’re unfamiliar with the inner workings of Kubernetes.
 
-MySQL
-~~~~~
+MariaDB
+~~~~~~~~
 
-Smarter persists most of its data to MySQL running on AWS RDS. For
-simple SQL tasks the bastion server provides shortcuts for connecting to
-the MySQL service from the command line. However, you can also connect
-to the service using Oracle’s MySQL Workbench desktop software which
+Smarter persists most of its data to MariaDB running as a pod on Kubernetes.
+For simple SQL tasks the bastion server provides shortcuts for connecting to
+the MariaDB service from the command line. However, you can also connect
+to the service using Oracle's MySQL Workbench desktop software which
 conveniently, offers a means of connecting to database hosts via a
 bastion server.
 
