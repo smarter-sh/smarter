@@ -74,12 +74,15 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
+from smarter.apps.connection.urls import ConnectionReverseViews
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
 from smarter.apps.dashboard.views.manifest_drop_zone import ManifestDropZoneView
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
+from smarter.apps.plugin.urls import PluginReverseViews
 from smarter.apps.prompt.urls import PromptReverseViews
+from smarter.apps.provider.urls import ProviderReverseViews
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
@@ -111,6 +114,11 @@ def file_drop_zone(request: "HttpRequest") -> dict:
 
     @cache_results()
     def get_cached_file_drop_zone_context() -> dict:
+
+        provider_list_reverse_name = ":".join([ProviderReverseViews.namespace, ProviderReverseViews.listview])
+        connection_list_reverse_name = ":".join([ConnectionReverseViews.namespace, ConnectionReverseViews.listview])
+
+        plugin_list_reverse_name = ":".join([PluginReverseViews.namespace, PluginReverseViews.listview])
         logger.debug("%s.file_drop_zone() called.", logger_prefix)
         api_apply_path_name = ":".join([dashboard_namespace, camel_case_object_name(ManifestDropZoneView)])
         api_apply_path = reverse(api_apply_path_name)
@@ -119,9 +127,9 @@ def file_drop_zone(request: "HttpRequest") -> dict:
                 "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
                 "api_apply_path": api_apply_path,
                 "workbench_list_path": reverse(":".join([PromptReverseViews.namespace, PromptReverseViews.listview])),
-                "plugin_list_path": reverse("plugin:plugin_listview"),
-                "connection_list_path": reverse("connection:connection_listview"),
-                "provider_list_path": reverse("provider:provider_listview"),
+                "plugin_list_path": reverse(plugin_list_reverse_name),
+                "connection_list_path": reverse(connection_list_reverse_name),
+                "provider_list_path": reverse(provider_list_reverse_name),
             }
         }
         return retval

@@ -1,1 +1,746 @@
-{"user": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "admin": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "chatbots": {"user": [{"id": 4, "tags": ["calculator", "capstone-project"], "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNAx/chat/", "userProfile": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful calculator. You perform all of your operations using the calculator tool call function that is provided to you on all prompts. You always use the calculator function to perform calculations. You NEVER perform  calculations yourself. If you are unable to provide the necessary calculator parameters, then ask the user for clarification.", "createdAt": "2026-05-02T20:09:42.056961Z", "updatedAt": "2026-05-02T20:09:42.303886Z", "name": "calculator", "description": "An chatbot that scientific calculator functions.", "version": "0.1.0", "annotations": [{"smarter.sh/tests/focus-level": "high"}, {"smarter.sh/tests/owner": "Lawrence McDaniel"}], "deployed": false, "provider": "openai", "defaultModel": "gpt-4o-mini", "defaultTemperature": 0.5, "defaultMaxTokens": 256, "appName": "Calculator Bot", "appAssistant": "Cleo The Calculator", "appWelcomeMessage": "Welcome to the Calculator Bot! How can I help you today?", "appExamplePrompts": ["What is (3 + 5) * 2?", "Calculate 7.5 / (2.5 - 0.5) + 4.", "What is sin(pi / 2) + cos(0)?", "Evaluate 2 * (3 + 4) - sqrt(49) + tan(pi / 4)."], "appPlaceholder": "Give me something to calculate...", "appInfoUrl": "https://smarter.sh", "appBackgroundImageUrl": null, "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png", "appFileAttachment": false, "dnsVerificationStatus": "Not Verified", "tlsCertificateIssuanceStatus": "No Certificate", "subdomain": null, "customDomain": null, "urls": {"manifest": "/workbench/chatbots/rMTAwMDAwNAx/manifest/", "chat": "/workbench/chatbots/rMTAwMDAwNAx/chat/", "config": "/workbench/chatbots/rMTAwMDAwNAx/config/"}}, {"id": 7, "tags": ["capstone-project", "dates"], "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNwx/chat/", "userProfile": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful date calculator. You perform all of your date operations using the date_calculator tool call function that is provided to you on all prompts. You always use the date_calculator function to perform calculations. You NEVER perform date calculations yourself. If you are unable to provide the necessary date_calculator parameters, then ask the user for clarification.", "createdAt": "2026-05-02T20:09:44.476296Z", "updatedAt": "2026-05-02T20:09:44.673787Z", "name": "datemath", "description": "An chatbot that understands date math.", "version": "0.1.0", "annotations": [{"smarter.sh/tests/focus-level": "high"}, {"smarter.sh/tests/owner": "Lawrence McDaniel"}], "deployed": false, "provider": "openai", "defaultModel": "gpt-4o-mini", "defaultTemperature": 0.5, "defaultMaxTokens": 256, "appName": "Date Calculator Bot", "appAssistant": "Daisy Date", "appWelcomeMessage": "Welcome to the Date Calculator Bot! How can I help you today?", "appExamplePrompts": ["I was born on December 31, 1966. How many days old am I?", "Which is more recent a.) December 31, 1966 or b.) 1st of Jan of the year Two Thousand?", "Convert the date December 31, 1966 to ISO format.", "Subtract 100 days from December 31, 1966."], "appPlaceholder": "Give me a date calculation...", "appInfoUrl": "https://smarter.sh", "appBackgroundImageUrl": null, "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png", "appFileAttachment": false, "dnsVerificationStatus": "Not Verified", "tlsCertificateIssuanceStatus": "No Certificate", "subdomain": null, "customDomain": null, "urls": {"manifest": "/workbench/chatbots/rMTAwMDAwNwx/manifest/", "chat": "/workbench/chatbots/rMTAwMDAwNwx/chat/", "config": "/workbench/chatbots/rMTAwMDAwNwx/config/"}}, {"id": 8, "tags": ["gibberish", "jabberwocky", "talk-talk-talk"], "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwOAx/chat/", "userProfile": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.", "createdAt": "2026-05-02T20:09:45.122260Z", "updatedAt": "2026-05-02T20:09:55.215011Z", "name": "example", "description": "An example chatbot with tool calling and Smarter Plugins.", "version": "0.1.0", "annotations": [{"smarter.sh/tests/focus-level": "low"}, {"smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."}, {"smarter.sh/tests/last-updated": "2025-12-31"}, {"smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"}, {"smarter.sh/tests/owner": "Lawrence McDaniel"}], "deployed": false, "provider": "openai", "defaultModel": "gpt-4o-mini", "defaultTemperature": 0.5, "defaultMaxTokens": 2048, "appName": "Smarter Demo", "appAssistant": "Lawrence", "appWelcomeMessage": "Welcome to the Smarter demo!", "appExamplePrompts": ["What is the weather in San Francisco?", "What is an Everlasting Gobstopper?", "example function calling configuration"], "appPlaceholder": "Ask me anything...", "appInfoUrl": "https://smarter.sh", "appBackgroundImageUrl": null, "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png", "appFileAttachment": false, "dnsVerificationStatus": "Not Verified", "tlsCertificateIssuanceStatus": "No Certificate", "subdomain": null, "customDomain": null, "urls": {"manifest": "/workbench/chatbots/rMTAwMDAwOAx/manifest/", "chat": "/workbench/chatbots/rMTAwMDAwOAx/chat/", "config": "/workbench/chatbots/rMTAwMDAwOAx/config/"}}, {"id": 3, "tags": ["gibberish", "jabberwocky", "talk-talk-talk"], "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwMwx/chat/", "userProfile": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful chatbot.", "createdAt": "2026-05-02T20:09:41.422786Z", "updatedAt": "2026-05-02T20:09:41.624290Z", "name": "googleai", "description": "A GoogleAI Gemini pass-through chatbot.", "version": "0.1.0", "annotations": [{"smarter.sh/tests/focus-level": "low"}, {"smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."}, {"smarter.sh/tests/last-updated": "2025-12-31"}, {"smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"}, {"smarter.sh/tests/owner": "Lawrence McDaniel"}], "deployed": false, "provider": "googleai", "defaultModel": "gemini-2.5-flash-lite", "defaultTemperature": 0.5, "defaultMaxTokens": 4096, "appName": "GoogleAI Gemini 1.5", "appAssistant": "Oscar", "appWelcomeMessage": "Welcome to Gemini!", "appExamplePrompts": ["Write a Python function that generates the Fibonacci sequence.", "Summarize the book \"The Great Gatsby\" in 100 words or less.", "Provide a technical definition for the term \"machine learning.\""], "appPlaceholder": "Ask me anything...", "appInfoUrl": "https://cloud.google.com/ai/apis/", "appBackgroundImageUrl": null, "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png", "appFileAttachment": false, "dnsVerificationStatus": "Not Verified", "tlsCertificateIssuanceStatus": "No Certificate", "subdomain": null, "customDomain": null, "urls": {"manifest": "/workbench/chatbots/rMTAwMDAwMwx/manifest/", "chat": "/workbench/chatbots/rMTAwMDAwMwx/chat/", "config": "/workbench/chatbots/rMTAwMDAwMwx/config/"}}, {"id": 10, "tags": ["gibberish", "jabberwocky", "talk-talk-talk"], "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAxMAx/chat/", "userProfile": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful chatbot.", "createdAt": "2026-05-02T20:09:46.458567Z", "updatedAt": "2026-05-02T20:09:46.661976Z", "name": "metaai", "description": "A MetaAI Llama pass-through chatbot.", "version": "0.1.0", "annotations": [{"smarter.sh/tests/focus-level": "low"}, {"smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."}, {"smarter.sh/tests/last-updated": "2025-12-31"}, {"smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"}, {"smarter.sh/tests/owner": "Lawrence McDaniel"}], "deployed": false, "provider": "metaai", "defaultModel": "llama3.1-8b", "defaultTemperature": 0.5, "defaultMaxTokens": 4096, "appName": "MetaAI Llama 3.1", "appAssistant": "Llama", "appWelcomeMessage": "Welcome to Llama 3.1!", "appExamplePrompts": ["Write a Python function that generates the Fibonacci sequence.", "Summarize the book \"The Great Gatsby\" in 100 words or less.", "Provide a technical definition for the term \"machine learning.\""], "appPlaceholder": "Ask me anything...", "appInfoUrl": "https://developers.meta.com/ai/", "appBackgroundImageUrl": null, "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png", "appFileAttachment": false, "dnsVerificationStatus": "Not Verified", "tlsCertificateIssuanceStatus": "No Certificate", "subdomain": null, "customDomain": null, "urls": {"manifest": "/workbench/chatbots/rMTAwMDAxMAx/manifest/", "chat": "/workbench/chatbots/rMTAwMDAxMAx/chat/", "config": "/workbench/chatbots/rMTAwMDAxMAx/config/"}}, {"id": 11, "tags": ["gibberish", "jabberwocky", "talk-talk-talk"], "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAxMQx/chat/", "userProfile": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful chatbot.", "createdAt": "2026-05-02T20:09:47.063873Z", "updatedAt": "2026-05-02T20:09:47.283765Z", "name": "openai", "description": "An OpenAI ChatGPT 4 pass-through chatbot.", "version": "0.1.0", "annotations": [{"smarter.sh/tests/focus-level": "low"}, {"smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."}, {"smarter.sh/tests/last-updated": "2025-12-31"}, {"smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"}, {"smarter.sh/tests/owner": "Lawrence McDaniel"}], "deployed": false, "provider": "openai", "defaultModel": "gpt-4o-mini", "defaultTemperature": 0.5, "defaultMaxTokens": 4096, "appName": "OpenAI ChatGPT 4", "appAssistant": "Oscar", "appWelcomeMessage": "Welcome to ChatGPT 4!", "appExamplePrompts": ["Write a Python function that generates the Fibonacci sequence.", "Summarize the book \"The Great Gatsby\" in 100 words or less.", "Provide a technical definition for the term \"machine learning.\""], "appPlaceholder": "Ask me anything...", "appInfoUrl": "https://platform.openai.com/", "appBackgroundImageUrl": null, "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png", "appFileAttachment": false, "dnsVerificationStatus": "Not Verified", "tlsCertificateIssuanceStatus": "No Certificate", "subdomain": null, "customDomain": null, "urls": {"manifest": "/workbench/chatbots/rMTAwMDAxMQx/manifest/", "chat": "/workbench/chatbots/rMTAwMDAxMQx/chat/", "config": "/workbench/chatbots/rMTAwMDAxMQx/config/"}}, {"id": 9, "tags": ["simple-chatbot"], "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwOQx/chat/", "userProfile": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful assistant.", "createdAt": "2026-05-02T20:09:45.721262Z", "updatedAt": "2026-05-02T20:09:45.982600Z", "name": "simple", "description": "A minimally functional chatbot with with no additional features.", "version": "0.1.0", "annotations": [{"smarter.sh/tests/focus-level": "low"}, {"smarter.sh/tests/owner": "Lawrence McDaniel"}], "deployed": false, "provider": "openai", "defaultModel": "gpt-5-nano", "defaultTemperature": 1.0, "defaultMaxTokens": 2048, "appName": "Simple Chatbot", "appAssistant": "Simba The Simple Chatbot", "appWelcomeMessage": "Welcome to the Simple Chatbot! How can I help you today?", "appExamplePrompts": ["What is the weather in New York City today?", "Evaluate 2 * (3 + 4) - Sqrt(49) + Tan(pi / 4).", "I was born December 31, 1966. How many days old am I?", "What AI classes does Stackademy offer?"], "appPlaceholder": "Ask me anything...", "appInfoUrl": "https://smarter.sh", "appBackgroundImageUrl": null, "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png", "appFileAttachment": false, "dnsVerificationStatus": "Not Verified", "tlsCertificateIssuanceStatus": "No Certificate", "subdomain": null, "customDomain": null, "urls": {"manifest": "/workbench/chatbots/rMTAwMDAwOQx/manifest/", "chat": "/workbench/chatbots/rMTAwMDAwOQx/chat/", "config": "/workbench/chatbots/rMTAwMDAwOQx/config/"}}, {"id": 6, "tags": ["smarter", "presales", "sales-agent"], "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNgx/chat/", "userProfile": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful sales agent for the [Smarter](https://smarter.sh/) platform, an enterprise AI resource management platform developed by [Lawrence McDaniel](https://lawrencemcdaniel.com/). When users say, 'you', or 'it', they mean the Smarter platform. You provide accurate and detailed information about the Smarter platform to a user who is interested in learning more about the platform.\nDO NOT PROVIDE FALSE OR MISLEASING INFORMATION. YOU SHOULD EXCLUSIVELY RELY ON THE INFORMATION PROVIDED IN THIS PROMPT, ALONG WITH ANY ADDITIONAL INFORMATION RETRIEVED FROM TOOL CALLS. DO NOT LEVERAGE ANY OTHER SOURCES OF INFORMATION. AVOID BEING REPETITIVE OR PROVIDING UNNECESSARY INFORMATION. DO NOT PROVIDE INFORMATION THAT IS NOT RELEVANT TO THE USER'S INQUIRY. DO NOT ENGAGE IN CONVERSATION UNRELATED TO THE SMARTER PLATFORM. Links from tool calls are in markdown format, [link text](http://example.com). Keep them in this format, as the UI will automatically convert them to clickable links.\nSmarter provides seamless support for multiple AI providers including DeepSeek, Google AI, Meta AI and OpenAI. Smarter is a declarative manifest-based platform that allows you to define AI resources in an intuitive YAML file format. Smarter enables beginner prompt engineers to leverage LLMs' most sophisticated features, like tool calling, without needing to understand Python nor other programming languages.\nFor more information contact Lawrence McDaniel, Data Scientist, CDMX, phone +1 (617) 834-6172, web https://smarter.sh/ whatsapp 16178346172, email lpm0073@gmail.com\nYour objective is to provide a concise and accurate response to the user's prompt. BE BRIEF AND TO THE POINT. If possible, you should engage the user with probing questions about how they are considering using the Smarter platform, what features they are interested in, and how they would like to get started with the platform. Try to figure out what problem is the user trying to solve with the Smarter platform.\nYour eventual secondary goal to provide a call to action to the user, such as scheduling a demo, contacting a sales representative, or signing up for a free trial. You should EVENTUALLY provide the user with a link to the appropriate contact or to the Smarter website. But be patient and try to engage the user in a conversation first.", "createdAt": "2026-05-02T20:09:43.726852Z", "updatedAt": "2026-05-02T20:09:43.988677Z", "name": "smarter", "description": "A Smarter Platform public relations agent", "version": "1.0.0", "annotations": [{"smarter.sh/tests/helpfullness": "high"}, {"smarter.sh/tests/host": "none"}, {"smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."}, {"smarter.sh/tests/last-updated": "2025-12-31"}, {"smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"}, {"smarter.sh/tests/owner": "Lawrence McDaniel"}], "deployed": false, "provider": "openai", "defaultModel": "gpt-4o-mini", "defaultTemperature": 0.0, "defaultMaxTokens": 4096, "appName": "Smarter Sales Agent", "appAssistant": "Smarter", "appWelcomeMessage": "Welcome to Smarter!", "appExamplePrompts": ["Tell me about Smarter", "How much does Smarter cost?", "Send me some links about Smarter", "Who made you?"], "appPlaceholder": "Ask me anything about Smarter...", "appInfoUrl": "https://smarter.sh", "appBackgroundImageUrl": null, "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png", "appFileAttachment": false, "dnsVerificationStatus": "Not Verified", "tlsCertificateIssuanceStatus": "No Certificate", "subdomain": null, "customDomain": null, "urls": {"manifest": "/workbench/chatbots/rMTAwMDAwNgx/manifest/", "chat": "/workbench/chatbots/rMTAwMDAwNgx/chat/", "config": "/workbench/chatbots/rMTAwMDAwNgx/config/"}}, {"id": 2, "tags": ["stackademy", "api", "chatbot"], "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwMgx/chat/", "userProfile": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user.\n", "createdAt": "2026-05-02T20:09:29.828861Z", "updatedAt": "2026-05-02T20:09:29.839860Z", "name": "stackademy_api", "description": "Stackademy University course catalogue inquiries using the Stackademy API plugin.", "version": "1.0.0", "annotations": [{"smarter.sh/chatbot/stackademy-api/creator": "QA Team"}, {"smarter.sh/chatbot/stackademy-api/purpose": "chatbot for Stackademy course1 catalogue inquiries"}, {"smarter.sh/chatbot/stackademy-api/release-date": "2024-06-15"}, {"smarter.sh/chatbot/stackademy-api/backward-compatibility": true}], "deployed": false, "provider": "openai", "defaultModel": "gpt-4o-mini", "defaultTemperature": 0.5, "defaultMaxTokens": 512, "appName": "Stackademy API Chatbot", "appAssistant": "Stanley", "appWelcomeMessage": "Welcome to Stackademy API Chatbot! How can I help you today?", "appExamplePrompts": ["Do you offer any courses on AI?", "My budget is $1,000. What courses can I take?", "What is the capital of France?"], "appPlaceholder": "Ask me anything about Stackademy courses...", "appInfoUrl": "https://smarter.sh", "appBackgroundImageUrl": "https://smarter.sh/assets/img/bg.jpg", "appLogoUrl": "https://smarter.sh/assets/img/logo.png", "appFileAttachment": false, "dnsVerificationStatus": "Not Verified", "tlsCertificateIssuanceStatus": "No Certificate", "subdomain": null, "customDomain": null, "urls": {"manifest": "/workbench/chatbots/rMTAwMDAwMgx/manifest/", "chat": "/workbench/chatbots/rMTAwMDAwMgx/chat/", "config": "/workbench/chatbots/rMTAwMDAwMgx/config/"}}, {"id": 1, "tags": ["stackademy", "sql", "chatbot"], "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwMQx/chat/", "userProfile": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n", "createdAt": "2026-05-02T20:09:27.558551Z", "updatedAt": "2026-05-02T20:09:27.570456Z", "name": "stackademy_sql", "description": "Stackademy University course catalogue inquiries using the Stackademy SQL plugin.", "version": "1.0.0", "annotations": [{"smarter.sh/chatbot/stackademy-sql/creator": "QA Team"}, {"smarter.sh/chatbot/stackademy-sql/purpose": "chatbot for Stackademy course catalogue inquiries"}, {"smarter.sh/chatbot/stackademy-sql/release-date": "2024-06-15"}, {"smarter.sh/chatbot/stackademy-sql/backward-compatibility": true}, {"smarter.sh/chatbot/stackademy-sql/note": "Uses SQL plugin to answer course catalogue questions.\nVery fast and accurate when the database is well-structured.\nLeverages cache for improved performance.\n"}], "deployed": false, "provider": "openai", "defaultModel": "gpt-4o-mini", "defaultTemperature": 0.5, "defaultMaxTokens": 1024, "appName": "Stackademy SQL Chatbot", "appAssistant": "Stanley", "appWelcomeMessage": "Welcome to Stackademy SQL Chatbot! How can I help you today?", "appExamplePrompts": ["Do you offer any courses on AI?", "My budget is $1,000. What courses can I take?", "I want to study programming. What do you suggest?"], "appPlaceholder": "Ask me anything about Stackademy courses...", "appInfoUrl": "https://stackademy.edu/online-courses", "appBackgroundImageUrl": null, "appLogoUrl": null, "appFileAttachment": false, "dnsVerificationStatus": "Not Verified", "tlsCertificateIssuanceStatus": "No Certificate", "subdomain": null, "customDomain": null, "urls": {"manifest": "/workbench/chatbots/rMTAwMDAwMQx/manifest/", "chat": "/workbench/chatbots/rMTAwMDAwMQx/chat/", "config": "/workbench/chatbots/rMTAwMDAwMQx/config/"}}, {"id": 5, "tags": ["talk-talk-talk", "weather", "forecast"], "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNQx/chat/", "userProfile": {"user": {"username": "admin", "email": "admin@smarter.sh"}, "account": {"accountNumber": "3141-5926-5359"}}, "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful weather forecaster. You respond only to questions about the weather. You answer all weather questions using the get_current_weather function provided to you. You NEVER attempt to provide weather information yourself. If you are unable to provide the necessary parameters to the get_current_weather function, then you ask the user for clarification. If you are still unable to provide the necessary parameters, you inform the user that you are unable to help them at this time.", "createdAt": "2026-05-02T20:09:42.802479Z", "updatedAt": "2026-05-02T20:09:43.048722Z", "name": "weather", "description": "A chatbot that predicts the weather.", "version": "0.1.0", "annotations": [{"smarter.sh/tests/focus-level": "low"}, {"smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."}, {"smarter.sh/tests/last-updated": "2025-12-31"}, {"smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"}, {"smarter.sh/tests/owner": "Lawrence McDaniel"}], "deployed": false, "provider": "openai", "defaultModel": "gpt-4o-mini", "defaultTemperature": 0.5, "defaultMaxTokens": 256, "appName": "Weather Chatbot", "appAssistant": "Lawrence", "appWelcomeMessage": "Welcome to the Weather Chatbot! How can I help you today?", "appExamplePrompts": ["What is the weather in San Francisco?", "I was born December 31, 1966. How many days old am I?", "What courses does Stackademy offer about web development?"], "appPlaceholder": "Ask me about the weather...", "appInfoUrl": "https://smarter.sh", "appBackgroundImageUrl": null, "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png", "appFileAttachment": false, "dnsVerificationStatus": "Not Verified", "tlsCertificateIssuanceStatus": "No Certificate", "subdomain": null, "customDomain": null, "urls": {"manifest": "/workbench/chatbots/rMTAwMDAwNQx/manifest/", "chat": "/workbench/chatbots/rMTAwMDAwNQx/chat/", "config": "/workbench/chatbots/rMTAwMDAwNQx/config/"}}], "shared": []}}
+{
+  "user": {
+    "user": {
+      "username": "admin",
+      "email": "admin@smarter.sh"
+    },
+    "account": {
+      "accountNumber": "3141-5926-5359"
+    }
+  },
+  "admin": {
+    "user": {
+      "username": "admin",
+      "email": "admin@smarter.sh"
+    },
+    "account": {
+      "accountNumber": "3141-5926-5359"
+    }
+  },
+  "chatbots": {
+    "user": [
+      {
+        "id": 4,
+        "tags": [
+          "calculator",
+          "capstone-project"
+        ],
+        "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNAx/chat/",
+        "userProfile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful calculator. You perform all of your operations using the calculator tool call function that is provided to you on all prompts. You always use the calculator function to perform calculations. You NEVER perform  calculations yourself. If you are unable to provide the necessary calculator parameters, then ask the user for clarification.",
+        "createdAt": "2026-05-02T20:09:42.056961Z",
+        "updatedAt": "2026-05-02T20:09:42.303886Z",
+        "name": "calculator",
+        "description": "An chatbot that scientific calculator functions.",
+        "version": "0.1.0",
+        "annotations": [
+          {
+            "smarter.sh/tests/focus-level": "high"
+          },
+          {
+            "smarter.sh/tests/owner": "Lawrence McDaniel"
+          }
+        ],
+        "deployed": false,
+        "provider": "openai",
+        "defaultModel": "gpt-4o-mini",
+        "defaultTemperature": 0.5,
+        "defaultMaxTokens": 256,
+        "appName": "Calculator Bot",
+        "appAssistant": "Cleo The Calculator",
+        "appWelcomeMessage": "Welcome to the Calculator Bot! How can I help you today?",
+        "appExamplePrompts": [
+          "What is (3 + 5) * 2?",
+          "Calculate 7.5 / (2.5 - 0.5) + 4.",
+          "What is sin(pi / 2) + cos(0)?",
+          "Evaluate 2 * (3 + 4) - sqrt(49) + tan(pi / 4)."
+        ],
+        "appPlaceholder": "Give me something to calculate...",
+        "appInfoUrl": "https://smarter.sh",
+        "appBackgroundImageUrl": null,
+        "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+        "appFileAttachment": false,
+        "dnsVerificationStatus": "Not Verified",
+        "tlsCertificateIssuanceStatus": "No Certificate",
+        "subdomain": null,
+        "customDomain": null,
+        "urls": {
+          "manifest": "/workbench/chatbots/rMTAwMDAwNAx/manifest/",
+          "chat": "/workbench/chatbots/rMTAwMDAwNAx/chat/",
+          "config": "/workbench/chatbots/rMTAwMDAwNAx/config/"
+        }
+      },
+      {
+        "id": 7,
+        "tags": [
+          "capstone-project",
+          "dates"
+        ],
+        "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNwx/chat/",
+        "userProfile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful date calculator. You perform all of your date operations using the date_calculator tool call function that is provided to you on all prompts. You always use the date_calculator function to perform calculations. You NEVER perform date calculations yourself. If you are unable to provide the necessary date_calculator parameters, then ask the user for clarification.",
+        "createdAt": "2026-05-02T20:09:44.476296Z",
+        "updatedAt": "2026-05-02T20:09:44.673787Z",
+        "name": "datemath",
+        "description": "An chatbot that understands date math.",
+        "version": "0.1.0",
+        "annotations": [
+          {
+            "smarter.sh/tests/focus-level": "high"
+          },
+          {
+            "smarter.sh/tests/owner": "Lawrence McDaniel"
+          }
+        ],
+        "deployed": false,
+        "provider": "openai",
+        "defaultModel": "gpt-4o-mini",
+        "defaultTemperature": 0.5,
+        "defaultMaxTokens": 256,
+        "appName": "Date Calculator Bot",
+        "appAssistant": "Daisy Date",
+        "appWelcomeMessage": "Welcome to the Date Calculator Bot! How can I help you today?",
+        "appExamplePrompts": [
+          "I was born on December 31, 1966. How many days old am I?",
+          "Which is more recent a.) December 31, 1966 or b.) 1st of Jan of the year Two Thousand?",
+          "Convert the date December 31, 1966 to ISO format.",
+          "Subtract 100 days from December 31, 1966."
+        ],
+        "appPlaceholder": "Give me a date calculation...",
+        "appInfoUrl": "https://smarter.sh",
+        "appBackgroundImageUrl": null,
+        "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+        "appFileAttachment": false,
+        "dnsVerificationStatus": "Not Verified",
+        "tlsCertificateIssuanceStatus": "No Certificate",
+        "subdomain": null,
+        "customDomain": null,
+        "urls": {
+          "manifest": "/workbench/chatbots/rMTAwMDAwNwx/manifest/",
+          "chat": "/workbench/chatbots/rMTAwMDAwNwx/chat/",
+          "config": "/workbench/chatbots/rMTAwMDAwNwx/config/"
+        }
+      },
+      {
+        "id": 8,
+        "tags": [
+          "gibberish",
+          "jabberwocky",
+          "talk-talk-talk"
+        ],
+        "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwOAx/chat/",
+        "userProfile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+        "createdAt": "2026-05-02T20:09:45.122260Z",
+        "updatedAt": "2026-05-02T20:09:55.215011Z",
+        "name": "example",
+        "description": "An example chatbot with tool calling and Smarter Plugins.",
+        "version": "0.1.0",
+        "annotations": [
+          {
+            "smarter.sh/tests/focus-level": "low"
+          },
+          {
+            "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."
+          },
+          {
+            "smarter.sh/tests/last-updated": "2025-12-31"
+          },
+          {
+            "smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"
+          },
+          {
+            "smarter.sh/tests/owner": "Lawrence McDaniel"
+          }
+        ],
+        "deployed": false,
+        "provider": "openai",
+        "defaultModel": "gpt-4o-mini",
+        "defaultTemperature": 0.5,
+        "defaultMaxTokens": 2048,
+        "appName": "Smarter Demo",
+        "appAssistant": "Lawrence",
+        "appWelcomeMessage": "Welcome to the Smarter demo!",
+        "appExamplePrompts": [
+          "What is the weather in San Francisco?",
+          "What is an Everlasting Gobstopper?",
+          "example function calling configuration"
+        ],
+        "appPlaceholder": "Ask me anything...",
+        "appInfoUrl": "https://smarter.sh",
+        "appBackgroundImageUrl": null,
+        "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+        "appFileAttachment": false,
+        "dnsVerificationStatus": "Not Verified",
+        "tlsCertificateIssuanceStatus": "No Certificate",
+        "subdomain": null,
+        "customDomain": null,
+        "urls": {
+          "manifest": "/workbench/chatbots/rMTAwMDAwOAx/manifest/",
+          "chat": "/workbench/chatbots/rMTAwMDAwOAx/chat/",
+          "config": "/workbench/chatbots/rMTAwMDAwOAx/config/"
+        }
+      },
+      {
+        "id": 3,
+        "tags": [
+          "gibberish",
+          "jabberwocky",
+          "talk-talk-talk"
+        ],
+        "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwMwx/chat/",
+        "userProfile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful chatbot.",
+        "createdAt": "2026-05-02T20:09:41.422786Z",
+        "updatedAt": "2026-05-02T20:09:41.624290Z",
+        "name": "googleai",
+        "description": "A GoogleAI Gemini pass-through chatbot.",
+        "version": "0.1.0",
+        "annotations": [
+          {
+            "smarter.sh/tests/focus-level": "low"
+          },
+          {
+            "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."
+          },
+          {
+            "smarter.sh/tests/last-updated": "2025-12-31"
+          },
+          {
+            "smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"
+          },
+          {
+            "smarter.sh/tests/owner": "Lawrence McDaniel"
+          }
+        ],
+        "deployed": false,
+        "provider": "googleai",
+        "defaultModel": "gemini-2.5-flash-lite",
+        "defaultTemperature": 0.5,
+        "defaultMaxTokens": 4096,
+        "appName": "GoogleAI Gemini 1.5",
+        "appAssistant": "Oscar",
+        "appWelcomeMessage": "Welcome to Gemini!",
+        "appExamplePrompts": [
+          "Write a Python function that generates the Fibonacci sequence.",
+          "Summarize the book \"The Great Gatsby\" in 100 words or less.",
+          "Provide a technical definition for the term \"machine learning.\""
+        ],
+        "appPlaceholder": "Ask me anything...",
+        "appInfoUrl": "https://cloud.google.com/ai/apis/",
+        "appBackgroundImageUrl": null,
+        "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+        "appFileAttachment": false,
+        "dnsVerificationStatus": "Not Verified",
+        "tlsCertificateIssuanceStatus": "No Certificate",
+        "subdomain": null,
+        "customDomain": null,
+        "urls": {
+          "manifest": "/workbench/chatbots/rMTAwMDAwMwx/manifest/",
+          "chat": "/workbench/chatbots/rMTAwMDAwMwx/chat/",
+          "config": "/workbench/chatbots/rMTAwMDAwMwx/config/"
+        }
+      },
+      {
+        "id": 10,
+        "tags": [
+          "gibberish",
+          "jabberwocky",
+          "talk-talk-talk"
+        ],
+        "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAxMAx/chat/",
+        "userProfile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful chatbot.",
+        "createdAt": "2026-05-02T20:09:46.458567Z",
+        "updatedAt": "2026-05-02T20:09:46.661976Z",
+        "name": "metaai",
+        "description": "A MetaAI Llama pass-through chatbot.",
+        "version": "0.1.0",
+        "annotations": [
+          {
+            "smarter.sh/tests/focus-level": "low"
+          },
+          {
+            "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."
+          },
+          {
+            "smarter.sh/tests/last-updated": "2025-12-31"
+          },
+          {
+            "smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"
+          },
+          {
+            "smarter.sh/tests/owner": "Lawrence McDaniel"
+          }
+        ],
+        "deployed": false,
+        "provider": "metaai",
+        "defaultModel": "llama3.1-8b",
+        "defaultTemperature": 0.5,
+        "defaultMaxTokens": 4096,
+        "appName": "MetaAI Llama 3.1",
+        "appAssistant": "Llama",
+        "appWelcomeMessage": "Welcome to Llama 3.1!",
+        "appExamplePrompts": [
+          "Write a Python function that generates the Fibonacci sequence.",
+          "Summarize the book \"The Great Gatsby\" in 100 words or less.",
+          "Provide a technical definition for the term \"machine learning.\""
+        ],
+        "appPlaceholder": "Ask me anything...",
+        "appInfoUrl": "https://developers.meta.com/ai/",
+        "appBackgroundImageUrl": null,
+        "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+        "appFileAttachment": false,
+        "dnsVerificationStatus": "Not Verified",
+        "tlsCertificateIssuanceStatus": "No Certificate",
+        "subdomain": null,
+        "customDomain": null,
+        "urls": {
+          "manifest": "/workbench/chatbots/rMTAwMDAxMAx/manifest/",
+          "chat": "/workbench/chatbots/rMTAwMDAxMAx/chat/",
+          "config": "/workbench/chatbots/rMTAwMDAxMAx/config/"
+        }
+      },
+      {
+        "id": 11,
+        "tags": [
+          "gibberish",
+          "jabberwocky",
+          "talk-talk-talk"
+        ],
+        "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAxMQx/chat/",
+        "userProfile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful chatbot.",
+        "createdAt": "2026-05-02T20:09:47.063873Z",
+        "updatedAt": "2026-05-02T20:09:47.283765Z",
+        "name": "openai",
+        "description": "An OpenAI ChatGPT 4 pass-through chatbot.",
+        "version": "0.1.0",
+        "annotations": [
+          {
+            "smarter.sh/tests/focus-level": "low"
+          },
+          {
+            "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."
+          },
+          {
+            "smarter.sh/tests/last-updated": "2025-12-31"
+          },
+          {
+            "smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"
+          },
+          {
+            "smarter.sh/tests/owner": "Lawrence McDaniel"
+          }
+        ],
+        "deployed": false,
+        "provider": "openai",
+        "defaultModel": "gpt-4o-mini",
+        "defaultTemperature": 0.5,
+        "defaultMaxTokens": 4096,
+        "appName": "OpenAI ChatGPT 4",
+        "appAssistant": "Oscar",
+        "appWelcomeMessage": "Welcome to ChatGPT 4!",
+        "appExamplePrompts": [
+          "Write a Python function that generates the Fibonacci sequence.",
+          "Summarize the book \"The Great Gatsby\" in 100 words or less.",
+          "Provide a technical definition for the term \"machine learning.\""
+        ],
+        "appPlaceholder": "Ask me anything...",
+        "appInfoUrl": "https://platform.openai.com/",
+        "appBackgroundImageUrl": null,
+        "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+        "appFileAttachment": false,
+        "dnsVerificationStatus": "Not Verified",
+        "tlsCertificateIssuanceStatus": "No Certificate",
+        "subdomain": null,
+        "customDomain": null,
+        "urls": {
+          "manifest": "/workbench/chatbots/rMTAwMDAxMQx/manifest/",
+          "chat": "/workbench/chatbots/rMTAwMDAxMQx/chat/",
+          "config": "/workbench/chatbots/rMTAwMDAxMQx/config/"
+        }
+      },
+      {
+        "id": 9,
+        "tags": [
+          "simple-chatbot"
+        ],
+        "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwOQx/chat/",
+        "userProfile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful assistant.",
+        "createdAt": "2026-05-02T20:09:45.721262Z",
+        "updatedAt": "2026-05-02T20:09:45.982600Z",
+        "name": "simple",
+        "description": "A minimally functional chatbot with with no additional features.",
+        "version": "0.1.0",
+        "annotations": [
+          {
+            "smarter.sh/tests/focus-level": "low"
+          },
+          {
+            "smarter.sh/tests/owner": "Lawrence McDaniel"
+          }
+        ],
+        "deployed": false,
+        "provider": "openai",
+        "defaultModel": "gpt-5-nano",
+        "defaultTemperature": 1.0,
+        "defaultMaxTokens": 2048,
+        "appName": "Simple Chatbot",
+        "appAssistant": "Simba The Simple Chatbot",
+        "appWelcomeMessage": "Welcome to the Simple Chatbot! How can I help you today?",
+        "appExamplePrompts": [
+          "What is the weather in New York City today?",
+          "Evaluate 2 * (3 + 4) - Sqrt(49) + Tan(pi / 4).",
+          "I was born December 31, 1966. How many days old am I?",
+          "What AI classes does Stackademy offer?"
+        ],
+        "appPlaceholder": "Ask me anything...",
+        "appInfoUrl": "https://smarter.sh",
+        "appBackgroundImageUrl": null,
+        "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+        "appFileAttachment": false,
+        "dnsVerificationStatus": "Not Verified",
+        "tlsCertificateIssuanceStatus": "No Certificate",
+        "subdomain": null,
+        "customDomain": null,
+        "urls": {
+          "manifest": "/workbench/chatbots/rMTAwMDAwOQx/manifest/",
+          "chat": "/workbench/chatbots/rMTAwMDAwOQx/chat/",
+          "config": "/workbench/chatbots/rMTAwMDAwOQx/config/"
+        }
+      },
+      {
+        "id": 6,
+        "tags": [
+          "smarter",
+          "presales",
+          "sales-agent"
+        ],
+        "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNgx/chat/",
+        "userProfile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful sales agent for the [Smarter](https://smarter.sh/) platform, an enterprise AI resource management platform developed by [Lawrence McDaniel](https://lawrencemcdaniel.com/). When users say, 'you', or 'it', they mean the Smarter platform. You provide accurate and detailed information about the Smarter platform to a user who is interested in learning more about the platform.\nDO NOT PROVIDE FALSE OR MISLEASING INFORMATION. YOU SHOULD EXCLUSIVELY RELY ON THE INFORMATION PROVIDED IN THIS PROMPT, ALONG WITH ANY ADDITIONAL INFORMATION RETRIEVED FROM TOOL CALLS. DO NOT LEVERAGE ANY OTHER SOURCES OF INFORMATION. AVOID BEING REPETITIVE OR PROVIDING UNNECESSARY INFORMATION. DO NOT PROVIDE INFORMATION THAT IS NOT RELEVANT TO THE USER'S INQUIRY. DO NOT ENGAGE IN CONVERSATION UNRELATED TO THE SMARTER PLATFORM. Links from tool calls are in markdown format, [link text](http://example.com). Keep them in this format, as the UI will automatically convert them to clickable links.\nSmarter provides seamless support for multiple AI providers including DeepSeek, Google AI, Meta AI and OpenAI. Smarter is a declarative manifest-based platform that allows you to define AI resources in an intuitive YAML file format. Smarter enables beginner prompt engineers to leverage LLMs' most sophisticated features, like tool calling, without needing to understand Python nor other programming languages.\nFor more information contact Lawrence McDaniel, Data Scientist, CDMX, phone +1 (617) 834-6172, web https://smarter.sh/ whatsapp 16178346172, email lpm0073@gmail.com\nYour objective is to provide a concise and accurate response to the user's prompt. BE BRIEF AND TO THE POINT. If possible, you should engage the user with probing questions about how they are considering using the Smarter platform, what features they are interested in, and how they would like to get started with the platform. Try to figure out what problem is the user trying to solve with the Smarter platform.\nYour eventual secondary goal to provide a call to action to the user, such as scheduling a demo, contacting a sales representative, or signing up for a free trial. You should EVENTUALLY provide the user with a link to the appropriate contact or to the Smarter website. But be patient and try to engage the user in a conversation first.",
+        "createdAt": "2026-05-02T20:09:43.726852Z",
+        "updatedAt": "2026-05-02T20:09:43.988677Z",
+        "name": "smarter",
+        "description": "A Smarter Platform public relations agent",
+        "version": "1.0.0",
+        "annotations": [
+          {
+            "smarter.sh/tests/helpfullness": "high"
+          },
+          {
+            "smarter.sh/tests/host": "none"
+          },
+          {
+            "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."
+          },
+          {
+            "smarter.sh/tests/last-updated": "2025-12-31"
+          },
+          {
+            "smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"
+          },
+          {
+            "smarter.sh/tests/owner": "Lawrence McDaniel"
+          }
+        ],
+        "deployed": false,
+        "provider": "openai",
+        "defaultModel": "gpt-4o-mini",
+        "defaultTemperature": 0.0,
+        "defaultMaxTokens": 4096,
+        "appName": "Smarter Sales Agent",
+        "appAssistant": "Smarter",
+        "appWelcomeMessage": "Welcome to Smarter!",
+        "appExamplePrompts": [
+          "Tell me about Smarter",
+          "How much does Smarter cost?",
+          "Send me some links about Smarter",
+          "Who made you?"
+        ],
+        "appPlaceholder": "Ask me anything about Smarter...",
+        "appInfoUrl": "https://smarter.sh",
+        "appBackgroundImageUrl": null,
+        "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+        "appFileAttachment": false,
+        "dnsVerificationStatus": "Not Verified",
+        "tlsCertificateIssuanceStatus": "No Certificate",
+        "subdomain": null,
+        "customDomain": null,
+        "urls": {
+          "manifest": "/workbench/chatbots/rMTAwMDAwNgx/manifest/",
+          "chat": "/workbench/chatbots/rMTAwMDAwNgx/chat/",
+          "config": "/workbench/chatbots/rMTAwMDAwNgx/config/"
+        }
+      },
+      {
+        "id": 2,
+        "tags": [
+          "stackademy",
+          "api",
+          "chatbot"
+        ],
+        "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwMgx/chat/",
+        "userProfile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user.\n",
+        "createdAt": "2026-05-02T20:09:29.828861Z",
+        "updatedAt": "2026-05-02T20:09:29.839860Z",
+        "name": "stackademy_api",
+        "description": "Stackademy University course catalogue inquiries using the Stackademy API plugin.",
+        "version": "1.0.0",
+        "annotations": [
+          {
+            "smarter.sh/chatbot/stackademy-api/creator": "QA Team"
+          },
+          {
+            "smarter.sh/chatbot/stackademy-api/purpose": "chatbot for Stackademy course1 catalogue inquiries"
+          },
+          {
+            "smarter.sh/chatbot/stackademy-api/release-date": "2024-06-15"
+          },
+          {
+            "smarter.sh/chatbot/stackademy-api/backward-compatibility": true
+          }
+        ],
+        "deployed": false,
+        "provider": "openai",
+        "defaultModel": "gpt-4o-mini",
+        "defaultTemperature": 0.5,
+        "defaultMaxTokens": 512,
+        "appName": "Stackademy API Chatbot",
+        "appAssistant": "Stanley",
+        "appWelcomeMessage": "Welcome to Stackademy API Chatbot! How can I help you today?",
+        "appExamplePrompts": [
+          "Do you offer any courses on AI?",
+          "My budget is $1,000. What courses can I take?",
+          "What is the capital of France?"
+        ],
+        "appPlaceholder": "Ask me anything about Stackademy courses...",
+        "appInfoUrl": "https://smarter.sh",
+        "appBackgroundImageUrl": "https://smarter.sh/assets/img/bg.jpg",
+        "appLogoUrl": "https://smarter.sh/assets/img/logo.png",
+        "appFileAttachment": false,
+        "dnsVerificationStatus": "Not Verified",
+        "tlsCertificateIssuanceStatus": "No Certificate",
+        "subdomain": null,
+        "customDomain": null,
+        "urls": {
+          "manifest": "/workbench/chatbots/rMTAwMDAwMgx/manifest/",
+          "chat": "/workbench/chatbots/rMTAwMDAwMgx/chat/",
+          "config": "/workbench/chatbots/rMTAwMDAwMgx/config/"
+        }
+      },
+      {
+        "id": 1,
+        "tags": [
+          "stackademy",
+          "sql",
+          "chatbot"
+        ],
+        "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwMQx/chat/",
+        "userProfile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n",
+        "createdAt": "2026-05-02T20:09:27.558551Z",
+        "updatedAt": "2026-05-02T20:09:27.570456Z",
+        "name": "stackademy_sql",
+        "description": "Stackademy University course catalogue inquiries using the Stackademy SQL plugin.",
+        "version": "1.0.0",
+        "annotations": [
+          {
+            "smarter.sh/chatbot/stackademy-sql/creator": "QA Team"
+          },
+          {
+            "smarter.sh/chatbot/stackademy-sql/purpose": "chatbot for Stackademy course catalogue inquiries"
+          },
+          {
+            "smarter.sh/chatbot/stackademy-sql/release-date": "2024-06-15"
+          },
+          {
+            "smarter.sh/chatbot/stackademy-sql/backward-compatibility": true
+          },
+          {
+            "smarter.sh/chatbot/stackademy-sql/note": "Uses SQL plugin to answer course catalogue questions.\nVery fast and accurate when the database is well-structured.\nLeverages cache for improved performance.\n"
+          }
+        ],
+        "deployed": false,
+        "provider": "openai",
+        "defaultModel": "gpt-4o-mini",
+        "defaultTemperature": 0.5,
+        "defaultMaxTokens": 1024,
+        "appName": "Stackademy SQL Chatbot",
+        "appAssistant": "Stanley",
+        "appWelcomeMessage": "Welcome to Stackademy SQL Chatbot! How can I help you today?",
+        "appExamplePrompts": [
+          "Do you offer any courses on AI?",
+          "My budget is $1,000. What courses can I take?",
+          "I want to study programming. What do you suggest?"
+        ],
+        "appPlaceholder": "Ask me anything about Stackademy courses...",
+        "appInfoUrl": "https://stackademy.edu/online-courses",
+        "appBackgroundImageUrl": null,
+        "appLogoUrl": null,
+        "appFileAttachment": false,
+        "dnsVerificationStatus": "Not Verified",
+        "tlsCertificateIssuanceStatus": "No Certificate",
+        "subdomain": null,
+        "customDomain": null,
+        "urls": {
+          "manifest": "/workbench/chatbots/rMTAwMDAwMQx/manifest/",
+          "chat": "/workbench/chatbots/rMTAwMDAwMQx/chat/",
+          "config": "/workbench/chatbots/rMTAwMDAwMQx/config/"
+        }
+      },
+      {
+        "id": 5,
+        "tags": [
+          "talk-talk-talk",
+          "weather",
+          "forecast"
+        ],
+        "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNQx/chat/",
+        "userProfile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "defaultSystemRole": "The current date/time is Tuesday, 2026-05-05T00:10:39+0000\nYou are a helpful weather forecaster. You respond only to questions about the weather. You answer all weather questions using the get_current_weather function provided to you. You NEVER attempt to provide weather information yourself. If you are unable to provide the necessary parameters to the get_current_weather function, then you ask the user for clarification. If you are still unable to provide the necessary parameters, you inform the user that you are unable to help them at this time.",
+        "createdAt": "2026-05-02T20:09:42.802479Z",
+        "updatedAt": "2026-05-02T20:09:43.048722Z",
+        "name": "weather",
+        "description": "A chatbot that predicts the weather.",
+        "version": "0.1.0",
+        "annotations": [
+          {
+            "smarter.sh/tests/focus-level": "low"
+          },
+          {
+            "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."
+          },
+          {
+            "smarter.sh/tests/last-updated": "2025-12-31"
+          },
+          {
+            "smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"
+          },
+          {
+            "smarter.sh/tests/owner": "Lawrence McDaniel"
+          }
+        ],
+        "deployed": false,
+        "provider": "openai",
+        "defaultModel": "gpt-4o-mini",
+        "defaultTemperature": 0.5,
+        "defaultMaxTokens": 256,
+        "appName": "Weather Chatbot",
+        "appAssistant": "Lawrence",
+        "appWelcomeMessage": "Welcome to the Weather Chatbot! How can I help you today?",
+        "appExamplePrompts": [
+          "What is the weather in San Francisco?",
+          "I was born December 31, 1966. How many days old am I?",
+          "What courses does Stackademy offer about web development?"
+        ],
+        "appPlaceholder": "Ask me about the weather...",
+        "appInfoUrl": "https://smarter.sh",
+        "appBackgroundImageUrl": null,
+        "appLogoUrl": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+        "appFileAttachment": false,
+        "dnsVerificationStatus": "Not Verified",
+        "tlsCertificateIssuanceStatus": "No Certificate",
+        "subdomain": null,
+        "customDomain": null,
+        "urls": {
+          "manifest": "/workbench/chatbots/rMTAwMDAwNQx/manifest/",
+          "chat": "/workbench/chatbots/rMTAwMDAwNQx/chat/",
+          "config": "/workbench/chatbots/rMTAwMDAwNQx/config/"
+        }
+      }
+    ],
+    "shared": []
+  }
+}

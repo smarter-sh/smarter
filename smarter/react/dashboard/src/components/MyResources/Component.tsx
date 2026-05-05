@@ -7,10 +7,14 @@ interface MyResourcesProps {
 
 interface MyResourcesData {
   pending_deployments: number;
-  chatbots: number;
-  plugins: number;
-  connections: number;
-  providers: number;
+  chatbots_qty: number;
+  chatbots_url: string;
+  plugins_qty: number;
+  plugins_url: string;
+  connections_qty: number;
+  connections_url: string;
+  providers_qty: number;
+  providers_url: string;
 }
 
 function MyResources({ apiUrl }: MyResourcesProps) {
@@ -56,10 +60,10 @@ function MyResources({ apiUrl }: MyResourcesProps) {
   }, [apiUrl]);
 
   const my_resources_pending_deployments = data?.pending_deployments ?? 0;
-  const my_resources_chatbots = data?.chatbots ?? 0;
-  const my_resources_plugins = data?.plugins ?? 0;
-  const my_resources_connections = data?.connections ?? 0;
-  const my_resources_providers = data?.providers ?? 0;
+  const my_resources_chatbots = data?.chatbots_qty ?? 0;
+  const my_resources_plugins = data?.plugins_qty ?? 0;
+  const my_resources_connections = data?.connections_qty ?? 0;
+  const my_resources_providers = data?.providers_qty ?? 0;
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Failed to load resources: {error}</div>;
@@ -95,7 +99,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                       <span className="opacity-75">You have</span>
                       <span className="position-relative d-inline-block">
                         <a
-                          href="/prompts/"
+                          href={data?.chatbots_url}
                           className="link-white opacity-75-hover fw-bold d-block mb-1"
                         >
                           {my_resources_pending_deployments} pending
@@ -125,7 +129,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                   {/* begin::Col */}
                   <div className="col-6">
                     {/* begin::Items */}
-                    <a href="/prompts/">
+                    <a href={data?.chatbots_url}>
                       <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
                         {/* begin::Symbol */}
                         <div className="symbol symbol-30px me-5 mb-8">
@@ -172,7 +176,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                       {/* end::Symbol */}
 
                       {/* begin::Plugins */}
-                      <a href="/plugins/">
+                      <a href={data?.plugins_url}>
                         <div className="m-0">
                           {/* begin::Number */}
                           <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
@@ -209,7 +213,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                       {/* begin::Connections */}
                       <a
                         className="menu-link"
-                        href="/connections/"
+                        href={data?.connections_url}
                         target="_self"
                       >
                         <div className="m-0">

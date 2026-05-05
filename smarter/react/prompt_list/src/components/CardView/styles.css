@@ -1,0 +1,41 @@
+.card-view {
+	display: block;
+}
+
+
+.chatbot-card > .card-header {
+	border-bottom: 1px solid #e5e5e5;
+}
+
+.smarter-chatbot-card {
+	background-color: #d9d9d9;
+}
+
+.user-chatbot-card {
+	background-color: #ffe5b4;
+}
+
+.card-body > p {
+	margin-bottom: 2px !important;
+}
+
+
+.prompt-list-card-link {
+	text-decoration: none;
+	color: inherit;
+}
+
+.prompt-list-card-header {
+	position: relative;
+}
+
+.prompt-list-card-title {
+	border-bottom: 1px solid red;
+	padding-bottom: 6px;
+}
+
+.prompt-list-card-actions {
+	display: flex;
+	gap: 8px;
+	margin-top: 12px;
+}
