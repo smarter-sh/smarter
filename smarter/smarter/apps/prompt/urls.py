@@ -12,12 +12,15 @@ from django.urls import path
 from smarter.common.utils import camel_case_object_name
 
 from .const import namespace
-from .views import (
+from .views.detailview import (
     ChatAppWorkbenchView,
     ChatConfigView,
     PromptLandingView,
-    PromptListView,
     PromptManifestView,
+)
+from .views.listview import (
+    PromptListApiView,
+    PromptListView,
 )
 
 app_name = namespace
@@ -62,9 +65,13 @@ class PromptReverseViews:
     config_by_hashed_id = camel_case_object_name(ChatConfigView)
     landing_by_hashed_id = camel_case_object_name(PromptLandingView)
 
+    listview = camel_case_object_name(PromptListView)
+    listview_api = camel_case_object_name(PromptListApiView)
+
 
 urlpatterns = [
-    path("", PromptListView.as_view(), name="listview"),
+    path("", PromptListView.as_view(), name=PromptReverseViews.listview),
+    path("api/", PromptListApiView.as_view(), name=PromptReverseViews.listview_api),
     path("chatbots/<str:hashed_id>/", PromptLandingView.as_view(), name=PromptReverseViews.landing_by_hashed_id),
     path(
         "chatbots/<str:hashed_id>/manifest/",

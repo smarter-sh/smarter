@@ -55,7 +55,7 @@ from smarter.apps.plugin import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt import urls as prompt_urls
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
-from smarter.apps.prompt.views import ChatConfigView
+from smarter.apps.prompt.views.detailview import ChatConfigView
 from smarter.apps.provider import urls as provider_urls
 from smarter.apps.provider.const import namespace as provider_namespace
 from smarter.apps.secret import urls as secret_urls

@@ -35,7 +35,9 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistorySerializer,
 )
 from smarter.apps.prompt.signals import chat_config_invoked
-from smarter.apps.prompt.views.chatapp_workbench_view import SmarterChatSession
+from smarter.apps.prompt.views.detailview.chatapp_workbench_view import (
+    SmarterChatSession,
+)
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
