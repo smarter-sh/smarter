@@ -2,6 +2,7 @@
 // ServiceHealth Component.
 // ----------------------------------------------------------------------------
 import { useEffect, useState } from "react";
+import HealthRing from "./HealthRing";
 import "./styles.css";
 
 interface ServiceHealthProps {
@@ -33,19 +34,36 @@ function HealthCheckItem({ label }: HealthCheckItemProps) {
   );
 }
 
+
+
 function ServiceHealthChecks() {
+  const serviceHealthScore = 100;
+
   return (
     <div className="d-flex align-items-center mb-5">
       <div className="row m-0">
-        <h4 className="fw-bold text-gray-800 mb-3">Backend Service Health</h4>
-        <div className="d-flex d-grid gap-5">
-          <div className="d-flex flex-column flex-shrink-0 me-4">
-            <HealthCheckItem label="Compute" />
-            <HealthCheckItem label="Network" />
+        <div className="col-3 d-flex justify-content-end">
+          <div className="w-80px flex-shrink-0 me-2">
+            <div
+              className="min-h-auto ms-n3"
+              id="kt_slider_widget_smarter_health"
+              style={{ height: "100px" }}
+            >
+              <HealthRing value={serviceHealthScore} />
+            </div>
           </div>
-          <div className="d-flex flex-column flex-shrink-0">
-            <HealthCheckItem label="Data Storage" />
-            <HealthCheckItem label="Ingress" />
+        </div>
+        <div className="col-9">
+          <h4 className="fw-bold text-gray-800 mb-3">Backend Service Health</h4>
+          <div className="d-flex d-grid gap-5">
+            <div className="d-flex flex-column flex-shrink-0 me-4">
+              <HealthCheckItem label="Compute" />
+              <HealthCheckItem label="Network" />
+            </div>
+            <div className="d-flex flex-column flex-shrink-0">
+              <HealthCheckItem label="Data Storage" />
+              <HealthCheckItem label="Ingress" />
+            </div>
           </div>
         </div>
       </div>
@@ -63,7 +81,6 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
 
     async function load() {
       try {
-        console.log("Loading Service Health from API:", apiUrl);
         setLoading(true);
         setError(null);
 
@@ -79,14 +96,12 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
         }
 
         const json = (await res.json()) as ServiceHealthData;
-        console.log("Loaded Service Health data:", json);
         setData(json);
       } catch (err) {
         console.error("Error loading Service Health:", err);
         if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
-        console.log("Finished loading Service Health");
         setLoading(false);
       }
     }
@@ -102,8 +117,6 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
   const drf_version = data?.drf_version ?? "0.0.0";
   const linux_distribution =
     data?.linux_distribution ?? "Unknown Linux distribution";
-
-  console.log("ServiceHealth component received apiUrl:", apiUrl);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Failed to load service health: {error}</div>;
@@ -141,6 +154,23 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
                 Python {python_version} / Django {django_version} / Pydantic{" "}
                 {pydantic_version} / DRF {drf_version}
               </span>
+            </div>
+            <div className="row">
+              <div className="col-4">
+                <a target="_blank" rel="noopener noreferrer" href="https://github.com/smarter-sh/smarter/actions/workflows/build.yml">
+                  <img alt="Build Status" src="https://github.com/smarter-sh/smarter/actions/workflows/build.yml/badge.svg?branch=main" style={{ maxWidth: "100%" }} />
+                </a>
+              </div>
+              <div className="col-4">
+                <a target="_blank" rel="noopener noreferrer" href="https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml">
+                  <img alt="Release Status" src="https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main" style={{ maxWidth: "100%" }} />
+                </a>
+              </div>
+              <div className="col-4">
+                <a target="_blank" rel="noopener noreferrer" href="https://smarter.readthedocs.io/">
+                  <img alt="Documentation Status" src="https://readthedocs.org/projects/smarter/badge/?version=latest" style={{ maxWidth: "100%" }} />
+                </a>
+              </div>
             </div>
           </div>
           {/* end::Body */}
