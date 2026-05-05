@@ -98,12 +98,8 @@ MAX_QUEUE_SIZE = 10000
 LOG_QUEUE_TIMEOUT = 0.05
 WORKER_QUEUE_TIMEOUT = 1.00
 
-USER_STREAM_TTL_SECONDS = (
-    60 * 60 * 24
-)  # one day default for user streams since they are typically lower volume and may be useful for debugging over a longer time horizon.
-GLOBAL_STREAM_TTL_SECONDS = (
-    60 * 60 * 1
-)  # one hour default for global stream since it's typically higher volume and used for short-term UI feed rather than long-term storage.
+USER_STREAM_TTL_SECONDS = 300
+GLOBAL_STREAM_TTL_SECONDS = 300
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)

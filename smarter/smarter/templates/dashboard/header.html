@@ -1,5 +1,13 @@
 {% load static %}
 
+<style>
+  @media (max-width: 991.98px) {
+    .smarter-product-title {
+      font-size: 1.25rem;
+    }
+  }
+</style>
+
 <div id="kt_app_header" class="app-header">
   <!--begin::Header container-->
   <div
@@ -60,7 +68,7 @@
       <div
         class="smarter-title-bar not-selectable pt-6 d-flex align-items-stretch justify-content-between flex-lg-grow-1"
       >
-        <h1>{{ dashboard.product_name }}<span class="product-name"></span></h1>
+        <h1 class="smarter-product-title">{{ dashboard.product_name }}</h1>
       </div>
       <!--end::Menu wrapper-->
       <!--begin::Navbar-->

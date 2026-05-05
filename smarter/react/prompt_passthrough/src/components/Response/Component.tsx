@@ -19,34 +19,44 @@ import "./styles.css";
 import SuccessEmoji, {success_style} from "./status_success";
 import FailureEmoji, {failure_style} from "./status_failure";
 import WorkingEmoji, {working_style} from "./status_working";
+import ReadyEmoji, {ready_style} from "./status_ready";
 
-function Response({ apiResponse }: { apiResponse: { status: number; body: any } | null }) {
-  const http_response_status = apiResponse?.status ?? 0;
+function Response({
+  apiResponse,
+  isProcessing = false,
+}: {
+  apiResponse: { status: number; body: any } | null;
+  isProcessing?: boolean;
+}) {
   const responseJson = apiResponse?.body ?? null;
-  const status_style =
-    http_response_status >= 200 && http_response_status < 300
-      ? success_style
-      : http_response_status === 0
-      ? working_style
-      : failure_style;
+  let status_style = ready_style;
+  let status_emoji = <ReadyEmoji />;
+  let status_text = "";
 
-  const status_emoji =
-    http_response_status >= 200 && http_response_status < 300
-      ? <SuccessEmoji />
-      : http_response_status === 0
-      ? <WorkingEmoji />
-      : <FailureEmoji />;
+  if (isProcessing) {
+    status_style = working_style;
+    status_emoji = <WorkingEmoji />;
+    status_text = "(prompting LLM...)";
+  } else if (apiResponse) {
+    const isSuccess = apiResponse.status >= 200 && apiResponse.status < 300;
+
+    status_style = isSuccess ? success_style : failure_style;
+    status_emoji = isSuccess ? <SuccessEmoji /> : <FailureEmoji />;
+    status_text = `(${apiResponse.status})`;
+  }
 
   return (
     <div className="col-lg-12">
       <div className="card shadow-sm">
         <div className="card-header d-flex justify-content-center align-items-center">
-          <h3 className="mb-0">HTTP Response Body <span style={status_style}>({http_response_status}) {status_emoji}</span></h3>
+          <h3 className="mb-0">
+            HTTP Response Body <span style={status_style}>{status_text} {status_emoji}</span>
+          </h3>
         </div>
         <div className="card-body">
           <div>
             <pre style={{ margin: 0 }}>
-              {JSON.stringify(responseJson, null, 2)}
+              {responseJson === null ? "" : JSON.stringify(responseJson, null, 2)}
             </pre>
           </div>
         </div>

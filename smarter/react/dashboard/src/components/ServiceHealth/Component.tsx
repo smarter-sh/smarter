@@ -3,6 +3,7 @@
 // ----------------------------------------------------------------------------
 import { useEffect, useState } from "react";
 import HealthRing from "./HealthRing";
+import GitHubStatus from "./GitHubStatus";
 import "./styles.css";
 
 interface ServiceHealthProps {
@@ -34,6 +35,49 @@ function HealthCheckItem({ label }: HealthCheckItemProps) {
   );
 }
 
+
+
+interface CardHeaderProps {
+  smarter_version: string;
+  linux_distribution: string;
+}
+
+function CardHeader({ smarter_version, linux_distribution }: CardHeaderProps) {
+  return (
+    <div className="card-header pt-5">
+      {/* begin::Title */}
+      <div className="row">
+        <div className="col-12 border-bottom border-gray-200 pb-2 mb-2">
+          <h4 className="card-title card-label fw-bold text-gray-800">
+            Smarter v{smarter_version}
+          </h4>
+        </div>
+        <div className="col-12 fw-bold text-gray-500 fs-6 mt-1">
+          {linux_distribution}
+        </div>
+      </div>
+      {/* end::Title */}
+    </div>
+  );
+}
+
+interface PlatformVersionsProps {
+  python_version: string;
+  django_version: string;
+  pydantic_version: string;
+  drf_version: string;
+}
+
+function PlatformVersions({ python_version, django_version, pydantic_version, drf_version }: PlatformVersionsProps) {
+  return (
+    <div className="row">
+      <span className="col-12 text-gray-500 text-center mt-3 mb-0 pb-0 fs-9">
+        Python {python_version} / Django {django_version} / Pydantic{" "}
+        {pydantic_version} / DRF {drf_version}
+      </span>
+    </div>
+  );
+}
 
 
 function ServiceHealthChecks() {
@@ -130,50 +174,17 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
         className="col-xl-6 mb-xl-10"
       >
         <div className="card card-flush h-xl-100">
-          {/* begin::Header */}
-          <div className="card-header pt-5">
-            {/* begin::Title */}
-            <div className="row">
-              <div className="col-12 border-bottom border-gray-200 pb-2 mb-2">
-                <h4 className="card-title card-label fw-bold text-gray-800">
-                  Smarter v{smarter_version}
-                </h4>
-              </div>
-              <div className="col-12 fw-bold text-gray-500 fs-6 mt-1">
-                {linux_distribution}
-              </div>
-            </div>
-            {/* end::Title */}
-          </div>
-          {/* end::Header */}
-          {/* begin::Body */}
+          <CardHeader smarter_version={smarter_version} linux_distribution={linux_distribution} />
           <div className="card-body py-6">
             <ServiceHealthChecks />
-            <div className="row">
-              <span className="col-12 text-gray-500 text-center mt-5 mb-0 pb-0 fs-9">
-                Python {python_version} / Django {django_version} / Pydantic{" "}
-                {pydantic_version} / DRF {drf_version}
-              </span>
-            </div>
-            <div className="row">
-              <div className="col-4">
-                <a target="_blank" rel="noopener noreferrer" href="https://github.com/smarter-sh/smarter/actions/workflows/build.yml">
-                  <img alt="Build Status" src="https://github.com/smarter-sh/smarter/actions/workflows/build.yml/badge.svg?branch=main" style={{ maxWidth: "100%" }} />
-                </a>
-              </div>
-              <div className="col-4">
-                <a target="_blank" rel="noopener noreferrer" href="https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml">
-                  <img alt="Release Status" src="https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main" style={{ maxWidth: "100%" }} />
-                </a>
-              </div>
-              <div className="col-4">
-                <a target="_blank" rel="noopener noreferrer" href="https://smarter.readthedocs.io/">
-                  <img alt="Documentation Status" src="https://readthedocs.org/projects/smarter/badge/?version=latest" style={{ maxWidth: "100%" }} />
-                </a>
-              </div>
-            </div>
+            <GitHubStatus />
+            <PlatformVersions
+              python_version={python_version}
+              django_version={django_version}
+              pydantic_version={pydantic_version}
+              drf_version={drf_version}
+            />
           </div>
-          {/* end::Body */}
         </div>
       </div>
       {/* end::Col */}
