@@ -58,6 +58,7 @@ function Prompt({
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [llmProviderId, setLLMProvider] = useState(defaultLLMProviderId ?? "1");
   const [templateId, setTemplateId] = useState(defaultTemplateId ?? "1");
+  const [isSending, setIsSending] = useState(false);
   const [apiResponse, setApiResponse] = useState<{
     status: number;
     body: any;
@@ -80,42 +81,46 @@ function Prompt({
   };
 
   const handleSend = async () => {
-    console.log("Sending request. apiUrl:", apiUrl);
-
-    const csrftokenFromCookie =
-      getCookie(
-        {
-          name: csrfCookieName,
-          expiration: null,
-          domain: cookieDomain,
-          value: null,
-        },
-        "",
-      ) || "";
-    if (csrftokenFromCookie !== csrftoken) {
-      console.warn(
-        "CSRF token mismatch. Cookie value:",
-        csrftokenFromCookie,
-        "Expected value:",
-        csrftoken,
-      );
+    if (isSending) {
+      return;
     }
-    const providerSlug = getSmarterApiUrlSlug(llmProviderId);
-    const url = new URL(providerSlug + "/", apiUrl).toString();
-    const res = await fetchDjangoUrl(
-      requestJson,
-      url,
-      csrftoken,
-      djangoSessionCookieName,
-      csrfCookieName,
-      cookieDomain,
-    );
-    const data = await res.json();
 
-    console.log("API Response Status:", res.status);
-    console.log("API Response Data:", data);
+    setIsSending(true);
+    try {
+      const csrftokenFromCookie =
+        getCookie(
+          {
+            name: csrfCookieName,
+            expiration: null,
+            domain: cookieDomain,
+            value: null,
+          },
+          "",
+        ) || "";
+      if (csrftokenFromCookie !== csrftoken) {
+        console.warn(
+          "CSRF token mismatch. Cookie value:",
+          csrftokenFromCookie,
+          "Expected value:",
+          csrftoken,
+        );
+      }
+      const providerSlug = getSmarterApiUrlSlug(llmProviderId);
+      const url = new URL(providerSlug + "/", apiUrl).toString();
+      const res = await fetchDjangoUrl(
+        requestJson,
+        url,
+        csrftoken,
+        djangoSessionCookieName,
+        csrfCookieName,
+        cookieDomain,
+      );
+      const data = await res.json();
 
-    setApiResponse({ status: res.status, body: data });
+      setApiResponse({ status: res.status, body: data });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -154,8 +159,9 @@ function Prompt({
                     className="btn btn-primary w-100"
                     type="button"
                     onClick={handleSend}
+                    disabled={isSending}
                   >
-                    SEND
+                    {isSending ? "SENDING..." : "SEND"}
                   </button>
                 </div>
               </div>
@@ -188,7 +194,7 @@ function Prompt({
       </div>
       <div className="row d-flex">
         <div className="col-lg-12">
-          <Response apiResponse={apiResponse} />
+          <Response apiResponse={apiResponse} isProcessing={isSending} />
         </div>
       </div>
     </>

@@ -3,10 +3,12 @@ Middleware to ensure that all requests for 'application/JSON' return responses
 that are also in JSON format.
 """
 
+import inspect
 import logging
 from collections.abc import Awaitable
 from http import HTTPStatus
 
+from asgiref.sync import markcoroutinefunction
 from django.http import JsonResponse
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseBase
@@ -73,6 +75,16 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
 
     """
 
+    sync_capable = True
+    async_capable = True
+
+    def __init__(self, get_response):
+        super().__init__(get_response)
+        self.get_response = get_response
+        self.is_async = inspect.iscoroutinefunction(get_response)
+        if self.is_async:
+            markcoroutinefunction(self)
+
     @property
     def formatted_class_name(self) -> str:
         """Return the formatted class name for logging purposes."""
@@ -93,3 +105,6 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
                 }
                 return JsonResponse(data, status=response.status_code)
         return response
+
+    async def async_process_response(self, request, response):
+        return self.process_response(request, response)

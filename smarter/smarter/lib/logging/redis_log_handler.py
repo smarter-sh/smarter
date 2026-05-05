@@ -98,12 +98,8 @@ MAX_QUEUE_SIZE = 10000
 LOG_QUEUE_TIMEOUT = 0.05
 WORKER_QUEUE_TIMEOUT = 1.00
 
-USER_STREAM_TTL_SECONDS = (
-    60 * 60 * 24
-)  # one day default for user streams since they are typically lower volume and may be useful for debugging over a longer time horizon.
-GLOBAL_STREAM_TTL_SECONDS = (
-    60 * 60 * 1
-)  # one hour default for global stream since it's typically higher volume and used for short-term UI feed rather than long-term storage.
+USER_STREAM_TTL_SECONDS = 300
+GLOBAL_STREAM_TTL_SECONDS = 300
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
@@ -172,7 +168,7 @@ def get_user_channel() -> str:
     return user_id_context.get() or job_id_factory()
 
 
-def get_user_context(username: str) -> str:
+def get_user_context(user: Any) -> str:
     """
     Retrieves the current user context for logging.
 
@@ -183,10 +179,11 @@ def get_user_context(username: str) -> str:
     :return: The current user context (user ID or job ID) for logging.
     :rtype: str
     """
-    # pylint: disable=C0415
-    from smarter.apps.account.models import get_resolved_user
-
-    return f"{username.__class__.__name__}.{username}"
+    if hasattr(user, "username"):
+        username = user.username
+    else:
+        username = str(user)
+    return f"{user.__class__.__name__}.{username}"
 
 
 def get_redis_cache() -> Any:

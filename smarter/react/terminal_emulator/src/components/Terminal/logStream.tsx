@@ -19,6 +19,7 @@ export function useLogStream(streamUrl: string) {
   const [logs, setLogs] = useState<LogEvent[]>([]);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
@@ -30,9 +31,19 @@ export function useLogStream(streamUrl: string) {
       setError(null);
     };
 
+    es.addEventListener("bulk", (event: MessageEvent) => {
+      try {
+        const parsed = JSON.parse(event.data) as LogEvent[];
+        setLogs(parsed);
+      } catch {
+        // ignore malformed bulk payload
+      } finally {
+        setIsInitializing(false);
+      }
+    });
+
     es.onmessage = (event) => {
       try {
-        console.log("Received log event:", event.data);
         const parsed = JSON.parse(event.data) as LogEvent;
         setLogs((prev) => [...prev, parsed]);
       } catch {
@@ -43,6 +54,7 @@ export function useLogStream(streamUrl: string) {
 
     es.onerror = () => {
       setConnected(false);
+      setIsInitializing(false);
       setError("Log stream disconnected. Reconnecting...");
       // Browser will retry automatically (server says retry: 3000)
     };
@@ -54,5 +66,5 @@ export function useLogStream(streamUrl: string) {
     };
   }, [streamUrl]);
 
-  return { logs, connected, error };
+  return { logs, connected, error, isInitializing };
 }
