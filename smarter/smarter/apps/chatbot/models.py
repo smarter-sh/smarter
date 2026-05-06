@@ -9,7 +9,6 @@ from urllib.parse import ParseResult, urljoin, urlparse
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.http import HttpRequest
-from django.urls import reverse
 from rest_framework import serializers
 
 from smarter.apps.account.models import (
@@ -48,6 +47,7 @@ from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken

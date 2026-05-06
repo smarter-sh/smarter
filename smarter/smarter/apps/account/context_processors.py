@@ -3,10 +3,10 @@
 import logging
 
 from django.conf import settings
-from django.urls import reverse
 
 from smarter.apps.account.urls import AccountReverseNames
 from smarter.common.utils import is_authenticated_request
+from smarter.lib.django.shortcuts import reverse
 
 from .models import UserProfile
 

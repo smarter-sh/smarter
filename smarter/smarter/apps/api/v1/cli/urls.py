@@ -75,7 +75,7 @@ class ApiV1CliReverseViews:
     -------
     .. code-block:: python
 
-        from django.urls import reverse
+        from smarter.lib.django.shortcuts import reverse
         url = reverse(ApiV1CliReverseViews.deploy, kwargs={'kind': 'Plugin'})
 
         str(ApiV1CliReverseViews.deploy)

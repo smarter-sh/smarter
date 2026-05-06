@@ -13,7 +13,6 @@ import markdown
 from django.http.response import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.test import RequestFactory
-from django.urls import reverse
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import smarter_settings
@@ -21,6 +20,7 @@ from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterException
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json, logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
     SmarterWebHtmlView,

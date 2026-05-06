@@ -70,7 +70,6 @@ from unittest.mock import patch
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpResponse
-from django.urls import reverse
 
 from smarter.apps.account.models import User
 from smarter.apps.account.urls import AccountReverseNames
@@ -82,6 +81,7 @@ from smarter.apps.account.views.authentication import (
     LogoutView,
 )
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django.shortcuts import reverse
 
 from .mixins import TestAccountMixin
 

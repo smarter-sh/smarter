@@ -49,7 +49,7 @@ class PromptReverseNames:
     -------
     .. code-block:: python
 
-        from django.urls import reverse
+        from smarter.lib.django.shortcuts import reverse
         url = reverse(PromptReverseNames.describe, kwargs={'hashed_id': 'rMTAwMDAzOQx'})
 
         # returns manifest of the chatbot with the given hashed_id

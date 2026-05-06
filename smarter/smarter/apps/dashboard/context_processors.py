@@ -158,21 +158,15 @@ def file_drop_zone(request: "HttpRequest") -> dict[str, Any]:
     @cache_results()
     def get_cached_file_drop_zone_context() -> dict[str, Any]:
 
-        provider_list_reverse_name = ":".join([ProviderReverseNames.namespace, ProviderReverseNames.listview])
-        connection_list_reverse_name = ":".join([ConnectionReverseNames.namespace, ConnectionReverseNames.listview])
-
-        plugin_list_reverse_name = ":".join([PluginReverseNames.namespace, PluginReverseNames.listview])
         logger.debug("%s.file_drop_zone() called.", logger_prefix)
-        api_apply_path_name = ":".join([dashboard_namespace, camel_case_object_name(ManifestDropZoneView)])
-        api_apply_path = reverse(api_apply_path_name)
         retval = {
             "drop_zone": {
                 "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
-                "api_apply_path": api_apply_path,
-                "workbench_list_path": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.listview])),
-                "plugin_list_path": reverse(plugin_list_reverse_name),
-                "connection_list_path": reverse(connection_list_reverse_name),
-                "provider_list_path": reverse(provider_list_reverse_name),
+                "api_apply_path": reverse(DashboardReverseNames.namespace, DashboardReverseNames.manifest_drop_zone),
+                "workbench_list_path": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+                "plugin_list_path": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
+                "connection_list_path": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+                "provider_list_path": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
             }
         }
         return retval

@@ -8,7 +8,6 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.conf import smarter_settings
@@ -22,6 +21,7 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
     SmarterTokenConversionError,

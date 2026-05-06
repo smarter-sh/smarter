@@ -15,7 +15,6 @@ from django.http import (
     HttpRequest,
 )
 from django.http.response import JsonResponse
-from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
 
@@ -29,6 +28,7 @@ from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
     smarter_cache_page_by_user,

@@ -11,7 +11,6 @@ from pathlib import Path
 from time import sleep
 
 from django.test import Client
-from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
@@ -30,6 +29,7 @@ from smarter.apps.provider.services.text_completion.providers import (
     smarter_compatible_client,
 )
 from smarter.common.utils import get_readonly_yaml_file
+from smarter.lib.django.shortcuts import reverse
 
 from ..tests.test_setup import get_test_file, get_test_file_path
 
