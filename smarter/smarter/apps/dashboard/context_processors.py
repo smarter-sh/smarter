@@ -57,14 +57,12 @@ these are automatically included by Sphinx's ``automodule`` directive. For
 detailed API documentation, refer to the generated documentation for each function.
 """
 
-import logging
 import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urljoin
 
 from django.test import RequestFactory
-from django.urls import reverse
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
@@ -72,30 +70,75 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
+from smarter.apps.account.urls import AccountNamedUrls
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.connection.urls import ConnectionReverseViews
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
+from smarter.apps.dashboard.urls import DashboardNames
+from smarter.apps.dashboard.urls_passthrough import PassthroughNamespace
+from smarter.apps.dashboard.views.logs.names import LogsNames
 from smarter.apps.dashboard.views.manifest_drop_zone import ManifestDropZoneView
+from smarter.apps.docs.urls import DocsReverseViews
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
 from smarter.apps.plugin.urls import PluginReverseViews
 from smarter.apps.prompt.urls import PromptReverseViews
 from smarter.apps.provider.urls import ProviderReverseViews
+from smarter.apps.secret.urls import SecretReverseViews
+from smarter.apps.vectorstore.urls import VectorstoreReverseViews
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.common.utils import camel_case_object_name
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
+from smarter.lib.django.shortcuts import reverse
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__)
-logger_prefix_cache_invalidations = formatted_text_blue(f"{__name__}.cache_invalidations()")
+logger_prefix = logging.formatted_text(__name__)
+logger_prefix_cache_invalidations = logging.formatted_text_blue(f"{__name__}.cache_invalidations()")
+
+
+def sidebar(request: "HttpRequest") -> dict:
+    """
+    Provides context for rendering the dashboard sidebar href navigation links.
+    """
+
+    @cache_results()
+    def cached_sidebar_context() -> dict:
+        retval = {
+            "sidebar": {
+                "dashboard": reverse(DashboardNames.namespace, DashboardNames.dashboard),
+                "workbench": reverse(PromptReverseViews.namespace, PromptReverseViews.listview),
+                "apply_manifest": reverse(DashboardNames.namespace, DashboardNames.manifest_drop_zone),
+                "prompt_passthrough": reverse(PassthroughNamespace.namespace, PassthroughNamespace.view),
+                "server_logs": reverse(LogsNames.namespace, LogsNames.logs),
+                "providers": reverse(ProviderReverseViews.namespace, ProviderReverseViews.listview),
+                "plugins": reverse(PluginReverseViews.namespace, PluginReverseViews.listview),
+                "connections": reverse(ConnectionReverseViews.namespace, ConnectionReverseViews.listview),
+                "secrets": reverse(SecretReverseViews.namespace, SecretReverseViews.SECRETS),
+                "vectorstores": reverse(VectorstoreReverseViews.namespace, VectorstoreReverseViews.list_view),
+                "api_keys": reverse(AccountNamedUrls.namespace, AccountNamedUrls.API_KEYS_LIST),
+                "custom_domains": reverse(ConnectionReverseViews.namespace, ConnectionReverseViews.listview),  # FIX ME
+                "example_manifests": reverse(DocsReverseViews.namespace, DocsReverseViews.example_manifests),
+                "swagger_docs": reverse(DocsReverseViews.namespace, DocsReverseViews.swagger_docs),
+                "redoc": reverse(DocsReverseViews.namespace, DocsReverseViews.redoc),
+                "json_schemas": reverse(DocsReverseViews.namespace, DocsReverseViews.json_schemas),
+                "account": "/dashboard/account/dashboard/overview/",
+                "admin": "/admin/",
+            }
+        }
+        logger.debug(
+            "%s.sidebar() called. Returning sidebar context: %s", logger_prefix, logging.formatted_json(retval)
+        )
+        return retval
+
+    return cached_sidebar_context()
 
 
 def file_drop_zone(request: "HttpRequest") -> dict:
@@ -430,7 +473,7 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     # page cache invalidations
     ###########################################################################
     factory = RequestFactory()
-    url = reverse("dashboard:dashboard")
+    url = reverse(DashboardNames.namespace, DashboardNames.dashboard)
     request = factory.get(url)
 
     logger.debug(
@@ -445,9 +488,7 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
 
     DashboardView.dispatch.invalidate(request)
 
-    reverse_name = ":".join([PromptReverseViews.namespace, PromptReverseViews.listview])
-
-    url = reverse(reverse_name)
+    url = reverse(PromptReverseViews.namespace, PromptReverseViews.listview)
     request = factory.get(url)
     logger.debug(
         "%s.cache_invalidations() Created invalidation request for URL %s: %s",

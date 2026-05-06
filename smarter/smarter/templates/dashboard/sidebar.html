@@ -87,7 +87,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'dashboard:dashboard' %}"
+                href="{{ sidebar.dashboard }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -108,7 +108,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'prompt:prompt_list_view' %}"
+                href="{{ sidebar.workbench }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -129,7 +129,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'dashboard:manifest_drop_zone_view' %}"
+                href="{{ sidebar.apply_manifest }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -150,7 +150,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'dashboard:prompt_passthrough_view' %}"
+                href="{{ sidebar.prompt_passthrough }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -172,7 +172,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'dashboard:logs:terminal_emulator_log_view' %}"
+                href="{{ sidebar.server_logs }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -194,7 +194,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'provider:provider_list_view' %}"
+                href="{{ sidebar.providers }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -243,7 +243,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'connection:connection_list_view' %}"
+                href="{{ sidebar.connections }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -264,7 +264,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'secret:dashboard_secrets' %}"
+                href="{{ sidebar.secrets }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -286,7 +286,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'vectorstore:list_view' %}"
+                href="{{ sidebar.vectorstores }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -308,7 +308,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'account:api_keys_list' %}"
+                href="{{ sidebar.api_keys }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -329,7 +329,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'connection:connection_list_view' %}"
+                href="{{ sidebar.custom_domains }}"
                 target="_self"
               >
                 <span class="menu-icon">
@@ -398,7 +398,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'docs:example_manifests' %}"
+                href="{{ sidebar.example_manifests }}"
                 target="_self"
               >
                 <span class="menu-bullet">
@@ -415,7 +415,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'docs:schema-swagger-ui' %}"
+                href="{{ sidebar.swagger_docs }}"
                 target="_self"
               >
                 <span class="menu-bullet">
@@ -432,7 +432,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'docs:schema-redoc-ui' %}"
+                href="{{ sidebar.redoc }}"
                 target="_self"
               >
                 <span class="menu-bullet">
@@ -449,7 +449,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="{% url 'docs:json_schemas' %}"
+                href="{{ sidebar.json_schemas }}"
                 target="_self"
               >
                 <span class="menu-bullet">
@@ -499,7 +499,7 @@
               <!--begin:Menu link-->
               <a
                 class="menu-link"
-                href="/dashboard/account/dashboard/overview/"
+                href="{{ sidebar.account }}"
               >
                 <span class="menu-bullet">
                   <span class="bullet bullet-dot"></span>
