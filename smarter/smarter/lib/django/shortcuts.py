@@ -15,6 +15,21 @@ def reverse(*args, **kwargs) -> str:
     Django's built-in `reverse` function, but it is designed to to fit
     the exact pattern used across the Smarter codebase, which is to pass
     in a series of namespace arguments followed by a view name.
+
+    For example, if you have a view named "my_view" that is in the "my_app"
+    namespace, you would call this function like this:
+
+    ```python
+    reverse("my_app:my_view")
+    ```
+
+    This function will then split the argument into its components and pass
+    them to Django's `reverse` function in the correct format.
+
+    param args: A series of strings representing namespaces and the view name.
+    param kwargs: Any keyword arguments to pass to Django's `reverse` function. If any keyword arguments are provided, this function will assume that the caller is not using the expected pattern and will pass all arguments directly to Django's `reverse` function without modification.
+    return: The URL path corresponding to the given view name and namespaces.
+    rtype: str
     """
     if kwargs:
         # not our pattern, so just pass through to Django's reverse function

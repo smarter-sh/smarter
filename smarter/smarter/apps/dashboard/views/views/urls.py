@@ -5,15 +5,15 @@ from django.views.generic.base import RedirectView
 
 from smarter.apps.account import urls as account_urls
 from smarter.apps.dashboard.const import namespace
-from smarter.apps.dashboard.views.dashboard import (
+from smarter.apps.dashboard.views.views import (
     ChangeLogView,
     DashboardView,
     EmailAdded,
     NotificationsView,
 )
-from smarter.apps.dashboard.views.dashboard.api import urls as dashboard_api_urls
-from smarter.apps.dashboard.views.dashboard.api.my_resources import MyResourcesView
-from smarter.apps.dashboard.views.dashboard.api.service_health import ServiceHealthView
+from smarter.apps.dashboard.views.views.api import urls as dashboard_api_urls
+from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
+from smarter.apps.dashboard.views.views.api.service_health import ServiceHealthView
 from smarter.apps.plugin import urls as plugin_urls
 from smarter.common.utils import camel_case_object_name
 from smarter.lib import logging
