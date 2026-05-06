@@ -74,9 +74,9 @@ from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.connection.urls import ConnectionReverseNames
-from smarter.apps.dashboard.urls.dashboard import DashboardReverseNames
-from smarter.apps.dashboard.urls.passthrough import PassthroughReverseNames
+from smarter.apps.dashboard.urls import DashboardReverseNames
 from smarter.apps.dashboard.views.logs.names import DashboardLogsReverseNames
+from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
 from smarter.apps.docs.urls import DocsReverseNames
 from smarter.apps.plugin.models import (
     PluginMeta,
@@ -114,7 +114,9 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
                 "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
                 "apply_manifest": reverse(DashboardReverseNames.namespace, DashboardReverseNames.manifest_drop_zone),
                 "prompt_passthrough": reverse(PassthroughReverseNames.namespace, PassthroughReverseNames.view),
-                "server_logs": reverse(DashboardLogsReverseNames.namespace, DashboardLogsReverseNames.logs),
+                "server_logs": reverse(
+                    DashboardReverseNames.namespace, DashboardLogsReverseNames.namespace, DashboardLogsReverseNames.logs
+                ),
                 "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
                 "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
                 "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),

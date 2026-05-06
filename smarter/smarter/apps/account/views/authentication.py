@@ -350,7 +350,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
                 login(request, authenticated_user)
                 return redirect_and_expire_cache(path="/welcome/")
             else:
-                # pylint: disable=W0719
+                # pylint: disable=broad-exception-raised
                 raise Exception(
                     f"{self.formatted_class_name}.post() Authentication failed immediately after registration. This is a bug."
                 )

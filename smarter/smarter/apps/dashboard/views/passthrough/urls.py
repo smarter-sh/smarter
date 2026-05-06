@@ -5,7 +5,7 @@ from django.urls import path
 from smarter.apps.dashboard.const import namespace
 from smarter.common.utils import camel_case_object_name
 
-from ..views.passthrough import PromptPassthroughView, ProviderApiView
+from . import PromptPassthroughView, ProviderApiView
 
 
 class PassthroughReverseNames:
