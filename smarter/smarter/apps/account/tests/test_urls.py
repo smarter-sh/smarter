@@ -2,10 +2,10 @@
 """Test API end points."""
 
 from django.test import Client
-from django.urls import reverse
 
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.lib.django.shortcuts import reverse
 
 
 class TestUrls(TestAccountMixin):

@@ -9,7 +9,6 @@ from urllib.parse import urlencode
 import pytz
 from dateutil.relativedelta import relativedelta
 from django.db.models.signals import post_delete
-from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -17,6 +16,7 @@ from smarter.apps.secret.manifest.brokers.secret import SAMSecret
 from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.lib import json, logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import (

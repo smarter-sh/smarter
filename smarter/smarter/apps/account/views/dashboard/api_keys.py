@@ -7,7 +7,6 @@ from uuid import UUID
 
 from django import forms, http
 from django.http import HttpResponseRedirect
-from django.urls import reverse
 
 from smarter.apps.account.models import UserProfile
 from smarter.lib import json, logging
@@ -15,6 +14,7 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
 )
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken

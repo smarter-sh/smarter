@@ -4,12 +4,12 @@
 from django.conf import settings
 from django.http.request import HttpRequest
 from django.shortcuts import redirect, render
-from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
 
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
     smarter_cache_page_by_user,
@@ -47,10 +47,10 @@ class DashboardView(SmarterAuthenticatedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "my_resources_api_url": reverse(
-                    ":".join([DashboardReverseNames.namespace, DashboardReverseNames.api_my_resources])
+                    DashboardReverseNames.namespace, DashboardReverseNames.api_my_resources
                 ),
                 "service_health_api_url": reverse(
-                    ":".join([DashboardReverseNames.namespace, DashboardReverseNames.api_service_health])
+                    DashboardReverseNames.namespace, DashboardReverseNames.api_service_health
                 ),
             }
         }

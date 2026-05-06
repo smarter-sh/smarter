@@ -6,7 +6,6 @@ from typing import Optional
 
 import yaml
 from django.test import Client
-from django.urls import reverse
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import (
@@ -21,6 +20,7 @@ from smarter.common.const import (
 )
 from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.models import SmarterAuthToken
 
 HERE = os.path.abspath(os.path.dirname(__file__))

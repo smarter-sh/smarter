@@ -2,9 +2,9 @@
 """Test API end points."""
 
 from django.test import Client
-from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.lib.django.shortcuts import reverse
 
 from ..const import namespace
 

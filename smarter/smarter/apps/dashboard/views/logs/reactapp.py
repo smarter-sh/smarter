@@ -8,9 +8,9 @@ other command line tools.
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
-from django.urls import reverse
 
 from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
 )
@@ -35,15 +35,15 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
         """
         from .names import DashboardLogsReverseNames
 
-        reverse_name = ":".join([DashboardLogsReverseNames.namespace, DashboardLogsReverseNames.stream])
-
         context = {
             "terminal": {
                 "root_id": "smarter-terminal-emulator-root",
                 "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "api_url": reverse(reverse_name),  # the WebSocket endpoint with the log data stream.
+                "api_url": reverse(
+                    DashboardLogsReverseNames.namespace, DashboardLogsReverseNames.stream
+                ),  # the WebSocket endpoint with the log data stream.
             }
         }
         self.template_path = "react/terminal-emulator.html"

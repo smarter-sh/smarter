@@ -61,7 +61,6 @@ from http import HTTPStatus
 from typing import Optional
 
 from django.http import HttpRequest, JsonResponse
-from django.urls import reverse
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
@@ -81,6 +80,7 @@ from smarter.apps.provider.urls import ProviderReverseNames
 from smarter.apps.secret.models import Secret
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )
@@ -328,24 +328,19 @@ class MyResourcesView(SmarterAuthenticatedWebView):
 
     def post(self, request: HttpRequest, *args, **kwargs):
 
-        prompt_reverse_name = ":".join([PromptReverseNames.namespace, PromptReverseNames.listview])
-        plugin_reverse_name = ":".join([PluginReverseNames.namespace, PluginReverseNames.listview])
-        connection_reverse_name = ":".join([ConnectionReverseNames.namespace, ConnectionReverseNames.listview])
-        provider_reverse_name = ":".join([ProviderReverseNames.namespace, ProviderReverseNames.listview])
-
         user = get_resolved_user(request.user)
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
 
         retval = {
             "pending_deployments": get_pending_deployments(user_profile=user_profile),
             "chatbots_qty": get_chatbots(user_profile=user_profile),
-            "chatbots_url": reverse(prompt_reverse_name),
+            "chatbots_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
             "plugins_qty": get_plugins(user_profile=user_profile),
-            "plugins_url": reverse(plugin_reverse_name),
+            "plugins_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
             "connections_qty": get_connections(user_profile=user_profile),
-            "connections_url": reverse(connection_reverse_name),
+            "connections_url": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
             "providers_qty": get_providers(user_profile=user_profile),
-            "providers_url": reverse(provider_reverse_name),
+            "providers_url": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
         }
 
         logger.debug("%s.post() returning: %s", self.formatted_class_name, logging.formatted_json(retval))

@@ -8,7 +8,6 @@ from urllib.parse import urljoin
 
 import httpx
 from django.test import RequestFactory
-from django.urls import reverse
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.api.v1.cli.brokers import Brokers
@@ -19,6 +18,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_green,
 )
 from smarter.lib import json
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.loader import SAMLoader

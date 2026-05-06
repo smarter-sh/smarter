@@ -4,13 +4,13 @@
 from logging import getLogger
 
 from django.test import Client
-from django.urls import reverse
 
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.const import namespace
 from smarter.apps.docs.utils import json_schema_name
+from smarter.lib.django.shortcuts import reverse
 
 ALL_KINDS = SAMKinds.singular_slugs()
 logger = getLogger(__name__)

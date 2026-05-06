@@ -13,9 +13,9 @@ from django.http import (
     HttpRequest,
 )
 from django.shortcuts import render
-from django.urls import reverse
 
 from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )
@@ -50,9 +50,7 @@ class PromptListView(SmarterAuthenticatedWebView):
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "prompt_list_api_url": reverse(
-                    ":".join([PromptReverseNames.namespace, PromptReverseNames.listview_api])
-                ),
+                "prompt_list_api_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview_api),
             }
         }
 

@@ -5,7 +5,6 @@ import os
 from http import HTTPStatus
 
 from django.test import Client
-from django.urls import reverse
 
 from smarter.apps.account.api.v1.urls import Namespace
 from smarter.apps.account.api.v1.views.batch_create_users import (
@@ -19,6 +18,7 @@ from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.api.v1.const import namespace as account_api_v1_namespace
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 namespace = ":".join([api_namespace, account_api_v1_namespace, account_namespace])
