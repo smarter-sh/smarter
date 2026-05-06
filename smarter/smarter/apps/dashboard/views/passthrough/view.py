@@ -51,7 +51,7 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         which only receives JSON dicts of LLM prompts.
         """
         # pylint: disable=C0415
-        from smarter.apps.dashboard.urls_passthrough import PassthroughReverseNames
+        from smarter.apps.dashboard.urls.passthrough import PassthroughReverseNames
 
         api_path = reverse(
             ":".join([PromptAPINamespace.namespace, PromptAPINamespace.passthrough]),
@@ -60,7 +60,7 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         api_path = api_path.rstrip("/").rsplit("/", 1)[0] + "/"
         api_url = request.build_absolute_uri(api_path)
 
-        provider_api_url = reverse(":".join([PassthroughReverseNames.namespace, PassthroughReverseNames.api_providers]))
+        provider_api_url = reverse(PassthroughReverseNames.namespace, PassthroughReverseNames.api_providers)
 
         context = {
             "passthrough": {

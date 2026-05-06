@@ -10,7 +10,7 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.models import get_resolved_user
 from smarter.apps.provider.models import Provider
-from smarter.apps.provider.serializers import ProviderSerializer
+from smarter.apps.provider.serializers import ProviderMiniSerializer
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
 )
@@ -27,5 +27,5 @@ class ProviderApiView(SmarterAuthenticatedNeverCachedWebView):
         user = get_resolved_user(request.user)
 
         providers = Provider.objects.with_read_permission_for(user=user)  # type: ignore
-        serialized_providers = ProviderSerializer(providers, many=True).data
+        serialized_providers = ProviderMiniSerializer(providers, many=True).data
         return JsonResponse({"providers": serialized_providers})

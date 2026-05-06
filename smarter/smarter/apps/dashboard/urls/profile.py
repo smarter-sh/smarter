@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from .views.profile import ProfileLanguageView, ProfileView
+from ..views.profile import ProfileLanguageView, ProfileView
 
 urlpatterns = [
     path("", ProfileView.as_view(), name="profile"),

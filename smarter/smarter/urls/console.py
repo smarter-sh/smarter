@@ -36,12 +36,12 @@ from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.connection import urls as connection_urls
 from smarter.apps.connection.const import namespace as connection_namespace
-from smarter.apps.dashboard import urls as dashboard_urls
 from smarter.apps.dashboard.admin import (
     SmarterSuperUserOnlyModelAdmin,
     smarter_restricted_admin_site,
 )
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
+from smarter.apps.dashboard.urls import dashboard as dashboard_urls
 from smarter.apps.docs import urls as docs_urls
 from smarter.apps.docs.const import namespace as docs_namespace
 from smarter.apps.docs.views.webserver import (
