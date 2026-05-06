@@ -36,10 +36,10 @@ class DashboardView(SmarterAuthenticatedWebView):
             return redirect(reverse("login_view"))
 
         # pylint: disable=C0415
-        from smarter.apps.dashboard.views.dashboard.api.urls import (
+        from smarter.apps.dashboard.views.views.api.urls import (
             DashboardApiReverseNames,
         )
-        from smarter.apps.dashboard.views.dashboard.urls import (
+        from smarter.apps.dashboard.views.views.urls import (
             DashboardReverseNames,  # avoid circular import
         )
 

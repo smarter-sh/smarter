@@ -33,7 +33,7 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
         :return: An HttpResponse rendering the terminal emulator page with the appropriate context.
         :rtype: HttpResponse
         """
-        from smarter.apps.dashboard.views.dashboard.urls import DashboardReverseNames
+        from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 
         from .names import DashboardLogsReverseNames
 

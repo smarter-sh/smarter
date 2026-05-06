@@ -75,9 +75,9 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.views.apply_manifest.urls import ApplyManifestReverseNames
-from smarter.apps.dashboard.views.dashboard.urls import DashboardReverseNames
 from smarter.apps.dashboard.views.logs.names import DashboardLogsReverseNames
 from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
+from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.apps.docs.urls import DocsReverseNames
 from smarter.apps.plugin.models import (
     PluginMeta,
@@ -495,7 +495,7 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     )
     request.user = user_profile.user
     # pylint: disable=C0415
-    from smarter.apps.dashboard.views.dashboard import DashboardView
+    from smarter.apps.dashboard.views.views import DashboardView
 
     DashboardView.dispatch.invalidate(request)
 

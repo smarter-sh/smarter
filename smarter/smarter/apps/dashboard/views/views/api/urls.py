@@ -2,8 +2,8 @@
 
 from django.urls import path
 
-from smarter.apps.dashboard.views.dashboard.api.my_resources import MyResourcesView
-from smarter.apps.dashboard.views.dashboard.api.service_health import ServiceHealthView
+from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
+from smarter.apps.dashboard.views.views.api.service_health import ServiceHealthView
 from smarter.common.utils import camel_case_object_name
 from smarter.lib import logging
 
