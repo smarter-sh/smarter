@@ -9,8 +9,6 @@ from smarter.lib import logging
 
 from .const import namespace
 from .names import DashboardLogsReverseNames
-
-# from .consumers import RedisLogConsumer
 from .reactapp import TerminalEmulatorLogView
 from .streams import stream_user_logs
 
