@@ -16,7 +16,7 @@ from .views.provider import ProviderDetailView, ProviderListView
 app_name = namespace
 
 
-class ProviderReverseViews:
+class ProviderReverseNames:
     """
     Reverse view names for the Provider app.
     """
@@ -27,6 +27,6 @@ class ProviderReverseViews:
 
 
 urlpatterns = [
-    path("providers/", ProviderListView.as_view(), name=ProviderReverseViews.listview),
+    path("providers/", ProviderListView.as_view(), name=ProviderReverseNames.listview),
     path("providers/<str:name>/", ProviderDetailView.as_view(), name="provider_by_name"),
 ]

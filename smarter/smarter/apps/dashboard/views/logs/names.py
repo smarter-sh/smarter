@@ -11,7 +11,7 @@ from .reactapp import TerminalEmulatorLogView
 from .streams import stream_user_logs
 
 
-class LogsNames:
+class DashboardLogsReverseNames:
     """
     A class to hold the names of the logs views for easy reference throughout the codebase.
     """

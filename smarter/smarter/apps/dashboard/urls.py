@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 app_name = namespace
 
 
-class DashboardNames:
+class DashboardReverseNames:
     """
     A class to hold the names of the dashboard views for easy reference throughout the codebase.
     """
@@ -39,18 +39,18 @@ class DashboardNames:
 
 
 urlpatterns = [
-    path("", DashboardView.as_view(), name=DashboardNames.dashboard),
-    path("api/my-resources/", MyResourcesView.as_view(), name=DashboardNames.api_my_resources),
-    path("api/service-health/", ServiceHealthView.as_view(), name=DashboardNames.api_service_health),
+    path("", DashboardView.as_view(), name=DashboardReverseNames.dashboard),
+    path("api/my-resources/", MyResourcesView.as_view(), name=DashboardReverseNames.api_my_resources),
+    path("api/service-health/", ServiceHealthView.as_view(), name=DashboardReverseNames.api_service_health),
     path("logs/", include(logs_urls, namespace=logs_urls.app_name)),
     path("account/", include(account_urls)),
     path("plugins/", include(plugin_urls)),
     path("profile/", include(urls_profile)),
     path("help/", RedirectView.as_view(url="/docs/"), name="help"),
     path("support/", RedirectView.as_view(url="/docs/"), name="support"),
-    path("changelog/", ChangeLogView.as_view(), name=DashboardNames.changelog),
-    path("notifications/", NotificationsView.as_view(), name=DashboardNames.notifications),
-    path("email-added/", EmailAdded.as_view(), name=DashboardNames.email_added),
+    path("changelog/", ChangeLogView.as_view(), name=DashboardReverseNames.changelog),
+    path("notifications/", NotificationsView.as_view(), name=DashboardReverseNames.notifications),
+    path("email-added/", EmailAdded.as_view(), name=DashboardReverseNames.email_added),
 ]
 
 if smarter_settings.enable_dashboard_passthrough_prompt:
@@ -69,7 +69,7 @@ else:
 
 if smarter_settings.enable_dashboard_apply:
     urlpatterns.append(
-        path("apply/", ManifestDropZoneView.as_view(), name=DashboardNames.manifest_drop_zone),
+        path("apply/", ManifestDropZoneView.as_view(), name=DashboardReverseNames.manifest_drop_zone),
     )
     logger.info(
         "%s Dashboard apply drop zone endpoint enabled. This allows users to apply manifests by dragging and dropping files onto the dashboard. Set env `SMARTER_ENABLE_DASHBOARD_APPLY=false` to disable.",

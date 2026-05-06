@@ -57,7 +57,7 @@ from .views.manifest import (
 from .views.views import JsonSchemasView, ManifestsView
 
 
-class DocsReverseViews:
+class DocsReverseNames:
     """
     Centralized reverse view names for the docs app.
     """
@@ -87,8 +87,8 @@ urlpatterns = [
     # Documentation generators
     # -------------------------------------------------------------------------
     re_path(r"^swagger(?P<format>\.json|\.yaml)$", schema_view.without_ui(cache_timeout=0), name="schema-json"),
-    re_path(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name=DocsReverseViews.swagger_docs),
-    re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name=DocsReverseViews.redoc),
+    re_path(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name=DocsReverseNames.swagger_docs),
+    re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name=DocsReverseNames.redoc),
     # -------------------------------------------------------------------------
     # JSON Schemas
     # -------------------------------------------------------------------------
@@ -258,9 +258,9 @@ urlpatterns = [
     # -------------------------------------------------------------------------
     # manifests landing page
     # -------------------------------------------------------------------------
-    path("manifests/", ManifestsView.as_view(), name=DocsReverseViews.example_manifests),
+    path("manifests/", ManifestsView.as_view(), name=DocsReverseNames.example_manifests),
     # -------------------------------------------------------------------------
     # json schemas landing page
     # -------------------------------------------------------------------------
-    path("json-schemas/", JsonSchemasView.as_view(), name=DocsReverseViews.json_schemas),
+    path("json-schemas/", JsonSchemasView.as_view(), name=DocsReverseNames.json_schemas),
 ]

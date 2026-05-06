@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 
 from smarter.apps.account.models import User
-from smarter.apps.account.urls import AccountNamedUrls
+from smarter.apps.account.urls import AccountReverseNames
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
@@ -64,7 +64,7 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
             user = User.objects.filter(email=email).first()
 
         password_reset_link = self.expiring_token.encode_link(
-            request=request, user=user, reverse_link=AccountNamedUrls.PASSWORD_RESET_LINK
+            request=request, user=user, reverse_link=AccountReverseNames.PASSWORD_RESET_LINK
         )
         context = {"password_reset": {"url": password_reset_link}}
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)

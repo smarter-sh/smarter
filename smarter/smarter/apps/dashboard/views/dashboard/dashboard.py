@@ -36,7 +36,9 @@ class DashboardView(SmarterAuthenticatedWebView):
             return redirect(reverse("login_view"))
 
         # pylint: disable=C0415
-        from smarter.apps.dashboard.urls import DashboardNames  # avoid circular import
+        from smarter.apps.dashboard.urls import (
+            DashboardReverseNames,  # avoid circular import
+        )
 
         context = {
             "react_dashboard": {
@@ -44,9 +46,11 @@ class DashboardView(SmarterAuthenticatedWebView):
                 "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "my_resources_api_url": reverse(":".join([DashboardNames.namespace, DashboardNames.api_my_resources])),
+                "my_resources_api_url": reverse(
+                    ":".join([DashboardReverseNames.namespace, DashboardReverseNames.api_my_resources])
+                ),
                 "service_health_api_url": reverse(
-                    ":".join([DashboardNames.namespace, DashboardNames.api_service_health])
+                    ":".join([DashboardReverseNames.namespace, DashboardReverseNames.api_service_health])
                 ),
             }
         }

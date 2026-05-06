@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 app_name = namespace
 
 
-class VectorstoreReverseViews:
+class VectorstoreReverseNames:
     """
     Holds named URL patterns for the vectorstore app.
     This class provides constants for all named URL patterns used in the vectorstore views.
@@ -45,11 +45,11 @@ class VectorstoreReverseViews:
 urlpatterns = []
 if smarter_settings.enable_vectorstore:
     urlpatterns = [
-        path("", VectorstoreListView.as_view(), name=VectorstoreReverseViews.list_view),
+        path("", VectorstoreListView.as_view(), name=VectorstoreReverseNames.list_view),
         path(
             "vectorstores/<str:backend>/<str:name>/manifest/",
             VectorstoreManifestView.as_view(),
-            name=VectorstoreReverseViews.manifest_view,
+            name=VectorstoreReverseNames.manifest_view,
         ),
     ]
     logger.info("%s Vectorstore API endpoints enabled.", formatted_text(__name__))

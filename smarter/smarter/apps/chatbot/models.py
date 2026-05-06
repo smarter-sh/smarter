@@ -704,9 +704,9 @@ class ChatBot(MetaDataWithOwnershipModel):
         :rtype: str
         """
         # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseViews
+        from smarter.apps.prompt.urls import PromptReverseNames
 
-        path = reverse(f"{PromptReverseViews.namespace}:{PromptReverseViews.landing_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.landing_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url
@@ -804,9 +804,9 @@ class ChatBot(MetaDataWithOwnershipModel):
             stacklevel=2,
         )
         # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseViews
+        from smarter.apps.prompt.urls import PromptReverseNames
 
-        path = reverse(f"{PromptReverseViews.namespace}:{PromptReverseViews.chat_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.chat_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url

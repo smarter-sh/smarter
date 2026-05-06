@@ -10,7 +10,7 @@ from .views.plugin import PluginDetailView, PluginListView
 app_name = namespace
 
 
-class PluginReverseViews:
+class PluginReverseNames:
     """
     Reverse view names for the plugin app.
     """
@@ -21,6 +21,6 @@ class PluginReverseViews:
 
 
 urlpatterns = [
-    path("plugins/", PluginListView.as_view(), name=PluginReverseViews.listview),
-    path("plugins/<str:kind>/<str:name>/", PluginDetailView.as_view(), name=PluginReverseViews.detailview),
+    path("plugins/", PluginListView.as_view(), name=PluginReverseNames.listview),
+    path("plugins/<str:kind>/<str:name>/", PluginDetailView.as_view(), name=PluginReverseNames.detailview),
 ]

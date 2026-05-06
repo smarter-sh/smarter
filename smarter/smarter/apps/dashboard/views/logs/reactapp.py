@@ -33,9 +33,9 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
         :return: An HttpResponse rendering the terminal emulator page with the appropriate context.
         :rtype: HttpResponse
         """
-        from .names import LogsNames
+        from .names import DashboardLogsReverseNames
 
-        reverse_name = ":".join([LogsNames.namespace, LogsNames.stream])
+        reverse_name = ":".join([DashboardLogsReverseNames.namespace, DashboardLogsReverseNames.stream])
 
         context = {
             "terminal": {

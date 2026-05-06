@@ -59,7 +59,7 @@ detailed API documentation, refer to the generated documentation for each functi
 
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urljoin
 
 from django.test import RequestFactory
@@ -70,24 +70,24 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
-from smarter.apps.account.urls import AccountNamedUrls
+from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
-from smarter.apps.connection.urls import ConnectionReverseViews
+from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
-from smarter.apps.dashboard.urls import DashboardNames
-from smarter.apps.dashboard.urls_passthrough import PassthroughNamespace
-from smarter.apps.dashboard.views.logs.names import LogsNames
+from smarter.apps.dashboard.urls import DashboardReverseNames
+from smarter.apps.dashboard.urls_passthrough import PassthroughReverseNames
+from smarter.apps.dashboard.views.logs.names import DashboardLogsReverseNames
 from smarter.apps.dashboard.views.manifest_drop_zone import ManifestDropZoneView
-from smarter.apps.docs.urls import DocsReverseViews
+from smarter.apps.docs.urls import DocsReverseNames
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
-from smarter.apps.plugin.urls import PluginReverseViews
-from smarter.apps.prompt.urls import PromptReverseViews
-from smarter.apps.provider.urls import ProviderReverseViews
-from smarter.apps.secret.urls import SecretReverseViews
-from smarter.apps.vectorstore.urls import VectorstoreReverseViews
+from smarter.apps.plugin.urls import PluginReverseNames
+from smarter.apps.prompt.urls import PromptReverseNames
+from smarter.apps.provider.urls import ProviderReverseNames
+from smarter.apps.secret.urls import SecretReverseNames
+from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.utils import camel_case_object_name
@@ -104,33 +104,33 @@ logger_prefix = logging.formatted_text(__name__)
 logger_prefix_cache_invalidations = logging.formatted_text_blue(f"{__name__}.cache_invalidations()")
 
 
-def sidebar(request: "HttpRequest") -> dict:
+def sidebar(request: "HttpRequest") -> dict[str, Any]:
     """
     Provides context for rendering the dashboard sidebar href navigation links.
     """
 
     @cache_results()
-    def cached_sidebar_context() -> dict:
+    def cached_sidebar_context() -> dict[str, Any]:
         retval = {
             "sidebar": {
-                "dashboard": reverse(DashboardNames.namespace, DashboardNames.dashboard),
-                "workbench": reverse(PromptReverseViews.namespace, PromptReverseViews.listview),
-                "apply_manifest": reverse(DashboardNames.namespace, DashboardNames.manifest_drop_zone),
-                "prompt_passthrough": reverse(PassthroughNamespace.namespace, PassthroughNamespace.view),
-                "server_logs": reverse(LogsNames.namespace, LogsNames.logs),
-                "providers": reverse(ProviderReverseViews.namespace, ProviderReverseViews.listview),
-                "plugins": reverse(PluginReverseViews.namespace, PluginReverseViews.listview),
-                "connections": reverse(ConnectionReverseViews.namespace, ConnectionReverseViews.listview),
-                "secrets": reverse(SecretReverseViews.namespace, SecretReverseViews.SECRETS),
-                "vectorstores": reverse(VectorstoreReverseViews.namespace, VectorstoreReverseViews.list_view),
-                "api_keys": reverse(AccountNamedUrls.namespace, AccountNamedUrls.API_KEYS_LIST),
-                "custom_domains": reverse(ConnectionReverseViews.namespace, ConnectionReverseViews.listview),  # FIX ME
-                "example_manifests": reverse(DocsReverseViews.namespace, DocsReverseViews.example_manifests),
-                "swagger_docs": reverse(DocsReverseViews.namespace, DocsReverseViews.swagger_docs),
-                "redoc": reverse(DocsReverseViews.namespace, DocsReverseViews.redoc),
-                "json_schemas": reverse(DocsReverseViews.namespace, DocsReverseViews.json_schemas),
-                "account": "/dashboard/account/dashboard/overview/",
-                "admin": "/admin/",
+                "dashboard": reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
+                "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+                "apply_manifest": reverse(DashboardReverseNames.namespace, DashboardReverseNames.manifest_drop_zone),
+                "prompt_passthrough": reverse(PassthroughReverseNames.namespace, PassthroughReverseNames.view),
+                "server_logs": reverse(DashboardLogsReverseNames.namespace, DashboardLogsReverseNames.logs),
+                "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
+                "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
+                "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+                "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.SECRETS),
+                "vectorstores": reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.list_view),
+                "api_keys": reverse(AccountReverseNames.namespace, AccountReverseNames.API_KEYS_LIST),
+                "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
+                "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
+                "swagger_docs": reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
+                "redoc": reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),
+                "json_schemas": reverse(DocsReverseNames.namespace, DocsReverseNames.json_schemas),
+                "account": "/dashboard/account/dashboard/overview/",  # FIX ME
+                "admin": "/admin/",  # FIX ME
             }
         }
         logger.debug(
@@ -141,7 +141,7 @@ def sidebar(request: "HttpRequest") -> dict:
     return cached_sidebar_context()
 
 
-def file_drop_zone(request: "HttpRequest") -> dict:
+def file_drop_zone(request: "HttpRequest") -> dict[str, Any]:
     """
     Provides context for enabling file drop zone functionality in the dashboard.
 
@@ -156,12 +156,12 @@ def file_drop_zone(request: "HttpRequest") -> dict:
     """
 
     @cache_results()
-    def get_cached_file_drop_zone_context() -> dict:
+    def get_cached_file_drop_zone_context() -> dict[str, Any]:
 
-        provider_list_reverse_name = ":".join([ProviderReverseViews.namespace, ProviderReverseViews.listview])
-        connection_list_reverse_name = ":".join([ConnectionReverseViews.namespace, ConnectionReverseViews.listview])
+        provider_list_reverse_name = ":".join([ProviderReverseNames.namespace, ProviderReverseNames.listview])
+        connection_list_reverse_name = ":".join([ConnectionReverseNames.namespace, ConnectionReverseNames.listview])
 
-        plugin_list_reverse_name = ":".join([PluginReverseViews.namespace, PluginReverseViews.listview])
+        plugin_list_reverse_name = ":".join([PluginReverseNames.namespace, PluginReverseNames.listview])
         logger.debug("%s.file_drop_zone() called.", logger_prefix)
         api_apply_path_name = ":".join([dashboard_namespace, camel_case_object_name(ManifestDropZoneView)])
         api_apply_path = reverse(api_apply_path_name)
@@ -169,7 +169,7 @@ def file_drop_zone(request: "HttpRequest") -> dict:
             "drop_zone": {
                 "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
                 "api_apply_path": api_apply_path,
-                "workbench_list_path": reverse(":".join([PromptReverseViews.namespace, PromptReverseViews.listview])),
+                "workbench_list_path": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.listview])),
                 "plugin_list_path": reverse(plugin_list_reverse_name),
                 "connection_list_path": reverse(connection_list_reverse_name),
                 "provider_list_path": reverse(provider_list_reverse_name),
@@ -180,7 +180,7 @@ def file_drop_zone(request: "HttpRequest") -> dict:
     return get_cached_file_drop_zone_context()
 
 
-def base(request: "HttpRequest") -> dict:
+def base(request: "HttpRequest") -> dict[str, Any]:
     """
     Provides the base context for all templates inheriting from ``base.html``
     in the Smarter dashboard.
@@ -213,7 +213,7 @@ def base(request: "HttpRequest") -> dict:
             user = None
 
     @cache_results()
-    def get_cached_context(username: Optional[str]) -> dict:
+    def get_cached_context(username: Optional[str]) -> dict[str, Any]:
         """
         Constructs and returns the cached dashboard context for the specified user.
 
@@ -276,7 +276,7 @@ def base(request: "HttpRequest") -> dict:
     return context
 
 
-def branding(request: "HttpRequest") -> dict:
+def branding(request: "HttpRequest") -> dict[str, Any]:
     """
     Provides organization-specific branding context for dashboard templates.
 
@@ -303,7 +303,7 @@ def branding(request: "HttpRequest") -> dict:
     """
 
     @cache_results()
-    def get_cached_context() -> dict:
+    def get_cached_context() -> dict[str, Any]:
         logger.debug("%s.branding() called.", logger_prefix)
         current_year = datetime.now().year
         root_url = request.build_absolute_uri("/").rstrip("/")
@@ -393,7 +393,7 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
     return context
 
 
-def cache_buster(request) -> dict:
+def cache_buster(request) -> dict[str, Any]:
     """
     Adds a cache-busting query parameter to static asset URLs during development.
 
@@ -419,7 +419,7 @@ def cache_buster(request) -> dict:
     return {"cache_buster": "v=" + str(time.time())}
 
 
-def prompt_list_context(request: "HttpRequest") -> dict:
+def prompt_list_context(request: "HttpRequest") -> dict[str, Any]:
     """
     Provides default placeholder context for prompt list views in the dashboard.
     This mitigates Django template rendering errors presumably caused by Wagtail
@@ -473,7 +473,7 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     # page cache invalidations
     ###########################################################################
     factory = RequestFactory()
-    url = reverse(DashboardNames.namespace, DashboardNames.dashboard)
+    url = reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard)
     request = factory.get(url)
 
     logger.debug(
@@ -488,7 +488,7 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
 
     DashboardView.dispatch.invalidate(request)
 
-    url = reverse(PromptReverseViews.namespace, PromptReverseViews.listview)
+    url = reverse(PromptReverseNames.namespace, PromptReverseNames.listview)
     request = factory.get(url)
     logger.debug(
         "%s.cache_invalidations() Created invalidation request for URL %s: %s",
