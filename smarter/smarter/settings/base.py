@@ -784,6 +784,7 @@ TEMPLATES = [
                 "smarter.apps.dashboard.context_processors.base",
                 "smarter.apps.dashboard.context_processors.footer",
                 "smarter.apps.dashboard.context_processors.file_drop_zone",
+                "smarter.apps.dashboard.context_processors.sidebar",
             ],
         },
     },

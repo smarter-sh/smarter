@@ -1,5 +1,9 @@
 # pylint: disable=W0613,C0302
-""" """
+"""
+View for the Dashboard prompt passthrough endpoint, which renders a template
+that accepts raw JSON dicts for LLM provider prompts, passes these directly
+to the LLM provider API, and renders the API response in the template.
+"""
 
 import logging
 
@@ -35,7 +39,7 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
 
     **Example usage**::
 
-        GET /chatbot/detail/?name=my_chatbot&kind=custom
+        GET /dashboard/passthrough/
 
     """
 
@@ -46,12 +50,17 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         View for rendering the Monaco terminal emulation page
         which only receives JSON dicts of LLM prompts.
         """
+        # pylint: disable=C0415
+        from smarter.apps.dashboard.urls_passthrough import PassthroughNamespace
+
         api_path = reverse(
             ":".join([PromptAPINamespace.namespace, PromptAPINamespace.passthrough]),
             kwargs={"provider_name": "delete-me"},
         )
         api_path = api_path.rstrip("/").rsplit("/", 1)[0] + "/"
         api_url = request.build_absolute_uri(api_path)
+
+        provider_api_url = reverse(":".join([PassthroughNamespace.namespace, PassthroughNamespace.api_providers]))
 
         context = {
             "passthrough": {
@@ -62,16 +71,10 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
                 "api_url": api_url,
                 "llm_provider_id": "1",
                 "template_id": "1",
+                "provider_api_url": provider_api_url,
             }
         }
         self.template_path = "react/prompt-passthrough.html"
 
         logger.debug("%s.get() rendering Prompt Passthrough View with context: %s", self.formatted_class_name, context)
         return render(request, self.template_path, context=context)
-
-    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """
-        Receives a LLM prompt JSON dict from the frontend and sends this to
-        the Provider passthrough service.
-        """
-        return HttpResponse(status=404)  # Not yet implemented.

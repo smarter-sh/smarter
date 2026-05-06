@@ -56,6 +56,19 @@ from .views.manifest import (
 )
 from .views.views import JsonSchemasView, ManifestsView
 
+
+class DocsReverseViews:
+    """
+    Centralized reverse view names for the docs app.
+    """
+
+    namespace = namespace
+    example_manifests = "example_manifests"
+    swagger_docs = "schema-swagger-ui"
+    redoc = "schema-redoc-ui"
+    json_schemas = "json_schemas"
+
+
 app_name = namespace
 urlpatterns = [
     path("", lambda request: redirect(namespace + ":example_manifests", permanent=False), name="docs-home"),
@@ -74,8 +87,8 @@ urlpatterns = [
     # Documentation generators
     # -------------------------------------------------------------------------
     re_path(r"^swagger(?P<format>\.json|\.yaml)$", schema_view.without_ui(cache_timeout=0), name="schema-json"),
-    re_path(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
-    re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc-ui"),
+    re_path(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name=DocsReverseViews.swagger_docs),
+    re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name=DocsReverseViews.redoc),
     # -------------------------------------------------------------------------
     # JSON Schemas
     # -------------------------------------------------------------------------
@@ -245,9 +258,9 @@ urlpatterns = [
     # -------------------------------------------------------------------------
     # manifests landing page
     # -------------------------------------------------------------------------
-    path("manifests/", ManifestsView.as_view(), name="example_manifests"),
+    path("manifests/", ManifestsView.as_view(), name=DocsReverseViews.example_manifests),
     # -------------------------------------------------------------------------
     # json schemas landing page
     # -------------------------------------------------------------------------
-    path("json-schemas/", JsonSchemasView.as_view(), name="json_schemas"),
+    path("json-schemas/", JsonSchemasView.as_view(), name=DocsReverseViews.json_schemas),
 ]
