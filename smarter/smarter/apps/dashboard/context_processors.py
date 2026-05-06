@@ -113,7 +113,9 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
                 "dashboard": reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
                 "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
                 "apply_manifest": reverse(DashboardReverseNames.namespace, DashboardReverseNames.manifest_drop_zone),
-                "prompt_passthrough": reverse(PassthroughReverseNames.namespace, PassthroughReverseNames.view),
+                "prompt_passthrough": reverse(
+                    DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
+                ),
                 "server_logs": reverse(
                     DashboardReverseNames.namespace, DashboardLogsReverseNames.namespace, DashboardLogsReverseNames.logs
                 ),

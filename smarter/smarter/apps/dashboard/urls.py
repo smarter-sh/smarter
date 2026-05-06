@@ -54,7 +54,7 @@ urlpatterns = [
     path("notifications/", NotificationsView.as_view(), name=DashboardReverseNames.notifications),
     path("email-added/", EmailAdded.as_view(), name=DashboardReverseNames.email_added),
     path("manifest-drop-zone/", ManifestDropZoneView.as_view(), name=DashboardReverseNames.manifest_drop_zone),
-    path("logs/", include(logs_urls), name=logs_urls.DashboardLogsReverseNames.namespace),
-    path("passthrough/", include(passthrough_urls), name=passthrough_urls.PassthroughReverseNames.namespace),
-    path("profile/", include(profile_urls), name=profile_urls.ProfileReverseNames.namespace),
+    path("logs/", include(logs_urls, namespace=logs_urls.app_name)),
+    path("passthrough/", include(passthrough_urls, namespace=passthrough_urls.app_name)),
+    path("profile/", include(profile_urls, namespace=profile_urls.app_name)),
 ]

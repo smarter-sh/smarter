@@ -5,13 +5,12 @@ that accepts raw JSON dicts for LLM provider prompts, passes these directly
 to the LLM provider API, and renders the API response in the template.
 """
 
-import logging
-
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
 from smarter.apps.prompt.api.v1.urls import PromptAPINamespace
+from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
@@ -51,6 +50,10 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         which only receives JSON dicts of LLM prompts.
         """
         # pylint: disable=C0415
+        from smarter.apps.dashboard.urls import DashboardReverseNames
+        from smarter.apps.dashboard.views.passthrough.api.urls import (
+            PassthroughApiReverseNames,
+        )
         from smarter.apps.dashboard.views.passthrough.urls import (
             PassthroughReverseNames,
         )
@@ -62,7 +65,12 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         api_path = api_path.rstrip("/").rsplit("/", 1)[0] + "/"
         api_url = request.build_absolute_uri(api_path)
 
-        provider_api_url = reverse(PassthroughReverseNames.namespace, PassthroughReverseNames.api_providers)
+        provider_api_url = reverse(
+            DashboardReverseNames.namespace,
+            PassthroughReverseNames.namespace,
+            PassthroughApiReverseNames.namespace,
+            PassthroughApiReverseNames.api_providers,
+        )
 
         context = {
             "passthrough": {
@@ -78,5 +86,9 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         }
         self.template_path = "react/prompt-passthrough.html"
 
-        logger.debug("%s.get() rendering Prompt Passthrough View with context: %s", self.formatted_class_name, context)
+        logger.debug(
+            "%s.get() rendering Prompt Passthrough View with context: %s",
+            self.formatted_class_name,
+            logging.formatted_json(context),
+        )
         return render(request, self.template_path, context=context)
