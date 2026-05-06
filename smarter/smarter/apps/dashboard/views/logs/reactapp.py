@@ -33,6 +33,8 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
         :return: An HttpResponse rendering the terminal emulator page with the appropriate context.
         :rtype: HttpResponse
         """
+        from smarter.apps.dashboard.views.dashboard.urls import DashboardReverseNames
+
         from .names import DashboardLogsReverseNames
 
         context = {
@@ -42,7 +44,9 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "api_url": reverse(
-                    DashboardLogsReverseNames.namespace, DashboardLogsReverseNames.stream
+                    DashboardReverseNames.namespace,
+                    DashboardLogsReverseNames.namespace,
+                    DashboardLogsReverseNames.terminal_emulator_view,
                 ),  # the WebSocket endpoint with the log data stream.
             }
         }

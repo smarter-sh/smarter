@@ -50,7 +50,7 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         which only receives JSON dicts of LLM prompts.
         """
         # pylint: disable=C0415
-        from smarter.apps.dashboard.urls import DashboardReverseNames
+        from smarter.apps.dashboard.views.dashboard.urls import DashboardReverseNames
         from smarter.apps.dashboard.views.passthrough.api.urls import (
             PassthroughApiReverseNames,
         )
