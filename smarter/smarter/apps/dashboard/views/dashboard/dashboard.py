@@ -36,7 +36,10 @@ class DashboardView(SmarterAuthenticatedWebView):
             return redirect(reverse("login_view"))
 
         # pylint: disable=C0415
-        from smarter.apps.dashboard.urls import (
+        from smarter.apps.dashboard.views.dashboard.api.urls import (
+            DashboardApiReverseNames,
+        )
+        from smarter.apps.dashboard.views.dashboard.urls import (
             DashboardReverseNames,  # avoid circular import
         )
 
@@ -47,10 +50,14 @@ class DashboardView(SmarterAuthenticatedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "my_resources_api_url": reverse(
-                    DashboardReverseNames.namespace, DashboardReverseNames.api_my_resources
+                    DashboardReverseNames.namespace,
+                    DashboardApiReverseNames.namespace,
+                    DashboardApiReverseNames.my_resources,
                 ),
                 "service_health_api_url": reverse(
-                    DashboardReverseNames.namespace, DashboardReverseNames.api_service_health
+                    DashboardReverseNames.namespace,
+                    DashboardApiReverseNames.namespace,
+                    DashboardApiReverseNames.service_health,
                 ),
             }
         }

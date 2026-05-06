@@ -2,15 +2,15 @@
 URLs for the logs views.
 """
 
-from django.urls import path
+from django.urls import include, path
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 
+from .api import urls as api_urls
 from .const import namespace
 from .names import DashboardLogsReverseNames
 from .reactapp import TerminalEmulatorLogView
-from .streams import stream_user_logs
 
 app_name = namespace
 logger = logging.getLogger(__name__)
@@ -21,10 +21,10 @@ urlpatterns = []
 
 if smarter_settings.enable_dashboard_server_logs:
     urlpatterns.append(
-        path("", TerminalEmulatorLogView.as_view(), name=DashboardLogsReverseNames.logs),
+        path("", TerminalEmulatorLogView.as_view(), name=DashboardLogsReverseNames.terminal_emulator_view),
     )
     urlpatterns.append(
-        path("api/stream/", stream_user_logs, name=DashboardLogsReverseNames.stream),
+        path("api/", include(api_urls, namespace=api_urls.app_name)),
     )
 
     # Note: future use of WebSockets for real-time log streaming.
