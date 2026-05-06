@@ -8,7 +8,7 @@ from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 
 from .const import namespace
-from .names import LogsNames
+from .names import DashboardLogsReverseNames
 
 # from .consumers import RedisLogConsumer
 from .reactapp import TerminalEmulatorLogView
@@ -23,15 +23,15 @@ urlpatterns = []
 
 if smarter_settings.enable_dashboard_server_logs:
     urlpatterns.append(
-        path("", TerminalEmulatorLogView.as_view(), name=LogsNames.logs),
+        path("", TerminalEmulatorLogView.as_view(), name=DashboardLogsReverseNames.logs),
     )
     urlpatterns.append(
-        path("api/stream/", stream_user_logs, name=LogsNames.stream),
+        path("api/stream/", stream_user_logs, name=DashboardLogsReverseNames.stream),
     )
 
     # Note: future use of WebSockets for real-time log streaming.
     # urlpatterns.append(
-    #     path("api/consumer/", RedisLogConsumer.as_asgi(), name=LogsNames.consumer),  # type: ignore
+    #     path("api/consumer/", RedisLogConsumer.as_asgi(), name=DashboardLogsReverseNames.consumer),  # type: ignore
     # )
 
     logger.info("%s Server logs app url endpoint enabled.", logger_prefix)

@@ -70,14 +70,14 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.connection.models import ConnectionBase
-from smarter.apps.connection.urls import ConnectionReverseViews
+from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
-from smarter.apps.plugin.urls import PluginReverseViews
-from smarter.apps.prompt.urls import PromptReverseViews
+from smarter.apps.plugin.urls import PluginReverseNames
+from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.provider.models import Provider
-from smarter.apps.provider.urls import ProviderReverseViews
+from smarter.apps.provider.urls import ProviderReverseNames
 from smarter.apps.secret.models import Secret
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
@@ -328,10 +328,10 @@ class MyResourcesView(SmarterAuthenticatedWebView):
 
     def post(self, request: HttpRequest, *args, **kwargs):
 
-        prompt_reverse_name = ":".join([PromptReverseViews.namespace, PromptReverseViews.listview])
-        plugin_reverse_name = ":".join([PluginReverseViews.namespace, PluginReverseViews.listview])
-        connection_reverse_name = ":".join([ConnectionReverseViews.namespace, ConnectionReverseViews.listview])
-        provider_reverse_name = ":".join([ProviderReverseViews.namespace, ProviderReverseViews.listview])
+        prompt_reverse_name = ":".join([PromptReverseNames.namespace, PromptReverseNames.listview])
+        plugin_reverse_name = ":".join([PluginReverseNames.namespace, PluginReverseNames.listview])
+        connection_reverse_name = ":".join([ConnectionReverseNames.namespace, ConnectionReverseNames.listview])
+        provider_reverse_name = ":".join([ProviderReverseNames.namespace, ProviderReverseNames.listview])
 
         user = get_resolved_user(request.user)
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore

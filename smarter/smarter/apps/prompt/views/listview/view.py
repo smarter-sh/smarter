@@ -41,7 +41,7 @@ class PromptListView(SmarterAuthenticatedWebView):
     template_path = "react/prompt-list.html"
 
     def get(self, request: HttpRequest, *args, **kwargs):
-        from smarter.apps.prompt.urls import PromptReverseViews
+        from smarter.apps.prompt.urls import PromptReverseNames
 
         logger.debug("%s.get() called for %s with args %s, kwargs %s", self.formatted_class_name, request, args, kwargs)
         context = {
@@ -51,7 +51,7 @@ class PromptListView(SmarterAuthenticatedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "prompt_list_api_url": reverse(
-                    ":".join([PromptReverseViews.namespace, PromptReverseViews.listview_api])
+                    ":".join([PromptReverseNames.namespace, PromptReverseNames.listview_api])
                 ),
             }
         }

@@ -8,7 +8,7 @@ from smarter.common.utils import camel_case_object_name
 from .const import namespace
 
 
-class SecretReverseViews:
+class SecretReverseNames:
     """
     Holds named URL patterns for the account dashboard.
     This class provides constants for all named URL patterns used in the account dashboard views.
@@ -33,7 +33,7 @@ class SecretReverseViews:
 app_name = namespace
 
 urlpatterns = [
-    path("", SecretsView.as_view(), name=SecretReverseViews.SECRETS),
-    path("new/", SecretView.as_view(), name=SecretReverseViews.SECRET_NEW),
-    path("<int:secret_id>/", SecretView.as_view(), name=SecretReverseViews.SECRET),
+    path("", SecretsView.as_view(), name=SecretReverseNames.SECRETS),
+    path("new/", SecretView.as_view(), name=SecretReverseNames.SECRET_NEW),
+    path("<int:secret_id>/", SecretView.as_view(), name=SecretReverseNames.SECRET),
 ]

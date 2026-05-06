@@ -8,7 +8,7 @@ from smarter.common.utils import camel_case_object_name
 from .views.passthrough import PromptPassthroughView, ProviderApiView
 
 
-class PassthroughNamespace:
+class PassthroughReverseNames:
     """
     A class to hold the namespace for the passthrough views in the dashboard app.
     """
@@ -20,6 +20,6 @@ class PassthroughNamespace:
 
 
 urlpatterns = [
-    path("", PromptPassthroughView.as_view(), name=PassthroughNamespace.view),
-    path("api/providers/", ProviderApiView.as_view(), name=PassthroughNamespace.api_providers),
+    path("", PromptPassthroughView.as_view(), name=PassthroughReverseNames.view),
+    path("api/providers/", ProviderApiView.as_view(), name=PassthroughReverseNames.api_providers),
 ]
