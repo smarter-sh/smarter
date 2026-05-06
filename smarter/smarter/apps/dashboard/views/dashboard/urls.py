@@ -14,7 +14,6 @@ from smarter.apps.dashboard.views.dashboard import (
 from smarter.apps.dashboard.views.dashboard.api import urls as dashboard_api_urls
 from smarter.apps.dashboard.views.dashboard.api.my_resources import MyResourcesView
 from smarter.apps.dashboard.views.dashboard.api.service_health import ServiceHealthView
-from smarter.apps.dashboard.views.manifest_drop_zone import ManifestDropZoneView
 from smarter.apps.plugin import urls as plugin_urls
 from smarter.common.utils import camel_case_object_name
 from smarter.lib import logging
@@ -33,7 +32,6 @@ class DashboardReverseNames:
     notifications = camel_case_object_name(NotificationsView)
     changelog = camel_case_object_name(ChangeLogView)
     email_added = camel_case_object_name(EmailAdded)
-    manifest_drop_zone = camel_case_object_name(ManifestDropZoneView)
     api_my_resources = camel_case_object_name(MyResourcesView)
     api_service_health = camel_case_object_name(ServiceHealthView)
 
@@ -48,5 +46,4 @@ urlpatterns = [
     path("changelog/", ChangeLogView.as_view(), name=DashboardReverseNames.changelog),
     path("notifications/", NotificationsView.as_view(), name=DashboardReverseNames.notifications),
     path("email-added/", EmailAdded.as_view(), name=DashboardReverseNames.email_added),
-    path("manifest-drop-zone/", ManifestDropZoneView.as_view(), name=DashboardReverseNames.manifest_drop_zone),
 ]

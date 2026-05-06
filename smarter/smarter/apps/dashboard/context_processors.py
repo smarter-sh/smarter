@@ -74,6 +74,7 @@ from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.connection.urls import ConnectionReverseNames
+from smarter.apps.dashboard.views.apply_manifest.urls import ApplyManifestReverseNames
 from smarter.apps.dashboard.views.dashboard.urls import DashboardReverseNames
 from smarter.apps.dashboard.views.logs.names import DashboardLogsReverseNames
 from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
@@ -112,7 +113,11 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
             "sidebar": {
                 "dashboard": reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
                 "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
-                "apply_manifest": reverse(DashboardReverseNames.namespace, DashboardReverseNames.manifest_drop_zone),
+                "apply_manifest": reverse(
+                    DashboardReverseNames.namespace,
+                    ApplyManifestReverseNames.namespace,
+                    ApplyManifestReverseNames.manifest_drop_zone,
+                ),
                 "prompt_passthrough": reverse(
                     DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
                 ),
@@ -136,9 +141,7 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
                 "admin": "/admin/",  # FIX ME
             }
         }
-        logger.debug(
-            "%s.sidebar() called. Returning sidebar context: %s", logger_prefix, logging.formatted_json(retval)
-        )
+        logger.debug("%s.sidebar() cached sidebar context: %s", logger_prefix, logging.formatted_json(retval))
         return retval
 
     return cached_sidebar_context()
@@ -161,17 +164,23 @@ def file_drop_zone(request: "HttpRequest") -> dict[str, Any]:
     @cache_results()
     def get_cached_file_drop_zone_context() -> dict[str, Any]:
 
-        logger.debug("%s.file_drop_zone() called.", logger_prefix)
         retval = {
             "drop_zone": {
                 "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
-                "api_apply_path": reverse(DashboardReverseNames.namespace, DashboardReverseNames.manifest_drop_zone),
+                "api_apply_path": reverse(
+                    DashboardReverseNames.namespace,
+                    ApplyManifestReverseNames.namespace,
+                    ApplyManifestReverseNames.manifest_drop_zone,
+                ),
                 "workbench_list_path": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
                 "plugin_list_path": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
                 "connection_list_path": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
                 "provider_list_path": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
             }
         }
+        logger.debug(
+            "%s.file_drop_zone() cached file drop zone context: %s", logger_prefix, logging.formatted_json(retval)
+        )
         return retval
 
     return get_cached_file_drop_zone_context()
@@ -266,7 +275,12 @@ def base(request: "HttpRequest") -> dict[str, Any]:
                 "current_year": current_year,
             }
         }
-        logger.debug("%s.base() Constructed dashboard context for user %s: %s", logger_prefix, username, cached_context)
+        logger.debug(
+            "%s.base() cached dashboard context for user %s: %s",
+            logger_prefix,
+            username,
+            logging.formatted_json(cached_context),
+        )
         return cached_context
 
     context = get_cached_context(username=resolved_user.username if resolved_user else "missing")  # type: ignore[assignment]
@@ -301,7 +315,6 @@ def branding(request: "HttpRequest") -> dict[str, Any]:
 
     @cache_results()
     def get_cached_context() -> dict[str, Any]:
-        logger.debug("%s.branding() called.", logger_prefix)
         current_year = datetime.now().year
         root_url = request.build_absolute_uri("/").rstrip("/")
         context = {
@@ -350,6 +363,7 @@ def branding(request: "HttpRequest") -> dict[str, Any]:
                 "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
             }
         }
+        logger.debug("%s.branding() cached branding context: %s", logger_prefix, logging.formatted_json(context))
         return context
 
     return get_cached_context()

@@ -18,26 +18,26 @@ def reverse(*args, **kwargs) -> str:
     """
     if kwargs:
         # not our pattern, so just pass through to Django's reverse function
-        logger.warning(
-            "%s.reverse() was called with kwargs, which is outside of the expected pattern. Passing through to Django's reverse function.",
-            logging.formatted_text(__name__),
-        )
         return django_reverse(*args, **kwargs)
 
     path_parts = []
     for arg in args:
         if not isinstance(arg, str):
             # not our pattern, so just pass through to Django's reverse function
-            logger.warning(
-                "%s.reverse() was called with a non-string argument, which is outside of the expected pattern. Passing through to Django's reverse function.",
-                logging.formatted_text(__name__),
-            )
             return django_reverse(*args, **kwargs)
 
         # unpack namespaces and view name from the argument, which is expected to be in the format "namespace1:namespace2:view_name"
         path_parts.append(arg.split(":"))
 
-    return django_reverse(":".join([item for sublist in path_parts for item in sublist]))
+    reverse_path = ":".join([item for sublist in path_parts for item in sublist])
+    retval = django_reverse(reverse_path)
+    logger.debug(
+        "%s.reverse() view name %s resolved to path %s",
+        logging.formatted_text(__name__),
+        reverse_path,
+        retval,
+    )
+    return retval
 
 
 __all__ = ["reverse"]
