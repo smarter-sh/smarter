@@ -32,9 +32,12 @@ if smarter_settings.enable_dashboard_server_logs:
     #     path("api/consumer/", RedisLogConsumer.as_asgi(), name=DashboardLogsReverseNames.consumer),  # type: ignore
     # )
 
-    logger.info("%s Server logs app url endpoint enabled.", logger_prefix)
+    logger.info(
+        "%s Server logs app url endpoint enabled. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=false` to disable.",
+        logging.formatted_text(__name__),
+    )
 else:
     logger.info(
         "%s Server logs app is disabled. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=true` to enable the server logs endpoint at /logs/.",
-        logger_prefix,
+        logging.formatted_text(__name__),
     )
