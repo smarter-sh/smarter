@@ -9,6 +9,7 @@ from django import forms, http
 from django.http import HttpResponseRedirect
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.views.dashboard.urls import DashboardNamedUrls
 from smarter.lib import json, logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
@@ -65,6 +66,7 @@ class APIKeyView(APIKeyBase):
     template_path = "account/dashboard/api-key.html"
 
     def _handle_create(self, request):
+
         new_api_key, token = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
             user_profile=self.user_profile,
             name="New API Key",
@@ -72,7 +74,7 @@ class APIKeyView(APIKeyBase):
             description=f"New API key created by {request.user}",
         )
         url = reverse(
-            "account:dashboard_account_api_key_new",
+            f"{DashboardNamedUrls.namespace}:{DashboardNamedUrls.ACCOUNT_API_KEY_NEW}",
             kwargs={
                 "key_id": new_api_key.key_id,
                 "new_api_key": token,

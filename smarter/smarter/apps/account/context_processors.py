@@ -26,7 +26,9 @@ def base(request):
         "account_authentication": {
             "login_url": settings.LOGIN_URL,
             "logout_url": "/logout/",
-            "forgot_password_url": reverse(AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST),
+            "forgot_password_url": reverse(
+                AccountReverseNames.namespace, AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST
+            ),
         }
     }
     if is_authenticated_request(request):

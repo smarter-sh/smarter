@@ -390,7 +390,7 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
         from smarter.apps.account.urls import AccountReverseNames
 
         url = self.expiring_token.encode_link(
-            request, user, AccountReverseNames.namespace + ":" + AccountReverseNames.ACCOUNT_ACTIVATE
+            request, user, reverse(AccountReverseNames.namespace, AccountReverseNames.ACCOUNT_ACTIVATE)
         )
         context = {
             "account_activation": {
@@ -403,7 +403,7 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
         email_helper.send_email(subject=subject, body=body, to=to, html=True)
 
         # render a page to let the user know the email was sent. Add a link to resend the email.
-        email_resend_url = reverse(AccountReverseNames.namespace + ":" + AccountReverseNames.ACCOUNT_ACTIVATION)
+        email_resend_url = reverse(AccountReverseNames.namespace, AccountReverseNames.ACCOUNT_ACTIVATION)
         context = {"account_activation": {"resend": email_resend_url}}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
