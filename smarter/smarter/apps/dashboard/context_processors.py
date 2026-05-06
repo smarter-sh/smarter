@@ -74,11 +74,9 @@ from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.connection.urls import ConnectionReverseNames
-from smarter.apps.dashboard.const import namespace as dashboard_namespace
-from smarter.apps.dashboard.urls import DashboardReverseNames
-from smarter.apps.dashboard.urls_passthrough import PassthroughReverseNames
+from smarter.apps.dashboard.urls.dashboard import DashboardReverseNames
+from smarter.apps.dashboard.urls.passthrough import PassthroughReverseNames
 from smarter.apps.dashboard.views.logs.names import DashboardLogsReverseNames
-from smarter.apps.dashboard.views.manifest_drop_zone import ManifestDropZoneView
 from smarter.apps.docs.urls import DocsReverseNames
 from smarter.apps.plugin.models import (
     PluginMeta,
@@ -90,7 +88,6 @@ from smarter.apps.secret.urls import SecretReverseNames
 from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
-from smarter.common.utils import camel_case_object_name
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse

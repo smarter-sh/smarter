@@ -4,18 +4,22 @@ from django.urls import include, path
 from django.views.generic.base import RedirectView
 
 from smarter.apps.account import urls as account_urls
-from smarter.apps.dashboard import urls_profile
+from smarter.apps.dashboard.const import namespace
+from smarter.apps.dashboard.urls import profile
+from smarter.apps.dashboard.views.dashboard import (
+    ChangeLogView,
+    DashboardView,
+    EmailAdded,
+    NotificationsView,
+)
+from smarter.apps.dashboard.views.dashboard.api.my_resources import MyResourcesView
+from smarter.apps.dashboard.views.dashboard.api.service_health import ServiceHealthView
+from smarter.apps.dashboard.views.logs import urls as logs_urls
+from smarter.apps.dashboard.views.manifest_drop_zone import ManifestDropZoneView
 from smarter.apps.plugin import urls as plugin_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.utils import camel_case_object_name
 from smarter.lib import logging
-
-from .const import namespace
-from .views.dashboard import ChangeLogView, DashboardView, EmailAdded, NotificationsView
-from .views.dashboard.api.my_resources import MyResourcesView
-from .views.dashboard.api.service_health import ServiceHealthView
-from .views.logs import urls as logs_urls
-from .views.manifest_drop_zone import ManifestDropZoneView
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +49,7 @@ urlpatterns = [
     path("logs/", include(logs_urls, namespace=logs_urls.app_name)),
     path("account/", include(account_urls)),
     path("plugins/", include(plugin_urls)),
-    path("profile/", include(urls_profile)),
+    path("profile/", include(profile)),
     path("help/", RedirectView.as_view(url="/docs/"), name="help"),
     path("support/", RedirectView.as_view(url="/docs/"), name="support"),
     path("changelog/", ChangeLogView.as_view(), name=DashboardReverseNames.changelog),
@@ -54,7 +58,7 @@ urlpatterns = [
 ]
 
 if smarter_settings.enable_dashboard_passthrough_prompt:
-    from .urls_passthrough import urlpatterns as passthrough_urlpatterns
+    from .passthrough import urlpatterns as passthrough_urlpatterns
 
     urlpatterns += passthrough_urlpatterns
     logger.info(
