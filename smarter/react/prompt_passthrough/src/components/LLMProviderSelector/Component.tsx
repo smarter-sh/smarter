@@ -1,5 +1,5 @@
 
-import fetchDjangoUrl from "@/lib/django";
+//import fetchDjangoUrl from "@/lib/django";
 
 import './styles.css';
 
