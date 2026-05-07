@@ -2,6 +2,34 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
+function manualChunks(id: string) {
+  if (id.includes("node_modules/react")) {
+    return "react-vendor";
+  }
+
+  if (id.includes("node_modules/monaco-editor/esm/vs/language/json/")) {
+    return "monaco-json";
+  }
+
+  if (id.includes("node_modules/monaco-editor/esm/vs/editor/")) {
+    return "monaco-editor";
+  }
+
+  if (id.includes("node_modules/monaco-editor/esm/vs/base/")) {
+    return "monaco-base";
+  }
+
+  if (id.includes("node_modules/monaco-editor/esm/vs/platform/")) {
+    return "monaco-platform";
+  }
+
+  if (id.includes("node_modules/monaco-editor/esm/")) {
+    return "monaco-vendor";
+  }
+
+  return undefined;
+}
+
 export default defineConfig(({ command }: { command: string }) => ({
   plugins: [react()],
   // runtime builds are saved into the Django static directory so that these
@@ -36,6 +64,7 @@ export default defineConfig(({ command }: { command: string }) => ({
       output: {
         entryFileNames: "assets/index.js",
         chunkFileNames: "assets/[name].js",
+        manualChunks,
       },
     },
   },

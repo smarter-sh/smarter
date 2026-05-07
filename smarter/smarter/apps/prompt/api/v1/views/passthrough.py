@@ -81,7 +81,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
 
     .. seealso::
 
-        - The OpenAI API documentation for chat completions: https://platform.openai.com/docs/api-reference/chat/create
+        - The OpenAI API documentation for chat completions: https://developers.openai.com/api/reference/overview/chat/create
         - :class:`openai.types.chat.chat_completion.ChatCompletion`
     """
 
