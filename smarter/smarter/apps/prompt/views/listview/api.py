@@ -15,7 +15,6 @@ from django.http import (
     HttpRequest,
 )
 from django.http.response import JsonResponse
-from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
 
@@ -29,6 +28,7 @@ from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
     smarter_cache_page_by_user,
@@ -66,7 +66,7 @@ class PromptListApiView(SmarterAuthenticatedWebView):
     def post(self, request: HttpRequest, *args, **kwargs):
 
         # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseViews
+        from smarter.apps.prompt.urls import PromptReverseNames
 
         logger.debug(
             "%s.post() called for %s with args %s, kwargs %s", self.formatted_class_name, request, args, kwargs
@@ -78,9 +78,9 @@ class PromptListApiView(SmarterAuthenticatedWebView):
             {
                 **ChatBotSerializer(chatbot_helper.chatbot).data,
                 "urls": {
-                    "manifest": reverse(":".join([PromptReverseViews.namespace, PromptReverseViews.manifest_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
-                    "chat": reverse(":".join([PromptReverseViews.namespace, PromptReverseViews.chat_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
-                    "config": reverse(":".join([PromptReverseViews.namespace, PromptReverseViews.config_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
+                    "manifest": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.manifest_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
+                    "chat": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.chat_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
+                    "config": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.config_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
                 },
             }
             for chatbot_helper in self.chatbot_helpers
@@ -90,9 +90,9 @@ class PromptListApiView(SmarterAuthenticatedWebView):
             {
                 **ChatBotSerializer(chatbot_helper.chatbot).data,
                 "urls": {
-                    "manifest": reverse(":".join([PromptReverseViews.namespace, PromptReverseViews.manifest_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
-                    "chat": reverse(":".join([PromptReverseViews.namespace, PromptReverseViews.chat_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
-                    "config": reverse(":".join([PromptReverseViews.namespace, PromptReverseViews.config_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
+                    "manifest": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.manifest_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
+                    "chat": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.chat_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
+                    "config": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.config_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
                 },
             }
             for chatbot_helper in self.chatbot_helpers

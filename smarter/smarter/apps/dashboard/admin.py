@@ -1,5 +1,54 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,W0613
-"""Rebuild the admin site to restrict access to certain apps and models."""
+"""
+Custom Django admin site and model admin classes for the dashboard app.
+
+This module rebuilds the Django admin site with fine-grained, role-based
+access control. Instead of using Django's default ``AdminSite``, a
+:class:`RestrictedAdminSite` instance is registered that enforces the
+following permission tiers across all registered models:
+
+- **Superuser** — full CRUD access to all models.
+- **Staff / account admin** — read and update/delete access to owned objects;
+  no add permission.
+- **Customer (authenticated)** — read access to owned objects only.
+- **Anonymous / unauthenticated** — no access.
+
+Module-level helpers
+--------------------
+:func:`smarter_is_staff`
+    Returns ``True`` if the requesting user is a staff member or superuser.
+
+:func:`smarter_has_ud_permission`
+    Returns ``True`` if the requesting user may update or delete the given
+    object, based on ownership and account association.
+
+Model admin classes
+-------------------
+:class:`SmarterCustomerModelAdmin`
+    Grants authenticated customers read access to their own objects; restricts
+    add/change/delete to owners and superusers.
+
+:class:`SmarterStaffOnlyModelAdmin`
+    Restricts all operations to staff members and superusers.
+
+:class:`SmarterSuperUserOnlyModelAdmin`
+    Restricts all operations to superusers only.
+
+Admin site
+----------
+:class:`RestrictedAdminSite`
+    Custom :class:`~django.contrib.admin.AdminSite` that dynamically updates
+    the console header with the current user's role and version string.
+
+:data:`smarter_restricted_admin_site`
+    The singleton :class:`RestrictedAdminSite` instance used throughout the
+    project (``name="restricted_admin_site"``).
+
+Registered models
+-----------------
+- :class:`~smarter.apps.dashboard.models.EmailContactList` — registered with
+  :class:`EmailContactListAdmin` (staff-only).
+"""
 
 import logging
 

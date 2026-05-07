@@ -20,7 +20,7 @@ from waffle import get_waffle_switch_model
 
 from smarter.apps.account import urls as account_urls
 from smarter.apps.account.const import namespace as account_namespace
-from smarter.apps.account.urls import AccountNamedUrls
+from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.views.authentication import (
     AccountRegisterView,
     LoginView,
@@ -183,11 +183,13 @@ urlpatterns = [
     path(
         "password-reset-request/",
         PasswordResetRequestView.as_view(),
-        name=AccountNamedUrls.ACCOUNT_PASSWORD_RESET_REQUEST,
+        name=AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST,
     ),
-    path("password-confirm/", PasswordConfirmView.as_view(), name=AccountNamedUrls.ACCOUNT_PASSWORD_CONFIRM),
+    path("password-confirm/", PasswordConfirmView.as_view(), name=AccountReverseNames.ACCOUNT_PASSWORD_CONFIRM),
     path(
-        "password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name=AccountNamedUrls.PASSWORD_RESET_LINK
+        "password-reset-link/<uidb64>/<token>/",
+        PasswordResetView.as_view(),
+        name=AccountReverseNames.PASSWORD_RESET_LINK,
     ),
     # -----------------------------------
     # static routes

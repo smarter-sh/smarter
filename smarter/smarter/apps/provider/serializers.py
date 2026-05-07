@@ -3,6 +3,7 @@
 Serializer classes for the Provider app.
 """
 
+from smarter.apps.account.models import User
 from smarter.apps.account.serializers import (
     AccountMiniSerializer,
     MetaDataWithOwnershipModelSerializer,
@@ -22,6 +23,17 @@ from .models import (
     get_provider,
     get_providers,
 )
+
+
+class ProviderMiniSerializer(MetaDataWithOwnershipModelSerializer):
+    """
+    Provider Mini Serializer
+    """
+
+    class Meta:
+        model = Provider
+        fields = ["id", "name", "base_url"]
+        read_only_fields = ["created_at", "updated_at", "owner"]
 
 
 class ProviderSerializer(MetaDataWithOwnershipModelSerializer):

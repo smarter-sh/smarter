@@ -97,6 +97,9 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             logger_prefix,
             request,
             user_profile,
+            self.api_key,
+            self.base_url,
+            self.provider,
             formatted_json(data),
         )
         try:

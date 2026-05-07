@@ -6,12 +6,11 @@ import os
 from http import HTTPStatus
 from urllib.parse import urlencode
 
-from django.urls import reverse
-
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.manifest.enum import SAMKeys, SCLIResponseGet, SCLIResponseGetData
 
 from .base_class import ApiV1CliTestBase

@@ -33,7 +33,7 @@ Smarter |project_version| Documentation
 
 A :doc:`declarative <smarter-framework/lib/manifests>` AI :doc:`resource management <smarter-resources>` :doc:`platform <smarter-platform>` and :doc:`developer framework <smarter-framework>`.
 
-- **From scratch** | :doc:`smarter-platform/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://platform.smarter.sh/docs/learn/>`__
+- **From scratch** | :doc:`smarter-platform/installation/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://platform.smarter.sh/docs/learn/>`__
 - **Platform**
 
   - Helps you manage all your :doc:`AI resources <smarter-resources>` using easy :doc:`YAML files <smarter-framework/lib/manifests>` (like how `Kubernetes <https://kubernetes.io/>`_ works).

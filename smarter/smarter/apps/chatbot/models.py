@@ -9,7 +9,6 @@ from urllib.parse import ParseResult, urljoin, urlparse
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.http import HttpRequest
-from django.urls import reverse
 from rest_framework import serializers
 
 from smarter.apps.account.models import (
@@ -48,6 +47,7 @@ from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -704,9 +704,9 @@ class ChatBot(MetaDataWithOwnershipModel):
         :rtype: str
         """
         # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseViews
+        from smarter.apps.prompt.urls import PromptReverseNames
 
-        path = reverse(f"{PromptReverseViews.namespace}:{PromptReverseViews.landing_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.landing_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url
@@ -804,9 +804,9 @@ class ChatBot(MetaDataWithOwnershipModel):
             stacklevel=2,
         )
         # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseViews
+        from smarter.apps.prompt.urls import PromptReverseNames
 
-        path = reverse(f"{PromptReverseViews.namespace}:{PromptReverseViews.chat_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.chat_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url

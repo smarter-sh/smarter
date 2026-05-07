@@ -2,7 +2,7 @@
 """
 Test Authentication.
 
-AccountNamedUrls:
+AccountReverseNames:
     Class to hold named URL patterns for the account app.
     This class provides constants for all named URL patterns used in the account dashboard views.
     The names follow the convention: 'account_<view_name>'.
@@ -36,28 +36,28 @@ AccountNamedUrls:
             name="dashboard_account_dashboard",
         ),
         path("api/", include("smarter.apps.account.api.urls", namespace=namespace)),
-        path("api-keys/", APIKeyListView.as_view(), name=AccountNamedUrls.API_KEYS_LIST),
-        path("login/", LoginView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGIN),
-        path("logout/", LogoutView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGOUT),
-        path("inactive/", AccountInactiveView.as_view(), name=AccountNamedUrls.ACCOUNT_INACTIVE),
+        path("api-keys/", APIKeyListView.as_view(), name=AccountReverseNames.API_KEYS_LIST),
+        path("login/", LoginView.as_view(), name=AccountReverseNames.ACCOUNT_LOGIN),
+        path("logout/", LogoutView.as_view(), name=AccountReverseNames.ACCOUNT_LOGOUT),
+        path("inactive/", AccountInactiveView.as_view(), name=AccountReverseNames.ACCOUNT_INACTIVE),
         path("dashboard/", include("smarter.apps.account.views.dashboard.urls")),
         # account lifecycle
-        path("register/", AccountRegisterView.as_view(), name=AccountNamedUrls.ACCOUNT_REGISTER),
-        path("activation/", AccountActivationEmailView.as_view(), name=AccountNamedUrls.ACCOUNT_ACTIVATION),
-        path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name=AccountNamedUrls.ACCOUNT_ACTIVATE),
-        path("deactivate/", AccountDeactivateView.as_view(), name=AccountNamedUrls.ACCOUNT_DEACTIVATE),
+        path("register/", AccountRegisterView.as_view(), name=AccountReverseNames.ACCOUNT_REGISTER),
+        path("activation/", AccountActivationEmailView.as_view(), name=AccountReverseNames.ACCOUNT_ACTIVATION),
+        path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name=AccountReverseNames.ACCOUNT_ACTIVATE),
+        path("deactivate/", AccountDeactivateView.as_view(), name=AccountReverseNames.ACCOUNT_DEACTIVATE),
         # password management
         path(
             "password-reset-request/",
             PasswordResetRequestView.as_view(),
-            name=AccountNamedUrls.ACCOUNT_PASSWORD_RESET_REQUEST,
+            name=AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST,
         ),
-        path("password-confirm/", PasswordConfirmView.as_view(), name=AccountNamedUrls.ACCOUNT_PASSWORD_CONFIRM),
+        path("password-confirm/", PasswordConfirmView.as_view(), name=AccountReverseNames.ACCOUNT_PASSWORD_CONFIRM),
         path(
-            "password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name=AccountNamedUrls.PASSWORD_RESET_LINK
+            "password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name=AccountReverseNames.PASSWORD_RESET_LINK
         ),
-        path("users/", UsersView.as_view(), name=AccountNamedUrls.ACCOUNT_USERS),
-        path("user/<int:user_id>/", UserView.as_view(), name=AccountNamedUrls.ACCOUNT_USER),
+        path("users/", UsersView.as_view(), name=AccountReverseNames.ACCOUNT_USERS),
+        path("user/<int:user_id>/", UserView.as_view(), name=AccountReverseNames.ACCOUNT_USER),
     ]
 
 """
@@ -70,10 +70,9 @@ from unittest.mock import patch
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpResponse
-from django.urls import reverse
 
 from smarter.apps.account.models import User
-from smarter.apps.account.urls import AccountNamedUrls
+from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.views.authentication import (
     AccountActivationEmailView,
     AccountInactiveView,
@@ -82,6 +81,7 @@ from smarter.apps.account.views.authentication import (
     LogoutView,
 )
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django.shortcuts import reverse
 
 from .mixins import TestAccountMixin
 
@@ -91,7 +91,7 @@ logger = logging.getLogger(__name__)
 class TestLoginView(TestAccountMixin):
     """
     Test Account LoginView.
-    path("login/", LoginView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGIN)
+    path("login/", LoginView.as_view(), name=AccountReverseNames.ACCOUNT_LOGIN)
 
     """
 
@@ -387,7 +387,7 @@ class TestLoginView(TestAccountMixin):
 class TestLogoutView(TestAccountMixin):
     """
     Test Account LogoutView.
-    path("login/", LogoutView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGOUT)
+    path("login/", LogoutView.as_view(), name=AccountReverseNames.ACCOUNT_LOGOUT)
 
     """
 
@@ -465,7 +465,7 @@ class TestLogoutView(TestAccountMixin):
 class TestAccountInactiveView(TestAccountMixin):
     """
     Test AccountInactiveView.
-    path("inactive/", AccountInactiveView.as_view(), name=AccountNamedUrls.ACCOUNT_INACTIVE)
+    path("inactive/", AccountInactiveView.as_view(), name=AccountReverseNames.ACCOUNT_INACTIVE)
     """
 
     test_logger_prefix = formatted_text(f"{__name__}.TestAccountInactiveView()")
@@ -504,7 +504,7 @@ class TestAccountInactiveView(TestAccountMixin):
 class TestAccountRegisterView(TestAccountMixin):
     """
     Test AccountRegisterView.
-    path("register/", AccountRegisterView.as_view(), name=AccountNamedUrls.ACCOUNT_REGISTER)
+    path("register/", AccountRegisterView.as_view(), name=AccountReverseNames.ACCOUNT_REGISTER)
     """
 
     test_logger_prefix = formatted_text(f"{__name__}.TestAccountRegisterView()")
@@ -594,14 +594,14 @@ class TestAccountRegisterView(TestAccountMixin):
 class TestAccountActivationEmailView(TestAccountMixin):
     """
     Test AccountActivationEmailView.
-    path("activation/", AccountActivationEmailView.as_view(), name=AccountNamedUrls.ACCOUNT_ACTIVATION)
+    path("activation/", AccountActivationEmailView.as_view(), name=AccountReverseNames.ACCOUNT_ACTIVATION)
     """
 
     test_logger_prefix = formatted_text(f"{__name__}.TestAccountActivationEmailView()")
 
     def setUp(self):
         super().setUp()
-        self.url = reverse(AccountNamedUrls.namespace + ":" + AccountNamedUrls.ACCOUNT_ACTIVATION)
+        self.url = reverse(AccountReverseNames.namespace + ":" + AccountReverseNames.ACCOUNT_ACTIVATION)
         logger.debug("%s.setUp() URL set to %s", self.test_logger_prefix, self.url)
 
     @patch("smarter.apps.account.views.authentication.email_helper")

@@ -8,7 +8,6 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.conf import smarter_settings
@@ -22,6 +21,7 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
     SmarterTokenConversionError,
@@ -350,7 +350,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
                 login(request, authenticated_user)
                 return redirect_and_expire_cache(path="/welcome/")
             else:
-                # pylint: disable=W0719
+                # pylint: disable=broad-exception-raised
                 raise Exception(
                     f"{self.formatted_class_name}.post() Authentication failed immediately after registration. This is a bug."
                 )
@@ -387,10 +387,10 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
                 request=request, error_message="User not found. Please log in to activate your account."
             )
         # pylint: disable=C0415
-        from smarter.apps.account.urls import AccountNamedUrls
+        from smarter.apps.account.urls import AccountReverseNames
 
         url = self.expiring_token.encode_link(
-            request, user, AccountNamedUrls.namespace + ":" + AccountNamedUrls.ACCOUNT_ACTIVATE
+            request, user, reverse(AccountReverseNames.namespace, AccountReverseNames.ACCOUNT_ACTIVATE)
         )
         context = {
             "account_activation": {
@@ -403,7 +403,7 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
         email_helper.send_email(subject=subject, body=body, to=to, html=True)
 
         # render a page to let the user know the email was sent. Add a link to resend the email.
-        email_resend_url = reverse(AccountNamedUrls.namespace + ":" + AccountNamedUrls.ACCOUNT_ACTIVATION)
+        email_resend_url = reverse(AccountReverseNames.namespace, AccountReverseNames.ACCOUNT_ACTIVATION)
         context = {"account_activation": {"resend": email_resend_url}}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 

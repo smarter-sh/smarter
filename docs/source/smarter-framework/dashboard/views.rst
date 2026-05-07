@@ -4,7 +4,7 @@ Views
 .. toctree::
    :maxdepth: 1
 
-   views/dashboard
+   views/apply-manifest
    views/logs
-   views/manifest-drop-zone
-   views/prompt-passthrough
+   views/passthrough
+   views/views

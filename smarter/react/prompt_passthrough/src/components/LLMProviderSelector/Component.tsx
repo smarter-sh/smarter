@@ -1,4 +1,6 @@
 
+//import fetchDjangoUrl from "@/lib/django";
+
 import './styles.css';
 
 interface LLMProviderSelectorProps {
