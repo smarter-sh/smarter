@@ -72,6 +72,7 @@ function Prompt({
   const [defaultModel, setDefaultModel] = useState("");
   const [providerBaseUrl, setProviderBaseUrl] = useState("");
   const [providerSlug, setProviderSlug] = useState("");
+  const [connectivityTestPath, setConnectivityTestPath] = useState("");
 
   // Final request JSON state (function of providersJson, llmProviderId, templateId, defaultModel)
   const [requestJson, setRequestJson] = useState("");
@@ -121,6 +122,7 @@ function Prompt({
       setSelectedProviderJson(provider);
       setProviderBaseUrl(provider.baseUrl);
       setProviderSlug(provider.rfc1034CompliantName);
+      setConnectivityTestPath(provider.connectivityTestPath);
       setDefaultModel(provider.defaultModel);
     }
   }, [providersJson, llmProviderId]);
@@ -138,6 +140,7 @@ function Prompt({
       setSelectedProviderJson(provider);
       setProviderBaseUrl(provider.baseUrl);
       setProviderSlug(provider.rfc1034CompliantName);
+      setConnectivityTestPath(provider.connectivityTestPath);
       setDefaultModel(provider.defaultModel);
       const templateJson = getPromptTemplate(templateId, provider.defaultModel);
       setRequestJson(templateJson);
@@ -226,6 +229,7 @@ function Prompt({
             <LLMProviderPassthroughRequest
               providersJson={providersJson}
               llmProviderId={llmProviderId}
+              connectivityTestPath={connectivityTestPath}
               templateId={templateId}
               providerBaseUrl={providerBaseUrl}
               isSending={isSending}

@@ -84,7 +84,7 @@ class ProviderApiView(SmarterView):
         @cache_results()
         def _get_cached_providers_for_user(user_id):
 
-            providers = Provider.objects.with_read_permission_for(user=user)  # type: ignore
+            providers = Provider.objects.with_read_permission_for(user=user).prefetch_related("tags")  # type: ignore
             serialized_providers = ProviderSerializer(providers, many=True).data
             retval = {"providers": serialized_providers}
             logger.debug("cached providers for user %s: %s", self.user_profile, logging.formatted_json(retval))

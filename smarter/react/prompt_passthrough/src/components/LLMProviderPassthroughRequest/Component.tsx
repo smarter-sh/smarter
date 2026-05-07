@@ -12,6 +12,7 @@ import "./styles.css";
 export interface ProviderPassthroughRequestProps {
   providersJson: LLMProvider[];
   llmProviderId: string;
+  connectivityTestPath: string;
   templateId: string;
   providerBaseUrl: string;
   isSending: boolean;
@@ -27,6 +28,7 @@ export interface ProviderPassthroughRequestProps {
 export default function LLMProviderPassthroughRequest({
   providersJson,
   llmProviderId,
+  connectivityTestPath,
   templateId,
   providerBaseUrl,
   isSending,
@@ -59,7 +61,7 @@ export default function LLMProviderPassthroughRequest({
               type="text"
               className="form-control"
               value={
-                providerBaseUrl ? `${providerBaseUrl}chat/completions` : ""
+                providerBaseUrl ? `${providerBaseUrl}${connectivityTestPath}` : ""
               }
               readOnly
               style={{ backgroundColor: "#f8f9fa", fontSize: "0.95rem" }}

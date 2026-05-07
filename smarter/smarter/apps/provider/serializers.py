@@ -9,7 +9,6 @@ from smarter.apps.account.serializers import (
     AccountMiniSerializer,
     MetaDataWithOwnershipModelSerializer,
     UserMiniSerializer,
-    UserProfileSerializer,
 )
 from smarter.apps.secret.serializers import SecretMiniSerializer
 from smarter.common.exceptions import SmarterException
@@ -37,7 +36,6 @@ class ProviderSerializer(MetaDataWithOwnershipModelSerializer):
     tos_accepted = serializers.BooleanField(read_only=True)
     rfc1034_compliant_name = serializers.CharField(read_only=True)
     tos_accepted_by = UserMiniSerializer(read_only=True)
-    user_profile = UserProfileSerializer(read_only=True)
 
     class Meta:
         model = Provider
