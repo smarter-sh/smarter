@@ -59,7 +59,7 @@ export default function LLMProviderPassthroughRequest({
               type="text"
               className="form-control"
               value={
-                providerBaseUrl ? `${providerBaseUrl}/chat/completions` : ""
+                providerBaseUrl ? `${providerBaseUrl}chat/completions` : ""
               }
               readOnly
               style={{ backgroundColor: "#f8f9fa", fontSize: "0.95rem" }}
