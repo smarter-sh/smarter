@@ -11,7 +11,7 @@ from social_core.exceptions import AuthAlreadyAssociated
 from social_django.middleware import SocialAuthExceptionMiddleware
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.urls import AccountNamedUrls
+from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.common.helpers.console_helpers import formatted_text
 
@@ -37,7 +37,7 @@ class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
                 request,
                 exception,
             )
-            return redirect(AccountNamedUrls.namespace + ":" + AccountNamedUrls.ACCOUNT_ALREADY_ASSOCIATED)
+            return redirect(AccountReverseNames.namespace + ":" + AccountReverseNames.ACCOUNT_ALREADY_ASSOCIATED)
         return super().process_exception(request, exception)
 
 
@@ -183,12 +183,12 @@ def redirect_inactive_account(strategy, details, *args, user=None, **kwargs):
     if request and request.session.get("account_status") == "inactive":
         # clear the flag so it doesn't persist
         del request.session["account_status"]
-        return redirect(AccountNamedUrls.namespace + ":" + AccountNamedUrls.ACCOUNT_INACTIVE)
+        return redirect(AccountReverseNames.namespace + ":" + AccountReverseNames.ACCOUNT_INACTIVE)
 
     # Self-onboarded user who registered with oauth but their account is
     # not active.
     if user and hasattr(user, "is_active") and not user.is_active:
-        return redirect(AccountNamedUrls.namespace + ":" + AccountNamedUrls.ACCOUNT_INACTIVE)
+        return redirect(AccountReverseNames.namespace + ":" + AccountReverseNames.ACCOUNT_INACTIVE)
 
     # Continue the pipeline as normal
     return None

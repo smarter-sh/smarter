@@ -26,7 +26,7 @@ from .views.listview import (
 app_name = namespace
 
 
-class PromptReverseViews:
+class PromptReverseNames:
     """
     Reverse views for the Prompt app.
     Provides named references for reversing Prompt-related API endpoints.
@@ -49,11 +49,11 @@ class PromptReverseViews:
     -------
     .. code-block:: python
 
-        from django.urls import reverse
-        url = reverse(PromptReverseViews.describe, kwargs={'hashed_id': 'rMTAwMDAzOQx'})
+        from smarter.lib.django.shortcuts import reverse
+        url = reverse(PromptReverseNames.describe, kwargs={'hashed_id': 'rMTAwMDAzOQx'})
 
         # returns manifest of the chatbot with the given hashed_id
-        retval = PromptReverseViews.describe
+        retval = PromptReverseNames.describe
         print(retval)
 
     """
@@ -70,18 +70,18 @@ class PromptReverseViews:
 
 
 urlpatterns = [
-    path("", PromptListView.as_view(), name=PromptReverseViews.listview),
-    path("api/", PromptListApiView.as_view(), name=PromptReverseViews.listview_api),
-    path("chatbots/<str:hashed_id>/", PromptLandingView.as_view(), name=PromptReverseViews.landing_by_hashed_id),
+    path("", PromptListView.as_view(), name=PromptReverseNames.listview),
+    path("api/", PromptListApiView.as_view(), name=PromptReverseNames.listview_api),
+    path("chatbots/<str:hashed_id>/", PromptLandingView.as_view(), name=PromptReverseNames.landing_by_hashed_id),
     path(
         "chatbots/<str:hashed_id>/manifest/",
         PromptManifestView.as_view(),
-        name=PromptReverseViews.manifest_by_hashed_id,
+        name=PromptReverseNames.manifest_by_hashed_id,
     ),
     path(
         "chatbots/<str:hashed_id>/chat/",
         ChatAppWorkbenchView.as_view(),
-        name=PromptReverseViews.chat_by_hashed_id,
+        name=PromptReverseNames.chat_by_hashed_id,
     ),
-    path("chatbots/<str:hashed_id>/config/", ChatConfigView.as_view(), name=PromptReverseViews.config_by_hashed_id),
+    path("chatbots/<str:hashed_id>/config/", ChatConfigView.as_view(), name=PromptReverseNames.config_by_hashed_id),
 ]

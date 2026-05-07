@@ -23,6 +23,7 @@ export function useLogStream(streamUrl: string) {
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
+    console.log("Connecting to log stream at", streamUrl);
     const es = new EventSource(streamUrl);
     esRef.current = es;
 
@@ -53,6 +54,7 @@ export function useLogStream(streamUrl: string) {
     };
 
     es.onerror = () => {
+      console.error("Error in log stream connection", es);
       setConnected(false);
       setIsInitializing(false);
       setError("Log stream disconnected. Reconnecting...");

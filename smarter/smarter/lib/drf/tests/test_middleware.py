@@ -5,7 +5,6 @@ from http import HTTPStatus
 from logging import getLogger
 
 from django.http import HttpRequest
-from django.urls import reverse
 from django.utils import timezone
 from rest_framework.authentication import get_authorization_header
 from rest_framework.test import APIClient
@@ -13,6 +12,7 @@ from rest_framework.test import APIClient
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.api.v1.tests.urls import ApiV1TestUrls
 from smarter.common.const import SmarterHttpMethods
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.middleware import SmarterTokenAuthenticationMiddleware
 
 logger = getLogger(__name__)

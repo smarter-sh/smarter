@@ -126,7 +126,7 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
             )
         logger.debug(
             "%s.get_cached_connections_for_user: Found these connections %s for user %s",
-            ConnectionBase.formatted_class_name,
+            logging.formatted_text(ConnectionBase.__name__),
             instances,
             user,
         )

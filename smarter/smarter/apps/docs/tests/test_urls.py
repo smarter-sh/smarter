@@ -10,7 +10,6 @@ ensure that:
 from logging import getLogger
 
 from django.test import Client
-from django.urls import reverse
 
 from smarter.apps.account.tests.factories import (
     admin_user_factory,
@@ -18,6 +17,7 @@ from smarter.apps.account.tests.factories import (
     mortal_user_factory,
 )
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..const import namespace

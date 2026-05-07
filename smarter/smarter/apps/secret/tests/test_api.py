@@ -5,9 +5,9 @@ import logging
 from http import HTTPStatus
 
 from django.test import Client
-from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.lib.django.shortcuts import reverse
 
 from .factories import factory_secret_teardown, secret_factory
 

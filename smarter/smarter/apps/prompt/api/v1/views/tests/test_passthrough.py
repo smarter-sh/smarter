@@ -6,7 +6,6 @@ import os
 from typing import Any, cast
 
 from django.test import Client
-from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.const import namespace as smarter_apps_api_namespace
@@ -15,6 +14,7 @@ from smarter.apps.prompt.api.v1.urls import PromptAPINamespace
 from smarter.apps.prompt.const import namespace as smarter_apps_prompt_namespace
 from smarter.apps.provider.models import Provider
 from smarter.common.helpers.console_helpers import formatted_json
+from smarter.lib.django.shortcuts import reverse
 
 # api:v1:prompt:passthrough
 namespace = ":".join(

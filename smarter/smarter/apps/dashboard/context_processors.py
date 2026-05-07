@@ -1,70 +1,85 @@
 # pylint: disable=W0613
 """
-smarter.apps.dashboard.context_processors
-=========================================
+Custom Django context processors for the Smarter dashboard application.
 
-This module provides custom Django context processors for the Smarter dashboard
-application. These context processors are designed to inject additional context
-variables into templates that inherit from ``base.html``, supporting the dynamic
-rendering of dashboard and branding information throughout the application.
+These processors inject template context variables into every view that renders
+a template inheriting from ``base.html``. Each processor is registered in
+``TEMPLATES['OPTIONS']['context_processors']`` in Django settings.
 
-Overview
---------
+Context processors
+------------------
 
+:func:`sidebar`
+    Resolves and caches the href targets for every sidebar navigation link.
+    Returns a ``sidebar`` dict keyed by destination name.
 
-The context processors in this module serve the following purposes:
+:func:`file_drop_zone`
+    Injects drop-zone feature flags and relevant API/list URLs into a
+    ``drop_zone`` dict.  Enabled via ``ENABLE_DASHBOARD_APPLY``.
 
-- **Dashboard Context**: Supplies user-specific and application-wide metadata,
-    such as the current user's email, username, role flags, product version, and
-    resource counts (e.g., chatbots, plugins, API keys, custom domains, connections,
-    and secrets). This enables the dashboard to display personalized and up-to-date
-    information for each authenticated user.
+:func:`base`
+    Assembles the primary ``dashboard`` context dict: user identity, role
+    flags (``is_superuser``, ``is_staff``), feature toggles, resource counts,
+    and platform version metadata.  The inner result is cached per user.
 
-- **Branding Context**: Provides organization-specific branding details, including
-    support contact information, corporate name, address, social media links, and
-    copyright notices. This ensures consistent branding and support information
-    across all dashboard templates.
+:func:`branding`
+    Provides a ``branding`` dict containing corporate identity, support
+    contact details, social-media URLs, CDN paths, and a dynamic copyright
+    notice.  Values are sourced from ``smarter_settings``.
 
-- **Cache Busting**: Adds a cache-busting query parameter to static asset URLs
-    during local development, preventing browsers from serving outdated static
-    files.
+:func:`footer`
+    Provides a ``footer`` dict with links to legal, plans, support, and
+    contact pages.
 
+:func:`cache_buster`
+    Injects a ``cache_buster`` string (``v=<timestamp>``) for appending to
+    static asset URLs in local development.
 
-Caching
--------
+:func:`prompt_list_context`
+    **Deprecated.** Provides a placeholder ``prompt_list`` dict to prevent
+    template errors from Wagtail admin interactions.  Slated for removal.
 
-Many of the resource-counting functions in this module are decorated with a
-caching mechanism to reduce database load and improve performance. The cache
-timeout is configurable and set to 60 seconds by default.
+Cache utilities
+---------------
 
-cache_invalidations(user_profile) is a utility function provided to invalidate
-all relevant caches when user data changes, ensuring that the dashboard
-reflects the most current information.
+:func:`cache_invalidations`
+    Invalidates all per-user caches (account, profile, plugins, chatbots, and
+    page-level caches for the dashboard and workbench) after user data changes.
+    Called by signal handlers in the account app.
+
+    .. seealso::
+
+        - :class:`smarter.lib.manifest.broker.AbstractBroker`
+        - ``smarter.apps.account.signals.cache_invalidate``
 
 Usage
 -----
 
-To use these context processors, add their import paths to the
-``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings.
-This will make the provided context variables available in all templates
-rendered by Django that inherit from ``base.html``.
+Add the processors to your Django settings::
 
-Note
-----
-
-This module does not document individual function signatures or arguments, as
-these are automatically included by Sphinx's ``automodule`` directive. For
-detailed API documentation, refer to the generated documentation for each function.
+    TEMPLATES = [
+        {
+            "OPTIONS": {
+                "context_processors": [
+                    ...
+                    "smarter.apps.dashboard.context_processors.sidebar",
+                    "smarter.apps.dashboard.context_processors.base",
+                    "smarter.apps.dashboard.context_processors.branding",
+                    "smarter.apps.dashboard.context_processors.footer",
+                    "smarter.apps.dashboard.context_processors.file_drop_zone",
+                    "smarter.apps.dashboard.context_processors.cache_buster",
+                ],
+            },
+        }
+    ]
 """
 
-import logging
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urljoin
 
 from django.test import RequestFactory
-from django.urls import reverse
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
@@ -72,33 +87,101 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
+from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
-from smarter.apps.connection.urls import ConnectionReverseViews
-from smarter.apps.dashboard.const import namespace as dashboard_namespace
-from smarter.apps.dashboard.views.manifest_drop_zone import ManifestDropZoneView
+from smarter.apps.connection.urls import ConnectionReverseNames
+from smarter.apps.dashboard.views.apply_manifest.urls import ApplyManifestReverseNames
+from smarter.apps.dashboard.views.logs.names import DashboardLogsReverseNames
+from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
+from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
+from smarter.apps.docs.urls import DocsReverseNames
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
-from smarter.apps.plugin.urls import PluginReverseViews
-from smarter.apps.prompt.urls import PromptReverseViews
-from smarter.apps.provider.urls import ProviderReverseViews
+from smarter.apps.plugin.urls import PluginReverseNames
+from smarter.apps.prompt.urls import PromptReverseNames
+from smarter.apps.provider.urls import ProviderReverseNames
+from smarter.apps.secret.urls import SecretReverseNames
+from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
-from smarter.common.utils import camel_case_object_name
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
+from smarter.lib.django.shortcuts import reverse
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__)
-logger_prefix_cache_invalidations = formatted_text_blue(f"{__name__}.cache_invalidations()")
+logger_prefix = logging.formatted_text(__name__)
+logger_prefix_cache_invalidations = logging.formatted_text_blue(f"{__name__}.cache_invalidations()")
 
 
-def file_drop_zone(request: "HttpRequest") -> dict:
+def sidebar(request: "HttpRequest") -> dict[str, Any]:
+    """
+    Resolve and cache the href targets for every dashboard sidebar navigation link.
+
+    The inner result is cached so that URL reversals are only performed once
+    per process lifetime (the URLs are static). The resolved URLs are returned
+    under a ``sidebar`` key whose sub-keys correspond to each navigation
+    destination:
+
+    ``dashboard``, ``workbench``, ``apply_manifest``, ``prompt_passthrough``,
+    ``server_logs``, ``providers``, ``plugins``, ``connections``, ``secrets``,
+    ``vectorstores``, ``api_keys``, ``custom_domains``, ``example_manifests``,
+    ``swagger_docs``, ``redoc``, ``json_schemas``, ``account``, ``admin``.
+
+    :param request: The incoming HTTP request (not used directly; required by
+        the Django context-processor protocol).
+    :type request: HttpRequest
+    :returns: A dict with a single ``"sidebar"`` key mapping destination names
+        to their resolved URL strings.
+    :rtype: dict[str, Any]
+    """
+
+    @cache_results()
+    def cached_sidebar_context() -> dict[str, Any]:
+        retval = {
+            "sidebar": {
+                "dashboard": reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
+                "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+                "apply_manifest": reverse(
+                    DashboardReverseNames.namespace,
+                    ApplyManifestReverseNames.namespace,
+                    ApplyManifestReverseNames.manifest_drop_zone,
+                ),
+                "prompt_passthrough": reverse(
+                    DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
+                ),
+                "server_logs": reverse(
+                    DashboardReverseNames.namespace,
+                    DashboardLogsReverseNames.namespace,
+                    DashboardLogsReverseNames.terminal_emulator_view,
+                ),
+                "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
+                "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
+                "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+                "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.SECRETS),
+                "vectorstores": reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.list_view),
+                "api_keys": reverse(AccountReverseNames.namespace, AccountReverseNames.API_KEYS_LIST),
+                "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
+                "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
+                "swagger_docs": reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
+                "redoc": reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),
+                "json_schemas": reverse(DocsReverseNames.namespace, DocsReverseNames.json_schemas),
+                "account": "/dashboard/account/dashboard/overview/",  # FIX ME
+                "admin": "/admin/",  # FIX ME
+            }
+        }
+        logger.debug("%s.sidebar() cached sidebar context: %s", logger_prefix, logging.formatted_json(retval))
+        return retval
+
+    return cached_sidebar_context()
+
+
+def file_drop_zone(request: "HttpRequest") -> dict[str, Any]:
     """
     Provides context for enabling file drop zone functionality in the dashboard.
 
@@ -113,31 +196,31 @@ def file_drop_zone(request: "HttpRequest") -> dict:
     """
 
     @cache_results()
-    def get_cached_file_drop_zone_context() -> dict:
+    def get_cached_file_drop_zone_context() -> dict[str, Any]:
 
-        provider_list_reverse_name = ":".join([ProviderReverseViews.namespace, ProviderReverseViews.listview])
-        connection_list_reverse_name = ":".join([ConnectionReverseViews.namespace, ConnectionReverseViews.listview])
-
-        plugin_list_reverse_name = ":".join([PluginReverseViews.namespace, PluginReverseViews.listview])
-        logger.debug("%s.file_drop_zone() called.", logger_prefix)
-        api_apply_path_name = ":".join([dashboard_namespace, camel_case_object_name(ManifestDropZoneView)])
-        api_apply_path = reverse(api_apply_path_name)
         retval = {
             "drop_zone": {
                 "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
-                "api_apply_path": api_apply_path,
-                "workbench_list_path": reverse(":".join([PromptReverseViews.namespace, PromptReverseViews.listview])),
-                "plugin_list_path": reverse(plugin_list_reverse_name),
-                "connection_list_path": reverse(connection_list_reverse_name),
-                "provider_list_path": reverse(provider_list_reverse_name),
+                "api_apply_path": reverse(
+                    DashboardReverseNames.namespace,
+                    ApplyManifestReverseNames.namespace,
+                    ApplyManifestReverseNames.manifest_drop_zone,
+                ),
+                "workbench_list_path": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+                "plugin_list_path": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
+                "connection_list_path": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+                "provider_list_path": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
             }
         }
+        logger.debug(
+            "%s.file_drop_zone() cached file drop zone context: %s", logger_prefix, logging.formatted_json(retval)
+        )
         return retval
 
     return get_cached_file_drop_zone_context()
 
 
-def base(request: "HttpRequest") -> dict:
+def base(request: "HttpRequest") -> dict[str, Any]:
     """
     Provides the base context for all templates inheriting from ``base.html``
     in the Smarter dashboard.
@@ -170,7 +253,7 @@ def base(request: "HttpRequest") -> dict:
             user = None
 
     @cache_results()
-    def get_cached_context(username: Optional[str]) -> dict:
+    def get_cached_context(username: Optional[str]) -> dict[str, Any]:
         """
         Constructs and returns the cached dashboard context for the specified user.
 
@@ -226,14 +309,19 @@ def base(request: "HttpRequest") -> dict:
                 "current_year": current_year,
             }
         }
-        logger.debug("%s.base() Constructed dashboard context for user %s: %s", logger_prefix, username, cached_context)
+        logger.debug(
+            "%s.base() cached dashboard context for user %s: %s",
+            logger_prefix,
+            username,
+            logging.formatted_json(cached_context),
+        )
         return cached_context
 
     context = get_cached_context(username=resolved_user.username if resolved_user else "missing")  # type: ignore[assignment]
     return context
 
 
-def branding(request: "HttpRequest") -> dict:
+def branding(request: "HttpRequest") -> dict[str, Any]:
     """
     Provides organization-specific branding context for dashboard templates.
 
@@ -260,8 +348,7 @@ def branding(request: "HttpRequest") -> dict:
     """
 
     @cache_results()
-    def get_cached_context() -> dict:
-        logger.debug("%s.branding() called.", logger_prefix)
+    def get_cached_context() -> dict[str, Any]:
         current_year = datetime.now().year
         root_url = request.build_absolute_uri("/").rstrip("/")
         context = {
@@ -310,6 +397,7 @@ def branding(request: "HttpRequest") -> dict:
                 "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
             }
         }
+        logger.debug("%s.branding() cached branding context: %s", logger_prefix, logging.formatted_json(context))
         return context
 
     return get_cached_context()
@@ -350,7 +438,7 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
     return context
 
 
-def cache_buster(request) -> dict:
+def cache_buster(request) -> dict[str, Any]:
     """
     Adds a cache-busting query parameter to static asset URLs during development.
 
@@ -376,7 +464,7 @@ def cache_buster(request) -> dict:
     return {"cache_buster": "v=" + str(time.time())}
 
 
-def prompt_list_context(request: "HttpRequest") -> dict:
+def prompt_list_context(request: "HttpRequest") -> dict[str, Any]:
     """
     Provides default placeholder context for prompt list views in the dashboard.
     This mitigates Django template rendering errors presumably caused by Wagtail
@@ -430,7 +518,7 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     # page cache invalidations
     ###########################################################################
     factory = RequestFactory()
-    url = reverse("dashboard:dashboard")
+    url = reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard)
     request = factory.get(url)
 
     logger.debug(
@@ -441,13 +529,11 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     )
     request.user = user_profile.user
     # pylint: disable=C0415
-    from smarter.apps.dashboard.views.dashboard import DashboardView
+    from smarter.apps.dashboard.views.views import DashboardView
 
     DashboardView.dispatch.invalidate(request)
 
-    reverse_name = ":".join([PromptReverseViews.namespace, PromptReverseViews.listview])
-
-    url = reverse(reverse_name)
+    url = reverse(PromptReverseNames.namespace, PromptReverseNames.listview)
     request = factory.get(url)
     logger.debug(
         "%s.cache_invalidations() Created invalidation request for URL %s: %s",

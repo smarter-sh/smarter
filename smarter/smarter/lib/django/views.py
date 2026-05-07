@@ -241,12 +241,7 @@ class SmarterView(View, SmarterRequestMixin):
             self.smarter_request = (
                 request or kwargs["request"] or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
             )
-            if self.smarter_request:
-                verbose_logger.debug(
-                    "%s.setup() - SmarterRequestMixin.smarter_request initialized successfully.",
-                    self.logger_prefix,
-                )
-            else:
+            if not self.smarter_request:
                 logger.warning(
                     "%s.setup() - SmarterRequestMixin.smarter_request could not be initialized.",
                     self.logger_prefix,

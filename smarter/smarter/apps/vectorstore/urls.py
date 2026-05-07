@@ -12,6 +12,7 @@ from smarter.apps.vectorstore.views import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import camel_case_object_name
 
 from .const import namespace
 
@@ -20,27 +21,39 @@ logger = logging.getLogger(__name__)
 app_name = namespace
 
 
-urlpatterns = [
-    path("", VectorstoreListView.as_view(), name="list_view"),
-    path(
-        "vectorstores/<str:backend>/<str:name>/manifest/",
-        VectorstoreManifestView.as_view(),
-        name="manifest_view",
-    ),
-]
+class VectorstoreReverseNames:
+    """
+    Holds named URL patterns for the vectorstore app.
+    This class provides constants for all named URL patterns used in the vectorstore views.
+    The names follow the convention: 'vectorstore_<view_name>'.
+    These are referenced in Django templates as 'reverse' or 'url' tags.
 
+    .. usage-example::
+
+      .. html::
+
+      <a href="{% url 'vectorstore:list_view' %}">Go to Vectorstore List View</a>
+
+    """
+
+    namespace = namespace
+
+    list_view = camel_case_object_name(VectorstoreListView)
+    manifest_view = camel_case_object_name(VectorstoreManifestView)
+
+
+urlpatterns = []
 if smarter_settings.enable_vectorstore:
     urlpatterns = [
-        path("", VectorstoreListView.as_view(), name="list_view"),
+        path("", VectorstoreListView.as_view(), name=VectorstoreReverseNames.list_view),
         path(
             "vectorstores/<str:backend>/<str:name>/manifest/",
             VectorstoreManifestView.as_view(),
-            name="manifest_view",
+            name=VectorstoreReverseNames.manifest_view,
         ),
     ]
     logger.info("%s Vectorstore API endpoints enabled.", formatted_text(__name__))
 else:
-    urlpatterns = []
     logger.info(
         "%s Vectorstore API endpoints have been disabled. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
         formatted_text(__name__),

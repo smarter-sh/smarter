@@ -3,6 +3,7 @@
 from django.urls import path
 from django.views.generic.base import RedirectView
 
+from smarter.apps.account.const import namespace
 from smarter.apps.account.views.dashboard.api_keys import APIKeysView, APIKeyView
 from smarter.apps.account.views.dashboard.billing.billing import BillingView
 from smarter.apps.account.views.dashboard.billing.billing_addresses import (
@@ -38,6 +39,8 @@ class DashboardNamedUrls:
       <a href="{% url 'dashboard_account_dashboard_overview' %}">Go to Dashboard Overview</a>
 
     """
+
+    namespace = namespace
 
     ACCOUNT_ACTIVITY = "dashboard_account_activity"
     ACCOUNT_API_KEYS = "dashboard_account_api_keys"

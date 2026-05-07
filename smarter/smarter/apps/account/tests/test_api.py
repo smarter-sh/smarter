@@ -4,9 +4,9 @@
 from http import HTTPStatus
 
 from django.test import Client
-from django.urls import reverse
 
 from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 # our stuff

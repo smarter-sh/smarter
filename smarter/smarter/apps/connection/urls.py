@@ -10,7 +10,7 @@ from .views.connection import ConnectionDetailView, ConnectionListView
 app_name = namespace
 
 
-class ConnectionReverseViews:
+class ConnectionReverseNames:
     """
     Reverse view names for the connection app.
     """
@@ -21,6 +21,6 @@ class ConnectionReverseViews:
 
 
 urlpatterns = [
-    path("connections/", ConnectionListView.as_view(), name=ConnectionReverseViews.listview),
-    path("connections/<str:kind>/<str:name>/", ConnectionDetailView.as_view(), name=ConnectionReverseViews.detailview),
+    path("connections/", ConnectionListView.as_view(), name=ConnectionReverseNames.listview),
+    path("connections/<str:kind>/<str:name>/", ConnectionDetailView.as_view(), name=ConnectionReverseNames.detailview),
 ]

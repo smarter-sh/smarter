@@ -5,8 +5,7 @@ Logs
 .. toctree::
    :maxdepth: 1
 
-   logs/consumers
+   logs/api
    logs/names
    logs/reactapp
-   logs/streams
    logs/urls

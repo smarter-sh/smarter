@@ -1,0 +1,123 @@
+# pylint: disable=W0613
+"""
+Main dashboard view.
+
+This module provides the primary authenticated dashboard view that renders the
+React-based dashboard page. Responses are lightly cached on a per-user basis
+(``DASHBOARD_CACHE_TIMEOUT`` seconds) to keep the UI snappy without serving
+stale data.
+
+Unauthenticated requests are redirected to the login page.
+
+Attributes:
+    DASHBOARD_CACHE_TIMEOUT (int): Per-user response cache lifetime in seconds
+        (default: ``10``).
+
+Classes:
+    DashboardView: Authenticated, lightly cached view that renders the React
+        dashboard page.
+
+Example:
+    Wire up the view in your URL configuration::
+
+        from smarter.apps.dashboard.views.views.dashboard import DashboardView
+
+        urlpatterns = [
+            path("", DashboardView.as_view(), name="dashboard"),
+        ]
+"""
+
+from django.conf import settings
+from django.http import HttpResponse
+from django.http.request import HttpRequest
+from django.shortcuts import redirect, render
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_control
+
+from smarter.common.utils import is_authenticated_request
+from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
+from smarter.lib.django.views import (
+    SmarterAuthenticatedWebView,
+    smarter_cache_page_by_user,
+)
+
+logger = logging.getLogger(__name__)
+DASHBOARD_CACHE_TIMEOUT = 10  # 10 seconds. keeps the dashboard snappy while avoiding appearing stale.
+
+
+# ------------------------------------------------------------------------------
+# Public Access Views
+# ------------------------------------------------------------------------------
+@method_decorator(cache_control(max_age=DASHBOARD_CACHE_TIMEOUT), name="dispatch")
+@method_decorator(smarter_cache_page_by_user(DASHBOARD_CACHE_TIMEOUT), name="dispatch")
+class DashboardView(SmarterAuthenticatedWebView):
+    """
+    Authenticated, per-user cached view that renders the React dashboard page.
+
+    Extends :class:`~smarter.lib.django.views.SmarterAuthenticatedWebView`.
+    Two decorators are applied at dispatch time:
+
+    - :func:`~django.views.decorators.cache.cache_control` — sets
+      ``max-age`` on the response to ``DASHBOARD_CACHE_TIMEOUT``.
+    - :func:`~smarter.lib.django.views.smarter_cache_page_by_user` — caches
+      the rendered page keyed by authenticated user for
+      ``DASHBOARD_CACHE_TIMEOUT`` seconds.
+
+    On a ``GET`` request the view redirects unauthenticated users to the login
+    page, otherwise it builds a context dictionary containing API URLs for the
+    "My Resources" and "Service Health" React widgets, then renders
+    ``react/dashboard.html``.
+
+    Attributes:
+        template_path (str): Set at request time to ``"react/dashboard.html"``.
+    """
+
+    # template_path = "dashboard/authenticated.html"
+    template_path = "react/dashboard.html"
+
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """
+        Handle GET requests to render the dashboard page for authenticated users.
+
+        :param request: The incoming HTTP GET request from the client.
+        :type request: django.http.HttpRequest
+        :param args: Additional positional arguments forwarded by the URL dispatcher.
+        :param kwargs: Additional keyword arguments forwarded by the URL dispatcher.
+        :returns: An HTTP response with the rendered dashboard page for authenticated users, or a redirect to the login page for unauthenticated users.
+        :rtype: django.http.HttpResponse or django.http.HttpResponseRedirect
+        """
+
+        if not is_authenticated_request(request):
+            return redirect(reverse("login_view"))
+
+        # pylint: disable=C0415
+        from smarter.apps.dashboard.views.views.api.urls import (
+            DashboardApiReverseNames,
+        )
+        from smarter.apps.dashboard.views.views.urls import (
+            DashboardReverseNames,  # avoid circular import
+        )
+
+        context = {
+            "react_dashboard": {
+                "root_id": "smarter-dashboard-root",
+                "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
+                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
+                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
+                "my_resources_api_url": reverse(
+                    DashboardReverseNames.namespace,
+                    DashboardApiReverseNames.namespace,
+                    DashboardApiReverseNames.my_resources,
+                ),
+                "service_health_api_url": reverse(
+                    DashboardReverseNames.namespace,
+                    DashboardApiReverseNames.namespace,
+                    DashboardApiReverseNames.service_health,
+                ),
+            }
+        }
+        self.template_path = "react/dashboard.html"
+
+        logger.debug("%s.get() Rendering dashboard with context: %s", self.formatted_class_name, context)
+        return render(request, self.template_path, context=context)
