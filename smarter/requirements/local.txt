@@ -34,6 +34,8 @@ asgiref==3.11.1
     #   django
     #   django-cors-headers
     #   social-auth-app-django
+ast-serialize==0.3.0
+    # via mypy
 astroid==4.0.4
     # via pylint
 attrs==26.1.0
@@ -57,16 +59,16 @@ billiard==4.2.4
     # via celery
 black==26.3.1
     # via -r smarter/requirements/in/local.in
-boto3==1.43.2
+boto3==1.43.5
     # via -r smarter/requirements/in/base.in
-botocore==1.43.2
+botocore==1.43.5
     # via
     #   -r smarter/requirements/in/base.in
     #   boto3
     #   s3transfer
 build==1.5.0
     # via pip-tools
-cachetools==7.1.0
+cachetools==7.1.1
     # via
     #   -r smarter/requirements/in/base.in
     #   tox
@@ -127,7 +129,7 @@ coverage==7.13.5
     # via -r smarter/requirements/in/local.in
 cron-descriptor==1.4.5
     # via django-celery-beat
-cryptography==47.0.0
+cryptography==48.0.0
     # via
     #   google-auth
     #   paramiko
@@ -150,7 +152,7 @@ distro==1.9.0
     # via
     #   google-genai
     #   openai
-django==6.0.4
+django==6.0.5
     # via
     #   -r smarter/requirements/in/base.in
     #   channels
@@ -245,7 +247,7 @@ frozenlist==1.8.0
     #   aiosignal
 google-auth[requests]==2.50.0
     # via google-genai
-google-genai==1.74.0
+google-genai==1.75.0
     # via -r smarter/requirements/in/base.in
 googlemaps==4.10.0
     # via -r smarter/requirements/in/base.in
@@ -307,11 +309,11 @@ kombu==5.6.2
     # via celery
 langchain==1.2.17
     # via -r smarter/requirements/in/base.in
-langchain-classic==1.0.4
+langchain-classic==1.0.6
     # via langchain-community
 langchain-community==0.4.1
     # via -r smarter/requirements/in/base.in
-langchain-core==1.3.2
+langchain-core==1.3.3
     # via
     #   langchain
     #   langchain-classic
@@ -342,9 +344,9 @@ langgraph-checkpoint==4.0.3
     #   langgraph-prebuilt
 langgraph-prebuilt==1.0.13
     # via langgraph
-langgraph-sdk==0.3.13
+langgraph-sdk==0.3.14
     # via langgraph
-langsmith==0.8.0
+langsmith==0.8.2
     # via
     #   langchain-classic
     #   langchain-community
@@ -353,7 +355,7 @@ lark==1.3.1
     # via python-hcl2
 levenshtein==0.27.3
     # via python-levenshtein
-librt==0.9.0
+librt==0.10.0
     # via mypy
 llamaai==0.1.27
     # via -r smarter/requirements/in/base.in
@@ -365,7 +367,7 @@ mariadb==1.1.14
     # via -r smarter/requirements/in/base.in
 markdown==3.10.2
     # via -r smarter/requirements/in/base.in
-markdown-it-py==4.0.0
+markdown-it-py==4.1.0
     # via rich
 markupsafe==3.0.3
     # via jinja2
@@ -385,7 +387,7 @@ multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
-mypy==1.20.2
+mypy==2.0.0
     # via -r smarter/requirements/in/local.in
 mypy-extensions==1.1.0
     # via
@@ -413,7 +415,7 @@ oauthlib==3.3.1
     # via
     #   requests-oauthlib
     #   social-auth-core
-openai==2.31.0
+openai==2.35.1
     # via
     #   -r smarter/requirements/in/base.in
     #   langchain-openai
@@ -421,7 +423,7 @@ openmeteo-requests==1.7.5
     # via -r smarter/requirements/in/base.in
 openmeteo-sdk==1.26.0
     # via openmeteo-requests
-orjson==3.11.8
+orjson==3.11.9
     # via
     #   langgraph-sdk
     #   langsmith
@@ -502,7 +504,7 @@ pycountry==26.2.16
     # via -r smarter/requirements/in/base.in
 pycparser==3.0
     # via cffi
-pydantic==2.13.3
+pydantic==2.13.4
     # via
     #   -r smarter/requirements/in/base.in
     #   autodoc-pydantic
@@ -515,7 +517,7 @@ pydantic==2.13.3
     #   langsmith
     #   openai
     #   pydantic-settings
-pydantic-core==2.46.3
+pydantic-core==2.46.4
     # via pydantic
 pydantic-settings==2.14.0
     # via
@@ -570,7 +572,7 @@ python-dateutil==2.9.0.post0
     #   mailchimp-marketing
     #   pandas
     #   pinecone
-python-discovery==1.2.2
+python-discovery==1.3.0
     # via virtualenv
 python-dotenv==1.2.2
     # via
@@ -584,7 +586,7 @@ python3-openid==3.2.0
     # via social-auth-core
 pytokens==0.4.1
     # via black
-pytz==2026.1.post1
+pytz==2026.2
     # via drf-yasg
 pyyaml==6.0.3
     # via
@@ -595,7 +597,7 @@ pyyaml==6.0.3
     #   langchain-community
     #   langchain-core
     #   pre-commit
-qh3==1.7.4
+qh3==1.8.0
     # via urllib3-future
 rapidfuzz==3.14.5
     # via levenshtein
@@ -730,7 +732,7 @@ tqdm==4.67.3
     #   openai
 typeguard==4.5.1
     # via inflect
-types-cachetools==6.2.0.20260408
+types-cachetools==7.0.0.20260503
     # via -r smarter/requirements/in/local.in
 types-html5lib==1.1.11.20260408
     # via types-lxml
@@ -745,7 +747,7 @@ types-pyyaml==6.0.12.20260408
     #   -r smarter/requirements/in/local.in
     #   django-stubs
     #   djangorestframework-stubs
-types-requests==2.33.0.20260408
+types-requests==2.33.0.20260503
     # via -r smarter/requirements/in/local.in
 types-webencodings==0.5.0.20260408
     # via types-html5lib
@@ -810,7 +812,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==21.3.0
+virtualenv==21.3.1
     # via
     #   pre-commit
     #   tox
@@ -818,7 +820,7 @@ wassima==2.0.6
     # via niquests
 watchdog==6.0.0
     # via -r smarter/requirements/in/local.in
-wcwidth==0.6.0
+wcwidth==0.7.0
     # via prompt-toolkit
 websockets==16.0
     # via google-genai
