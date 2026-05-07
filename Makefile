@@ -220,6 +220,7 @@ python-init:
 	@echo "==============================================================================="
 	@echo "Initializing Python virtual environment and installing dependencies. This may take a few minutes..."
 	@echo "==============================================================================="
+	rm -r -f venv && \
 	mkdir -p .pypi_cache && \
 	make check-python
 	make python-clean && \

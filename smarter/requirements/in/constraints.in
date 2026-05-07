@@ -6,3 +6,5 @@
 #             -r constraints.in
 #
 # -----------------------------------------------------------------------------
+urllib3-future==2.19.913    # required by niquests; pin to ensure it doesn't shadow urllib3
+openmeteo-requests<1.5.0    # >=1.5.0 pulls niquests -> urllib3-future, which breaks boto3/botocore
