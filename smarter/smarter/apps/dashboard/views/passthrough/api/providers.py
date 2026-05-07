@@ -24,19 +24,22 @@ Example:
 
 import logging
 
+from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, JsonResponse
+from django.utils.decorators import method_decorator
 
 from smarter.apps.account.models import get_resolved_user
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderMiniSerializer
 from smarter.lib.django.views import (
-    SmarterAuthenticatedNeverCachedWebView,
+    SmarterView,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class ProviderApiView(SmarterAuthenticatedNeverCachedWebView):
+@method_decorator(login_required, name="dispatch")
+class ProviderApiView(SmarterView):
     """
     Authenticated JSON API view that returns LLM providers accessible to the requesting user.
 

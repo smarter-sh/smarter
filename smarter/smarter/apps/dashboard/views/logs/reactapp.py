@@ -87,6 +87,9 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
             with the terminal context dictionary.
         :rtype: django.http.HttpResponse
         """
+        from smarter.apps.dashboard.views.logs.api.urls import (
+            DashboardLogsApiReverseNames,
+        )
         from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 
         from .names import DashboardLogsReverseNames
@@ -100,11 +103,16 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
                 "api_url": reverse(
                     DashboardReverseNames.namespace,
                     DashboardLogsReverseNames.namespace,
-                    DashboardLogsReverseNames.terminal_emulator_view,
+                    DashboardLogsApiReverseNames.namespace,
+                    DashboardLogsApiReverseNames.stream,
                 ),  # the WebSocket endpoint with the log data stream.
             }
         }
         self.template_path = "react/terminal-emulator.html"
 
-        logger.debug("%s.get() Rendering terminal emulator with context: %s", self.formatted_class_name, context)
+        logger.debug(
+            "%s.get() rendering terminal emulator with context: %s",
+            self.formatted_class_name,
+            logging.formatted_json(context),
+        )
         return render(request, self.template_path, context=context)
