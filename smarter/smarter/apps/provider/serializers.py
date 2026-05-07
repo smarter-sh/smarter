@@ -3,13 +3,15 @@
 Serializer classes for the Provider app.
 """
 
-from smarter.apps.account.models import User
+from rest_framework import serializers
+
 from smarter.apps.account.serializers import (
     AccountMiniSerializer,
     MetaDataWithOwnershipModelSerializer,
     UserMiniSerializer,
+    UserProfileSerializer,
 )
-from smarter.apps.secret.serializers import SecretSerializer
+from smarter.apps.secret.serializers import SecretMiniSerializer
 from smarter.common.exceptions import SmarterException
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
@@ -25,23 +27,17 @@ from .models import (
 )
 
 
-class ProviderMiniSerializer(MetaDataWithOwnershipModelSerializer):
-    """
-    Provider Mini Serializer
-    """
-
-    class Meta:
-        model = Provider
-        fields = ["id", "name", "base_url"]
-        read_only_fields = ["created_at", "updated_at", "owner"]
-
-
 class ProviderSerializer(MetaDataWithOwnershipModelSerializer):
     """PluginMeta model serializer."""
 
     owner = UserMiniSerializer(read_only=True)
     account = AccountMiniSerializer(read_only=True)
-    api_key = SecretSerializer(read_only=True)
+    api_key = SecretMiniSerializer(read_only=True)
+    is_official_provider = serializers.BooleanField(read_only=True)
+    tos_accepted = serializers.BooleanField(read_only=True)
+    rfc1034_compliant_name = serializers.CharField(read_only=True)
+    tos_accepted_by = UserMiniSerializer(read_only=True)
+    user_profile = UserProfileSerializer(read_only=True)
 
     class Meta:
         model = Provider

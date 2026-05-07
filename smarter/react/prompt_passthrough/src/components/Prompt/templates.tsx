@@ -1,5 +1,12 @@
-import getDefaultModel from "./defaultModels";
-
+/******************************************************************************
+ * Prompt templates for the Prompt component. The getPromptTemplate
+ * function returns a JSON stringified template based on the templateId
+ * and defaultModel provided. The templates include a simple "Hello world"
+ * example, a message roles example, and a function call example. The
+ * function throws an error if templateId or defaultModel are not provided.
+ * The templates can be easily extended with additional cases in the switch
+ * statement.
+ *****************************************************************************/
 const helloWorld = {
   messages: [
     {
@@ -59,8 +66,13 @@ const functionCallPrompt = {
   ],
 };
 
-export default function getPromptTemplate(templateId: string, llmProviderId: string) {
-  const defaultModel = getDefaultModel(llmProviderId);
+export default function getPromptTemplate(templateId: string, defaultModel: string) {
+  if (!templateId) {
+    throw new Error("templateId is required to get a prompt template");
+    }
+  if (!defaultModel) {
+    throw new Error("defaultModel is required to get a prompt template");
+  }
   let template;
     switch (templateId) {
       case "1":
