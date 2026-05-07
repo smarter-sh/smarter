@@ -10,24 +10,6 @@ from smarter.lib.django.serializers import MetaDataModelSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 
-class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
-    """
-    Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field.
-    """
-
-    # pylint: disable=missing-class-docstring
-    class Meta(MetaDataModelSerializer.Meta):
-        fields = "__all__"
-        read_only_fields = getattr(MetaDataModelSerializer.Meta, "read_only_fields", [])
-
-        # mcdaniel apr-2026: this is an abstract base serializer. if i understand this
-        # correctly, the child serializers will override the Meta class and thus this will not be used.
-        # and at any rate, setting the model there it seems to break Sphinx.
-        # ----------------------------------------------------------------------------------------
-        # model = MetaDataModel
-        # abstract = True
-
-
 class UserSerializer(MetaDataModelSerializer):
     """
     Serializer for the `User` model in the Smarter API.
@@ -252,3 +234,23 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
         for field in fields.values():
             field.read_only = True
         return fields
+
+
+class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
+    """
+    Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field.
+    """
+
+    user_profile = UserProfileSerializer(read_only=True)
+
+    # pylint: disable=missing-class-docstring
+    class Meta(MetaDataModelSerializer.Meta):
+        fields = "__all__"
+        read_only_fields = getattr(MetaDataModelSerializer.Meta, "read_only_fields", [])
+
+        # mcdaniel apr-2026: this is an abstract base serializer. if i understand this
+        # correctly, the child serializers will override the Meta class and thus this will not be used.
+        # and at any rate, setting the model there it seems to break Sphinx.
+        # ----------------------------------------------------------------------------------------
+        # model = MetaDataModel
+        # abstract = True

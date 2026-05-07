@@ -1,5 +1,19 @@
 import type { LLMProvider } from "../LLMProviders";
 
+const DATE_FORMAT: Intl.DateTimeFormatOptions = {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZoneName: "short",
+};
+
+function formatDate(value: string): string {
+  const d = new Date(value.replace(/(\.\d{3})\d+/, "$1"));
+  return isNaN(d.getTime()) ? value : d.toLocaleString("en-US", DATE_FORMAT);
+}
+
 interface ProviderDetailsProps {
   provider: LLMProvider;
 }
@@ -16,12 +30,10 @@ export default function ProviderDetails({ provider }: ProviderDetailsProps) {
             <strong>Default model:</strong> {provider.defaultModel}
           </div>
           <div>
-            <strong>API key:</strong> {provider.apiKey.name} (#
-            {provider.apiKey.id})
+            <strong>API Key Secret Name:</strong> {provider.apiKey.name}
           </div>
           <div>
-            <strong>Connectivity path:</strong>{" "}
-            {provider.connectivityTestPath}
+            <strong>Connectivity path:</strong> {provider.connectivityTestPath}
           </div>
           <div>
             <strong>Account:</strong>{" "}
@@ -35,26 +47,27 @@ export default function ProviderDetails({ provider }: ProviderDetailsProps) {
 
         <div className="col-md-6">
           <div>
-            <strong>TOS accepted:</strong>{" "}
-            {provider.tosAccepted ? "Yes" : "No"}
+            <strong>TOS accepted:</strong> {provider.tosAccepted ? "Yes" : "No"}
           </div>
           <div>
-            <strong>TOS accepted by:</strong>{" "}
-            {provider.tosAcceptedBy.username} (
-            {provider.tosAcceptedBy.email})
+            <strong>TOS accepted by:</strong> {provider.tosAcceptedBy.username}{" "}
+            ({provider.tosAcceptedBy.email})
           </div>
           <div>
-            <strong>TOS accepted at:</strong> {provider.tosAcceptedAt}
+            <strong>TOS accepted at:</strong>{" "}
+            {formatDate(provider.tosAcceptedAt)}
           </div>
           <div>
             <strong>Ownership requested:</strong>{" "}
             {provider.ownershipRequested ?? "None"}
           </div>
           <div>
-            <strong>Created:</strong> {provider.createdAt}
+            <strong>Created:</strong>{" "}
+            {formatDate(provider.createdAt)}
           </div>
           <div>
-            <strong>Updated:</strong> {provider.updatedAt}
+            <strong>Updated:</strong>{" "}
+            {formatDate(provider.updatedAt)}
           </div>
         </div>
       </div>
@@ -73,8 +86,8 @@ export default function ProviderDetails({ provider }: ProviderDetailsProps) {
 
       <div className="mt-2">
         <strong>Contact:</strong> {provider.contactEmail} (
-        {provider.contactEmailVerified}) | <strong>Support:</strong>{" "}
-        {provider.supportEmail} ({provider.supportEmailVerified})
+        {formatDate(provider.contactEmailVerified)}) | <strong>Support:</strong>{" "}
+        {provider.supportEmail} ({formatDate(provider.supportEmailVerified)})
       </div>
     </>
   );
