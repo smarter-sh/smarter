@@ -1,8 +1,28 @@
 # pylint: disable=W0613,C0302
 """
-View for the Dashboard prompt passthrough endpoint, which renders a template
-that accepts raw JSON dicts for LLM provider prompts, passes these directly
-to the LLM provider API, and renders the API response in the template.
+View for the Dashboard prompt passthrough endpoint.
+
+This module provides an authenticated Django view that renders a React-based
+page accepting raw JSON dictionaries formatted for LLM provider APIs. The
+frontend submits these payloads directly to the LLM provider via the Smarter
+prompt passthrough API, and the API response is rendered back in the template.
+
+The view resolves the correct API and provider-listing URLs at request time and
+injects them—along with CSRF and session cookie configuration—into the React
+component context.
+
+Classes:
+    PromptPassthroughView: Renders the prompt passthrough React page for
+        authenticated users.
+
+Example:
+    Wire up the view in your URL configuration::
+
+        from smarter.apps.dashboard.views.passthrough.view import PromptPassthroughView
+
+        urlpatterns = [
+            path("passthrough/", PromptPassthroughView.as_view(), name="prompt_passthrough"),
+        ]
 """
 
 from django.conf import settings
@@ -46,8 +66,23 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
-        View for rendering the Monaco terminal emulation page
-        which only receives JSON dicts of LLM prompts.
+        Render the prompt passthrough page for the authenticated user.
+
+        Resolves the LLM provider passthrough API URL and the provider-listing
+        API URL at request time, builds a context dictionary for the React
+        frontend, and renders ``react/prompt-passthrough.html``.
+
+        The passthrough API URL is derived by stripping the provider-name
+        placeholder segment from the fully-qualified URL so that the React
+        component can append any provider name dynamically.
+
+        :param request: The incoming HTTP GET request from the client.
+        :type request: django.http.HttpRequest
+        :param args: Additional positional arguments forwarded by the URL dispatcher.
+        :param kwargs: Additional keyword arguments forwarded by the URL dispatcher.
+        :returns: An HTTP 200 response rendering ``react/prompt-passthrough.html``
+            with the passthrough context dictionary.
+        :rtype: django.http.HttpResponse
         """
         # pylint: disable=C0415
         from smarter.apps.dashboard.views.passthrough.api.urls import (

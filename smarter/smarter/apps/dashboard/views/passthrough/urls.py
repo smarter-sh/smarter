@@ -1,4 +1,31 @@
-"""URL configuration for the Dashboard app's passthrough views."""
+"""
+URL configuration for the Dashboard app's passthrough views.
+
+This module registers URL patterns for the prompt passthrough sub-application
+of the dashboard. Registration is conditional on the
+``ENABLE_DASHBOARD_PASSTHROUGH_PROMPT`` setting: when disabled, no routes are
+registered and an informational log message is emitted.
+
+Attributes:
+    app_name (str): The Django application namespace, taken from
+        :data:`.const.namespace`.
+    urlpatterns (list): The list of URL patterns registered for this app.
+        Empty when ``smarter_settings.enable_dashboard_passthrough_prompt`` is
+        ``False``.
+
+Classes:
+    PassthroughReverseNames: Convenience class that centralises the
+        ``reverse()`` name strings used by this URL configuration.
+
+Example:
+    Include these URLs from a parent URL configuration::
+
+        from django.urls import include, path
+
+        urlpatterns = [
+            path("passthrough/", include("smarter.apps.dashboard.views.passthrough.urls")),
+        ]
+"""
 
 from django.urls import include, path
 
