@@ -171,6 +171,7 @@ runs:
       shell: bash
       run: |-
         echo "Collecting static assets for production build..."
+        make python-init
         make collectstatic
 
     - name: Build and push to AWS ECR
