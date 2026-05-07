@@ -1,0 +1,11 @@
+{
+  "index.html": {
+    "file": "assets/index.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "css": [
+      "assets/index-CK8UZAZJ.css"
+    ]
+  }
+}

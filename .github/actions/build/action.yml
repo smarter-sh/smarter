@@ -166,21 +166,6 @@ runs:
         fi
         echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
 
-
-
-    - name: Set up Python 3.13
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.13"
-
-    - name: Collect Static Assets
-      id: collect-static-assets
-      shell: bash
-      run: |-
-        echo "Collecting static assets for production build..."
-        make python-init
-        make collectstatic
-
     - name: Build and push to AWS ECR
       id: docker-build-ecr
       uses: docker/build-push-action@v6

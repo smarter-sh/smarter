@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smarter Prompt Passthrough</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+
+    <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/prompt_passthrough/assets/index.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/common-styles.css" rel="stylesheet" type="text/css" />
+
+    <script type="module" crossorigin src="/static/react/prompt_passthrough/assets/index.js"></script>
+    <link rel="stylesheet" crossorigin href="/static/react/prompt_passthrough/assets/index-x1XGuNl0.css">
+  </head>
+  <body>
+    <!-- only used for development via 'npm run dev' -->
+    <div
+      id="smarter-prompt-passthrough-root"
+      smarter-csrf-cookie-name="csrftoken"
+      django-csrftoken="1UNIA5jlXRTUifBGjVT3yKCn2On8MNzrFiVxN65QVrl6vPZKPx1AC15NcT07RB88"
+      smarter-django-session-cookie-name="sessionid"
+      smarter-api-path="/api/v1/prompts/passthrough/"
+      smarter-llm-provider-id="1"
+      smarter-template-id="1">
+    ></div>
+  </body>
+  <script src="/assets/plugins/global/plugins.bundle.js"></script>
+  <script src="/assets/js/scripts.bundle.js"></script>
+
+</html>
