@@ -20,13 +20,11 @@
  */
 import { useEffect, useState } from "react";
 import type * as monaco from "monaco-editor";
-import Editor from "@monaco-editor/react";
-import Toolbar from "@/components/Toolbar";
-import LLMProviders, { type LLMProvider } from "@/components/LLMProviders";
-import LLMProviderSelector from "@/components/LLMProviderSelector";
-import TemplateSelector from "@/components/TemplateSelector/";
-import Response from "@/components/Response";
 import getPromptTemplate from "./templates";
+import LLMProviderMetaData from "@/components/LLMProviderMetaData";
+import LLMProviders, { type LLMProvider } from "@/components/LLMProviders";
+import LLMProviderPassthroughResponse from "@/components/LLMProviderPassthroughResponse";
+import LLMProviderPassthroughRequest from "@/components/LLMProviderPassthroughRequest";
 
 import getCookie from "@/lib/cookie";
 import fetchDjangoUrl from "@/lib/django";
@@ -54,7 +52,6 @@ function Prompt({
   defaultTemplateId,
   providerApiUrl,
 }: PromptProps) {
-
   // UI state
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -66,6 +63,8 @@ function Prompt({
 
   // LLM provider and template state
   const [providersJson, setProviders] = useState<LLMProvider[]>([]);
+  const [selectedProviderJson, setSelectedProviderJson] =
+    useState<LLMProvider | null>(null);
   const [templateId, setTemplateId] = useState(defaultTemplateId ?? "1");
   const [llmProviderId, setLLMProvider] = useState(defaultLLMProviderId ?? "1");
 
@@ -76,19 +75,20 @@ function Prompt({
 
   // Final request JSON state (function of providersJson, llmProviderId, templateId, defaultModel)
   const [requestJson, setRequestJson] = useState("");
+  const [activeTab, setActiveTab] = useState<"request" | "response">("request");
 
   useEffect(() => {
     const controller = new AbortController();
     LLMProviders(providerApiUrl, controller.signal)
       .then((providers) => {
-
         // set the provider list, and identify the default provider based on
         // the "isDefault" flag (or fallback to first provider if none
         // marked as default).
         setProviders(providers);
-        const default_provider = providers.filter(
-          (p) => Boolean(p.isDefault) === true,
-        )[0] || providers[0];
+        const default_provider =
+          providers.filter((p) => Boolean(p.isDefault) === true)[0] ||
+          providers[0];
+        setSelectedProviderJson(default_provider);
         if (!default_provider) {
           console.warn("No LLM providers found from API");
           return;
@@ -118,6 +118,7 @@ function Prompt({
   useEffect(() => {
     const provider = providersJson.find((p) => String(p.id) === llmProviderId);
     if (provider) {
+      setSelectedProviderJson(provider);
       setProviderBaseUrl(provider.baseUrl);
       setProviderSlug(provider.rfc1034CompliantName);
       setDefaultModel(provider.defaultModel);
@@ -134,22 +135,17 @@ function Prompt({
     setLLMProvider(newId);
     const provider = providersJson.find((p) => String(p.id) === newId);
     if (provider) {
+      setSelectedProviderJson(provider);
       setProviderBaseUrl(provider.baseUrl);
       setProviderSlug(provider.rfc1034CompliantName);
       setDefaultModel(provider.defaultModel);
-      const templateJson = getPromptTemplate(
-        templateId,
-        provider.defaultModel,
-      );
+      const templateJson = getPromptTemplate(templateId, provider.defaultModel);
       setRequestJson(templateJson);
     }
   };
   const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setTemplateId(e.target.value);
-    const templateJson = getPromptTemplate(
-      e.target.value,
-      defaultModel ?? "",
-    );
+    const templateJson = getPromptTemplate(e.target.value, defaultModel ?? "");
     setRequestJson(templateJson);
   };
 
@@ -190,6 +186,7 @@ function Prompt({
       const data = await res.json();
 
       setApiResponse({ status: res.status, body: data });
+      setActiveTab("response");
     } finally {
       setIsSending(false);
     }
@@ -199,80 +196,56 @@ function Prompt({
     <>
       <div className="row d-flex mb-3">
         <div className="col-lg-12">
-          <div className="card shadow-sm">
-            <div className="card-header d-flex justify-content-center align-items-center">
-              <h4 className="mt-4 p-4">LLM Provider API Passthrough Request</h4>
-              <div className="row w-100 mt-3 mb-2">
-                <div className="col-6">
-                  <LLMProviderSelector
-                    providersJson={providersJson}
-                    value={llmProviderId}
-                    onChange={handleLLMProviderChange}
-                  />
-                </div>
-                <div className="col-6">
-                  <TemplateSelector
-                    value={templateId}
-                    onChange={handleTemplateChange}
-                  />
-                </div>
-              </div>
-              <div className="row w-100 mt-3 mb-2">
-                <div className="col-9">
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={
-                      providerBaseUrl
-                        ? `${providerBaseUrl}/chat/completions`
-                        : ""
-                    }
-                    readOnly
-                    style={{ backgroundColor: "#f8f9fa", fontSize: "0.95rem" }}
-                  />
-                </div>
-                <div className="col-3 d-flex align-items-center justify-content-end">
-                  <button
-                    className="btn btn-primary w-100"
-                    type="button"
-                    onClick={handleSend}
-                    disabled={isSending}
-                  >
-                    {isSending ? "SENDING..." : "SEND"}
-                  </button>
-                </div>
-              </div>
-            </div>
+          <h3 className="mt-4 p-4">LLM Provider API Passthrough</h3>
+          <ul className="nav nav-tabs mb-3" role="tablist">
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === "request" ? "active" : ""}`}
+                type="button"
+                onClick={() => setActiveTab("request")}
+                role="tab"
+                aria-selected={activeTab === "request"}
+              >
+                Request
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === "response" ? "active" : ""}`}
+                type="button"
+                onClick={() => setActiveTab("response")}
+                role="tab"
+                aria-selected={activeTab === "response"}
+              >
+                Response
+              </button>
+            </li>
+          </ul>
 
-            <div className="card-body">
-              <Toolbar editor={editor} />
-              <Editor
-                height="500px"
-                defaultLanguage="json"
-                theme="vs-dark"
-                value={requestJson}
-                onMount={handleEditorDidMount}
-                onChange={(value) => setRequestJson(value || "")}
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                  fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
-                  fontLigatures: true,
-                  lineHeight: 22,
-                  wordWrap: "on",
-                  formatOnPaste: true,
-                  formatOnType: true,
-                  automaticLayout: true,
-                }}
-              />
-            </div>
-          </div>
+          {activeTab === "request" && (
+            <LLMProviderPassthroughRequest
+              providersJson={providersJson}
+              llmProviderId={llmProviderId}
+              templateId={templateId}
+              providerBaseUrl={providerBaseUrl}
+              isSending={isSending}
+              editor={editor}
+              requestJson={requestJson}
+              onLLMProviderChange={handleLLMProviderChange}
+              onTemplateChange={handleTemplateChange}
+              onSend={handleSend}
+              onEditorDidMount={handleEditorDidMount}
+              onRequestJsonChange={setRequestJson}
+            />
+          )}
+
+          {activeTab === "response" && (
+            <LLMProviderPassthroughResponse apiResponse={apiResponse} isProcessing={isSending} />
+          )}
         </div>
-      </div>
-      <div className="row d-flex">
-        <div className="col-lg-12">
-          <Response apiResponse={apiResponse} isProcessing={isSending} />
-        </div>
+        {activeTab === "request" && (
+          <LLMProviderMetaData provider={selectedProviderJson} />
+        )}
       </div>
     </>
   );
