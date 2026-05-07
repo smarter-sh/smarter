@@ -22,15 +22,15 @@ Example:
         ]
 """
 
-import logging
-
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
 
 from smarter.apps.account.models import get_resolved_user
 from smarter.apps.provider.models import Provider
-from smarter.apps.provider.serializers import ProviderMiniSerializer
+from smarter.apps.provider.serializers import ProviderSerializer
+from smarter.lib import logging
+from smarter.lib.cache import cache_results
 from smarter.lib.django.views import (
     SmarterView,
 )
@@ -81,6 +81,14 @@ class ProviderApiView(SmarterView):
         """
         user = get_resolved_user(request.user)
 
-        providers = Provider.objects.with_read_permission_for(user=user)  # type: ignore
-        serialized_providers = ProviderMiniSerializer(providers, many=True).data
-        return JsonResponse({"providers": serialized_providers})
+        @cache_results()
+        def _get_cached_providers_for_user(user_id):
+
+            providers = Provider.objects.with_read_permission_for(user=user)  # type: ignore
+            serialized_providers = ProviderSerializer(providers, many=True).data
+            retval = {"providers": serialized_providers}
+            logger.debug("cached providers for user %s: %s", self.user_profile, logging.formatted_json(retval))
+            return retval
+
+        cached_providers = _get_cached_providers_for_user(user.id)  # type: ignore
+        return JsonResponse(cached_providers)
