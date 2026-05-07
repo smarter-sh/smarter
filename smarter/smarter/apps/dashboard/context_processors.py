@@ -1,60 +1,77 @@
 # pylint: disable=W0613
 """
-smarter.apps.dashboard.context_processors
-=========================================
+Custom Django context processors for the Smarter dashboard application.
 
-This module provides custom Django context processors for the Smarter dashboard
-application. These context processors are designed to inject additional context
-variables into templates that inherit from ``base.html``, supporting the dynamic
-rendering of dashboard and branding information throughout the application.
+These processors inject template context variables into every view that renders
+a template inheriting from ``base.html``. Each processor is registered in
+``TEMPLATES['OPTIONS']['context_processors']`` in Django settings.
 
-Overview
---------
+Context processors
+------------------
 
+:func:`sidebar`
+    Resolves and caches the href targets for every sidebar navigation link.
+    Returns a ``sidebar`` dict keyed by destination name.
 
-The context processors in this module serve the following purposes:
+:func:`file_drop_zone`
+    Injects drop-zone feature flags and relevant API/list URLs into a
+    ``drop_zone`` dict.  Enabled via ``ENABLE_DASHBOARD_APPLY``.
 
-- **Dashboard Context**: Supplies user-specific and application-wide metadata,
-    such as the current user's email, username, role flags, product version, and
-    resource counts (e.g., chatbots, plugins, API keys, custom domains, connections,
-    and secrets). This enables the dashboard to display personalized and up-to-date
-    information for each authenticated user.
+:func:`base`
+    Assembles the primary ``dashboard`` context dict: user identity, role
+    flags (``is_superuser``, ``is_staff``), feature toggles, resource counts,
+    and platform version metadata.  The inner result is cached per user.
 
-- **Branding Context**: Provides organization-specific branding details, including
-    support contact information, corporate name, address, social media links, and
-    copyright notices. This ensures consistent branding and support information
-    across all dashboard templates.
+:func:`branding`
+    Provides a ``branding`` dict containing corporate identity, support
+    contact details, social-media URLs, CDN paths, and a dynamic copyright
+    notice.  Values are sourced from ``smarter_settings``.
 
-- **Cache Busting**: Adds a cache-busting query parameter to static asset URLs
-    during local development, preventing browsers from serving outdated static
-    files.
+:func:`footer`
+    Provides a ``footer`` dict with links to legal, plans, support, and
+    contact pages.
 
+:func:`cache_buster`
+    Injects a ``cache_buster`` string (``v=<timestamp>``) for appending to
+    static asset URLs in local development.
 
-Caching
--------
+:func:`prompt_list_context`
+    **Deprecated.** Provides a placeholder ``prompt_list`` dict to prevent
+    template errors from Wagtail admin interactions.  Slated for removal.
 
-Many of the resource-counting functions in this module are decorated with a
-caching mechanism to reduce database load and improve performance. The cache
-timeout is configurable and set to 60 seconds by default.
+Cache utilities
+---------------
 
-cache_invalidations(user_profile) is a utility function provided to invalidate
-all relevant caches when user data changes, ensuring that the dashboard
-reflects the most current information.
+:func:`cache_invalidations`
+    Invalidates all per-user caches (account, profile, plugins, chatbots, and
+    page-level caches for the dashboard and workbench) after user data changes.
+    Called by signal handlers in the account app.
+
+    .. seealso::
+
+        - :class:`smarter.lib.manifest.broker.AbstractBroker`
+        - ``smarter.apps.account.signals.cache_invalidate``
 
 Usage
 -----
 
-To use these context processors, add their import paths to the
-``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings.
-This will make the provided context variables available in all templates
-rendered by Django that inherit from ``base.html``.
+Add the processors to your Django settings::
 
-Note
-----
-
-This module does not document individual function signatures or arguments, as
-these are automatically included by Sphinx's ``automodule`` directive. For
-detailed API documentation, refer to the generated documentation for each function.
+    TEMPLATES = [
+        {
+            "OPTIONS": {
+                "context_processors": [
+                    ...
+                    "smarter.apps.dashboard.context_processors.sidebar",
+                    "smarter.apps.dashboard.context_processors.base",
+                    "smarter.apps.dashboard.context_processors.branding",
+                    "smarter.apps.dashboard.context_processors.footer",
+                    "smarter.apps.dashboard.context_processors.file_drop_zone",
+                    "smarter.apps.dashboard.context_processors.cache_buster",
+                ],
+            },
+        }
+    ]
 """
 
 import time
@@ -104,7 +121,24 @@ logger_prefix_cache_invalidations = logging.formatted_text_blue(f"{__name__}.cac
 
 def sidebar(request: "HttpRequest") -> dict[str, Any]:
     """
-    Provides context for rendering the dashboard sidebar href navigation links.
+    Resolve and cache the href targets for every dashboard sidebar navigation link.
+
+    The inner result is cached so that URL reversals are only performed once
+    per process lifetime (the URLs are static). The resolved URLs are returned
+    under a ``sidebar`` key whose sub-keys correspond to each navigation
+    destination:
+
+    ``dashboard``, ``workbench``, ``apply_manifest``, ``prompt_passthrough``,
+    ``server_logs``, ``providers``, ``plugins``, ``connections``, ``secrets``,
+    ``vectorstores``, ``api_keys``, ``custom_domains``, ``example_manifests``,
+    ``swagger_docs``, ``redoc``, ``json_schemas``, ``account``, ``admin``.
+
+    :param request: The incoming HTTP request (not used directly; required by
+        the Django context-processor protocol).
+    :type request: HttpRequest
+    :returns: A dict with a single ``"sidebar"`` key mapping destination names
+        to their resolved URL strings.
+    :rtype: dict[str, Any]
     """
 
     @cache_results()

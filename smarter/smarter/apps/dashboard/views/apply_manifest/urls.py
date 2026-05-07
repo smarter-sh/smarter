@@ -1,5 +1,33 @@
 """
 URL configuration for the apply manifest views in the dashboard app.
+
+This module defines the URL patterns for the ``apply_manifest`` sub-application
+of the dashboard. URL registration is conditional on the
+``ENABLE_DASHBOARD_APPLY`` setting: when disabled, no routes are registered and
+an informational log message is emitted.
+
+Attributes:
+    app_name (str): The Django application namespace, taken from
+        :data:`.const.namespace`.
+    urlpatterns (list): The list of URL patterns registered for this app.
+        Empty when ``smarter_settings.enable_dashboard_apply`` is ``False``.
+
+Classes:
+    ApplyManifestReverseNames: Convenience class that centralises the
+        ``reverse()`` name strings used by this URL configuration.
+
+URL patterns (when enabled):
+    - ``manifest-drop-zone/`` — :class:`.ManifestDropZoneView`
+      (name: ``manifest_drop_zone``)
+
+Example:
+    Include these URLs from a parent URL configuration::
+
+        from django.urls import include, path
+
+        urlpatterns = [
+            path("apply/", include("smarter.apps.dashboard.views.apply_manifest.urls")),
+        ]
 """
 
 from django.urls import path
@@ -16,7 +44,8 @@ logger = logging.getLogger(__name__)
 
 class ApplyManifestReverseNames:
     """
-    A class to hold the names of the apply manifest views for easy reference throughout the codebase.
+    A class to hold the names of the apply manifest views for easy
+    reference throughout the codebase.
     """
 
     namespace = namespace

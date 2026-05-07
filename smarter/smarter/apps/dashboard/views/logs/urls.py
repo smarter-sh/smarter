@@ -1,5 +1,33 @@
 """
-URLs for the logs views.
+URL configuration for the dashboard logs views.
+
+This module registers URL patterns for the server logs sub-application of the
+dashboard. Registration is conditional on the
+``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS`` setting: when disabled, no routes are
+registered and an informational log message is emitted.
+
+Attributes:
+    app_name (str): The Django application namespace, taken from
+        :data:`.const.namespace`.
+    urlpatterns (list): The list of URL patterns registered for this app.
+        Empty when ``smarter_settings.enable_dashboard_server_logs`` is
+        ``False``.
+
+URL patterns (when enabled):
+
+- ``""`` — :class:`.TerminalEmulatorLogView`
+  (name: ``DashboardLogsReverseNames.terminal_emulator_view``)
+- ``"api/"`` — included from :mod:`.api.urls`
+  (namespace: ``api_urls.app_name``)
+
+Example:
+    Include these URLs from a parent URL configuration::
+
+        from django.urls import include, path
+
+        urlpatterns = [
+            path("logs/", include("smarter.apps.dashboard.views.logs.urls")),
+        ]
 """
 
 from django.urls import include, path
@@ -14,7 +42,6 @@ from .reactapp import TerminalEmulatorLogView
 
 app_name = namespace
 logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
 
 
 urlpatterns = []

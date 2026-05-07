@@ -1,3 +1,7 @@
+"""
+URLs for the passthrough API views in the dashboard app.
+"""
+
 from django.urls import path
 
 from smarter.common.utils.utils import camel_case_object_name

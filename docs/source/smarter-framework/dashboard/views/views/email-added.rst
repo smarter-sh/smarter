@@ -5,3 +5,4 @@ Email Added View
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:

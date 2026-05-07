@@ -1,5 +1,5 @@
 """
-URLs for the logs views.
+Reverse names for the logs views.
 """
 
 from smarter.common.utils import camel_case_object_name

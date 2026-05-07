@@ -5,3 +5,4 @@ Coming Soon View
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
