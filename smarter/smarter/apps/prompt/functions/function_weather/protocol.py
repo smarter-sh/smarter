@@ -79,7 +79,13 @@ from googlemaps.exceptions import ApiError as GoogleMapsApiError
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
-from openmeteo_requests import OpenMeteoRequestsError
+
+try:
+    from openmeteo_requests import OpenMeteoRequestsError
+except ImportError:
+    # version < 1.5.0
+    from openmeteo_requests.Client import OpenMeteoRequestsError
+
 from openmeteo_sdk.VariablesWithTime import VariablesWithTime
 from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
 from pint import UnitRegistry

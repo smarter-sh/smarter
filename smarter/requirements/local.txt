@@ -103,9 +103,7 @@ channels-redis==4.3.0
 chardet==7.4.3
     # via tox
 charset-normalizer==3.4.7
-    # via
-    #   niquests
-    #   requests
+    # via requests
 click==8.3.3
     # via
     #   black
@@ -397,8 +395,6 @@ mypy-extensions==1.1.0
     #   typing-inspect
 nest-asyncio==1.6.0
     # via llamaai
-niquests==3.18.7
-    # via openmeteo-requests
 nltk==3.9.4
     # via
     #   -r smarter/requirements/in/base.in
@@ -419,8 +415,10 @@ openai==2.35.1
     # via
     #   -r smarter/requirements/in/base.in
     #   langchain-openai
-openmeteo-requests==1.7.5
-    # via -r smarter/requirements/in/base.in
+openmeteo-requests==1.4.0
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   -r smarter/requirements/in/constraints.in
 openmeteo-sdk==1.26.0
     # via openmeteo-requests
 orjson==3.11.9
@@ -622,6 +620,7 @@ requests==2.33.1
     #   langsmith
     #   llamaai
     #   mailchimp-marketing
+    #   openmeteo-requests
     #   pinecone-plugin-assistant
     #   requests-cache
     #   requests-file
@@ -800,7 +799,7 @@ urllib3==2.6.3
     #   retry-requests
     #   types-requests
 urllib3-future==2.19.913
-    # via niquests
+    # via -r smarter/requirements/in/constraints.in
 uuid-utils==0.14.1
     # via
     #   langchain-core
@@ -816,8 +815,6 @@ virtualenv==21.3.1
     # via
     #   pre-commit
     #   tox
-wassima==2.0.6
-    # via niquests
 watchdog==6.0.0
     # via -r smarter/requirements/in/local.in
 wcwidth==0.7.0
