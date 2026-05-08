@@ -89,7 +89,7 @@ if (
             f"{logger_prefix} Google Maps API key is not set. Please set GOOGLE_MAPS_API_KEY in your .env file."
         )
     except SmarterInvalidApiKeyError as invalid_key_error:
-        logger.error(str(invalid_key_error))
+        logger.warning(str(invalid_key_error))
 
 try:
     google_maps_client = googlemaps.Client(key=smarter_settings.google_maps_api_key.get_secret_value())
@@ -100,9 +100,9 @@ except ValueError as e:
             f"{logger_prefix} Invalid Google Maps API key. Please check your GOOGLE_MAPS_API_KEY in your .env file: {e}"
         ) from e
     except SmarterInvalidApiKeyError as invalid_key_error:
-        logger.error(str(invalid_key_error))
+        logger.warning(str(invalid_key_error))
 except Exception as value_error:
-    logger.error(
+    logger.warning(
         f"{logger_prefix} Could not initialize Google Maps API. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview. Add your GOOGLE_MAPS_API_KEY to .env: {value_error}"
     )
 

@@ -1,24 +1,24 @@
 import { defineConfig } from "vite";
-import { execSync } from "child_process";
+// import { execSync } from "child_process";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig(({ command }: { command: string }) => ({
   plugins: [
     react(),
-    {
-      name: "post-build",
-      closeBundle() {
-        execSync(
-          "aws s3 sync ../../smarter/static/react/terminal_emulator s3://smarter.sh/react/terminal_emulator/ --acl public-read --delete",
-          { stdio: "inherit" },
-        );
-        execSync(
-          "aws --no-cli-pager cloudfront create-invalidation --distribution-id E2NUOFBC8HY0W9 --paths '/react/terminal_emulator/*'",
-          { stdio: "inherit" },
-        );
-      },
-    },
+    // {
+    //   name: "post-build",
+    //   closeBundle() {
+    //     execSync(
+    //       "aws s3 sync ../../smarter/static/react/terminal_emulator s3://smarter.sh/react/terminal_emulator/ --acl public-read --delete",
+    //       { stdio: "inherit" },
+    //     );
+    //     execSync(
+    //       "aws --no-cli-pager cloudfront create-invalidation --distribution-id E2NUOFBC8HY0W9 --paths '/react/terminal_emulator/*'",
+    //       { stdio: "inherit" },
+    //     );
+    //   },
+    // },
   ],
   // runtime builds are saved into the Django static directory so that these
   // files can be included in the Django collectstatic process and served by
