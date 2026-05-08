@@ -3,7 +3,6 @@ Middleware to block clients that trigger excessive 404 responses.
 """
 
 import inspect
-import logging
 from http import HTTPStatus
 
 from asgiref.sync import markcoroutinefunction
@@ -14,19 +13,12 @@ from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterMiddlewareMixin
 from smarter.common.utils import is_authenticated_request
+from smarter.lib import logging
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return (waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)) or level >= logging.WARNING
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 
 logger.debug("Loading %s", formatted_text(__name__ + ".SmarterBlockExcessive404Middleware"))
 

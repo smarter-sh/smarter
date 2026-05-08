@@ -271,7 +271,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                       {/* begin::Secrets */}
                       <a
                         className="menu-link"
-                        href="/providers/"
+                        href={data?.providers_url}
                         target="_self"
                       >
                         <div className="m-0">

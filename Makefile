@@ -359,7 +359,7 @@ help:
 	@echo 'change-log             - Update CHANGELOG.md file'
 	@echo '<************************** Docker **************************>'
 	@echo 'docker-check           - Verify Docker is installed and running'
-	@echo 'docker-init            - Initialize MySQL and create the smarter database'
+	@echo 'docker-init            - Initialize MariaDB and create the smarter database'
 	@echo 'docker-shell           - Open a shell in the smarter-app Docker container'
 	@echo 'docker-build           - Build all Docker containers using docker-compose'
 	@echo 'docker-run             - Start all Docker containers using docker-compose'
