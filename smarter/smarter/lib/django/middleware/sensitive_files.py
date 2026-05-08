@@ -2,7 +2,6 @@
 
 import fnmatch
 import inspect
-import logging
 import re
 import urllib.parse
 
@@ -13,21 +12,13 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterMiddlewareMixin
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
-# pylint: disable=unused-argument
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 
 logger.debug("Loading %s", formatted_text(__name__ + ".SmarterBlockSensitiveFilesMiddleware"))
 

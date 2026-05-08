@@ -160,5 +160,10 @@ def dashboard_vite_assets(entry: str = "index.html") -> dict[str, Any]:
         "css": css_files,
     }
 
-    logger.debug("%s.dashboard_vite_assets() entry=%s assets=%s", logger_prefix, entry, logging.formatted_json(assets))
+    logger.debug(
+        "%s.dashboard_vite_assets() caching result for entry=%s assets=%s",
+        logger_prefix,
+        entry,
+        logging.formatted_json(assets),
+    )
     return assets
