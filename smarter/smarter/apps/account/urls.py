@@ -1,7 +1,5 @@
 """URL configuration for the web platform."""
 
-import logging
-
 from django.urls import include, path
 from django.views.generic.base import RedirectView
 
@@ -9,6 +7,7 @@ from smarter.apps.account.views.dashboard import urls as account_dashboard_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.lib import logging
 
 from .const import namespace
 from .views.authentication import (

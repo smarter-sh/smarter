@@ -98,8 +98,12 @@ MAX_QUEUE_SIZE = 10000
 LOG_QUEUE_TIMEOUT = 0.05
 WORKER_QUEUE_TIMEOUT = 1.00
 
-USER_STREAM_TTL_SECONDS = 300
-GLOBAL_STREAM_TTL_SECONDS = 300
+USER_STREAM_TTL_SECONDS = (
+    1 * 60 * 60
+)  # 1 hour for user/job-specific streams, which are expected to be consumed and then expire
+GLOBAL_STREAM_TTL_SECONDS = (
+    24 * 60 * 60
+)  # 24 hours for the global stream, which is more of a firehose and may be consumed by multiple clients with different latencies
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)

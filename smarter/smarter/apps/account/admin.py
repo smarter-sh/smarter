@@ -1,7 +1,6 @@
 # pylint: disable=C0115,W0212
 """Account admin."""
 
-import logging
 from typing import Optional
 
 from django.contrib.auth.admin import UserAdmin
@@ -19,6 +18,7 @@ from smarter.apps.dashboard.admin import (
     smarter_restricted_admin_site,
 )
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 
 from .models import (
     Account,
