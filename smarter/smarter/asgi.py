@@ -7,7 +7,6 @@ For more information on this file, see
 https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/
 """
 
-import logging
 import os
 
 from channels.auth import AuthMiddlewareStack
@@ -19,6 +18,7 @@ from django.core.asgi import get_asgi_application
 
 from smarter import consumers
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
 

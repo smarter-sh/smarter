@@ -2,11 +2,11 @@
 # pylint: disable=C0415
 """Django's command-line utility for administrative tasks."""
 
-import logging
 import os
 import sys
 
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,5 @@
 """Django manage.py initialize_account command."""
 
-import logging
 from typing import Optional
 
 from django.core.management import call_command
@@ -8,6 +7,7 @@ from django.core.management import call_command
 from smarter.apps.account.models import Account, User
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 
