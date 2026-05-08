@@ -1,37 +1,25 @@
 import { defineConfig } from "vite";
+import { execSync } from "child_process";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-function manualChunks(id: string) {
-  if (id.includes("node_modules/react")) {
-    return "react-vendor";
-  }
-
-  if (id.includes("node_modules/monaco-editor/esm/vs/language/json/")) {
-    return "monaco-json";
-  }
-
-  if (id.includes("node_modules/monaco-editor/esm/vs/editor/")) {
-    return "monaco-editor";
-  }
-
-  if (id.includes("node_modules/monaco-editor/esm/vs/base/")) {
-    return "monaco-base";
-  }
-
-  if (id.includes("node_modules/monaco-editor/esm/vs/platform/")) {
-    return "monaco-platform";
-  }
-
-  if (id.includes("node_modules/monaco-editor/esm/")) {
-    return "monaco-vendor";
-  }
-
-  return undefined;
-}
-
 export default defineConfig(({ command }: { command: string }) => ({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: "post-build",
+      closeBundle() {
+        execSync(
+          "aws s3 sync ../../smarter/static/react/prompt_passthrough s3://smarter.sh/react/prompt_passthrough/ --acl public-read --delete",
+          { stdio: "inherit" },
+        );
+        execSync(
+          "aws --no-cli-pager cloudfront create-invalidation --distribution-id E2NUOFBC8HY0W9 --paths '/react/prompt_passthrough/*'",
+          { stdio: "inherit" },
+        );
+      },
+    },
+  ],
   // runtime builds are saved into the Django static directory so that these
   // files can be included in the Django collectstatic process and served by
   // Django at runtime. On the other hand, in development we want to rely on
@@ -64,7 +52,6 @@ export default defineConfig(({ command }: { command: string }) => ({
       output: {
         entryFileNames: "assets/index.js",
         chunkFileNames: "assets/[name].js",
-        manualChunks,
       },
     },
   },
