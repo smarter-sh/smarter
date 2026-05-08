@@ -37,10 +37,7 @@ function ListViewToggleButton({ viewMode, onClick }: ViewToggleButtonProps) {
   );
 }
 
-function ThumbnailViewToggleButton({
-  viewMode,
-  onClick,
-}: ViewToggleButtonProps) {
+function ThumbnailViewToggleButton({viewMode, onClick}: ViewToggleButtonProps) {
   return (
     <button
       type="button"
@@ -51,6 +48,27 @@ function ThumbnailViewToggleButton({
     >
       <i className="fas fa-th-large" />
     </button>
+  );
+}
+
+function ToggleButton({ viewMode, setViewMode }: { viewMode: ViewMode; setViewMode: (mode: ViewMode) => void }) {
+  return (
+      <div id="toggle-buttons" className="mb-4">
+        <div
+          className="btn-group border border-light rounded-3 bg-white"
+          role="group"
+          aria-label="View toggle"
+        >
+          <ListViewToggleButton
+            viewMode={viewMode}
+            onClick={() => setViewMode("list")}
+          />
+          <ThumbnailViewToggleButton
+            viewMode={viewMode}
+            onClick={() => setViewMode("thumbnail")}
+          />
+        </div>
+      </div>
   );
 }
 
@@ -131,27 +149,16 @@ function Prompts({
   }
 
   return (
-    <section id="chatbots">
-      <div id="toggle-buttons" className="mb-4">
-        <div
-          className="btn-group border border-light rounded-3 bg-white"
-          role="group"
-          aria-label="View toggle"
-        >
-          <ListViewToggleButton
-            viewMode={viewMode}
-            onClick={() => setViewMode("list")}
-          />
-          <ThumbnailViewToggleButton
-            viewMode={viewMode}
-            onClick={() => setViewMode("thumbnail")}
-          />
-        </div>
-      </div>
 
-      <CombinedListViews chatbots={chatbots} />
-      <CombinedCardViews chatbots={chatbots} />
-    </section>
+    <>
+      <ToggleButton viewMode={viewMode} setViewMode={setViewMode} />
+
+      {viewMode === "list" ? (
+        <CombinedListViews chatbots={chatbots} />
+      ) : (
+        <CombinedCardViews chatbots={chatbots} />
+      )}
+    </>
   );
 }
 
