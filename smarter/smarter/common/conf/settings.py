@@ -3732,6 +3732,42 @@ class Settings(BaseSettings):
         return retval
 
     @cached_property
+    def root_cdn_domain(self) -> str:
+        """
+        Return the CDN domain for the root domain.
+
+        Example:
+            >>> print(smarter_settings.root_cdn_domain)
+            'cdn.example.com'
+        See Also:
+            - smarter_settings.platform_subdomain
+            - smarter_settings.root_domain
+        """
+        return f"cdn.{self.root_domain}"
+
+    @cached_property
+    def root_cdn_url(self) -> str:
+        """
+        Return the CDN URL for the root domain.
+
+        Example:
+            >>> print(smarter_settings.root_cdn_url)
+            https://cdn.example.com
+        Raises:
+            SmarterConfigurationError: If the constructed URL is invalid.
+        See Also:
+            - SmarterValidator.urlify()
+            - smarter_settings.root_cdn_domain
+            - smarter_settings.environment
+        """
+        retval = SmarterValidator.urlify(self.root_cdn_domain, environment=self.environment)
+        if retval is None:
+            raise SmarterConfigurationError(
+                f"Invalid root_cdn_domain: {self.root_cdn_domain}. " "Please check your environment settings."
+            )
+        return retval
+
+    @cached_property
     def root_platform_domain(self) -> str:
         """
         Return the platform domain name for the root domain.

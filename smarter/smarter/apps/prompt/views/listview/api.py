@@ -36,7 +36,7 @@ from smarter.lib.django.views import (
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-WORKBENCH_CACHE_TIMEOUT = 10  # 10 seconds. keeps the workbench snappy while avoiding appearing stale.
+WORKBENCH_CACHE_TIMEOUT = 30  # 30 seconds. keeps the workbench snappy while avoiding appearing stale.
 
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])

@@ -66,13 +66,13 @@ A typical vite manifest.json looks like this::
     }
 """
 
-import json
 import os
 from typing import Any
 
+import requests
 from django import template
-from django.conf import settings
 
+from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 
@@ -90,11 +90,10 @@ def load_manifest() -> dict[str, Any]:
     :return: The Vite manifest loaded from the static files directory.
     :rtype: dict[str, Any]
     """
-    manifest_path = os.path.join(settings.STATIC_ROOT, "react/dashboard/manifest.json")
-    with open(manifest_path, encoding="utf-8") as f:
-        retval = json.load(f)
-        logger.debug("%s.load_manifest() Loaded Vite manifest: %s", logger_prefix, logging.formatted_json(retval))
-        return retval
+    url = os.path.join(smarter_settings.root_cdn_url, "react/dashboard/manifest.json")
+    r = requests.get(url, timeout=5)
+    r.raise_for_status()
+    return r.json()
 
 
 @cache_results()
