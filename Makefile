@@ -302,6 +302,7 @@ react-build:
 	cd smarter/react/terminal_emulator && npm install && npm run build && cd ../../../
 	cd smarter/react/prompt_passthrough && npm install && npm run build && cd ../../../
 	cd smarter/react/dashboard && npm install && npm run build && cd ../../../
+	python smarter/manage.py collectstatic --noinput
 
 # -------------------------------------------------------------------------
 # Sphinx Documentation
