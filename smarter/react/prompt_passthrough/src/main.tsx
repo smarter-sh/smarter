@@ -15,6 +15,7 @@ const cookieDomain =
   rootEl.getAttribute("smarter-cookie-domain") || window.location.hostname;
 const llmProviderId = rootEl.getAttribute("smarter-llm-provider-id") || "1";
 const templateId = rootEl.getAttribute("smarter-template-id") || "1";
+const providerApiUrl = rootEl.getAttribute("smarter-provider-api-url") || "";
 
 if (!apiUrl) throw new Error("API URL not found in root element attributes");
 if (!csrfCookieName)
@@ -27,6 +28,12 @@ if (!cookieDomain)
   throw new Error("Cookie domain not found in root element attributes");
 if (!csrftoken)
   throw new Error("CSRF token value not found in root element attributes");
+if (!llmProviderId)
+  throw new Error("LLM provider ID not found in root element attributes");
+if (!templateId)
+  throw new Error("Template ID not found in root element attributes");
+if (!providerApiUrl)
+  throw new Error("Provider API URL not found in root element attributes");
 
 createRoot(rootEl).render(
   <StrictMode>
@@ -38,6 +45,7 @@ createRoot(rootEl).render(
       cookieDomain={cookieDomain}
       llmProviderId={llmProviderId}
       templateId={templateId}
+      providerApiUrl={providerApiUrl}
     />
   </StrictMode>,
 );

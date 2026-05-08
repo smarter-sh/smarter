@@ -14,6 +14,7 @@ interface AppProps {
   cookieDomain: string;
   llmProviderId: string;
   templateId: string;
+  providerApiUrl: string;
 }
 
 function App({
@@ -24,6 +25,7 @@ function App({
   cookieDomain,
   llmProviderId,
   templateId,
+  providerApiUrl,
 }: AppProps) {
   return (
     <>
@@ -37,6 +39,7 @@ function App({
           cookieDomain={cookieDomain}
           defaultLLMProviderId={llmProviderId}
           defaultTemplateId={templateId}
+          providerApiUrl={providerApiUrl}
         />
       </section>
     </>

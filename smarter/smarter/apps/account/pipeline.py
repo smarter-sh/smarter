@@ -3,8 +3,6 @@
 Authentication pipeline functions for account management.
 """
 
-import logging
-
 import requests
 from django.shortcuts import redirect
 from social_core.exceptions import AuthAlreadyAssociated
@@ -14,6 +12,7 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__)

@@ -1,7 +1,6 @@
 """WSGI config for smarter project."""
 
 # wsgi.py
-import logging
 import os
 
 from django.conf import settings
@@ -9,6 +8,7 @@ from django.core.wsgi import get_wsgi_application
 from whitenoise import WhiteNoise
 
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
 

@@ -21,7 +21,7 @@ import FailureEmoji, {failure_style} from "./status_failure";
 import WorkingEmoji, {working_style} from "./status_working";
 import ReadyEmoji, {ready_style} from "./status_ready";
 
-function Response({
+function LLMProviderPassthroughResponse({
   apiResponse,
   isProcessing = false,
 }: {
@@ -65,4 +65,4 @@ function Response({
   );
 }
 
-export default Response;
+export default LLMProviderPassthroughResponse;

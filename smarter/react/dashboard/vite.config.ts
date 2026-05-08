@@ -1,9 +1,25 @@
 import { defineConfig } from "vite";
+//import { execSync } from "child_process";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig(({ command }: { command: string }) => ({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // {
+    //   name: "post-build",
+    //   closeBundle() {
+    //     execSync(
+    //       "aws s3 sync ../../smarter/static/react/dashboard s3://smarter.sh/react/dashboard/ --acl public-read --delete",
+    //       { stdio: "inherit" },
+    //     );
+    //     execSync(
+    //       "aws --no-cli-pager cloudfront create-invalidation --distribution-id E2NUOFBC8HY0W9 --paths '/react/dashboard/*'",
+    //       { stdio: "inherit" },
+    //     );
+    //   },
+    // },
+  ],
   // runtime builds are saved into the Django static directory so that these
   // files can be included in the Django collectstatic process and served by
   // Django at runtime. On the other hand, in development we want to rely on
@@ -43,7 +59,10 @@ export default defineConfig(({ command }: { command: string }) => ({
         entryFileNames: "assets/index.js",
         chunkFileNames: "assets/[name].js",
         manualChunks(id: string) {
-          if (id.includes("node_modules/xterm") || id.includes("node_modules/@xterm")) {
+          if (
+            id.includes("node_modules/xterm") ||
+            id.includes("node_modules/@xterm")
+          ) {
             return "xterm";
           }
           return undefined;

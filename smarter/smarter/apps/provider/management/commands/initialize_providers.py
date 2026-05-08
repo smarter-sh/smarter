@@ -171,7 +171,7 @@ class Command(SmarterCommand):
                 "support_email_verified": timezone.now(),
                 "terms_of_service_url": "https://openai.com/policies/terms-of-use/",
                 "privacy_policy_url": "https://openai.com/policies/privacy-policy/",
-                "docs_url": "https://platform.openai.com/docs/api-reference",
+                "docs_url": "https://developers.openai.com/api/reference/overview",
                 "tos_accepted_at": timezone.now(),
                 "tos_accepted_by": self.user_profile.cached_user,
             },

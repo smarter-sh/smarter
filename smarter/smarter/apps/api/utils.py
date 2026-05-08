@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Api utils"""
 
-import logging
 import os
 from typing import Optional
 from urllib.parse import urljoin
@@ -17,7 +16,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text,
     formatted_text_green,
 )
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import AbstractBroker

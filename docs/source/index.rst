@@ -43,7 +43,7 @@ A :doc:`declarative <smarter-framework/lib/manifests>` AI :doc:`resource managem
 
 - **AI Resource Management**
 
-  - Works with many :doc:`AI model providers <smarter-resources/smarter-provider>` — `OpenAI <https://platform.openai.com/docs/api-reference/>`_, `Google AI <https://ai.google.dev/api>`_, `Meta AI <https://developers.facebook.com/docs/>`_, `DeepSeek <https://api-docs.deepseek.com/>`_, and others.
+  - Works with many :doc:`AI model providers <smarter-resources/smarter-provider>` — `OpenAI <https://developers.openai.com/api/reference/overview/>`_, `Google AI <https://ai.google.dev/api>`_, `Meta AI <https://developers.facebook.com/docs/>`_, `DeepSeek <https://api-docs.deepseek.com/>`_, and others.
   - Lets you :doc:`organize <smarter-resources/smarter-chatbot>` and version your prompts, and see how they change over time.
   - Supports “:doc:`agents <smarter-resources/smarter-plugin>`” and multi-step AI workflows so you can build bigger, smarter tasks.
   - Secure integrations to :doc:`external data sources <smarter-resources/smarter-plugin>` like :doc:`databases <smarter-resources/plugins/plugin/sql>` and :doc:`APIs <smarter-resources/plugins/plugin/api>`.
