@@ -66,14 +66,14 @@ A typical vite manifest.json looks like this::
     }
 """
 
-import json
 import os
 from typing import Any
 
 from django import template
 from django.conf import settings
 
-from smarter.lib import logging
+from smarter.common.conf import smarter_settings
+from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 
 logger = logging.getLogger(__name__)

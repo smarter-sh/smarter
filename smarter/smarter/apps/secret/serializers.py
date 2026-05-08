@@ -47,3 +47,35 @@ class SecretSerializer(MetaDataWithOwnershipModelSerializer):
             "last_accessed",
             "expires_at",
         ]
+
+
+class SecretMiniSerializer(MetaDataWithOwnershipModelSerializer):
+    """
+    Minimal serializer for the `Secret` model, exposing only essential fields.
+
+    This serializer is intended for use in contexts where only basic secret information is needed,
+    such as listing secrets without sensitive details.
+
+    :param id: Integer. Unique identifier for the secret.
+    :param name: String. Name of the secret.
+
+    .. note::
+
+            All fields are read-only in this serializer.
+
+    **Example usage**::
+
+        from smarter.apps.account.serializers import SecretMiniSerializer
+        serializer = SecretMiniSerializer(secret_instance)
+        data = serializer.data
+
+    """
+
+    # pylint: disable=missing-class-docstring
+    class Meta(MetaDataWithOwnershipModelSerializer.Meta):
+        model = Secret
+        fields = ["id", "name"]
+        read_only_fields = getattr(MetaDataWithOwnershipModelSerializer.Meta, "read_only_fields", []) + [
+            "id",
+            "name",
+        ]

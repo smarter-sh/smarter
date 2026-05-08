@@ -16,7 +16,14 @@ ifeq ("$(wildcard .env)","")
 endif
 include .env
 
-.PHONY: init activate build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release docker-init docker-build docker-run docker-test python-init python-lint python-clean python-requirements keen-init keen-build keen-server helm change-log help
+.PHONY: init activate build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
+	python-init python-lint python-clean python-requirements check-python \
+	keen-init keen-build keen-server \
+	react-build \
+	helm-update \
+	sphinx-init sphinx-docs sphinx-linkcheck \
+	help
 
 # Default target executed when no arguments are given to make.
 all: help
@@ -75,17 +82,6 @@ run:
 	@echo "==============================================================================="
 	make docker-run
 
-collectstatic:
-	@echo "==============================================================================="
-	@echo "Collecting static files on local filesystem ..."
-	@echo "==============================================================================="
-	rm -r -f smarter/staticfiles/react/
-	cd smarter/react/prompt_list && npm install && npm run build && cd ../../../
-	cd smarter/react/terminal_emulator && npm install && npm run build && cd ../../../
-	cd smarter/react/prompt_passthrough && npm install && npm run build && cd ../../../
-	cd smarter/react/dashboard && npm install && npm run build && cd ../../../
-	python smarter/manage.py collectstatic --noinput
-
 test:
 	make docker-test
 
@@ -118,6 +114,12 @@ coverage:
 	@echo "Generating code coverage report using Docker and coverage.py ..."
 	@echo "==============================================================================="
 	docker exec smarter-app bash -c "coverage run --source=smarter.lib.django.request manage.py test smarter.lib.django.tests.test_request_mixin && coverage report -m"
+
+change-log:
+	@echo "==============================================================================="
+	@echo "Generating changelog..."
+	@echo "==============================================================================="
+	npx conventional-changelog -p angular -i CHANGELOG.md -s
 
 pre-commit-init:
 	@echo "==============================================================================="
@@ -205,6 +207,34 @@ docker-prune:
 	docker network prune -f && \
 	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || @echo "No images to remove"
 
+# -------------------------------------------------------------------------
+# Helm
+# -------------------------------------------------------------------------
+helm-update:
+	@echo "==============================================================================="
+	@echo "Updating Helm chart dependencies for smarter/charts/smarter ..."
+	@echo "==============================================================================="
+	cd helm/charts/smarter && \
+	helm dependency update
+
+# ---------------------------------------------------------
+# Keen
+# ---------------------------------------------------------
+keen-init:
+	cd keen_v3.0.6/tools && npm install --global yarn && \
+	npm install gulp@^4.0.2 && \
+	npm install gulp-cli && \
+	gulp --version
+
+keen-build:
+	cd keen_v3.0.6/tools && \
+	yarn && \
+	gulp --demo1
+
+keen-server:
+	cd keen_v3.0.6/tools && \
+	gulp localhost
+
 # ---------------------------------------------------------
 # Python
 # ---------------------------------------------------------
@@ -261,40 +291,18 @@ python-requirements:
 
 
 # ---------------------------------------------------------
-# Keen
+# React
 # ---------------------------------------------------------
-keen-init:
-	cd keen_v3.0.6/tools && npm install --global yarn && \
-	npm install gulp@^4.0.2 && \
-	npm install gulp-cli && \
-	gulp --version
-
-keen-build:
-	cd keen_v3.0.6/tools && \
-	yarn && \
-	gulp --demo1
-
-keen-server:
-	cd keen_v3.0.6/tools && \
-	gulp localhost
-
-
-# -------------------------------------------------------------------------
-# AWS and deployment
-# -------------------------------------------------------------------------
-helm-update:
+react-build:
 	@echo "==============================================================================="
-	@echo "Updating Helm chart dependencies for smarter/charts/smarter ..."
+	@echo "Collecting static files on local filesystem ..."
 	@echo "==============================================================================="
-	cd helm/charts/smarter && \
-	helm dependency update
-
-
-change-log:
-	@echo "==============================================================================="
-	@echo "Generating changelog..."
-	@echo "==============================================================================="
-	npx conventional-changelog -p angular -i CHANGELOG.md -s
+	rm -r -f smarter/staticfiles/react/
+	cd smarter/react/prompt_list && npm install && npm run build && cd ../../../
+	cd smarter/react/terminal_emulator && npm install && npm run build && cd ../../../
+	cd smarter/react/prompt_passthrough && npm install && npm run build && cd ../../../
+	cd smarter/react/dashboard && npm install && npm run build && cd ../../../
+	python smarter/manage.py collectstatic --noinput
 
 # -------------------------------------------------------------------------
 # Sphinx Documentation
@@ -335,39 +343,44 @@ sphinx-linkcheck:
 help:
 	@echo '===================================================================='
 	@echo 'init                   - Initialize local and Docker environments'
-	@echo 'activate               - activates Python virtual environment'
+	@echo 'activate               - Activate Python virtual environment'
 	@echo 'build                  - Build Docker containers'
-	@echo 'run                    - run web application from Docker'
-	@echo 'test                   - run Python-Django unit tests in Docker'
-	@echo 'clean                  - delete all local artifacts, virtual environment, node_modules, and Docker containers'
-	@echo 'tear-down              - destroy all docker build and local artifacts'
+	@echo 'run                    - Run web application from Docker'
+	@echo 'test                   - Run Python-Django unit tests in Docker'
+	@echo 'clean                  - Delete all local artifacts, virtual environment, node_modules, and Docker containers'
+	@echo 'tear-down              - Destroy all Docker build and local artifacts'
 	@echo '<************************** Code Management **************************>'
 	@echo 'lint                   - Run all code linters and formatters'
 	@echo 'analyze                - Generate code analysis report using cloc'
-	@echo 'coverage               - Generate Docker-based code coverage analysis report'
-	@echo 'pre-commit-init        - install and configure pre-commit'
-	@echo 'pre-commit-run         - runs all pre-commit hooks on all files'
+	@echo 'coverage               - Generate Docker-based code coverage report'
+	@echo 'pre-commit-init        - Install and configure pre-commit'
+	@echo 'pre-commit-run         - Run all pre-commit hooks on all files'
 	@echo 'release                - Force a new Github release'
+	@echo 'change-log             - Update CHANGELOG.md file'
 	@echo '<************************** Docker **************************>'
-	@echo 'docker-init            - Initialize MySQL and create the smarter database'
+	@echo 'docker-check           - Verify Docker is installed and running'
+	@echo 'docker-init            - Initialize MariaDB and create the smarter database'
 	@echo 'docker-shell           - Open a shell in the smarter-app Docker container'
 	@echo 'docker-build           - Build all Docker containers using docker-compose'
 	@echo 'docker-run             - Start all Docker containers using docker-compose'
 	@echo 'docker-test            - Run Python-Django unit tests in Docker'
-	@echo 'docker-prune           - Remove unused Docker objects'
+	@echo 'docker-prune           - Remove unused Docker objects and clean up Docker artifacts'
 	@echo '<************************** Python **************************>'
+	@echo 'check-python           - Verify Python 3.13 is installed'
 	@echo 'python-init            - Create a Python virtual environment and install dependencies'
-	@echo 'python-lint            - Run Python linting using pre-commit'
+	@echo 'python-lint            - Run Python linting using pre-commit and pylint'
 	@echo 'python-clean           - Destroy the Python virtual environment and remove __pycache__ directories'
-	@echo 'python-requirements    - compile and update Python dependency files'
+	@echo 'python-requirements    - Compile and update Python dependency files'
+	@echo '<************************** React **************************>'
+	@echo 'react-build            - Build all React frontend apps and collect static files'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'
 	@echo 'keen-build             - Build Keen app using gulp'
 	@echo 'keen-server            - Start local Keen web server using gulp'
-	@echo '<************************** AWS **************************>'
+	@echo '<************************** Helm **************************>'
 	@echo 'helm-update            - Update Helm chart dependencies'
-	@echo '<************************** AWS **************************>'
+	@echo '<************************** Sphinx Documentation **************************>'
 	@echo 'sphinx-init            - Initialize Sphinx documentation environment'
 	@echo 'sphinx-docs            - Build Sphinx documentation'
+	@echo 'sphinx-linkcheck       - Check documentation links'
 	@echo '===================================================================='
-	@echo 'change-log             - update CHANGELOG.md file'

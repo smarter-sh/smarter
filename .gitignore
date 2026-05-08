@@ -2,6 +2,8 @@
 # WARNING: everything is in here for a reason. Edit with care.
 # -------------------------------------
 
+smarter/smarter/static/react/
+
 # -------------------------------------
 # Helm chart artifacts. charts are compressed
 # binary files that do not belong in GitHub.

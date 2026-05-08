@@ -682,11 +682,14 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django_hosts.middleware.HostsRequestMiddleware",
     # this replaces corsheaders.middleware.CorsMiddleware"
-    "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
-    # this replaces django.middleware.security.SecurityMiddleware
-    # simple middleware to block requests for common sensitive files
-    # like .env, private key files, etc.
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
+    # to manage logging context by user. This has to run AFTER
+    # authentication middleware so that it can get the user info for logging context.
     # -------------------------------
+    "smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware",
+    "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
     "smarter.lib.django.middleware.sensitive_files.SmarterBlockSensitiveFilesMiddleware",
     # to log and block excessive 404 errors, which is a growing problem
     # from botnets probing for vulnerabilities.
@@ -695,7 +698,6 @@ MIDDLEWARE = [
     #
     # -------------------------------
     # "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     # this replaces django.middleware.csrf.SmarterCsrfViewMiddleware
     # to add chatbot-specific CSRF handling
@@ -703,13 +705,11 @@ MIDDLEWARE = [
     "smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware",
     #
     # -------------------------------
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
-    # to manage logging context by user. This has to run AFTER
-    # authentication middleware so that it can get the user info for logging context.
-    # -------------------------------
-    "smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware",
     # to manage ALLOWED_HOSTS
+    # -------------------------------
+    # this replaces django.middleware.security.SecurityMiddleware
+    # simple middleware to block requests for common sensitive files
+    # like .env, private key files, etc.
     # -------------------------------
     "smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware",
     #
@@ -726,6 +726,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "waffle.middleware.WaffleMiddleware",
+    # minify HTML and strip out commenets to reduce response sizes and obfuscate potential sensitive information in comments
+    # -------------------------------
     "smarter.lib.django.middleware.html_minify.HTMLMinifyMiddleware",
     "django_hosts.middleware.HostsResponseMiddleware",
     #

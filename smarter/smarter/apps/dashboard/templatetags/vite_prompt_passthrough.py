@@ -66,14 +66,13 @@ A typical vite manifest.json looks like this::
     }
 """
 
-import json
 import os
 from typing import Any
 
 from django import template
 from django.conf import settings
 
-from smarter.lib import logging
+from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 
 logger = logging.getLogger(__name__)
@@ -162,6 +161,9 @@ def prompt_passthrough_vite_assets(entry: str = "index.html") -> dict[str, Any]:
     }
 
     logger.debug(
-        "%s.prompt_passthrough_vite_assets() entry=%s assets=%s", logger_prefix, entry, logging.formatted_json(assets)
+        "%s.prompt_passthrough_vite_assets() caching result for entry=%s assets=%s",
+        logger_prefix,
+        entry,
+        logging.formatted_json(assets),
     )
     return assets

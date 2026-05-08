@@ -124,7 +124,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             response = provider.handler(user_profile, chat, data)
 
     .. seealso::
-        - https://platform.openai.com/docs/api-reference/chat
+        - https://developers.openai.com/api/reference/overview/chat
         - :class:`SmarterChatProviderBase`
     """
 
@@ -178,7 +178,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         .. seealso::
 
-            - https://platform.openai.com/docs/api-reference/chat/create
+            - https://developers.openai.com/api/reference/overview/chat/create
             - :class:`OpenAIMessageKeys`
         """
         if not isinstance(self.messages, list):

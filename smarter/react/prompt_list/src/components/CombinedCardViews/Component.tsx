@@ -24,12 +24,14 @@ function CombinedCardViews({ chatbots }: CombinedCardViewsProps) {
               renderDetailRow={renderDetailRow}
             />
           ) : null}
-          <CardView
-            title="Shared Chatbots"
-            chatbots={chatbots.shared}
-            cardClassName={chatbots.user.length > 0 ? "mt-5" : "mt-15"}
-            renderDetailRow={renderDetailRow}
-          />
+          {chatbots.shared.length > 0 ? (
+            <CardView
+              title="Shared Chatbots"
+              chatbots={chatbots.shared}
+              cardClassName={chatbots.user.length > 0 ? "mt-5" : "mt-15"}
+              renderDetailRow={renderDetailRow}
+            />
+          ) : null}
         </section>
       </div>
     </div>

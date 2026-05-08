@@ -1,11 +1,10 @@
 """Django context processors for account/base.html"""
 
-import logging
-
 from django.conf import settings
 
 from smarter.apps.account.urls import AccountReverseNames
 from smarter.common.utils import is_authenticated_request
+from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 
 from .models import UserProfile

@@ -1,10 +1,11 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'delete' view"""
 
-import logging
 from http import HTTPStatus
 
 from drf_yasg.utils import swagger_auto_schema
+
+from smarter.lib import logging
 
 from .base import CliBaseApiView
 from .swagger import (
@@ -57,5 +58,7 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         logger.debug(
             "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
         )
+        if not self.broker:
+            raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         response = self.broker.delete(request=request, kwargs=kwargs)
         return response

@@ -1,4 +1,4 @@
 
-import Dashboard from "./Component";
+import Prompts from "./Component";
 
-export default Dashboard;
+export default Prompts;

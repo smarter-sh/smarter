@@ -1,14 +1,18 @@
+import { type LLMProvider } from "@/components/LLMProviders";
 
-//import fetchDjangoUrl from "@/lib/django";
-
-import './styles.css';
+import "./styles.css";
 
 interface LLMProviderSelectorProps {
+  providersJson: LLMProvider[];
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
-function LLMProviderSelector({ value, onChange }: LLMProviderSelectorProps) {
+function LLMProviderSelector({
+  value,
+  onChange,
+  providersJson,
+}: LLMProviderSelectorProps) {
 
   return (
     <select
@@ -17,9 +21,14 @@ function LLMProviderSelector({ value, onChange }: LLMProviderSelectorProps) {
       value={value}
       onChange={onChange}
     >
-      <option value="1">OpenAI</option>
-      <option value="2">Anthropic</option>
-      <option value="3">Google Gemini</option>
+      {providersJson.length === 0 && (
+        <option value="">No providers available</option>
+      )}
+      {providersJson.map((provider) => (
+        <option key={provider.id} value={String(provider.id)}>
+          {provider.name}
+        </option>
+      ))}
     </select>
   );
 }
