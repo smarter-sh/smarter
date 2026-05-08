@@ -39,8 +39,20 @@ LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
 # Environment: local, alpha, beta, next, or production
 ARG TARGETPLATFORM
 ARG TARGETARCH
+
+# from .env file. This is used to control which environment we're building the image for, and therefore
+# which dependencies we install and which settings are used.
 ARG ENVIRONMENT=local
 ENV ENVIRONMENT=$ENVIRONMENT
+
+# from .env file. This is used to control whether we build react components
+# files during the build process.
+ARG BUILD_REACT_COMPONENTS=true
+ENV BUILD_REACT_COMPONENTS=${BUILD_REACT_COMPONENTS}
+
+# from .env file. This is used to control whether we collect static files during the build process.
+ARG COLLECT_STATIC_FILES=true
+ENV COLLECT_STATIC_FILES=${COLLECT_STATIC_FILES}
 
 ############################## install system packages #################################
 # build-essential           needed to compile Python packages with native extensions
@@ -241,14 +253,46 @@ COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
 COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
 
 
+################################ build react ###################################
+# The Smarter web console UI includes several React components, including the
+# main dashboard, the prompt (ie Chatbots) list, the terminal emulator, and the
+# prompt passthrough. We need to build each of these and include the built assets
+# in the final image as part of Django's staticfiles output because all of these
+# components are served by Django as static assets.
+#
+# Note: This can be sped up significantly in local development by setting the
+# BUILD_REACT_COMPONENTS=false and instead using the Makefile command
+# `make collectstatic` which will build all React components and save these in the
+# local smarter/smarter/static/react/ directory, which is then copied into the
+# Docker image as part of the application code copy step above.
+#
+# Also note that `smarter/smarter/static/react/` is ignored by git, meaning that these
+# build assets will not exist inside normal remotely executed CI-CD processes
+# in GitHub Actions.
+FROM data AS react_build
+
+RUN if [ "$BUILD_REACT_COMPONENTS" = "true" ]; then \
+    DEBIAN_FRONTEND=noninteractive apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    nodejs \
+    npm && \
+    rm -rf /var/lib/apt/lists/* && \
+    cd smarter/react/prompt_list && npm install && npm run build && cd ../../../ && \
+    cd smarter/react/terminal_emulator && npm install && npm run build && cd ../../../ && \
+    cd smarter/react/prompt_passthrough && npm install && npm run build && cd ../../../ && \
+    cd smarter/react/dashboard && npm install && npm run build && cd ../../../ && \
+    apt-get purge -y nodejs npm && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /home/smarter_user/.npm ; fi
+
+
 ############################## collect_assets ##################################
 # This is a Django application, so we need to collect static assets.
 # We do this in a separate stage so that if the application code changes
 # but the static assets do not change, we can take advantage of Docker's
 # caching mechanism.
-FROM data AS collect_assets
-ARG COLLECT_STATIC_FILES=true
-ENV COLLECT_STATIC_FILES=${COLLECT_STATIC_FILES}
+FROM react_build AS collect_assets
 WORKDIR /home/smarter_user/smarter
 RUN if [ "$COLLECT_STATIC_FILES" = "true" ]; then python manage.py collectstatic --noinput; else echo "Skipping collectstatic"; fi
 

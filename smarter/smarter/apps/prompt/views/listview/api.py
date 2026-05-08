@@ -28,7 +28,6 @@ from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
@@ -66,7 +65,6 @@ class PromptListApiView(SmarterAuthenticatedWebView):
 
     def post(self, request: HttpRequest, *args, **kwargs):
 
-        @cache_results(timeout=60)
         def _get_cached_chatbots_for_user_profile(user_profile_id: int) -> JsonResponse:
             """Get cached chatbots for a user profile."""
 
