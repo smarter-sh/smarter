@@ -16,6 +16,37 @@ import "./styles.css";
 // These strings are internal SSE stream status messages emitted by the server. They can
 // appear in replay history from older log entries and should never surface to dashboard users.
 const SUPPRESSED_STARTUP_LINES = new Set(["Waiting for log stream...", "[stream] connected"]);
+const terminalTheme = {
+  background: "#171b20",
+  foreground: "#d9e1ea",
+  cursor: "#78dce8",
+  black: "#1b1f24",
+  red: "#ff8f8f",
+  green: "#7bd88f",
+  yellow: "#ffd580",
+  blue: "#78dce8",
+  magenta: "#c792ea",
+  cyan: "#89ddff",
+  white: "#d9e1ea",
+  brightBlack: "#5c6773",
+  brightRed: "#ff8f8f",
+  brightGreen: "#7bd88f",
+  brightYellow: "#ffd580",
+  brightBlue: "#89ddff",
+  brightMagenta: "#d8b4ff",
+  brightCyan: "#89ddff",
+  brightWhite: "#ffffff",
+};
+const terminalConfig = {
+      convertEol: true,
+      cursorBlink: false,
+      disableStdin: true,
+      fontFamily: '"JetBrains Mono", "SFMono-Regular", Menlo, monospace',
+      fontSize: 13,
+      lineHeight: 1.4,
+      scrollback: 5000,
+      theme: terminalTheme,
+    };
 
 interface TerminalEmulatorProps {
   apiUrl: string;
@@ -35,43 +66,14 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
       return;
     }
 
-    const term = new Terminal({
-      convertEol: true,
-      cursorBlink: false,
-      disableStdin: true,
-      fontFamily: '"JetBrains Mono", "SFMono-Regular", Menlo, monospace',
-      fontSize: 13,
-      lineHeight: 1.4,
-      scrollback: 5000,
-      theme: {
-        background: "#171b20",
-        foreground: "#d9e1ea",
-        cursor: "#78dce8",
-        black: "#1b1f24",
-        red: "#ff8f8f",
-        green: "#7bd88f",
-        yellow: "#ffd580",
-        blue: "#78dce8",
-        magenta: "#c792ea",
-        cyan: "#89ddff",
-        white: "#d9e1ea",
-        brightBlack: "#5c6773",
-        brightRed: "#ff8f8f",
-        brightGreen: "#7bd88f",
-        brightYellow: "#ffd580",
-        brightBlue: "#89ddff",
-        brightMagenta: "#d8b4ff",
-        brightCyan: "#89ddff",
-        brightWhite: "#ffffff",
-      },
-    });
+    const term = new Terminal(terminalConfig);
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
-
     term.open(terminalContainerRef.current);
     // defer fit until after browser layout
     let rafId = requestAnimationFrame(() => {
       fitAddon.fit();
+      term.write('\x1b[?7l');
     });
 
     terminalRef.current = term;
@@ -87,6 +89,7 @@ function TerminalEmulator({ apiUrl }: TerminalEmulatorProps) {
 
     resizeObserver.observe(terminalContainerRef.current);
     window.addEventListener("resize", handleResize);
+
 
     return () => {
       cancelAnimationFrame(rafId);
