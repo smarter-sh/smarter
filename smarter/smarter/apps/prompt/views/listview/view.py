@@ -41,9 +41,9 @@ class PromptListView(SmarterAuthenticatedWebView):
     template_path = "react/prompt-list.html"
 
     def get(self, request: HttpRequest, *args, **kwargs):
+        # pylint: disable=C0415
         from smarter.apps.prompt.urls import PromptReverseNames
 
-        logger.debug("%s.get() called for %s with args %s, kwargs %s", self.formatted_class_name, request, args, kwargs)
         context = {
             "prompt_list": {
                 "root_id": "smarter-prompt-list-root",
@@ -54,4 +54,12 @@ class PromptListView(SmarterAuthenticatedWebView):
             }
         }
 
+        logger.debug(
+            "%s.get() called for %s with args %s, kwargs %s with context %s",
+            self.formatted_class_name,
+            request,
+            args,
+            kwargs,
+            logging.formatted_json(context),
+        )
         return render(request, template_name=self.template_path, context=context)
