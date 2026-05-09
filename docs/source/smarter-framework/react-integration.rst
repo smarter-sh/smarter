@@ -47,7 +47,9 @@ template-based web pages. At a high level, the strategy involves:
    nothing more than the mounting points for the React components along with the
    attributes mapping the view context to individual data attributes.
 
-
+   .. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/view-template-integration1.png
+      :alt: View, Template, and React Component Integration
+      :width: 100%
 
 .. toctree::
   :maxdepth: 1
