@@ -1,29 +1,39 @@
 import { defineConfig } from "vite";
-//import { execSync } from "child_process";
+import { execSync } from "child_process";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig(({ command }: { command: string }) => ({
   plugins: [
     react(),
-    // {
-    //   name: "post-build",
-    //   closeBundle() {
-    //     execSync(
-    //       "aws s3 sync ../../smarter/static/react/dashboard s3://smarter.sh/react/dashboard/ --acl public-read --delete",
-    //       { stdio: "inherit" },
-    //     );
-    //     execSync(
-    //       "aws --no-cli-pager cloudfront create-invalidation --distribution-id E2NUOFBC8HY0W9 --paths '/react/dashboard/*'",
-    //       { stdio: "inherit" },
-    //     );
-    //   },
-    // },
+    // We push the build files to an S3 bucket in order to simplify Docker builds.
+    // This enables us to avoid having to use React build tools inside of Docker.
+    //
+    // Separately, we also create a CloudFront invalidation after each build so that
+    // we maintain the option of serving these files from Cloudfront in production (if
+    // we ever find a compelling reason to do so in the future).
+    {
+      name: "post-build",
+      closeBundle() {
+        execSync(
+          "aws s3 sync ../../smarter/static/react/dashboard s3://smarter.sh/react/dashboard/ --acl public-read --delete",
+          { stdio: "inherit" },
+        );
+        execSync(
+          "aws --no-cli-pager cloudfront create-invalidation --distribution-id E2NUOFBC8HY0W9 --paths '/react/dashboard/*'",
+          { stdio: "inherit" },
+        );
+      },
+    },
   ],
-  // runtime builds are saved into the Django static directory so that these
+  // Builds are also saved into the Django static directory so that these
   // files can be included in the Django collectstatic process and served by
-  // Django at runtime. On the other hand, in development we want to rely on
-  // Vite's dev server to serve these files, so we set the base to '/'.
+  // Django at runtime in local development environments. For development
+  // we need to be able to support serving these files both from the Vite
+  // dev server as well as the Django dev server. We set the base to '/'
+  // so that Vite's dev server can serve these files. Separately, we persist
+  // the actual build files to the Django static directory and set up a proxy
+  // in the Vite dev server to forward requests to the Django dev server.
   base: command === "serve" ? "/" : "/static/react/dashboard/",
   resolve: {
     alias: {
@@ -33,7 +43,7 @@ export default defineConfig(({ command }: { command: string }) => ({
   build: {
     // ------------------------------------------------------------------------
     // The manifest is needed for hosting builds from Django (both dev and prod).
-    // It is used by Django to determine the correct file names to include
+    // It is used by Django templatetags to determine the correct file names to include
     // in the HTML template. This is necessary because Vite includes a
     // hash in the file names for cache busting.
     // ------------------------------------------------------------------------

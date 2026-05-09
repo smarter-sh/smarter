@@ -83,7 +83,7 @@
 .terminal-window__body {
   flex: 1 1 auto;
   height: 750px;
-  overflow: hidden;
+  overflow: visible;
   padding: 0;
   position: relative;
   background:
@@ -126,6 +126,12 @@
   border-top-color: var(--terminal-cyan);
   border-radius: 50%;
   animation: terminal-spin 0.7s linear infinite;
+}
+
+.terminal-window__xterm .xterm-viewport {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  min-width: 100%;
 }
 
 .terminal-window__xterm .xterm-viewport::-webkit-scrollbar {
