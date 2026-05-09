@@ -6,12 +6,12 @@ from django.contrib.auth.models import User
 
 from .account import (
     Account,
-    AccountContact,
     ResolvedUserType,
     get_resolved_user,
     is_authenticated_user,
     welcome_email_context,
 )
+from .account_contact import AccountContact
 from .charge import (
     CHARGE_TYPE_PLUGIN,
     CHARGE_TYPE_PROMPT_COMPLETION,

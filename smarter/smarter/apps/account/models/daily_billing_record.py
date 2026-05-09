@@ -1,4 +1,42 @@
-"""Account DailyBillingRecord model."""
+"""
+Account DailyBillingRecord Model
+=================================
+
+This module defines the :class:`DailyBillingRecord` model for aggregating and tracking daily billing data
+for accounts and users. It enables efficient reporting and analytics by recording daily usage and billing
+information per account, user, provider, and charge type.
+
+Classes & Constants
+-------------------
+
+- :class:`DailyBillingRecord`: Aggregates daily usage and billing data for each account and user.
+
+Key Features
+------------
+
+- Tracks provider, charge type, and token usage for each billing day.
+- Enforces uniqueness for each (account, user, provider, date) combination.
+- Integrates with Smarter logging and account models.
+
+Example
+-------
+
+.. code-block:: python
+
+    from smarter.apps.account.models import DailyBillingRecord
+
+    record = DailyBillingRecord.objects.create(
+        account=account,
+        user=user,
+        provider="openai",
+        date=date.today(),
+        charge_type="completion",
+        prompt_tokens=100,
+        completion_tokens=200,
+        total_tokens=300
+    )
+
+"""
 
 # django stuff
 from django.conf import settings

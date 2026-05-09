@@ -20,7 +20,8 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from .account import Account, AccountContact
+from .account import Account
+from .account_contact import AccountContact
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 

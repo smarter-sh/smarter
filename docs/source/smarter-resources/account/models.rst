@@ -1,5 +1,5 @@
-Django ORM
-================
+Account Django ORM
+===================
 
 .. toctree::
    :maxdepth: 1
