@@ -1,4 +1,44 @@
-"""Account Charge model."""
+"""
+Account Charge Model and Constants
+==================================
+
+This module defines the :class:`Charge` model for tracking periodic billing events associated with user profiles.
+It also provides constants for charge types and providers, and emits a signal when a new charge is created.
+
+Classes & Constants
+-------------------
+
+- :class:`Charge`: Represents a single billing event for a user profile, including provider, charge type, token usage, and references.
+- :data:`CHARGE_TYPES`: List of available charge types (completion, plugin, tool).
+- :data:`PROVIDERS`: List of supported LLM providers (OpenAI, Meta AI, Google AI).
+- :data:`CHARGE_TYPE_PROMPT_COMPLETION`, :data:`CHARGE_TYPE_PLUGIN`, :data:`CHARGE_TYPE_TOOL`: Charge type constants.
+
+Key Features
+------------
+
+- Tracks provider, charge type, token usage, and references for each billing event.
+- Emits a signal (`new_charge_created`) when a new charge is created for downstream processing.
+- Integrates with Smarter logging and signal systems.
+
+Example
+-------
+
+.. code-block:: python
+
+    from smarter.apps.account.models import Charge
+
+    charge = Charge.objects.create(
+        user_profile=user_profile,
+        provider="openai",
+        charge_type="completion",
+        prompt_tokens=100,
+        completion_tokens=200,
+        total_tokens=300,
+        model="gpt-4",
+        reference="invoice-123"
+    )
+
+"""
 
 # django stuff
 from django.db import models

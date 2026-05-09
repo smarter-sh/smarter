@@ -1,4 +1,44 @@
-"""Account MetaDataWithOwnership model."""
+"""
+Account MetaDataWithOwnership Model
+===================================
+
+This module provides an abstract Django ORM base model and supporting classes for
+resource ownership and permission management within the Smarter platform. It extends
+the core metadata model to include ownership by user profiles and accounts, and
+provides permission-aware querysets and managers for filtering resources based on
+user access rights.
+
+Classes
+-------
+
+- MetaDataWithOwnershipModel
+    Abstract base model that adds ownership fields and logic to metadata models.
+- MetaDataWithOwnershipModelManager
+    Custom manager that returns permission-aware querysets.
+- SmarterQuerySetWithPermissions
+    QuerySet subclass with methods for filtering by read and ownership permissions.
+
+Features
+--------
+
+- Ownership enforcement via foreign key to UserProfile.
+- Permission-based filtering for read and management (ownership) access.
+- Caching for optimized retrieval of model instances.
+- Uniqueness constraints on resource name and owner.
+- Integration with Smarter's custom logging and exception handling.
+
+Usage
+-----
+
+This module is intended to be subclassed by concrete models that require
+ownership and permission logic. Do not instantiate MetaDataWithOwnershipModel directly.
+
+.. code-block:: python
+
+    class MyResource(MetaDataWithOwnershipModel):
+        # Define additional fields here
+
+"""
 
 from typing import Any, Optional, TypeVar, overload
 
