@@ -14,7 +14,7 @@ with the resources you need—all without requiring a page reload or manual refr
    :alt: Prompts Passthrough React Component Screenshot
    :class: screenshot
    :align: center
-   :width: 80%
+   :width: 100%
 
 Component Usage Example
 ------------------------
@@ -28,5 +28,3 @@ Core Prompts Component
 
 .. literalinclude:: ../../../../smarter/react/prompt_list/src/components/Prompts/Component.tsx
    :language: tsx
-   :start-after: "interface PromptListProps"
-   :end-before: "export function"
