@@ -79,7 +79,7 @@ last_updated = datetime.now().strftime("%Y-%m-%d")
 # custom context variables to be used in Sphinx templates, presumably in
 # the ./_templates/footer.html template override.
 html_context = {
-    "commit": commit,
+    # "commit": commit,
     "last_updated": last_updated,
     "branding_company_name": smarter_settings.branding_corporate_name,
     "branding_smarter_product_name": SMARTER_PRODUCT_NAME,

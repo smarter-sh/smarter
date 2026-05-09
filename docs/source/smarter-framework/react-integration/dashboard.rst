@@ -27,7 +27,7 @@ achieve with traditional server-rendered templates.
    :alt: Dashboard Passthrough React Component Screenshot
    :class: screenshot
    :align: center
-   :width: 80%
+   :width: 100%
 
 Component Usage Example
 ------------------------
@@ -41,5 +41,3 @@ Core Dashboard Component
 
 .. literalinclude:: ../../../../smarter/react/dashboard/src/components/Dashboard/Component.tsx
    :language: tsx
-   :start-after: "interface DashboardProps"
-   :end-before: "export function"

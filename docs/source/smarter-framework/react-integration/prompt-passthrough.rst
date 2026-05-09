@@ -34,7 +34,7 @@ API endpoints themselves are provisioned via Smarter's LLM Provider resource mod
    :alt: Prompt Passthrough React Component Screenshot
    :class: screenshot
    :align: center
-   :width: 80%
+   :width: 100%
 
 Component Usage Example
 ------------------------
@@ -48,5 +48,3 @@ Core Prompt Component
 
 .. literalinclude:: ../../../../smarter/react/prompt_passthrough/src/components/Prompt/Component.tsx
    :language: tsx
-   :start-after: "interface PromptProps"
-   :end-before: "export function"

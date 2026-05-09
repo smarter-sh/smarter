@@ -32,7 +32,7 @@ seamless, visually rich terminal experience within any web application.
    :alt: Terminal Emulator React Component Screenshot
    :class: screenshot
    :align: center
-   :width: 80%
+   :width: 100%
 
 Component Usage Example
 ------------------------
@@ -46,5 +46,3 @@ Core Terminal Component
 
 .. literalinclude:: ../../../../smarter/react/terminal_emulator/src/components/Terminal/Component.tsx
    :language: tsx
-   :start-after: "interface TerminalEmulatorProps"
-   :end-before: "export function"
