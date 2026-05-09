@@ -119,5 +119,7 @@ class DashboardView(SmarterAuthenticatedWebView):
         }
         self.template_path = "react/dashboard.html"
 
-        logger.debug("%s.get() Rendering dashboard with context: %s", self.formatted_class_name, context)
+        logger.debug(
+            "%s.get() Rendering dashboard with context: %s", self.formatted_class_name, logging.formatted_json(context)
+        )
         return render(request, self.template_path, context=context)
