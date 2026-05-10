@@ -11,7 +11,7 @@ from urllib.parse import parse_qs, urlparse
 
 import inflect
 from django.core import serializers
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.db import IntegrityError, models
 from django.http import HttpRequest, QueryDict
 from requests import PreparedRequest
@@ -173,7 +173,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             request
             or kwargs.pop("request", None)
             or next(
-                (arg for arg in args if isinstance(arg, (Request, HttpRequest, WSGIRequest, PreparedRequest))), None
+                (arg for arg in args if isinstance(arg, (Request, HttpRequest, ASGIRequest, PreparedRequest))), None
             )
         )
         user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)

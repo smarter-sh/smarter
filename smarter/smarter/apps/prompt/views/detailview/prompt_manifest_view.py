@@ -59,7 +59,7 @@ class PromptManifestView(DocsBaseView):
     unsupported chatbot kinds and names.
 
     :param request: Django HTTP request object.
-    :type request: WSGIRequest
+    :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
     :param kwargs: Keyword arguments, must include 'name' (chatbot name) and 'kind' (chatbot type).
@@ -106,7 +106,7 @@ class PromptManifestView(DocsBaseView):
         6. Handle any errors that occur during the process and return appropriate error responses.
 
         :param request: Django HTTP request object.
-        :type request: WSGIRequest
+        :type request: ASGIRequest
         :param args: Additional positional arguments.
         :type args: tuple
         :param kwargs: Keyword arguments, must include 'name' (chatbot name) and 'kind' (chatbot type).

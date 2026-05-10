@@ -5,7 +5,7 @@ import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
@@ -146,7 +146,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             (arg for arg in args if isinstance(arg, UserProfile)), None
         )
         request = kwargs.pop("request", None) or next(
-            (arg for arg in args if isinstance(arg, (Request, HttpRequest, WSGIRequest))), None
+            (arg for arg in args if isinstance(arg, (Request, HttpRequest, ASGIRequest))), None
         )
         SmarterRequestMixin.__init__(
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
@@ -508,7 +508,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             request.headers.get("Authorization"),
             self.is_internal_api_request(request),
         )
-        # there are cases where the requests lifecycle begins with a WSGIRequest that is
+        # there are cases where the requests lifecycle begins with a ASGIRequest that is
         # eventually wrapped into a DRF Request object. So we need to ensure that
         # the smarter_request is always set to the DRF Request object.
         if isinstance(request, Request) and not isinstance(self.smarter_request, Request):

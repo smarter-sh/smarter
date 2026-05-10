@@ -7,7 +7,7 @@ from typing import Optional
 
 # django stuff
 from django import http
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 
 # our stuff
 from smarter.apps.secret.admin import SecretAdminForm as SecretForm
@@ -38,7 +38,7 @@ class SecretsView(SmarterAdminWebView):
 
     template_path = "account/dashboard/secrets.html"
 
-    def get(self, request: WSGIRequest, *args, **kwargs):
+    def get(self, request: ASGIRequest, *args, **kwargs):
         logger.debug("%s.get() user: %s", self.formatted_class_name, self.user_profile)
         if not self.user_profile:
             return SmarterHttpResponseForbidden(request=request, error_message="User not found")
@@ -59,7 +59,7 @@ class SecretView(SmarterAdminWebView):
     template_path = "account/dashboard/secret.html"
     secret: Optional[Secret] = None
 
-    def _handle_multipart_form(self, request: WSGIRequest):
+    def _handle_multipart_form(self, request: ASGIRequest):
         """
         Handle multipart form data for both edit and create secret.
         """
@@ -103,7 +103,7 @@ class SecretView(SmarterAdminWebView):
         )
         return http.JsonResponse(status=HTTPStatus.OK.value, data=secret_form.data)
 
-    def _handle_json(self, request: WSGIRequest):
+    def _handle_json(self, request: ASGIRequest):
 
         logger.debug(
             "%s._handle_json() %s is editing secret: %s", self.formatted_class_name, self.user_profile, self.secret
@@ -130,14 +130,14 @@ class SecretView(SmarterAdminWebView):
         logger.debug("%s._handle_json() %s saved secret: %s", self.formatted_class_name, self.user_profile, self.secret)
         return http.JsonResponse(status=HTTPStatus.OK.value, data={})
 
-    def _handle_write_request(self, request: WSGIRequest):
+    def _handle_write_request(self, request: ASGIRequest):
         if request.content_type == "multipart/form-data":
             return self._handle_multipart_form(request)
         if request.content_type == "application/json":
             return self._handle_json(request)
         return http.JsonResponse({"error": "Invalid content type"}, status=HTTPStatus.BAD_REQUEST)
 
-    def setup(self, request: WSGIRequest, *args, **kwargs):
+    def setup(self, request: ASGIRequest, *args, **kwargs):
         super().setup(request, *args, **kwargs)
 
         logger.debug("%s.setup() user: %s", self.formatted_class_name, self.user_profile)
@@ -156,7 +156,7 @@ class SecretView(SmarterAdminWebView):
         else:
             logger.debug("%s.setup() with no secret_id", self.formatted_class_name)
 
-    def get(self, request: WSGIRequest, *args, secret_id: Optional[int] = None, **kwargs):
+    def get(self, request: ASGIRequest, *args, secret_id: Optional[int] = None, **kwargs):
         """
         Get, edit, or create a secret.
         """
@@ -179,7 +179,7 @@ class SecretView(SmarterAdminWebView):
         logger.debug("%s.get() %s got secret: %s", self.formatted_class_name, self.user_profile, secret_id)
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request: WSGIRequest):
+    def post(self, request: ASGIRequest):
         """
         Create
         """
@@ -187,14 +187,14 @@ class SecretView(SmarterAdminWebView):
         return self._handle_multipart_form(request)
 
     # pylint: disable=W0613
-    def patch(self, request: WSGIRequest, *args, secret_id: Optional[int] = None, **kwargs):
+    def patch(self, request: ASGIRequest, *args, secret_id: Optional[int] = None, **kwargs):
         """
         Edit/Create
         """
         logger.debug("%s.patch() %s patching secret: %s", self.formatted_class_name, self.user_profile, secret_id)
         return self._handle_write_request(request)
 
-    def delete(self, request: WSGIRequest, *args, secret_id: Optional[int] = None, **kwargs):
+    def delete(self, request: ASGIRequest, *args, secret_id: Optional[int] = None, **kwargs):
         if not self.secret:
             return SmarterHttpResponseNotFound(request=request, error_message="Secret not found")
         logger.debug("%s.delete() received DELETE request: %s", self.formatted_class_name, request)

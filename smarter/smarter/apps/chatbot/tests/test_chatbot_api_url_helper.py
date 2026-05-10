@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -113,7 +113,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
 
     def test_non_api_url(self):
         """Test a non-api url."""
-        request: WSGIRequest = self.wsgi_request_factory.get("/", SERVER_NAME="localhost:9357")
+        request: ASGIRequest = self.wsgi_request_factory.get("/", SERVER_NAME="localhost:9357")
         helper = ChatBotHelper(
             request=request, chatbot_id=None, account=self.account, user=self.admin_user, user_profile=self.user_profile
         )

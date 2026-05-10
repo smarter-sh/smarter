@@ -20,7 +20,7 @@ Example:
         ]
 """
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponse
 
 from smarter.lib import json
@@ -50,13 +50,13 @@ class EmailAdded(SmarterWebHtmlView):
 
     template_path = "dashboard/email-added.html"
 
-    def post(self, request: WSGIRequest) -> HttpResponse:
+    def post(self, request: ASGIRequest) -> HttpResponse:
         """
         Handle POST requests to render the email-added confirmation page with
         context from the request body.
 
         :param request: The incoming HTTP POST request from the client, expected to contain a JSON body with context data for the template.
-        :type request: django.core.handlers.wsgi.WSGIRequest
+        :type request: django.core.handlers.wsgi.ASGIRequest
         :returns: An HTTP response with the rendered email-added confirmation page.
         :rtype: django.http.HttpResponse
         """

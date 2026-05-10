@@ -6,7 +6,7 @@ Smarter API command-line interface 'apply' view
 
 from http import HTTPStatus
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from drf_yasg.utils import swagger_auto_schema
 
 from smarter.lib import logging
@@ -69,7 +69,7 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Manifest applied successfully")},
         request_body=ManifestSerializer,
     )
-    def post(self, request: WSGIRequest, *args, **kwargs):
+    def post(self, request: ASGIRequest, *args, **kwargs):
         """
         Handles POST requests to apply a Smarter manifest.
         """

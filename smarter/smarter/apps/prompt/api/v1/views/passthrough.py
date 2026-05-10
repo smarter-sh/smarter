@@ -88,7 +88,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
     provider_name: str
     handler: OpenAICompatiblePassthroughProtocol
 
-    def setup(self, request, *args, **kwargs):
+    def setup(self, request: ASGIRequest, *args, **kwargs):
         """
         Set the provider_name and handler based on the URL kwargs.
         The handler can be any function that implements the
