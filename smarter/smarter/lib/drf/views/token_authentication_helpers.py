@@ -3,9 +3,7 @@
 import logging
 from http import HTTPStatus
 
-from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseForbidden, JsonResponse
-from django.utils.decorators import method_decorator
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
@@ -155,7 +153,8 @@ class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
 # ------------------------------------------------------------------------------
 # Admin API Views
 # ------------------------------------------------------------------------------
-@method_decorator(staff_member_required, name="dispatch")
+
+
 class SmarterAdminAPIView(APIView, SmarterRequestMixin):
     """Smarter base class for DRF API views that require admin authentication.
 
@@ -189,8 +188,12 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
         Args:
             request (Request): The incoming HTTP request.
         """
+        super().setup(request, *args, **kwargs)
         logger.debug(
-            "%s.setup() - called for request: %s", self.formatted_class_name, smarter_build_absolute_uri(request)
+            "%s.setup() - called for request: %s user: %s",
+            self.formatted_class_name,
+            smarter_build_absolute_uri(request),
+            request.user if hasattr(request, "user") and hasattr(request.user, "is_authenticated") else "N/A",
         )
 
         # experiment: we want to ensure that the request object is
@@ -207,7 +210,6 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
             self.user_profile,
             is_authenticated_request(request),
         )
-        super().setup(request, *args, **kwargs)
 
     def dispatch(self, request, *args, **kwargs):
         """Extend DRF dispatch() to add authentication check.
@@ -226,6 +228,14 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
                 request.user,
             )
             return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
+
+        if not request.user.is_staff and not request.user.is_superuser:  # type: ignore
+            logger.warning(
+                "%s.dispatch() - request user is neither staff nor superuser: %s",
+                self.formatted_class_name,
+                request.user,
+            )
+            return HttpResponseForbidden("Forbidden: User does not have admin privileges.")
 
         try:
             response = super().dispatch(request, *args, **kwargs)
@@ -255,7 +265,6 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
         return False
 
 
-@method_decorator(staff_member_required, name="dispatch")
 class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
     """Smarter base class for DRF list views that require admin access.
 
@@ -344,6 +353,14 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
                 request.user,
             )
             return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
+
+        if not request.user.is_staff or request.user.is_superuser:  # type: ignore
+            logger.warning(
+                "%s.dispatch() - request user is not staff or superuser: %s",
+                self.formatted_class_name,
+                request.user,
+            )
+            return HttpResponseForbidden("Forbidden: User does not have admin privileges.")
 
         try:
             response = super().dispatch(request, *args, **kwargs)

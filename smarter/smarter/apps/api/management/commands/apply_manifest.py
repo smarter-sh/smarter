@@ -180,7 +180,7 @@ class Command(SmarterCommand):
         loader = SAMLoader(manifest=self.data)
         factory = RequestFactory()
         fake_request = factory.post("/fake-url/", data=loader.manifest, content_type="application/json")
-        fake_request.user = user_profile.cached_user
+        fake_request.user = user_profile.user
 
         if not isinstance(loader.kind, str):
             self.handle_completed_failure(msg="Unable to determine manifest kind.")
@@ -193,7 +193,7 @@ class Command(SmarterCommand):
         broker = BrokerClass(request=fake_request, loader=loader, user_profile=user_profile)
         response = broker.apply(request=fake_request)
 
-        if response.status_code == 200:
+        if response and response.status_code == 200:
             if verbose:
                 logger.debug("%s - manifest applied successfully", logger_prefix)
             else:

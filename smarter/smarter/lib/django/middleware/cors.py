@@ -141,11 +141,16 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             return super().__call__(request)
 
         url = self.smarter_build_absolute_uri(request)
-        logger.debug("%s.__call__() - url=%s", self.formatted_class_name, url)
+        logger.debug(
+            "%s.__call__() - url=%s - user: %s",
+            self.formatted_class_name,
+            url,
+            request.user if hasattr(request, "user") and hasattr(request.user, "is_authenticated") else "N/A",
+        )
         self._url = None
         self._chatbot = None
         self.request = request
-        return super().__call__(request)
+        return super().__call__(self.request)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
@@ -173,11 +178,16 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             return await super().__acall__(request)
 
         url = self.smarter_build_absolute_uri(request)
-        logger.debug("%s.__acall__() - url=%s", self.formatted_class_name, url)
+        logger.debug(
+            "%s.__acall__() - url=%s - user: %s",
+            self.formatted_class_name,
+            url,
+            request.user.is_authenticated if hasattr(request.user, "is_authenticated") else "N/A",
+        )
         self._url = None
         self._chatbot = None
         self.request = request
-        return await super().__acall__(request)
+        return await super().__acall__(self.request)
 
     @property
     def chatbot(self) -> Optional[ChatBot]:
