@@ -193,14 +193,6 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
         self.authorization_header = get_authorization_header(request)  # type: ignore[assignment]
         self.request = request
         if not self.is_token_auth(request):
-            if hasattr(request, "user") and request.user:
-                logger.debug(
-                    "%s.__call__() No token found but detected user %s (is_authenticated: %s). Skipping token authentication.",
-                    self.formatted_class_name,
-                    request.user,
-                    request.user.is_authenticated if hasattr(request.user, "is_authenticated") else "N/A",
-                )
-                return self.get_response(self.request)  # type: ignore
             # we're not using token authentication, no need to do anything
             logger.debug("%s.__call__() skipping non-token authentication", self.formatted_class_name)
             request = self.get_request_with_verified_user(request)
