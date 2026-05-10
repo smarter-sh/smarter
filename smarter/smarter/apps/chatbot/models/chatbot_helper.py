@@ -1,4 +1,3 @@
-# pylint: disable=W0613,C0115,C0302
 """All models for the OpenAI Function Calling API app."""
 
 from functools import cached_property
@@ -33,7 +32,6 @@ from .chatbot_api_key import ChatBotAPIKey
 from .chatbot_custom_domain import ChatBotCustomDomain
 from .chatbot_plugin import ChatBotPlugin
 from .chatbot_requests import ChatBotRequests
-from .serializers import ChatBotCustomDomainSerializer, ChatBotSerializer
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CHATBOT_LOGGING])
 chatbot_helper_logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING])
@@ -504,6 +502,12 @@ class ChatBotHelper(SmarterRequestMixin):
         :returns: A dictionary containing the serialized state of the ChatBotHelper.
         :rtype: dict[str, Any]
         """
+        # pylint: disable=C0415
+        from smarter.apps.chatbot.serializers import (
+            ChatBotCustomDomainSerializer,
+            ChatBotSerializer,
+        )
+
         return self.sorted_dict(
             {
                 "ready": self.ready,

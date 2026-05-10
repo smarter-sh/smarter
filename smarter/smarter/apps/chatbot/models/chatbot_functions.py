@@ -1,4 +1,3 @@
-# pylint: disable=W0613,C0115,C0302
 """All models for the OpenAI Function Calling API app."""
 
 from typing import List, Optional
