@@ -1,7 +1,7 @@
 PluginSelectorHistory Model
 ==============================
 
-.. autoclass:: smarter.apps.plugin.models.PluginSelectorHistory
+.. automodule:: smarter.apps.plugin.models.plugin_selector_history
     :members:
     :undoc-members:
     :inherited-members:
