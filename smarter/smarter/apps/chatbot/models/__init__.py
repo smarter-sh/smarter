@@ -10,11 +10,6 @@ from .chatbot_functions import ChatBotFunctions
 from .chatbot_helper import ChatBotHelper
 from .chatbot_plugin import ChatBotPlugin
 from .chatbot_requests import ChatBotRequests
-from .serializers import (
-    ChatBotCustomDomainSerializer,
-    ChatBotRequestsSerializer,
-    ChatBotSerializer,
-)
 from .utils import get_cached_chatbot_by_request
 
 __all__ = [
@@ -26,8 +21,5 @@ __all__ = [
     "ChatBotRequests",
     "ChatBot",
     "ChatBotHelper",
-    "ChatBotRequestsSerializer",
-    "ChatBotSerializer",
-    "ChatBotCustomDomainSerializer",
     "get_cached_chatbot_by_request",
 ]

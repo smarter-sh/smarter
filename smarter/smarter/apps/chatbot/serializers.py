@@ -16,7 +16,25 @@ from .models import (
     ChatBotCustomDomain,
     ChatBotFunctions,
     ChatBotPlugin,
+    ChatBotRequests,
 )
+
+
+class ChatBotRequestsSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the ChatBotRequests model.
+    """
+
+    # pylint: disable=C0115
+    class Meta:
+        model = ChatBotRequests
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "request",
+            "is_aggregation",
+        )
 
 
 class ChatBotSerializer(MetaDataWithOwnershipModelSerializer):
@@ -114,3 +132,14 @@ class ChatBotFunctionsSerializer(SmarterCamelCaseSerializer):
         for field in fields.values():
             field.read_only = True
         return fields
+
+
+__all__ = [
+    "ChatBotRequestsSerializer",
+    "ChatBotSerializer",
+    "ChatBotConfigSerializer",
+    "ChatBotAPIKeySerializer",
+    "ChatBotPluginSerializer",
+    "ChatBotFunctionsSerializer",
+    "ChatBotCustomDomainSerializer",
+]
