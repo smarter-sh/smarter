@@ -6,9 +6,10 @@ provider backend API.
 
 import logging
 from http import HTTPStatus
+from typing import Any
 
+from django.core.handlers.asgi import ASGIRequest
 from openai.types.chat.chat_completion import ChatCompletion
-from rest_framework.request import Request
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.provider.models import Provider
@@ -20,6 +21,7 @@ from smarter.apps.provider.services.text_completion.providers import (
 )
 from smarter.common.exceptions import SmarterIlligalInvocationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpErrorResponse,
@@ -27,10 +29,8 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
 )
+from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.drf.views.token_authentication_helpers import (
-    SmarterAuthenticatedAPIView,
-)
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
@@ -49,7 +49,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
+class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
     """
     Handle POST requests to the passthrough endpoint for direct LLM provider API access.
 
@@ -61,7 +61,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
     provider's chat completion API.
 
     :param request: The HTTP request object, expected to have a JSON body with chat completion parameters.
-    :type request: rest_framework.request.Request
+    :type request: rest_framework.request.ASGIRequest
     :param args: Additional positional arguments (unused).
     :param kwargs: Additional keyword arguments. May include 'provider' to select the LLM provider.
     :return: A JSON response containing the provider's chat completion result, or an error message.
@@ -111,33 +111,33 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
             "%s.setup() provider_name: %s and handler: %s", self.formatted_class_name, self.provider_name, self.handler
         )
 
-    def get(self, request: Request, *args, **kwargs) -> SmarterHttpResponseBadRequest:
+    def get(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
         return SmarterHttpResponseBadRequest(
             request=request, error_message="GET method not supported for passthrough endpoint"
         )
 
-    def put(self, request: Request, *args, **kwargs) -> SmarterHttpResponseBadRequest:
+    def put(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
         return SmarterHttpResponseBadRequest(
             request=request, error_message="PUT method not supported for passthrough endpoint"
         )
 
-    def delete(self, request: Request, *args, **kwargs) -> SmarterHttpResponseBadRequest:
+    def delete(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
         return SmarterHttpResponseBadRequest(
             request=request, error_message="DELETE method not supported for passthrough endpoint"
         )
 
-    def patch(self, request: Request, *args, **kwargs) -> SmarterHttpResponseBadRequest:
+    def patch(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
         return SmarterHttpResponseBadRequest(
             request=request, error_message="PATCH method not supported for passthrough endpoint"
         )
 
-    def options(self, request: Request, *args, **kwargs) -> SmarterHttpResponseBadRequest:
+    def options(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
         return SmarterHttpResponseBadRequest(
             request=request, error_message="OPTIONS method not supported for passthrough endpoint"
         )
 
     def post(
-        self, request: Request, *args, **kwargs
+        self, request: ASGIRequest, *args, **kwargs
     ) -> (
         SmarterJournaledJsonResponse
         | SmarterJournaledJsonErrorResponse
@@ -150,7 +150,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
         """
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.post()")
         kwargs.pop("provider_name")
-        logger.debug("%s called with args: %s, kwargs: %s", logger_prefix, args, kwargs)
+        logger.debug("%s called with request: %s, args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
 
         # do we know who this is?
         try:
@@ -158,6 +158,22 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
             logger.debug("%s verified user_profile: %s", logger_prefix, user_profile)
         except UserProfile.DoesNotExist:
             return SmarterHttpResponseForbidden(request=request, error_message="User profile not found")
+        except UserProfile.MultipleObjectsReturned:
+            user_profile = UserProfile.objects.filter(user=request.user).first()
+            if not user_profile:
+                return SmarterHttpResponseForbidden(request=request, error_message="User profile not found")
+            logger.warning(
+                "%s Multiple user profiles found for user: %s. Arbitrarily selecting the first one: %s",
+                logger_prefix,
+                request.user,
+                user_profile,
+            )
+
+        try:
+            data: dict[str, Any] = json.loads(request.body.decode("utf-8"))
+        except json.JSONDecodeError as e:
+            logger.error("%s JSON decode error: %s. Raw request body: %s", logger_prefix, e, request.body)
+            return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
 
         # process the request using the appropriate handler for the specified provider.
         try:
@@ -165,9 +181,9 @@ class PassthroughChatViewSet(SmarterAuthenticatedAPIView):
                 "%s calling handler: %s with data: %s",
                 logger_prefix,
                 self.handler,
-                formatted_json(request.data),
+                formatted_json(data),
             )
-            retval = self.handler(request, user_profile, request.data, *args, **kwargs)
+            retval = self.handler(request, user_profile, data, *args, **kwargs)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             logger.error("%s Error processing request: %s", logger_prefix, e)
