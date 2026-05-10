@@ -4,7 +4,7 @@
 import logging
 from typing import Optional, Union
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
@@ -62,9 +62,9 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 
 # chat_session_invoked.send(sender=self.__class__, instance=self, request=request)
 @receiver(chat_session_invoked, dispatch_uid="chat_session_invoked")
-def handle_chat_session_invoked(sender, instance: SmarterChatSession, request: WSGIRequest, *args, **kwargs):
+def handle_chat_session_invoked(sender, instance: SmarterChatSession, request: ASGIRequest, *args, **kwargs):
     """Handle chat session invoked signal."""
-    if isinstance(request, WSGIRequest):
+    if isinstance(request, ASGIRequest):
         url: str = request.build_absolute_uri()
     else:
         url = "missing request object"

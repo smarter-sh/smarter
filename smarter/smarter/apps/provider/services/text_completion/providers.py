@@ -55,6 +55,8 @@ import logging
 from functools import cached_property
 from typing import Any, List, Optional, Union
 
+from django.core.handlers.asgi import ASGIRequest
+from django.http import HttpRequest
 from pydantic import SecretStr
 from rest_framework.request import Request
 
@@ -80,6 +82,8 @@ from .lib.protocols import (
     SmarterChatCompletionResponseType,
     SmarterChatHandlerProtocol,
 )
+
+ProviderRequestType = Union[ASGIRequest, Request, HttpRequest]
 
 
 # pylint: disable=W0613
@@ -220,7 +224,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         return get_cached_openai_client_for_provider(provider_name, user.username)  # type: ignore
 
     def get_passthrough_handler(
-        self, request: Request, provider_name: Optional[str] = None, **kwargs
+        self, request: ProviderRequestType, provider_name: Optional[str] = None, **kwargs
     ) -> OpenAICompatiblePassthroughProtocol:
         """
         A convenience method to get an OpenAI-compatible passthrough handler by provider name.
@@ -232,7 +236,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         """
 
         def get_handler(
-            request: Request,
+            request: ProviderRequestType,
             user_profile: UserProfile,
             data: dict[str, Any],
             *args,
@@ -241,14 +245,14 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
             """Expose the handler method of the default provider"""
 
             client = self.get_openai_client_for_provider(provider_name=provider_name or self.default_handler_name, user=request.user)  # type: ignore
-            handler = client.handler(request, user_profile, data, *args, **kwargs)
+            handler = client.handler(request, user_profile, data, *args, **kwargs)  # type: ignore
             return handler
 
         provider_name = provider_name or self.default_handler_name
         return get_handler
 
     def get_smarter_handler(
-        self, request: Request, provider_name: Optional[str] = None, **kwargs
+        self, request: ProviderRequestType, provider_name: Optional[str] = None, **kwargs
     ) -> SmarterChatHandlerProtocol:
         """
         A convenience method to get a handler by provider name.
@@ -297,7 +301,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         return list(Provider.objects.filter(is_active=True).values_list("name", flat=True))  # type: ignore
 
     def handler(
-        self, request: Request, provider_name: Optional[str] = None, **kwargs
+        self, request: ProviderRequestType, provider_name: Optional[str] = None, **kwargs
     ) -> Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]:
         """
         A convenience method to get a handler by provider name.
@@ -312,7 +316,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         return self.get_smarter_handler(request=request, provider_name=provider_name, **kwargs)
 
     def default_handler(
-        self, request: Request, **kwargs
+        self, request: ProviderRequestType, **kwargs
     ) -> Union[SmarterChatHandlerProtocol, OpenAICompatiblePassthroughProtocol]:
         """
         A convenience method to get the default handler.

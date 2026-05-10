@@ -4,7 +4,7 @@
 import logging
 import typing
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.forms.models import model_to_dict
 from rest_framework.serializers import ModelSerializer
 
@@ -213,7 +213,7 @@ class SAMChatToolCallBroker(AbstractBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: ASGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = {
@@ -228,7 +228,7 @@ class SAMChatToolCallBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def get(self, request: ASGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
 
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
@@ -280,7 +280,7 @@ class SAMChatToolCallBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def apply(self, request: ASGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         """
         Chat is a read-only django table, populated by the LLM handlers
         """
@@ -288,12 +288,12 @@ class SAMChatToolCallBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError("Chat is a read-only table", thing=self.kind, command=command)
 
-    def chat(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: ASGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def describe(self, request: ASGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         self._session_key: str = kwargs.get("session_id", None)
@@ -307,24 +307,24 @@ class SAMChatToolCallBroker(AbstractBroker):
             f"ChatToolCall not found for session_key {self.session_key}", thing=self.kind, command=command
         )
 
-    def delete(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def delete(self, request: ASGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError("Chat is a read-only table", thing=self.kind, command=command)
 
-    def deploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: ASGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(f"Deploy not implemented for {self.kind}", thing=self.kind, command=command)
 
-    def undeploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: ASGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(
             f"Undeploy not implemented for {self.kind}", thing=self.kind, command=command
         )
 
-    def logs(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def logs(self, request: ASGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         self._session_key: str = kwargs.get("session_id", None)

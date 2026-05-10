@@ -7,7 +7,7 @@ from typing import List, Optional
 from urllib.parse import ParseResult, urlparse
 
 from django.contrib.auth.models import User
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponseNotAllowed, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -279,7 +279,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         """
         logger.debug("%s: %s", self.formatted_class_name, message)
 
-    def setup(self, request: WSGIRequest, *args, **kwargs):
+    def setup(self, request: ASGIRequest, *args, **kwargs):
         """
         Set up the ChatBot API base viewset for request processing.
 
@@ -296,7 +296,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         Parameters
         ----------
-        request : WSGIRequest
+        request : ASGIRequest
             The HTTP request object provided by Django, containing all request data, headers, and user context.
 
         *args
@@ -328,7 +328,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         )
         return super().setup(request, *args, **kwargs)
 
-    def dispatch(self, request: WSGIRequest, *args, name: Optional[str] = None, **kwargs):
+    def dispatch(self, request: ASGIRequest, *args, name: Optional[str] = None, **kwargs):
         """
         Dispatch method for the ChatBot API base viewset.
 
@@ -350,7 +350,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         Parameters
         ----------
-        request : WSGIRequest
+        request : ASGIRequest
             The HTTP request object provided by Django, containing all request data, headers, and user context.
 
         *args
@@ -459,7 +459,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         Sets CORS headers to allow cross-origin requests from the Smarter environment URL.
 
         :param request: The HTTP request object.
-        :type request: WSGIRequest
+        :type request: ASGIRequest
         """
         logger.debug(
             "%s.options(): url=%s",
@@ -480,7 +480,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         instead.
 
         :param request: The HTTP request object.
-        :type request: WSGIRequest
+        :type request: ASGIRequest
         :return: A JsonResponse indicating that GET is not supported.
         :rtype: JsonResponse
         """
@@ -526,7 +526,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         Parameters
         ----------
-        request : WSGIRequest
+        request : ASGIRequest
             The HTTP request object provided by Django, containing all request data, headers, and user context.
 
         *args

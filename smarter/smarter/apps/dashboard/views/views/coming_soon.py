@@ -24,7 +24,7 @@ Example:
 import html
 
 from django import forms
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import JsonResponse
 
 from smarter.apps.dashboard.models import EmailContactList
@@ -75,7 +75,7 @@ class ComingSoon(SmarterWebHtmlView):
         """
         Handle GET requests to render the "Coming Soon" page with an empty email form.
         :param request: The incoming HTTP GET request from the client.
-        :type request: django.core.handlers.wsgi.WSGIRequest
+        :type request: django.core.handlers.wsgi.ASGIRequest
         :param args: Additional positional arguments forwarded by the URL dispatcher.
         :param kwargs: Additional keyword arguments forwarded by the URL dispatcher.
         :returns: An HTTP response with the rendered "Coming Soon" page.
@@ -85,7 +85,7 @@ class ComingSoon(SmarterWebHtmlView):
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request: WSGIRequest):
+    def post(self, request: ASGIRequest):
         """
         Handle POST requests to process email sign-up submissions.
         On success, returns a JSON object with a redirect URL and a message
@@ -94,7 +94,7 @@ class ComingSoon(SmarterWebHtmlView):
         messages.
 
         :param request: The incoming HTTP POST request containing the email sign-up data.
-        :type request: django.core.handlers.wsgi.WSGIRequest
+        :type request: django.core.handlers.wsgi.ASGIRequest
         :returns: A JSON response indicating success or failure of the email submission.
         :rtype: django.http.JsonResponse
 
