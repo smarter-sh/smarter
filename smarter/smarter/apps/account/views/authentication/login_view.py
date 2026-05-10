@@ -31,7 +31,9 @@ logger = logging.getSmarterLogger(
 
 
 class LoginView(SmarterNeverCachedWebView):
-    """View for logging in browser session."""
+    """
+    View for logging in browser session.
+    """
 
     class LoginForm(forms.Form):
         """Form for the sign-in page."""
