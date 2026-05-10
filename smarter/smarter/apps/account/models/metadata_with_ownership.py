@@ -144,15 +144,13 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
                 return self.all()
 
             retval = self.filter(
-                models.Q(user_profile=user_profile)
-                | models.Q(user_profile__account=user_profile.account, user_profile__user__is_staff=True)
-                | models.Q(user_profile__account=user_profile.account, user_profile__user__is_superuser=True)
-                | models.Q(user_profile__account=smarter_cached_objects.smarter_account)
+                models.Q(user_profile__account=smarter_cached_objects.smarter_account)
+                | models.Q(user_profile__account=user_profile.account)
             )
             logger.debug(
-                "%s called for user: %s, returning resources. count: %s",
+                "%s user is not a superuser. Returning resources owned by account %s + platform. count: %s",
                 logger_prefix,
-                user,
+                user_profile.account.account_number,
                 retval.count(),
             )
             return retval
@@ -242,9 +240,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
             # staff users have ownership permission for resources owned within their account, or owned by themselves
             if user_profile.user.is_staff:
-                retval = self.filter(
-                    models.Q(user_profile=user_profile) | models.Q(user_profile__account=user_profile.account)
-                )
+                retval = self.filter(user_profile__account=user_profile.account)
                 logger.debug(
                     "%s called for staff user: %s, returning resources. count: %s",
                     logger_prefix,
