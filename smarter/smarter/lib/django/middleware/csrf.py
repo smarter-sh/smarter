@@ -166,9 +166,10 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             allowed_origin_subdomains[parsed.scheme].append(parsed.netloc.lstrip("*"))
         return allowed_origin_subdomains
 
-    def __call__(self, request):
+    def process_request(self, request):
         """
-        New-style middleware entrypoint for CSRF protection with dynamic trusted origins and chatbot logic.
+        Process the request to set up the CSRF protection.
+        If the request is for a ChatBot, then we'll exempt it from CSRF checks.
         """
         host = request.get_host()
 
@@ -180,41 +181,29 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
 
         # Short-circuit for health checks
         if request.path.replace("/", "") in self.amnesty_urls:
-            return self.get_response(request)
+            return None
 
         # Short-circuit for any requests born from internal IP address hosts.
+        # This is unlikely, but not impossible.
         if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
             logger.debug(
-                "%s.__call__() %s identified as an internal IP address, exiting.",
+                "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
                 self.smarter_build_absolute_uri(request),
             )
-            return self.get_response(request)
+            return None
 
-        logger.debug(
-            "%s.__call__ url=%s user=%s",
-            self.formatted_class_name,
-            self.url,
-            request.user if hasattr(request, "user") and hasattr(request.user, "is_authenticated") else "N/A",
-        )
+        logger.debug("%s.__call__(): %s", self.formatted_class_name, self.url)
 
-        # Local/dev bypass
-        if smarter_settings.environment == SmarterEnvironments.LOCAL:
-            logger.debug("%s.__call__(): environment is local. ignoring csrf checks", self.formatted_class_name)
-            return self.get_response(request)
+        if not self.ready:
+            return super().process_request(request)
 
-        # Chatbot bypass
-        if self.is_chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS):
-            logger.info(
-                "%s.__call__() SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS is active. ignoring csrf checks for ChatBot request %s",
-                self.formatted_class_name,
-                self.url,
-            )
-            return self.get_response(request)
-
-        # Chatbot logging
         if self.is_chatbot:
-            logger.debug("%s.__call__(): csrf_middleware_logging is active", self.formatted_class_name)
+            logger.debug("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.url)
+            return None
+
+        if self.is_chatbot:
+            logger.debug("%s.process_request(): csrf_middleware_logging is active", self.formatted_class_name)
             logger.debug("=" * 80)
             logger.debug("%s ChatBot: %s", self.formatted_class_name, self.url)
             for cookie in request.COOKIES:
@@ -236,15 +225,29 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             )
             logger.debug("=" * 80)
 
-        # Remove user before passing downstream if present
+        # ------------------------------------------------------
         if hasattr(request, "user") and request.user is not None:
+            # not expecting for this to actually be set, but just in case
+            # strip it out before passing downstream.
             setattr(request, "user", None)
+        return super().process_request(request)
 
-        # Call parent (CsrfViewMiddleware) __call__ for CSRF logic
-        response = super().__call__(request)
+    def process_view(self, request, callback, callback_args, callback_kwargs):
+
+        if smarter_settings.environment == SmarterEnvironments.LOCAL:
+            logger.debug("%s._accept: environment is local. ignoring csrf checks", self.formatted_class_name)
+            return None
+        if self.is_chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS):
+            logger.info(
+                "%s.process_view() SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS is active. ignoring csrf checks for ChatBot request %s",
+                self.formatted_class_name,
+                self.url,
+            )
+            return None
+        response = super().process_view(request, callback, callback_args, callback_kwargs)
         if isinstance(response, HttpResponseForbidden):
             logger.error(
-                "%s.__call__() CSRF validation failed | path=%s | method=%s | user_agent=%s | remote_addr=%s | origin=%s | referer=%s | csrf_cookie=%s | session_key=%s",
+                "%s.process_view() CSRF validation failed | path=%s | method=%s | user_agent=%s | remote_addr=%s | origin=%s | referer=%s | csrf_cookie=%s | session_key=%s",
                 self.formatted_class_name,
                 request.path,
                 request.method,
