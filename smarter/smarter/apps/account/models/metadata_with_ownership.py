@@ -327,6 +327,7 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
         """Returns a SmarterQuerySetWithPermissions with the applied complex filter."""
         return self.get_queryset().complex_filter(filter_obj)
 
+    # pylint: disable=W0622
     def union(self, *other_qs, all=False) -> SmarterQuerySetWithPermissions[_MT]:
         """Returns a SmarterQuerySetWithPermissions representing the union of querysets."""
         return self.get_queryset().union(*other_qs, all=all)
@@ -523,6 +524,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             user = user or user_profile.cached_user
             account = account or user_profile.cached_account
 
+        # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
         def _get_object_by_pk(pk: int, class_name: str = cls.__name__) -> Optional["MetaDataWithOwnershipModel"]:
             """
@@ -767,6 +769,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             invalidate,
         )
 
+        # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
         def _get_objects_for_user_profile_id(
             user_profile_id: int, class_name: str = cls.__name__
