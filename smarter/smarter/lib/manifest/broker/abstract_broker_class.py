@@ -63,6 +63,7 @@ from .error_classes import (
 inflect_engine = inflect.engine()
 
 SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]
+SmarterRequest = Union[HttpRequest, Request, ASGIRequest]
 
 
 # pylint: disable=W0613
@@ -2065,26 +2066,26 @@ class BrokerNotImplemented(AbstractBroker):
     def manifest(self) -> Optional[Union[AbstractSAMBase, dict]]:
         raise SAMBrokerErrorNotImplemented("Subclasses must implement the manifest property.")
 
-    def chat(self, request, *args, **kwargs):
+    def chat(self, request: SmarterRequest, *args, **kwargs):
         super().chat(request, args, kwargs)
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: SmarterRequest, *args, **kwargs):
         super().delete(request, args, kwargs)
 
-    def deploy(self, request, *args, **kwargs):
+    def deploy(self, request: SmarterRequest, *args, **kwargs):
         super().deploy(request, args, kwargs)
 
-    def describe(self, request, *args, **kwargs):
+    def describe(self, request: SmarterRequest, *args, **kwargs):
         super().describe(request, args, kwargs)
 
-    def example_manifest(self, request, *args, **kwargs):
+    def example_manifest(self, request: SmarterRequest, *args, **kwargs):
         super().example_manifest(request, args, kwargs)
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: SmarterRequest, *args, **kwargs):
         super().get(request, args, kwargs)
 
-    def logs(self, request, *args, **kwargs):
+    def logs(self, request: SmarterRequest, *args, **kwargs):
         super().logs(request, args, kwargs)
 
-    def undeploy(self, request, *args, **kwargs):
+    def undeploy(self, request: SmarterRequest, *args, **kwargs):
         super().undeploy(request, args, kwargs)

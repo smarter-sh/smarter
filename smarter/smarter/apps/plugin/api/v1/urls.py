@@ -2,6 +2,7 @@
 
 from django.urls import path
 from django.views import View
+from rest_framework.request import Request
 
 from .const import namespace
 from .views import (
@@ -18,7 +19,7 @@ app_name = namespace
 class RequestRouter(View):
     """http method-based request router."""
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: Request, *args, **kwargs):
         if request and isinstance(request.method, str) and request.method.lower() == "post":
             return PluginView.as_view()(request, *args, **kwargs)
         return PluginListView.as_view()(request, *args, **kwargs)

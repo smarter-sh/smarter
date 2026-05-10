@@ -3,6 +3,7 @@
 
 from http import HTTPStatus
 
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.apps.provider.serializers import (
@@ -18,7 +19,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
 class ProvidersApiViewSet(SmarterAuthenticatedAPIView):
     """top-level viewset for Providers list"""
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         """Get all providers."""
         serializer = ProviderSerializer(many=True, context={"request": request})
         if not serializer.data:
@@ -29,7 +30,7 @@ class ProvidersApiViewSet(SmarterAuthenticatedAPIView):
 class ProviderApiViewSet(SmarterAuthenticatedAPIView):
     """top-level viewset for a specific provider"""
 
-    def get(self, request, *args, name: str, **kwargs):
+    def get(self, request: Request, *args, name: str, **kwargs):
         """Get a specific provider by name."""
         serializer = ProviderSerializer(many=False, context={"request": request})
         if not serializer.data:
@@ -40,7 +41,7 @@ class ProviderApiViewSet(SmarterAuthenticatedAPIView):
 class ProviderModelsApiViewSet(SmarterAuthenticatedAPIView):
     """top-level viewset for all models for a specific provider"""
 
-    def get(self, request, *args, name: str, **kwargs):
+    def get(self, request: Request, *args, name: str, **kwargs):
         """Get all models for a specific provider."""
         serializer = ProviderModelSerializer(many=True, context={"request": request})
         if not serializer.data:
@@ -51,7 +52,7 @@ class ProviderModelsApiViewSet(SmarterAuthenticatedAPIView):
 class ProviderModelApiViewSet(SmarterAuthenticatedAPIView):
     """top-level viewset for a specific model for a specific provider"""
 
-    def get(self, request, *args, name: str, model_name: str, **kwargs):
+    def get(self, request: Request, *args, name: str, model_name: str, **kwargs):
         """Get a specific model for a specific provider."""
         serializer = ProviderModelSerializer(many=False, context={"request": request})
         if not serializer.data:
