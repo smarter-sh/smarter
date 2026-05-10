@@ -8,3 +8,4 @@ Views
    views/logs
    views/passthrough
    views/views
+   views/authentication
