@@ -184,7 +184,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
             self.formatted_class_name,
             url,
         )
-        if not SmarterValidator.is_api_endpoint(url):
+        if not SmarterValidator.is_api_endpoint(url):  # type: ignore
             # skip token authentication if we're not a Smarter API request
             logger.info("%s skipping token authentication for non-Smarter API request", self.formatted_class_name)
             request = self.get_request_with_verified_user(request)
@@ -193,10 +193,18 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
         self.authorization_header = get_authorization_header(request)  # type: ignore[assignment]
         self.request = request
         if not self.is_token_auth(request):
+            if hasattr(request, "user") and request.user:
+                logger.debug(
+                    "%s.__call__() No token found but detected user %s (is_authenticated: %s). Skipping token authentication.",
+                    self.formatted_class_name,
+                    request.user,
+                    request.user.is_authenticated if hasattr(request.user, "is_authenticated") else "N/A",
+                )
+                return self.get_response(self.request)  # type: ignore
             # we're not using token authentication, no need to do anything
             logger.debug("%s.__call__() skipping non-token authentication", self.formatted_class_name)
             request = self.get_request_with_verified_user(request)
-            return self.get_response(request)
+            return self.get_response(self.request)  # type: ignore
         if getattr(request, "auth", None) is not None:
             # we've already authenticated the request
             # with some other middleware, no need to do anything

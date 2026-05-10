@@ -1,10 +1,12 @@
 """This module is used to suppress DisallowedHost exception and return HttpResponseBadRequest instead."""
 
 import fnmatch
+from collections.abc import Awaitable
 from typing import Optional
 from urllib.parse import urlparse
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest
+from django.http.response import HttpResponseBase
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.conf import smarter_settings
@@ -80,14 +82,26 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
     """
 
-    def process_request(self, request: WSGIRequest):
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+
+        logger.debug(
+            "%s.__call__() called for %s user: %s",
+            logging.formatted_text(__name__ + "." + self.__class__.__name__),
+            self.smarter_build_absolute_uri(request),
+            getattr(request, "user", None),
+        )
+        return super().__call__(request)
+
+    def process_request(self, request: HttpRequest):
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SECURITY):
             return None
 
+        logger_prefix = logging.formatted_text(__name__ + "." + self.__class__.__name__)
+
         logger.debug(
             "%s.process_request() called for %s",
-            self.formatted_class_name,
+            logger_prefix,
             self.smarter_build_absolute_uri(request),
         )
 
@@ -98,7 +112,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         if request.path.replace("/", "") in self.amnesty_urls:
             logger.debug(
                 "%s %s found in amnesty_urls: %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self.smarter_build_absolute_uri(request),
                 self.amnesty_urls,
             )
@@ -116,7 +130,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
             logger.debug(
                 "%s %s identified as an internal IP address, exiting.",
-                self.formatted_class_name,
+                logger_prefix,
                 self.smarter_build_absolute_uri(request),
             )
             return None
@@ -130,7 +144,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         if base_host in [h.rsplit(".", maxsplit=1)[-1] for h in SmarterValidator.LOCAL_HOSTS]:
             logger.debug(
                 "%s %s base host matched in SmarterValidator.LOCAL_HOSTS: %s",
-                self.formatted_class_name,
+                logger_prefix,
                 host,
                 SmarterValidator.LOCAL_HOSTS,
             )
@@ -139,7 +153,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         if host in SmarterValidator.LOCAL_HOSTS:
             logger.debug(
                 "%s %s found in SmarterValidator.LOCAL_HOSTS: %s",
-                self.formatted_class_name,
+                logger_prefix,
                 host,
                 SmarterValidator.LOCAL_HOSTS,
             )
@@ -154,7 +168,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         if len(path_parts) == 1 and path_parts[0] in self.amnesty_urls:
             logger.debug(
                 "%s %s found in amnesty_urls: %s",
-                self.formatted_class_name,
+                logger_prefix,
                 host,
                 path_parts,
             )
@@ -167,7 +181,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         if ".well-known/acme-challenge" in str(parsed_url.path):
             logger.debug(
                 "%s %s identified as an ACME challenge request, exiting.",
-                self.formatted_class_name,
+                logger_prefix,
                 url,
             )
             return None
@@ -179,7 +193,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             if fnmatch.fnmatch(host, allowed_host):
                 logger.debug(
                     "%s %s matched with smarter_settings.allowed_hosts: %s",
-                    self.formatted_class_name,
+                    logger_prefix,
                     host,
                     allowed_host,
                 )
@@ -190,16 +204,16 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         #     to instantiate a ChatBotHelper object just to check if the host is a domain
         #     for a deployed ChatBot.
         # ---------------------------------------------------------------------
-        logger.debug("%s instantiating ChatBotHelper() for url: %s", self.formatted_class_name, url)
+        logger.debug("%s instantiating ChatBotHelper() for url: %s", logger_prefix, url)
         chatbot: Optional[ChatBot] = get_cached_chatbot_by_request(request=request)
         if chatbot is not None:
-            logger.info("%s ChatBotHelper() verified that %s is a chatbot.", self.formatted_class_name, url)
+            logger.info("%s ChatBotHelper() verified that %s is a chatbot.", logger_prefix, url)
             return None
 
         # ---------------------------------------------------------------------
         # End of the road. Reject the request with a 400 Bad Request response.
         # ---------------------------------------------------------------------
-        logger.error("%s %s failed security tests.", self.formatted_class_name, url)
+        logger.error("%s %s failed security tests.", logger_prefix, url)
         return SmarterHttpResponseBadRequest(
             request=request, error_message="SecurityMiddleware() Bad Request (400) - Invalid Hostname."
         )
