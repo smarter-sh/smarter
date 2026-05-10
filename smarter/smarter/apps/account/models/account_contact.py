@@ -44,7 +44,6 @@ from django.template.loader import render_to_string
 
 # our stuff
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
@@ -182,7 +181,7 @@ class AccountContact(TimestampedModel):
         html_template = render_to_string("account/email/welcome.html", context)
         logger.debug(
             "%s.send_welcome_email() Sending welcome email to %s",
-            formatted_text(__name__ + ".AccountContact.send_welcome_email()"),
+            logging.formatted_text(__name__ + ".AccountContact.send_welcome_email()"),
             self.email,
         )
 
@@ -288,7 +287,7 @@ class AccountContact(TimestampedModel):
             )
 
         """
-        prefix = formatted_text(__name__ + ".AccountContact.send_email_to_primary_contact()")
+        prefix = logging.formatted_text(__name__ + ".AccountContact.send_email_to_primary_contact()")
         contact = cls.get_primary_contact(account)
         logger.debug(
             "%s.send_email_to_primary_contact() Attempting to send email to primary contact for account %s. Found contact: %s, subject: %s, body: %s, html: %s, from_email: %s",
@@ -335,7 +334,7 @@ class AccountContact(TimestampedModel):
             contact.save()  # Ensures uniqueness and sends welcome email if needed
 
         """
-        prefix = formatted_text(__name__ + ".AccountContact.save()")
+        prefix = logging.formatted_text(__name__ + ".AccountContact.save()")
         logger.debug("%s called with args: %s, kwargs: %s", prefix, args, kwargs)
         if self.is_primary:
             # Check for another primary contact for this account (excluding self if updating)

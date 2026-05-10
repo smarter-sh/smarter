@@ -8,7 +8,6 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import mask_string
 from smarter.lib import logging
@@ -214,7 +213,7 @@ class AccountMixin(SmarterHelperMixin):
         :return: String representation of the class.
         :rtype: str
         """
-        return f"{formatted_text(AccountMixin.__name__)}[{id(self)}](user_profile={self.user_profile})"
+        return f"{logging.formatted_text(AccountMixin.__name__)}[{id(self)}](user_profile={self.user_profile})"
 
     def __repr__(self) -> str:
         """
@@ -321,7 +320,7 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns the logger prefix for the class.
         """
-        return formatted_text(f"{__name__}.{AccountMixin.__name__}[{id(self)}]")
+        return logging.formatted_text(f"{__name__}.{AccountMixin.__name__}[{id(self)}]")
 
     @property
     def formatted_class_name(self) -> str:

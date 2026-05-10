@@ -46,7 +46,6 @@ from django.db import models
 from smarter.apps.account.signals import new_charge_created
 
 # our stuff
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -142,7 +141,7 @@ class Charge(TimestampedModel):
         if is_new:
             logger.debug(
                 "%s.save() New user charge created for %s. Sending signal.",
-                formatted_text(__name__ + ".Charge()"),
+                logging.formatted_text(__name__ + ".Charge()"),
                 self.user_profile,
             )
             new_charge_created.send(sender=self.__class__, charge=self)

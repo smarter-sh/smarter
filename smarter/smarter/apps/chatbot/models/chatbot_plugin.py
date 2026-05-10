@@ -12,9 +12,6 @@ from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCom
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-)
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.models import TimestampedModel
@@ -204,7 +201,7 @@ class ChatBotPlugin(TimestampedModel):
         :rtype: models.QuerySet["ChatBotPlugin"]
 
         """
-        logger_prefix = formatted_text(__name__ + "." + ChatBotPlugin.__name__ + ".get_cached_objects()")
+        logger_prefix = logging.formatted_text(__name__ + "." + ChatBotPlugin.__name__ + ".get_cached_objects()")
         logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
         @cache_results()

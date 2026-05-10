@@ -1,8 +1,6 @@
 """Unit test base classes for Smarter."""
 
-import logging
-
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 
 from ..serializers import (
     AccountMiniSerializer,
@@ -17,7 +15,7 @@ logger = logging.getLogger(__name__)
 class TestSerializers(TestAccountMixin):
     """Test serializers for the account app."""
 
-    test_serializers_logger_prefix = formatted_text(f"{__name__}.TestSerializers()")
+    test_serializers_logger_prefix = logging.formatted_text(f"{__name__}.TestSerializers()")
 
     def test_account_serializer(self):
         """Test the AccountSerializer."""

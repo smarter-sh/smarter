@@ -18,7 +18,6 @@ from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -80,7 +79,7 @@ def create_charge(*args, **kwargs):
     total_tokens = kwargs.get("total_tokens")
     model = kwargs.get("model")
     reference = kwargs.get("reference")
-    prefix = formatted_text(module_prefix + "create_charge()")
+    prefix = logging.formatted_text(module_prefix + "create_charge()")
 
     provider = Provider.objects.get(id=provider_id) if provider_id else None
 
@@ -132,7 +131,7 @@ def aggregate_charges():
         # (see your Celery Beat configuration)
     """
 
-    prefix = formatted_text(module_prefix + "aggregate_charges()")
+    prefix = logging.formatted_text(module_prefix + "aggregate_charges()")
     logger.info(prefix)
     aggregate_daily_billing_records()
 
@@ -165,7 +164,7 @@ def aggregate_daily_billing_records():
         # (see your Celery Beat configuration)
     """
     MAX_AGGREGATION_ERROR_THRESHOLD = 10
-    message_prefix = formatted_text(module_prefix + "aggregate_daily_billing_records()")
+    message_prefix = logging.formatted_text(module_prefix + "aggregate_daily_billing_records()")
 
     def aggregate(user_profile: UserProfile, created_at_date: datetime.date, charge_type: str):
         """Handle aggregation of one set of charges."""

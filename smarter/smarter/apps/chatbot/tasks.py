@@ -31,7 +31,6 @@ from smarter.common.helpers.aws.exceptions import (
 )
 from smarter.common.helpers.aws.route53 import AWSRoute53
 from smarter.common.helpers.aws_helpers import aws_helper
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -77,7 +76,7 @@ from .signals import (
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.CHATBOT_LOGGING]
 )
-logger_prefix = formatted_text(__name__)
+logger_prefix = logging.formatted_text(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 

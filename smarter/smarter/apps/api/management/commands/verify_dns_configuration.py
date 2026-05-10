@@ -1,13 +1,11 @@
 """This module verifies AWS Route53 DNS resources required by the Smarter platform."""
 
-import logging
-
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.aws.route53 import AWSRoute53
 from smarter.common.helpers.aws_helpers import aws_helper
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)
@@ -67,7 +65,7 @@ class Command(SmarterCommand):
         :py:data:`smarter.common.helpers.aws_helpers.aws_helper` - AWS helper module for initializing AWS services.
     """
 
-    log_prefix = formatted_text(f"{__name__}.Command()")
+    log_prefix = logging.formatted_text(f"{__name__}.Command()")
 
     def get_any_A_record(self) -> dict:
         """

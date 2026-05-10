@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """utility for applying any Smarter manifest using the api/v1/cli endpoint."""
 
-import logging
 import os
 from typing import Optional
 
@@ -11,14 +10,14 @@ from django.test import RequestFactory
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.loader import SAMLoader
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(f"{__name__}")
+logger_prefix = logging.formatted_text(f"{__name__}")
 
 
 class Command(SmarterCommand):

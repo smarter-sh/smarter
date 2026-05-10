@@ -2,8 +2,6 @@
 Chatbot utility functions.
 """
 
-from logging import getLogger
-
 from django.contrib.auth.models import User
 from django.db.models import QuerySet
 
@@ -14,7 +12,7 @@ from smarter.apps.account.utils import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -28,9 +26,9 @@ def should_log_verbose(level):
     return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING)
 
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
-logger_prefix = formatted_text(f"{__name__}")
+logger_prefix = logging.formatted_text(f"{__name__}")
 
 LRU_CACHE_MAX_SIZE = 128
 
