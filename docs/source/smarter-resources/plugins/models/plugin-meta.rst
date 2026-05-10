@@ -1,7 +1,7 @@
 PluginMeta Model
 ======================
 
-.. autoclass:: smarter.apps.plugin.models.PluginMeta
+.. automodule:: smarter.apps.plugin.models.plugin_meta
     :members:
     :undoc-members:
     :inherited-members:

@@ -1,7 +1,7 @@
 PluginDataStatic Model
 ======================
 
-.. autoclass:: smarter.apps.plugin.models.PluginDataStatic
+.. automodule:: smarter.apps.plugin.models.plugin_data_static
     :members:
     :undoc-members:
     :show-inheritance:

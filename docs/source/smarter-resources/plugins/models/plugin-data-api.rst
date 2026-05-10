@@ -1,7 +1,7 @@
 PluginDataApi Model
 =======================
 
-.. autoclass:: smarter.apps.plugin.models.PluginDataApi
+.. automodule:: smarter.apps.plugin.models.plugin_data_api
     :members:
     :undoc-members:
     :show-inheritance:
