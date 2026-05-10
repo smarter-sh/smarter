@@ -3,6 +3,7 @@
 import logging
 
 from django.http.response import HttpResponseForbidden
+from rest_framework.request import Request
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.secret.models import Secret
@@ -35,7 +36,7 @@ class SecretView(SmarterAdminAPIView):
     def get_queryset(self):
         return Secret.objects.all()
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: Request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code < 300 and isinstance(request.user, User):
             # we now have to consider superuser secrets that are associated with multiple secrets
@@ -51,7 +52,7 @@ class SecretListView(SmarterAdminListAPIView):
     def get_queryset(self):
         return Secret.objects.all()
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: Request, *args, **kwargs):
         try:
             response = super().dispatch(request, *args, **kwargs)
         except AttributeError:
@@ -71,7 +72,7 @@ class SecretListView(SmarterAdminListAPIView):
             self.user_profile = UserProfile.objects.filter(user=request.user).first()
         return response
 
-    def setup(self, request, *args, **kwargs):
+    def setup(self, request: Request, *args, **kwargs):
         """Setup the view. This is called by Django before dispatch() and is used to set up the view for the request."""
         super().setup(request, *args, **kwargs)
         if not hasattr(self.request, "user") or not isinstance(self.request.user, User):

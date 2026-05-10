@@ -2,6 +2,7 @@
 """Account views for smarter api."""
 
 from django.shortcuts import get_object_or_404
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.apps.prompt.api.v1.serializers import (
@@ -24,7 +25,7 @@ class ChatToolCallHistoryListView(SmarterAuthenticatedListAPIView):
 
 class ChatToolCallHistoryView(SmarterAuthenticatedAPIView):
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         instance = get_object_or_404(ChatToolCall, pk=kwargs["pk"])
         serializer = ChatToolCallSerializer(instance)
         return Response(serializer.data)
@@ -37,7 +38,7 @@ class PluginUsageHistoryListView(SmarterAuthenticatedListAPIView):
 
 class PluginUsageHistoryView(SmarterAuthenticatedAPIView):
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         instance = get_object_or_404(PluginUsageHistoryView, pk=kwargs["pk"])
         serializer = ChatPluginUsageSerializer(instance)
         return Response(serializer.data)
@@ -50,7 +51,7 @@ class ChatHistoryListView(SmarterAuthenticatedListAPIView):
 
 class ChatHistoryView(SmarterAuthenticatedAPIView):
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         instance = get_object_or_404(ChatHistory, pk=kwargs["pk"])
         serializer = ChatHistorySerializer(instance)
         return Response(serializer.data)

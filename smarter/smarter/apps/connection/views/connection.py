@@ -68,7 +68,7 @@ class ConnectionDetailView(DocsBaseView):
     template_path = "common/manifest_detail.html"
     connection: Optional[ConnectionBase] = None
 
-    def get(self, request, *args, **kwargs) -> HttpResponse:
+    def get(self, request: ASGIRequest, *args, **kwargs) -> HttpResponse:
         """
         Handle GET requests to render the connection manifest detail view.
         This method processes the incoming request to retrieve the
