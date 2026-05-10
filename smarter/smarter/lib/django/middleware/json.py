@@ -83,10 +83,9 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
         logger.debug(
-            "%s.__call__(): url=%s user=%s",
+            "%s.__call__(): url=%s",
             self.formatted_class_name,
             self.smarter_build_absolute_uri(request),
-            request.user if hasattr(request, "user") and hasattr(request.user, "is_authenticated") else "N/A",
         )
         return super().__call__(request)
 

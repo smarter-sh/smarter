@@ -85,10 +85,9 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
 
         logger.debug(
-            "%s.__call__() called for %s user: %s",
+            "%s.__call__() called for %s",
             logging.formatted_text(__name__ + "." + self.__class__.__name__),
             self.smarter_build_absolute_uri(request),
-            getattr(request, "user", None),
         )
         return super().__call__(request)
 
