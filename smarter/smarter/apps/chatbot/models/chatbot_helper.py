@@ -18,11 +18,6 @@ from smarter.apps.account.utils import (
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-    formatted_text_green,
-    formatted_text_red,
-)
 from smarter.lib import logging
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -242,7 +237,7 @@ class ChatBotHelper(SmarterRequestMixin):
         >>> helper.formatted_class_name
         'smarter.apps.chatbot.models.ChatBotHelper()'
         """
-        return formatted_text(f"{__name__}.{ChatBotHelper.__name__}()")
+        return logging.formatted_text(f"{__name__}.{ChatBotHelper.__name__}()")
 
     @cached_property
     def account(self) -> Optional[Account]:
@@ -465,7 +460,11 @@ class ChatBotHelper(SmarterRequestMixin):
 
         :return: A string indicating whether the ChatBotHelper is ready or not.
         """
-        return formatted_text_green("Ready") if self.is_chatbothelper_ready else formatted_text_red("Not Ready")
+        return (
+            logging.formatted_text_green("Ready")
+            if self.is_chatbothelper_ready
+            else logging.formatted_text_red("Not Ready")
+        )
 
     @property
     def ready(self) -> bool:

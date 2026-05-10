@@ -17,7 +17,6 @@ from smarter.apps.dashboard.admin import (
     smarter_is_staff,
     smarter_restricted_admin_site,
 )
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 
 from .models import (
@@ -49,7 +48,7 @@ def smarter_filter_queryset_for_user_profile(
         This function only works for models that inherit from
         smarter.apps.account.models.MetaDataWithOwnershipModel
     """
-    logger_prefix = formatted_text(f"{__file__}.smarter_filter_queryset_for_user_profile()")
+    logger_prefix = logging.formatted_text(f"{__file__}.smarter_filter_queryset_for_user_profile()")
     logger.debug(
         "%s: Filtering queryset for user %s with role %s",
         logger_prefix,

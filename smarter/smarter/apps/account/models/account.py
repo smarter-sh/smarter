@@ -53,7 +53,6 @@ from django.utils.functional import SimpleLazyObject
 # our stuff
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -113,7 +112,7 @@ def is_authenticated_user(user: object) -> bool:
     :returns: True if the object is an authenticated user, False otherwise.
     """
     verbose_logger.debug(
-        "%s called for user type: %s", formatted_text(__name__) + ".is_authenticated_user()", type(user)
+        "%s called for user type: %s", logging.formatted_text(__name__) + ".is_authenticated_user()", type(user)
     )
     if hasattr(user, "is_authenticated"):
         return bool(user.is_authenticated)  # type: ignore
@@ -156,7 +155,9 @@ def get_resolved_user(
             :class:`django.utils.functional.SimpleLazyObject`
 
     """
-    verbose_logger.debug("%s called for user type: %s", formatted_text(__name__) + ".get_resolved_user()", type(user))
+    verbose_logger.debug(
+        "%s called for user type: %s", logging.formatted_text(__name__) + ".get_resolved_user()", type(user)
+    )
     if user is None:
         return None
 
@@ -164,7 +165,7 @@ def get_resolved_user(
     if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
         verbose_logger.debug(
             "%s - user is instance of expected type: %s",
-            formatted_text(__name__) + ".get_resolved_user()",
+            logging.formatted_text(__name__) + ".get_resolved_user()",
             type(user),
         )
         return user
@@ -176,7 +177,7 @@ def get_resolved_user(
     if isinstance(user, SimpleLazyObject):
         verbose_logger.debug(
             "%s - user is instance of SimpleLazyObject, returning wrapped user: %s",
-            formatted_text(__name__) + ".get_resolved_user()",
+            logging.formatted_text(__name__) + ".get_resolved_user()",
             type(user._wrapped),
         )
         return user._wrapped
@@ -184,7 +185,7 @@ def get_resolved_user(
     if hasattr(user, "__class__") and user.__class__.__name__ in ("MagicMock", "Mock"):
         verbose_logger.debug(
             "%s - user is instance of test mock: %s",
-            formatted_text(__name__) + ".get_resolved_user()",
+            logging.formatted_text(__name__) + ".get_resolved_user()",
             type(user),
         )
         return user  # type: ignore[return-value]
@@ -387,7 +388,7 @@ class Account(MetaDataModel):
                 print(account.company_name)
 
         """
-        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
+        logger_prefix = logging.formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
         logger.debug(
             "%s called with pk=%s, name=%s, account_number=%s, company_name=%s, invalidate=%s",
             logger_prefix,

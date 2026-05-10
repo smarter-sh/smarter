@@ -8,7 +8,6 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -25,7 +24,7 @@ logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.CHATBOT_LOGGING, SmarterWaffleSwitches.MIDDLEWARE_LOGGING]
 )
 
-logger.debug("Loading %s", formatted_text(__name__ + ".SmarterSecurityMiddleware"))
+logger.debug("Loading %s", logging.formatted_text(__name__ + ".SmarterSecurityMiddleware"))
 
 
 class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):

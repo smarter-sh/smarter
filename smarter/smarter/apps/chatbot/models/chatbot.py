@@ -29,9 +29,6 @@ from smarter.apps.chatbot.signals import (
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-)
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib import json, logging
@@ -713,7 +710,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["ChatBot"]
         """
-        logger_prefix = formatted_text(__name__ + "." + ChatBot.__name__ + ".get_cached_object()")
+        logger_prefix = logging.formatted_text(__name__ + "." + ChatBot.__name__ + ".get_cached_object()")
         logger.debug(
             "%s called %s with pk=%s, name=%s, user=%s, user_profile=%s, account=%s, invalidate=%s",
             logger_prefix,
@@ -753,7 +750,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         :rtype: models.QuerySet["ChatBot"]
 
         """
-        logger_prefix = formatted_text(__name__ + "." + ChatBot.__name__ + ".get_cached_objects()")
+        logger_prefix = logging.formatted_text(__name__ + "." + ChatBot.__name__ + ".get_cached_objects()")
         logger.debug("%s called with user_profile=%s, invalidate=%s", logger_prefix, user_profile, invalidate)
 
         @cache_results()

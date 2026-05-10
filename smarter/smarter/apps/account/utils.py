@@ -31,13 +31,12 @@ from smarter.apps.account.models import (
 )
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-HERE = formatted_text(__name__)
+HERE = logging.formatted_text(__name__)
 
 
 logger = logging.getSmarterLogger(
@@ -110,7 +109,7 @@ class SmarterCachedObjects:
             if self._smarter_admin_user_profile:
                 logger.debug(
                     "%s re-queried %s",
-                    formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()"),
+                    logging.formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()"),
                     self._smarter_admin_user_profile,
                 )
                 self._smarter_admin_user_profile.refresh_from_db()
@@ -123,7 +122,7 @@ class SmarterCachedObjects:
                 self._smarter_admin_user_profile = user_profile
                 logger.debug(
                     "%s initialized %s",
-                    formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()"),
+                    logging.formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()"),
                     user_profile,
                 )
                 return self._smarter_admin_user_profile  # type: ignore[return-value]
@@ -151,7 +150,7 @@ class SmarterCachedObjects:
                 self._admin_user.refresh_from_db()
             logger.debug(
                 "%s re-queried %s",
-                formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.admin_user()"),
+                logging.formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.admin_user()"),
                 self._admin_user,
             )
 
@@ -160,7 +159,7 @@ class SmarterCachedObjects:
                 self._admin_user = User.objects.get(username=SMARTER_ADMIN_USERNAME, is_superuser=True)
                 logger.debug(
                     "%s initialized %s",
-                    formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.admin_user()"),
+                    logging.formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.admin_user()"),
                     self._admin_user,
                 )
                 return self._admin_user
@@ -428,7 +427,7 @@ def get_cached_admin_user_for_account(
             raise SmarterConfigurationError(
                 f"Failed to retrieve account with number {account_number}. Please ensure the account exists and is configured correctly."
             ) from e
-        console_prefix = formatted_text(f"{__name__}.get_cached_admin_user_for_account()")
+        console_prefix = logging.formatted_text(f"{__name__}.get_cached_admin_user_for_account()")
         user_profile = (
             UserProfile.objects.filter(account=account)
             .filter(Q(user__is_staff=True) | Q(user__is_superuser=True))

@@ -1,11 +1,9 @@
 # pylint: disable=wrong-import-position
 """Test SmarterQuerySetWithPermissions."""
 
-# our stuff
-import logging
-
 from django.test import Client
 
+from smarter.apps.account.models import SmarterQuerySetWithPermissions
 from smarter.apps.account.tests.factories import (
     admin_user_factory,
     factory_account_teardown,
@@ -13,8 +11,8 @@ from smarter.apps.account.tests.factories import (
 )
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.secret.models import Secret, SmarterQuerySetWithPermissions
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.apps.secret.models import Secret
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +20,7 @@ logger = logging.getLogger(__name__)
 class TestSmarterQuerySetWithPermissions(TestAccountMixin):
     """Test SmarterQuerySetWithPermissions model"""
 
-    logger_prefix = formatted_text(f"{__name__}.TestSmarterQuerySetWithPermissions()")
+    logger_prefix = logging.formatted_text(f"{__name__}.TestSmarterQuerySetWithPermissions()")
 
     @classmethod
     def setUpClass(cls):

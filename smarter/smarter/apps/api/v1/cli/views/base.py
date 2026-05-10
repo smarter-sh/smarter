@@ -39,7 +39,6 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.common.helpers.aws.exceptions import SmarterAWSError
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.k8s_helpers import KubernetesHelperException
 from smarter.common.utils import (
     is_authenticated_request,
@@ -161,7 +160,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: Logger prefix string
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{CliBaseApiView.__name__}[{id(self)}]")
+        return logging.formatted_text(f"{__name__}.{CliBaseApiView.__name__}[{id(self)}]")
 
     @property
     def formatted_class_name(self) -> str:

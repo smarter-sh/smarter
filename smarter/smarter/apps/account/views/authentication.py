@@ -11,7 +11,6 @@ from django.http import HttpResponse, HttpResponseRedirect
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -68,7 +67,7 @@ class LoginView(SmarterNeverCachedWebView):
 
     @property
     def formatted_class_name(self):
-        return formatted_text(f"{__name__}.{LoginView.__name__}")
+        return logging.formatted_text(f"{__name__}.{LoginView.__name__}")
 
     @property
     def is_google_oauth_enabled(self) -> bool:

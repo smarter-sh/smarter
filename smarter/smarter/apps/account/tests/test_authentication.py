@@ -62,8 +62,6 @@ AccountReverseNames:
 
 """
 
-# our stuff
-import logging
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -80,7 +78,9 @@ from smarter.apps.account.views.authentication import (
     LoginView,
     LogoutView,
 )
-from smarter.common.helpers.console_helpers import formatted_text
+
+# our stuff
+from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 
 from .mixins import TestAccountMixin
@@ -95,7 +95,7 @@ class TestLoginView(TestAccountMixin):
 
     """
 
-    test_logger_prefix = formatted_text(f"{__name__}.TestLoginView()")
+    test_logger_prefix = logging.formatted_text(f"{__name__}.TestLoginView()")
 
     def test_get_login_view_renders_for_anonymous(self):
         """
@@ -391,7 +391,7 @@ class TestLogoutView(TestAccountMixin):
 
     """
 
-    test_logger_prefix = formatted_text(f"{__name__}.TestLogoutView()")
+    test_logger_prefix = logging.formatted_text(f"{__name__}.TestLogoutView()")
 
     def test_get_logout_view_redirects_authenticated_user(self):
         """
@@ -468,7 +468,7 @@ class TestAccountInactiveView(TestAccountMixin):
     path("inactive/", AccountInactiveView.as_view(), name=AccountReverseNames.ACCOUNT_INACTIVE)
     """
 
-    test_logger_prefix = formatted_text(f"{__name__}.TestAccountInactiveView()")
+    test_logger_prefix = logging.formatted_text(f"{__name__}.TestAccountInactiveView()")
 
     def test_get_inactive_view_renders_authenticated_user(self):
         """
@@ -507,7 +507,7 @@ class TestAccountRegisterView(TestAccountMixin):
     path("register/", AccountRegisterView.as_view(), name=AccountReverseNames.ACCOUNT_REGISTER)
     """
 
-    test_logger_prefix = formatted_text(f"{__name__}.TestAccountRegisterView()")
+    test_logger_prefix = logging.formatted_text(f"{__name__}.TestAccountRegisterView()")
 
     def setUp(self):
         """Set up for each test."""
@@ -597,7 +597,7 @@ class TestAccountActivationEmailView(TestAccountMixin):
     path("activation/", AccountActivationEmailView.as_view(), name=AccountReverseNames.ACCOUNT_ACTIVATION)
     """
 
-    test_logger_prefix = formatted_text(f"{__name__}.TestAccountActivationEmailView()")
+    test_logger_prefix = logging.formatted_text(f"{__name__}.TestAccountActivationEmailView()")
 
     def setUp(self):
         super().setUp()
