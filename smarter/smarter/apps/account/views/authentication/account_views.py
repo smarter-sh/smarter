@@ -107,7 +107,8 @@ class AccountRegisterView(SmarterNeverCachedWebView):
             else:
                 # pylint: disable=broad-exception-raised
                 raise Exception(
-                    f"{self.formatted_class_name}.post() Authentication failed immediately after registration. This is a bug."
+                    "%s.post() Authentication failed immediately after registration. This is a bug."
+                    % self.formatted_class_name
                 )
         return self.get(request=request)
 
@@ -133,7 +134,7 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
         # generate and send the activation email
         user = get_resolved_user(request.user)
         if not isinstance(user, User) or not hasattr(user, "is_authenticated") or not user.is_authenticated:
-            logger.debug(
+            logger.warning(
                 "%s.AccountActivationEmailView.get() user is not authenticated or not found: %s",
                 self.formatted_class_name,
                 user,
@@ -145,7 +146,7 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
         from smarter.apps.account.urls import AccountReverseNames
 
         url = self.expiring_token.encode_link(
-            request, user, reverse(AccountReverseNames.namespace, AccountReverseNames.ACCOUNT_ACTIVATE)
+            request, user, ":".join([AccountReverseNames.namespace, AccountReverseNames.ACCOUNT_ACTIVATE])
         )
         context = {
             "account_activation": {
@@ -155,6 +156,12 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)
         subject = "Activate your account."
         to = user.email
+        logger.debug(
+            "%s.AccountActivationEmailView.get() sending account activation email to %s with url: %s",
+            self.formatted_class_name,
+            to,
+            url,
+        )
         email_helper.send_email(subject=subject, body=body, to=to, html=True)
 
         # render a page to let the user know the email was sent. Add a link to resend the email.

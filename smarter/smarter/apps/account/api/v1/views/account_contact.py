@@ -33,7 +33,6 @@ class AccountContactView(AccountViewBase):
     account_contact: AccountContact
 
     def get(self, request: Request, account_contact_id: int):
-        logger.debug(f"Getting account contact with id {account_contact_id}")
         self.account_contact = get_object_or_404(AccountContact, pk=account_contact_id)
         return JsonResponse(self.serializer_class(self.account_contact).data)
 

@@ -6,7 +6,7 @@ from http import HTTPStatus
 
 from django.test import Client
 
-from smarter.apps.account.api.v1.urls import Namespace
+from smarter.apps.account.api.v1.urls import AccountAPINamespaces
 from smarter.apps.account.api.v1.views.batch_create_users import (
     BatchCreateUsersResponseModel,
     BatchModel,
@@ -39,7 +39,7 @@ class TestUrls(TestAccountMixin):
         self.batch_data = self.get_readonly_json_file(os.path.join(HERE, "data/batch_users.json"))
         self.batch_model = BatchModel(**self.batch_data)  # type: ignore
         self.batch_account = Account.objects.create(account_number=self.batch_model.account_number)
-        self.url = reverse(namespace + ":" + Namespace.batch_create_users)
+        self.url = reverse(namespace + ":" + AccountAPINamespaces.batch_create_users)
         logger.debug("Created test batch account with account number: %s", self.batch_account.account_number)
 
     def tearDown(self):
