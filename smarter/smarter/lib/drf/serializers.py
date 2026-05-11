@@ -6,6 +6,10 @@ from typing import Optional
 from django.http import HttpRequest
 from rest_framework import serializers
 
+from smarter.lib import logging
+
+logger = logging.getSmarterLogger(__name__)
+
 
 def is_sphinx_build():
     """Determine if the current execution context is a Sphinx documentation build."""
@@ -21,6 +25,7 @@ class SmarterCamelCaseSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         """Initialize the serializer and set the request context."""
         super().__init__(*args, **kwargs)
+        self.logger_prefix = logging.formatted_text(__name__ + "." + self.__class__.__name__)
 
         # Get the request from the context if available, while
         # guarding against Sphinx autodoc generation issues.
@@ -35,6 +40,12 @@ class SmarterCamelCaseSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         """Convert field names to camelCase."""
+        logger.debug(
+            "%s.to_representation() - called with instance: %s, request: %s",
+            self.logger_prefix,
+            type(instance),
+            self.request,
+        )
         representation = super().to_representation(instance)
         new_representation = {}
         for key, value in representation.items():

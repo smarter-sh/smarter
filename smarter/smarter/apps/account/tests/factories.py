@@ -5,6 +5,7 @@ from typing import Optional
 
 from smarter.apps.account.models import (
     Account,
+    AccountContact,
     User,
     UserProfile,
 )
@@ -138,6 +139,12 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
         user_profile = UserProfile.get_cached_object(user=user, account=account)
     elif user and not user_profile:
         user_profile = UserProfile.objects.filter(user=user).first()
+
+    try:
+        if user_profile:
+            AccountContact.objects.filter(email=user_profile.user.email, account=user_profile.account).delete()
+    except AccountContact.DoesNotExist:
+        pass
     try:
         if user_profile:
             lbl = str(user_profile)

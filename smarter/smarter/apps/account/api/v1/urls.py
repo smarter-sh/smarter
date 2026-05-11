@@ -2,6 +2,8 @@
 
 from django.urls import path
 
+from smarter.common.utils import camel_case_object_name
+
 from .const import namespace
 from .views.account import AccountListView, AccountView
 from .views.account_contact import AccountContactListView, AccountContactView
@@ -11,14 +13,14 @@ from .views.user import UserListView, UserView
 app_name = namespace
 
 
-class Namespace:
+class AccountAPINamespaces:
     """Namespace for account api urls."""
 
-    users_list_view = "account_users_list_view"
-    user_view = "account_user_view"
-    account_contact_list_view = "account_contact_list_view"
-    account_contact_view = "account_contact_view"
-    batch_create_users = "account_batch_create_users"
+    users_list_view = camel_case_object_name(UserListView)
+    user_view = camel_case_object_name(UserView)
+    account_contact_list_view = camel_case_object_name(AccountContactListView)
+    account_contact_view = camel_case_object_name(AccountContactView)
+    batch_create_users = camel_case_object_name(BatchCreateUsersView)
 
 
 urlpatterns = [
@@ -31,26 +33,26 @@ urlpatterns = [
     path(
         "users/",
         UserListView.as_view(),
-        name=Namespace.users_list_view,
+        name=AccountAPINamespaces.users_list_view,
     ),
     path(
         "users/<int:user_id>/",
         UserView.as_view(),
-        name=Namespace.user_view,
+        name=AccountAPINamespaces.user_view,
     ),
     path(
         "contacts/",
         AccountContactListView.as_view(),
-        name=Namespace.account_contact_list_view,
+        name=AccountAPINamespaces.account_contact_list_view,
     ),
     path(
         "contacts/<int:account_contact_id>/",
         AccountContactView.as_view(),
-        name=Namespace.account_contact_view,
+        name=AccountAPINamespaces.account_contact_view,
     ),
     path(
         "batch-create-users/",
         BatchCreateUsersView.as_view(),
-        name=Namespace.batch_create_users,
+        name=AccountAPINamespaces.batch_create_users,
     ),
 ]

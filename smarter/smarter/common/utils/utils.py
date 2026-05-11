@@ -384,7 +384,7 @@ def dict_is_subset(small, big) -> bool:
         return small == big
 
 
-def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_length: int = 8) -> str:
+def mask_string(string: Union[str, bytes], mask_char: str = "*", mask_length: int = 4, string_length: int = 8) -> str:
     """
     Masks a string by replacing all but the last ``mask_length`` characters with ``mask_char``.
 
