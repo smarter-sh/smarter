@@ -16,6 +16,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
 
 from smarter.apps.account.models import AccountContact
+from smarter.apps.account.serializers import AccountContactSerializer
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -28,13 +29,13 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 class AccountContactView(AccountViewBase):
     """AccountContact view for smarter api."""
 
+    serializer_class = AccountContactSerializer
     account_contact: AccountContact
 
     def get(self, request: Request, account_contact_id: int):
-        if account_contact_id and request.user.is_superuser:  # type: ignore
-            self.account_contact = get_object_or_404(AccountContact, pk=account_contact_id)
-        else:
-            return Http404()
+        logger.debug(f"Getting account contact with id {account_contact_id}")
+        self.account_contact = get_object_or_404(AccountContact, pk=account_contact_id)
+        return JsonResponse(self.serializer_class(self.account_contact).data)
 
     def post(self, request: Request):
         return HttpResponseBadRequest()
@@ -43,10 +44,7 @@ class AccountContactView(AccountViewBase):
         return HttpResponseBadRequest()
 
     def delete(self, request, account_contact_id: int):
-        if account_contact_id and self.is_superuser_or_unauthorized():
-            self.account_contact = get_object_or_404(AccountContact, pk=account_contact_id)
-        else:
-            return HttpResponseForbidden()
+        self.account_contact = get_object_or_404(AccountContact, pk=account_contact_id)
 
         try:
             with transaction.atomic():
@@ -66,15 +64,13 @@ class AccountContactView(AccountViewBase):
 class AccountContactListView(AccountListViewBase):
     """AccountContact list view for smarter api."""
 
-    account_contact: AccountContact
+    serializer_class = AccountContactSerializer
 
     def get_queryset(self):
-        if not isinstance(self.account_contact, AccountContact):
-            return AccountContact.objects.none()
         if not self.request:
             return AccountContact.objects.none()
         if not self.request.user.is_authenticated:  # type: ignore
             return AccountContact.objects.none()
         if self.request.user.is_superuser:  # type: ignore
             return AccountContact.objects.all()
-        return self.account_contact
+        return AccountContact.objects.filter(account=self.user_profile.account)  # type: ignore
