@@ -120,6 +120,17 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         # pylint: disable=C0415
         from smarter.apps.account.utils import smarter_cached_objects
 
+        if not isinstance(user, User):
+            logger.debug(
+                "%s.with_read_permission_for() user is not an instance of User: %s",
+                logging.formatted_text(
+                    __name__
+                    + f".{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
+                ),
+                user,
+            )
+            return self.none()
+
         logger_prefix = logging.formatted_text(
             __name__ + f".{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
         )
