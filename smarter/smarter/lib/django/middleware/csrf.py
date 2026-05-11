@@ -11,6 +11,7 @@ from warnings import deprecated
 
 from asgiref.sync import markcoroutinefunction
 from django.conf import settings
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponseForbidden
 from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.functional import cached_property
@@ -167,7 +168,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             allowed_origin_subdomains[parsed.scheme].append(parsed.netloc.lstrip("*"))
         return allowed_origin_subdomains
 
-    def __call__(self, request):
+    def __call__(self, request: ASGIRequest):
         """
         New-style middleware entrypoint for CSRF protection with dynamic trusted origins and chatbot logic.
         """
@@ -258,7 +259,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         return response
 
     @deprecated("Use __call__ instead, which is the new-style middleware entrypoint.")
-    def process_request(self, request):
+    def process_request(self, request: ASGIRequest):
         """
         Legacy support for old-style middleware. This will only be called if the middleware is not used as new-style middleware.
         """
@@ -266,7 +267,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         return self(request)
 
     @deprecated("Use __call__ instead, which is the new-style middleware entrypoint.")
-    def process_view(self, request, callback, callback_args, callback_kwargs):
+    def process_view(self, request: ASGIRequest, callback, callback_args, callback_kwargs):
         """
         Legacy support for old-style middleware. This will only be called if the middleware is not used as new-style middleware.
         """
