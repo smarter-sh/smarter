@@ -285,6 +285,13 @@ class SmarterAdminAPIView(APIView, SmarterAdminAPIMixin):
         if not self.is_superuser():
             return HttpResponseForbidden("Forbidden: User %s does not have superuser privileges.", self.user_profile)
 
+        logger.debug(
+            "%s.dispatch() - called by user_profile: %s and ready to process request: %s",
+            self.formatted_class_name,
+            self.user_profile,
+            smarter_build_absolute_uri(request),
+        )
+
         try:
             response = super().dispatch(request, *args, **kwargs)
         # pylint: disable=broad-except
@@ -363,10 +370,9 @@ class SmarterAdminListAPIView(ListAPIView, SmarterAdminAPIMixin):
         SmarterRequestMixin.__init__(
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
-
-        if not self.user.is_staff and not self.user.is_superuser:  # type: ignore
+        if not self.is_superuser():
             logger.warning(
-                "%s.dispatch() - request user is neither staff nor superuser: %s",
+                "%s.setup() - request user %s is not superuser",
                 self.formatted_class_name,
                 self.user,
             )

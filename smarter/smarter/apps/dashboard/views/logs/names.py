@@ -2,7 +2,7 @@
 Reverse names for the logs views.
 """
 
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .reactapp import TerminalEmulatorLogView
@@ -15,4 +15,4 @@ class DashboardLogsReverseNames:
 
     namespace = namespace
 
-    terminal_emulator_view = camel_case_object_name(TerminalEmulatorLogView)
+    terminal_emulator_view = to_snake_case(TerminalEmulatorLogView)

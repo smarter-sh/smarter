@@ -12,7 +12,7 @@ from smarter.apps.vectorstore.views import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 
@@ -38,8 +38,8 @@ class VectorstoreReverseNames:
 
     namespace = namespace
 
-    list_view = camel_case_object_name(VectorstoreListView)
-    manifest_view = camel_case_object_name(VectorstoreManifestView)
+    list_view = to_snake_case(VectorstoreListView)
+    manifest_view = to_snake_case(VectorstoreManifestView)
 
 
 urlpatterns = []

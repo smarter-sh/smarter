@@ -54,7 +54,7 @@ app_name = namespace
 # /api/v1/ is the main entry point for the API
 urlpatterns = [
     # for Chatbots of the form https://example.3141-5926-5359.alpha.api.example.com
-    path("", include(chatbot_urls)),
+    # path("", include(chatbot_urls)),
     # -------------------------------------------
     # the main API
     # -------------------------------------------
