@@ -68,7 +68,7 @@ class TestUrls(TestAccountMixin):
     def test_account_users_view(self):
         """test that we can see users associated with an account and that one of these matches the account data."""
 
-        reverse_name = ":".join([self.namespace, AccountAPINamespaces.users_list_view])
+        reverse_name = ":".join([self.namespace, AccountAPINamespaces.user_list_view])
         response = self.client.get(reverse(reverse_name))  # type: ignore
 
         redirect_url = response.get("Location")

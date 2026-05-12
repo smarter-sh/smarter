@@ -19,7 +19,7 @@ class AccountAPINamespaces:
 
     account_view = to_snake_case(AccountView)
     account_list_view = to_snake_case(AccountListView)
-    users_list_view = to_snake_case(UserListView)
+    user_list_view = to_snake_case(UserListView)
     user_view = to_snake_case(UserView)
     account_contact_list_view = to_snake_case(AccountContactListView)
     account_contact_view = to_snake_case(AccountContactView)
@@ -38,7 +38,7 @@ urlpatterns = [
     path(
         "users/",
         UserListView.as_view(),
-        name=AccountAPINamespaces.users_list_view,
+        name=AccountAPINamespaces.user_list_view,
     ),
     path(
         "users/<int:user_id>/",

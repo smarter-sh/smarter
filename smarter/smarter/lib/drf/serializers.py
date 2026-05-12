@@ -40,12 +40,6 @@ class SmarterCamelCaseSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         """Convert field names to camelCase."""
-        logger.debug(
-            "%s.to_representation() - called with instance: %s, request: %s",
-            self.logger_prefix,
-            type(instance),
-            self.request,
-        )
         representation = super().to_representation(instance)
         new_representation = {}
         for key, value in representation.items():
