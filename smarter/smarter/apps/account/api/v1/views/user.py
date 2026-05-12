@@ -22,109 +22,6 @@ from .base import AccountListViewBase, AccountViewBase
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
-
-class UserView(AccountViewBase):
-    """User view for smarter api."""
-
-    def get(self, request, user_id: int):
-        logger.debug("%s.get() - user_id: %s, request: %s", self.formatted_class_name, user_id, request)
-        response = get_user(request, user_id)
-        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
-        return response
-
-    def post(self, request):
-        logger.debug("%s.post() - request: %s", self.formatted_class_name, request)
-        response = create_user(request)
-        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
-        return response
-
-    def patch(self, request):
-        logger.debug("%s.patch() - request: %s", self.formatted_class_name, request)
-        response = update_user(request)
-        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
-        return response
-
-    def delete(self, request, user_id):
-        logger.debug("%s.delete() - user_id: %s, request: %s", self.formatted_class_name, user_id, request)
-        response = delete_user(request, user_id)
-        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
-        return response
-
-    def handle_exception(self, exc):
-        if isinstance(exc, Http404):
-            logger.debug("%s.handle_exception() - Http404: %s", self.formatted_class_name, exc)
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        logger.error("%s.handle_exception() - unhandled exception: %s", self.formatted_class_name, exc)
-        return super().handle_exception(exc)
-
-
-class UserListView(AccountListViewBase):
-    """User list view for smarter api."""
-
-    serializer_class = UserSerializer
-
-    def setup(self, request: Request, *args, **kwargs):
-        """
-        Setup the view. This is called by Django before dispatch() and is used to
-        initialize attributes that require the request object.
-        """
-        super().setup(request, *args, **kwargs)
-        logger.debug(
-            "%s.setup() - request: %s, user: %s, user_profile: %s is_authenticated: %s",
-            self.formatted_class_name,
-            smarter_build_absolute_uri(self.request),
-            self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
-            self.user_profile,
-            is_authenticated_request(self.request),
-        )
-
-    def get_queryset(self):
-        logger.debug("%s.get_queryset() - request: %s", self.formatted_class_name, self.request)
-        user = get_resolved_user(self.request.user)
-        if user is None:
-            logger.debug("%s.get_queryset() - user not found for request: %s", self.formatted_class_name, self.request)
-            return Response({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
-        if user.is_superuser:
-            logger.debug("%s.get_queryset() - user is superuser: %s", self.formatted_class_name, user)
-            return User.objects.all()
-
-        try:
-            account_users = UserProfile.objects.filter(account__user=self.request.user).values_list("user", flat=True)
-            logger.debug(
-                "%s.get_queryset() - account users for %s: %s", self.formatted_class_name, user, list(account_users)
-            )
-            return User.objects.filter(id__in=account_users)
-        except UserProfile.DoesNotExist:
-            logger.debug("%s.get_queryset() - user profile not found for user: %s", self.formatted_class_name, user)
-            return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
-
-    def get_list(self, request: Request):
-        """
-        Get a list of all users the requesting user has access to.
-        """
-        logger.debug("%s.get() - request: %s", self.formatted_class_name, request)
-        queryset = self.get_queryset()
-        if isinstance(queryset, Response):
-            return queryset
-        serializer = UserSerializer(queryset, many=True)
-        response = Response(serializer.data, status=HTTPStatus.OK.value)
-        return response
-
-    def get(self, request: Request, *args, **kwargs):
-        """
-        Handle GET requests to retrieve the list of users.
-        """
-        logger.debug("%s.get() - request: %s", self.formatted_class_name, request)
-        return self.get_list(request)
-
-    def post(self, request, *args, **kwargs):
-        """
-        Handle POST requests to create a new user.
-        """
-        logger.debug("%s.post() - request: %s", self.formatted_class_name, request)
-        return self.get_list(request)
-
-
 # -----------------------------------------------------------------------
 # handlers for users
 # -----------------------------------------------------------------------
@@ -181,13 +78,13 @@ def eval_permissions(request, user_to_update: User, user_to_update_profile: Opti
     return None
 
 
-def get_user_for_operation(request) -> tuple[User, UserProfile] | JsonResponse:
+def get_user_for_operation(request, user_id: int) -> tuple[User, UserProfile] | JsonResponse:
 
     if not isinstance(request.user, User):
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     try:
-        user = User.objects.get(id=request.data.get("id"))
+        user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.BAD_REQUEST.value)
 
@@ -284,9 +181,9 @@ def create_user(request: Request):
     return HttpResponseRedirect(request.path_info + str(user.id) + "/")  # type: ignore[return-value]
 
 
-def update_user(request: Request):
+def update_user(request: Request, user_id: int):
     """update an account from a json representation in the body of the request."""
-    logger.debug("%s.update_user() - request: %s", request, request)
+    logger.debug("%s.update_user() - user_id: %s, request: %s", request, user_id, request)
     data: dict
 
     validate_request_body(request)
@@ -295,7 +192,7 @@ def update_user(request: Request):
     except json.JSONDecodeError:
         logger.debug("UserListView.get_queryset() - invalid JSON format in request body: %s", request.body)
         return JsonResponse({"error": "Invalid JSON format in request body."}, status=HTTPStatus.BAD_REQUEST.value)
-    user_to_update, user_to_update_profile = get_user_for_operation(request)
+    user_to_update, user_to_update_profile = get_user_for_operation(request, user_id)
     if isinstance(user_to_update, JsonResponse):
         return user_to_update
     if isinstance(user_to_update_profile, JsonResponse):
@@ -353,3 +250,105 @@ def delete_user(request: Request, user_id: Optional[int] = None):
     plugins_path = request.path_info.rsplit("/", 2)[0]
 
     return HttpResponseRedirect(plugins_path)
+
+
+class UserView(AccountViewBase):
+    """User view for smarter api."""
+
+    def get(self, request, user_id: int):
+        logger.debug("%s.get() - user_id: %s, request: %s", self.formatted_class_name, user_id, request)
+        response = get_user(request, user_id)
+        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
+        return response
+
+    def post(self, request, user_id: Optional[int] = None):
+        logger.debug("%s.post() - request: %s", self.formatted_class_name, request)
+        response = create_user(request)
+        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
+        return response
+
+    def patch(self, request, user_id: int):
+        logger.debug("%s.patch() - user_id: %s, request: %s", self.formatted_class_name, user_id, request)
+        response = update_user(request, user_id)
+        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
+        return response
+
+    def delete(self, request, user_id):
+        logger.debug("%s.delete() - user_id: %s, request: %s", self.formatted_class_name, user_id, request)
+        response = delete_user(request, user_id)
+        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
+        return response
+
+    def handle_exception(self, exc):
+        if isinstance(exc, Http404):
+            logger.debug("%s.handle_exception() - Http404: %s", self.formatted_class_name, exc)
+            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        logger.error("%s.handle_exception() - unhandled exception: %s", self.formatted_class_name, exc)
+        return super().handle_exception(exc)
+
+
+class UserListView(AccountListViewBase):
+    """User list view for smarter api."""
+
+    serializer_class = UserSerializer
+
+    def setup(self, request: Request, *args, **kwargs):
+        """
+        Setup the view. This is called by Django before dispatch() and is used to
+        initialize attributes that require the request object.
+        """
+        super().setup(request, *args, **kwargs)
+        logger.debug(
+            "%s.setup() - request: %s, user: %s, user_profile: %s is_authenticated: %s",
+            self.formatted_class_name,
+            smarter_build_absolute_uri(self.request),
+            self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
+            self.user_profile,
+            is_authenticated_request(self.request),
+        )
+
+    def get_queryset(self):
+        logger.debug("%s.get_queryset() - request: %s", self.formatted_class_name, self.request)
+        user = get_resolved_user(self.request.user)
+        if user is None:
+            logger.debug("%s.get_queryset() - user not found for request: %s", self.formatted_class_name, self.request)
+            return Response({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
+        if user.is_superuser:
+            logger.debug("%s.get_queryset() - user is superuser: %s", self.formatted_class_name, user)
+            return User.objects.all()
+
+        try:
+            account_users = UserProfile.objects.filter(account__user=self.request.user).values_list("user", flat=True)
+            logger.debug(
+                "%s.get_queryset() - account users for %s: %s", self.formatted_class_name, user, list(account_users)
+            )
+            return User.objects.filter(id__in=account_users)
+        except UserProfile.DoesNotExist:
+            logger.debug("%s.get_queryset() - user profile not found for user: %s", self.formatted_class_name, user)
+            return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
+
+    def get_list(self, request: Request):
+        """
+        Get a list of all users the requesting user has access to.
+        """
+        logger.debug("%s.get() - request: %s", self.formatted_class_name, request)
+        queryset = self.get_queryset()
+        if isinstance(queryset, Response):
+            return queryset
+        serializer = UserSerializer(queryset, many=True)
+        response = Response(serializer.data, status=HTTPStatus.OK.value)
+        return response
+
+    def get(self, request: Request, *args, **kwargs):
+        """
+        Handle GET requests to retrieve the list of users.
+        """
+        logger.debug("%s.get() - request: %s", self.formatted_class_name, request)
+        return self.get_list(request)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests to create a new user.
+        """
+        logger.debug("%s.post() - request: %s", self.formatted_class_name, request)
+        return self.get_list(request)

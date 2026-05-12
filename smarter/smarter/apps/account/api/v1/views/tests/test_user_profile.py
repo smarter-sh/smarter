@@ -3,13 +3,11 @@
 
 from http import HTTPStatus
 
-from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.api.v1.urls import AccountAPINamespaces
 from smarter.apps.account.const import namespace as account_namespace
-from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.api.v1.const import namespace as api_v1_namespace
@@ -19,8 +17,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
 )
-
-User = get_user_model()
 
 
 class TestUserProfileView(TestAccountMixin):
