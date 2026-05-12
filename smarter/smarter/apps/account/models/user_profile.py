@@ -315,14 +315,14 @@ class UserProfile(MetaDataModel):
     )
 
     @property
-    def cached_user(self) -> Optional[User]:
+    def cached_user(self) -> User:
         """
         Retrieve the associated User instance with caching.
         This significantly reduces the number of database queries when accessing
         the user from the user profile.
 
-        :returns: Optional[User]
-            The associated User instance, or None if not found.
+        :returns: User
+            The associated User instance.
 
         **Example usage**::
 
@@ -334,14 +334,14 @@ class UserProfile(MetaDataModel):
         return self.user
 
     @property
-    def cached_account(self) -> Optional[Account]:
+    def cached_account(self) -> Account:
         """
         Retrieve the associated Account instance with caching.
         This significantly reduces the number of database queries
         when accessing the account from the user profile.
 
-        :returns: Optional[Account]
-            The associated Account instance, or None if not found.
+        :returns: Account
+            The associated Account instance.
 
         **Example usage**::
 
@@ -403,6 +403,13 @@ class UserProfile(MetaDataModel):
             profile.save()
 
         """
+        logger_prefix = logging.formatted_text(__name__ + "." + UserProfile.__name__ + ".save()")
+        logger.debug(
+            "%s.save() called for UserProfile with user: %s and account: %s",
+            logger_prefix,
+            self.user,
+            self.account,
+        )
         is_new = self.pk is None
 
         if self.user is None or self.account is None:
@@ -412,16 +419,8 @@ class UserProfile(MetaDataModel):
             # ensure that at least one person is on the account contact list
             is_primary = AccountContact.objects.filter(account=self.account, is_primary=True).count() == 0
             self.add_to_account_contacts(is_primary=is_primary)
-
-            logger.debug(
-                "%s.save() New user profile created for %s %s. Sending signal.",
-                logging.formatted_text(__name__ + ".UserProfile()"),
-                self.account.company_name,
-                self.user.email,
-            )
             new_user_created.send(sender=self.__class__, user_profile=self)
         else:
-            # if account or user is updated, raise an error since that should not happen.
             orig = UserProfile.objects.get(pk=self.pk)
             if orig.account != self.account or orig.user != self.user:
                 raise SmarterValueError("Cannot change the account or user of an existing UserProfile")
@@ -715,15 +714,17 @@ class UserProfile(MetaDataModel):
         return super().get_cached_objects()  # type: ignore[return-value]
 
     def __str__(self):
+        user_identifier = "NoUser"
+        company_name = "NoAccount"
         try:
             user_identifier = (
                 self.user.email if self.user and self.user.email else (self.user.username if self.user else "NoUser")
             )
             company_name = self.account.company_name if self.account else "NoAccount"
         except User.DoesNotExist:
-            user_identifier = "NoUser"
+            pass
         except Account.DoesNotExist:
-            company_name = "NoAccount"
+            pass
         return f"{company_name}-{user_identifier}"
 
     def __repr__(self):
