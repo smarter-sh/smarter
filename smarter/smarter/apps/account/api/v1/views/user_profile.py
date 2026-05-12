@@ -29,36 +29,32 @@ class UserProfileView(AccountViewBase):
     """UserProfile view for smarter api."""
 
     def get(self, request: Request, user_profile_id: int):
-        if user_profile_id and request.user.is_superuser:  # type: ignore
-            self.user_profile = get_object_or_404(UserProfile, pk=user_profile_id)
-        else:
-            return Http404()
+        self.user_profile = get_object_or_404(UserProfile, pk=user_profile_id)
 
-    def post(self, request: Request):
+    def post(self, request: Request, user_profile_id: Optional[int] = None):
         return HttpResponseBadRequest()
 
     def patch(self, request: Request, user_profile_id: Optional[int] = None):
         return HttpResponseBadRequest()
 
     def delete(self, request, user_profile_id: int):
-        if user_profile_id and self.is_superuser_or_unauthorized():
-            self.user_profile = get_object_or_404(UserProfile, pk=user_profile_id)
-        else:
-            return HttpResponseForbidden()
+        logger.debug(
+            "%s.delete() called by %s with user_profile_id: %s",
+            self.formatted_class_name,
+            self.user_profile,
+            user_profile_id,
+        )
+        user_profile = get_object_or_404(UserProfile, pk=user_profile_id)
 
         try:
-            with transaction.atomic():
-                if not isinstance(self.user_profile, UserProfile):
-                    return JsonResponse({"error": "UserProfile not found"}, status=HTTPStatus.NOT_FOUND)
-                self.user_profile.delete()
-                UserProfile.objects.get(user=request.user).delete()
+            user_profile.delete()
         except Exception as e:
+            logger.error("Error deleting user profile with id %s: %s", user_profile_id, str(e))
             return JsonResponse(
                 {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
-        plugins_path = request.path_info.rsplit("/", 2)[0]
-        return HttpResponseRedirect(plugins_path)
+        return HttpResponseRedirect("/")
 
 
 class UserProfileListView(AccountListViewBase):

@@ -159,44 +159,55 @@ class SmarterAdminAPIMixin(SmarterRequestMixin):
 
     request: Any
 
-    def is_superuser_or_unauthorized(self):
+    def is_superuser(self) -> bool:
         """Check if the authenticated user is a superuser.
 
         Returns:
             bool: True if the user is not a superuser, False otherwise.
         """
-        if not is_authenticated_request(self.request):
-            logger.warning(
-                "%s.is_superuser_or_unauthorized() - request user is not authenticated: %s",
-                self.formatted_class_name,
-                self.request.user,
-            )
-            return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
-        if not self.user_profile or not self.user_profile.user.is_superuser:
-            return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
-        return False
-
-    def is_staff_or_unauthorized(self):
-        """Check if the authenticated user is a staff member.
-
-        Returns:
-            bool: True if the user is not a staff member, False otherwise.
-        """
         logger.debug(
-            "%s.is_staff_or_unauthorized() - checking if user is staff or superuser: %s",
+            "%s.is_superuser() - checking if user_profile %s is superuser: %s",
             self.formatted_class_name,
             self.user_profile,
+            self.user_profile.user.is_superuser if self.user_profile and self.user_profile.user else False,
         )
         if not is_authenticated_request(self.request):
             logger.warning(
-                "%s.is_staff_or_unauthorized() - request user is not authenticated: %s",
+                "%s.is_superuser() - request user is not authenticated: %s",
                 self.formatted_class_name,
                 self.request.user,
             )
-            return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+            return False
+        if not self.user_profile or not self.user_profile.user.is_superuser:
+            return False
+        return True
+
+    def is_staff(self) -> bool:
+        """Check if the authenticated user is a staff member.
+
+        Returns:
+            bool: True if the user is a staff member, False otherwise.
+        """
+        logger.debug(
+            "%s.is_staff() - checking if user_profile %s is staff or superuser: %s",
+            self.formatted_class_name,
+            self.user_profile,
+            (
+                (self.user_profile.user.is_staff or self.user_profile.user.is_superuser)
+                if self.user_profile and self.user_profile.user
+                else False
+            ),
+        )
+        if not is_authenticated_request(self.request):
+            logger.warning(
+                "%s.is_staff() - request user is not authenticated: %s",
+                self.formatted_class_name,
+                self.request.user,
+            )
+            return False
         if not self.user_profile or (not self.user_profile.user.is_staff and not self.user_profile.user.is_superuser):
-            return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
-        return False
+            return False
+        return True
 
 
 class SmarterAdminAPIView(APIView, SmarterAdminAPIMixin):
@@ -244,7 +255,6 @@ class SmarterAdminAPIView(APIView, SmarterAdminAPIMixin):
         SmarterRequestMixin.__init__(
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
-        self.is_staff_or_unauthorized()
         logger.debug(
             "%s.setup() - called for request: %s user: %s",
             self.formatted_class_name,
@@ -272,6 +282,8 @@ class SmarterAdminAPIView(APIView, SmarterAdminAPIMixin):
             AuthenticationFailed: Raised when authentication fails.
             SmarterTokenAuthenticationError: Raised for errors specific to SmarterTokenAuthentication.
         """
+        if not self.is_superuser():
+            return HttpResponseForbidden("Forbidden: User %s does not have superuser privileges.", self.user_profile)
 
         try:
             response = super().dispatch(request, *args, **kwargs)
@@ -348,13 +360,6 @@ class SmarterAdminListAPIView(ListAPIView, SmarterAdminAPIMixin):
         user = kwargs.pop("user", None)
         account = kwargs.pop("account", None)
         user_profile = kwargs.pop("user_profile", None)
-        if not is_authenticated_request(request):
-            logger.warning(
-                "%s.dispatch() - request user is not authenticated: %s",
-                self.formatted_class_name,
-                request.user,
-            )
-            return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
         SmarterRequestMixin.__init__(
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
@@ -406,6 +411,9 @@ class SmarterAdminListAPIView(ListAPIView, SmarterAdminAPIMixin):
             AuthenticationFailed: Raised when authentication fails.
             SmarterTokenAuthenticationError: Raised for errors specific to SmarterTokenAuthentication.
         """
+        if not self.is_superuser():
+            return HttpResponseForbidden("Forbidden: %s does not have superuser privileges.", self.user_profile)
+
         logger.debug(
             "%s.dispatch() - called for request: %s user: %s",
             self.formatted_class_name,
