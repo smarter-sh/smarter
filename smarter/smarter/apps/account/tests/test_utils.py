@@ -50,6 +50,7 @@ class TestGetCachedDefaultAccount(TestAccountMixin):
         Test that get_cached_default_account raises if no default account is configured.
         """
         account = utils.get_cached_default_account(invalidate=True)
+        self.assertIsInstance(account, Account)
         account.is_default_account = False
         account.save()
         with self.assertRaises(SmarterConfigurationError):

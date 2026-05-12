@@ -43,16 +43,14 @@ import os
 import random
 from typing import TYPE_CHECKING, Optional, Union
 
-# django stuff
 from django.contrib.auth.models import AbstractUser, AnonymousUser, User
 from django.core.validators import RegexValidator
 from django.db import models
-from django.http import HttpResponseNotFound
 from django.test.client import RequestFactory
 from django.utils.functional import SimpleLazyObject
 
-# our stuff
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
@@ -320,11 +318,37 @@ class Account(MetaDataModel):
             account.save()  # Ensures account_number is unique and valid
 
         """
+        orig = None
         if self.pk is not None:
             # check if account_number is being changed on updated, if so raise error.
             orig = Account.objects.get(pk=self.pk)
             if orig.account_number != self.account_number:
-                raise SmarterValueError("Account number cannot be changed once set.")
+                raise SmarterValueError("Account number is immutable and cannot be changed once set.")
+        try:
+            Account.objects.get(is_default_account=True)
+        except Account.DoesNotExist:
+            if orig and orig.is_default_account:
+                logger.warning(
+                    "%s.save() this save operation will leave the platform with no default account. You should ensure that exactly one account is marked as default.",
+                    self.formatted_class_name,
+                )
+            else:
+                logger.warning(
+                    "%s.save() No default account found when saving Account instance. Ensure that one account is marked as default.",
+                    self.formatted_class_name,
+                )
+
+        except Account.MultipleObjectsReturned as e:
+            accounts = Account.objects.filter(is_default_account=True)
+            logger.error(
+                "%s.save() Multiple accounts marked as default: %s. Account IDs: %s. Ensure that only one account is marked as default.",
+                self.formatted_class_name,
+                accounts,
+                [account for account in accounts],
+            )
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}.save() Multiple accounts are marked as default: {[account for account in accounts]}. Only one default account is allowed. {e}"
+            ) from e
         if self.account_number == "9999-9999-9999":
             self.account_number = self.randomized_account_number()
 

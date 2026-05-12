@@ -37,11 +37,6 @@ class APIKeyForm(forms.ModelForm):
 class APIKeyBase(SmarterAdminWebView):
     """Base class for API key views."""
 
-    def dispatch(self, request, *args, **kwargs):
-        self.user_profile = UserProfile.get_cached_object(user=request.user)  # type: ignore[assignment]
-        self.account = self.user_profile.account
-        return super().dispatch(request, *args, **kwargs)
-
 
 class APIKeysView(APIKeyBase):
     """View for the account API keys."""
