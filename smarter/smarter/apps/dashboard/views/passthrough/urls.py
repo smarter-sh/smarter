@@ -30,7 +30,7 @@ Example:
 from django.urls import include, path
 
 from smarter.common.conf import smarter_settings
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
 from .api import urls as api_urls
@@ -48,7 +48,7 @@ class PassthroughReverseNames:
 
     namespace = namespace
 
-    view = camel_case_object_name(PromptPassthroughView)
+    view = to_snake_case(PromptPassthroughView)
 
 
 urlpatterns = []

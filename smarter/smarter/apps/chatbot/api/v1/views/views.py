@@ -6,7 +6,7 @@ from typing import Optional
 
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseNotFound, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -74,27 +74,31 @@ class ChatbotView(ViewBase):
 
     serializer_class = ChatBotSerializer
     chatbot: Optional[ChatBot] = None
+    hashed_id: Optional[str] = None
+    chatbot_id: Optional[int] = None
 
     def get_queryset(self, *args, **kwargs):
         return ChatBot.objects.filter(id=self.chatbot.id)  # type: ignore[return-value]
 
     def dispatch(self, request: Request, *args, **kwargs):
+        self.hashed_id = kwargs.pop("hashed_id", None)
         retval = super().dispatch(request, *args, **kwargs)
-        hashed_id = kwargs.pop("hashed_id", None)
-        if hashed_id:
-            chatbot_id = ChatBot.id_from_hashed_id(hashed_id)
+        if self.hashed_id:
+            self.chatbot_id = ChatBot.id_from_hashed_id(self.hashed_id)
         else:
-            chatbot_id = kwargs.pop("chatbot_id", None)
+            self.chatbot_id = kwargs.get("chatbot_id")
 
-        if chatbot_id:
-            self.chatbot = get_object_or_404(ChatBot, pk=chatbot_id)
+        if self.chatbot_id:
+            self.chatbot = get_object_or_404(ChatBot, pk=self.chatbot_id)
             self.user_profile = self.chatbot.user_profile
-            logger.debug("ChatbotView.dispatch() - %s %s", self.chatbot, self.user_profile)
+            logger.debug("%s.dispatch() - %s %s", self.formatted_class_name, self.chatbot, self.user_profile)
         return retval
 
-    def get(self, request: Request, chatbot_id: int):
-        serializer = self.serializer_class(self.chatbot)
-        return Response(serializer.data, status=HTTPStatus.OK)
+    def get(self, request: Request, chatbot_id: Optional[int] = None):
+        if self.chatbot:
+            serializer = self.serializer_class(self.chatbot)
+            return Response(serializer.data, status=HTTPStatus.OK)
+        return HttpResponseNotFound("ChatBot not found")
 
     def post(self, request: Request, *args, **kwargs):
         try:
@@ -135,7 +139,7 @@ class ChatbotView(ViewBase):
         return HttpResponseRedirect(request.path_info)
 
     def delete(self, request: Request, *args, chatbot_id: Optional[int] = None, **kwargs):
-        if chatbot_id and self.is_superuser_or_unauthorized():
+        if chatbot_id and self.is_superuser():
             chatbot = get_object_or_404(ChatBot, pk=chatbot_id)
         else:
             chatbot = self.chatbot

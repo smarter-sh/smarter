@@ -2,7 +2,7 @@
 URLs for the logs views.
 """
 
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .streams import stream_user_logs
@@ -15,4 +15,4 @@ class DashboardLogsApiReverseNames:
 
     namespace = namespace
 
-    stream = camel_case_object_name(stream_user_logs)
+    stream = to_snake_case(stream_user_logs)

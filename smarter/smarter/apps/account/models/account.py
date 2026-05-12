@@ -47,6 +47,7 @@ from typing import TYPE_CHECKING, Optional, Union
 from django.contrib.auth.models import AbstractUser, AnonymousUser, User
 from django.core.validators import RegexValidator
 from django.db import models
+from django.http import HttpResponseNotFound
 from django.test.client import RequestFactory
 from django.utils.functional import SimpleLazyObject
 
@@ -356,7 +357,7 @@ class Account(MetaDataModel):
         account_number: Optional[str] = None,
         company_name: Optional[str] = None,
         **kwargs,
-    ) -> Optional["Account"]:
+    ) -> "Account":
         """
         Retrieve an Account instance by account number with caching.
 
@@ -406,11 +407,11 @@ class Account(MetaDataModel):
                     "%s._get_account_by_number() cache miss for account_number=%s", logger_prefix, account_number
                 )
                 return cls.objects.get(account_number=account_number)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 logger.debug(
                     "%s._get_account_by_number() no Account found for account_number=%s", logger_prefix, account_number
                 )
-                return None
+                raise cls.DoesNotExist(f"No Account found with account_number={account_number}") from e
 
         @cache_results(cls.cache_expiration)
         def _get_account_by_company_name(company_name: str, class_name: str) -> Optional["Account"]:
@@ -419,13 +420,13 @@ class Account(MetaDataModel):
                     "%s._get_account_by_company_name() cache miss for company_name=%s", logger_prefix, company_name
                 )
                 return cls.objects.get(company_name=company_name)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 logger.debug(
                     "%s._get_account_by_company_name() no Account found for company_name=%s",
                     logger_prefix,
                     company_name,
                 )
-                return None
+                raise cls.DoesNotExist(f"No Account found with company_name={company_name}") from e
 
         if invalidate:
             _get_account_by_number.invalidate(account_number=account_number, class_name=Account.__name__)
