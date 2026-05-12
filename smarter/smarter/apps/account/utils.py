@@ -106,13 +106,17 @@ class SmarterCachedObjects:
 
         @cache_results()
         def _requery_smarter_admin_user_profile(class_name=SmarterCachedObjects.__name__) -> None:
-            if self._smarter_admin_user_profile:
+            if isinstance(self._smarter_admin_user_profile, UserProfile):
                 logger.debug(
                     "%s re-queried %s",
                     logging.formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()"),
                     self._smarter_admin_user_profile,
                 )
-                self._smarter_admin_user_profile.refresh_from_db()
+                try:
+                    self._smarter_admin_user_profile.refresh_from_db()
+                except UserProfile.DoesNotExist:
+                    self._smarter_admin_user_profile = None
+                    _requery_smarter_admin_user_profile.invalidate(class_name=SmarterCachedObjects.__name__)
 
         if not self._smarter_admin_user_profile:
             try:
@@ -203,26 +207,24 @@ def get_cached_default_account(invalidate: bool = False) -> Account:
     """
 
     @cache_results()
-    def _get_default_account(class_name=Account.__name__) -> Account:
-        accounts = Account.objects.filter(is_default_account=True)
-        if not accounts.exists():
+    def _get_default_account() -> Account:
+        try:
+            return Account.objects.get(is_default_account=True)
+        except Account.DoesNotExist as e:
             raise SmarterConfigurationError(
                 "No default account found. Please ensure an account is marked as the default account."
-            )
-        if accounts.count() > 1:
-            logger.warning("%s.get_cached_default_account() multiple default accounts found", HERE)
-        account = accounts.first()
-        logger.debug("%s.get_cached_default_account() retrieving and caching default account %s", HERE, account)
-        if not account:
+            ) from e
+        except Account.MultipleObjectsReturned as e:
+            accounts = Account.objects.filter(is_default_account=True)
+            accounts_list = [str(account) for account in accounts]
             raise SmarterConfigurationError(
-                "No default account found. Please ensure an account is marked as the default account."
-            )
-        return account
+                f"Multiple default accounts found: {', '.join(accounts_list)}. Please ensure only one account is marked as the default account."
+            ) from e
 
     if invalidate:
-        _get_default_account.invalidate(class_name=Account.__name__)
+        _get_default_account.invalidate()
 
-    return _get_default_account(class_name=Account.__name__)
+    return _get_default_account()
 
 
 def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Optional[User] = None) -> Account:

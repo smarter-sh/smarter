@@ -113,7 +113,7 @@ coverage:
 	@echo "==============================================================================="
 	@echo "Generating code coverage report using Docker and coverage.py ..."
 	@echo "==============================================================================="
-	docker exec smarter-app bash -c "coverage run --source=smarter.apps.account --omit='*/tests/*,*/test_*.py' manage.py test smarter.apps.account && coverage report -m"
+	docker exec smarter-app bash -c "coverage run --source=smarter.apps.account manage.py test smarter.apps.account && coverage report -m"
 
 change-log:
 	@echo "==============================================================================="
@@ -188,7 +188,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.apps.account.views.tests.test_password_management"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.account"
 
 docker-prune:
 	@echo ""

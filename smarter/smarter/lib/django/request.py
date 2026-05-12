@@ -455,8 +455,7 @@ class SmarterRequestMixin(AccountMixin):
                 self.request_mixin_logger_prefix,
                 self._url,
             )
-            if self.is_authenticated:
-                verbose_logger.debug("hi dad")
+            if self.is_authenticated and not self.user:
                 self._smarter_request_user = request.user  # type: ignore
                 verbose_logger.debug(
                     "%s.smarter_request setter - smarter_request_user set to: %s is_authenticated=%s",

@@ -190,12 +190,11 @@ class AccountMixin(SmarterHelperMixin):
         else:
             if user_profile:
                 self.user_profile = user_profile
-            elif user:
+            elif user and account:
+                self.user_profile = UserProfile.get_cached_object(user=user, account=account)  # type: ignore
+            elif user and not self.user:
                 self.user = user
-                if account:
-                    self.account = account
-                    assert self.user_profile is not None
-            elif account:
+            elif account and not self.account:
                 self.account = account
 
         logger.debug(
@@ -737,10 +736,14 @@ class AccountMixin(SmarterHelperMixin):
         )
         try:
             user, _ = SmarterTokenAuthentication().authenticate_credentials(api_token)
-            self.user = user
+            self._user = user
+            self._account = None
+            self._user_profile = None
             return True
         except AuthenticationFailed:
-            self.user = SmarterAnonymousUser()
+            self._user = SmarterAnonymousUser()
+            self._account = None
+            self._user_profile = None
             logger.warning(
                 "%s.authenticate(): failed to authenticate user from API token", self.account_mixin_logger_prefix
             )
