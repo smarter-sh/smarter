@@ -50,6 +50,12 @@ class TestAccountMixin(SmarterTestBase):
     def setUp(self):
         """We use different manifest test data depending on the test case."""
         super().setUp()
+        # Assign class-level user/account attributes to instance for reliable access
+        self.admin_user = self.__class__.admin_user
+        self.account = self.__class__.account
+        self.user_profile = self.__class__.user_profile
+        self.non_admin_user = self.__class__.non_admin_user
+        self.non_admin_user_profile = self.__class__.non_admin_user_profile
         self._manifest = None
         self._manifest_path = None
         self._loader = None

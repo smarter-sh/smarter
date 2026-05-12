@@ -106,7 +106,7 @@ class TestLoginView(TestAccountMixin):
         GET request to LoginView for anonymous user should render sign-in page with correct context.
         """
         request = self.request_factory()
-        request.user = AnonymousUser()
+        request.user = AnonymousUser()  # type: ignore
         view = LoginView()
         response = view.get(request)
         self.assertEqual(
@@ -132,7 +132,7 @@ class TestLoginView(TestAccountMixin):
             f"Expected FOUND for authenticated GET but got {response.status_code}",
         )
         if hasattr(response, "url"):
-            self.assertEqual(response.url, "/")
+            self.assertEqual(response.url, "/")  # type: ignore
 
     def test_post_login_success(self):
         """
@@ -156,7 +156,7 @@ class TestLoginView(TestAccountMixin):
             f"Expected FOUND for successful login but got {response.status_code}",
         )
         if hasattr(response, "url"):
-            self.assertEqual(response.url, "/")
+            self.assertEqual(response.url, "/")  # type: ignore
 
     def test_post_login_invalid_password(self):
         """
@@ -578,7 +578,7 @@ class TestAccountRegisterView(TestAccountMixin):
         GET request to AccountRegisterView for anonymous user should render sign-up page with form.
         """
         request = self.request_factory().get("/register/")
-        request.user = None
+        request.user = None  # type: ignore
         view = AccountRegisterView()
         response = view.get(request)
         self.assertEqual(
@@ -598,7 +598,7 @@ class TestAccountRegisterView(TestAccountMixin):
             HTTPStatus.FOUND,
             f"Expected FOUND for authenticated GET but got {response.status_code}",
         )
-        self.assertEqual(response.url, "/")
+        self.assertEqual(response.url, "/")  # type: ignore
 
     def test_post_register_view_valid_form(self):
         """
@@ -609,7 +609,7 @@ class TestAccountRegisterView(TestAccountMixin):
             "password": "testpass123",
         }
         request = self.request_factory().post("/register/", data)
-        request.user = None
+        request.user = None  # type: ignore
         middleware = SessionMiddleware(lambda request: HttpResponse())
         middleware.process_request(request)
         request.session.save()
@@ -621,7 +621,7 @@ class TestAccountRegisterView(TestAccountMixin):
             f"Expected FOUND for valid registration POST but got {response.status_code}",
         )
         if hasattr(response, "url"):
-            self.assertEqual(response.url, "/welcome/")
+            self.assertEqual(response.url, "/welcome/")  # type: ignore
 
     def test_post_register_view_invalid_form(self):
         """

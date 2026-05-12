@@ -9,6 +9,7 @@ from .views.account import AccountListView, AccountView
 from .views.account_contact import AccountContactListView, AccountContactView
 from .views.batch_create_users import BatchCreateUsersView
 from .views.user import UserListView, UserView
+from .views.user_profile import UserProfileListView, UserProfileView
 
 app_name = namespace
 
@@ -21,6 +22,8 @@ class AccountAPINamespaces:
     account_contact_list_view = camel_case_object_name(AccountContactListView)
     account_contact_view = camel_case_object_name(AccountContactView)
     batch_create_users = camel_case_object_name(BatchCreateUsersView)
+    user_profile_list_view = camel_case_object_name(UserProfileListView)
+    user_profile_view = camel_case_object_name(UserProfileView)
 
 
 urlpatterns = [
@@ -54,5 +57,15 @@ urlpatterns = [
         "batch-create-users/",
         BatchCreateUsersView.as_view(),
         name=AccountAPINamespaces.batch_create_users,
+    ),
+    path(
+        "user-profiles/",
+        UserProfileListView.as_view(),
+        name=AccountAPINamespaces.user_profile_list_view,
+    ),
+    path(
+        "user-profiles/<int:user_profile_id>/",
+        UserProfileView.as_view(),
+        name=AccountAPINamespaces.user_profile_view,
     ),
 ]
