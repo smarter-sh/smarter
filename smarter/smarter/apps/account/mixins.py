@@ -393,6 +393,8 @@ class AccountMixin(SmarterHelperMixin):
         Set the account for the current user. Handle
         management of user_profile.
         """
+        if isinstance(self._account, Account) and account is not None:
+            raise SmarterBusinessRuleViolation("Account is already set to %s. It is now read-only." % self._account)
         self._account = account
         logger.debug("%s.account.setter: set _account to %s", self.account_mixin_logger_prefix, self._account)
         self._user_profile = None
@@ -438,6 +440,8 @@ class AccountMixin(SmarterHelperMixin):
         :return: None
         :rtype: None
         """
+        if isinstance(self._account, Account):
+            raise SmarterBusinessRuleViolation("Account is already set to %s. It is now read-only." % self._account)
         if not account_number:
             self._account = None
             verbose_logger.debug("%s.account_number.setter: unset _account", self.account_mixin_logger_prefix)
@@ -505,6 +509,8 @@ class AccountMixin(SmarterHelperMixin):
         :return: None
         :rtype: None
         """
+        if isinstance(self._user, User):
+            raise SmarterBusinessRuleViolation("User is already set to %s. It is now read-only." % self._user)
         self._user = user
         if not user:
             self._account = None
@@ -578,6 +584,10 @@ class AccountMixin(SmarterHelperMixin):
         :return: None
         :rtype: None
         """
+        if isinstance(self._user_profile, UserProfile):
+            raise SmarterBusinessRuleViolation(
+                f"UserProfile is already set to {self._user_profile}. It is now read-only."
+            )
         self._user_profile = user_profile
         verbose_logger.debug(
             "%s.user_profile.setter: set _user_profile to %s", self.account_mixin_logger_prefix, self._user_profile
@@ -702,7 +712,7 @@ class AccountMixin(SmarterHelperMixin):
                 "ready": self.is_accountmixin_ready,
                 "account": AccountMiniSerializer(self.account).data if self.account else None,
                 "user": UserMiniSerializer(self.user).data if self.user else None,
-                "user_profile": UserProfileSerializer(self.user_profile).data if self.user_profile else None,
+                "userProfile": UserProfileSerializer(self.user_profile).data if self.user_profile else None,
             }
         )
 
