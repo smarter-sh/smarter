@@ -9,6 +9,7 @@ from django.shortcuts import redirect
 
 from smarter.apps.account.models import User
 from smarter.apps.account.urls import AccountReverseNames
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
@@ -30,6 +31,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
 
 
+# pylint: disable=W0613
 class PasswordResetRequestView(SmarterNeverCachedWebView):
     """View for requesting a password reset email."""
 
@@ -42,6 +44,15 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
 
     template_path = "account/authentication/password-reset-request.html"
     email_template_path = "account/authentication/email/password-reset.html"
+    password_reset_link: str = ""
+
+    def generate_password_reset_link(self, request, user):
+        """Generate a password reset link for the given user."""
+        if not isinstance(user, User):
+            raise SmarterValueError("Invalid user object.")
+        return self.expiring_token.encode_link(
+            request=request, user=user, reverse_link=AccountReverseNames.PASSWORD_RESET_LINK  # type: ignore
+        )
 
     def get(self, request, *args, **kwargs):
         form = PasswordResetRequestView.EmailForm()
@@ -63,10 +74,8 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
             logger.warning("Multiple users found with email %s. Sending password reset email to one of them.", email)
             user = User.objects.filter(email=email).first()
 
-        password_reset_link = self.expiring_token.encode_link(
-            request=request, user=user, reverse_link=AccountReverseNames.PASSWORD_RESET_LINK
-        )
-        context = {"password_reset": {"url": password_reset_link}}
+        self.password_reset_link = self.generate_password_reset_link(request, user)
+        context = {"password_reset": {"url": self.password_reset_link}}
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)
         subject = "Reset your password"
         to = email
@@ -79,6 +88,8 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
 
     template_path = "account/authentication/new-password.html"
     expiring_token = ExpiringTokenGenerator()
+    uidb64: str = ""
+    token: str = ""
 
     class NewPasswordForm(forms.Form):
         """Form for the sign-in page."""
@@ -90,12 +101,15 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
     def get(self, request, *args, **kwargs):
         logger.debug("%s.get() begin", self.formatted_class_name)
         form = PasswordResetView.NewPasswordForm()
-        uidb64 = kwargs.get("uidb64", None)
-        token = kwargs.get("token", None)
+        try:
+            self.uidb64 = kwargs["uidb64"]
+            self.token = kwargs["token"]
+        except KeyError:
+            return SmarterHttpResponseBadRequest(request=request, error_message="Missing uidb64 or token in URL.")
 
         logger.debug("%s.get() initialized", self.formatted_class_name)
         try:
-            user = self.expiring_token.decode_link(uidb64=uidb64, token=token)
+            user = self.expiring_token.decode_link(uidb64=self.uidb64, token=self.token)
             logger.debug("%s.get() user: %s", self.formatted_class_name, user)
         except User.DoesNotExist:
             return SmarterHttpResponseNotFound(
@@ -114,12 +128,16 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
             return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
         logger.debug("%s.get() finalizing", self.formatted_class_name)
-        context = {"form": form, "password_reset": {"uidb64": uidb64, "token": token, "user": user}}
+        context = {"form": form, "password_reset": {"uidb64": self.uidb64, "token": self.token, "user": user}}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request, *args, **kwargs):
-        uidb64 = kwargs.get("uidb64", None)
-        token = kwargs.get("token", None)
+        try:
+            self.uidb64 = kwargs["uidb64"]
+            self.token = kwargs["token"]
+        except KeyError:
+            return SmarterHttpResponseBadRequest(request=request, error_message="Missing uidb64 or token in URL.")
+
         form = PasswordResetView.NewPasswordForm(request.POST)
         if not form.is_valid():
             return SmarterHttpResponseBadRequest(request=request, error_message="input form is invalid.")
@@ -131,7 +149,7 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
             return SmarterHttpResponseBadRequest(request=request, error_message="Passwords do not match.")
 
         try:
-            user = self.expiring_token.decode_link(uidb64, token)
+            user = self.expiring_token.decode_link(uidb64=self.uidb64, token=self.token)
         except User.DoesNotExist:
             return SmarterHttpResponseNotFound(
                 request=request, error_message="Invalid password reset link. User does not exist."
