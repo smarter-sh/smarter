@@ -71,6 +71,7 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
         self.assertTrue(auth_token)
 
         non_admin_same_account, _, non_admin_same_account_user_profile = mortal_user_factory(account=self.account)
+        other_admin_same_account, _, other_admin_same_account_user_profile = admin_user_factory(account=self.account)
         try:
             logger.debug(
                 "%s.test_has_permissions() 2.) testing permissions for non-staff user in same account.",
@@ -89,15 +90,16 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
                 self.formatted_class_name,
             )
             # staff user in same account should have permissions to anything in the account
-            non_admin_same_account.is_staff = True
-            non_admin_same_account.save()
             auth_token = (
                 SmarterAuthToken.objects.filter(pk=self.auth_token.pk)
-                .with_ownership_permission_for(non_admin_same_account)
+                .with_ownership_permission_for(other_admin_same_account)
                 .exists()
             )
             self.assertTrue(auth_token)
         finally:
+            factory_account_teardown(
+                user=other_admin_same_account, account=None, user_profile=other_admin_same_account_user_profile
+            )
             factory_account_teardown(
                 user=non_admin_same_account, account=None, user_profile=non_admin_same_account_user_profile
             )
