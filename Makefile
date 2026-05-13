@@ -66,6 +66,9 @@ init:
 activate:
 	./scripts/activate.sh
 
+collectstatic:
+	python smarter/manage.py collectstatic --noinput
+
 # complete Docker build. Performs all 13 steps of the build process regardless of current state.
 # takes around 4 minutes to complete
 build:
@@ -188,7 +191,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.apps.account"
+	docker exec smarter-app bash -c "python manage.py test smarter.lib"
 
 docker-prune:
 	@echo ""
@@ -257,6 +260,7 @@ python-init:
 	npm install && \
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
+	$(PIP) install pip==25.3 setuptools wheel pip-tools && \
 	PIP_CACHE_DIR=.pypi_cache $(PIP) install -r smarter/requirements/local.txt
 
 python-lint:

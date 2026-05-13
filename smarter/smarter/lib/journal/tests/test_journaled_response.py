@@ -130,5 +130,5 @@ class TestSmarterJournaledJsonErrorResponse(SmarterTestBase):
         self.assertIn("error", data)
         self.assertIn("stacktrace", data["error"])
         self.assertIn("errorClass", data["error"])
-        self.assertEqual(data["error"]["status"], str(HTTPStatus.UNAUTHORIZED))
+        self.assertEqual(str(data["error"]["status"]), str(HTTPStatus.UNAUTHORIZED))
         mock_logger.error.assert_called()

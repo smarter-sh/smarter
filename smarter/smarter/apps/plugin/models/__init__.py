@@ -16,6 +16,7 @@ from .plugin_selector_history import (
     PluginSelectorHistory,
     PluginSelectorHistorySerializer,
 )
+from .validators import validate_openai_parameters_dict
 
 PluginDataType = type[PluginDataStatic] | type[PluginDataApi] | type[PluginDataSql]
 PLUGIN_DATA_MAP: dict[str, PluginDataType] = {
@@ -37,4 +38,5 @@ __all__ = [
     "PluginSelectorHistorySerializer",
     "PluginDataValueError",
     "PLUGIN_DATA_MAP",
+    "validate_openai_parameters_dict",
 ]

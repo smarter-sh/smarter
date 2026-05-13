@@ -2,7 +2,7 @@
 All models for the ChatBot app.
 """
 
-from .chatbot import ChatBot
+from .chatbot import ChatBot, validate_provider
 from .chatbot_api_key import ChatBotAPIKey
 from .chatbot_custom_domain import ChatBotCustomDomain
 from .chatbot_custom_domain_dns import ChatBotCustomDomainDNS
@@ -22,4 +22,5 @@ __all__ = [
     "ChatBot",
     "ChatBotHelper",
     "get_cached_chatbot_by_request",
+    "validate_provider",
 ]

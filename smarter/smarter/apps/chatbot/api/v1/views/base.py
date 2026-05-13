@@ -24,7 +24,7 @@ from smarter.apps.chatbot.models import (
 from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.prompt.models import ChatHelper
+from smarter.apps.prompt.models import Chat, ChatHelper
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import is_authenticated_request
@@ -177,7 +177,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             )
         # smarter.apps.chatbot.models.ChatBot.DoesNotExist: ChatBot matching query does not exist.
         except ChatBot.DoesNotExist as e:
-            raise SmarterChatBotException(
+            raise ChatBot.DoesNotExist(
                 f"ChatBot not found. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}"
             ) from e
 
@@ -580,7 +580,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         if not self.chatbot:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
-                e=SmarterChatBotException(
+                e=ChatBot.DoesNotExist(
                     f"ChatBot not found. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}"
                 ),
                 safe=False,
@@ -595,7 +595,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         if not self.chat_helper:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
-                e=SmarterChatBotException(
+                e=Chat.DoesNotExist(
                     f"ChatHelper not found. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}"
                 ),
                 safe=False,

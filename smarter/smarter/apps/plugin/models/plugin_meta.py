@@ -256,11 +256,29 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 ) from e
 
         if username and not user:
-            user_profile = UserProfile.get_cached_object(invalidate=invalidate, username=username, account=account)  # type: ignore[arg-type]
+            try:
+                user_profile = UserProfile.get_cached_object(invalidate=invalidate, username=username, account=account)  # type: ignore[arg-type]
+            except UserProfile.DoesNotExist:
+                logger.debug(
+                    "%s.get_cached_object() - No UserProfile found for username: %s, account: %s",
+                    logger_prefix,
+                    username,
+                    account.id if account else None,  # type: ignore[attr-defined]
+                )
+                user_profile = None
             user = user_profile.user if user_profile else None
             account = account or (user_profile.account if user_profile else None)
 
-        user_profile = user_profile or UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
+        try:
+            user_profile = user_profile or UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
+        except UserProfile.DoesNotExist:
+            logger.debug(
+                "%s.get_cached_object() - No UserProfile found for user: %s, account: %s",
+                logger_prefix,
+                user.username if user else None,
+                account.id if account else None,  # type: ignore[attr-defined]
+            )
+            user_profile = None
         if not user_profile and not pk:
             raise SmarterValueError("either a pk or UserProfile + name is required to get a PluginMeta object.")
 
@@ -337,7 +355,15 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         try:
             retval = []
-            user_profile = UserProfile.get_cached_object(invalidate=invalidate, pk=user_profile_id)
+            try:
+                user_profile = UserProfile.get_cached_object(invalidate=invalidate, pk=user_profile_id)
+            except UserProfile.DoesNotExist:
+                logger.debug(
+                    "%s.get_cached_plugins_for_user_profile_id() - No UserProfile found for id: %s",
+                    logger_prefix,
+                    user_profile_id,
+                )
+                user_profile = None
             if not user_profile:
                 raise SmarterValueError(f"UserProfile with id {user_profile_id} not found.")
             admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore[arg-type]
@@ -353,7 +379,16 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 return False
 
             def get_plugins_for_account() -> QuerySet:
-                user_plugins = PluginMeta.get_cached_objects(user_profile=user_profile, invalidate=invalidate)
+                try:
+                    user_plugins = PluginMeta.get_cached_objects(user_profile=user_profile, invalidate=invalidate)
+                except PluginMeta.DoesNotExist as e:
+                    logger.error(
+                        "%s.get_cached_plugins_for_user_profile_id() - Error retrieving user plugins for %s: %s",
+                        logger_prefix,
+                        user_profile,
+                        str(e),
+                    )
+                    user_plugins = PluginMeta.objects.none()
                 logger.debug(
                     "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d user plugins for %s",
                     logger_prefix,
@@ -361,7 +396,16 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     user_profile,
                 )
 
-                admin_plugins = PluginMeta.get_cached_objects(user_profile=admin_user_profile, invalidate=invalidate)  # type: ignore[assignment]
+                try:
+                    admin_plugins = PluginMeta.get_cached_objects(user_profile=admin_user_profile, invalidate=invalidate)  # type: ignore[assignment]
+                except PluginMeta.DoesNotExist as e:
+                    logger.error(
+                        "%s.get_cached_plugins_for_user_profile_id() - Error retrieving admin plugins for %s: %s",
+                        logger_prefix,
+                        admin_user_profile,
+                        str(e),
+                    )
+                    admin_plugins = PluginMeta.objects.none()
                 logger.debug(
                     "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d admin plugins for %s",
                     logger_prefix,
@@ -369,9 +413,18 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     admin_user_profile,
                 )
 
-                smarter_plugins = PluginMeta.get_cached_objects(
-                    user_profile=smarter_cached_objects.smarter_admin_user_profile, invalidate=invalidate
-                )
+                try:
+                    smarter_plugins = PluginMeta.get_cached_objects(
+                        user_profile=smarter_cached_objects.smarter_admin_user_profile, invalidate=invalidate
+                    )
+                except PluginMeta.DoesNotExist as e:
+                    logger.error(
+                        "%s.get_cached_plugins_for_user_profile_id() - Error retrieving smarter plugins for %s: %s",
+                        logger_prefix,
+                        smarter_cached_objects.smarter_admin_user_profile,
+                        str(e),
+                    )
+                    smarter_plugins = PluginMeta.objects.none()
                 logger.debug(
                     "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d smarter plugins for %s",
                     logger_prefix,
