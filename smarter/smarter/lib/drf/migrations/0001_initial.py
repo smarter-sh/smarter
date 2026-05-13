@@ -132,12 +132,12 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "tags",
-                    taggit.managers.TaggableManager(
+                    models.JSONField(
                         blank=True,
-                        help_text="Tags for categorizing and organizing this resource.",
-                        through="drf.StringPKTaggedItem",
-                        to="taggit.Tag",
-                        verbose_name="Tags",
+                        default=list,
+                        encoder=smarter.lib.json.SmarterJSONEncoder,
+                        help_text="taggit values distilled to a simple list of strings",
+                        null=True,
                     ),
                 ),
             ],

@@ -154,7 +154,7 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
 
 
 ############################## create app user #################################
-FROM mariadb_connector AS user_setup
+FROM aws_cli AS user_setup
 
 
 # Create a non-root user to run the application

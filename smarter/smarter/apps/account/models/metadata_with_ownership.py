@@ -485,6 +485,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         username: Optional[str] = None,
         account: Optional[Account] = None,
         session_key: Optional[str] = None,
+        taggit=True,
         **kwargs,
     ) -> models.Model:
         """
@@ -554,11 +555,16 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     f"{logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()")} invalid pk value: {pk}. Expected an integer."
                 )
             try:
-                retval = (
-                    cls.objects.prefetch_related("tags")
-                    .select_related("user_profile", "user_profile__account", "user_profile__user")
-                    .get(pk=pk)
-                )
+                if taggit:
+                    retval = (
+                        cls.objects.prefetch_related("tags")
+                        .select_related("user_profile", "user_profile__account", "user_profile__user")
+                        .get(pk=pk)
+                    )
+                else:
+                    retval = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).get(pk=pk)
                 logger.debug(
                     "%s._get_object_by_pk() fetched %s - %s",
                     logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
@@ -593,11 +599,16 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
             try:
-                retval = (
-                    cls.objects.prefetch_related("tags")
-                    .select_related("user_profile", "user_profile__account", "user_profile__user")
-                    .get(name=name, user_profile=user_profile)
-                )
+                if taggit:
+                    retval = (
+                        cls.objects.prefetch_related("tags")
+                        .select_related("user_profile", "user_profile__account", "user_profile__user")
+                        .get(name=name, user_profile=user_profile)
+                    )
+                else:
+                    retval = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).get(name=name, user_profile=user_profile)
                 logger.debug(
                     "%s._get_object_by_name_and_user_profile() fetched %s for name: %s and user_profile: %s",
                     logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
@@ -638,11 +649,16 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
             try:
-                retval = (
-                    cls.objects.prefetch_related("tags")
-                    .select_related("user_profile", "user_profile__account", "user_profile__user")
-                    .get(name=name, user_profile__account=account)
-                )
+                if taggit:
+                    retval = (
+                        cls.objects.prefetch_related("tags")
+                        .select_related("user_profile", "user_profile__account", "user_profile__user")
+                        .get(name=name, user_profile__account=account)
+                    )
+                else:
+                    retval = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).get(name=name, user_profile__account=account)
                 logger.debug(
                     "%s._get_object_by_name_and_account() fetched %s for name: %s and account: %s",
                     logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
@@ -681,11 +697,16 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
             try:
-                retval = (
-                    cls.objects.prefetch_related("tags")
-                    .select_related("user_profile", "user_profile__account", "user_profile__user")
-                    .get(user_profile__cached_user__sessions__session_key=session_key)
-                )
+                if taggit:
+                    retval = (
+                        cls.objects.prefetch_related("tags")
+                        .select_related("user_profile", "user_profile__account", "user_profile__user")
+                        .get(user_profile__cached_user__sessions__session_key=session_key)
+                    )
+                else:
+                    retval = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).get(user_profile__cached_user__sessions__session_key=session_key)
                 logger.debug(
                     "%s._get_object_by_session_key() fetched %s for session_key: %s",
                     logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
@@ -748,7 +769,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
     @classmethod
     def get_cached_objects(
-        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None
+        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None, taggit=True, **kwargs
     ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
         """
         Retrieve a list of MetaDataWithOwnershipModel instances associated with a user profile using caching.
@@ -794,11 +815,16 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile ID.
             :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
             """
-            return (
-                cls.objects.prefetch_related("tags")
-                .select_related("user_profile", "user_profile__account", "user_profile__user")
-                .filter(user_profile_id=user_profile_id)
-            )
+            if taggit:
+                return (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .filter(user_profile_id=user_profile_id)
+                )
+            else:
+                return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").filter(
+                    user_profile_id=user_profile_id
+                )
 
         if invalidate and user_profile:
             _get_objects_for_user_profile_id.invalidate(user_profile_id=user_profile.id, class_name=cls.__name__)  # type: ignore
@@ -806,7 +832,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         if user_profile:
             return _get_objects_for_user_profile_id(user_profile_id=user_profile.id, class_name=cls.__name__)  # type: ignore
 
-        return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
+        return super().get_cached_objects(invalidate=invalidate, **kwargs)  # type: ignore[return-value]
 
     def save(self, *args, **kwargs):
         """

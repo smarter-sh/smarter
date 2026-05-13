@@ -393,7 +393,7 @@ class AccountMixin(SmarterHelperMixin):
         management of user_profile.
         """
         if isinstance(self._account, Account) and account is not None:
-            raise SmarterBusinessRuleViolation("Account is already set to %s. It is now read-only." % self._account)
+            raise SmarterBusinessRuleViolation(f"Account is already set to {self._account}. It is now immutable.")
         self._account = account
         logger.debug("%s.account.setter: set _account to %s", self.account_mixin_logger_prefix, self._account)
         self._user_profile = None
@@ -440,7 +440,7 @@ class AccountMixin(SmarterHelperMixin):
         :rtype: None
         """
         if isinstance(self._account, Account):
-            raise SmarterBusinessRuleViolation("Account is already set to %s. It is now read-only." % self._account)
+            raise SmarterBusinessRuleViolation(f"Account is already set to {self._account}. It is now immutable.")
         if not account_number:
             self._account = None
             verbose_logger.debug("%s.account_number.setter: unset _account", self.account_mixin_logger_prefix)
@@ -509,7 +509,7 @@ class AccountMixin(SmarterHelperMixin):
         :rtype: None
         """
         if isinstance(self._user, User):
-            raise SmarterBusinessRuleViolation("User is already set to %s. It is now read-only." % self._user)
+            raise SmarterBusinessRuleViolation(f"User is already set to {self._user}. It is now immutable.")
         self._user = user
         if not user:
             self._account = None
@@ -585,7 +585,7 @@ class AccountMixin(SmarterHelperMixin):
         """
         if isinstance(self._user_profile, UserProfile):
             raise SmarterBusinessRuleViolation(
-                f"UserProfile is already set to {self._user_profile}. It is now read-only."
+                f"UserProfile is already set to {self._user_profile}. It is now immutable."
             )
         self._user_profile = user_profile
         verbose_logger.debug(

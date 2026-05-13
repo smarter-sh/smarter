@@ -99,7 +99,7 @@ class TestManifestLoader(SmarterTestBase):
 
             # convert back to yaml
             yaml_data = yaml.dump(json_data)
-            with self.assertRaises(SAMLoaderError):
+            with self.assertRaises(SAMLoaderError, msg=f"Expected SAMLoaderError when {element} is missing"):
                 SAMLoader(manifest=yaml_data)
 
         for element in [SAMKeys.METADATA.value, SAMKeys.SPEC.value]:

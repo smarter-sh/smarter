@@ -30,14 +30,6 @@ logger = getLogger(__name__)
 ###############################################################################
 
 
-class StringPKTaggedItem(TaggedItemBase):
-    """
-    Custom TaggedItemBase with a string primary key for object_id.
-    """
-
-    object_id = models.CharField(max_length=128, db_index=True)
-
-
 class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
     """
     API Key manager. This is a custom manager derived from a combination of
@@ -148,11 +140,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     key_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     last_used_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
-    tags = TaggableManager(
-        blank=True,
-        help_text="Tags for categorizing and organizing this resource.",
-        through=StringPKTaggedItem,
-    )
+    tags = models.JSONField(default=list, blank=True)
 
     @property
     def identifier(self):
@@ -193,6 +181,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         user_profile: Optional[UserProfile] = None,
         user: Optional[User] = None,
         name: Optional[str] = None,
+        **kwargs,
     ) -> models.QuerySet["SmarterAuthToken"]:
         """
         Retrieve API keys with caching based on user profile and optional name
@@ -295,7 +284,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         elif user_profile:
             return _get_cached_objects_for_user_profile(user_profile.id)  # type: ignore
         else:
-            return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate)  # type: ignore
+            return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate, taggit=False)  # type: ignore
 
     def __str__(self):
         return str(self.name) + " (" + str(self.user) + ") " + str(self.identifier)

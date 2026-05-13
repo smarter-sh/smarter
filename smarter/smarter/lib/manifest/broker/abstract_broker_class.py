@@ -1,7 +1,6 @@
 # pylint: disable=C0302
 """Smarter API Manifest Abstract Broker class."""
 
-import logging
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -33,7 +32,7 @@ from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.mixins import SmarterConverterMixin
 from smarter.lib.django.request import SmarterRequestMixin
@@ -249,7 +248,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :rtype: str
         """
         user_profile = self.user_profile or "Anonymous"
-        name = self.name or "Unknown"
+        name = self._name or "Unknown"
 
         return f"{formatted_text(self.__class__.__name__)}[id={id(self)}](name={name}, user_profile={user_profile})"
 
@@ -396,6 +395,9 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: True if the AbstractBroker is ready for operations.
         :rtype: bool
         """
+        if self._is_ready_abstract_broker:
+            return self._is_ready_abstract_broker
+
         logger.debug(
             "%s.is_ready_abstract_broker() called. Beginning ready state: %s",
             self.abstract_broker_logger_prefix,
@@ -424,16 +426,23 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             )
             self._is_ready_abstract_broker = True
 
-        if not bool(self.name):
-            self._is_ready_abstract_broker = False
-
         if self._is_ready_abstract_broker:
+            logger.debug(
+                "%s.is_ready_abstract_broker() ready state is now: %s",
+                self.abstract_broker_logger_prefix,
+                self._is_ready_abstract_broker,
+            )
             return self._is_ready_abstract_broker
+
+        # hereon we know that there is no manifest nor loader to initialize from
+        # so we'll only look at instance variables.
+        if not bool(self._name):
+            self._is_ready_abstract_broker = False
 
         # ---------------------------------------------------------------------
         # log every reason why we are not ready.
         # ---------------------------------------------------------------------
-        if not self.name:
+        if not self._name:
             logger.warning(
                 "%s.is_ready_abstract_broker() - Broker name is not set. Cannot process broker.",
                 self.abstract_broker_logger_prefix,
@@ -690,7 +699,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             logger.warning("%s.name() could not determine name, returning None", self.abstract_broker_logger_prefix)
         return self._name
 
-    def manifest_to_django_orm(self) -> dict:
+    def manifest_to_django_orm(self) -> dict[str, Any]:
         """
         Convert the Smarter API manifest metadata into a dictionary suitable for creating or updating a Django ORM ChatBot model.
 
@@ -733,7 +742,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         logger.debug(
             "%s.manifest_to_django_orm() converted manifest metadata to Django ORM dict: %s",
             self.abstract_broker_logger_prefix,
-            retval,
+            logging.formatted_json(retval),
         )
 
         return retval
@@ -823,6 +832,10 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             return
         if not isinstance(value, SAMLoader):
             raise SmarterValueError("loader must be a SAMLoader instance")
+        if value.manifest_kind != self.kind:
+            raise SAMBrokerError(
+                f"loader manifest kind '{value.manifest_kind}' does not match broker kind '{self.kind}'"
+            )
         self._loader = value
 
         logger.debug("%s.loader() setter set loader to %s", self.abstract_broker_logger_prefix, self._loader)
@@ -2009,16 +2022,18 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
 
         :return: None
         """
+        state = {
+            "ready": self.ready,
+            "name": self._name,
+            "manifest": bool(self._manifest),
+            "loader": bool(self._loader),
+            "orm_instance": bool(self.orm_instance),
+            "request": self.url,
+            "user_profile": self.user_profile,
+        }
         msg = (
             f"{self.abstract_broker_logger_prefix} {self.kind} "
-            f"broker is {self.abstract_broker_ready_state} with "
-            f"ready: {self.ready}, "
-            f"name: {self._name}, "
-            f"manifest: {bool(self._manifest)}, "
-            f"loader: {bool(self._loader)}, "
-            f"orm_instance: {bool(self.orm_instance)}, "
-            f"request: {self.url}, "
-            f"user_profile: {self.user_profile} "
+            f"broker is {self.abstract_broker_ready_state}: " + logging.formatted_json(state)
         )
         if self.is_ready_abstract_broker:
             logger.info(msg)

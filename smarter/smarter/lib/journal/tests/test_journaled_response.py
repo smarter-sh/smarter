@@ -40,8 +40,6 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         self.assertEqual(resp.status_code, HTTPStatus.CREATED)
         data = json.loads(resp.content.decode("utf-8"))
         self.assertIn("api", data)
-        self.assertIn("thing", data)
-        self.assertIn("metadata", data)
         self.assertEqual(data["metadata"]["key"], "journal-key")
 
     @patch("smarter.lib.journal.http.waffle")
@@ -71,8 +69,6 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         self.assertEqual(resp.status_code, HTTPStatus.OK)
         data = json.loads(resp.content.decode("utf-8"))
         self.assertIn("api", data)
-        self.assertIn("thing", data)
-        self.assertIn("metadata", data)
         self.assertEqual(data["metadata"]["key"], "journal-key")
 
     @patch("smarter.lib.journal.http.waffle")
@@ -98,7 +94,7 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         self.assertEqual(resp.status_code, HTTPStatus.OK)
         response_json = json.loads(resp.content.decode("utf-8"))
         self.assertIn("api", response_json)
-        self.assertIn("thing", response_json)
+        self.assertIn("thing", response_json["metadata"])
         self.assertIn("metadata", response_json)
 
 
