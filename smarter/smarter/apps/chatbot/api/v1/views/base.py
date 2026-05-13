@@ -384,8 +384,15 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         self._chatbot_id = kwargs.get("chatbot_id")
         if self._chatbot_id:
             kwargs.pop("chatbot_id")
-        if self.chatbot:
-            self.user_profile = self.chatbot.user_profile
+        if self.chatbot and self.chatbot.user_profile:
+            self._user_profile = self.chatbot.user_profile
+            self._account = self.chatbot.user_profile.account
+            self._user = self.chatbot.user_profile.user
+            logger.debug(
+                "%s.dispatch() - reinitializing user, account, and user_profile from chatbot.user_profile: %s",
+                self.formatted_class_name,
+                self.chatbot.user_profile,
+            )
         else:
             self._name = self._name or name
         if not self.chatbot:

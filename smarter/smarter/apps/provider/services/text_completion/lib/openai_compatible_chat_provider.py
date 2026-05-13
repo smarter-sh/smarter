@@ -852,8 +852,16 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         )
         self._chat = chat
         self.user_profile = user_profile
-        if chat:
-            self.user_profile = chat.user_profile
+        if chat and chat.user_profile:
+            self._user_profile = chat.user_profile
+            self._account = chat.user_profile.account
+            self._user = chat.user_profile.user
+            logger.debug(
+                "%s.handler() - reinitialized user_profile from chat: %s, user_profile: %s",
+                self.formatted_class_name,
+                chat,
+                self._user_profile,
+            )
         self.data = data  # type: ignore[assignment]
         self.plugins = plugins
         self.functions = functions
