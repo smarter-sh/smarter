@@ -1,4 +1,34 @@
-"""Account LLMPrices model."""
+"""
+Account LLMPrices Model
+=======================
+
+This module defines the :class:`LLMPrices` model for managing provider/model-specific markup factors
+used in account billing. It enables proportional billing across all accounts based on their usage
+of different LLM providers and models.
+
+Classes
+-------
+
+- :class:`LLMPrices`: Stores markup prices for each (charge_type, provider, model) combination.
+
+Key Features
+------------
+
+- Tracks markup factors for each provider/model/charge type.
+- Enforces uniqueness for (charge_type, provider, model) combinations.
+- Supports flexible billing and cost allocation for LLM usage.
+
+Example
+-------
+
+.. code-block:: python
+
+    from smarter.apps.account.models import LLMPrices
+
+    markup = LLMPrices.objects.get(provider="openai", model="gpt-4").price
+    account_charge = provider_cost * markup * account_usage_ratio
+
+"""
 
 # django stuff
 from django.db import models
@@ -46,6 +76,7 @@ class LLMPrices(TimestampedModel):
     model = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=6)
 
+    # pylint: disable=C0115
     class Meta:
         unique_together = ("charge_type", "provider", "model")
 

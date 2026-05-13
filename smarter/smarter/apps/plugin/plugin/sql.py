@@ -38,6 +38,7 @@ from typing import Any, Optional, Type, Union
 
 from django.core.exceptions import MultipleObjectsReturned
 
+from smarter.apps.connection.models import SqlConnection
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
@@ -61,7 +62,7 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
     SqlData,
     TestValue,
 )
-from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
+from smarter.apps.plugin.models import PluginDataSql, PluginMeta
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults

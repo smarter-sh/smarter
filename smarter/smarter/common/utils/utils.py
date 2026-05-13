@@ -384,7 +384,7 @@ def dict_is_subset(small, big) -> bool:
         return small == big
 
 
-def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_length: int = 8) -> str:
+def mask_string(string: Union[str, bytes], mask_char: str = "*", mask_length: int = 4, string_length: int = 8) -> str:
     """
     Masks a string by replacing all but the last ``mask_length`` characters with ``mask_char``.
 
@@ -672,7 +672,7 @@ def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, li
     return retval
 
 
-def camel_case_object_name(obj) -> str:
+def to_snake_case(obj) -> str:
     """
     Convert CamelCase to snake_case for URL naming.
 
@@ -680,6 +680,8 @@ def camel_case_object_name(obj) -> str:
     :return: The converted snake_case string.
     :rtype: str
     """
+    if isinstance(obj, str):
+        return str(camel_to_snake(obj))
     return str(camel_to_snake(obj.__name__))
 
 
@@ -835,7 +837,7 @@ def bool_environment_variable(var_name: str, default: bool) -> bool:
 
 __all__ = [
     "bool_environment_variable",
-    "camel_case_object_name",
+    "to_snake_case",
     "camel_to_snake",
     "camel_to_snake_dict",
     "dict_is_contained_in",

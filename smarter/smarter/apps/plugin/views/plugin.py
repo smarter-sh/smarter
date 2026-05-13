@@ -10,7 +10,7 @@ from typing import Optional
 
 import yaml
 from django.contrib.auth.models import AnonymousUser
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponse
 from django.shortcuts import render
 
@@ -48,7 +48,7 @@ class PluginDetailView(DocsBaseView):
     This view renders a detailed manifest for a specific plugin, including its configuration and metadata, in YAML format. It is intended for authenticated users and provides error handling for missing or unsupported plugin kinds and names.
 
     :param request: Django HTTP request object.
-    :type request: WSGIRequest
+    :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
     :param kwargs: Keyword arguments, must include 'name' (plugin name) and 'kind' (plugin type).
@@ -92,7 +92,7 @@ class PluginDetailView(DocsBaseView):
         6. Handle any errors that occur during the process and return appropriate error responses.
 
         :param request: Django HTTP request object.
-        :type request: WSGIRequest
+        :type request: ASGIRequest
         :param args: Additional positional arguments.
         :type args: tuple
         :param kwargs: Keyword arguments, must include 'name' (plugin name) and 'kind' (plugin type).
@@ -208,7 +208,7 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
     This view displays all plugins available to the authenticated user as cards, providing a quick overview and access to plugin details.
 
     :param request: Django HTTP request object.
-    :type request: WSGIRequest
+    :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
     :param kwargs: Additional keyword arguments.
@@ -221,7 +221,7 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
     template_path = "plugin/plugin_list.html"
     plugins: list[PluginMeta]
 
-    def get(self, request: WSGIRequest, *args, **kwargs):
+    def get(self, request: ASGIRequest, *args, **kwargs):
         logger.debug(
             "%s.get() Rendering plugin list view for user %s with args=%s, kwargs=%s.",
             self.formatted_class_name,

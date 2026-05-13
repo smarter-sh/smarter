@@ -23,6 +23,7 @@ from smarter.apps.prompt.signals import (
 from smarter.apps.provider.models import Provider
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
@@ -118,11 +119,17 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         if self.base_url:
             openai.base_url = self.base_url
 
-        if not hasattr(request, "data") or not isinstance(request.data, dict):
-            return SmarterHttpResponseBadRequest(
-                request=request, error_message="Invalid request body: expected a JSON object"
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+        except json.JSONDecodeError as e:
+            logger.error("%s JSON decode error: %s. Raw request body: %s", logger_prefix, e, request.body)
+            return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s Unexpected error decoding JSON body: %s. Raw request body: %s", logger_prefix, e, request.body
             )
-        data = request.data
+            return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
 
         chat_started.send(sender=self.handler, request=request, data=data)
         chat_completion_request.send(sender=self.handler, data=data)

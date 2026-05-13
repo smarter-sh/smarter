@@ -1,13 +1,12 @@
 # pylint: disable=wrong-import-position
 """Test Charge model."""
 
-# our stuff
-import logging
-
 from smarter.apps.account.models import CHARGE_TYPES, Charge
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider
-from smarter.common.helpers.console_helpers import formatted_text
+
+# our stuff
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 class TestCharge(TestAccountMixin):
     """Test Charge model"""
 
-    logger_prefix = formatted_text(f"{__name__}.TestCharge()")
+    logger_prefix = logging.formatted_text(f"{__name__}.TestCharge()")
 
     @classmethod
     def setUpClass(cls):

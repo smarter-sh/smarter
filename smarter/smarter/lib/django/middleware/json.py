@@ -82,7 +82,11 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         return formatted_text(f"{__name__}.{SmarterJsonErrorMiddleware.__name__}")
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
-        logger.debug("%s.__call__(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
+        logger.debug(
+            "%s.__call__(): url=%s",
+            self.formatted_class_name,
+            self.smarter_build_absolute_uri(request),
+        )
         return super().__call__(request)
 
     def process_response(self, request, response):

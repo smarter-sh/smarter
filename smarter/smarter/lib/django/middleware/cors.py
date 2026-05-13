@@ -24,7 +24,7 @@ from functools import cached_property, lru_cache
 from typing import Optional, Pattern, Sequence
 from urllib.parse import SplitResult, urlsplit
 
-from asgiref.sync import markcoroutinefunction
+from asgiref.sync import markcoroutinefunction, sync_to_async
 from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware
 from django.http import HttpRequest
@@ -117,7 +117,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             return self.__acall__(request)
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
-            return super().__call__(request)
+            return self.get_response(request)
 
         host = request.get_host()
         if not host:
@@ -128,7 +128,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
 
         # Short-circuit for health checks
         if request.path.replace("/", "") in self.amnesty_urls:
-            return super().__call__(request)
+            return self.get_response(request)
 
         # Short-circuit for any requests born from internal IP address hosts
         # This is unlikely, but not impossible.
@@ -138,46 +138,28 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
                 self.formatted_class_name,
                 self.smarter_build_absolute_uri(request),
             )
-            return super().__call__(request)
+            return self.get_response(request)
 
         url = self.smarter_build_absolute_uri(request)
-        logger.debug("%s.__call__() - url=%s", self.formatted_class_name, url)
+        logger.debug(
+            "%s.__call__() - url=%s",
+            self.formatted_class_name,
+            url,
+        )
         self._url = None
         self._chatbot = None
         self.request = request
-        return super().__call__(request)
+        return super().__call__(self.request)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
-        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
-            return await super().__acall__(request)
-
-        host = request.get_host()
-        if not host:
-            return SmarterHttpResponseServerError(
-                request=request,
-                error_message="Internal error (500) - could not parse request.",
-            )
-
-        # Short-circuit for health checks
-        if request.path.replace("/", "") in self.amnesty_urls:
-            return await super().__acall__(request)
-
-        # Short-circuit for any requests born from internal IP address hosts
-        # This is unlikely, but not impossible.
-        if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
-            logger.debug(
-                "%s %s identified as an internal IP address, exiting.",
-                self.formatted_class_name,
-                self.smarter_build_absolute_uri(request),
-            )
-            return await super().__acall__(request)
-
-        url = self.smarter_build_absolute_uri(request)
-        logger.debug("%s.__acall__() - url=%s", self.formatted_class_name, url)
-        self._url = None
-        self._chatbot = None
-        self.request = request
-        return await super().__acall__(request)
+        logger.debug("%s.__acall__() called with request: %s", self.formatted_class_name, request)
+        if inspect.iscoroutinefunction(self.get_response):
+            response = await self.get_response(request)
+        else:
+            response = await sync_to_async(self.get_response, thread_sensitive=True)(request)
+        if inspect.isawaitable(response):
+            return await response
+        return response
 
     @property
     def chatbot(self) -> Optional[ChatBot]:

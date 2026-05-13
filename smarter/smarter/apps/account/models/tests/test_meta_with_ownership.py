@@ -1,12 +1,11 @@
 # pylint: disable=wrong-import-position
 """Test MetaDataWithOwnershipModel model."""
 
-# our stuff
-import logging
-
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret.models import Secret
-from smarter.common.helpers.console_helpers import formatted_text
+
+# our stuff
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +13,7 @@ logger = logging.getLogger(__name__)
 class TestMetaDataWithOwnershipModel(TestAccountMixin):
     """Test MetaDataWithOwnershipModel model"""
 
-    logger_prefix = formatted_text(f"{__name__}.TestMetaDataWithOwnershipModel()")
+    logger_prefix = logging.formatted_text(f"{__name__}.TestMetaDataWithOwnershipModel()")
 
     @classmethod
     def setUpClass(cls):

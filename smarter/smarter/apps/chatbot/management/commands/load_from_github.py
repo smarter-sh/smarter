@@ -3,7 +3,6 @@ This module is used to deploy a collection of customer API's from a GitHub repos
 organized in directories by customer API name.
 """
 
-import logging
 import os
 import re
 import subprocess
@@ -20,13 +19,13 @@ from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.loader import SAMLoader
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(f"{__name__}")
+logger_prefix = logging.formatted_text(f"{__name__}")
 
 
 # pylint: disable=E1101,too-many-instance-attributes

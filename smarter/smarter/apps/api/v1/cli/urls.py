@@ -31,7 +31,7 @@ Endpoints
 
 from django.urls import path
 
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .views.apply import ApiV1CliApplyApiView
@@ -85,21 +85,21 @@ class ApiV1CliReverseViews:
 
     namespace = f"api:v1:{namespace}:"
 
-    manifest = camel_case_object_name(ApiV1CliManifestApiView)
-    apply = camel_case_object_name(ApiV1CliApplyApiView)
-    chat = camel_case_object_name(ApiV1CliChatApiView)
-    chat_config = camel_case_object_name(ApiV1CliChatConfigApiView)
-    delete = camel_case_object_name(ApiV1CliDeleteApiView)
-    deploy = camel_case_object_name(ApiV1CliDeployApiView)
-    undeploy = camel_case_object_name(ApiV1CliUndeployApiView)
-    describe = camel_case_object_name(ApiV1CliDescribeApiView)
-    get = camel_case_object_name(ApiV1CliGetApiView)
-    logs = camel_case_object_name(ApiV1CliLogsApiView)
-    example_manifest = camel_case_object_name(ApiV1CliManifestApiView)
-    status = camel_case_object_name(ApiV1CliStatusApiView)
-    schema = camel_case_object_name(ApiV1CliSchemaApiView)
-    version = camel_case_object_name(ApiV1CliVersionApiView)
-    whoami = camel_case_object_name(ApiV1CliWhoamiApiView)
+    manifest = to_snake_case(ApiV1CliManifestApiView)
+    apply = to_snake_case(ApiV1CliApplyApiView)
+    chat = to_snake_case(ApiV1CliChatApiView)
+    chat_config = to_snake_case(ApiV1CliChatConfigApiView)
+    delete = to_snake_case(ApiV1CliDeleteApiView)
+    deploy = to_snake_case(ApiV1CliDeployApiView)
+    undeploy = to_snake_case(ApiV1CliUndeployApiView)
+    describe = to_snake_case(ApiV1CliDescribeApiView)
+    get = to_snake_case(ApiV1CliGetApiView)
+    logs = to_snake_case(ApiV1CliLogsApiView)
+    example_manifest = to_snake_case(ApiV1CliManifestApiView)
+    status = to_snake_case(ApiV1CliStatusApiView)
+    schema = to_snake_case(ApiV1CliSchemaApiView)
+    version = to_snake_case(ApiV1CliVersionApiView)
+    whoami = to_snake_case(ApiV1CliWhoamiApiView)
 
 
 urlpatterns = [

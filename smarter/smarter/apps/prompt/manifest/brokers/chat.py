@@ -4,7 +4,7 @@
 import logging
 import typing
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.forms.models import model_to_dict
 from rest_framework.serializers import ModelSerializer
 
@@ -218,7 +218,7 @@ class SAMChatBroker(AbstractBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = {
@@ -233,7 +233,7 @@ class SAMChatBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
 
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
@@ -279,7 +279,7 @@ class SAMChatBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Chat is a read-only django table, populated by the LLM handlers
         """
@@ -287,14 +287,14 @@ class SAMChatBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError(message="Chat is a read-only resource", thing=self.kind, command=command)
 
-    def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         prompt: typing.Optional[str] = kwargs.get("prompt", None)
         data = {"response": "Hello, I am a chatbot!", "prompt": prompt, "chat_id": "1234567890"}
         return self.json_response_ok(command=command, data=data)
 
-    def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         if self.chat_object:
@@ -305,7 +305,7 @@ class SAMChatBroker(AbstractBroker):
                 raise SAMChatBrokerError(f"Failed to describe {self.kind}", thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="Chat not found", thing=self.kind, command=command)
 
-    def delete(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def delete(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.chat_object:
@@ -316,17 +316,17 @@ class SAMChatBroker(AbstractBroker):
                 raise SAMChatBrokerError(f"Failed to delete {self.kind}", thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="Chat not found", thing=self.kind, command=command)
 
-    def deploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         if self.chat_object:

@@ -425,7 +425,7 @@ class SAMUserBroker(AbstractBroker):
         """
         return UserSerializer
 
-    def manifest_to_django_orm(self) -> dict:
+    def manifest_to_django_orm(self) -> dict[str, Any]:
         """
         Convert the Smarter API User manifest (Pydantic model) into a dictionary suitable for Django ORM operations.
 
@@ -466,7 +466,14 @@ class SAMUserBroker(AbstractBroker):
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
             config_dump = json.loads(json.dumps(config_dump))
-        return {**metadata, **config_dump}
+        retval = {**metadata, **config_dump}
+        logger.debug(
+            "%s.manifest_to_django_orm() Converted manifest to Django ORM dictionary for %s: %s",
+            self.formatted_class_name,
+            self.kind,
+            retval,
+        )
+        return retval
 
     def django_orm_to_manifest_dict(self) -> Optional[dict[str, Any]]:
         """
@@ -501,7 +508,14 @@ class SAMUserBroker(AbstractBroker):
         if not self.manifest:
             raise SAMUserBrokerError("User manifest is not set", thing=self.kind)
 
-        return self.manifest.model_dump()
+        retval = self.manifest.model_dump()
+        logger.debug(
+            "%s.django_orm_to_manifest_dict() Converted Django ORM User instance to manifest dictionary for %s: %s",
+            self.formatted_class_name,
+            self.kind,
+            retval,
+        )
+        return retval
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -948,17 +962,6 @@ class SAMUserBroker(AbstractBroker):
                     logger.debug(
                         "%s.apply() Created new (unsaved) User instance for %s", self.formatted_class_name, self.kind
                     )
-                if not self.brokered_user_profile:
-                    self.brokered_user_profile = UserProfile(
-                        account=self.account,
-                        user=self.brokered_user,
-                        name=self.manifest.metadata.name,
-                    )
-                    logger.debug(
-                        "%s.apply() Created new (unsaved) UserProfile instance for %s",
-                        self.formatted_class_name,
-                        self.kind,
-                    )
 
                 # User model
                 data = self.manifest_to_django_orm()
@@ -971,22 +974,42 @@ class SAMUserBroker(AbstractBroker):
                         self.kind,
                     )
                     data.pop(field, None)
+                data.pop("user_profile", None)
                 for key, value in data.items():
                     setattr(self.brokered_user, key, value)
                     logger.debug("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
+                self.brokered_user.save()
 
                 # UserProfile model
+                if not self.brokered_user_profile:
+                    self.brokered_user_profile = UserProfile(
+                        account=self.account,
+                        user=self.brokered_user,
+                        name=self.manifest.metadata.name,
+                    )
+                    logger.debug(
+                        "%s.apply() Created new (unsaved) UserProfile instance for %s",
+                        self.formatted_class_name,
+                        self.kind,
+                    )
                 self.brokered_user_profile.description = self.manifest.metadata.description
                 self.brokered_user_profile.version = self.manifest.metadata.version
                 # Convert tags to set for TaggableManager compatibility
                 tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
                 self.brokered_user_profile.tags = tags
                 self.brokered_user_profile.annotations = self.manifest.metadata.annotations
+                self.brokered_user_profile.save()
 
-                self.brokered_user.save()
                 self.brokered_user_profile.refresh_from_db()
         # pylint: disable=broad-except
         except Exception as e:
+            logger.error(
+                "%s.apply() Failed to apply manifest to Django ORM for %s: %s",
+                self.formatted_class_name,
+                self.kind,
+                str(e),
+                exc_info=True,
+            )
             raise SAMUserBrokerError(
                 f"Failed to apply {self.kind} {self.brokered_user.email if isinstance(self.brokered_user, User) else None}",
                 thing=self.kind,

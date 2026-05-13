@@ -3,7 +3,6 @@ authenticate requests via SmarterTokenAuthentication, a subclass of
 knox.auth TokenAuthentication tokens.
 """
 
-import logging
 import traceback
 from datetime import timedelta
 from http import HTTPStatus
@@ -16,18 +15,18 @@ from django.utils.deprecation import MiddlewareMixin
 from knox.settings import knox_settings
 from rest_framework.authentication import get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.request import Request
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import mask_string
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import SmarterAuthToken
 from .signals import (
@@ -41,14 +40,7 @@ from .token_authentication import (
     SmarterTokenAuthenticationError,
 )
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 
 
 class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
@@ -85,7 +77,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
         """Check if the request is for knox token authentication.
 
         Args:
-            request (HttpRequest): The incoming HTTP request.
+            request (Request): The incoming HTTP request.
 
         Returns:
             bool: True if the request uses token authentication, False otherwise.
@@ -148,11 +140,11 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
             return self.smarter_build_absolute_uri(self.request)
         return None
 
-    def get_request_with_verified_user(self, request: HttpRequest) -> HttpRequest:
+    def get_request_with_verified_user(self, request: Request) -> Request:
         """Ensure the request has a user set, defaulting to SmarterAnonymousUser if not.
 
         Args:
-            request (HttpRequest): The incoming HTTP request.
+            request (Request): The incoming HTTP request.
         """
         if not hasattr(request, "user") or request.user is None:
             logger.warning("%s.__call__() setting anonymous user on request", self.formatted_class_name)
@@ -164,11 +156,11 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
         self.get_response = get_response
         logger.debug("%s.__init__() initialized", self.formatted_class_name)
 
-    def __call__(self, request, *args, **kwargs):
+    def __call__(self, request: Request, *args, **kwargs):
         """Try to authenticate the request using SmarterTokenAuthentication.
 
         Args:
-            request (HttpRequest): The incoming HTTP request.
+            request (Request): The incoming HTTP request.
 
         Raises:
             AuthenticationFailed: Raised when authentication fails.
@@ -184,7 +176,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
             self.formatted_class_name,
             url,
         )
-        if not SmarterValidator.is_api_endpoint(url):
+        if not SmarterValidator.is_api_endpoint(url):  # type: ignore
             # skip token authentication if we're not a Smarter API request
             logger.info("%s skipping token authentication for non-Smarter API request", self.formatted_class_name)
             request = self.get_request_with_verified_user(request)
@@ -196,7 +188,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
             # we're not using token authentication, no need to do anything
             logger.debug("%s.__call__() skipping non-token authentication", self.formatted_class_name)
             request = self.get_request_with_verified_user(request)
-            return self.get_response(request)
+            return self.get_response(self.request)  # type: ignore
         if getattr(request, "auth", None) is not None:
             # we've already authenticated the request
             # with some other middleware, no need to do anything

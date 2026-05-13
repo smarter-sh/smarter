@@ -20,7 +20,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
     """
     Attempts to construct the absolute URI for a given request object.
 
-    :param request: The request object, which may be an instance of :class:`django.http.HttpRequest`, :class:`rest_framework.request.Request`, :class:`django.core.handlers.wsgi.WSGIRequest`, or a mock object for testing.
+    :param request: The request object, which may be an instance of :class:`django.http.HttpRequest`, :class:`rest_framework.request.Request`, :class:`django.core.handlers.wsgi.ASGIRequest`, or a mock object for testing.
     :type request: "HttpRequest" or compatible type
 
     :return: The absolute URI as a string, or a fallback test URL if the request is invalid or cannot be resolved.

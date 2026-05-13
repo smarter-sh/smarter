@@ -32,7 +32,6 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import settings_defaults
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -579,7 +578,7 @@ class SAMChatbotBroker(AbstractBroker):
         :returns: A string containing the formatted class name, suitable for use in log output.
         :rtype: str
         """
-        return formatted_text(f"{SAMChatbotBroker.__name__}[{id(self)}]")
+        return logging.formatted_text(f"{SAMChatbotBroker.__name__}[{id(self)}]")
 
     @property
     def kind(self) -> str:

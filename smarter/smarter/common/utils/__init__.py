@@ -13,7 +13,6 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 
 from smarter.common.utils.utils import (
     bool_environment_variable,
-    camel_case_object_name,
     camel_to_snake,
     camel_to_snake_dict,
     dict_is_contained_in,
@@ -30,6 +29,7 @@ from smarter.common.utils.utils import (
     rfc1034_compliant_to_snake,
     snake_case,
     snake_to_camel,
+    to_snake_case,
 )
 
 from .diagnostics import get_diagnostics
@@ -41,7 +41,7 @@ __all__ = [
     "is_async_context",
     "bool_environment_variable",
     "camel_to_snake",
-    "camel_case_object_name",
+    "to_snake_case",
     "camel_to_snake_dict",
     "dict_is_contained_in",
     "dict_is_subset",

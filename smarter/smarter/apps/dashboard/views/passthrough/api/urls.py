@@ -4,7 +4,7 @@ URLs for the passthrough API views in the dashboard app.
 
 from django.urls import path
 
-from smarter.common.utils.utils import camel_case_object_name
+from smarter.common.utils.utils import to_snake_case
 
 from .const import namespace
 from .providers import ProviderApiView
@@ -19,7 +19,7 @@ class PassthroughApiReverseNames:
 
     namespace = namespace
 
-    api_providers = camel_case_object_name(ProviderApiView)
+    api_providers = to_snake_case(ProviderApiView)
 
 
 urlpatterns = [

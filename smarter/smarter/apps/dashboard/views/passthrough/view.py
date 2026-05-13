@@ -46,7 +46,7 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
     and renders the API response in the template.
 
     :param request: Django HTTP request object.
-    :type request: WSGIRequest
+    :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
     :param kwargs: Keyword arguments, must include 'name' (chatbot name) and 'kind' (chatbot type).

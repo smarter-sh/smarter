@@ -631,7 +631,6 @@ class SAMAccountBroker(AbstractBroker):
                 command=command,
             )
 
-        self.user = None
         self.brokered_account = smarter_cached_objects.smarter_account
         if not self.brokered_account:
             raise SAMBrokerErrorNotReady(

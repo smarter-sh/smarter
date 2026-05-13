@@ -9,7 +9,7 @@ how we got here:
 
 from django.urls import path
 
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .views.detailview import (
@@ -60,13 +60,13 @@ class PromptReverseNames:
 
     namespace = namespace
 
-    manifest_by_hashed_id = camel_case_object_name(PromptManifestView)
-    chat_by_hashed_id = camel_case_object_name(ChatAppWorkbenchView)
-    config_by_hashed_id = camel_case_object_name(ChatConfigView)
-    landing_by_hashed_id = camel_case_object_name(PromptLandingView)
+    manifest_by_hashed_id = to_snake_case(PromptManifestView)
+    chat_by_hashed_id = to_snake_case(ChatAppWorkbenchView)
+    config_by_hashed_id = to_snake_case(ChatConfigView)
+    landing_by_hashed_id = to_snake_case(PromptLandingView)
 
-    listview = camel_case_object_name(PromptListView)
-    listview_api = camel_case_object_name(PromptListApiView)
+    listview = to_snake_case(PromptListView)
+    listview_api = to_snake_case(PromptListApiView)
 
 
 urlpatterns = [

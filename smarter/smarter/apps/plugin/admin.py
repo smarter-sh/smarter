@@ -5,6 +5,7 @@ import logging
 import re
 
 from django.contrib import admin
+from django.core.handlers.asgi import ASGIRequest
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
@@ -36,7 +37,7 @@ class PluginSelectorInline(admin.StackedInline):
     extra = 0  # This will not show extra empty forms
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
@@ -47,7 +48,7 @@ class PluginPromptInline(admin.StackedInline):
     extra = 0  # This will not show extra empty forms
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
@@ -62,7 +63,7 @@ class PluginDataInline(admin.StackedInline):
         verbose_name_plural = "Plugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
@@ -77,7 +78,7 @@ class PluginDataApiInline(admin.StackedInline):
         verbose_name_plural = "ApiPlugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
@@ -92,7 +93,7 @@ class PluginDataSqlInline(admin.StackedInline):
         verbose_name_plural = "SqlPlugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
@@ -113,7 +114,7 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
@@ -150,7 +151,7 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataApiInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
@@ -188,7 +189,7 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataSqlInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")

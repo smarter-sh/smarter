@@ -79,11 +79,11 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
     def setUp(self):
         """test-level setup."""
         super().setUp()
-        self._here = None
-        self._broker = None
-        self._request = None
-        self._loader = None
-        self._manifest_filespec = None
+        self._here = None  # type: ignore
+        self._broker = None  # type: ignore
+        self._request = None  # type: ignore
+        self._loader = None  # type: ignore
+        self._manifest_filespec = None  # type: ignore
         title = f" {logger_prefix}.{self._testMethodName}() "
         msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
         logger.debug(msg)
@@ -92,11 +92,11 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         title = f" {logger_prefix}.tearDown() {self._testMethodName} "
         msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
         logger.debug(msg)
-        self._here = None
-        self._broker = None
-        self._request = None
-        self._loader = None
-        self._manifest_filespec = None
+        self._here = None  # type: ignore
+        self._broker = None  # type: ignore
+        self._request = None  # type: ignore
+        self._loader = None  # type: ignore
+        self._manifest_filespec = None  # type: ignore
         super().tearDown()
 
     @property
@@ -158,7 +158,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
             return self._request
 
         self._request = HttpRequest()
-        self._request.headers = {"Authorization": f"Token {self.token_key}"}
+        self._request.headers = {"Authorization": f"Token {self.token_key}"}  # type: ignore
         logger.debug("%s.request() Set Authorization header: %s", self.formatted_class_name, self._request.headers)
         # self._request.user = self.admin_user
 
@@ -176,7 +176,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         if isinstance(yaml_data, str):
             yaml_data = yaml_data.encode("utf-8")
         # pylint: disable=protected-access
-        self._request._body = yaml_data
+        self._request._body = yaml_data  # type: ignore
 
         self.assertIsInstance(self._request, HttpRequest)
         logger.debug(
@@ -325,17 +325,17 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         # Validate that the response is a properly
         # structured SAM manifest dict
         self.assertIsNotNone(
-            data.get(SAMKeys.APIVERSION.value),
+            data.get(SAMKeys.APIVERSION.value),  # type: ignore
             msg=f"apiVersion missing in manifest dict. response_json: {response_json}",
         )
         self.assertIsNotNone(
-            data.get(SAMKeys.KIND.value), msg=f"kind missing in manifest dict. response_json: {response_json}"
+            data.get(SAMKeys.KIND.value), msg=f"kind missing in manifest dict. response_json: {response_json}"  # type: ignore
         )
         self.assertIsNotNone(
-            data.get(SAMKeys.METADATA.value), msg=f"metadata missing in manifest dict. response_json: {response_json}"
+            data.get(SAMKeys.METADATA.value), msg=f"metadata missing in manifest dict. response_json: {response_json}"  # type: ignore
         )
         self.assertIsNotNone(
-            data.get(SAMKeys.SPEC.value), msg=f"spec missing in manifest dict. response_json: {response_json}"
+            data.get(SAMKeys.SPEC.value), msg=f"spec missing in manifest dict. response_json: {response_json}"  # type: ignore
         )
 
         return True
@@ -374,7 +374,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         self.assertIsInstance(
             data, dict, msg=f"Response data is not a dict. response_json: {response_json}, data: {data}"
         )
-        data = data.get(SCLIResponseGet.DATA.value)
+        data = data.get(SCLIResponseGet.DATA.value)  # type: ignore
         self.assertIsInstance(
             data, dict, msg=f"Response data.data is not a dict. response_json: {response_json}, data: {data}"
         )
@@ -382,15 +382,15 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         # Validate that the response is a properly
         # structured SAM manifest dict
         self.assertIsNotNone(
-            data.get(SAMKeys.APIVERSION.value),
+            data.get(SAMKeys.APIVERSION.value),  # type: ignore
             msg=f"apiVersion missing in manifest dict. response_json: {response_json}, data: {data}",
         )
         self.assertIsNotNone(
-            data.get(SAMKeys.KIND.value),
+            data.get(SAMKeys.KIND.value),  # type: ignore
             msg=f"kind missing in manifest dict. response_json: {response_json}, data: {data}",
         )
         self.assertIsNotNone(
-            data.get(SAMKeys.METADATA.value),
+            data.get(SAMKeys.METADATA.value),  # type: ignore
             msg=f"metadata missing in manifest dict. response_json: {response_json}, data: {data}",
         )
         self.assertIsNotNone(

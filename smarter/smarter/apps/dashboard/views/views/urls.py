@@ -15,7 +15,7 @@ from smarter.apps.dashboard.views.views.api import urls as dashboard_api_urls
 from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
 from smarter.apps.dashboard.views.views.api.service_health import ServiceHealthView
 from smarter.apps.plugin import urls as plugin_urls
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
@@ -29,11 +29,11 @@ class DashboardReverseNames:
     namespace = namespace
 
     dashboard = namespace
-    notifications = camel_case_object_name(NotificationsView)
-    changelog = camel_case_object_name(ChangeLogView)
-    email_added = camel_case_object_name(EmailAdded)
-    api_my_resources = camel_case_object_name(MyResourcesView)
-    api_service_health = camel_case_object_name(ServiceHealthView)
+    notifications = to_snake_case(NotificationsView)
+    changelog = to_snake_case(ChangeLogView)
+    email_added = to_snake_case(EmailAdded)
+    api_my_resources = to_snake_case(MyResourcesView)
+    api_service_health = to_snake_case(ServiceHealthView)
 
 
 urlpatterns = [

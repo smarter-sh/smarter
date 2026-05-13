@@ -7,15 +7,14 @@ ensure that:
 - we are authenticating our http requests properly and consistently.
 """
 
-import logging
-
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory, mortal_user_factory
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
 )
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 logger = logging.getLogger(__name__)
@@ -24,7 +23,7 @@ logger = logging.getLogger(__name__)
 class TestAccountMixin(SmarterTestBase):
     """Test AccountMixin."""
 
-    test_account_mixin_logger_prefix = formatted_text(f"{__name__}.TestAccountMixin()")
+    test_account_mixin_logger_prefix = logging.formatted_text(f"{__name__}.TestAccountMixin()")
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -159,6 +158,7 @@ class TestAccountMixin(SmarterTestBase):
 
     def test_unset_user(self) -> None:
         """Test setting user to None."""
+
         instance = AccountMixin(user=self.mortal_user)
         self.assertEqual(instance.user, self.mortal_user)
         # force lazy instantiations of account and user_profile.
@@ -167,17 +167,8 @@ class TestAccountMixin(SmarterTestBase):
 
         # unset the user but leave the account unchanged.
         # should reinitialize with the admin user.
-        instance.user = None
-        self.assertIsNone(instance.account)
-        self.assertIsNone(instance.user_profile)
-
-        # unset both the user and account.
-        # should unset everything.
-        instance.user = None
-        instance.account = None
-        self.assertIsNone(instance.user)
-        self.assertIsNone(instance.account)
-        self.assertIsNone(instance.user_profile)
+        with self.assertRaises(SmarterBusinessRuleViolation):
+            instance.user = None
 
     def test_unset_account(self) -> None:
         """Test setting account to None."""
@@ -201,32 +192,9 @@ class TestAccountMixin(SmarterTestBase):
         self.assertEqual(instance.account, self.account)
         self.assertEqual(instance.user_profile, self.user_profile)
 
-        # 1.) unset the user_profile
-        # should reinitialize the user_profile and unset the user and account.
-        instance.user_profile = None
-        self.assertIsNone(instance.user)
-        self.assertIsNone(instance.account)
-        self.assertIsNone(instance.user_profile)
-
-        # 2.) unset the user_profile and user, but leave the account unchanged.
-        instance.user_profile = None
-        instance.account = None
-
-        # ensure that user is also unset
-        self.assertIsNone(instance.user)
-
-        # should reinitialize the account and user_profile based on the user.
-        instance.account = self.account
-        instance.user_profile = self.user_profile
-        self.assertEqual(instance.account, self.account)
-        self.assertEqual(instance.user_profile, self.user_profile)
-
-        # 3.) unset the user_profile and account, but leave the user unchanged.
-        instance.user_profile = None
-        instance.account = None
-
-        # ensure that account is still set.
-        self.assertIsNone(instance.account)
+        # unset the user_profile
+        with self.assertRaises(SmarterBusinessRuleViolation):
+            instance.user_profile = None
 
     def test_set_account(self) -> None:
         """

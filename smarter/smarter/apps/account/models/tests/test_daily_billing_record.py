@@ -3,13 +3,12 @@
 
 import datetime
 
-# our stuff
-import logging
-
 from smarter.apps.account.models import CHARGE_TYPES, DailyBillingRecord
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider
-from smarter.common.helpers.console_helpers import formatted_text
+
+# our stuff
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +16,7 @@ logger = logging.getLogger(__name__)
 class TestDailyBillingRecord(TestAccountMixin):
     """Test DailyBillingRecord model"""
 
-    logger_prefix = formatted_text(f"{__name__}.TestDailyBillingRecord()")
+    logger_prefix = logging.formatted_text(f"{__name__}.TestDailyBillingRecord()")
 
     @classmethod
     def setUpClass(cls):

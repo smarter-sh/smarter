@@ -3850,6 +3850,32 @@ class Settings(BaseSettings):
         return f"{self.environment}.{self.root_platform_domain}"
 
     @cached_property
+    def environment_platform_url(self) -> str:
+        """
+        Return the platform URL for the environment platform domain.
+
+        Example:
+            >>> print(smarter_settings.environment_platform_url)
+            https://alpha.platform.example.com
+            >>> print(smarter_settings.environment_platform_url)
+            http://localhost:9357
+
+        Raises:
+            SmarterConfigurationError: If the constructed URL is invalid.
+        See Also:
+            - SmarterValidator.urlify()
+            - smarter_settings.environment_platform_domain
+            - smarter_settings.environment
+        """
+        retval = SmarterValidator.urlify(self.environment_platform_domain, environment=self.environment)
+        if retval is None:
+            raise SmarterConfigurationError(
+                f"Invalid environment_platform_domain: {self.environment_platform_domain}. "
+                "Please check your environment settings."
+            )
+        return retval
+
+    @cached_property
     def all_domains(self) -> List[str]:
         """
         Return all domains for the environment. Domains are

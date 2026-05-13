@@ -3,7 +3,7 @@
 from django.urls import path
 
 from smarter.apps.prompt.views.detailview import ChatConfigView
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .views.default import DefaultChatbotApiView
@@ -60,28 +60,28 @@ class ChatBotApiV1ReverseViews:
 
     # reverse() by hashed_id
     # --------------------------------------------------------------------------
-    chatbot_view_by_hashed_id = camel_case_object_name(ChatbotView) + BY_HASHED_ID
-    chat_config_view_by_hashed_id = camel_case_object_name(ChatConfigView) + BY_HASHED_ID
-    default_chatbot_api_view_by_hashed_id = camel_case_object_name(DefaultChatbotApiView) + BY_HASHED_ID
+    chatbot_view_by_hashed_id = to_snake_case(ChatbotView) + BY_HASHED_ID
+    chat_config_view_by_hashed_id = to_snake_case(ChatConfigView) + BY_HASHED_ID
+    default_chatbot_api_view_by_hashed_id = to_snake_case(DefaultChatbotApiView) + BY_HASHED_ID
 
     # legacy reverse() references by chatbot_id
     # --------------------------------------------------------------------------
-    chat_config_view_by_id = camel_case_object_name(ChatConfigView)
-    default_chatbot_api_view_by_id = camel_case_object_name(DefaultChatbotApiView)
+    chat_config_view_by_id = to_snake_case(ChatConfigView)
+    default_chatbot_api_view_by_id = to_snake_case(DefaultChatbotApiView)
 
     # currently no reverse() references to these named views.
     # --------------------------------------------------------------------------
-    chatbot_list_view = camel_case_object_name(ChatbotListView)
-    chatbot_view_by_id = camel_case_object_name(ChatbotView) + BY_ID
-    chatbot_plugin_list_view_by_id = camel_case_object_name(ChatbotPluginListView) + BY_ID
-    chatbot_plugin_view_by_id = camel_case_object_name(ChatbotPluginView) + BY_ID
-    chatbot_api_key_list_view_by_id = camel_case_object_name(ChatbotAPIKeyListView) + BY_ID
-    chatbot_api_key_view_by_id = camel_case_object_name(ChatbotAPIKeyView) + BY_ID
-    chatbot_custom_domain_list_view_by_id = camel_case_object_name(ChatbotCustomDomainListView) + BY_ID
-    chatbot_custom_domain_view_by_id = camel_case_object_name(ChatbotCustomDomainView) + BY_ID
-    chatbot_api_functions_by_id = camel_case_object_name(ChatBotFunctionsListView) + BY_ID
-    chatbot_functions_view_by_id = camel_case_object_name(ChatbotFunctionsView) + BY_ID
-    chatbot_function_plugin_list_view_by_id = camel_case_object_name(ChatbotPluginListView) + BY_ID
+    chatbot_list_view = to_snake_case(ChatbotListView)
+    chatbot_view_by_id = to_snake_case(ChatbotView) + BY_ID
+    chatbot_plugin_list_view_by_id = to_snake_case(ChatbotPluginListView) + BY_ID
+    chatbot_plugin_view_by_id = to_snake_case(ChatbotPluginView) + BY_ID
+    chatbot_api_key_list_view_by_id = to_snake_case(ChatbotAPIKeyListView) + BY_ID
+    chatbot_api_key_view_by_id = to_snake_case(ChatbotAPIKeyView) + BY_ID
+    chatbot_custom_domain_list_view_by_id = to_snake_case(ChatbotCustomDomainListView) + BY_ID
+    chatbot_custom_domain_view_by_id = to_snake_case(ChatbotCustomDomainView) + BY_ID
+    chatbot_api_functions_by_id = to_snake_case(ChatBotFunctionsListView) + BY_ID
+    chatbot_functions_view_by_id = to_snake_case(ChatbotFunctionsView) + BY_ID
+    chatbot_function_plugin_list_view_by_id = to_snake_case(ChatbotPluginListView) + BY_ID
 
 
 urlpatterns = [

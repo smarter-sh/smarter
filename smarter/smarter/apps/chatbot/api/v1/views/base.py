@@ -7,7 +7,7 @@ from typing import List, Optional
 from urllib.parse import ParseResult, urlparse
 
 from django.contrib.auth.models import User
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponseNotAllowed, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -24,7 +24,7 @@ from smarter.apps.chatbot.models import (
 from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.prompt.models import ChatHelper
+from smarter.apps.prompt.models import Chat, ChatHelper
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import is_authenticated_request
@@ -177,7 +177,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             )
         # smarter.apps.chatbot.models.ChatBot.DoesNotExist: ChatBot matching query does not exist.
         except ChatBot.DoesNotExist as e:
-            raise SmarterChatBotException(
+            raise ChatBot.DoesNotExist(
                 f"ChatBot not found. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}"
             ) from e
 
@@ -279,7 +279,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         """
         logger.debug("%s: %s", self.formatted_class_name, message)
 
-    def setup(self, request: WSGIRequest, *args, **kwargs):
+    def setup(self, request: ASGIRequest, *args, **kwargs):
         """
         Set up the ChatBot API base viewset for request processing.
 
@@ -296,7 +296,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         Parameters
         ----------
-        request : WSGIRequest
+        request : ASGIRequest
             The HTTP request object provided by Django, containing all request data, headers, and user context.
 
         *args
@@ -328,7 +328,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         )
         return super().setup(request, *args, **kwargs)
 
-    def dispatch(self, request: WSGIRequest, *args, name: Optional[str] = None, **kwargs):
+    def dispatch(self, request: ASGIRequest, *args, name: Optional[str] = None, **kwargs):
         """
         Dispatch method for the ChatBot API base viewset.
 
@@ -350,7 +350,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         Parameters
         ----------
-        request : WSGIRequest
+        request : ASGIRequest
             The HTTP request object provided by Django, containing all request data, headers, and user context.
 
         *args
@@ -384,8 +384,15 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         self._chatbot_id = kwargs.get("chatbot_id")
         if self._chatbot_id:
             kwargs.pop("chatbot_id")
-        if self.chatbot:
-            self.user_profile = self.chatbot.user_profile
+        if self.chatbot and self.chatbot.user_profile:
+            self._user_profile = self.chatbot.user_profile
+            self._account = self.chatbot.user_profile.account
+            self._user = self.chatbot.user_profile.user
+            logger.debug(
+                "%s.dispatch() - reinitializing user, account, and user_profile from chatbot.user_profile: %s",
+                self.formatted_class_name,
+                self.chatbot.user_profile,
+            )
         else:
             self._name = self._name or name
         if not self.chatbot:
@@ -459,7 +466,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         Sets CORS headers to allow cross-origin requests from the Smarter environment URL.
 
         :param request: The HTTP request object.
-        :type request: WSGIRequest
+        :type request: ASGIRequest
         """
         logger.debug(
             "%s.options(): url=%s",
@@ -480,7 +487,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         instead.
 
         :param request: The HTTP request object.
-        :type request: WSGIRequest
+        :type request: ASGIRequest
         :return: A JsonResponse indicating that GET is not supported.
         :rtype: JsonResponse
         """
@@ -526,7 +533,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         Parameters
         ----------
-        request : WSGIRequest
+        request : ASGIRequest
             The HTTP request object provided by Django, containing all request data, headers, and user context.
 
         *args
@@ -580,7 +587,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         if not self.chatbot:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
-                e=SmarterChatBotException(
+                e=ChatBot.DoesNotExist(
                     f"ChatBot not found. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}"
                 ),
                 safe=False,
@@ -595,7 +602,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         if not self.chat_helper:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
-                e=SmarterChatBotException(
+                e=Chat.DoesNotExist(
                     f"ChatHelper not found. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}"
                 ),
                 safe=False,

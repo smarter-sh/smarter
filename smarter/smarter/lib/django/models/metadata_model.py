@@ -125,7 +125,7 @@ class MetaDataModel(TimestampedModel):
     @classmethod
     def get_cached_object(
         cls, *args, invalidate: Optional[bool] = False, pk: Optional[int] = None, name: Optional[str] = None, **kwargs
-    ) -> Optional["MetaDataModel"]:
+    ) -> "MetaDataModel":
         """
         Retrieve a model instance by primary key or name, using caching to
         optimize performance. This method is selectively overridden in
@@ -162,10 +162,10 @@ class MetaDataModel(TimestampedModel):
             )
 
         if not pk and not name:
-            return None
+            raise cls.DoesNotExist(f"Must provide either 'pk' or 'name' to retrieve a {cls.__name__} object.")
 
         @cache_results(timeout=cls.cache_expiration)
-        def _get_object_by_name(name: str, class_name: str = cls.__name__) -> Optional["MetaDataModel"]:
+        def _get_object_by_name(name: str, class_name: str = cls.__name__) -> "MetaDataModel":
             try:
                 verbose_logger.debug(
                     "%s._get_object_by_name() cache miss for %s name: %s",
@@ -174,14 +174,14 @@ class MetaDataModel(TimestampedModel):
                     name,
                 )
                 return cls.objects.prefetch_related("tags").get(name=name)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 verbose_logger.debug(
                     "%s._get_object_by_name() no %s object found for name: %s",
                     logger_prefix,
                     class_name,
                     name,
                 )
-                return None
+                raise cls.DoesNotExist(f"{class_name} object with name '{name}' does not exist.") from e
             except cls.MultipleObjectsReturned as e:
                 logger.error(
                     "%s.get_cached_object() - Multiple %s objects found for name '%s'. Returning the first one.",
@@ -189,7 +189,7 @@ class MetaDataModel(TimestampedModel):
                     class_name,
                     name,
                 )
-                raise SmarterValueError(f"Multiple {class_name} objects found for name '{name}'.") from e
+                raise cls.MultipleObjectsReturned(f"Multiple {class_name} objects found for name '{name}'.") from e
 
         if invalidate:
             _get_object_by_name.invalidate(name, cls.__name__)
@@ -200,7 +200,7 @@ class MetaDataModel(TimestampedModel):
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
     @classmethod
-    def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["MetaDataModel"]:
+    def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["MetaDataModel"]:
         """
         Retrieve model instances using caching to optimize performance.
         This method is selectively overridden in models that inherit from
@@ -231,7 +231,7 @@ class MetaDataModel(TimestampedModel):
         if invalidate:
             pass
 
-        return super().get_cached_objects(invalidate=invalidate)  # type: ignore
+        return super().get_cached_objects(invalidate=invalidate, **kwargs)  # type: ignore
 
     def save(self, *args, **kwargs):
         """

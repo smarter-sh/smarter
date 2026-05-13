@@ -6,8 +6,9 @@ from typing import Optional
 
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseNotFound, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.apps.account.models import User, UserProfile
@@ -43,7 +44,7 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 class ViewBase(SmarterAdminAPIView):
     """Base class for all chatbot detail views."""
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: Request, *args, **kwargs):
         retval = super().dispatch(request, *args, **kwargs)
         if isinstance(request.user, User):
             self.user_profile = get_object_or_404(UserProfile, user=request.user)
@@ -54,7 +55,7 @@ class ViewBase(SmarterAdminAPIView):
 class ListViewBase(SmarterAdminListAPIView):
     """Base class for all chatbot list views."""
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: Request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code > 299:
             return response
@@ -73,29 +74,41 @@ class ChatbotView(ViewBase):
 
     serializer_class = ChatBotSerializer
     chatbot: Optional[ChatBot] = None
+    hashed_id: Optional[str] = None
+    chatbot_id: Optional[int] = None
 
     def get_queryset(self, *args, **kwargs):
         return ChatBot.objects.filter(id=self.chatbot.id)  # type: ignore[return-value]
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: Request, *args, **kwargs):
+        self.hashed_id = kwargs.pop("hashed_id", None)
         retval = super().dispatch(request, *args, **kwargs)
-        hashed_id = kwargs.pop("hashed_id", None)
-        if hashed_id:
-            chatbot_id = ChatBot.id_from_hashed_id(hashed_id)
+        if self.hashed_id:
+            self.chatbot_id = ChatBot.id_from_hashed_id(self.hashed_id)
         else:
-            chatbot_id = kwargs.pop("chatbot_id", None)
+            self.chatbot_id = kwargs.get("chatbot_id")
 
-        if chatbot_id:
-            self.chatbot = get_object_or_404(ChatBot, pk=chatbot_id)
-            self.user_profile = self.chatbot.user_profile
-            logger.debug("ChatbotView.dispatch() - %s %s", self.chatbot, self.user_profile)
+        if self.chatbot_id:
+            self.chatbot = get_object_or_404(ChatBot, pk=self.chatbot_id)
+            if self.chatbot.user_profile:
+                self._user_profile = self.chatbot.user_profile
+                self._account = self.chatbot.user_profile.account
+                self._user = self.chatbot.user_profile.user
+                logger.debug(
+                    "%s.dispatch() - reinitializing user, account, and user_profile from chatbot.user_profile: %s",
+                    self.formatted_class_name,
+                    self.chatbot.user_profile,
+                )
+            logger.debug("%s.dispatch() - %s %s", self.formatted_class_name, self.chatbot, self.user_profile)
         return retval
 
-    def get(self, request, chatbot_id: int):
-        serializer = self.serializer_class(self.chatbot)
-        return Response(serializer.data, status=HTTPStatus.OK)
+    def get(self, request: Request, chatbot_id: Optional[int] = None):
+        if self.chatbot:
+            serializer = self.serializer_class(self.chatbot)
+            return Response(serializer.data, status=HTTPStatus.OK)
+        return HttpResponseNotFound("ChatBot not found")
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args, **kwargs):
         try:
             data = request.data
             chatbot = ChatBot.objects.create(**data)
@@ -103,7 +116,7 @@ class ChatbotView(ViewBase):
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return HttpResponseRedirect(request.path_info + str(chatbot.id) + "/")  # type: ignore[return-value]
 
-    def patch(self, request, *args, chatbot_id: Optional[int] = None, **kwargs):
+    def patch(self, request: Request, *args, chatbot_id: Optional[int] = None, **kwargs):
         chatbot: Optional[ChatBot] = None
         data: Optional[dict] = None
 
@@ -133,8 +146,8 @@ class ChatbotView(ViewBase):
 
         return HttpResponseRedirect(request.path_info)
 
-    def delete(self, request, *args, chatbot_id: Optional[int] = None, **kwargs):
-        if chatbot_id and self.is_superuser_or_unauthorized():
+    def delete(self, request: Request, *args, chatbot_id: Optional[int] = None, **kwargs):
+        if chatbot_id and self.is_superuser():
             chatbot = get_object_or_404(ChatBot, pk=chatbot_id)
         else:
             chatbot = self.chatbot
@@ -157,11 +170,11 @@ class ChatbotListView(ListViewBase):
     serializer_class = ChatBotSerializer
     chatbots: Optional[QuerySet[ChatBot]]
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: Request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code > 299:
             return response
-        self.chatbots = ChatBot.objects.with_read_permission_for(user=request.user)
+        self.chatbots = ChatBot.objects.with_read_permission_for(user=request.user)  # type: ignore[assignment]
         return response
 
     def get_queryset(self, *args, **kwargs):
@@ -173,7 +186,7 @@ class ChatBotDeployView(ViewBase):
 
     serializer_class = ChatBotSerializer
 
-    def post(self, request, chatbot_id: int):
+    def post(self, request: Request, chatbot_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         try:
             chatbot.deployed = True
@@ -191,14 +204,14 @@ class ChatbotPluginView(ViewBase):
 
     serializer_class = ChatBotPluginSerializer
 
-    def get(self, request, chatbot_id: int, plugin_meta_id: int):
+    def get(self, request: Request, chatbot_id: int, plugin_meta_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         plugin_meta = get_object_or_404(PluginMeta, pk=plugin_meta_id)
         plugin = get_object_or_404(ChatBotPlugin, chatbot=chatbot, plugin_meta=plugin_meta)
         serializer = self.serializer_class(plugin)
         return Response(serializer.data, status=HTTPStatus.OK)
 
-    def post(self, request, chatbot_id: int):
+    def post(self, request: Request, chatbot_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         try:
             data = request.data
@@ -207,7 +220,7 @@ class ChatbotPluginView(ViewBase):
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return HttpResponseRedirect(request.path_info + str(chatbot_plugin.id) + "/")  # type: ignore[return-value]
 
-    def patch(self, request, chatbot_id: int, plugin_id: int):
+    def patch(self, request: Request, chatbot_id: int, plugin_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         chatbot_plugin = get_object_or_404(ChatBotPlugin, pk=plugin_id, chatbot=chatbot)
         try:
@@ -219,7 +232,7 @@ class ChatbotPluginView(ViewBase):
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return HttpResponseRedirect(request.path_info)
 
-    def delete(self, request, chatbot_id: int, plugin_id: int):
+    def delete(self, request: Request, chatbot_id: int, plugin_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         chatbot_plugin = get_object_or_404(ChatBotPlugin, pk=plugin_id, chatbot=chatbot)
         try:
@@ -252,13 +265,13 @@ class ChatbotAPIKeyView(ViewBase):
 
     serializer_class = ChatBotAPIKeySerializer
 
-    def get(self, request, chatbot_id: int, api_key_id: int):
+    def get(self, request: Request, chatbot_id: int, api_key_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         api_key = get_object_or_404(SmarterAuthToken, pk=api_key_id, chatbot=chatbot)
         serializer = self.serializer_class(api_key)
         return Response(serializer.data, status=HTTPStatus.OK)
 
-    def post(self, request, chatbot_id: int, api_key_id: Optional[int] = None):
+    def post(self, request: Request, chatbot_id: int, api_key_id: Optional[int] = None):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         api_key = get_object_or_404(ChatBotAPIKey, pk=api_key_id)
         try:
@@ -267,7 +280,7 @@ class ChatbotAPIKeyView(ViewBase):
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return HttpResponseRedirect(request.path_info + str(chatbot_api_key.id) + "/")  # type: ignore[return-value]
 
-    def delete(self, request, chatbot_id: int, api_key_id: int):
+    def delete(self, request: Request, chatbot_id: int, api_key_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         api_key = get_object_or_404(SmarterAuthToken, pk=api_key_id)
         chatbot_api_key = get_object_or_404(ChatBotAPIKey, chatbot=chatbot, api_key=api_key)
@@ -301,13 +314,13 @@ class ChatbotCustomDomainView(ViewBase):
 
     serializer_class = ChatBotCustomDomainSerializer
 
-    def get(self, request, chatbot_id: int, custom_domain_id: int):
+    def get(self, request: Request, chatbot_id: int, custom_domain_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         custom_domain = get_object_or_404(ChatBotCustomDomain, pk=custom_domain_id, chatbot=chatbot)
         serializer = self.serializer_class(custom_domain)
         return Response(serializer.data, status=HTTPStatus.OK)
 
-    def post(self, request, chatbot_id: int, custom_domain_id: Optional[int] = None):
+    def post(self, request: Request, chatbot_id: int, custom_domain_id: Optional[int] = None):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         custom_domain = get_object_or_404(ChatBotCustomDomain, pk=custom_domain_id)
         try:
@@ -316,7 +329,7 @@ class ChatbotCustomDomainView(ViewBase):
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return HttpResponseRedirect(request.path_info + str(chatbot_custom_domain.id) + "/")  # type: ignore[return-value]
 
-    def delete(self, request, chatbot_id: int, custom_domain_id: int):
+    def delete(self, request: Request, chatbot_id: int, custom_domain_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         custom_domain = get_object_or_404(ChatBotCustomDomain, pk=custom_domain_id)
         chatbot_custom_domain = get_object_or_404(ChatBotCustomDomain, chatbot=chatbot, custom_domain=custom_domain)
@@ -350,22 +363,22 @@ class ChatbotFunctionsView(ViewBase):
 
     serializer_class = ChatBotFunctionsSerializer
 
-    def get(self, request, chatbot_id: int, function_id: int):
+    def get(self, request: Request, chatbot_id: int, function_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         function = get_object_or_404(ChatBotFunctions, pk=function_id, chatbot=chatbot)
         serializer = self.serializer_class(function)
         return Response(serializer.data, status=HTTPStatus.OK)
 
-    def post(self, request, chatbot_id: int):
+    def post(self, request: Request, chatbot_id: int):
         # chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         raise NotImplementedError("Not implemented")
 
-    def patch(self, request, chatbot_id: int, function_id: int):
+    def patch(self, request: Request, chatbot_id: int, function_id: int):
         # chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         # function = get_object_or_404(ChatBotFunctions, pk=function_id, chatbot=chatbot)
         raise NotImplementedError("Not implemented")
 
-    def delete(self, request, chatbot_id: int, function_id: int):
+    def delete(self, request: Request, chatbot_id: int, function_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
         function = get_object_or_404(ChatBotFunctions, pk=function_id, chatbot=chatbot)
         try:

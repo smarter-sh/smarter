@@ -8,7 +8,7 @@ how we got here:
 
 from django.urls import path
 
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .views.provider import ProviderDetailView, ProviderListView
@@ -22,8 +22,8 @@ class ProviderReverseNames:
     """
 
     namespace = namespace
-    listview = camel_case_object_name(ProviderListView)
-    detailview = camel_case_object_name(ProviderDetailView)
+    listview = to_snake_case(ProviderListView)
+    detailview = to_snake_case(ProviderDetailView)
 
 
 urlpatterns = [
