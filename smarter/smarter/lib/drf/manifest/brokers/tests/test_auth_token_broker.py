@@ -149,7 +149,7 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
         """Test that the broker initializes with required properties."""
         broker: SAMSmarterAuthTokenBroker = self.SAMBrokerClass(self.request, self.loader)
         self.assertIsInstance(broker, SAMSmarterAuthTokenBroker)
-        self.assertEqual(broker.kind, "AuthToken")
+        self.assertEqual(broker.kind, "SmarterAuthToken")
         self.assertIsNotNone(broker.ORMModelClass)
         self.assertEqual(broker.ORMModelClass.__name__, "SmarterAuthToken")
 
@@ -182,7 +182,7 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
 
     def test_kind_property(self):
         """Test kind property returns 'SmarterAuthToken'."""
-        self.assertEqual(self.broker.kind, "AuthToken")
+        self.assertEqual(self.broker.kind, "SmarterAuthToken")
 
     def test_manifest_property(self):
         """Test manifest property returns a SAMSmarterAuthToken or None if not ready."""
