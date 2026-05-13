@@ -162,6 +162,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         logger.info(
             "%s.authenticate_credentials() - successfully authenticated user %s", self.formatted_class_name, user
         )
+        logger.info("%s - is %s", self.formatted_class_name, self.formatted_state_ready)
         return (user, smarter_auth_token)
 
     @classmethod

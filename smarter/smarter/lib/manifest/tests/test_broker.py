@@ -193,7 +193,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
         )
         broker2.name_cached_property_setter(self.broker.name)
         broker2.kind_setter(self.broker.kind)
-        broker2.account = self.broker.account
+
         self.assertTrue(self.broker == broker2)
         broker2.name_cached_property_setter("other_name")
         self.assertFalse(self.broker == broker2)
@@ -213,7 +213,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
         )
         broker2.name_cached_property_setter(self.broker.name)
         broker2.kind_setter(self.broker.kind)
-        broker2.account = self.broker.account
+
         # Equal
         self.assertFalse(self.broker < broker2)
         self.assertTrue(self.broker <= broker2)

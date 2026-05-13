@@ -200,7 +200,7 @@ class MetaDataModel(TimestampedModel):
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
     @classmethod
-    def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["MetaDataModel"]:
+    def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["MetaDataModel"]:
         """
         Retrieve model instances using caching to optimize performance.
         This method is selectively overridden in models that inherit from
@@ -231,7 +231,7 @@ class MetaDataModel(TimestampedModel):
         if invalidate:
             pass
 
-        return super().get_cached_objects(invalidate=invalidate)  # type: ignore
+        return super().get_cached_objects(invalidate=invalidate, **kwargs)  # type: ignore
 
     def save(self, *args, **kwargs):
         """

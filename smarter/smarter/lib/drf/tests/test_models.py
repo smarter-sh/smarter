@@ -54,6 +54,7 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
 
     def test_has_permissions(self):
 
+        logger.debug("%s.test_has_permissions() testing permissions.", self.formatted_class_name)
         # object that is not a User should not have permissions
         user = object()
         self.assertFalse(
@@ -61,6 +62,7 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
         )
 
         # superuser should have permissions to anything
+        logger.debug("%s.test_has_permissions() 1.) testing permissions for superuser.", self.formatted_class_name)
         auth_token = (
             SmarterAuthToken.objects.filter(pk=self.auth_token.pk)
             .with_ownership_permission_for(self.admin_user)
@@ -70,6 +72,10 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
 
         non_admin_same_account, _, non_admin_same_account_user_profile = mortal_user_factory(account=self.account)
         try:
+            logger.debug(
+                "%s.test_has_permissions() 2.) testing permissions for non-staff user in same account.",
+                self.formatted_class_name,
+            )
             # non-staff user should not have permissions to anything
             auth_token = (
                 SmarterAuthToken.objects.filter(pk=self.auth_token.pk)
@@ -78,6 +84,10 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
             )
             self.assertFalse(auth_token)
 
+            logger.debug(
+                "%s.test_has_permissions() 3.) testing permissions for staff user in same account.",
+                self.formatted_class_name,
+            )
             # staff user in same account should have permissions to anything in the account
             non_admin_same_account.is_staff = True
             non_admin_same_account.save()
@@ -93,6 +103,10 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
             )
 
         # staff user in different account should not have permissions
+        logger.debug(
+            "%s.test_has_permissions() 4.) testing permissions for staff user in different account.",
+            self.formatted_class_name,
+        )
         staff_admin_different_account, different_account, staff_admin_different_account_user_profile = (
             admin_user_factory()
         )

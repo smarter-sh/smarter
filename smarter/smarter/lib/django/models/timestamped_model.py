@@ -631,7 +631,9 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             raise SmarterValueError(f"Error serializing model to JSON: {e}") from e
 
     @classmethod
-    def get_cached_object(cls, invalidate: Optional[bool] = False, pk: Optional[int] = None) -> Optional[models.Model]:
+    def get_cached_object(
+        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, **kwargs
+    ) -> Optional[models.Model]:
         """
         Retrieve a model instance by primary key, using caching to
         optimize performance. This method is selectively overridden in
@@ -691,7 +693,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         return _get_model_by_pk(pk, class_name=cls.__name__)
 
     @classmethod
-    def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["TimestampedModel"]:
+    def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["TimestampedModel"]:
         """
         Retrieve model instances using caching to optimize performance.
         This method is selectively overridden in models that inherit from
