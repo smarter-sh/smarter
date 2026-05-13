@@ -90,7 +90,15 @@ class ChatbotView(ViewBase):
 
         if self.chatbot_id:
             self.chatbot = get_object_or_404(ChatBot, pk=self.chatbot_id)
-            self.user_profile = self.chatbot.user_profile
+            if self.chatbot.user_profile:
+                self._user_profile = self.chatbot.user_profile
+                self._account = self.chatbot.user_profile.account
+                self._user = self.chatbot.user_profile.user
+                logger.debug(
+                    "%s.dispatch() - reinitializing user, account, and user_profile from chatbot.user_profile: %s",
+                    self.formatted_class_name,
+                    self.chatbot.user_profile,
+                )
             logger.debug("%s.dispatch() - %s %s", self.formatted_class_name, self.chatbot, self.user_profile)
         return retval
 

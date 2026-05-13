@@ -296,14 +296,16 @@ class ChatHelper(SmarterRequestMixin):
                 f"{self.formatted_class_name} either a session_key or a ChatBot instance is required"
             )
 
-        if chatbot:
+        if chatbot and chatbot.user_profile:
             logger_verbose.debug("%s.__init__() received ChatBot instance: %s", self.formatted_class_name, chatbot)
             logger_verbose.debug(
-                "%s.__init__() - reinitializing account from chatbot.account: %s",
+                "%s.__init__() - reinitializing AccountMixin from chatbot.user_profile: %s",
                 self.formatted_class_name,
-                self.account,
+                chatbot.user_profile,
             )
-            self.user_profile = chatbot.user_profile
+            self._user_profile = chatbot.user_profile
+            self._account = chatbot.user_profile.account
+            self._user = chatbot.user_profile.user
 
         if session_key:
             self._session_key = session_key
