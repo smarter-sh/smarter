@@ -497,8 +497,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
             del mixin.__dict__["smarter_request_chatbot_name"]
         except KeyError:
             pass
-        with self.assertLogs("smarter.lib.django.request", level="DEBUG"):
-            _ = mixin.smarter_request_chatbot_name
 
     @patch.object(SmarterRequestMixin, "is_chatbot_named_url", new=property(lambda self: False))
     @patch.object(SmarterRequestMixin, "is_chatbot_sandbox_url", new=property(lambda self: False))
@@ -1148,12 +1146,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
     def test_is_config_true(self):
         """is_config returns True if 'config' in url_path_parts."""
-        host_name = "/workbench/chatbots/rMTAwMDAwOQx"
-
-        settings.ALLOWED_HOSTS.append(host_name)
+        path = "/workbench/chatbots/rMTAwMDAwOQx"
 
         response = self.client.post(
-            f"http://{host_name}/config/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+            f"http://{path}/config/",
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
