@@ -1,4 +1,44 @@
-"""Account MetaDataWithOwnership model."""
+"""
+Account MetaDataWithOwnership Model
+===================================
+
+This module provides an abstract Django ORM base model and supporting classes for
+resource ownership and permission management within the Smarter platform. It extends
+the core metadata model to include ownership by user profiles and accounts, and
+provides permission-aware querysets and managers for filtering resources based on
+user access rights.
+
+Classes
+-------
+
+- MetaDataWithOwnershipModel
+    Abstract base model that adds ownership fields and logic to metadata models.
+- MetaDataWithOwnershipModelManager
+    Custom manager that returns permission-aware querysets.
+- SmarterQuerySetWithPermissions
+    QuerySet subclass with methods for filtering by read and ownership permissions.
+
+Features
+--------
+
+- Ownership enforcement via foreign key to UserProfile.
+- Permission-based filtering for read and management (ownership) access.
+- Caching for optimized retrieval of model instances.
+- Uniqueness constraints on resource name and owner.
+- Integration with Smarter's custom logging and exception handling.
+
+Usage
+-----
+
+This module is intended to be subclassed by concrete models that require
+ownership and permission logic. Do not instantiate MetaDataWithOwnershipModel directly.
+
+.. code-block:: python
+
+    class MyResource(MetaDataWithOwnershipModel):
+        # Define additional fields here
+
+"""
 
 from typing import Any, Optional, TypeVar, overload
 
@@ -10,7 +50,6 @@ from django.db.models.query import Prefetch
 
 # our stuff
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.models import MetaDataModel
@@ -81,7 +120,18 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         # pylint: disable=C0415
         from smarter.apps.account.utils import smarter_cached_objects
 
-        logger_prefix = formatted_text(
+        if not isinstance(user, User):
+            logger.debug(
+                "%s.with_read_permission_for() user is not an instance of User: %s",
+                logging.formatted_text(
+                    __name__
+                    + f".{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
+                ),
+                user,
+            )
+            return self.none()
+
+        logger_prefix = logging.formatted_text(
             __name__ + f".{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
         )
         logger.debug(
@@ -105,15 +155,13 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
                 return self.all()
 
             retval = self.filter(
-                models.Q(user_profile=user_profile)
-                | models.Q(user_profile__account=user_profile.account, user_profile__user__is_staff=True)
-                | models.Q(user_profile__account=user_profile.account, user_profile__user__is_superuser=True)
-                | models.Q(user_profile__account=smarter_cached_objects.smarter_account)
+                models.Q(user_profile__account=smarter_cached_objects.smarter_account)
+                | models.Q(user_profile__account=user_profile.account)
             )
             logger.debug(
-                "%s called for user: %s, returning resources. count: %s",
+                "%s user is not a superuser. Returning resources owned by account %s + platform. count: %s",
                 logger_prefix,
-                user,
+                user_profile.account.account_number,
                 retval.count(),
             )
             return retval
@@ -173,7 +221,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         .. note::
             If the user has multiple UserProfiles, the result is the union of all resources they can manage for each profile.
         """
-        logger_prefix = formatted_text(
+        logger_prefix = logging.formatted_text(
             __name__
             + f".{self.__class__.__name__}.with_ownership_permission_for('{user}') - model: {self.model.__name__}"
         )
@@ -203,9 +251,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
             # staff users have ownership permission for resources owned within their account, or owned by themselves
             if user_profile.user.is_staff:
-                retval = self.filter(
-                    models.Q(user_profile=user_profile) | models.Q(user_profile__account=user_profile.account)
-                )
+                retval = self.filter(user_profile__account=user_profile.account)
                 logger.debug(
                     "%s called for staff user: %s, returning resources. count: %s",
                     logger_prefix,
@@ -292,6 +338,7 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
         """Returns a SmarterQuerySetWithPermissions with the applied complex filter."""
         return self.get_queryset().complex_filter(filter_obj)
 
+    # pylint: disable=W0622
     def union(self, *other_qs, all=False) -> SmarterQuerySetWithPermissions[_MT]:
         """Returns a SmarterQuerySetWithPermissions representing the union of querysets."""
         return self.get_queryset().union(*other_qs, all=all)
@@ -438,6 +485,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         username: Optional[str] = None,
         account: Optional[Account] = None,
         session_key: Optional[str] = None,
+        taggit=True,
         **kwargs,
     ) -> models.Model:
         """
@@ -466,7 +514,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
         :rtype: models.Model
         """
-        logger_prefix = formatted_text(cls.__name__ + ".get_cached_object()")
+        logger_prefix = logging.formatted_text(cls.__name__ + ".get_cached_object()")
         logger.debug(
             "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
             logger_prefix,
@@ -488,6 +536,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             user = user or user_profile.cached_user
             account = account or user_profile.cached_account
 
+        # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
         def _get_object_by_pk(pk: int, class_name: str = cls.__name__) -> Optional["MetaDataWithOwnershipModel"]:
             """
@@ -503,17 +552,22 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             """
             if not isinstance(pk, int):
                 raise SmarterValueError(
-                    f"{formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()")} invalid pk value: {pk}. Expected an integer."
+                    f"{logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()")} invalid pk value: {pk}. Expected an integer."
                 )
             try:
-                retval = (
-                    cls.objects.prefetch_related("tags")
-                    .select_related("user_profile", "user_profile__account", "user_profile__user")
-                    .get(pk=pk)
-                )
+                if taggit:
+                    retval = (
+                        cls.objects.prefetch_related("tags")
+                        .select_related("user_profile", "user_profile__account", "user_profile__user")
+                        .get(pk=pk)
+                    )
+                else:
+                    retval = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).get(pk=pk)
                 logger.debug(
                     "%s._get_object_by_pk() fetched %s - %s",
-                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     type(retval).__name__,
                     str(retval),
                 )
@@ -521,7 +575,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             except cls.DoesNotExist:
                 logger.debug(
                     "%s._get_object_by_pk() no %s object found for pk: %s",
-                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     cls.__name__,
                     pk,
                 )
@@ -545,14 +599,19 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
             try:
-                retval = (
-                    cls.objects.prefetch_related("tags")
-                    .select_related("user_profile", "user_profile__account", "user_profile__user")
-                    .get(name=name, user_profile=user_profile)
-                )
+                if taggit:
+                    retval = (
+                        cls.objects.prefetch_related("tags")
+                        .select_related("user_profile", "user_profile__account", "user_profile__user")
+                        .get(name=name, user_profile=user_profile)
+                    )
+                else:
+                    retval = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).get(name=name, user_profile=user_profile)
                 logger.debug(
                     "%s._get_object_by_name_and_user_profile() fetched %s for name: %s and user_profile: %s",
-                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     type(retval).__class__.__name__,
                     name,
                     user_profile,
@@ -561,7 +620,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             except cls.DoesNotExist:
                 logger.debug(
                     "%s._get_object_by_name_and_user_profile() no %s found for name: %s and user_profile: %s",
-                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     cls.__name__,
                     name,
                     user_profile,
@@ -590,14 +649,19 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
             try:
-                retval = (
-                    cls.objects.prefetch_related("tags")
-                    .select_related("user_profile", "user_profile__account", "user_profile__user")
-                    .get(name=name, user_profile__account=account)
-                )
+                if taggit:
+                    retval = (
+                        cls.objects.prefetch_related("tags")
+                        .select_related("user_profile", "user_profile__account", "user_profile__user")
+                        .get(name=name, user_profile__account=account)
+                    )
+                else:
+                    retval = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).get(name=name, user_profile__account=account)
                 logger.debug(
                     "%s._get_object_by_name_and_account() fetched %s for name: %s and account: %s",
-                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     type(retval).__class__.__name__,
                     name,
                     account,
@@ -606,7 +670,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             except cls.DoesNotExist:
                 logger.debug(
                     "%s._get_object_by_name_and_account() no %s found for name: %s and account: %s",
-                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     cls.__name__,
                     name,
                     account,
@@ -633,14 +697,19 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
             try:
-                retval = (
-                    cls.objects.prefetch_related("tags")
-                    .select_related("user_profile", "user_profile__account", "user_profile__user")
-                    .get(user_profile__cached_user__sessions__session_key=session_key)
-                )
+                if taggit:
+                    retval = (
+                        cls.objects.prefetch_related("tags")
+                        .select_related("user_profile", "user_profile__account", "user_profile__user")
+                        .get(user_profile__cached_user__sessions__session_key=session_key)
+                    )
+                else:
+                    retval = cls.objects.select_related(
+                        "user_profile", "user_profile__account", "user_profile__user"
+                    ).get(user_profile__cached_user__sessions__session_key=session_key)
                 logger.debug(
                     "%s._get_object_by_session_key() fetched %s for session_key: %s",
-                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     type(retval).__class__.__name__,
                     session_key,
                 )
@@ -648,7 +717,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             except cls.DoesNotExist:
                 logger.debug(
                     "%s._get_object_by_session_key() no %s found for session_key: %s",
-                    formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
                     cls.__name__,
                     session_key,
                 )
@@ -678,7 +747,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         except UserProfile.MultipleObjectsReturned:
             logger.error(
                 "%s.get_cached_object() Multiple UserProfiles found for user %s and account %s. Defaulting to first result.",
-                formatted_text(cls.__name__ + ".get_cached_object()"),
+                logging.formatted_text(cls.__name__ + ".get_cached_object()"),
                 user,
                 account,
             )
@@ -700,7 +769,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
     @classmethod
     def get_cached_objects(
-        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None
+        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None, taggit=True, **kwargs
     ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
         """
         Retrieve a list of MetaDataWithOwnershipModel instances associated with a user profile using caching.
@@ -721,7 +790,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
 
         """
-        logger_prefix = formatted_text(__name__ + f".{MetaDataWithOwnershipModel.__name__}.get_cached_objects()")
+        logger_prefix = logging.formatted_text(
+            __name__ + f".{MetaDataWithOwnershipModel.__name__}.get_cached_objects()"
+        )
         logger.debug(
             "%s called for %s with user_profile: %s invalidate: %s",
             logger_prefix,
@@ -730,6 +801,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             invalidate,
         )
 
+        # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
         def _get_objects_for_user_profile_id(
             user_profile_id: int, class_name: str = cls.__name__
@@ -743,11 +815,16 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile ID.
             :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
             """
-            return (
-                cls.objects.prefetch_related("tags")
-                .select_related("user_profile", "user_profile__account", "user_profile__user")
-                .filter(user_profile_id=user_profile_id)
-            )
+            if taggit:
+                return (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .filter(user_profile_id=user_profile_id)
+                )
+            else:
+                return cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").filter(
+                    user_profile_id=user_profile_id
+                )
 
         if invalidate and user_profile:
             _get_objects_for_user_profile_id.invalidate(user_profile_id=user_profile.id, class_name=cls.__name__)  # type: ignore
@@ -755,7 +832,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         if user_profile:
             return _get_objects_for_user_profile_id(user_profile_id=user_profile.id, class_name=cls.__name__)  # type: ignore
 
-        return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
+        return super().get_cached_objects(invalidate=invalidate, **kwargs)  # type: ignore[return-value]
 
     def save(self, *args, **kwargs):
         """

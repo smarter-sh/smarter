@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .profile import ProfileLanguageView, ProfileView
@@ -17,8 +17,8 @@ class ProfileReverseNames:
 
     namespace = namespace
 
-    profile_view = camel_case_object_name(ProfileView)
-    language_view = camel_case_object_name(ProfileLanguageView)
+    profile_view = to_snake_case(ProfileView)
+    language_view = to_snake_case(ProfileLanguageView)
 
 
 urlpatterns = [

@@ -23,8 +23,6 @@ Namespaces are used for each included URL configuration to avoid naming conflict
 
 """
 
-import logging
-
 from django.urls import include, path
 
 from smarter.apps.account.api.v1 import urls as account_urls
@@ -44,7 +42,7 @@ from smarter.apps.secret.api.v1 import urls as secret_urls
 from smarter.apps.secret.const import namespace as secret_namespace
 from smarter.apps.vectorstore.api.v1 import urls as vectorstore_urls
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 
 from .cli.const import namespace as cli_namespace
 from .const import namespace
@@ -56,7 +54,7 @@ app_name = namespace
 # /api/v1/ is the main entry point for the API
 urlpatterns = [
     # for Chatbots of the form https://example.3141-5926-5359.alpha.api.example.com
-    path("", include(chatbot_urls)),
+    # path("", include(chatbot_urls)),
     # -------------------------------------------
     # the main API
     # -------------------------------------------
@@ -75,9 +73,9 @@ if smarter_settings.enable_vectorstore:
     urlpatterns += [
         path("vectorstores/", include(vectorstore_urls, namespace="vectorstore")),
     ]
-    logger.info("%s Vectorstore API endpoints enabled.", formatted_text(__name__))
+    logger.info("%s Vectorstore API endpoints enabled.", logging.formatted_text(__name__))
 else:
     logger.info(
         "%s Vectorstore API endpoints have been disabled. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
-        formatted_text(__name__),
+        logging.formatted_text(__name__),
     )

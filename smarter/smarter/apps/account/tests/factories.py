@@ -5,6 +5,7 @@ from typing import Optional
 
 from smarter.apps.account.models import (
     Account,
+    AccountContact,
     User,
     UserProfile,
 )
@@ -30,7 +31,7 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
         name=f"test_account_admin_user_{hashed_slug}",
         description="Account for admin user testing purposes",
         version=COMMON_VERSION,
-        is_default_account=True,
+        is_default_account=False,
         is_active=True,
         company_name=f"TestAccount_AdminUser_{hashed_slug}",
         phone_number="123-456-789",
@@ -87,7 +88,7 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
         name=f"test_account_mortal_user_{hashed_slug}",
         description="Account for mortal user testing purposes",
         version=COMMON_VERSION,
-        is_default_account=True,
+        is_default_account=False,
         is_active=True,
         company_name=f"TestAccount_MortalUser_{hashed_slug}",
         phone_number="123-456-789",
@@ -138,6 +139,12 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
         user_profile = UserProfile.get_cached_object(user=user, account=account)
     elif user and not user_profile:
         user_profile = UserProfile.objects.filter(user=user).first()
+
+    try:
+        if user_profile:
+            AccountContact.objects.filter(email=user_profile.user.email, account=user_profile.account).delete()
+    except AccountContact.DoesNotExist:
+        pass
     try:
         if user_profile:
             lbl = str(user_profile)
@@ -160,6 +167,36 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
             logger.debug("%s.factory_account_teardown() Deleted account: %s", HERE, lbl)
     except Account.DoesNotExist:
         pass
+
+    # This cleans up sloppy test runs where the unit tests created test artifacts but failed to clean them up.
+    accounts: list[Account] = []
+    test_user_profiles = UserProfile.objects.filter(is_test=True)
+    for user_profile in test_user_profiles:
+        if user_profile.account not in accounts:
+            accounts.append(user_profile.account)
+        user = user_profile.user
+        user_profile.delete()
+        user.delete()
+        logger.warning(
+            "%s.factory_account_teardown() had to intervene to delete test UserProfile: %s (account: %s)",
+            HERE,
+            user_profile,
+            user_profile.account,
+        )
+    for account in accounts:
+        account.delete()
+        logger.warning("%s.factory_account_teardown() had to intervene to delete test Account: %s", HERE, account)
+
+    account_contacts = AccountContact.objects.filter(is_test=True)
+    if account_contacts.exists():
+        for account_contact in account_contacts:
+            logger.warning(
+                "%s.factory_account_teardown() had to intervene to delete test AccountContact: %s (account: %s)",
+                HERE,
+                account_contact,
+                account_contact.account,
+            )
+        account_contacts.delete()
 
 
 def billing_address_factory():

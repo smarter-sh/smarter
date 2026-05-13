@@ -5,7 +5,6 @@ import datetime
 import json
 import re
 from functools import cached_property
-from logging import getLogger
 from typing import Any, Optional
 
 from django.core.exceptions import ValidationError
@@ -18,11 +17,12 @@ from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.json import SmarterJSONEncoder
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-logger = getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 cache_prefix = f"{__name__}."
 
 
@@ -307,16 +307,17 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :returns: The original object ID if decoding is successful, otherwise None.
         :rtype: Optional[int]
         """
+        logger_prefix = logging.formatted_text(f"{cls.__name__}.id_from_hashed_id()")
         try:
             verbose_logger.debug(
-                "%s.id_from_hashed_id() - Attempting to decode hashed_id: %s",
-                cls.formatted_class_name,
+                "%s - Attempting to decode hashed_id: %s",
+                logger_prefix,
                 hashed_id,
             )
             if not hashed_id.startswith(cls.HASH_PREFIX) or not hashed_id.endswith(cls.HASH_SUFFIX):
                 logger.warning(
-                    "%s.id_from_hashed_id() - Hashed ID '%s' does not start with '%s' or end with '%s'.",
-                    cls.formatted_class_name,
+                    "%s - Hashed ID '%s' does not start with '%s' or end with '%s'.",
+                    logger_prefix,
                     hashed_id,
                     cls.HASH_PREFIX,
                     cls.HASH_SUFFIX,
@@ -330,16 +331,16 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             decoded_str = decoded_bytes.decode()
             retval = int(decoded_str) - cls.HASH_FLOOR
             verbose_logger.debug(
-                "%s.id_from_hashed_id() - Successfully decoded hashed_id: %s to id: %d",
-                cls.formatted_class_name,
+                "%s - Successfully decoded hashed_id: %s to id: %d",
+                logger_prefix,
                 hashed_id,
                 retval,
             )
             return retval
         except (base64.binascii.Error, ValueError) as e:  # type: ignore[name-defined]
             logger.error(
-                "%s.id_from_hashed_id() - Failed to decode hashed_id '%s': %s",
-                cls.formatted_class_name,
+                "%s - Failed to decode hashed_id '%s': %s",
+                logger_prefix,
                 hashed_id,
                 e,
             )
@@ -347,8 +348,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logger.exception(
-                "%s.id_from_hashed_id() - Unexpected error while decoding hashed_id '%s': %s",
-                cls.formatted_class_name,
+                "%s - Unexpected error while decoding hashed_id '%s': %s",
+                logger_prefix,
                 hashed_id,
                 e,
             )
@@ -630,7 +631,9 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             raise SmarterValueError(f"Error serializing model to JSON: {e}") from e
 
     @classmethod
-    def get_cached_object(cls, invalidate: Optional[bool] = False, pk: Optional[int] = None) -> Optional[models.Model]:
+    def get_cached_object(
+        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, **kwargs
+    ) -> Optional[models.Model]:
         """
         Retrieve a model instance by primary key, using caching to
         optimize performance. This method is selectively overridden in
@@ -671,26 +674,26 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                     pk,
                 )
                 return cls.objects.get(pk=pk)
-            except cls.DoesNotExist:
+            except cls.DoesNotExist as e:
                 verbose_logger.debug(
                     "%s._get_model_by_pk() no object found for %s pk: %s",
                     logger_prefix,
                     class_name,
                     pk,
                 )
-                return None
+                raise cls.DoesNotExist(f"{class_name} object with pk '{pk}' does not exist.") from e
 
         if invalidate:
             _get_model_by_pk.invalidate(pk, cls.__name__)
 
         if not pk:
             verbose_logger.debug("%s._get_model_by_pk() called with no pk", logger_prefix)
-            return None
+            raise cls.DoesNotExist(f"Must provide a 'pk' to retrieve a {cls.__name__} object.")
 
         return _get_model_by_pk(pk, class_name=cls.__name__)
 
     @classmethod
-    def get_cached_objects(cls, invalidate: Optional[bool] = False) -> QuerySet["TimestampedModel"]:
+    def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["TimestampedModel"]:
         """
         Retrieve model instances using caching to optimize performance.
         This method is selectively overridden in models that inherit from

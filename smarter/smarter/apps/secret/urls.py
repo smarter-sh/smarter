@@ -3,7 +3,7 @@
 from django.urls import path
 
 from smarter.apps.secret.views.dashboard.secrets import SecretsView, SecretView
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 
@@ -25,9 +25,9 @@ class SecretReverseNames:
 
     namespace = namespace
 
-    SECRETS = camel_case_object_name(SecretsView)
-    SECRET = camel_case_object_name(SecretView)
-    SECRET_NEW = camel_case_object_name(SecretView) + "_new"
+    SECRETS = to_snake_case(SecretsView)
+    SECRET = to_snake_case(SecretView)
+    SECRET_NEW = to_snake_case(SecretView) + "_new"
 
 
 app_name = namespace

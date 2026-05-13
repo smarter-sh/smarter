@@ -15,8 +15,6 @@ from django.http import (
     HttpRequest,
 )
 from django.http.response import JsonResponse
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_control
 
 from smarter.apps.account.serializers import UserProfileSerializer
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
@@ -28,10 +26,10 @@ from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
+from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
-    smarter_cache_page_by_user,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -51,8 +49,6 @@ verbose_logger = logging.getSmarterLogger(
 )
 
 
-@method_decorator(cache_control(max_age=WORKBENCH_CACHE_TIMEOUT), name="post")
-@method_decorator(smarter_cache_page_by_user(WORKBENCH_CACHE_TIMEOUT), name="post")
 class PromptListApiView(SmarterAuthenticatedWebView):
     """
     list view for smarter workbench web console. This view is protected and
@@ -65,6 +61,7 @@ class PromptListApiView(SmarterAuthenticatedWebView):
 
     def post(self, request: HttpRequest, *args, **kwargs):
 
+        @cache_results(timeout=WORKBENCH_CACHE_TIMEOUT)
         def _get_cached_chatbots_for_user_profile(user_profile_id: int) -> JsonResponse:
             """Get cached chatbots for a user profile."""
 

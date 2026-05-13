@@ -1883,7 +1883,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Bug Fixes
 
-- check isinstance(request, WSGIRequest) ([8e2492e](https://github.com/smarter-sh/smarter/commit/8e2492ebb66b06bfaf868f85ebf7022d0cbb1d91))
+- check isinstance(request, ASGIRequest) ([8e2492e](https://github.com/smarter-sh/smarter/commit/8e2492ebb66b06bfaf868f85ebf7022d0cbb1d91))
 - fully inspect request before attempting to do anything with it ([19f9ace](https://github.com/smarter-sh/smarter/commit/19f9ace2ea74bb8ea31dc66b501c61f8c74e4f57))
 - initialize the admin for the account when we only have an account number ([7770406](https://github.com/smarter-sh/smarter/commit/7770406e658ccbabb0add0bfb1d3e6bd944373f5))
 - look for mysql db errors ([c41e21f](https://github.com/smarter-sh/smarter/commit/c41e21f461d8d7cd6fb609c4b88da09894953c44))

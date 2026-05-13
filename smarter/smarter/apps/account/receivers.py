@@ -7,7 +7,6 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
 from smarter.apps.dashboard.context_processors import cache_invalidations
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.broker import AbstractBroker
@@ -32,7 +31,7 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
     - verify that a UserProfile record exists for the user.
       if not, create one with the default account.
     """
-    logger.info("%s User logged in: %s", formatted_text(f"{module_prefix}.user_logged_in()"), user)
+    logger.info("%s User logged in: %s", logging.formatted_text(f"{module_prefix}.user_logged_in()"), user)
     try:
         UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist:
@@ -54,7 +53,7 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     """
     logger.info(
         "%s User post_save: %s, created: %s",
-        formatted_text(f"{module_prefix}.user_post_save()"),
+        logging.formatted_text(f"{module_prefix}.user_post_save()"),
         instance,
         created,
     )
@@ -68,7 +67,7 @@ def user_post_delete(sender: User, instance: User, **kwargs):
     """Signal receiver for deleted of User model."""
     logger.info(
         "%s User post_delete: %s, id: %s",
-        formatted_text(f"{module_prefix}.user_post_delete()"),
+        logging.formatted_text(f"{module_prefix}.user_post_delete()"),
         instance,
         instance.id,  # type: ignore
     )
@@ -79,7 +78,7 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
     """Signal receiver for created/saved of UserProfile model."""
     logger.info(
         "%s UserProfile post_save: %s, created: %s",
-        formatted_text(f"{module_prefix}.user_profile_post_save()"),
+        logging.formatted_text(f"{module_prefix}.user_profile_post_save()"),
         instance,
         created,
     )
@@ -90,7 +89,7 @@ def user_profile_post_delete(sender: UserProfile, instance: UserProfile, **kwarg
     """Signal receiver for deleted of UserProfile model."""
     logger.info(
         "%s UserProfile: %s, id: %s",
-        formatted_text(f"{module_prefix}.user_profile_post_delete()"),
+        logging.formatted_text(f"{module_prefix}.user_profile_post_delete()"),
         instance,
         instance.id,  # type: ignore
     )
@@ -99,14 +98,16 @@ def user_profile_post_delete(sender: UserProfile, instance: UserProfile, **kwarg
 @receiver(post_save, sender=Account)
 def account_post_save(sender: Account, instance: Account, created, **kwargs):
     """Signal receiver for created/saved of Account model."""
-    model_prefix = formatted_text(f"{module_prefix}.account_post_save()")
+    model_prefix = logging.formatted_text(f"{module_prefix}.account_post_save()")
     account_json = json.dumps(model_to_dict(instance))
     if created:
         logger.info("%s Account created: %s", model_prefix, account_json)
     else:
         logger.info("%s Account updated: %s", model_prefix, account_json)
         logger.info(
-            "%s invalidating cache for Account: %s", formatted_text(f"{module_prefix}.account_post_save()"), instance
+            "%s invalidating cache for Account: %s",
+            logging.formatted_text(f"{module_prefix}.account_post_save()"),
+            instance,
         )
 
 
@@ -115,7 +116,7 @@ def account_post_delete(sender: Account, instance: Account, **kwargs):
     """Signal receiver for deleted of Account model."""
     logger.info(
         "%s Account post_delete: %s, id: %s",
-        formatted_text(f"{module_prefix}.account_post_delete()"),
+        logging.formatted_text(f"{module_prefix}.account_post_delete()"),
         instance,
         instance.id,  # type: ignore
     )
@@ -127,7 +128,7 @@ def charge_post_save(sender: Charge, instance: Charge, created, **kwargs):
     charge_json = json.dumps(model_to_dict(instance))
     logger.info(
         "%s Charge post_save: %s, created: %s",
-        formatted_text(f"{module_prefix}.charge_post_save()"),
+        logging.formatted_text(f"{module_prefix}.charge_post_save()"),
         charge_json,
         created,
     )
@@ -139,7 +140,7 @@ def daily_billing_record_post_save(sender: DailyBillingRecord, instance: DailyBi
     daily_billing_record_json = json.dumps(model_to_dict(instance))
     logger.info(
         "%s DailyBillingRecord: %s, created: %s",
-        formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
+        logging.formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
         daily_billing_record_json,
         created,
     )
@@ -150,7 +151,7 @@ def broker_ready_receiver(sender, broker: AbstractBroker, **kwargs):
     """Signal receiver for broker_ready signal."""
     logger.info(
         "%s %s %s for %s is ready.",
-        formatted_text(f"{module_prefix}.broker_ready()"),
+        logging.formatted_text(f"{module_prefix}.broker_ready()"),
         broker.kind,
         str(broker),
         broker.name,

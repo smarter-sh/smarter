@@ -8,7 +8,6 @@ import yaml
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -21,7 +20,7 @@ KIND = SAMKinds.ACCOUNT.value
 
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
-logger_prefix = formatted_text(f"{__name__}.TestApiCliV1Account")
+logger_prefix = logging.formatted_text(f"{__name__}.TestApiCliV1Account")
 
 
 class TestApiCliV1Account(ApiV1CliTestBase):

@@ -2,15 +2,15 @@
 """Smarter API SmarterAuthToken Manifest handler"""
 
 import traceback
-from logging import getLogger
 from typing import Any, Optional, Type
 
 from django.core import serializers
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from pydantic_core import ValidationError as PydanticValidationError
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import User
+from smarter.lib import logging
 from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
 from smarter.lib.drf.manifest.models.auth_token.const import MANIFEST_KIND
 from smarter.lib.drf.manifest.models.auth_token.metadata import (
@@ -40,7 +40,7 @@ from smarter.lib.manifest.enum import (
 )
 
 MAX_RESULTS = 1000
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class SAMSmarterAuthTokenBrokerError(SAMBrokerError):
@@ -97,8 +97,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         Returns the formatted class name for logging purposes.
         This is used to provide a more readable class name in logs.
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMSmarterAuthTokenBroker()"
+        return logging.formatted_text(f"{__name__}.{SAMSmarterAuthToken.__name__}()[{id(self)}]")
 
     @property
     def smarter_auth_token(self) -> Optional[SmarterAuthToken]:
@@ -111,36 +110,34 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         """
         if self._smarter_auth_token:
             return self._smarter_auth_token
-        if not self._manifest or not self._name:
-            logger.debug(
-                "%s.smarter_auth_token() Manifest or name not set. Cannot retrieve SmarterAuthToken.",
-                self.formatted_class_name,
-            )
-            return None
 
-        if not self._manifest:
+        if not self.manifest:
             logger.debug(
                 "%s.smarter_auth_token() Manifest not set. Cannot retrieve SmarterAuthToken.",
                 self.formatted_class_name,
             )
             return None
 
+        username = self.manifest.spec.config.username
         try:
             logger.debug(
                 "%s.smarter_auth_token() Retrieving SmarterAuthToken for user %s with name %s",
                 self.formatted_class_name,
-                self.user,
+                username,
                 self.name,
             )
-            self._smarter_auth_token = SmarterAuthToken.objects.get(
-                user__username=self._manifest.spec.config.username, name=self.name
-            )
+            self._smarter_auth_token = SmarterAuthToken.objects.get(user__username=username, name=self.name)
         except SmarterAuthToken.DoesNotExist:
             logger.debug(
                 "%s.smarter_auth_token() SmarterAuthToken for user %s with name %s does not exist.",
                 self.formatted_class_name,
-                self._manifest.spec.config.username,
+                username,
                 self.name,
+            )
+            logger.debug(
+                "%s.smarter_auth_token() SmarterAuthTokens: %s",
+                self.formatted_class_name,
+                SmarterAuthToken.objects.all(),
             )
         return self._smarter_auth_token
 
@@ -186,23 +183,17 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        if self.smarter_auth_token is None:
-            raise SAMBrokerErrorNotReady(
-                f"SmarterAuthToken not set for {self.kind} broker. Cannot apply.",
-                thing=self.thing,
-                command=SmarterJournalCliCommands.APPLY,
-            )
-        if self.manifest is None:
-            raise SAMBrokerErrorNotReady(
-                f"Manifest not set for {self.kind} broker. Cannot apply.",
-                thing=self.thing,
-                command=SmarterJournalCliCommands.APPLY,
-            )
 
-        return {
+        retval = {
             **metadata,
             **config_dump,
         }
+        logger.debug(
+            "%s.manifest_to_django_orm() converted manifest metadata to Django ORM dict: %s",
+            self.formatted_class_name,
+            logging.formatted_json(retval),
+        )
+        return retval
 
     def django_orm_to_manifest_dict(self) -> dict:
         """
@@ -251,6 +242,12 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                     thing=self.kind,
                 )
             return self._manifest
+        logger.debug(
+            "%s.manifest() - Attempting to initialize from loader %s or smarter_auth_token %s",
+            self.formatted_class_name,
+            self.loader,
+            self._smarter_auth_token,
+        )
         if self.loader and self.loader.manifest_kind == self.kind:
             try:
                 logger.debug(
@@ -274,24 +271,24 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                     self.formatted_class_name,
                     str(e),
                 )
-        elif self.smarter_auth_token:
+        elif self._smarter_auth_token:
             status = SAMSmarterAuthTokenStatus(
-                recordLocator=self.smarter_auth_token.record_locator,
-                created=self.smarter_auth_token.created_at,
-                modified=self.smarter_auth_token.updated_at,
-                lastUsedAt=self.smarter_auth_token.last_used_at,
+                recordLocator=self._smarter_auth_token.record_locator,
+                created=self._smarter_auth_token.created_at,
+                modified=self._smarter_auth_token.updated_at,
+                lastUsedAt=self._smarter_auth_token.last_used_at,
             )
             metadata = SAMSmarterAuthTokenMetadata(
-                name=str(self.smarter_auth_token.name),
-                description=self.smarter_auth_token.description,
-                version=self.smarter_auth_token.version,
-                tags=self.smarter_auth_token.tags_list,
-                annotations=self.smarter_auth_token.annotations,
+                name=str(self._smarter_auth_token.name),
+                description=self._smarter_auth_token.description,
+                version=self._smarter_auth_token.version,
+                tags=self._smarter_auth_token.tags_list,
+                annotations=self._smarter_auth_token.annotations,
             )
             spec = SAMSmarterAuthTokenSpec(
                 config=SAMSmarterAuthTokenSpecConfig(
-                    isActive=self.smarter_auth_token.is_active,
-                    username=self.smarter_auth_token.user.username,
+                    isActive=self._smarter_auth_token.is_active,
+                    username=self._smarter_auth_token.user.username,
                 )
             )
             self._manifest = SAMSmarterAuthToken(
@@ -306,7 +303,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 self.formatted_class_name,
                 type(self._manifest).__name__,
                 self.smarter_auth_token,
-                serializers.serialize("json", [self.smarter_auth_token]),
+                serializers.serialize("json", [self._smarter_auth_token]),
             )
             return self._manifest
         else:
@@ -452,10 +449,10 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         Invalidate any relevant caches when the manifest or SmarterAuthToken data changes.
         """
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
-        SmarterAuthToken.get_cached_object(invalidate=True, user=self.user, name=self.name)  # type: ignore
+        SmarterAuthToken.get_cached_object(invalidate=True, user=self.user, name=self.name, taggit=False)  # type: ignore
         return super().cache_invalidations()
 
-    def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug("%s.example_manifest() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
@@ -476,7 +473,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug("%s.get() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
@@ -518,7 +515,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -542,7 +539,6 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             "username",
             "digest",
             "token_key",
-            "tags",
         ]
 
         if not isinstance(self.user, User):
@@ -565,14 +561,8 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 thing=self.thing,
                 command=command,
             )
-        if self.smarter_auth_token is None:
-            self.smarter_auth_token = SmarterAuthToken(
-                user=self.user,
-                user_profile=self.user_profile,
-            )
         try:
             data = self.manifest_to_django_orm()
-            tags = data.get("tags", [])
             for field in readonly_fields:
                 logger.debug(
                     "%s.apply() Removing readonly field %s from data for %s",
@@ -581,9 +571,6 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                     self.kind,
                 )
                 data.pop(field, None)
-            for key, value in data.items():
-                setattr(self.smarter_auth_token, key, value)
-                logger.debug("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
 
             # handle the username
             try:
@@ -611,12 +598,22 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                         command=command,
                     )
 
-            self.smarter_auth_token.user = manifest_spec_config_user
-            logger.debug(
-                "%s.apply() Setting smarter_auth_token.user to %s",
-                self.formatted_class_name,
-                manifest_spec_config_user,
-            )
+            if self.smarter_auth_token is None:
+                # Set all required fields at instantiation
+                self.smarter_auth_token = SmarterAuthToken(
+                    user=manifest_spec_config_user,
+                    user_profile=self.user_profile,
+                    name=data.get("name"),
+                    description=data.get("description"),
+                    version=data.get("version"),
+                    annotations=data.get("annotations"),
+                    is_active=data.get("is_active"),
+                    # add any other required fields here
+                )
+            else:
+                for key, value in data.items():
+                    setattr(self.smarter_auth_token, key, value)
+                self.smarter_auth_token.user = manifest_spec_config_user
 
             logger.debug(
                 "%s.apply() Saving %s: %s",
@@ -625,27 +622,20 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 serializers.serialize("json", [self.smarter_auth_token]),
             )
             self.smarter_auth_token.save()
-            self.smarter_auth_token.tags.set(tags)
             self.smarter_auth_token.refresh_from_db()
-            logger.debug(
-                "%s.apply() Saved %s: %s",
-                self.formatted_class_name,
-                self.smarter_auth_token,
-                serializers.serialize("json", [self.smarter_auth_token]),
-            )
         except Exception as e:
             tb = traceback.format_exc()
             raise SAMBrokerError(message=f"Error in {command}: {e}\n{tb}", thing=self.kind, command=command) from e
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug("%s.chat() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug(
             "%s.describe() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
         )
@@ -664,7 +654,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
 
-    def delete(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def delete(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug(
             "%s.delete() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
         )
@@ -696,7 +686,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
 
-    def deploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug(
             "%s.deploy() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
         )
@@ -704,20 +694,30 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
 
-        if not self.manifest:
-            raise SAMBrokerErrorNotReady(
-                f"{self.kind} {self.name} manifest is not ready", thing=self.kind, command=command
-            )
+        if not self.smarter_auth_token:
+            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
 
-        if self.smarter_auth_token and not self.smarter_auth_token.is_active:
+        if not self.smarter_auth_token.is_active:
             self.smarter_auth_token.is_active = True
             self.smarter_auth_token.save()
+            logger.debug(
+                "%s.deploy() Activated %s %s. Saved and refreshed from DB: %s",
+                self.formatted_class_name,
+                self.kind,
+                self.name,
+                serializers.serialize("json", [self.smarter_auth_token]),
+            )
         else:
-            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
+            logger.debug(
+                "%s.deploy() %s %s is already active. No action taken.",
+                self.formatted_class_name,
+                self.kind,
+                self.name,
+            )
 
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug(
             "%s.undeploy() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
         )
@@ -734,7 +734,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def logs(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug("%s.logs() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)

@@ -12,13 +12,13 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .uri import smarter_build_absolute_uri
 
 if TYPE_CHECKING:
-    from django.core.handlers.wsgi import WSGIRequest
+    from django.core.handlers.asgi import ASGIRequest
     from django.http import HttpRequest
     from rest_framework.request import Request
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__)
-RequestType = Union["HttpRequest", "Request", "WSGIRequest"]
+RequestType = Union["HttpRequest", "Request", "ASGIRequest"]
 
 
 # pylint: disable=W0613,C0415
@@ -36,9 +36,9 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
     """
     Determines whether the provided request is authenticated. Provides extensive logging for debugging purposes.
 
-    :param request: The request object to check. This can be an instance of :class:`django.http.HttpRequest`, :class:`rest_framework.request.Request`, or :class:`django.core.handlers.wsgi.WSGIRequest`. If ``None`` is provided, the function will return ``False``.
+    :param request: The request object to check. This can be an instance of :class:`django.http.HttpRequest`, :class:`rest_framework.request.Request`, or :class:`django.core.handlers.wsgi.ASGIRequest`. If ``None`` is provided, the function will return ``False``.
 
-    :type request: Optional[Union[HttpRequest, Request, WSGIRequest]]
+    :type request: Optional[Union[HttpRequest, Request, ASGIRequest]]
 
     :return: Returns ``True`` if the request is authenticated (i.e., the request has a ``user`` attribute and ``user.is_authenticated`` is ``True``). Returns ``False`` otherwise.
     :rtype: bool
@@ -46,7 +46,7 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
     :raises Exception: Any unexpected error during attribute access will be caught and logged; the function will return ``False`` in such cases.
 
     .. note::
-        This function is compatible with Django and Django REST Framework request objects. It also supports WSGIRequest and can be used in unit tests with mock objects that have the required attributes.
+        This function is compatible with Django and Django REST Framework request objects. It also supports ASGIRequest and can be used in unit tests with mock objects that have the required attributes.
 
     .. warning::
         If the request object does not have a ``user`` attribute, or if ``user.is_authenticated`` is not available, the function will return ``False``. Any exceptions are logged as warnings.
@@ -75,11 +75,11 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
     verbose_logger.debug("%s.is_authenticated_request()", logger_prefix)
     try:
         # pylint: disable=import-outside-toplevel
-        from django.core.handlers.wsgi import WSGIRequest
+        from django.core.handlers.asgi import ASGIRequest
         from django.http import HttpRequest
         from rest_framework.request import Request
 
-        is_valid_request_object = isinstance(request, (HttpRequest, Request, WSGIRequest))
+        is_valid_request_object = isinstance(request, (HttpRequest, Request, ASGIRequest))
         if is_valid_request_object:
             verbose_logger.debug(
                 "%s.is_authenticated_request() Valid request object of type %s",

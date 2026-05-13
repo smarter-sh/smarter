@@ -22,13 +22,13 @@ from smarter.apps.chatbot.models import (
     ChatBotHelper,
     ChatBotPlugin,
     ChatBotRequests,
-    ChatBotRequestsSerializer,
     get_cached_chatbot_by_request,
 )
 from smarter.apps.chatbot.serializers import (
     ChatBotConfigSerializer,
     ChatBotFunctionsSerializer,
     ChatBotPluginSerializer,
+    ChatBotRequestsSerializer,
 )
 from smarter.apps.plugin.models import (
     PluginSelectorHistory,

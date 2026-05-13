@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 import httpx
 import markdown
+from django.core.handlers.asgi import ASGIRequest
 from django.http.response import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.test import RequestFactory
@@ -228,16 +229,16 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 
         return super().dispatch(request, *args, **kwargs)  # type: ignore[return]
 
-    def put(self, request, *args, **kwargs):
+    def put(self, request: ASGIRequest, *args, **kwargs):
         return HttpResponseBadRequest("PUT method not supported for this view.")
 
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: ASGIRequest, *args, **kwargs):
         return HttpResponseBadRequest("PATCH method not supported for this view.")
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: ASGIRequest, *args, **kwargs):
         return HttpResponseBadRequest("PATCH method not supported for this view.")
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: ASGIRequest, *args, **kwargs):
         return HttpResponseBadRequest("DELETE method not supported for this view.")
 
 
@@ -252,7 +253,7 @@ class TxtBaseView(SmarterWebTxtView):
     title: Optional[str] = None
     leader: Optional[str] = None
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: ASGIRequest, *args, **kwargs):
         file_path = self.text_file
         if not file_path:
             raise DocsError("self.text_file not set.")
@@ -274,7 +275,7 @@ class MarkdownBaseView(SmarterWebHtmlView):
     template_path = "docs/markdown.html"
     markdown_file: Optional[str] = None
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: ASGIRequest, *args, **kwargs):
         if not self.markdown_file:
             raise DocsError("self.markdown_file not set.")
         file_path = os.path.join(DOCS_PATH, self.markdown_file)

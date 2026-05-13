@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .views.plugin import PluginDetailView, PluginListView
@@ -16,8 +16,8 @@ class PluginReverseNames:
     """
 
     namespace = namespace
-    listview = camel_case_object_name(PluginListView)
-    detailview = camel_case_object_name(PluginDetailView)
+    listview = to_snake_case(PluginListView)
+    detailview = to_snake_case(PluginDetailView)
 
 
 urlpatterns = [

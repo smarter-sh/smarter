@@ -1,7 +1,7 @@
 PluginDataBase Model
 ======================
 
-.. autoclass:: smarter.apps.plugin.models.PluginDataBase
+.. automodule:: smarter.apps.plugin.models.plugin_data_base
     :members:
     :undoc-members:
     :inherited-members:

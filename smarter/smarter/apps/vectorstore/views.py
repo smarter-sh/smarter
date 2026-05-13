@@ -9,7 +9,7 @@ import logging
 from typing import Optional
 
 import yaml
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponse
 from django.shortcuts import render
 
@@ -48,7 +48,7 @@ class VectorstoreManifestView(DocsBaseView):
     This view renders a detailed manifest for a specific vectorstore, including its configuration and metadata, in YAML format. It is intended for authenticated users and provides error handling for missing or unsupported vectorstore kinds and names.
 
     :param request: Django HTTP request object.
-    :type request: WSGIRequest
+    :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
     :param kwargs: Keyword arguments, must include 'name' (vectorstore name) and 'kind' (vectorstore type).
@@ -94,7 +94,7 @@ class VectorstoreManifestView(DocsBaseView):
         6. Handle any errors that occur during the process and return appropriate error responses.
 
         :param request: Django HTTP request object.
-        :type request: WSGIRequest
+        :type request: ASGIRequest
         :param args: Additional positional arguments.
         :type args: tuple
         :param kwargs: Keyword arguments, must include 'name' (vectorstore name) and 'kind' (vectorstore type).
@@ -192,7 +192,7 @@ class VectorstoreListView(SmarterAuthenticatedNeverCachedWebView):
     This view displays all vectorstores available to the authenticated user as cards, providing a summary and quick access to vectorstore details.
 
     :param request: Django HTTP request object.
-    :type request: WSGIRequest
+    :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
     :param kwargs: Additional keyword arguments.
@@ -214,7 +214,7 @@ class VectorstoreListView(SmarterAuthenticatedNeverCachedWebView):
     template_path = "vectorstore/vectorstore_list.html"
     vectorstores: list[VectorestoreMeta] = []
 
-    def get(self, request: WSGIRequest, *args, **kwargs):
+    def get(self, request: ASGIRequest, *args, **kwargs):
         if request.user is None:
             logger.error("%s.get() Request user is None. This should not happen.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")

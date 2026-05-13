@@ -1,7 +1,7 @@
 PluginSelector Model
 ======================
 
-.. autoclass:: smarter.apps.plugin.models.PluginSelector
+.. automodule:: smarter.apps.plugin.models.plugin_selector
     :members:
     :undoc-members:
     :inherited-members:

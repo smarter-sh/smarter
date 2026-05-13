@@ -24,7 +24,7 @@ from urllib.parse import ParseResult, urlparse
 
 import tldextract
 import yaml
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest, QueryDict
 from django.http.request import RawPostDataException
 from rest_framework.request import Request as RestFrameworkRequest
@@ -82,7 +82,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
 
-SmarterRequestType = Optional[Union[RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock]]
+SmarterRequestType = Optional[Union[RestFrameworkRequest, HttpRequest, ASGIRequest, MagicMock]]
 """Type alias for all Smarter request types."""
 
 
@@ -190,7 +190,7 @@ class SmarterRequestMixin(AccountMixin):
             kwargs,
         )
         request = request or next(
-            (req for req in args if isinstance(req, (RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock))), None
+            (req for req in args if isinstance(req, (RestFrameworkRequest, HttpRequest, ASGIRequest, MagicMock))), None
         )
         # ---------------------------------------------------------------------
         # the following reassignments are not necessarily technically required,
@@ -455,8 +455,7 @@ class SmarterRequestMixin(AccountMixin):
                 self.request_mixin_logger_prefix,
                 self._url,
             )
-            if self.is_authenticated:
-                verbose_logger.debug("hi dad")
+            if self.is_authenticated and not self.user:
                 self._smarter_request_user = request.user  # type: ignore
                 verbose_logger.debug(
                     "%s.smarter_request setter - smarter_request_user set to: %s is_authenticated=%s",
@@ -1993,7 +1992,7 @@ class SmarterRequestMixin(AccountMixin):
                 self.request_mixin_logger_prefix,
             )
             return False
-        if not isinstance(self.smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
+        if not isinstance(self.smarter_request, Union[HttpRequest, RestFrameworkRequest, ASGIRequest, MagicMock]):
             verbose_logger.debug(
                 "%s.is_requestmixin_ready() - request is not a HttpRequest. Received %s. Cannot process request.",
                 self.request_mixin_logger_prefix,

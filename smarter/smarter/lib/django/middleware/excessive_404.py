@@ -6,7 +6,7 @@ import inspect
 from http import HTTPStatus
 
 from asgiref.sync import markcoroutinefunction
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponseForbidden
 
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
@@ -77,12 +77,12 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         """Return the formatted class name for logging purposes."""
         return formatted_text(f"{__name__}.{SmarterBlockExcessive404Middleware.__name__}")
 
-    def process_response(self, request: WSGIRequest, response):
+    def process_response(self, request: ASGIRequest, response):
         """
         Process the HTTP response and apply excessive 404 blocking logic.
 
         :param request: The incoming HTTP request object.
-        :type request: django.core.handlers.wsgi.WSGIRequest
+        :type request: django.core.handlers.wsgi.ASGIRequest
         :param response: The outgoing HTTP response object.
         :type response: django.http.HttpResponse
 
@@ -124,7 +124,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
 
         return response
 
-    async def async_process_response(self, request: WSGIRequest, response):
+    async def async_process_response(self, request: ASGIRequest, response):
         """
         Async entry point for ASGI deployments. Mirrors :meth:`process_response`.
         """

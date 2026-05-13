@@ -1,15 +1,12 @@
 # pylint: disable=wrong-import-position
 """Test LLMPrices model."""
 
-import logging
-
-# our stuff
 from decimal import Decimal
 
 from smarter.apps.account.models import CHARGE_TYPES, LLMPrices
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +14,7 @@ logger = logging.getLogger(__name__)
 class TestLLMPrices(TestAccountMixin):
     """Test LLMPrices model"""
 
-    logger_prefix = formatted_text(f"{__name__}.TestLLMPrices()")
+    logger_prefix = logging.formatted_text(f"{__name__}.TestLLMPrices()")
 
     @classmethod
     def setUpClass(cls):

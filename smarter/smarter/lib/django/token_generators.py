@@ -3,8 +3,10 @@
 
 from urllib.parse import urlparse
 
+from aiohttp_retry import Union
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.handlers.asgi import ASGIRequest
 from django.utils.encoding import force_bytes
 from django.utils.http import (
     base36_to_int,
@@ -12,6 +14,7 @@ from django.utils.http import (
     urlsafe_base64_encode,
 )
 from django.utils.timezone import now as timezone_now
+from rest_framework.request import Request
 
 from smarter.apps.account.models import User
 from smarter.common.exceptions import SmarterException
@@ -19,6 +22,8 @@ from smarter.lib.django.shortcuts import reverse
 
 DEFAULT_LINK_EXPIRATION = 86400
 HFS_EPOCH_UNIX_TIMESTAMP = 2082844800
+
+SmarterRequest = Union[ASGIRequest, Request]
 
 
 class SmarterTokenError(SmarterException):
@@ -57,7 +62,7 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         uid = urlsafe_base64_decode(uidb64)
         return User.objects.get(pk=uid)
 
-    def encode_link(self, request, user, reverse_link) -> str:
+    def encode_link(self, request: SmarterRequest, user: User, reverse_link: str) -> str:
         """Create an encoded url link that expires after a certain amount of time."""
         token = self.make_token(user=user)
         domain = get_current_site(request).domain

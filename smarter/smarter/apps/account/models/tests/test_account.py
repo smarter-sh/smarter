@@ -1,12 +1,11 @@
 # pylint: disable=wrong-import-position
 """Test Account."""
 
-# our stuff
-import logging
-
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import hash_factory
+
+# our stuff
+from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 logger = logging.getLogger(__name__)
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 class TestAccount(SmarterTestBase):
     """Test Account model"""
 
-    logger_prefix = formatted_text(f"{__name__}.TestAccount()")
+    logger_prefix = logging.formatted_text(f"{__name__}.TestAccount()")
 
     @classmethod
     def setUpClass(cls):

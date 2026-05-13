@@ -5,6 +5,7 @@ import inspect
 
 from asgiref.sync import markcoroutinefunction
 from bs4 import BeautifulSoup, Comment
+from django.core.handlers.asgi import ASGIRequest
 from django.http import FileResponse
 from django.utils.deprecation import MiddlewareMixin
 
@@ -36,7 +37,7 @@ class HTMLMinifyMiddleware(MiddlewareMixin):
         if self.is_async:
             markcoroutinefunction(self)
 
-    def _should_skip(self, request, response) -> bool:
+    def _should_skip(self, request: ASGIRequest, response) -> bool:
         """Return True if minification should be skipped for this request/response."""
         if isinstance(response, FileResponse):
             return True
@@ -81,12 +82,12 @@ class HTMLMinifyMiddleware(MiddlewareMixin):
             logger.error("Error minifying HTML: %s", e)
         return response
 
-    def process_response(self, request, response):
+    def process_response(self, request: ASGIRequest, response):
         if self._should_skip(request, response):
             return response
         return self._minify(response)
 
-    async def async_process_response(self, request, response):
+    async def async_process_response(self, request: ASGIRequest, response):
         if self._should_skip(request, response):
             return response
         return self._minify(response)

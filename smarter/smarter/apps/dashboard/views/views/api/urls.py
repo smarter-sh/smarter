@@ -4,7 +4,7 @@ from django.urls import path
 
 from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
 from smarter.apps.dashboard.views.views.api.service_health import ServiceHealthView
-from smarter.common.utils import camel_case_object_name
+from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
 from .const import namespace
@@ -21,8 +21,8 @@ class DashboardApiReverseNames:
 
     namespace = namespace
 
-    my_resources = camel_case_object_name(MyResourcesView)
-    service_health = camel_case_object_name(ServiceHealthView)
+    my_resources = to_snake_case(MyResourcesView)
+    service_health = to_snake_case(ServiceHealthView)
 
 
 urlpatterns = [
