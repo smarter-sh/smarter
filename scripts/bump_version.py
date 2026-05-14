@@ -19,6 +19,11 @@ import re
 import sys
 from pathlib import Path
 
+REGEX_QUOTED_STRING = r'["\'].*?["\']'
+REGEX_ANY_STRING = r'[^"\s]+'
+REGEX_ANY_INTEGER = r"\d+"
+REGEX_SEMVER = rf"{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER}"
+
 
 def update_version_in_file(filepath, pattern, replacement):
     path = Path(filepath)
@@ -72,10 +77,16 @@ def main():
     #     echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:vx.x.x" >> $GITHUB_ENV
     #   env:
     #     AWS_ECR_REPO: ${{ env.NAMESPACE }}
+    docker_image_pattern = (
+        rf'^(\s*echo\s+"SMARTER_DOCKER_IMAGE=)'
+        rf"({REGEX_ANY_STRING}/{REGEX_ANY_STRING}:)"
+        rf"(v{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER})"
+        r'(".*)$'
+    )
     update_version_in_file(
         ".github/actions/deploy/action.yml",
-        r'^(\s*echo\s+"SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v\d+\.\d+\.\d+)(".*)$',
-        f"\\g<1>v{new_version}\\g<3>",
+        docker_image_pattern,
+        rf"\g<1>\g<2>v{new_version}\g<4>",
     )
     print(f"Updated .github/actions/deploy/action.yml to {new_version}")
 
@@ -109,9 +120,13 @@ def main():
         f"version: {new_version}",
     )
     # Update image version in artifacthub.io/images in Chart.yaml
+    docker_image_pattern_chart = (
+        rf"(image:\s*{REGEX_ANY_STRING}/{REGEX_ANY_STRING}:)"
+        rf"(v?{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER})"
+    )
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
-        r"(image:\s*mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)",
+        docker_image_pattern_chart,
         f"\\g<1>v{new_version}",
     )
     # Update version in artifacthub.io/changes description in Chart.yaml
