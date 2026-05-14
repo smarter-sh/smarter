@@ -3,6 +3,8 @@
 import logging
 from typing import Optional
 
+from smarter.common.helpers.aws.exceptions import AWSNotReadyError
+
 from .aws import AWSBase
 
 logger = logging.getLogger(__name__)
@@ -34,6 +36,8 @@ class AWSSimpleStorageSystem(AWSBase):
         :param bucket_prefix: S3 bucket prefix
         :return: S3 bucket ARN or None if not found
         """
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS S3.")
         try:
             for bucket in self.client.list_buckets()["Buckets"]:
                 if bucket["Name"].startswith(bucket_prefix):

@@ -341,7 +341,7 @@ class Command(SmarterCommand):
         # ---------------------------------------------------------------------
         self.verify_domain_delegated_from_parent(
             child_domain=smarter_settings.proxy_api_domain,
-            parent_domain=smarter_settings.root_domain,
+            parent_domain=smarter_settings.root_proxy_domain,
             a_record=a_record,
         )
         verified_domains.append(smarter_settings.proxy_api_domain)
@@ -370,10 +370,10 @@ class Command(SmarterCommand):
         # 6. non-production platform domain hosted zone verification.
         # ie alpha.platform.example.com
         # ---------------------------------------------------------------------
-        if smarter_settings.environment_api_domain != smarter_settings.root_api_domain:
+        if smarter_settings.environment_platform_domain != smarter_settings.root_platform_domain:
             self.verify_domain_delegated_from_parent(
                 child_domain=smarter_settings.environment_platform_domain,
-                parent_domain=smarter_settings.root_domain,
+                parent_domain=smarter_settings.root_platform_domain,
                 a_record=a_record,
             )
             verified_domains.append(smarter_settings.environment_platform_domain)
@@ -385,7 +385,7 @@ class Command(SmarterCommand):
         if smarter_settings.environment_api_domain != smarter_settings.root_api_domain:
             self.verify_domain_delegated_from_parent(
                 child_domain=smarter_settings.environment_api_domain,
-                parent_domain=smarter_settings.root_domain,
+                parent_domain=smarter_settings.root_api_domain,
                 a_record=a_record,
             )
             verified_domains.append(smarter_settings.environment_api_domain)
