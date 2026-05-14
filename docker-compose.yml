@@ -43,6 +43,9 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        # future use. The worker and beat services use the same Dockerfile as this app service,
+        # but we can optionally set the SCHEMA build argument to something other than "APP"
+        # in order to fine tune the build requirements.
         SCHEMA: APP
         ENVIRONMENT: ${ENVIRONMENT}
         COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
@@ -76,7 +79,10 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        SCHEMA: WORKER
+        # future use. The worker and beat services use the same Dockerfile as the app service,
+        # but we can optionally set the SCHEMA build argument to something other than "APP"
+        # in order to fine tune the build requirements.
+        SCHEMA: APP
         ENVIRONMENT: ${ENVIRONMENT}
         COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
         BUILD_REACT_COMPONENTS: ${BUILD_REACT_COMPONENTS}
@@ -114,7 +120,10 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        SCHEMA: BEAT
+        # future use. The worker and beat services use the same Dockerfile as the app service,
+        # but we can optionally set the SCHEMA build argument to something other than "APP"
+        # in order to fine tune the build requirements.
+        SCHEMA: APP
         ENVIRONMENT: ${ENVIRONMENT}
         COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
         BUILD_REACT_COMPONENTS: ${BUILD_REACT_COMPONENTS}
