@@ -182,6 +182,7 @@ runs:
           ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}
           ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
           ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.TAG }}
+          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:latest
         build-args: ENVIRONMENT=${{ inputs.environment }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -219,6 +220,7 @@ runs:
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ github.run_id }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.DATESTAMP }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.TAG }}
+          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:latest
         build-args: ENVIRONMENT=${{ inputs.environment }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
