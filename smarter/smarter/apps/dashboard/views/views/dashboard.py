@@ -31,38 +31,22 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import redirect, render
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_control
 
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.views import (
-    SmarterAuthenticatedWebView,
-    smarter_cache_page_by_user,
-)
+from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 
 logger = logging.getLogger(__name__)
 DASHBOARD_CACHE_TIMEOUT = 10  # 10 seconds. keeps the dashboard snappy while avoiding appearing stale.
 
 
-# ------------------------------------------------------------------------------
-# Public Access Views
-# ------------------------------------------------------------------------------
-@method_decorator(cache_control(max_age=DASHBOARD_CACHE_TIMEOUT), name="dispatch")
-@method_decorator(smarter_cache_page_by_user(DASHBOARD_CACHE_TIMEOUT), name="dispatch")
-class DashboardView(SmarterAuthenticatedWebView):
+class DashboardView(SmarterAuthenticatedNeverCachedWebView):
     """
     Authenticated, per-user cached view that renders the React dashboard page.
 
     Extends :class:`~smarter.lib.django.views.SmarterAuthenticatedWebView`.
     Two decorators are applied at dispatch time:
-
-    - :func:`~django.views.decorators.cache.cache_control` — sets
-      ``max-age`` on the response to ``DASHBOARD_CACHE_TIMEOUT``.
-    - :func:`~smarter.lib.django.views.smarter_cache_page_by_user` — caches
-      the rendered page keyed by authenticated user for
-      ``DASHBOARD_CACHE_TIMEOUT`` seconds.
 
     On a ``GET`` request the view redirects unauthenticated users to the login
     page, otherwise it builds a context dictionary containing API URLs for the
