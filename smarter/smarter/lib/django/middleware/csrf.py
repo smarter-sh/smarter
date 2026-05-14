@@ -264,7 +264,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         Legacy support for old-style middleware. This will only be called if the middleware is not used as new-style middleware.
         """
         logger.debug("%s.process_request() called with path: %s", self.formatted_class_name, request.path)
-        return self(request)
+        return super().process_request(request)
 
     @deprecated("Use __call__ instead, which is the new-style middleware entrypoint.")
     def process_view(self, request: ASGIRequest, callback, callback_args, callback_kwargs):
