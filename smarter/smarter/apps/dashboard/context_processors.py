@@ -513,32 +513,3 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
         UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)  # type: ignore
         PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=True, user_profile_id=user_profile.id)  # type: ignore
         get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id, invalidate=True)  # type: ignore
-
-    ###########################################################################
-    # page cache invalidations
-    ###########################################################################
-    factory = RequestFactory()
-    url = reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard)
-    request = factory.get(url)
-
-    logger.debug(
-        "%s.cache_invalidations() Created invalidation request for URL %s: %s",
-        logger_prefix_cache_invalidations,
-        url,
-        request,
-    )
-    request.user = user_profile.user
-    # pylint: disable=C0415
-    from smarter.apps.dashboard.views.views import DashboardView
-
-    DashboardView.dispatch.invalidate(request)
-
-    url = reverse(PromptReverseNames.namespace, PromptReverseNames.listview)
-    request = factory.get(url)
-    logger.debug(
-        "%s.cache_invalidations() Created invalidation request for URL %s: %s",
-        logger_prefix_cache_invalidations,
-        url,
-        request,
-    )
-    request.user = user_profile.user
