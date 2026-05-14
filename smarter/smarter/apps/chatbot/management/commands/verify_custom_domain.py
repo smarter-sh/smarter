@@ -52,7 +52,7 @@ class Command(SmarterCommand):
             verify_custom_domain(hosted_zone_id=custom_domain.aws_hosted_zone_id, sleep_interval=1800, max_attempts=48)
             ns_records = aws_helper.route53.get_ns_records(hosted_zone_id=custom_domain.aws_hosted_zone_id)
             self.handle_completed_success(
-                msg=f"Successfully verified the domain name {domain} for account {custom_domain.account.account_number} {custom_domain.account.company_name}."
+                msg=f"Successfully verified the domain name {domain} for account {custom_domain.user_profile.account.account_number} {custom_domain.user_profile.account.company_name}."
             )
         else:
             print(f"Verifying {domain} as a Celery task.")
@@ -62,5 +62,5 @@ class Command(SmarterCommand):
             ns_records = aws_helper.route53.get_ns_records(hosted_zone_id=custom_domain.aws_hosted_zone_id)
 
             self.handle_completed_success(
-                msg=f"Smarter has initiated the domain verification process for the domain name {domain} for account {custom_domain.account.account_number} {custom_domain.account.company_name}. This process may take up to 24 hours to complete. Please ensure that the root domain DNS settings include the following NS records: {ns_records}"
+                msg=f"Smarter has initiated the domain verification process for the domain name {domain} for account {custom_domain.user_profile.account.account_number} {custom_domain.user_profile.account.company_name}. This process may take up to 24 hours to complete. Please ensure that the root domain DNS settings include the following NS records: {ns_records}"
             )
