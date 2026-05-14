@@ -66,6 +66,8 @@ ENV COLLECT_STATIC_FILES=${COLLECT_STATIC_FILES}
 # wget                      used to download build artifacts in later stages
 # git                       used by manage.py commands and dependency installs
 # curl                      used below in this Dockerfile to download kubectl and AWS CLI
+# jq                        used below in this Dockerfile to parse React manifest.json
+#                           files to determine which static assets download.
 # unzip                     used below in this Dockerfile to install AWS CLI
 # procps                    provides the 'ps' command for container health checks
 # redis-tools               provides Redis CLI utilities for diagnostics and admin tasks
@@ -91,6 +93,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     wget \
     git \
     curl \
+    jq \
     unzip \
     procps \
     redis-tools \
@@ -254,37 +257,60 @@ COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compos
 
 
 ################################ build react ###################################
-# The Smarter web console UI includes several React components, including the
-# main dashboard, the prompt (ie Chatbots) list, the terminal emulator, and the
-# prompt passthrough. We need to build each of these and include the built assets
-# in the final image as part of Django's staticfiles output because all of these
-# components are served by Django as static assets.
+# The Smarter web console UI includes several React components, such as the
+# main dashboard, prompt (Chatbots) list, terminal emulator, and prompt passthrough.
+# Vite pushes builds of these React components to a CDN which is used as a general
+# purpose distribution mechanism for the latest production-ready builds of these components.
 #
-# Note: This can be sped up significantly in local development by setting the
-# BUILD_REACT_COMPONENTS=false and instead using the Makefile command
-# `make collectstatic` which will build all React components and save these in the
-# local smarter/smarter/static/react/ directory, which is then copied into the
-# Docker image as part of the application code copy step above.
+# The downloaded assets are placed in smarter/smarter/static/react/,
+# from which Django collects its static files. This directory is ignored by git
+# because it contains build assets rather than source code, so, these assets
+# are always fetched as part of the Docker build process rather than being
+# committed to the repository.
 #
-# Also note that `smarter/smarter/static/react/` is ignored by git, meaning that these
-# build assets will not exist inside normal remotely executed CI-CD processes
-# in GitHub Actions.
+# Developers: Note that Vite also saves locally to this same directory for local development.
+# Thus, you can still use the Makefile command `make collectstatic`
+# to build React components locally if needed, but the default and recommended workflow
+# is to rely on the CDN downloads for all environments.
 FROM data AS react_build
 
-RUN if [ "$BUILD_REACT_COMPONENTS" = "true" ]; then \
-    DEBIAN_FRONTEND=noninteractive apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    nodejs \
-    npm && \
-    rm -rf /var/lib/apt/lists/* && \
-    cd smarter/react/prompt_list && npm install && npm run build && cd ../../../ && \
-    cd smarter/react/terminal_emulator && npm install && npm run build && cd ../../../ && \
-    cd smarter/react/prompt_passthrough && npm install && npm run build && cd ../../../ && \
-    cd smarter/react/dashboard && npm install && npm run build && cd ../../../ && \
-    apt-get purge -y nodejs npm && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /home/smarter_user/.npm ; fi
+ENV CDN_BASE=https://cdn.smarter.sh/react
+ENV REACT_ROOT=/home/smarter_user/smarter/smarter/static/react/
+RUN mkdir -p ${REACT_ROOT}
+
+WORKDIR /home/smarter_user/smarter/smarter/static/react/
+
+ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
+
+# set -e: Exit immediately if any command returns a non-zero status (fail on error).
+# set -u: Treat unset variables as an error and exit immediately (fail on undefined variables).
+# set -x: Print each command and its arguments as they are executed (for debugging).
+RUN set -eu; \
+    for app in ${REACT_COMPONENTS}; do \
+        mkdir -p ${app}/assets; \
+        \
+        curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
+          ${CDN_BASE}/${app}/manifest.json \
+          -o ${app}/manifest.json; \
+        \
+        curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
+          ${CDN_BASE}/${app}/index.html \
+          -o ${app}/index.html; \
+        \
+        JS_FILE=$(jq -r '."index.html".file' \
+          ${app}/manifest.json); \
+        \
+        curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
+          ${CDN_BASE}/${app}/${JS_FILE} \
+          -o ${app}/${JS_FILE}; \
+        \
+        jq -r '."index.html".css[]?' \
+          ${app}/manifest.json | while read -r CSS_FILE; do \
+            curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
+              ${CDN_BASE}/${app}/${CSS_FILE} \
+              -o ${app}/${CSS_FILE}; \
+        done; \
+    done
 
 
 ############################## collect_assets ##################################
