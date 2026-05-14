@@ -93,7 +93,7 @@ def main():
     # Update helm/charts/smarter/values.yaml
     # global:
     #   image:
-    #     pullPolicy: IfNotPresent
+    #     pullPolicy: Always
     #     repository: lpm0073/smarter
     #     tag: vx.x.x
     update_version_in_file(

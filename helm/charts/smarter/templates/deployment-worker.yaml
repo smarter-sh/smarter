@@ -59,7 +59,7 @@ spec:
         - name: "{{ .Values.global.appName }}-worker"
           image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
           command: ["celery", "-A", "smarter.workers.celery.app", "worker", "--concurrency=5", "--loglevel=info", "-Q", "default_celery_task_queue", "-E"]
-          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
+          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
           resources:
             {{- toYaml .Values.worker.resources | nindent 12 }}
           livenessProbe:
