@@ -43,6 +43,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        SCHEMA: APP
         ENVIRONMENT: ${ENVIRONMENT}
         COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
         BUILD_REACT_COMPONENTS: ${BUILD_REACT_COMPONENTS}
@@ -75,6 +76,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        SCHEMA: WORKER
         ENVIRONMENT: ${ENVIRONMENT}
         COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
         BUILD_REACT_COMPONENTS: ${BUILD_REACT_COMPONENTS}
@@ -112,6 +114,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        SCHEMA: BEAT
         ENVIRONMENT: ${ENVIRONMENT}
         COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
         BUILD_REACT_COMPONENTS: ${BUILD_REACT_COMPONENTS}
