@@ -78,8 +78,8 @@ def smarter_cache_page_by_user(timeout):
             if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SMARTER_PAGE_CACHING):
                 return view_func(request, *args, **kwargs)
             path = str(request.path).replace("/", ".").strip(".")
-            if hasattr(request, "user") and request.user.is_authenticated:
-                key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"
+            if hasattr(request, "user") and isinstance(request.user, User) and request.user.is_authenticated:
+                key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"  # type: ignore[union-attr]
             else:
                 key_prefix = f"{cache_prefix}.user_anon.{path}"
             verbose_logger.debug(
@@ -95,7 +95,7 @@ def smarter_cache_page_by_user(timeout):
             )
             if request:
                 path = str(request.path).replace("/", ".").strip(".")
-                if hasattr(request, "user") and request.user.is_authenticated:
+                if hasattr(request, "user") and isinstance(request.user, User) and request.user.is_authenticated:
                     key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"  # type: ignore[union-attr]
                 else:
                     key_prefix = f"{cache_prefix}.user_anon.{path}"
