@@ -274,58 +274,100 @@ COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compos
 # to build React components locally if needed, but the default and recommended workflow
 # is to rely on the CDN downloads for all environments.
 #
-# example manifest.json file for reference: https://cdn.smarter.sh/react/dashboard/manifest.json
-#   {
-#     "index.html": {
-#       "file": "assets/index.js",
-#       "name": "index",
-#       "src": "index.html",
-#       "isEntry": true,
-#       "css": [
-#         "assets/index-B011HLqe.css"
-#       ]
-#     }
+# example manifest.json file for reference: https://cdn.smarter.sh/react/terminal_emulator/manifest.json
+# {
+#   "_rolldown-runtime.js": {
+#     "file": "assets/rolldown-runtime.js",
+#     "name": "rolldown-runtime"
+#   },
+#   "_xterm-kHJ-D0s7.css": {
+#     "file": "assets/xterm-kHJ-D0s7.css",
+#     "src": "_xterm-kHJ-D0s7.css"
+#   },
+#   "_xterm.js": {
+#     "file": "assets/xterm.js",
+#     "name": "xterm",
+#     "imports": [
+#       "_rolldown-runtime.js"
+#     ],
+#     "css": [
+#       "assets/xterm-kHJ-D0s7.css"
+#     ]
+#   },
+#   "index.html": {
+#     "file": "assets/index.js",
+#     "name": "index",
+#     "src": "index.html",
+#     "isEntry": true,
+#     "imports": [
+#       "_rolldown-runtime.js",
+#       "_xterm.js"
+#     ],
+#     "css": [
+#       "assets/index-58MXwt-L.css"
+#     ]
 #   }
+# }
 FROM data AS react_build
 
+# this resolves to d33lzt17u1szu4.cloudfront.net
 ENV CDN_BASE=https://cdn.smarter.sh/react
 ENV REACT_ROOT=/home/smarter_user/smarter/smarter/static/react/
 RUN mkdir -p ${REACT_ROOT}
 
-WORKDIR /home/smarter_user/smarter/smarter/static/react/
+WORKDIR ${REACT_ROOT}
 
 ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
 
-# set -e: Exit immediately if any command returns a non-zero status (fail on error).
-# set -u: Treat unset variables as an error and exit immediately (fail on undefined variables).
-# set -x: Print each command and its arguments as they are executed (for debugging).
+# set -e : fail immediately on error
+# set --u : fail on undefined variables
+#
+# Notes:
+# - build FAILS if manifest.json cannot be downloaded
+# - downloads EVERY unique asset referenced anywhere in manifest.json
+# - preserves nested paths like assets/foo.js
+# - safely handles:
+#     - imports
+#     - css
+#     - entrypoints
+#     - runtime chunks
+#     - arbitrary manifest complexity
 RUN set -eu; \
     for app in ${REACT_COMPONENTS}; do \
-        mkdir -p ${app}/assets; \
+        APP_ROOT="${REACT_ROOT}/${app}"; \
+        MANIFEST="${APP_ROOT}/manifest.json"; \
+        \
+        mkdir -p "${APP_ROOT}"; \
         \
         curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
-          ${CDN_BASE}/${app}/manifest.json \
-          -o ${app}/manifest.json; \
+            "${CDN_BASE}/${app}/manifest.json" \
+            -o "${MANIFEST}"; \
         \
         curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
-          ${CDN_BASE}/${app}/index.html \
-          -o ${app}/index.html; \
+            "${CDN_BASE}/${app}/index.html" \
+            -o "${APP_ROOT}/index.html"; \
         \
-        JS_FILE=$(jq -r '."index.html".file' \
-          ${app}/manifest.json); \
-        \
-        curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
-          ${CDN_BASE}/${app}/${JS_FILE} \
-          -o ${app}/${JS_FILE}; \
-        \
-        jq -r '."index.html".css[]?' \
-          ${app}/manifest.json | while read -r CSS_FILE; do \
+        jq -r ' \
+            [ \
+              .[] | \
+              (.file), \
+              (.css[]?) \
+            ] \
+            | unique[] \
+        ' "${MANIFEST}" \
+        | while read -r ASSET_FILE; do \
+            [ -n "${ASSET_FILE}" ] || continue; \
+            \
+            DEST_PATH="${APP_ROOT}/${ASSET_FILE}"; \
+            DEST_DIR="$(dirname "${DEST_PATH}")"; \
+            \
+            mkdir -p "${DEST_DIR}"; \
+            \
             curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
-              ${CDN_BASE}/${app}/${CSS_FILE} \
-              -o ${app}/${CSS_FILE}; \
+                "${CDN_BASE}/${app}/${ASSET_FILE}" \
+                -o "${DEST_PATH}"; \
         done; \
     done
-
 
 ############################## collect_assets ##################################
 # This is a Django application, so we need to collect static assets.
