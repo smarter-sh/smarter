@@ -81,7 +81,7 @@ spec:
               value: {{ $env.value | quote }}
             {{- end }}
           image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
-          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
+          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
           name: "{{ .Values.global.appName }}-job-init"
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
