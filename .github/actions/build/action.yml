@@ -13,6 +13,10 @@ branding:
   icon: "settings"
   color: "orange"
 inputs:
+  platform-subdomain:
+    description: "The platform to build for (e.g. platform, ubc, customer1, etc.)"
+    required: true
+    type: string
   environment:
     description: "The environment to deploy"
     required: true
@@ -63,7 +67,7 @@ runs:
         echo "AWS_ECR_REPO=${{ env.NAMESPACE_BASE }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
       env:
         ENVIRONMENT: ${{ inputs.environment }}
-        NAMESPACE_BASE: smarter-platform
+        NAMESPACE_BASE: smarter-${{ inputs.platform-subdomain }}
 
     - name: Get latest release version
       id: get-latest-version-tag
