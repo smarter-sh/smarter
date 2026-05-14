@@ -38,9 +38,9 @@ def main():
         sys.exit(1)
     new_version = sys.argv[1]
 
-    # Validate semantic version: ##.##.##
-    if not re.match(r"^\d+\.\d+\.\d+$", new_version):
-        print("Error: Version must be in format ##.##.## (e.g., 0.1.20)")
+    # Validate semantic version: ##.##.## or ##.##.##-label.n
+    if not re.match(r"^\d+\.\d+\.\d+(-[A-Za-z0-9.]+)?$", new_version):
+        print("Error: Version must be in format ##.##.## or ##.##.##-label.n (e.g., 0.1.20 or 0.14.0-alpha.1)")
         sys.exit(1)
 
     # Update __version__.py
