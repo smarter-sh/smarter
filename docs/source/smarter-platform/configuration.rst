@@ -299,7 +299,7 @@ Regardless of how the configuration values were ingested, the final smtp configu
 
    .. code-block:: ini
 
-      SMTP_HOST: email-smtp.us-east-2.amazonaws.com
+      SMTP_HOST: email-smtp.us-east-1.amazonaws.com
       SMTP_PASSWORD: <A CREDENTIAL GENERATED IN AWS SES>
       SMTP_PORT: "587"
       SMTP_USE_SSL: "false"

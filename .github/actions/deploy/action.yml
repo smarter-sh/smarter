@@ -246,13 +246,14 @@ runs:
       uses: aws-actions/amazon-ecr-login@v2
 
     # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
-    # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-platform-alpha:latest
+    # echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.223" >> $GITHUB_ENV
+    # example:  012345678903.dkr.ecr.us-east-1.amazonaws.com/smarter-platform-alpha:latest
     # echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
     - name: Set Docker image
       id: set-docker-image
       shell: bash
       run: |-
-        echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.223" >> $GITHUB_ENV
+        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
@@ -303,7 +304,7 @@ runs:
     # these will be set as environment variables for the Helm deployment
     #
     # example:
-    # SMTP_HOST: email-smtp.us-east-2.amazonaws.com
+    # SMTP_HOST: email-smtp.us-east-1.amazonaws.com
     # SMTP_PORT: "587"
     # SMTP_USE_SSL: "false"
     # SMTP_USE_TLS: "true"
