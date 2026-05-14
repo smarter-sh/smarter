@@ -132,7 +132,7 @@ runs:
     # these will be set as environment variables for the Helm deployment
     #
     # example:
-    # SMTP_HOST: email-smtp.us-east-2.amazonaws.com
+    # SMTP_HOST: email-smtp.us-east-1.amazonaws.com
     # SMTP_PORT: "587"
     # SMTP_USE_SSL: "false"
     # SMTP_USE_TLS: "true"

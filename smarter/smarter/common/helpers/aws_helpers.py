@@ -24,6 +24,7 @@ from .aws.api_gateway import AWSAPIGateway
 from .aws.aws import AWSBase
 from .aws.dynamodb import AWSDynamoDB
 from .aws.eks import AWSEks
+from .aws.exceptions import AWSNotReadyError
 from .aws.iam import AWSIdentifyAccessManagement
 from .aws.lambda_function import AWSLambdaFunction
 from .aws.rds import AWSRds
@@ -135,133 +136,143 @@ class AWSInfrastructureConfig(metaclass=Singleton):
         return self._aws
 
     @property
-    def acm(self) -> Optional[AWSCertificateManager]:
+    def acm(self) -> AWSCertificateManager:
         """
         Return the AWS Certificate Manager
 
-        :return: AWSCertificateManager instance or None if not available.
-        :rtype: Optional[AWSCertificateManager]
+        :return: AWSCertificateManager instance.
+        :rtype: AWSCertificateManager
         """
+        if not self.ready():
+            raise AWSNotReadyError("AWS is not ready. Please check your AWS configuration.")
         if not self._acm:
-            if self.ready():
-                self._acm = AWSCertificateManager()
+            self._acm = AWSCertificateManager()
         return self._acm
 
     @property
-    def api_gateway(self) -> Optional[AWSAPIGateway]:
+    def api_gateway(self) -> AWSAPIGateway:
         """
         Return the AWS API Gateway
 
-        :return: AWSAPIGateway instance or None if not available.
-        :rtype: Optional[AWSAPIGateway]
+        :return: AWSAPIGateway instance.
+        :rtype: AWSAPIGateway
         """
+        if not self.ready():
+            raise AWSNotReadyError("AWS is not ready. Please check your AWS configuration.")
         if not self._api_gateway:
-            if self.ready():
-                self._api_gateway = AWSAPIGateway()
+            self._api_gateway = AWSAPIGateway()
         return self._api_gateway
 
     @property
-    def dynamodb(self) -> Optional[AWSDynamoDB]:
+    def dynamodb(self) -> AWSDynamoDB:
         """
         Return the AWS DynamoDB
 
-        :return: AWSDynamoDB instance or None if not available.
-        :rtype: Optional[AWSDynamoDB]
+        :return: AWSDynamoDB instance.
+        :rtype: AWSDynamoDB
         """
+        if not self.ready():
+            raise AWSNotReadyError("AWS is not ready. Please check your AWS configuration.")
         if not self._dynamodb:
-            if self.ready():
-                self._dynamodb = AWSDynamoDB()
+            self._dynamodb = AWSDynamoDB()
         return self._dynamodb
 
     @property
-    def eks(self) -> Optional[AWSEks]:
+    def eks(self) -> AWSEks:
         """
         Return the AWS EKS
 
-        :return: AWSEks instance or None if not available.
-        :rtype: Optional[AWSEks]
+        :return: AWSEks instance.
+        :rtype: AWSEks
         """
+        if not self.ready():
+            raise AWSNotReadyError("AWS is not ready. Please check your AWS configuration.")
         if not self._eks:
-            if self.ready():
-                self._eks = AWSEks()
+            self._eks = AWSEks()
         return self._eks
 
     @property
-    def lambda_function(self) -> Optional[AWSLambdaFunction]:
+    def lambda_function(self) -> AWSLambdaFunction:
         """
         Return the AWS Lambda Function
 
-        :return: AWSLambdaFunction instance or None if not available.
-        :rtype: Optional[AWSLambdaFunction]
+        :return: AWSLambdaFunction instance.
+        :rtype: AWSLambdaFunction
         """
+        if not self.ready():
+            raise AWSNotReadyError("AWS is not ready. Please check your AWS configuration.")
         if not self._lambda_function:
-            if self.ready():
-                self._lambda_function = AWSLambdaFunction()
+            self._lambda_function = AWSLambdaFunction()
         return self._lambda_function
 
     @property
-    def iam(self) -> Optional[AWSIdentifyAccessManagement]:
+    def iam(self) -> AWSIdentifyAccessManagement:
         """
         Return the AWS IAM
 
-        :return: AWSIdentifyAccessManagement instance or None if not available.
-        :rtype: Optional[AWSIdentifyAccessManagement]
+        :return: AWSIdentifyAccessManagement instance.
+        :rtype: AWSIdentifyAccessManagement
         """
+        if not self.ready():
+            raise AWSNotReadyError("AWS is not ready. Please check your AWS configuration.")
         if not self._iam:
-            if self.ready():
-                self._iam = AWSIdentifyAccessManagement()
+            self._iam = AWSIdentifyAccessManagement()
         return self._iam
 
     @property
-    def rds(self) -> Optional[AWSRds]:
+    def rds(self) -> AWSRds:
         """
         Return the AWS RDS
 
-        :return: AWSRds instance or None if not available.
-        :rtype: Optional[AWSRds]
+        :return: AWSRds instance.
+        :rtype: AWSRds
         """
+        if not self.ready():
+            raise AWSNotReadyError("AWS is not ready. Please check your AWS configuration.")
         if not self._rds:
-            if self.ready():
-                self._rds = AWSRds()
+            self._rds = AWSRds()
         return self._rds
 
     @property
-    def rekognition(self) -> Optional[AWSRekognition]:
+    def rekognition(self) -> AWSRekognition:
         """
         Return the AWS Rekognition
 
-        :return: AWSRekognition instance or None if not available.
-        :rtype: Optional[AWSRekognition]
+        :return: AWSRekognition instance.
+        :rtype: AWSRekognition
         """
+        if not self.ready():
+            raise AWSNotReadyError("AWS is not ready. Please check your AWS configuration.")
         if not self._rekognition:
-            if self.ready():
-                self._rekognition = AWSRekognition()
+            self._rekognition = AWSRekognition()
         return self._rekognition
 
     @property
-    def route53(self) -> Optional[AWSRoute53]:
+    def route53(self) -> AWSRoute53:
         """
         Return the AWS Route53
 
-        :return: AWSRoute53 instance or None if not available.
-        :rtype: Optional[AWSRoute53]
+        :return: AWSRoute53 instance.
+        :rtype: AWSRoute53
         """
+        if not self.ready():
+            raise AWSNotReadyError("AWS is not ready. Please check your AWS configuration.")
         if not self._route53:
-            if self.ready():
-                self._route53 = AWSRoute53()
+            self._route53 = AWSRoute53()
         return self._route53
 
     @property
-    def s3(self) -> Optional[AWSSimpleStorageSystem]:
+    def s3(self) -> AWSSimpleStorageSystem:
         """
         Return the AWS S3
 
-        :return: AWSSimpleStorageSystem instance or None if not available.
-        :rtype: Optional[AWSSimpleStorageSystem]
+        :return: AWSSimpleStorageSystem instance.
+        :rtype: AWSSimpleStorageSystem
         """
+        if not self.ready():
+            raise AWSNotReadyError("AWS is not ready. Please check your AWS configuration.")
         if not self._s3:
-            if self.ready():
-                self._s3 = AWSSimpleStorageSystem()
+            self._s3 = AWSSimpleStorageSystem()
         return self._s3
 
 
