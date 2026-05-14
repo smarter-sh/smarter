@@ -39,6 +39,7 @@ LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
 # Environment: local, alpha, beta, next, or production
 ARG TARGETPLATFORM
 ARG TARGETARCH
+ARG SCHEMA=APP
 
 # from .env file. This is used to control which environment we're building the image for, and therefore
 # which dependencies we install and which settings are used.
@@ -272,6 +273,19 @@ COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compos
 # Thus, you can still use the Makefile command `make collectstatic`
 # to build React components locally if needed, but the default and recommended workflow
 # is to rely on the CDN downloads for all environments.
+#
+# example manifest.json file for reference: https://cdn.smarter.sh/react/dashboard/manifest.json
+#   {
+#     "index.html": {
+#       "file": "assets/index.js",
+#       "name": "index",
+#       "src": "index.html",
+#       "isEntry": true,
+#       "css": [
+#         "assets/index-B011HLqe.css"
+#       ]
+#     }
+#   }
 FROM data AS react_build
 
 ENV CDN_BASE=https://cdn.smarter.sh/react
