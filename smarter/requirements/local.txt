@@ -60,10 +60,13 @@ billiard==4.2.4
 black==26.3.1
     # via -r smarter/requirements/in/local.in
 boto3==1.43.5
-    # via -r smarter/requirements/in/base.in
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   -r smarter/requirements/in/constraints.in
 botocore==1.43.5
     # via
     #   -r smarter/requirements/in/base.in
+    #   -r smarter/requirements/in/constraints.in
     #   boto3
     #   s3transfer
 build==1.5.0
@@ -123,7 +126,7 @@ codespell==2.4.2
     # via -r smarter/requirements/in/local.in
 colorama==0.4.6
     # via tox
-coverage==7.13.5
+coverage==7.14.0
     # via -r smarter/requirements/in/local.in
 cron-descriptor==1.4.5
     # via django-celery-beat
@@ -189,11 +192,11 @@ django-rest-knox==5.0.4
     # via -r smarter/requirements/in/base.in
 django-storages==1.14.6
     # via -r smarter/requirements/in/base.in
-django-stubs==6.0.3
+django-stubs==6.0.4
     # via
     #   -r smarter/requirements/in/local.in
     #   djangorestframework-stubs
-django-stubs-ext==6.0.3
+django-stubs-ext==6.0.4
     # via django-stubs
 django-taggit==6.1.0
     # via -r smarter/requirements/in/base.in
@@ -206,7 +209,7 @@ djangorestframework==3.17.1
     #   -r smarter/requirements/in/base.in
     #   django-rest-knox
     #   drf-yasg
-djangorestframework-stubs==3.16.9
+djangorestframework-stubs==3.17.0
     # via -r smarter/requirements/in/local.in
 dnspython==2.8.0
     # via
@@ -243,16 +246,14 @@ frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-google-auth[requests]==2.50.0
+google-auth[requests]==2.52.0
     # via google-genai
-google-genai==1.75.0
+google-genai==2.2.0
     # via -r smarter/requirements/in/base.in
 googlemaps==4.10.0
     # via -r smarter/requirements/in/base.in
 h11==0.16.0
-    # via
-    #   httpcore
-    #   urllib3-future
+    # via httpcore
 httpcore==1.0.9
     # via httpx
 httpx==0.28.1
@@ -266,7 +267,7 @@ httpx-sse==0.4.3
     # via langchain-community
 identify==2.6.19
     # via pre-commit
-idna==3.13
+idna==3.15
     # via
     #   anyio
     #   email-validator
@@ -287,8 +288,6 @@ invoke==3.0.3
     # via paramiko
 isort==8.0.1
     # via pylint
-jh2==5.0.11
-    # via urllib3-future
 jinja2==3.1.6
     # via sphinx
 jiter==0.14.0
@@ -305,13 +304,13 @@ jsonpointer==3.1.1
     # via jsonpatch
 kombu==5.6.2
     # via celery
-langchain==1.2.17
+langchain==1.2.18
     # via -r smarter/requirements/in/base.in
-langchain-classic==1.0.6
+langchain-classic==1.0.7
     # via langchain-community
 langchain-community==0.4.1
     # via -r smarter/requirements/in/base.in
-langchain-core==1.3.3
+langchain-core==1.4.0
     # via
     #   langchain
     #   langchain-classic
@@ -336,7 +335,7 @@ langchain-text-splitters==1.1.2
     #   langchain-classic
 langgraph==1.1.10
     # via langchain
-langgraph-checkpoint==4.0.3
+langgraph-checkpoint==4.1.0
     # via
     #   langgraph
     #   langgraph-prebuilt
@@ -344,7 +343,7 @@ langgraph-prebuilt==1.0.13
     # via langgraph
 langgraph-sdk==0.3.14
     # via langgraph
-langsmith==0.8.2
+langsmith==0.8.4
     # via
     #   langchain-classic
     #   langchain-community
@@ -353,7 +352,7 @@ lark==1.3.1
     # via python-hcl2
 levenshtein==0.27.3
     # via python-levenshtein
-librt==0.10.0
+librt==0.11.0
     # via mypy
 llamaai==0.1.27
     # via -r smarter/requirements/in/base.in
@@ -365,7 +364,7 @@ mariadb==1.1.14
     # via -r smarter/requirements/in/base.in
 markdown==3.10.2
     # via -r smarter/requirements/in/base.in
-markdown-it-py==4.1.0
+markdown-it-py==4.2.0
     # via rich
 markupsafe==3.0.3
     # via jinja2
@@ -385,7 +384,7 @@ multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
-mypy==2.0.0
+mypy==2.1.0
     # via -r smarter/requirements/in/local.in
 mypy-extensions==1.1.0
     # via
@@ -411,7 +410,7 @@ oauthlib==3.3.1
     # via
     #   requests-oauthlib
     #   social-auth-core
-openai==2.35.1
+openai==2.36.0
     # via
     #   -r smarter/requirements/in/base.in
     #   langchain-openai
@@ -443,11 +442,11 @@ packaging==24.2
     #   sphinx
     #   tox
     #   wheel
-pandas==3.0.2
+pandas==3.0.3
     # via -r smarter/requirements/in/base.in
 pandas-stubs==3.0.0.260204
     # via -r smarter/requirements/in/local.in
-paramiko==4.0.0
+paramiko==5.0.0
     # via -r smarter/requirements/in/base.in
 pathspec==1.1.1
     # via
@@ -486,7 +485,7 @@ pre-commit==4.6.0
     # via -r smarter/requirements/in/local.in
 prompt-toolkit==3.0.52
     # via click-repl
-propcache==0.4.1
+propcache==0.5.2
     # via
     #   aiohttp
     #   yarl
@@ -517,7 +516,7 @@ pydantic==2.13.4
     #   pydantic-settings
 pydantic-core==2.46.4
     # via pydantic
-pydantic-settings==2.14.0
+pydantic-settings==2.14.1
     # via
     #   -r smarter/requirements/in/base.in
     #   autodoc-pydantic
@@ -570,7 +569,7 @@ python-dateutil==2.9.0.post0
     #   mailchimp-marketing
     #   pandas
     #   pinecone
-python-discovery==1.3.0
+python-discovery==1.3.1
     # via virtualenv
 python-dotenv==1.2.2
     # via
@@ -595,8 +594,6 @@ pyyaml==6.0.3
     #   langchain-community
     #   langchain-core
     #   pre-commit
-qh3==1.8.0
-    # via urllib3-future
 rapidfuzz==3.14.5
     # via levenshtein
 redis==7.4.0
@@ -604,12 +601,12 @@ redis==7.4.0
     #   celery-redbeat
     #   channels-redis
     #   django-redis
-regex==2026.4.4
+regex==2026.5.9
     # via
     #   nltk
     #   python-hcl2
     #   tiktoken
-requests==2.33.1
+requests==2.34.2
     # via
     #   -r smarter/requirements/in/base.in
     #   google-auth
@@ -631,7 +628,7 @@ requests==2.33.1
     #   sphinx
     #   tiktoken
     #   tldextract
-requests-cache==1.3.1
+requests-cache==1.3.2
     # via -r smarter/requirements/in/base.in
 requests-file==3.0.1
     # via tldextract
@@ -721,7 +718,7 @@ tiktoken==0.12.0
     # via langchain-openai
 tldextract==5.3.1
     # via -r smarter/requirements/in/base.in
-tomlkit==0.14.0
+tomlkit==0.15.0
     # via pylint
 tox==4.27.0
     # via -r smarter/requirements/in/local.in
@@ -729,24 +726,24 @@ tqdm==4.67.3
     # via
     #   nltk
     #   openai
-typeguard==4.5.1
+typeguard==4.5.2
     # via inflect
 types-cachetools==7.0.0.20260503
     # via -r smarter/requirements/in/local.in
-types-html5lib==1.1.11.20260408
+types-html5lib==1.1.11.20260508
     # via types-lxml
 types-lxml==2026.2.16
     # via -r smarter/requirements/in/local.in
-types-markdown==3.10.2.20260408
+types-markdown==3.10.2.20260508
     # via -r smarter/requirements/in/local.in
-types-paramiko==4.0.0.20260408
+types-paramiko==4.0.0.20260508
     # via -r smarter/requirements/in/local.in
-types-pyyaml==6.0.12.20260408
+types-pyyaml==6.0.12.20260510
     # via
     #   -r smarter/requirements/in/local.in
     #   django-stubs
     #   djangorestframework-stubs
-types-requests==2.33.0.20260503
+types-requests==2.33.0.20260513
     # via -r smarter/requirements/in/local.in
 types-webencodings==0.5.0.20260408
     # via types-html5lib
@@ -789,7 +786,7 @@ uritemplate==4.2.0
     # via drf-yasg
 url-normalize==3.0.0
     # via requests-cache
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   botocore
     #   mailchimp-marketing
@@ -798,9 +795,7 @@ urllib3==2.6.3
     #   requests-cache
     #   retry-requests
     #   types-requests
-urllib3-future==2.19.913
-    # via -r smarter/requirements/in/constraints.in
-uuid-utils==0.14.1
+uuid-utils==0.15.0
     # via
     #   langchain-core
     #   langsmith
@@ -811,7 +806,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==21.3.1
+virtualenv==21.3.3
     # via
     #   pre-commit
     #   tox
