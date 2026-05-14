@@ -144,7 +144,7 @@ runs:
       uses: aws-actions/amazon-ecr-login@v2
 
     # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
-    # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-platform-alpha:latest
+    # example:  012345678903.dkr.ecr.us-east-1.amazonaws.com/smarter-platform-alpha:latest
     - name: Set Docker image
       id: set-docker-image
       shell: bash
