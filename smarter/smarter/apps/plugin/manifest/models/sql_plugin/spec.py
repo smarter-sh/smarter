@@ -5,7 +5,6 @@ from typing import ClassVar, List, Optional
 
 from pydantic import Field, model_validator
 
-from smarter.apps.connection.models import SqlConnection
 from smarter.apps.plugin.manifest.models.common import Parameter, TestValue
 from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
 from smarter.lib import logging
@@ -73,9 +72,4 @@ class SAMSqlPluginSpec(SAMPluginCommonSpec):
         v = self.connection
         if not SmarterValidator.is_valid_cleanstring(v):
             raise SAMValidationError(f"connection '{v}' must be a valid cleanstring with no illegal characters.")
-        sql_connections = SqlConnection.objects.filter(name=v)
-        if self.user:
-            sql_connections = sql_connections.with_read_permission_for(user=self.user)
-        if not sql_connections.exists():
-            raise SAMValidationError(f"connection '{v}' does not exist or is not accessible.")
         return self

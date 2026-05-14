@@ -1,6 +1,7 @@
 # pylint: disable=W0718
 """Smarter API Account Manifest handler"""
 
+import datetime
 import traceback
 from typing import TYPE_CHECKING, Optional, Type
 
@@ -624,21 +625,46 @@ class SAMAccountBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.example_manifest() called", self.formatted_class_name)
 
-        if not isinstance(self.manifest, SAMAccount):
-            raise SAMAccountBrokerError(
-                message=f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}",
-                thing=self.kind,
-                command=command,
+        metadata = SAMAccountMetadata(
+            name="example_account",
+            description="Example database connection",
+            version="0.1.0",
+            tags=["example", "sql", "connection"],
+            annotations=[
+                {"smarter.sh/connection": "example_connection"},
+                {"smarter.sh/created_by": "smarter_sql_connection_broker"},
+            ],
+            accountNumber="123456789",
+        )
+        spec = SAMAccountSpec(
+            config=SAMAccountSpecConfig(
+                companyName="Example Company Inc.",
+                phoneNumber="555-123-4567",
+                address1="123 Example St.",
+                address2="Suite 100",
+                city="Exampleville",
+                state="EX",
+                postalCode="12345",
+                country="US",
+                language="en-US",
+                timezone="America/New_York",
+                currency="USD",
             )
-
-        self.brokered_account = smarter_cached_objects.smarter_account
-        if not self.brokered_account:
-            raise SAMBrokerErrorNotReady(
-                f"Account not set for {self.kind} broker. Cannot get example manifest.",
-                thing=self.thing,
-                command=command,
-            )
-        return self.json_response_ok(command=command, data=self.manifest.model_dump())
+        )
+        status = SAMAccountStatus(
+            adminAccount="123456789",
+            recordLocator="abc123",
+            created=datetime.datetime(2024, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
+            modified=datetime.datetime(2024, 1, 2, 0, 0, 0, tzinfo=datetime.timezone.utc),
+        )
+        manifest = SAMAccount(
+            apiVersion=self.api_version,
+            kind=self.kind,
+            metadata=metadata,
+            spec=spec,
+            status=status,
+        )
+        return self.json_response_ok(command=command, data=manifest.model_dump())
 
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
