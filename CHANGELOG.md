@@ -22,9 +22,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
   of technologies like [Calico](https://docs.tigera.io/calico/latest/about/)
   that make it easier to manage fine-grained cloud security policies by service.
 
-Add, we added lots to the platform. See below.
+Add, we made improvements to the existing platform...
 
-#### Improved Test Coverage
+#### Test Coverage
 
 We added around 200 unit tests on this release, continuing our commitment to
 shore up test [coverage](https://coverage.readthedocs.io/en/7.14.0/) on the
