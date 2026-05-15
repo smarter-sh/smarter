@@ -11,7 +11,7 @@ from django.http import HttpResponseForbidden
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.mixins import SmarterMiddlewareMixin
+from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.cache import lazy_cache as cache
@@ -19,8 +19,17 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
+    logger.debug(
+        "%s is %s", formatted_text(__name__ + ".HTMLMinifyMiddleware"), SmarterHelperMixin().formatted_state_ready
+    )
+else:
+    logger.debug(
+        "%s is %s. Enable with Django waffle in the admin console.",
+        formatted_text(__name__ + ".HTMLMinifyMiddleware"),
+        SmarterHelperMixin().formatted_state_not_ready,
+    )
 
-logger.debug("Loading %s", formatted_text(__name__ + ".SmarterBlockSensitiveFilesMiddleware"))
 
 ALLOWED_PATTERNS = [re.compile(pattern) for pattern in smarter_settings.sensitive_files_amnesty_patterns]
 SENSITIVE_FILES = list(

@@ -16,10 +16,11 @@ from django.http import HttpResponseForbidden
 from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.functional import cached_property
 
-from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins.helper_mixin import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
@@ -27,9 +28,16 @@ from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
-
-
-logger.debug("Loading %s", formatted_text(__name__ + ".SmarterCsrfViewMiddleware"))
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF):
+    logger.debug(
+        "%s is %s", formatted_text(__name__ + ".SmarterCsrfViewMiddleware"), SmarterHelperMixin().formatted_state_ready
+    )
+else:
+    logger.debug(
+        "%s is %s. Enable with Django waffle in the admin console.",
+        formatted_text(__name__ + ".SmarterCsrfViewMiddleware"),
+        SmarterHelperMixin().formatted_state_not_ready,
+    )
 
 
 class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
@@ -101,13 +109,9 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         # this can happen on fresh installations where migrations have not yet run.
         if self.is_async:
             SmarterRequestMixin.__init__(self, get_response, *args, **kwargs)
-            logger.warning(
-                "%s.__init__() could not get admin user profile because we're in an async context. SmarterRequestMixin initialized without user context. This may cause issues with ChatBot requests.",
-                self.formatted_class_name,
-            )
         else:
             try:
-                admin_user_profile = get_cached_smarter_admin_user_profile()
+                admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
                 SmarterRequestMixin.__init__(
                     self,
                     get_response,
@@ -172,6 +176,12 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         """
         New-style middleware entrypoint for CSRF protection with dynamic trusted origins and chatbot logic.
         """
+        if self.is_async:
+            return self.__acall__(request)
+
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF):
+            return self.get_response(request)
+
         host = request.get_host()
 
         if not host:
@@ -263,6 +273,8 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         """
         Legacy support for old-style middleware. This will only be called if the middleware is not used as new-style middleware.
         """
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF):
+            return self.get_response(request)
         logger.debug("%s.process_request() called with path: %s", self.formatted_class_name, request.path)
         return super().process_request(request)
 

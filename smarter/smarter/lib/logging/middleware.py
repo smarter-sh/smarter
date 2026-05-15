@@ -81,12 +81,28 @@ from typing import Awaitable
 from asgiref.sync import markcoroutinefunction
 from django.http import HttpRequest, HttpResponseBase
 
+from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.mixins import SmarterMiddlewareMixin
+from smarter.common.mixins.helper_mixin import SmarterHelperMixin
 from smarter.lib import logging
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .redis_log_handler import get_user_context, job_id_factory, user_id_context
 
 logger = logging.getLogger(__name__)
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT):
+    logger.debug(
+        "%s is %s",
+        formatted_text(__name__ + ".SmarterRequestLogContextMiddleware"),
+        SmarterHelperMixin().formatted_state_ready,
+    )
+else:
+    logger.debug(
+        "%s is %s. Enable with Django waffle in the admin console.",
+        formatted_text(__name__ + ".SmarterRequestLogContextMiddleware"),
+        SmarterHelperMixin().formatted_state_not_ready,
+    )
 
 
 class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
@@ -154,9 +170,11 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
         :returns: The HTTP response, or an awaitable that resolves to one.
         :rtype: django.http.HttpResponseBase or Awaitable[django.http.HttpResponseBase]
         """
-
         if self.is_async:
             return self.__acall__(request)
+
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT):
+            return self.get_response(request)
 
         context = self._get_sync_context(request)
         logger.debug("%s.__call__() setting logging context for request: %s", self.logger_prefix, context)

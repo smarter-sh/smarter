@@ -24,6 +24,15 @@ if TYPE_CHECKING:
 MOCK_REGEX = re.compile(r"<MagicMock|<Mock|mock\\.MagicMock|mock\\.Mock", re.IGNORECASE)
 
 
+class SmarterReadyState:
+    """
+    Constants representing the ready state of a Smarter class, formatted for logging.
+    """
+
+    READY = formatted_text_green("READY")
+    NOT_READY = formatted_text_red("NOT_READY")
+
+
 class SmarterHelperMixin:
     """
     A generic mixin providing helper functions for Smarter classes.
@@ -67,7 +76,7 @@ class SmarterHelperMixin:
         :return: The formatted readiness state as a string.
         :rtype: str
         """
-        return formatted_text_green("READY")
+        return SmarterReadyState.READY
 
     @property
     def formatted_state_not_ready(self) -> str:
@@ -77,7 +86,7 @@ class SmarterHelperMixin:
         :return: The formatted not-ready state as a string.
         :rtype: str
         """
-        return formatted_text_red("NOT_READY")
+        return SmarterReadyState.NOT_READY
 
     @property
     def ready(self) -> bool:

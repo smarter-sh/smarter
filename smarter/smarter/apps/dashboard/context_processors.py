@@ -79,8 +79,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urljoin
 
-from django.test import RequestFactory
-
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
     Account,

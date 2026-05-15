@@ -41,6 +41,16 @@ from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
+    logger.debug(
+        "%s is %s", formatted_text(__name__ + ".SmarterCorsMiddleware"), SmarterHelperMixin().formatted_state_ready
+    )
+else:
+    logger.debug(
+        "%s is %s. Enable with Django waffle in the admin console.",
+        formatted_text(__name__ + ".SmarterCorsMiddleware"),
+        SmarterHelperMixin().formatted_state_not_ready,
+    )
 
 
 class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):

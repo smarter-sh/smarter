@@ -113,6 +113,21 @@ class SmarterWaffleSwitches:
     ENABLE_MIDDLEWARE_CORS = "enable_middleware_cors"
     """Enables SmarterCorsMiddleware"""
 
+    ENABLE_MIDDLEWARE_CSRF = "enable_middleware_csrf"
+    """Enables Django's built-in CSRF middleware for enhanced security against cross-site request forgery attacks."""
+
+    ENABLE_MIDDLEWARE_HTML_MINIFY = "enable_middleware_html_minify"
+    """Enables HTML minification for responses with 'text/html' content type using BeautifulSoup, while skipping minification for certain paths and content types to avoid issues with non-HTML responses."""
+
+    ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT = "enable_middleware_request_log_context"
+    """Enables SmarterRequestLogContextMiddleware, which adds request-specific context to log records for enhanced logging capabilities."""
+
+    ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR = "enable_middleware_smarter_json_error"
+    """Enables SmarterJsonErrorMiddleware, which converts error responses to JSON format when the client expects JSON."""
+
+    ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH = "enable_middleware_smarter_token_auth"
+    """Enables SmarterTokenAuthenticationMiddleware, which provides token-based authentication for API endpoints."""
+
     ENABLE_MIDDLEWARE_SECURITY = "enable_middleware_security"
     """Enables SmarterSecurityMiddleware"""
 
@@ -263,9 +278,34 @@ class SmarterWaffleSwitches:
             comment="Enables SmarterBlockExcessive404Middleware",
             default=False,
         ),
+        ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH: SmarterWaffleSwitch(
+            name=ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH,
+            comment="Enables SmarterTokenAuthenticationMiddleware, which provides token-based authentication for API endpoints.",
+            default=True,
+        ),
         ENABLE_MIDDLEWARE_CORS: SmarterWaffleSwitch(
             name=ENABLE_MIDDLEWARE_CORS,
             comment="Enables SmarterCorsMiddleware",
+            default=True,
+        ),
+        ENABLE_MIDDLEWARE_CSRF: SmarterWaffleSwitch(
+            name=ENABLE_MIDDLEWARE_CSRF,
+            comment="Enables Django's built-in CSRF middleware for enhanced security against cross-site request forgery attacks.",
+            default=True,
+        ),
+        ENABLE_MIDDLEWARE_HTML_MINIFY: SmarterWaffleSwitch(
+            name=ENABLE_MIDDLEWARE_HTML_MINIFY,
+            comment="Enables HTML minification for responses with 'text/html' content type using BeautifulSoup, while skipping minification for certain paths and content types to avoid issues with non-HTML responses.",
+            default=True,
+        ),
+        ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT: SmarterWaffleSwitch(
+            name=ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT,
+            comment="Enables SmarterRequestLogContextMiddleware, which adds request-specific context to log records for enhanced logging capabilities.",
+            default=True,
+        ),
+        ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR: SmarterWaffleSwitch(
+            name=ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR,
+            comment="Enables SmarterJsonErrorMiddleware, which converts error responses to JSON format when the client expects JSON.",
             default=True,
         ),
         ENABLE_MIDDLEWARE_SECURITY: SmarterWaffleSwitch(

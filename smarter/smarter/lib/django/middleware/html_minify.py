@@ -10,13 +10,24 @@ from django.http import FileResponse
 from django.utils.deprecation import MiddlewareMixin
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins.helper_mixin import SmarterHelperMixin
 from smarter.lib import logging
+from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING, SmarterWaffleSwitches.CHATBOT_LOGGING]
 )
-logger.debug("Loading %s", formatted_text(__name__ + ".HTMLMinifyMiddleware"))
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_HTML_MINIFY):
+    logger.debug(
+        "%s is %s", formatted_text(__name__ + ".HTMLMinifyMiddleware"), SmarterHelperMixin().formatted_state_ready
+    )
+else:
+    logger.debug(
+        "%s is %s. Enable with Django waffle in the admin console.",
+        formatted_text(__name__ + ".HTMLMinifyMiddleware"),
+        SmarterHelperMixin().formatted_state_not_ready,
+    )
 
 
 class HTMLMinifyMiddleware(MiddlewareMixin):
@@ -83,11 +94,11 @@ class HTMLMinifyMiddleware(MiddlewareMixin):
         return response
 
     def process_response(self, request: ASGIRequest, response):
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_HTML_MINIFY):
+            return response
         if self._should_skip(request, response):
             return response
         return self._minify(response)
 
     async def async_process_response(self, request: ASGIRequest, response):
-        if self._should_skip(request, response):
-            return response
-        return self._minify(response)
+        return response
