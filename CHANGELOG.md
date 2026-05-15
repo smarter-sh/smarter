@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+
+
+## [0.14.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.1...v0.14.0-alpha.2) (2026-05-15)
+
+### Bug Fixes
+
+* add waffle switches for all custom middleware ([285fafd](https://github.com/smarter-sh/smarter/commit/285fafd5e280de6386884d37261b061368511c20))
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this
 project adheres to [Semantic Versioning](http://semver.org/).
 
