@@ -187,7 +187,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
             return self.__acall__(request)
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH):
-            return None
+            return self.get_response(request)
 
         # this is the earliest point at which we can evaluate the request URL.
         url = self.smarter_build_absolute_uri(request)
@@ -208,7 +208,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
             # we're not using token authentication, no need to do anything
             logger.debug("%s.__call__() skipping non-token authentication", self.formatted_class_name)
             request = self.get_request_with_verified_user(request)
-            return self.get_response(self.request)  # type: ignore
+            return self.get_response(request)
         if getattr(request, "auth", None) is not None:
             # we've already authenticated the request
             # with some other middleware, no need to do anything
