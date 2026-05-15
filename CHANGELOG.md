@@ -7,17 +7,21 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.14.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.13.223...v0.14.0-alpha.1) (2026-05-14)
 
-### Refactoring
+### Key Highlights
 
-We cleaned house on this release. Technical features that address
-access, security and performance have been pushed downwards into Smarter's
-support subsystems, leading to application source code that is easier
-for new contributors to discover, read and understand.
+- We cleaned house on this release. Technical features that address
+  access, security and performance have been pushed downwards into Smarter's
+  support subsystems, leading to application source code that is easier
+  for new contributors to discover, read and understand.
 
-The desktop installation of Smarter has been simplified for developers
-as well as for anyone who is evaluating the platform.
+- The desktop installation of Smarter has been simplified for developers
+  as well as for anyone who is evaluating the platform.
 
-Security as been hardened for production cloud use. ....
+- We hardened security for production cloud use with the introduction
+  of technologies like Calico that make it easier to manage fine-grained cloud
+  security policies by service.
+
+Add, we added lots to the platform. See below.
 
 #### Improved Coverage
 
@@ -56,7 +60,7 @@ Additionally, we also did the following:
 - narrowed ingress and egress port ranges
 - where possible, narrowed CIDR ranges for backend services
 - introduced a new bastion admin Kubernetes pod that replaces the dedicated EC2
-  bastion server. The bastion pod can deployed on demand and then immediately
+  bastion server. The bastion pod can be deployed on demand and then immediately
   disposed of, further minimizing the existence of a major attack surface.
 
 #### Refactored Django apps
@@ -78,12 +82,16 @@ The dashboard, prompts list, prompting passthrough tool, and server logs have
 all been implemented in ReactJS.
 
 We've introduced a robust strategy for integrating React-Django that we believe
-grants autonamy to front-end developers while maintaining resilient CD-CD processes.
+grants autonamy to front-end developers while maintaining resilient CI-CD processes.
 
 #### Role-Based Access
 
 We introduced RBAC to the SAM Architecture, greatly simplifying how resource access
-is managed at the source code level.
+is managed at the source code level. Specifically, we introduced two new methods
+to Django's ORM manager, with_read_permission_for(`Student_in_course_123`) and
+with_owernship_permission_for(`Instuctor_in_course_123`) that mask the
+complexities of record selection, caching and cache invalidations,
+while simultaneously making the source code more readable.
 
 #### Service Layer Replacements
 
