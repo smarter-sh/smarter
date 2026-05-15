@@ -9,10 +9,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Key Highlights
 
-- As The Smarter Project nears a quarter million lines of source code,
-  we decided to clean house on this release. Technical features that address
-  access, security and performance have been pushed downwards into Smarter's
-  support subsystems, leading to application source code that is easier
+- As [The Smarter Project](https://smarter.sh/) nears a quarter million lines of
+  source code, we decided to clean house on this release. Technical features
+  that address access, security and performance have been pushed downwards into
+  Smarter's support subsystems, leading to application source code that is easier
   for new contributors to discover, read and understand.
 
 - The desktop installation of Smarter has been simplified for developers
@@ -24,7 +24,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 Add, we added lots to the platform. See below.
 
-#### Improved Coverage
+#### Improved Test Coverage
 
 We added around 200 unit tests on this release, continuing our commitment to
 shore up test [coverage](https://coverage.readthedocs.io/en/7.14.0/) on the
@@ -32,7 +32,7 @@ low-level layers of the stack where reliability and stability matter the most.
 
 #### Documentation
 
-We redoubled efforts to generate comprehensive platform-wide Sphinx
+We redoubled efforts to generate comprehensive platform-wide [Sphinx](https://www.sphinx-doc.org/en/master/)
 [Read the Docs](https://docs.smarter.sh/en/latest/) documentation.
 We're pleased to report that every module in the codebase now conforms
 to Sphinx standards.
@@ -48,7 +48,7 @@ users. You now have multiple SQL service installation options.
 
 #### Security
 
-As The Smarter Project approaches a quarter million lines of code,We hardened security for production cloud installations. Namely, we introduced
+We hardened security for production cloud installations. Namely, we introduced
 [Calico](https://docs.tigera.io/calico/latest/about/), a high-performance
 networking and network security solution for Kubernetes. It provides container
 networking interface (CNI) plugins that allow pods to communicate.
