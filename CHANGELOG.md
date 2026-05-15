@@ -9,7 +9,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Key Highlights
 
-- We cleaned house on this release. Technical features that address
+- As The Smarter Project nears a quarter million lines of source code,
+  we decided to clean house on this release. Technical features that address
   access, security and performance have been pushed downwards into Smarter's
   support subsystems, leading to application source code that is easier
   for new contributors to discover, read and understand.
@@ -47,7 +48,7 @@ users. You now have multiple SQL service installation options.
 
 #### Security
 
-We hardened security for production cloud installations. Namely, we introduced
+As The Smarter Project approaches a quarter million lines of code,We hardened security for production cloud installations. Namely, we introduced
 [Calico](https://docs.tigera.io/calico/latest/about/), a high-performance
 networking and network security solution for Kubernetes. It provides container
 networking interface (CNI) plugins that allow pods to communicate.
