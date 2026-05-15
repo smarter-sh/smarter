@@ -499,10 +499,10 @@ class AWSBase(SmarterHelperMixin):
             logger.error(msg)
 
         if self._aws_session:
-            msg = f"{self.formatted_class_name}.aws_session() {formatted_text_green('established AWS boto session.')}"
+            msg = f"{self.formatted_class_name}.aws_session() is {self.formatted_state_ready}"
             logger.debug(msg)
         else:
-            msg = f"{self.formatted_class_name}.aws_session() {formatted_text_red('Unable to establish AWS boto session.')}"
+            msg = f"{self.formatted_class_name}.aws_session() is {self.formatted_state_not_ready}"
             logger.error(msg)
 
         return self._aws_session

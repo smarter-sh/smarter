@@ -13,13 +13,22 @@ from django.http.request import HttpRequest
 from django.http.response import HttpResponseBase
 
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.mixins import SmarterMiddlewareMixin
+from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.lib import logging
+from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
-
-logger.debug("Loading %s", formatted_text(__name__ + ".SmarterJsonErrorMiddleware"))
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
+    logger.debug(
+        "%s is %s", formatted_text(__name__ + ".SmarterJsonErrorMiddleware"), SmarterHelperMixin().formatted_state_ready
+    )
+else:
+    logger.debug(
+        "%s is %s. Enable with Django waffle in the admin console.",
+        formatted_text(__name__ + ".SmarterJsonErrorMiddleware"),
+        SmarterHelperMixin().formatted_state_not_ready,
+    )
 
 
 class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
@@ -90,6 +99,9 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         return super().__call__(request)
 
     def process_response(self, request, response):
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
+            return response
+
         if request.headers.get("Accept") == "application/json" and response.status_code >= HTTPStatus.BAD_REQUEST:
             if not isinstance(response, JsonResponse):
                 data = {

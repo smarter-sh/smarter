@@ -33,6 +33,7 @@ Example:
 from django.urls import include, path
 
 from smarter.common.conf import smarter_settings
+from smarter.common.mixins import SmarterReadyState
 from smarter.lib import logging
 
 from .api import urls as api_urls
@@ -60,11 +61,13 @@ if smarter_settings.enable_dashboard_server_logs:
     # )
 
     logger.info(
-        "%s Server logs app url endpoint enabled. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=false` to disable.",
+        "%s Server logs app url endpoint is %s. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=false` to disable.",
         logging.formatted_text(__name__),
+        SmarterReadyState.READY,
     )
 else:
     logger.info(
-        "%s Server logs app is disabled. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=true` to enable the server logs endpoint at /logs/.",
+        "%s Server logs app is %s. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=true` to enable the server logs endpoint at /logs/.",
         logging.formatted_text(__name__),
+        SmarterReadyState.NOT_READY,
     )
