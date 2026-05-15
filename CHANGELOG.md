@@ -48,11 +48,11 @@ users. You now have multiple SQL service installation options.
 #### Security
 
 We hardened security for production cloud installations. Namely, we introduced
-Calico, a high-performance networking and network security
-solution for Kubernetes. It provides container networking interface (CNI)
-plugins that allow pods to communicate. We're using Calico to enforce
-network policies, secure traffic with encryption, and to enabled
-observability across cloud, on-premises, and edge Kubernetes environments.
+[Calico](https://docs.tigera.io/calico/latest/about/), a high-performance
+networking and network security solution for Kubernetes. It provides container
+networking interface (CNI) plugins that allow pods to communicate.
+We're using Calico to enforce network policies, secure traffic with encryption,
+and to enable observability across cloud, on-premises, and edge Kubernetes environments.
 
 Additionally, we also did the following:
 
@@ -62,25 +62,28 @@ Additionally, we also did the following:
 - where possible, narrowed CIDR ranges for backend services
 - introduced a new bastion admin Kubernetes pod that replaces the dedicated EC2
   bastion server. The bastion pod can be deployed on demand and then immediately
-  disposed of, further minimizing the existence of a major attack surface.
+  disposed of, further minimizing the existence of a major attack surface. Separately,
+  this also reduces your cloud bill by around $30 USD per month -- woo hoo!
 
 #### Refactored Django apps
 
-Secret and Connection are now dedicated Django apps, paving the way for us to
-significantly expand the feature set in future releases.
+[Secret](./smarter/smarter/apps/secret/) and [Connection](./smarter/smarter/apps/connection/)
+are now dedicated Django apps, paving the way for us to significantly expand the
+feature set in future releases.
 
 #### ASGI
 
-We transitioned from WSGI to ASGI on this release, introducing asynchronous request
-features to the platform. We're presently using these to serve personalized
-real-time Python server logs to the web console, an exciting diagnostics feature
-for prompt engineers which we aspire to keep building on in the future.
+We transitioned from WSGI to [ASGI](./smarter/smarter/asgi.py) on this release,
+introducing asynchronous request features to the platform. We're presently using
+these to serve personalized real-time Python server logs to the web console, an
+exciting diagnostics feature for prompt engineers which we aspire to keep building
+on in the future.
 
 #### ReactJS
 
-We transitioned much of the web console to ReactJS front ends on this release.
-The dashboard, prompts list, prompting passthrough tool, and server logs have
-all been implemented in ReactJS.
+We transitioned much of the web console to [ReactJS front ends](./smarter/react/)
+on this release. The dashboard, prompts list, prompting passthrough tool, and
+server logs have all been implemented in ReactJS.
 
 We've introduced a robust strategy for integrating React-Django that we believe
 grants autonamy to front-end developers while maintaining resilient CI-CD processes.
@@ -93,6 +96,7 @@ to Django's ORM manager, with_read_permission_for(`Student_in_course_123`) and
 with_owernship_permission_for(`Instuctor_in_course_123`) that mask the
 complexities of record selection, caching and cache invalidations,
 while simultaneously making the source code more readable.
+[Learn more here](./smarter/smarter/apps/account/models/metadata_with_ownership.py).
 
 #### Service Layer Replacements
 
@@ -110,7 +114,8 @@ pinecone, pydantic, redis, requests, sphinx and urllib.
 
 We implemented a class-based approach to working with named URLS that
 significantly improves both code quality as well as tracability between
-Django views and templates and the URL paths which they reference.
+Django views and templates and the URL paths which they reference. See
+[this example implementation](./smarter/smarter/apps/account/urls.py).
 
 #### Performance
 
