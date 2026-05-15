@@ -18,22 +18,23 @@ project adheres to [Semantic Versioning](http://semver.org/).
   as well as for anyone who is evaluating the platform.
 
 - We hardened security for production cloud use with the introduction
-  of technologies like Calico that make it easier to manage fine-grained cloud
-  security policies by service.
+  of technologies like [Calico](https://docs.tigera.io/calico/latest/about/)
+  that make it easier to manage fine-grained cloud security policies by service.
 
 Add, we added lots to the platform. See below.
 
 #### Improved Coverage
 
 We added around 200 unit tests on this release, continuing our commitment to
-shore up test coverage on the low-level layers of the stack where reliability and
-stability matter the most.
+shore up test [coverage](https://coverage.readthedocs.io/en/7.14.0/) on the
+low-level layers of the stack where reliability and stability matter the most.
 
 #### Documentation
 
 We redoubled efforts to generate comprehensive platform-wide Sphinx
-Read the Docs documentation. We're pleased to report that every module
-in the codebase now conforms to Sphinx standards.
+[Read the Docs](https://docs.smarter.sh/en/latest/) documentation.
+We're pleased to report that every module in the codebase now conforms
+to Sphinx standards.
 
 #### Accessibility
 
@@ -100,10 +101,10 @@ products decided to sunset support for their community versions.
 
 #### Django v6
 
-We upgraded to Django 6.0! We're thrilled to have access to Django's newest platform
-version. We also updated important PyPi packages including celery, cryptography,
-django, levenshtein, nltk, pandas, pinecone, pydantic, redis, requests, sphinx
-and urllib.
+We upgraded to [Django 6.0](https://www.djangoproject.com/)! We're thrilled to
+have access to Django's newest platform version. We also updated important PyPi
+packages including celery, cryptography, django, levenshtein, nltk, pandas,
+pinecone, pydantic, redis, requests, sphinx and urllib.
 
 #### Django Reverse URLs
 
