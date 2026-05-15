@@ -213,10 +213,10 @@ reducing server workloads for the most common kinds of object lookups.
 - use Pydantic for validations ([90c24f7](https://github.com/smarter-sh/smarter/commit/90c24f7932d3f4f0aa27f1a1758598403621f32d))
 - validate email address ([2874f7e](https://github.com/smarter-sh/smarter/commit/2874f7e3b507fbf0f83e0503186b323478d7a72a))
 
-## [0.13](./changelogs/CHANGELOG-v0.13.md)
+## [0.13](./changelogs/CHANGELOG-v0.13.md) (2026-04-19)
 
-## [0.12](./changelogs/CHANGELOG-v0.12.md)
+## [0.12](./changelogs/CHANGELOG-v0.12.md) (2025-06-02)
 
-## [0.11](./changelogs/CHANGELOG-v0.11.md)
+## [0.11](./changelogs/CHANGELOG-v0.11.md) (2025-04-27)
 
-## [0.10](./changelogs/CHANGELOG-v0.10.md)
+## [Project Inception Through 0.10](./changelogs/CHANGELOG-v0.10.md) (2025-04-11)
