@@ -118,6 +118,16 @@ significantly improves both code quality as well as tracability between
 Django views and templates and the URL paths which they reference. See
 [this example implementation](./smarter/smarter/apps/account/urls.py).
 
+#### Logging
+
+We introduced [user-based log streams](./smarter/smarter/lib/logging/redis_log_handler.py),
+implemented with a combination of [Django middleware](https://docs.djangoproject.com/en/6.0/topics/http/middleware/),
+Python [contextvars](https://docs.python.org/3.7/library/contextvars.html) and
+Redis cache. This sends personalized streams of real-time Python server log data
+to the web console, a highly effective diagnostics and trouble shooting
+tool for prompt engineers. Users are able see the real-time server level execution
+of sophisticated multi-step LLM prompts.
+
 #### Performance
 
 We introduced internal resource caching to the SAM Architecture, greatly
