@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.14.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.2...v0.14.0-alpha.3) (2026-05-15)
+
+### Bug Fixes
+
+* ensure that all middleware always returns a response ([63f8bb5](https://github.com/smarter-sh/smarter/commit/63f8bb551f8646e32da5dc18c1a3212c4ebf9436))
+
 ## [0.14.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.1...v0.14.0-alpha.2) (2026-05-15)
 
 ### Bug Fixes
