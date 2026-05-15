@@ -9,6 +9,16 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Refactoring
 
+We cleaned house on this release. Technical features that address
+access, security and performance have been pushed downwards into Smarter's
+support subsystems, leading to application source code that is easier
+for new contributors to discover, read and understand.
+
+The desktop installation of Smarter has been simplified for developers
+as well as for anyone who is evaluating the platform.
+
+Security as been hardened for production cloud use. ....
+
 #### Improved Coverage
 
 We added around 200 unit tests on this release, continuing our commitment to
@@ -30,6 +40,25 @@ system package requirements for each operating system.
 We also introduced expanded Helm installation options for Kubernetes
 users. You now have multiple SQL service installation options.
 
+#### Security
+
+We hardened security for production cloud installations. Namely, we introduced
+Calico, a high-performance networking and network security
+solution for Kubernetes. It provides container networking interface (CNI)
+plugins that allow pods to communicate. We're using Calico to enforce
+network policies, secure traffic with encryption, and to enabled
+observability across cloud, on-premises, and edge Kubernetes environments.
+
+Additionally, we also did the following:
+
+- created dedicated security policies for each service
+- removed wildcards from all DNS records
+- narrowed ingress and egress port ranges
+- where possible, narrowed CIDR ranges for backend services
+- introduced a new bastion admin Kubernetes pod that replaces the dedicated EC2
+  bastion server. The bastion pod can deployed on demand and then immediately
+  disposed of, further minimizing the existence of a major attack surface.
+
 #### Refactored Django apps
 
 Secret and Connection are now dedicated Django apps, paving the way for us to
@@ -38,9 +67,9 @@ significantly expand the feature set in future releases.
 #### ASGI
 
 We transitioned from WSGI to ASGI on this release, introducing asynchronous request
-features to the platform. We're presently using these to enable personalized
-real-time logs in the web console, an exciting feature which we aspire to keep
-building on in the future.
+features to the platform. We're presently using these to serve personalized
+real-time Python server logs to the web console, an exciting diagnostics feature
+for prompt engineers which we aspire to keep building on in the future.
 
 #### ReactJS
 
@@ -48,9 +77,8 @@ We transitioned much of the web console to ReactJS front ends on this release.
 The dashboard, prompts list, prompting passthrough tool, and server logs have
 all been implemented in ReactJS.
 
-We've introduced a robust strategy for integrating React-Django that we hope
-will give front-end developers long term autononamy on design choices while
-maintaining high reliability in our CD-CD processes.
+We've introduced a robust strategy for integrating React-Django that we believe
+grants autonamy to front-end developers while maintaining resilient CD-CD processes.
 
 #### Role-Based Access
 
