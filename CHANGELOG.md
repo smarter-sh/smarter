@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.3...v0.14.0-alpha.4) (2026-05-16)
+
+### Bug Fixes
+
+* convert to asgi compatible middleware ([a4ab703](https://github.com/smarter-sh/smarter/commit/a4ab703fd148da545cd19d5a9c554158528a561c))
+
 ## [0.14.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.2...v0.14.0-alpha.3) (2026-05-15)
 
 ### Bug Fixes
