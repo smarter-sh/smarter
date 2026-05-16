@@ -186,7 +186,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             return self.__acall__(request)
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
-            return super().get_response(request)
+            return self.get_response(request)
 
         logger.debug("%s.__call__() called for %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
 
