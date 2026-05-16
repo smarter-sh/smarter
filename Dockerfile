@@ -206,56 +206,18 @@ RUN pip install pip==25.3 setuptools wheel pip-tools && \
 # we're going to run python unit tests in the Docker container.
 RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
-############################## application ##################################
-FROM venv AS application
-# do this last so that we can take advantage of Docker's caching mechanism.
-WORKDIR /home/smarter_user/
-COPY --chown=smarter_user:smarter_user ./smarter ./smarter
-COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
-RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
+FROM venv AS react_cache_buster
 
-################################# permissuions #######################################
-FROM application AS permissions
+ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
 
-# ensure that smarter_user owns everything and has the minimum
-# permissions needed to run the application and to manage files
-# that the application needs to write to in /home/smarter_user.
-# this is important because by default Debian adds
-# read-only and execute permissions to the group and to public.
-# We don't want either of these.
-#
-# files:                    r-------- so that smarter_user can read them
-# directories:              r-x------ so that smarter_user can cd into them
-# venv/bin/*:               r-x------ so that smarter_user can execute them
-# smarter/**/migrations:    rwx------ so that smarter_user can write django migration files.
-# data:                     rwx------ so that smarter_user can manage the data directory.
-# .cache:                   rwx------ bc some python packages want to write to .cache, like tldextract
+# Download all manifests and compute a combined hash for cache busting
+RUN for app in $REACT_COMPONENTS; do \
+      curl -fsSL "https://cdn.smarter.sh/react/${app}/manifest.json" -o "/tmp/${app}_manifest.json"; \
+      sha256sum "/tmp/${app}_manifest.json" | awk '{print $1}' > "/tmp/${app}_manifest.hash"; \
+    done && \
+    cat /tmp/*_manifest.hash | sha256sum | awk '{print $1}' > /tmp/react_manifests.hash
 
-USER root
-RUN if [ "$ENVIRONMENT" != "local" ] ; then chown -R smarter_user:smarter_user /home/smarter_user/ && \
-  find /home/smarter_user/ -type f -exec chmod 400 {} + && \
-  find /home/smarter_user/ -type d -exec chmod 500 {} + && \
-  find /home/smarter_user/venv/bin/ -type f -exec chmod 500 {} + && \
-  find /home/smarter_user/smarter/smarter/ -type d -name migrations -exec chmod 700 {} + && \
-  chmod -R 700 /home/smarter_user/data && \
-  chmod -R 700 /home/smarter_user/.cache && \
-  chmod 755 /home/smarter_user/smarter/manage.py ; fi
-
-################################# data #################################
-FROM permissions AS data
-# Add our source code and make the 'smarter' directory the working directory
-# we want this to be the last step so that we can take advantage of Docker's
-# caching mechanism.
-WORKDIR /home/smarter_user/
-
-COPY --chown=smarter_user:smarter_user ./docs ./data/docs
-COPY --chown=smarter_user:smarter_user ./README.md ./data/docs/README.md
-COPY --chown=smarter_user:smarter_user ./CHANGELOG.md ./data/docs/CHANGELOG.md
-COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/docs/CODE_OF_CONDUCT.md
-COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
-COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
-COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
-
+ARG REACT_MANIFESTS_HASH
 
 ################################ build react ###################################
 # The Smarter web console UI includes several React components, such as the
@@ -308,14 +270,14 @@ COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compos
 #     ]
 #   }
 # }
-FROM data AS react_build
+FROM react_cache_buster AS react_assets
 
 # this resolves to d33lzt17u1szu4.cloudfront.net
 ENV CDN_BASE=https://cdn.smarter.sh/react
-ENV REACT_ROOT=/home/smarter_user/smarter/smarter/static/react/
-RUN mkdir -p ${REACT_ROOT}
+ENV REACT_STAGING_FOLDER=/tmp/react_assets
+RUN mkdir -p ${REACT_STAGING_FOLDER}
 
-WORKDIR ${REACT_ROOT}
+WORKDIR ${REACT_STAGING_FOLDER}
 
 ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
 
@@ -334,7 +296,7 @@ ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator
 #     - arbitrary manifest complexity
 RUN set -eu; \
     for app in ${REACT_COMPONENTS}; do \
-        APP_ROOT="${REACT_ROOT}/${app}"; \
+        APP_ROOT="${REACT_STAGING_FOLDER}/${app}"; \
         MANIFEST="${APP_ROOT}/manifest.json"; \
         \
         mkdir -p "${APP_ROOT}"; \
@@ -369,12 +331,68 @@ RUN set -eu; \
         done; \
     done
 
+
+############################## application ##################################
+FROM react_assets AS application
+# do this last so that we can take advantage of Docker's caching mechanism.
+WORKDIR /home/smarter_user/
+COPY --chown=smarter_user:smarter_user ./smarter ./smarter
+COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
+RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
+
+COPY --from=react_assets /tmp/react_assets/ /home/smarter_user/smarter/smarter/static/react/
+
+
+################################# permissuions #######################################
+FROM application AS permissions
+
+# ensure that smarter_user owns everything and has the minimum
+# permissions needed to run the application and to manage files
+# that the application needs to write to in /home/smarter_user.
+# this is important because by default Debian adds
+# read-only and execute permissions to the group and to public.
+# We don't want either of these.
+#
+# files:                    r-------- so that smarter_user can read them
+# directories:              r-x------ so that smarter_user can cd into them
+# venv/bin/*:               r-x------ so that smarter_user can execute them
+# smarter/**/migrations:    rwx------ so that smarter_user can write django migration files.
+# data:                     rwx------ so that smarter_user can manage the data directory.
+# .cache:                   rwx------ bc some python packages want to write to .cache, like tldextract
+
+USER root
+RUN if [ "$ENVIRONMENT" != "local" ] ; then chown -R smarter_user:smarter_user /home/smarter_user/ && \
+  find /home/smarter_user/ -type f -exec chmod 400 {} + && \
+  find /home/smarter_user/ -type d -exec chmod 500 {} + && \
+  find /home/smarter_user/venv/bin/ -type f -exec chmod 500 {} + && \
+  find /home/smarter_user/smarter/smarter/ -type d -name migrations -exec chmod 700 {} + && \
+  chmod -R 700 /home/smarter_user/data && \
+  chmod -R 700 /home/smarter_user/.cache && \
+  chmod 755 /home/smarter_user/smarter/manage.py ; fi
+
+################################# data #################################
+FROM permissions AS data
+# Add our source code and make the 'smarter' directory the working directory
+# we want this to be the last step so that we can take advantage of Docker's
+# caching mechanism.
+WORKDIR /home/smarter_user/
+
+COPY --chown=smarter_user:smarter_user ./docs ./data/docs
+COPY --chown=smarter_user:smarter_user ./README.md ./data/docs/README.md
+COPY --chown=smarter_user:smarter_user ./CHANGELOG.md ./data/docs/CHANGELOG.md
+COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/docs/CODE_OF_CONDUCT.md
+COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
+COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
+COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
+
+
+
 ############################## collect_assets ##################################
 # This is a Django application, so we need to collect static assets.
 # We do this in a separate stage so that if the application code changes
 # but the static assets do not change, we can take advantage of Docker's
 # caching mechanism.
-FROM react_build AS collect_assets
+FROM data AS collect_assets
 WORKDIR /home/smarter_user/smarter
 RUN if [ "$COLLECT_STATIC_FILES" = "true" ]; then python manage.py collectstatic --noinput; else echo "Skipping collectstatic"; fi
 

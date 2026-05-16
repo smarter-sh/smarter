@@ -33,9 +33,6 @@ if smarter_settings.developer_mode:
 ENVIRONMENT_DOMAIN = smarter_settings.environment_platform_domain
 ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
 
-MIDDLEWARE += [
-    "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
-]
 cors_ports = ["3000", "5173", "9357"]
 for port in cors_ports:
     CORS_ALLOWED_ORIGINS.append(f"http://127.0.0.1:{port}")

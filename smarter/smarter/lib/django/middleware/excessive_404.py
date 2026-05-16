@@ -1,13 +1,153 @@
 """
-Middleware to block clients that trigger excessive 404 responses.
+Middleware for throttling unauthenticated clients generating excessive
+HTTP 404 responses.
+
+This middleware detects repeated invalid URL requests from unauthenticated
+clients and temporarily blocks abusive request patterns commonly associated
+with automated scanners, vulnerability probes, and broken crawlers.
+
+Key Features
+============
+
+- ASGI and WSGI compatible
+- Supports sync and async middleware execution
+- Per-IP throttling of repeated 404 responses
+- Temporary automatic client blocking
+- Low-noise sampled logging
+- Feature-flag enablement via Django Waffle
+- Exemption for authenticated users
+
+Threat Mitigation
+=================
+
+This middleware helps mitigate several classes of abusive traffic:
+
+- automated vulnerability scanners
+- brute-force endpoint discovery
+- malicious URL enumeration
+- broken or misconfigured crawlers
+- excessive invalid resource probing
+
+Behavior
+========
+
+For each response, the middleware:
+
+#. Detects HTTP 404 responses
+#. Exempts authenticated users
+#. Resolves the client IP address
+#. Tracks repeated 404 activity in cache storage
+#. Logs sampled probe activity
+#. Temporarily blocks abusive clients after threshold exhaustion
+
+When a client exceeds the configured threshold, the middleware returns
+``HTTP 403 Forbidden`` responses for the duration of the throttle window.
+
+Throttle Configuration
+======================
+
+The middleware uses the following default limits:
+
+- ``THROTTLE_LIMIT`` = 25 requests
+- ``THROTTLE_TIMEOUT`` = 600 seconds
+- ``LOG_SAMPLE_RATE`` = every 10th event
+
+These values may be overridden at the class level if needed.
+
+Caching
+=======
+
+Throttle counters are stored using the application's configured cache
+backend.
+
+Each client is tracked independently using cache keys in the format:
+
+.. code-block:: text
+
+   excessive_404_throttle:<client_ip>
+
+Authenticated Requests
+======================
+
+Authenticated requests are intentionally excluded from throttling to
+avoid disrupting legitimate application usage or administrative activity.
+
+Async Compatibility
+===================
+
+The middleware supports both synchronous and asynchronous Django
+execution models.
+
+Async deployments use ``async_process_response()``, while synchronous
+deployments use ``process_response()``.
+
+The middleware automatically detects coroutine-based request handlers
+during initialization.
+
+Feature Flags
+=============
+
+Middleware activation is controlled using Django Waffle:
+
+- ``ENABLE_MIDDLEWARE_EXCESSIVE_404``
+
+When disabled, the middleware becomes a transparent pass-through.
+
+Logging
+=======
+
+The middleware emits structured logs for:
+
+- middleware initialization
+- client throttling events
+- sampled 404 probe activity
+- client IP resolution failures
+
+To reduce log noise during large scanning events, 404 activity is logged
+using configurable sampling intervals.
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: generated/
+
+   SmarterBlockExcessive404Middleware
+
+Dependencies
+============
+
+- Django
+- Django Waffle
+- asgiref
+- application cache backend
+
+Warnings
+========
+
+This middleware uses IP-based throttling and may affect multiple users
+sharing the same public IP address.
+
+Care should be taken when deploying behind proxies or load balancers to
+ensure accurate client IP extraction.
+
+Notes
+=====
+
+The middleware depends on helper functionality provided by
+:class:`smarter.common.mixins.SmarterMiddlewareMixin`.
+
+Blocking state is temporary and automatically expires after the throttle
+timeout period.
 """
 
-import inspect
+from __future__ import annotations
+
+from collections.abc import Awaitable
 from http import HTTPStatus
 
-from asgiref.sync import markcoroutinefunction
-from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponseForbidden
+from asgiref.sync import sync_to_async
+from django.http import HttpRequest, HttpResponseBase, HttpResponseForbidden
 
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.helpers.console_helpers import formatted_text
@@ -18,7 +158,8 @@ from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
+logger = logging.getSmarterLogger(__name__)
+
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
     logger.debug(
         "%s is %s",
@@ -35,140 +176,154 @@ else:
 
 class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
     """
-    Middleware to block unauthenticated clients that trigger excessive 404 responses.
-    This is a countermeasure against abusive or automated 'bot' clients probing for non-existent resources.
+    Middleware that throttles unauthenticated clients producing excessive 404s.
 
-    This middleware monitors incoming HTTP requests and tracks the number of 404 (Not Found)
-    responses generated by each client IP address. If a client exceeds a configurable threshold
-    of 404 responses within a specified time window, further requests from that client will be
-    blocked with a 403 Forbidden response for the remainder of the timeout period.
-
-    The middleware is designed to help mitigate abusive or automated clients that probe for
-    non-existent resources, which can be indicative of malicious activity or misconfigured bots.
-
-    :cvar int THROTTLE_LIMIT: The maximum number of allowed 404 responses from a single client IP within the timeout period before blocking is triggered. Default is 25.
-    :cvar int THROTTLE_TIMEOUT: The duration of the timeout window in seconds during which 404 responses are counted and blocking is enforced. Default is 600 seconds (10 minutes).
-
-    .. note::
-        - Authenticated users are exempt from this blocking mechanism.
-        - The client IP is determined using the :meth:`get_client_ip` method.
-        - The 404 count and blocking state are stored in the Django cache backend.
-        - Logging is performed using a waffle switch to control verbosity.
-
-    **Example**
-
-    To enable this middleware, add it to your Django project's middleware settings::
-
-        MIDDLEWARE = [
-            ...
-            'smarter.lib.django.middleware.excessive_404.SmarterBlockExcessive404Middleware',
-            ...
-        ]
+    This mitigates:
+    - automated scanners
+    - brute-force URL probing
+    - broken crawlers
+    - vulnerability enumeration attempts
     """
 
-    sync_capable = True
-    async_capable = True
-
     THROTTLE_LIMIT = 25
-    """The maximum number of allowed 404 responses from a single unauthenticated client IP within the timeout period before blocking is triggered."""
+    THROTTLE_TIMEOUT = 600
 
-    THROTTLE_TIMEOUT = 600  # seconds (10 minutes)
-    """The duration of the timeout window in seconds during which 404 responses are counted and blocking is enforced."""
+    LOG_SAMPLE_RATE = 10
 
-    def __init__(self, get_response):
-        super().__init__(get_response)
-        self.get_response = get_response
-        self.is_async = inspect.iscoroutinefunction(get_response)
-        if self.is_async:
-            markcoroutinefunction(self)
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+
+        if self.async_mode:
+            return self.__acall__(request)
+
+        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+
+        response = self.get_response(request)
+        self.process_response(request, response)
+        return response
+
+    async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
+
+        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
+            return await sync_to_async(self.get_response)(request)
+
+        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        response = await self.get_response(request)
+        await self.async_process_response(request, response)
+        return response
 
     @property
     def formatted_class_name(self) -> str:
-        """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{SmarterBlockExcessive404Middleware.__name__}")
+        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
 
-    def process_response(self, request: ASGIRequest, response):
+    async def async_process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
         """
-        Process the HTTP response and apply excessive 404 blocking logic.
-
-        :param request: The incoming HTTP request object.
-        :type request: django.core.handlers.wsgi.ASGIRequest
-        :param response: The outgoing HTTP response object.
-        :type response: django.http.HttpResponse
-
-        :returns: The original response, or a 403 Forbidden response if the client has exceeded the allowed number of 404 responses.
-        :rtype: django.http.HttpResponse
+        Async entry point for ASGI deployments.
         """
+
+        return self._process_response(request, response)
+
+    def process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
+        """
+        Sync response middleware entry point.
+        """
+
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
             return response
 
-        # skip if the response is anything other than a 404
+        return self._process_response(request, response)
+
+    def _process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
+        """
+        Shared sync/async implementation.
+        """
+
         if response.status_code != HTTPStatus.NOT_FOUND:
             return response
 
-        # skip this for authenticated users
+        # Authenticated users are exempt
         if is_authenticated_request(request):
             return response
-
-        logger.debug("%s.process_response(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
 
         client_ip = self.get_client_ip(request)
+
         if not client_ip:
-            return response
-
-        throttle_key = f"excessive_404_throttle:{client_ip}"
-        blocked_count = cache.get(throttle_key, 0)
-        if blocked_count >= self.THROTTLE_LIMIT:
-            logger.warning("%s Throttled client %s after %d 404s", self.formatted_class_name, client_ip, blocked_count)
-            return HttpResponseForbidden(
-                f"You have been blocked due to too many invalid requests from your IP. Try again later or contact {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
+            logger.debug(
+                "%s unable to determine client IP",
+                self.formatted_class_name,
             )
-
-        try:
-            blocked_count = cache.incr(throttle_key)
-        except ValueError:
-            cache.set(throttle_key, 1, timeout=self.THROTTLE_TIMEOUT)
-            blocked_count = 1
-        else:
-            cache.set(throttle_key, blocked_count, timeout=self.THROTTLE_TIMEOUT)
-
-        return response
-
-    async def async_process_response(self, request: ASGIRequest, response):
-        """
-        Async entry point for ASGI deployments. Mirrors :meth:`process_response`.
-        """
-        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
             return response
 
-        if response.status_code != HTTPStatus.NOT_FOUND:
-            return response
+        throttle_key = self.get_throttle_key(client_ip)
 
-        if is_authenticated_request(request):
-            return response
+        blocked_count = cache.get(throttle_key, 0)
 
-        logger.debug(
-            "%s.async_process_response(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request)
+        self.log_404_event(
+            request=request,
+            client_ip=client_ip,
+            blocked_count=blocked_count,
         )
 
-        client_ip = self.get_client_ip(request)
-        if not client_ip:
-            return response
-
-        throttle_key = f"excessive_404_throttle:{client_ip}"
-        blocked_count = cache.get(throttle_key, 0)
         if blocked_count >= self.THROTTLE_LIMIT:
-            logger.warning("%s Throttled client %s after %d 404s", self.formatted_class_name, client_ip, blocked_count)
-            return HttpResponseForbidden(
-                f"You have been blocked due to too many invalid requests from your IP. Try again later or contact {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
+
+            logger.warning(
+                "%s blocked client=%s count=%d",
+                self.formatted_class_name,
+                client_ip,
+                blocked_count,
             )
+
+            return HttpResponseForbidden(
+                "Too many invalid requests detected from your IP address. "
+                f"Contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} for assistance."
+            )
+
+        self.increment_throttle(throttle_key)
+
+        return response
+
+    @classmethod
+    def get_throttle_key(cls, client_ip: str) -> str:
+        return f"excessive_404_throttle:{client_ip}"
+
+    def increment_throttle(self, throttle_key: str) -> None:
+        """
+        Increment the client's 404 counter.
+        """
 
         try:
             blocked_count = cache.incr(throttle_key)
-        except ValueError:
-            cache.set(throttle_key, 1, timeout=self.THROTTLE_TIMEOUT)
-            blocked_count = 1
-        else:
-            cache.set(throttle_key, blocked_count, timeout=self.THROTTLE_TIMEOUT)
 
-        return response
+        except ValueError:
+            cache.set(
+                throttle_key,
+                1,
+                timeout=self.THROTTLE_TIMEOUT,
+            )
+
+        else:
+            cache.set(
+                throttle_key,
+                blocked_count,
+                timeout=self.THROTTLE_TIMEOUT,
+            )
+
+    def log_404_event(
+        self,
+        request: HttpRequest,
+        client_ip: str,
+        blocked_count: int,
+    ) -> None:
+        """
+        Sample logs to reduce spam during bot scans.
+        """
+
+        if blocked_count % self.LOG_SAMPLE_RATE != 0:
+            return
+
+        logger.debug(
+            ("%s 404 probe detected " "client=%s " "count=%d " "path=%s"),
+            self.formatted_class_name,
+            client_ip,
+            blocked_count,
+            self.smarter_build_absolute_uri(request),
+        )
