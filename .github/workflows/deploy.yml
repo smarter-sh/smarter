@@ -17,6 +17,8 @@ env:
   ROOT_DOMAIN: "smarter.sh"
   NAMESPACE_BASE: "smarter-ubc"
   PLATFORM_SUBDOMAIN: "ubc"
+  DEBUG_MODE: "true"
+  ENVIRONMENT: "alpha"
 
 jobs:
   deploy:
@@ -29,6 +31,9 @@ jobs:
       - name: Set environment variable
         id: setenv
         run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "DEBUG_MODE=${{ secrets.DEBUG_MODE }}" >> $GITHUB_ENV
+          fi
           if [[ "${{ github.ref }}" == "refs/heads/alpha" ]]; then
             echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/beta" ]]; then
@@ -59,7 +64,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
           cohere-api-key: ${{ secrets.COHERE_API_KEY }}
-          debug-mode: ${{ secrets.DEBUG_MODE }}
+          debug-mode: ${{ env.DEBUG_MODE }}
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-pat: ${{ secrets.DOCKERHUB_PAT }}
           fernet-encryption-key: ${{ secrets.FERNET_ENCRYPTION_KEY }}
