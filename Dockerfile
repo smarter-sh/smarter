@@ -210,14 +210,18 @@ FROM venv AS react_cache_buster
 
 ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
 
+ARG REACT_MANIFESTS_HASH
+ENV REACT_MANIFESTS_HASH=${REACT_MANIFESTS_HASH}
+
 # Download all manifests and compute a combined hash for cache busting
 RUN for app in $REACT_COMPONENTS; do \
-      curl -fsSL "https://cdn.smarter.sh/react/${app}/manifest.json" -o "/tmp/${app}_manifest.json"; \
+      url="https://cdn.smarter.sh/react/${app}/manifest.json"; \
+      echo "Downloading manifest for ${app} from ${url}"; \
+      curl -fsSL "$url" -o "/tmp/${app}_manifest.json"; \
       sha256sum "/tmp/${app}_manifest.json" | awk '{print $1}' > "/tmp/${app}_manifest.hash"; \
     done && \
     cat /tmp/*_manifest.hash | sha256sum | awk '{print $1}' > /tmp/react_manifests.hash
 
-ARG REACT_MANIFESTS_HASH
 
 ################################ build react ###################################
 # The Smarter web console UI includes several React components, such as the
@@ -281,7 +285,7 @@ WORKDIR ${REACT_STAGING_FOLDER}
 
 ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
 
-# set -e : fail immediately on error
+# set -e : fail immediately on error.
 # set --u : fail on undefined variables
 #
 # Notes:
@@ -296,6 +300,7 @@ ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator
 #     - arbitrary manifest complexity
 RUN set -eu; \
     for app in ${REACT_COMPONENTS}; do \
+        echo "Processing React component: ${app}"; \
         APP_ROOT="${REACT_STAGING_FOLDER}/${app}"; \
         MANIFEST="${APP_ROOT}/manifest.json"; \
         \
