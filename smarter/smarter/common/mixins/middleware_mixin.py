@@ -4,9 +4,12 @@ SmarterMiddlewareMixin: A mixin for middleware classes with helper functions.
 
 import ipaddress
 import re
+from collections.abc import Awaitable
 from typing import Optional
 
-from django.utils.deprecation import MiddlewareMixin
+from asgiref.sync import iscoroutinefunction, markcoroutinefunction
+from django.http import HttpRequest
+from django.http.response import HttpResponseBase
 
 from smarter.common.conf import smarter_settings
 from smarter.common.utils import (
@@ -19,21 +22,43 @@ from .logger import logger
 MOCK_REGEX = re.compile(r"<MagicMock|<Mock|mock\\.MagicMock|mock\\.Mock", re.IGNORECASE)
 
 
-class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
-    """A mixin for middleware classes with helper functions.
+class SmarterMiddlewareMixin(SmarterHelperMixin):
+    """
+    A mixin for middleware classes with helper functions. The initialization
+    is a blatant copy of Django 6x cors middleware. This this is our base
+    case for working with ASGI and sync middlewares.
 
     This mixin provides utilities for extracting client IP addresses,
     checking authentication indicators, and other middleware-related helpers.
-    Inherits from both Django's :class:`MiddlewareMixin` and :class:`SmarterHelperMixin`.
+    Inherits from :class:`SmarterHelperMixin`.
+
     """
 
-    def __call__(self, request):
-        logger.debug(
-            "%s.__call__() - processing request: %s",
-            self.formatted_class_name,
-            self.smarter_build_absolute_uri(request),
-        )
-        return super().__call__(request)
+    def __init__(self, get_response, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.async_mode = iscoroutinefunction(get_response)
+
+        if self.async_mode:
+            # Mark the class as async-capable, but do the actual switch
+
+            # inside __call__ to avoid swapping out dunder methods
+            markcoroutinefunction(self)
+
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        if self.async_mode:
+            return self.__acall__(request)
+        result = self.get_response(request)
+        assert isinstance(result, HttpResponseBase)
+        response = result
+        return response
+
+    async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
+        result = self.get_response(request)
+        assert not isinstance(result, HttpResponseBase)
+        response = await result
+        return response
 
     def get_client_ip(self, request) -> Optional[str]:
         """

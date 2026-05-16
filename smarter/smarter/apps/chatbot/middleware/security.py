@@ -1,12 +1,10 @@
 """This module is used to suppress DisallowedHost exception and return HttpResponseBadRequest instead."""
 
 import fnmatch
-from collections.abc import Awaitable
 from typing import Optional
 from urllib.parse import urlparse
 
 from django.http import HttpRequest
-from django.http.response import HttpResponseBase
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.conf import smarter_settings
@@ -22,11 +20,12 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from ..models import ChatBot, get_cached_chatbot_by_request
 
-logger = logging.getSmarterLogger(
-    __name__, any_switches=[SmarterWaffleSwitches.CHATBOT_LOGGING, SmarterWaffleSwitches.MIDDLEWARE_LOGGING]
+logger = logging.getSmarterLogger(__name__)
+logger.debug(
+    "%s is %s",
+    logging.formatted_text(__name__ + ".SmarterSecurityMiddleware"),
+    SmarterHelperMixin().formatted_state_ready,
 )
-
-logger.debug("Loading %s", logging.formatted_text(__name__ + ".SmarterSecurityMiddleware"))
 
 
 class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
@@ -82,14 +81,25 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
     """
 
-    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+    def __call__(self, request):
 
-        logger.debug(
-            "%s.__call__() called for %s",
-            logging.formatted_text(__name__ + "." + self.__class__.__name__),
-            self.smarter_build_absolute_uri(request),
-        )
+        if self.async_mode:
+            return self.__acall__(request)
+
+        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         return super().__call__(request)
+
+    async def __acall__(self, request):
+        """
+        Async version of __call__ that is swapped in when an async request
+        is running.
+        """
+        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        return await super().__acall__(request)
+
+    @property
+    def formatted_class_name(self) -> str:
+        return logging.formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
 
     def process_request(self, request: HttpRequest):
 

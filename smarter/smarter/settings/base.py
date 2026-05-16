@@ -680,11 +680,12 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "smarter.lib.django.middleware.debug.MiddlewareDebugMiddleware",
     "django_hosts.middleware.HostsRequestMiddleware",
     # this replaces corsheaders.middleware.CorsMiddleware"
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
+    # -----> BROKEN <--------- "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
     # to manage logging context by user. This has to run AFTER
     # authentication middleware so that it can get the user info for logging context.
     # -------------------------------

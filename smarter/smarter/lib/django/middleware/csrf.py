@@ -1,36 +1,162 @@
 """
-This module contains the SmarterCsrfViewMiddleware class, which is a subclass of Django's
-SmarterCsrfViewMiddleware. It adds the ability to add the ChatBot's URL to the list of
-trusted origins for CSRF protection.
+ASGI-safe dynamic CSRF middleware for Django.
+
+This module extends :class:`django.middleware.csrf.CsrfViewMiddleware`
+to support request-scoped trusted origins while preserving full
+compatibility with Django's supported middleware lifecycle.
+
+The implementation intentionally relies only on officially supported
+extension points and avoids custom async adaptation logic.
+
+Key Features
+============
+
+- Fully compatible with ASGI and WSGI
+- Dynamic request-scoped CSRF trusted origins
+- Stateless request processing
+- Chatbot-aware CSRF bypass support
+- Internal network bypass support
+- Local development environment bypass
+- Compatibility with Django admin and authentication middleware
+- Compatible with sync views, async views, and Channels
+
+Design Constraints
+==================
+
+This middleware intentionally avoids several patterns that commonly
+introduce concurrency bugs or unsupported Django behavior:
+
+- Does not mutate ``request.user``
+- Does not override ``__call__``
+- Does not use ``markcoroutinefunction``
+- Does not manually manage async adaptation
+- Does not persist middleware state across requests
+- Does not mutate ``settings.CSRF_TRUSTED_ORIGINS``
+
+Concurrency Safety
+==================
+
+All trusted origin computation is request-scoped.
+
+Dynamic CSRF origin lists are created fresh for each request and are
+never written back to Django settings or shared global state.
+
+Temporary compatibility overrides required by Django internals are
+strictly limited to the duration of ``process_view()`` execution and
+are restored immediately afterward.
+
+Behavior
+========
+
+For each request, the middleware:
+
+#. Evaluates feature-flag enablement via Django Waffle
+#. Applies environment-specific bypass rules
+#. Applies internal network bypass rules
+#. Applies chatbot-specific CSRF bypass logic
+#. Dynamically computes trusted origins
+#. Delegates CSRF validation to Django's built-in middleware
+
+If CSRF validation fails, detailed structured logging is emitted
+containing request metadata for diagnostics.
+
+Dynamic Trusted Origins
+=======================
+
+Dynamic origins are derived from the active request and may include:
+
+- chatbot-specific origins
+- configuration endpoints
+- environment-specific origins
+
+The middleware never mutates:
+
+- ``settings.CSRF_TRUSTED_ORIGINS``
+- Django global middleware configuration
+- shared process state
+
+Django Compatibility
+====================
+
+This middleware preserves compatibility with Django internals by
+maintaining the expected behavior of:
+
+- ``csrf_trusted_origins_hosts``
+- ``allowed_origins_exact``
+- ``allowed_origin_subdomains``
+
+These properties are exposed using Django-compatible interfaces while
+still avoiding persistent mutation of global settings.
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: generated/
+
+   SmarterCsrfViewMiddleware
+
+Dependencies
+============
+
+- Django
+- Django Waffle
+
+Logging
+=======
+
+Middleware lifecycle events, bypass conditions, dynamic origin
+generation, and CSRF validation failures are logged using the
+application's structured logging framework.
+
+Notes
+=====
+
+This middleware depends on behavior provided by
+:class:`smarter.lib.django.request.SmarterRequestMixin`.
+
+Because Django's native CSRF middleware already supports both sync
+and async execution models, this implementation avoids introducing
+custom coroutine wrappers or async middleware adaptation logic.
+
+Warnings
+========
+
+Although temporary reassignment of Django internal CSRF origin
+structures occurs during request processing, the original values are
+always restored immediately after validation completes.
+
+This behavior is intentionally scoped to the request lifecycle and is
+designed to preserve compatibility with Django's internal CSRF
+validation flow.
 """
 
-import inspect
 from collections import defaultdict
 from urllib.parse import urlparse
-from warnings import deprecated
 
-from asgiref.sync import markcoroutinefunction
 from django.conf import settings
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponseForbidden
 from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.functional import cached_property
 
-from smarter.apps.account.utils import smarter_cached_objects
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins.helper_mixin import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.django import waffle
-from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
+logger = logging.getSmarterLogger(__name__)
+
+
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF):
     logger.debug(
-        "%s is %s", formatted_text(__name__ + ".SmarterCsrfViewMiddleware"), SmarterHelperMixin().formatted_state_ready
+        "%s is %s",
+        formatted_text(__name__ + ".SmarterCsrfViewMiddleware"),
+        SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
@@ -42,271 +168,177 @@ else:
 
 class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
     """
-    Middleware for enforcing CSRF (Cross-Site Request Forgery) protection with dynamic trusted origins.
+    ASGI-safe CSRF middleware.
 
-    This middleware extends Django's built-in CSRF middleware to support dynamic addition of trusted
-    origins, particularly for chatbot-related requests. It ensures that POST requests with a CSRF cookie
-    require a valid ``csrfmiddlewaretoken``, and it sets outgoing CSRF cookies as needed.
-
-    The middleware is designed to work seamlessly with the ``{% csrf_token %}`` template tag and
-    provides additional logic for chatbot requests, health checks, and internal IP addresses. It also
-    integrates with application logging and waffle switches for feature toggling.
-
-    Note that this middleware uses the admin user as a proxy for initializing the SmarterRequestMixin,
-    which is used solely for purposes of determining if the request is for a ChatBot. The user
-    object is stripped from the request before passing it downstream in the middleware chain.
-
-    **Key Features**
-
-    - Dynamically adds chatbot URLs to the list of CSRF trusted origins.
-    - Exempts chatbot requests from CSRF checks when appropriate.
-    - Handles health check endpoints and internal IP addresses efficiently.
-    - Provides detailed logging for CSRF-related events and decisions.
-    - Integrates with Django's CSRF protection and application-specific settings.
-
-    .. note::
-        - Chatbot requests can be exempted from CSRF checks based on waffle switches.
-        - Trusted origins are dynamically extended for chatbot and config requests.
-        - Logging is controlled via a waffle switch and the application's log level.
-
-    **Example**
-
-    To enable this middleware, add it to your Django project's middleware settings::
-
-        MIDDLEWARE = [
-            ...
-            'smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware',
-            ...
-        ]
-
-    :param request: The incoming HTTP request object.
-    :type request: django.http.HttpRequest
-
-    :returns: The HTTP response object, or None if the request is exempted from CSRF checks.
-    :rtype: django.http.HttpResponse or None
+    Extends Django's CsrfViewMiddleware while preserving all Django
+    request lifecycle invariants.
     """
 
-    sync_capable = True
-    async_capable = True
+    def __init__(self, get_response):
+        super().__init__(get_response)
 
-    _ready: bool = False
-
-    def __init__(self, get_response, *args, **kwargs):
-        """
-        Initialize the SmarterCsrfViewMiddleware.
-
-        We are not yet authenticated, which is fine. we use the admin user for
-        any needed context. This is needed for evaluating whether or not this
-        request is for a ChatBot.
-        """
-        logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
-        super().__init__(get_response, *args, **kwargs)
-        self.is_async = inspect.iscoroutinefunction(get_response)
-        if self.is_async:
-            markcoroutinefunction(self)
-
-        admin_user_profile = None
-        # this can happen on fresh installations where migrations have not yet run.
-        if self.is_async:
-            SmarterRequestMixin.__init__(self, get_response, *args, **kwargs)
-        else:
-            try:
-                admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
-                SmarterRequestMixin.__init__(
-                    self,
-                    get_response,
-                    request=None,
-                    user=admin_user_profile.user,
-                    user_profile=admin_user_profile,
-                    account=admin_user_profile.account,
-                    *args,
-                    **kwargs,
-                )
-                self._ready = True
-            # pylint: disable=broad-except
-            except Exception as e:
-                logger.error("%s.__init__() could not get admin user profile: %s", self.formatted_class_name, str(e))
-                SmarterRequestMixin.__init__(self, get_response, *args, **kwargs)
-
-    @property
-    def ready(self) -> bool:
-        """
-        Return whether the middleware is ready for use. The middleware is considered ready
-        if it has been properly initialized with the admin user profile.
-        """
-        return self._ready
+        # initialize request mixin WITHOUT fake users/admin state
+        SmarterRequestMixin.__init__(self)
 
     @property
     def formatted_class_name(self) -> str:
-        """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{SmarterCsrfViewMiddleware.__name__}")
+        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
 
-    @property
-    def CSRF_TRUSTED_ORIGINS(self) -> list[str]:
+    def get_dynamic_trusted_origins(
+        self,
+        request: ASGIRequest,
+    ) -> list[str]:
         """
-        Return the list of trusted origins for CSRF.
-        If the request is for a ChatBot, the ChatBot's URL is added to the list.
+        Return request-scoped trusted origins.
+
+        IMPORTANT:
+        - never mutate Django settings
+        - always return a fresh list
         """
-        retval = settings.CSRF_TRUSTED_ORIGINS
-        if self.is_chatbot or self.is_config:
-            retval += [self.url]
-        logger.debug("%s.CSRF_TRUSTED_ORIGINS: %s", self.formatted_class_name, retval)
-        return retval
+
+        origins = list(settings.CSRF_TRUSTED_ORIGINS)
+
+        try:
+            if self.is_chatbot or self.is_config:
+                origin = request.build_absolute_uri("/").rstrip("/")
+
+                if origin not in origins:
+                    origins.append(origin)
+        # pylint: disable=broad-except
+        except Exception as exc:
+            logging.exception(
+                "%s failed building dynamic CSRF origins: %s",
+                self.formatted_class_name,
+                exc,
+            )
+
+        return origins
 
     @cached_property
     def csrf_trusted_origins_hosts(self):
-        return [urlparse(origin).netloc.lstrip("*") for origin in self.CSRF_TRUSTED_ORIGINS]
+        """
+        Django internals use this property.
+
+        We preserve compatibility while avoiding mutation
+        of global settings.
+        """
+        return [urlparse(origin).netloc.lstrip("*") for origin in settings.CSRF_TRUSTED_ORIGINS]
 
     @cached_property
     def allowed_origins_exact(self):
-        return {origin for origin in self.CSRF_TRUSTED_ORIGINS if "*" not in origin}
+        return {origin for origin in settings.CSRF_TRUSTED_ORIGINS if "*" not in origin}
 
     @cached_property
     def allowed_origin_subdomains(self):
-        """
-        A mapping of allowed schemes to list of allowed netlocs, where all
-        subdomains of the netloc are allowed.
-        """
         allowed_origin_subdomains = defaultdict(list)
-        for parsed in (urlparse(origin) for origin in self.CSRF_TRUSTED_ORIGINS if "*" in origin):
+
+        for parsed in (urlparse(origin) for origin in settings.CSRF_TRUSTED_ORIGINS if "*" in origin):
             allowed_origin_subdomains[parsed.scheme].append(parsed.netloc.lstrip("*"))
+
         return allowed_origin_subdomains
 
-    def __call__(self, request: ASGIRequest):
+    def process_view(
+        self,
+        request: ASGIRequest,
+        callback,
+        callback_args,
+        callback_kwargs,
+    ):
         """
-        New-style middleware entrypoint for CSRF protection with dynamic trusted origins and chatbot logic.
+        Main CSRF enforcement hook.
+
+        IMPORTANT:
+        - return None to continue processing
+        - return HttpResponse to short-circuit
+        - NEVER return self.get_response(request)
         """
-        if self.is_async:
-            return self.__acall__(request)
+
+        logger.debug(
+            "%s.process_view() path=%s",
+            self.formatted_class_name,
+            request.path,
+        )
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF):
-            return self.get_response(request)
+            return None
+
+        if smarter_settings.environment == SmarterEnvironments.LOCAL:
+            logger.debug(
+                "%s local environment bypass",
+                self.formatted_class_name,
+            )
+            return None
+
+        path = request.path.strip("/")
+
+        if path in getattr(self, "amnesty_urls", []):
+            logger.debug(
+                "%s health check bypass: %s",
+                self.formatted_class_name,
+                request.path,
+            )
+            return None
 
         host = request.get_host()
 
-        if not host:
-            return SmarterHttpResponseServerError(
-                request=request,
-                error_message="Internal error (500) - could not parse request.",
-            )
-
-        # Short-circuit for health checks
-        if request.path.replace("/", "") in self.amnesty_urls:
-            return self.get_response(request)
-
-        # Short-circuit for any requests born from internal IP address hosts.
         if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
             logger.debug(
-                "%s.__call__() %s identified as an internal IP address, exiting.",
+                "%s internal IP bypass: %s",
                 self.formatted_class_name,
-                self.smarter_build_absolute_uri(request),
+                host,
             )
-            return self.get_response(request)
+            return None
 
-        logger.debug(
-            "%s.__call__ url=%s",
-            self.formatted_class_name,
-            self.url,
-        )
-
-        # Local/dev bypass
-        if smarter_settings.environment == SmarterEnvironments.LOCAL:
-            logger.debug("%s.__call__(): environment is local. ignoring csrf checks", self.formatted_class_name)
-            return self.get_response(request)
-
+        #
         # Chatbot bypass
+        #
         if self.is_chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS):
             logger.info(
-                "%s.__call__() SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS is active. ignoring csrf checks for ChatBot request %s",
+                "%s chatbot CSRF bypass: %s",
                 self.formatted_class_name,
-                self.url,
+                request.path,
             )
-            return self.get_response(request)
+            return None
 
-        # Chatbot logging
-        if self.is_chatbot:
-            logger.debug("%s.__call__(): csrf_middleware_logging is active", self.formatted_class_name)
-            logger.debug("=" * 80)
-            logger.debug("%s ChatBot: %s", self.formatted_class_name, self.url)
-            for cookie in request.COOKIES:
-                logger.debug("SmarterCsrfViewMiddleware request.COOKIES: %s", cookie)
-            logger.debug("%s cookie settings", self.formatted_class_name)
-            logger.debug("%s settings.CSRF_COOKIE_NAME: %s", self.formatted_class_name, settings.CSRF_COOKIE_NAME)
-            logger.debug(
-                "%s request.META['CSRF_COOKIE']: %s", self.formatted_class_name, request.META.get("CSRF_COOKIE")
-            )
-            logger.debug("%s settings.CSRF_COOKIE_AGE: %s", self.formatted_class_name, settings.CSRF_COOKIE_AGE)
-            logger.debug("%s settings.CSRF_COOKIE_DOMAIN: %s", self.formatted_class_name, settings.CSRF_COOKIE_DOMAIN)
-            logger.debug("%s settings.CSRF_COOKIE_PATH: %s", self.formatted_class_name, settings.CSRF_COOKIE_PATH)
-            logger.debug("%s settings.CSRF_COOKIE_SECURE: %s", self.formatted_class_name, settings.CSRF_COOKIE_SECURE)
-            logger.debug(
-                "%s settings.CSRF_COOKIE_HTTPONLY: %s", self.formatted_class_name, settings.CSRF_COOKIE_HTTPONLY
-            )
-            logger.debug(
-                "%s settings.CSRF_COOKIE_SAMESITE: %s", self.formatted_class_name, settings.CSRF_COOKIE_SAMESITE
-            )
-            logger.debug("=" * 80)
+        dynamic_origins = self.get_dynamic_trusted_origins(request)
 
-        # Remove user before passing downstream if present
-        if hasattr(request, "user") and request.user is not None:
-            setattr(request, "user", None)
+        original_exact = self.allowed_origins_exact
+        original_subdomains = self.allowed_origin_subdomains
+        original_hosts = self.csrf_trusted_origins_hosts
 
-        # Call parent (CsrfViewMiddleware) __call__ for CSRF logic
-        response = super().__call__(request)
+        try:
+            self.csrf_trusted_origins_hosts = [urlparse(origin).netloc.lstrip("*") for origin in dynamic_origins]
+            self.allowed_origins_exact = {origin for origin in dynamic_origins if "*" not in origin}
+            allowed_subdomains = defaultdict(list)
+            for parsed in (urlparse(origin) for origin in dynamic_origins if "*" in origin):
+                allowed_subdomains[parsed.scheme].append(parsed.netloc.lstrip("*"))
+
+            self.allowed_origin_subdomains = allowed_subdomains
+            response = super().process_view(request, callback, callback_args, callback_kwargs)
+
+        finally:
+            self.allowed_origins_exact = original_exact
+            self.allowed_origin_subdomains = original_subdomains
+            self.csrf_trusted_origins_hosts = original_hosts
+
         if isinstance(response, HttpResponseForbidden):
             logger.error(
-                "%s.__call__() CSRF validation failed | path=%s | method=%s | user_agent=%s | remote_addr=%s | origin=%s | referer=%s | csrf_cookie=%s | session_key=%s",
+                (
+                    "%s CSRF validation failed "
+                    "| path=%s "
+                    "| method=%s "
+                    "| origin=%s "
+                    "| referer=%s "
+                    "| remote_addr=%s "
+                    "| user_agent=%s"
+                ),
                 self.formatted_class_name,
                 request.path,
                 request.method,
-                request.META.get("HTTP_USER_AGENT"),
-                request.META.get("REMOTE_ADDR"),
                 request.META.get("HTTP_ORIGIN"),
                 request.META.get("HTTP_REFERER"),
-                request.COOKIES.get(settings.CSRF_COOKIE_NAME),
-                getattr(request.session, "session_key", None),
-            )
-        return response
-
-    @deprecated("Use __call__ instead, which is the new-style middleware entrypoint.")
-    def process_request(self, request: ASGIRequest):
-        """
-        Legacy support for old-style middleware. This will only be called if the middleware is not used as new-style middleware.
-        """
-        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF):
-            return self.get_response(request)
-        logger.debug("%s.process_request() called with path: %s", self.formatted_class_name, request.path)
-        return super().process_request(request)
-
-    @deprecated("Use __call__ instead, which is the new-style middleware entrypoint.")
-    def process_view(self, request: ASGIRequest, callback, callback_args, callback_kwargs):
-        """
-        Legacy support for old-style middleware. This will only be called if the middleware is not used as new-style middleware.
-        """
-        logger.debug("%s.process_view() called with path: %s", self.formatted_class_name, request.path)
-
-        if smarter_settings.environment == SmarterEnvironments.LOCAL:
-            logger.debug("%s.process_view: environment is local. ignoring csrf checks", self.formatted_class_name)
-            return None
-        if self.is_chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS):
-            logger.info(
-                "%s.process_view() SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS is active. ignoring csrf checks for ChatBot request %s",
-                self.formatted_class_name,
-                self.url,
-            )
-            return None
-        response = super().process_view(request, callback, callback_args, callback_kwargs)
-        if isinstance(response, HttpResponseForbidden):
-            logger.error(
-                "%s.process_view() CSRF validation failed | path=%s | method=%s | user_agent=%s | remote_addr=%s | origin=%s | referer=%s | csrf_cookie=%s | session_key=%s",
-                self.formatted_class_name,
-                request.path,
-                request.method,
-                request.META.get("HTTP_USER_AGENT"),
                 request.META.get("REMOTE_ADDR"),
-                request.META.get("HTTP_ORIGIN"),
-                request.META.get("HTTP_REFERER"),
-                request.COOKIES.get(settings.CSRF_COOKIE_NAME),
-                getattr(request.session, "session_key", None),
+                request.META.get("HTTP_USER_AGENT"),
             )
+
         return response

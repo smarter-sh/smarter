@@ -1,18 +1,63 @@
 """
-authenticate requests via SmarterTokenAuthentication, a subclass of
-knox.auth TokenAuthentication tokens.
+smarter.lib.drf.middleware
+==========================
+
+Middleware for Smarter token authentication using SmarterTokenAuthentication.
+
+This module provides middleware for authenticating API requests using Knox tokens and the
+SmarterTokenAuthentication backend. It supports both synchronous and asynchronous request handling,
+performs early API endpoint filtering, validates token lifetimes, and integrates with Django signals
+for authentication events. Structured logging is used throughout for observability, and the middleware
+is compatible with Django's MiddlewareMixin.
+
+Features
+--------
+- Early API endpoint filtering to minimize unnecessary authentication checks
+- Knox token authentication for secure API access
+- Token lifetime validation against configurable maximum age
+- Structured logging for authentication events and errors
+- Signal dispatching for authentication request, success, and failure
+- Async-compatible middleware behavior for modern Django deployments
+
+Classes
+-------
+.. autosummary::
+   :toctree:
+
+   SmarterTokenAuthenticationMiddleware
+
+Signals
+-------
+- ``smarter_token_authentication_request``: Emitted when a token authentication attempt is made.
+- ``smarter_token_authentication_success``: Emitted on successful authentication.
+- ``smarter_token_authentication_failure``: Emitted on authentication failure.
+
+Exceptions
+----------
+- ``SmarterTokenAuthenticationError``: Raised on authentication errors.
+
+Dependencies
+------------
+- Django
+- Django REST Framework
+- Knox
+- asgiref
+- smarter.common, smarter.lib, and related internal modules
 """
+
+from __future__ import annotations
 
 import inspect
 import traceback
+from collections.abc import Awaitable
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Optional
 
+from asgiref.sync import markcoroutinefunction, sync_to_async
 from django.contrib.auth import login
-from django.http import HttpRequest
+from django.http import HttpResponseBase
 from django.utils import timezone
-from django.utils.deprecation import MiddlewareMixin
 from knox.settings import knox_settings
 from rest_framework.authentication import get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
@@ -21,7 +66,7 @@ from rest_framework.request import Request
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.mixins import SmarterHelperMixin
+from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.common.utils import mask_string
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -43,6 +88,7 @@ from .token_authentication import (
 )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
+
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH):
     logger.debug(
         "%s is %s",
@@ -57,239 +103,238 @@ else:
     )
 
 
-class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
-    """Middleware to authenticate requests via SmarterTokenAuthentication, a subclass of
-    knox.auth TokenAuthentication tokens. Provides seamless token authentication for
-    incoming requests.
-
-    Does the following:
-
-    - Checks for the presence of an Authorization header with a valid token.
-    - Uses SmarterTokenAuthentication to authenticate the token.
-    - Logs authentication attempts and outcomes.
-    - adds Django signals for token authentication events.
-    - verifies token activity.
-    - adds timestamp update on token use.
-
-    Raises:
-        AuthenticationFailed: Raised when authentication fails.
-        SmarterTokenAuthenticationError: Raised for errors specific to SmarterTokenAuthentication.
-
+class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
+    """
+    Middleware for token authentication using SmarterTokenAuthentication.
     """
 
-    authorization_header: Optional[str] = None
-    request: Optional[HttpRequest] = None
-    masked_token: Optional[str] = None
+    sync_capable = True
+    async_capable = True
 
     @property
     def formatted_class_name(self) -> str:
-        """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{SmarterTokenAuthenticationMiddleware.__name__}")
+        return formatted_text(f"{__name__}.{self.__class__.__name__}")
 
-    # pylint: disable=unused-argument
-    def is_token_auth(self, request) -> bool:
-        """Check if the request is for knox token authentication.
+    def __call__(self, request: Request) -> HttpResponseBase | Awaitable[HttpResponseBase]:
 
-        Args:
-            request (Request): The incoming HTTP request.
-
-        Returns:
-            bool: True if the request uses token authentication, False otherwise.
-        """
-        # auth=[b'Token', b'd9d56ff4-- A 64-CHARACTER TOKEN --c8176']
-        auth = self.authorization_header.split() if isinstance(self.authorization_header, str) else []
-        auth = [a.decode() if isinstance(a, bytes) else a for a in auth]
-        prefix = knox_settings.AUTH_HEADER_PREFIX
-        if isinstance(prefix, bytes):
-            logger.debug(
-                "%s.is_token_auth() Decoding knox_settings.AUTH_HEADER_PREFIX from bytes to string",
-                self.formatted_class_name,
-            )
-            prefix = prefix.decode()
-
-        if not auth:
-            logger.debug(
-                "%s.is_token_auth() No Authorization header present - returning False",
-                self.formatted_class_name,
-            )
-            return False
-
-        # Ensure auth[0] is a string for comparison
-        # prefix=Token
-        # auth=['Token', 'd9d56ff4-- A 64-CHARACTER TOKEN --c8176']
-        auth_prefix = auth[0]
-        if isinstance(auth_prefix, bytes):
-            logger.debug(
-                "%s.is_token_auth() Decoding auth_prefix from bytes to string",
-                self.formatted_class_name,
-            )
-            auth_prefix = auth_prefix.decode()
-
-        if auth_prefix.lower() != prefix.lower():
-            # Authorization header is possibly for another backend
-            logger.debug(
-                "%s.is_token_auth() Authorization header prefix '%s' does not match expected prefix '%s'",
-                self.formatted_class_name,
-                auth_prefix,
-                prefix,
-            )
-            return False
-
-        token = auth[1]
-        self.masked_token = mask_string(string=token)
-        logger.debug(
-            "%s.is_token_auth() Detected Token authentication with token %s - returning True",
-            self.formatted_class_name,
-            self.masked_token,
-        )
-        return True
-
-    def url(self) -> Optional[str]:
-        """Return the full URL from the request object.
-
-        Returns:
-            Optional[str]: the complete url from the request object.
-        """
-        if self.request:
-            return self.smarter_build_absolute_uri(self.request)
-        return None
-
-    def get_request_with_verified_user(self, request: Request) -> Request:
-        """Ensure the request has a user set, defaulting to SmarterAnonymousUser if not.
-
-        Args:
-            request (Request): The incoming HTTP request.
-        """
-        if not hasattr(request, "user") or request.user is None:
-            logger.warning("%s.__call__() setting anonymous user on request", self.formatted_class_name)
-            request.user = SmarterAnonymousUser()
-        return request
-
-    def __init__(self, get_response):
-        super().__init__(get_response)
-        self.get_response = get_response
-        self.is_async = inspect.iscoroutinefunction(get_response)
-        logger.debug("%s.__init__() initialized", self.formatted_class_name)
-
-    def __call__(self, request: Request, *args, **kwargs):
-        """Try to authenticate the request using SmarterTokenAuthentication.
-
-        Args:
-            request (Request): The incoming HTTP request.
-
-        Raises:
-            AuthenticationFailed: Raised when authentication fails.
-            SmarterTokenAuthenticationError: Raised for errors specific to SmarterTokenAuthentication.
-        Returns:
-            HttpResponse: The response generated by the next middleware or view.
-        """
-        if self.is_async:
+        if self.async_mode:
             return self.__acall__(request)
+
+        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+
+        return self.process_request(request)
+
+    async def __acall__(self, request: Request):
+
+        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        return await sync_to_async(self.process_request)(request)
+
+    def process_request(self, request: Request):
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH):
             return self.get_response(request)
 
-        # this is the earliest point at which we can evaluate the request URL.
+        request = self.ensure_request_user(request)
+
         url = self.smarter_build_absolute_uri(request)
-        logger.debug(
-            "%s.__call__() processing request for URL: %s",
-            self.formatted_class_name,
-            url,
-        )
-        if not SmarterValidator.is_api_endpoint(url):  # type: ignore
-            # skip token authentication if we're not a Smarter API request
-            logger.info("%s skipping token authentication for non-Smarter API request", self.formatted_class_name)
-            request = self.get_request_with_verified_user(request)
+        if not isinstance(url, str):
+            raise ValueError("Failed to build request URL.")
+
+        logger.debug("%s processing request: %s", self.formatted_class_name, url)
+
+        if not self.is_api_request(url):
+            logger.debug("%s skipping non-api request", self.formatted_class_name)
             return self.get_response(request)
 
-        self.authorization_header = get_authorization_header(request)  # type: ignore[assignment]
-        self.request = request
-        if not self.is_token_auth(request):
-            # we're not using token authentication, no need to do anything
-            logger.debug("%s.__call__() skipping non-token authentication", self.formatted_class_name)
-            request = self.get_request_with_verified_user(request)
-            return self.get_response(request)
         if getattr(request, "auth", None) is not None:
-            # we've already authenticated the request
-            # with some other middleware, no need to do anything
-            logger.debug(
-                "%s.__call__() skipping already authenticated request for user %s",
-                self.formatted_class_name,
-                getattr(request, "user", None),
-            )
-            request = self.get_request_with_verified_user(request)
+            logger.debug("%s request already authenticated", self.formatted_class_name)
             return self.get_response(request)
+
+        authorization_header = self.get_authorization_header(request)
+
+        token = self.extract_token(authorization_header)
+
+        if not token:
+            logger.debug("%s no token authentication detected", self.formatted_class_name)
+            return self.get_response(request)
+
+        masked_token = mask_string(string=token)
 
         smarter_token_authentication_request.send(
             sender=self.__class__,
-            token=self.masked_token,
+            token=masked_token,
             url=url,
         )
-        request.auth = SmarterTokenAuthentication()  # type: ignore[assignment]
+
         try:
-            user, auth_obj = request.auth.authenticate(request)  # type: ignore[assignment]
-            if not user:
-                raise AuthenticationFailed(
-                    "SmarterTokenAuthentication.authenticate() did not return"
-                    " a user object. This can happen if the Authorization header"
-                    " is malformed or is for another backend."
-                )
 
-            # --- BEGIN: check token creation date ---
-            token = None
-            if hasattr(auth_obj, "digest"):
-                logger.debug(
-                    "%s.__call__() digest found. Checking token creation date for user %s",
-                    self.formatted_class_name,
-                    user,
-                )
-                try:
-                    token = SmarterAuthToken.objects.get(digest=auth_obj.digest)
-                    if token.created < timezone.now() - timedelta(
-                        days=smarter_settings.smarter_api_key_max_lifetime_days
-                    ):
-                        logger.warning(
-                            "%s token for user %s has exceeded max lifetime of %d days",
-                            self.formatted_class_name,
-                            user,
-                            smarter_settings.smarter_api_key_max_lifetime_days,
-                        )
-                except SmarterAuthToken.DoesNotExist:
-                    logger.warning("%s token digest not found in AuthToken table", self.formatted_class_name)
-            # --- END: Get token creation date ---
+            user, auth_obj = self.authenticate_request(request)
+            self.validate_token_lifetime(user=user, auth_obj=auth_obj)
+            request.user = user or SmarterAnonymousUser()
+            login(request, request.user, backend="django.contrib.auth.backends.ModelBackend")  # type: ignore
 
-            request.user = user or (SmarterAnonymousUser() if user is None else user)
-            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             smarter_token_authentication_success.send(
                 sender=self.__class__,
-                user=user,
-                token=self.masked_token,
+                user=request.user,
+                token=masked_token,
             )
-            logger.info("%s authenticated user %s", self.formatted_class_name, user)
+
+            logger.info("%s authenticated user=%s", self.formatted_class_name, request.user)
+
         except AuthenticationFailed as auth_failed:
-            smarter_token_authentication_failure.send(
-                sender=self.__class__,
-                user=SmarterAnonymousUser(),
-                token=self.masked_token,
+
+            return self.handle_authentication_failure(
+                request=request,
+                token=masked_token,
+                exc=auth_failed,
             )
-            try:
-                raise SmarterTokenAuthenticationError("Authentication failed.") from auth_failed
-            except SmarterTokenAuthenticationError as e:
-                auth = self.authorization_header.split() if isinstance(self.authorization_header, str) else []
-                auth_token = auth[1] if len(auth) > 1 else None
-                logger.warning(
-                    "%s failed token authentication attempt using token %s", self.formatted_class_name, auth_token
-                )
-                thing = SAMKinds.from_url(self.url())
-                command = SmarterJournalCliCommands.from_url(self.url())
-                return SmarterJournaledJsonErrorResponse(
-                    request=request,
-                    e=e,
-                    thing=thing,
-                    command=command,  # type: ignore[arg-type]
-                    status=HTTPStatus.UNAUTHORIZED,
-                    stack_trace=traceback.format_exc(),
-                )
-        logger.debug("%s.__call__() completed token authentication", self.formatted_class_name)
-        request = self.get_request_with_verified_user(request)
+
+        logger.debug("%s authentication completed", self.formatted_class_name)
+
         return self.get_response(request)
+
+    @staticmethod
+    def is_api_request(url: str) -> bool:
+        return SmarterValidator.is_api_endpoint(url)
+
+    @staticmethod
+    def get_authorization_header(request: Request) -> str:
+
+        auth_header = get_authorization_header(request)
+
+        if isinstance(auth_header, bytes):
+            return auth_header.decode()
+        if isinstance(auth_header, (bytes, bytearray)):
+            return auth_header.decode()
+        if isinstance(auth_header, memoryview):
+            return auth_header.tobytes().decode()
+        if isinstance(auth_header, str):
+            return auth_header
+        return ""
+
+    @staticmethod
+    def get_auth_prefix() -> str:
+
+        prefix = knox_settings.AUTH_HEADER_PREFIX
+
+        if isinstance(prefix, bytes):
+            return prefix.decode()
+
+        return str(prefix)
+
+    def extract_token(self, authorization_header: str) -> str | None:
+        """
+        Extract token from Authorization header.
+        """
+
+        if not authorization_header:
+            return None
+
+        auth_parts = authorization_header.split()
+
+        if len(auth_parts) != 2:
+            return None
+
+        auth_prefix, token = auth_parts
+
+        expected_prefix = self.get_auth_prefix()
+
+        if auth_prefix.lower() != expected_prefix.lower():
+            return None
+
+        logger.debug("%s detected token authentication token=%s", self.formatted_class_name, mask_string(token))
+
+        return token
+
+    @staticmethod
+    def ensure_request_user(request: Request) -> Request:
+
+        if not hasattr(request, "user") or request.user is None:
+            request.user = SmarterAnonymousUser()
+
+        return request
+
+    @staticmethod
+    def authenticate_request(request: Request):
+
+        request.auth = SmarterTokenAuthentication()
+
+        user_auth_tuple = request.auth.authenticate(request)
+
+        if not user_auth_tuple:
+            raise AuthenticationFailed("Authentication backend did not return a user.")
+
+        user, auth_obj = user_auth_tuple
+
+        if not user:
+            raise AuthenticationFailed("Authentication backend returned an empty user.")
+
+        return user, auth_obj
+
+    def validate_token_lifetime(
+        self,
+        user,
+        auth_obj,
+    ) -> None:
+        """
+        Warn on tokens exceeding configured lifetime.
+        """
+
+        digest = getattr(auth_obj, "digest", None)
+
+        if not digest:
+            return
+
+        try:
+            token = SmarterAuthToken.objects.get(digest=digest)
+
+        except SmarterAuthToken.DoesNotExist:
+
+            logger.warning(
+                "%s token digest not found",
+                self.formatted_class_name,
+            )
+
+            return
+
+        max_age = timedelta(days=smarter_settings.smarter_api_key_max_lifetime_days)
+
+        if token.created < timezone.now() - max_age:
+
+            logger.warning(
+                ("%s token exceeded maximum lifetime " "user=%s " "max_days=%d"),
+                self.formatted_class_name,
+                user,
+                smarter_settings.smarter_api_key_max_lifetime_days,
+            )
+
+    # pylint: disable=W0613
+    def handle_authentication_failure(
+        self,
+        request: Request,
+        token: str | None,
+        exc: Exception,
+    ):
+
+        smarter_token_authentication_failure.send(
+            sender=self.__class__,
+            user=SmarterAnonymousUser(),
+            token=token,
+        )
+
+        logger.warning("%s authentication failed token=%s", self.formatted_class_name, token)
+
+        wrapped_exception = SmarterTokenAuthenticationError("Authentication failed.")
+
+        thing = SAMKinds.from_url(self.smarter_build_absolute_uri(request))
+
+        command = SmarterJournalCliCommands.from_url(self.smarter_build_absolute_uri(request))
+
+        return SmarterJournaledJsonErrorResponse(
+            request=request,
+            e=wrapped_exception,
+            thing=thing,
+            command=command,  # type: ignore[arg-type]
+            status=HTTPStatus.UNAUTHORIZED,
+            stack_trace=traceback.format_exc(),
+        )
