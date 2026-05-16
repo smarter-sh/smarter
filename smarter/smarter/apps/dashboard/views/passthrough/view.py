@@ -98,14 +98,19 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
             kwargs={"provider_name": "delete-me"},
         )
         api_path = api_path.rstrip("/").rsplit("/", 1)[0] + "/"
-        api_url = request.build_absolute_uri(api_path)
+        from urllib.parse import urljoin
 
-        provider_api_url = reverse(
+        from smarter.common.conf import smarter_settings
+
+        api_url = urljoin(smarter_settings.environment_platform_url, api_path)
+
+        provider_api_path = reverse(
             DashboardReverseNames.namespace,
             PassthroughReverseNames.namespace,
             PassthroughApiReverseNames.namespace,
             PassthroughApiReverseNames.api_providers,
         )
+        provider_api_url = urljoin(smarter_settings.environment_platform_url, provider_api_path)
 
         context = {
             "passthrough": {
