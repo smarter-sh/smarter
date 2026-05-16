@@ -182,7 +182,7 @@ docker-shell:
 
 docker-build:
 	make docker-check && \
-	docker-compose build
+	docker-compose build  --progress=plain
 	docker image prune -f
 
 docker-run:

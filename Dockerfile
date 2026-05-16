@@ -217,6 +217,7 @@ ENV REACT_MANIFESTS_HASH=${REACT_MANIFESTS_HASH}
 RUN for app in $REACT_COMPONENTS; do \
       url="https://cdn.smarter.sh/react/${app}/manifest.json"; \
       echo "Downloading manifest for ${app} from ${url}"; \
+      echo "Last-Modified for $url: $(curl -sI "$url" | grep -i '^Last-Modified:')" \
       curl -fsSL "$url" -o "/tmp/${app}_manifest.json"; \
       sha256sum "/tmp/${app}_manifest.json" | awk '{print $1}' > "/tmp/${app}_manifest.hash"; \
     done && \
@@ -300,18 +301,25 @@ ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator
 #     - arbitrary manifest complexity
 RUN set -eu; \
     for app in ${REACT_COMPONENTS}; do \
-        echo "Processing React component: ${app}"; \
+        echo "Collecting assets for React component: ${app}"; \
         APP_ROOT="${REACT_STAGING_FOLDER}/${app}"; \
         MANIFEST="${APP_ROOT}/manifest.json"; \
         \
         mkdir -p "${APP_ROOT}"; \
         \
+        url="${CDN_BASE}/${app}/manifest.json"; \
+        echo "Downloading manifest for ${app} from ${url}"; \
         curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
-            "${CDN_BASE}/${app}/manifest.json" \
+            "${url}" \
             -o "${MANIFEST}"; \
         \
+        echo "Downloaded manifest for ${app}:"; \
+        cat "${MANIFEST}"; \
+        \
+        url="${CDN_BASE}/${app}/index.html"; \
+        echo "Downloading index.html for ${app} from ${url}"; \
         curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
-            "${CDN_BASE}/${app}/index.html" \
+            "${url}" \
             -o "${APP_ROOT}/index.html"; \
         \
         jq -r ' \
@@ -330,8 +338,10 @@ RUN set -eu; \
             \
             mkdir -p "${DEST_DIR}"; \
             \
+            url="${CDN_BASE}/${app}/${ASSET_FILE}"; \
+            echo "Downloading asset: ${url}"; \
             curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
-                "${CDN_BASE}/${app}/${ASSET_FILE}" \
+                "${url}" \
                 -o "${DEST_PATH}"; \
         done; \
     done
