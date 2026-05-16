@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.14.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.4...v0.14.0-alpha.5) (2026-05-16)
+
+### Bug Fixes
+
+* cors get_response() ([e04d09b](https://github.com/smarter-sh/smarter/commit/e04d09b95e05e35c3cf9c35e26f1399e15bb5e8d))
+
 ## [0.14.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.13.223...v0.14.0-alpha.1) (2026-05-14)
 
 ### Key Highlights
