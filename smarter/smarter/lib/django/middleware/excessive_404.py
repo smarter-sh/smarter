@@ -321,7 +321,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
             return
 
         logger.debug(
-            ("%s 404 probe detected " "client=%s " "count=%d " "path=%s"),
+            "%s 404 probe detected client=%s count=%d path=%s",
             self.formatted_class_name,
             client_ip,
             blocked_count,
