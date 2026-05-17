@@ -10,8 +10,8 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.middlewares: ${environment_namespace}-cors@kubernetescrd,${environment_namespace}-https-redirect@kubernetescrd
   labels:
-    app.kubernetes.io/application-group: ${ app_name }
-    app.kubernetes.io/name: ${ app_name }
+    app.kubernetes.io/application-group: ${app_name}
+    app.kubernetes.io/name: ${app_name}
 spec:
   ingressClassName: traefik
   rules:

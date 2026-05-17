@@ -25,11 +25,14 @@ Example:
         ]
 """
 
+from urllib.parse import urljoin
+
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
 from smarter.apps.prompt.api.v1.urls import PromptAPINamespace
+from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
@@ -98,10 +101,8 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
             kwargs={"provider_name": "delete-me"},
         )
         api_path = api_path.rstrip("/").rsplit("/", 1)[0] + "/"
-        from urllib.parse import urljoin
 
-        from smarter.common.conf import smarter_settings
-
+        # example: https://alpha.ubc.smarter.sh/api/v1/prompts/passthrough/
         api_url = urljoin(smarter_settings.environment_platform_url, api_path)
 
         provider_api_path = reverse(
@@ -110,6 +111,7 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
             PassthroughApiReverseNames.namespace,
             PassthroughApiReverseNames.api_providers,
         )
+        # example: https://alpha.ubc.smarter.sh/dashboard/passthrough/api/providers/
         provider_api_url = urljoin(smarter_settings.environment_platform_url, provider_api_path)
 
         context = {
@@ -118,10 +120,10 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
                 "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "api_url": api_url,
-                "llm_provider_id": "1",
-                "template_id": "1",
-                "provider_api_url": provider_api_url,
+                "api_url": api_url,  # api for this react component.
+                "llm_provider_id": "1",  # default value for the provider_id. The React component will set the user-selected provider_id here and use it when making requests to the api_url.
+                "template_id": "1",  # default value for the template_id. The React component will set the user-selected template_id here and use it when making requests to the api_url.
+                "provider_api_url": provider_api_url,  # list of providers (openai, googleai, anthropic, etc.) and their details (capabilities, pricing, etc.
             }
         }
         self.template_path = "react/prompt-passthrough.html"
