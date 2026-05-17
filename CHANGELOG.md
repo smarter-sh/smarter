@@ -2,29 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this
+project adheres to [Semantic Versioning](http://semver.org/). See [Change Log Archive](./changelogs/)
+For history.
 
-
-
-## [0.14.0-alpha.7](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.6...v0.14.0-alpha.7) (2026-05-16)
-
-### Bug Fixes
-
-* ensure that all url protocols are in agreement ([4508fd0](https://github.com/smarter-sh/smarter/commit/4508fd04773107417f1f34cedcb87cb39d92f26c))
-
-## [0.14.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.5...v0.14.0-alpha.6) (2026-05-16)
-
-### Bug Fixes
-
-* always create react production builds ([9fc1354](https://github.com/smarter-sh/smarter/commit/9fc1354f3804b3b7a2b9b17c5588298281300476))
-
-## [0.14.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.4...v0.14.0-alpha.5) (2026-05-16)
-
-### Bug Fixes
-
-* cors get_response() ([e04d09b](https://github.com/smarter-sh/smarter/commit/e04d09b95e05e35c3cf9c35e26f1399e15bb5e8d))
-
-## [0.14.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.13.223...v0.14.0-alpha.1) (2026-05-14)
+## [0.14.0](https://github.com/smarter-sh/smarter/compare/v0.13.223...v0.14.0-alpha.1) (2026-05-14)
 
 ### Key Highlights
 
@@ -84,6 +66,15 @@ Additionally, we also did the following:
   bastion server. The bastion pod can be deployed on demand and then immediately
   disposed of, further minimizing the existence of a major attack surface. Separately,
   this also reduces your cloud bill by around $30 USD per month -- woo hoo!
+- removed public routes to all backend services. MariaDB and Redis are now only
+  available via bastion within the VPC.
+
+#### Privacy
+
+We introduced a new URL slug hashing scheme that obscures resource
+names (Chatbots, Secrets, Plugins) when running in production which
+helps to further obscure publicly identifying information about your
+AI resources.
 
 #### Refactored Django apps
 
@@ -238,24 +229,6 @@ reducing server workloads for the most common kinds of object lookups.
 - use HTTP_X_FORWARDED_PROTO to determine protocol of originating request ([bb4f050](https://github.com/smarter-sh/smarter/commit/bb4f05056bca443b118379fa0b696f690fde75cf))
 - use Pydantic for validations ([90c24f7](https://github.com/smarter-sh/smarter/commit/90c24f7932d3f4f0aa27f1a1758598403621f32d))
 - validate email address ([2874f7e](https://github.com/smarter-sh/smarter/commit/2874f7e3b507fbf0f83e0503186b323478d7a72a))
-
-## [0.14.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.1...v0.14.0-alpha.2) (2026-05-15)
-
-### Bug Fixes
-
-- add waffle switches for all custom middleware ([285fafd](https://github.com/smarter-sh/smarter/commit/285fafd5e280de6386884d37261b061368511c20))
-
-## [0.14.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.2...v0.14.0-alpha.3) (2026-05-15)
-
-### Bug Fixes
-
-- ensure that all middleware always returns a response ([63f8bb5](https://github.com/smarter-sh/smarter/commit/63f8bb551f8646e32da5dc18c1a3212c4ebf9436))
-
-## [0.14.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.3...v0.14.0-alpha.4) (2026-05-16)
-
-### Bug Fixes
-
-- convert to asgi compatible middleware ([a4ab703](https://github.com/smarter-sh/smarter/commit/a4ab703fd148da545cd19d5a9c554158528a561c))
 
 ## [0.13](./changelogs/CHANGELOG-v0.13.md) (2026-04-19)
 

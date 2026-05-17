@@ -402,7 +402,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         normalized_path = self.normalize_path(request.path)
 
         if self.is_amnesty_path(normalized_path):
-            logger.info(
+            logger.debug(
                 "%s amnesty granted to: %s",
                 self.formatted_class_name,
                 normalized_path,
