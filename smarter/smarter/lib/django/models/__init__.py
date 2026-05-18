@@ -3,8 +3,8 @@ Django ORM base models
 """
 
 from .metadata_model import MetaDataModel
-from .timestamped_model import (
-    TimestampedModel,
+from .timestamped_model import TimestampedModel
+from .utils import (
     dict_keys_to_list,
     list_of_dicts_to_dict,
     list_of_dicts_to_list,
