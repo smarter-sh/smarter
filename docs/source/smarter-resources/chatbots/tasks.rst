@@ -1,4 +1,4 @@
-Chatbot Tasks
+Tasks
 ======================
 
 .. toctree::

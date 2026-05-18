@@ -1,8 +1,9 @@
 Models
 ========
 
-.. automodule:: smarter.lib.django.models
+.. toctree::
+   :maxdepth: 1
 
-.. autoclass:: smarter.lib.django.models.TimestampedModel
-    :members:
-    :undoc-members:
+   models/metadata_model
+   models/timestamped_model
+   models/utils

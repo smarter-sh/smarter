@@ -1,4 +1,4 @@
-Django ORM
+Models
 ======================
 
 .. toctree::

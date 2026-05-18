@@ -1,4 +1,4 @@
-URL Schemes
+URLs
 ================================
 
 .. literalinclude::  ../../../../smarter/smarter/apps/chatbot/api/v1/urls.py
