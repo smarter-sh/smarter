@@ -64,6 +64,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from .redis_log_handler import (
     get_user_context,
     job_id_factory,
+    purge_log_context,
     user_id_context,
 )
 
@@ -109,6 +110,7 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
         context = self.get_sync_context(request)
         logger.debug("%s called. Setting context=%s", self.formatted_class_name, context)
         token = self.set_logging_context(context)
+        # purge_log_context(context)
 
         try:
             return self.get_response(request)
