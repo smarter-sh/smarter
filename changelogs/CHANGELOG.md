@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.14.0-alpha.8](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.7...v0.14.0-alpha.8) (2026-05-18)
+
+### Bug Fixes
+
+* manifest drop zone api apply path ([090ce36](https://github.com/smarter-sh/smarter/commit/090ce36e5c86feb52c07ab6d6309c0817e002388))
+
 ## [0.14.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.5...v0.14.0-alpha.6) (2026-05-16)
 
 ### Bug Fixes
