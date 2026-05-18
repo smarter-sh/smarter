@@ -182,7 +182,7 @@ docker-shell:
 
 docker-build:
 	make docker-check && \
-	docker-compose build  --progress=plain
+	docker-compose build  --progress=plain --build-arg REACT_MANIFESTS_HASH=2
 	docker image prune -f
 
 docker-run:
@@ -296,16 +296,22 @@ python-requirements:
 
 # ---------------------------------------------------------
 # React
+# We assume that NODE_ENV=production for all React builds, which ensures that the production
+# versions of React and other dependencies are used and that the resulting static files are
+# optimized for production use.
+#
+# Note: It is necessary to provide the --include=dev flag to npm install in order for
+# the Vite build process to work correctly.
 # ---------------------------------------------------------
 react-build:
 	@echo "==============================================================================="
 	@echo "Collecting static files on local filesystem ..."
 	@echo "==============================================================================="
 	rm -r -f smarter/staticfiles/react/
-	cd smarter/react/prompt_list && npm install && npm run build && cd ../../../
-	cd smarter/react/terminal_emulator && npm install && npm run build && cd ../../../
-	cd smarter/react/prompt_passthrough && npm install && npm run build && cd ../../../
-	cd smarter/react/dashboard && npm install && npm run build && cd ../../../
+	cd smarter/react/prompt_list && rm package-lock.json && npm install --include=dev && npm run build && cd ../../../
+	cd smarter/react/terminal_emulator && rm package-lock.json && npm install --include=dev && npm run build && cd ../../../
+	cd smarter/react/prompt_passthrough && rm package-lock.json && npm install --include=dev && npm run build && cd ../../../
+	cd smarter/react/dashboard && rm package-lock.json && npm install --include=dev && npm run build && cd ../../../
 	python smarter/manage.py collectstatic --noinput
 
 # -------------------------------------------------------------------------

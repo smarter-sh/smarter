@@ -20,6 +20,7 @@
 import { useEffect, useState } from "react";
 import HealthRing from "./HealthRing";
 import GitHubStatus from "./GitHubStatus";
+import Loading from "@/components/Loading";
 import "./styles.css";
 
 interface ServiceHealthProps {
@@ -178,7 +179,7 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
   const linux_distribution =
     data?.linux_distribution ?? "Unknown Linux distribution";
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Loading />;
   if (error) return <div>Failed to load service health: {error}</div>;
 
   return (
