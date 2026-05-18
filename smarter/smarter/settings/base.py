@@ -694,8 +694,12 @@ MIDDLEWARE = [
     #
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     #
+    # replaces rest_framework.authentication.TokenAuthentication
+    # for api-key token authentication. Adds waffle-switched enable,
+    # and Django signals for logging context. This should be placed
+    # near and after AuthenticationMiddleware
     # -------------------------------
-    # -----> BROKEN <--------- "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
+    "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
     #
     #
     # to manage logging context by user. This has to run AFTER

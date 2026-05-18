@@ -87,6 +87,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.views.apply_manifest.urls import ApplyManifestReverseNames
@@ -199,11 +200,7 @@ def file_drop_zone(request: "HttpRequest") -> dict[str, Any]:
         retval = {
             "drop_zone": {
                 "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
-                "api_apply_path": reverse(
-                    DashboardReverseNames.namespace,
-                    ApplyManifestReverseNames.namespace,
-                    ApplyManifestReverseNames.manifest_drop_zone,
-                ),
+                "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
                 "workbench_list_path": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
                 "plugin_list_path": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
                 "connection_list_path": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
