@@ -13,10 +13,6 @@ Context processors
     Resolves and caches the href targets for every sidebar navigation link.
     Returns a ``sidebar`` dict keyed by destination name.
 
-:func:`file_drop_zone`
-    Injects drop-zone feature flags and relevant API/list URLs into a
-    ``drop_zone`` dict.  Enabled via ``ENABLE_DASHBOARD_APPLY``.
-
 :func:`base`
     Assembles the primary ``dashboard`` context dict: user identity, role
     flags (``is_superuser``, ``is_staff``), feature toggles, resource counts,
@@ -34,10 +30,6 @@ Context processors
 :func:`cache_buster`
     Injects a ``cache_buster`` string (``v=<timestamp>``) for appending to
     static asset URLs in local development.
-
-:func:`prompt_list_context`
-    **Deprecated.** Provides a placeholder ``prompt_list`` dict to prevent
-    template errors from Wagtail admin interactions.  Slated for removal.
 
 Cache utilities
 ---------------
@@ -66,7 +58,6 @@ Add the processors to your Django settings::
                     "smarter.apps.dashboard.context_processors.base",
                     "smarter.apps.dashboard.context_processors.branding",
                     "smarter.apps.dashboard.context_processors.footer",
-                    "smarter.apps.dashboard.context_processors.file_drop_zone",
                     "smarter.apps.dashboard.context_processors.cache_buster",
                 ],
             },
@@ -86,8 +77,6 @@ from smarter.apps.account.models import (
     get_resolved_user,
 )
 from smarter.apps.account.urls import AccountReverseNames
-from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.views.apply_manifest.urls import ApplyManifestReverseNames
@@ -178,41 +167,6 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
         return retval
 
     return cached_sidebar_context()
-
-
-def file_drop_zone(request: "HttpRequest") -> dict[str, Any]:
-    """
-    Provides context for enabling file drop zone functionality in the dashboard.
-
-    This context processor injects a variable into the template context that can
-    be used to enable or disable file drop zone features in the dashboard interface.
-    This is useful for enhancing user experience by allowing drag-and-drop file uploads.
-
-    :param request: The HTTP request object.
-    :type request: "HttpRequest"
-    :return: A dictionary containing the file drop zone context variable.
-    :rtype: dict
-    """
-
-    @cache_results()
-    def get_cached_file_drop_zone_context() -> dict[str, Any]:
-
-        retval = {
-            "drop_zone": {
-                "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
-                "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
-                "workbench_list_path": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
-                "plugin_list_path": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
-                "connection_list_path": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
-                "provider_list_path": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
-            }
-        }
-        logger.debug(
-            "%s.file_drop_zone() cached file drop zone context: %s", logger_prefix, logging.formatted_json(retval)
-        )
-        return retval
-
-    return get_cached_file_drop_zone_context()
 
 
 def base(request: "HttpRequest") -> dict[str, Any]:
@@ -457,24 +411,6 @@ def cache_buster(request) -> dict[str, Any]:
     The ``cache_buster`` variable is a string in the format ``v=<timestamp>``.
     """
     return {"cache_buster": "v=" + str(time.time())}
-
-
-def prompt_list_context(request: "HttpRequest") -> dict[str, Any]:
-    """
-    Provides default placeholder context for prompt list views in the dashboard.
-    This mitigates Django template rendering errors presumably caused by Wagtail
-    admin interface interactions.
-
-    Example usage in a Django template::
-
-        {% for prompt in prompt_list.prompts %}
-            {{ prompt.title }}
-        {% endfor %}
-
-    DEPRECATED: This context processor is slated for removal in future releases as
-    the underlying issues with Wagtail integration are resolved.
-    """
-    return {"prompt_list": {"smarter_admin": smarter_cached_objects.smarter_admin, "chatbot_helpers": []}}
 
 
 def cache_invalidations(user_profile: Optional[UserProfile]) -> None:

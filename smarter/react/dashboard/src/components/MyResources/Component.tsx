@@ -18,6 +18,7 @@
  *     <MyResources apiUrl="https://customer.smarter.sh/dashboard/api/my-resources" />
  */
 import { useEffect, useState } from "react";
+import Loading from "../Loading";
 import "./styles.css";
 
 interface MyResourcesProps {
@@ -84,7 +85,6 @@ function MyResources({ apiUrl }: MyResourcesProps) {
   const my_resources_connections = data?.connections_qty ?? 0;
   const my_resources_providers = data?.providers_qty ?? 0;
 
-  if (loading) return <div>Loading...</div>;
   if (error) return <div>Failed to load resources: {error}</div>;
 
 
@@ -117,15 +117,16 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                     <>
                       <span className="opacity-75">You have</span>{' '}
                       <span className="position-relative d-inline-block">
-                        <a
-                          href={data?.chatbots_url}
-                          className="link-white opacity-75-hover fw-bold d-block mb-1"
-                        >
-                          {my_resources_pending_deployments} pending
-                        </a>
-                        {/* begin::Separator */}
+                        {loading ?
+                          <Loading /> :
+                          <a
+                            href={data?.chatbots_url}
+                            className="link-white opacity-75-hover fw-bold d-block mb-1"
+                          >
+                            {my_resources_pending_deployments} pending
+                          </a>
+                        }
                         <span className="position-absolute opacity-50 bottom-0 start-0 border-2 border-body border-bottom w-100"></span>
-                        {/* end::Separator */}
                       </span>
                       <span className="opacity-75">{' '}
                         {my_resources_pending_deployments > 1
@@ -163,15 +164,16 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                         {/* begin::Workbench */}
                         <div className="m-0">
                           {/* begin::Number */}
-                          <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
-                            {my_resources_chatbots}
-                          </span>
+                          {loading ?
+                            <Loading /> :
+                            <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
+                              {my_resources_chatbots}
+                            </span>
+                          }
                           {/* end::Number */}
-                          {/* begin::Desc */}
                           <span className="text-gray-500 fw-semibold fs-6">
                             Agents
                           </span>
-                          {/* end::Desc */}
                         </div>
                         {/* end::Workbench */}
                       </div>
@@ -198,9 +200,12 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                       <a href={data?.plugins_url}>
                         <div className="m-0">
                           {/* begin::Number */}
-                          <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
-                            {my_resources_plugins}
-                          </span>
+                          {loading ?
+                            <Loading /> :
+                            <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
+                              {my_resources_plugins}
+                            </span>
+                          }
                           {/* end::Number */}
                           {/* begin::Desc */}
                           <span className="text-gray-500 fw-semibold fs-6">
@@ -237,9 +242,12 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                       >
                         <div className="m-0">
                           {/* begin::Number */}
-                          <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
-                            {my_resources_connections}
-                          </span>
+                          {loading ?
+                            <Loading /> :
+                            <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
+                              {my_resources_connections}
+                            </span>
+                          }
                           {/* end::Number */}
                           {/* begin::Desc */}
                           <span className="text-gray-500 fw-semibold fs-6">
@@ -276,9 +284,12 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                       >
                         <div className="m-0">
                           {/* begin::Number */}
-                          <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
-                            {my_resources_providers}
-                          </span>
+                          {loading ?
+                            <Loading /> :
+                            <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
+                              {my_resources_providers}
+                            </span>
+                          }
                           {/* end::Number */}
                           {/* begin::Desc */}
                           <span className="text-gray-500 fw-semibold fs-6">

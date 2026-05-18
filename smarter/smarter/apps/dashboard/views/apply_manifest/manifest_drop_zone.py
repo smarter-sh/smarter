@@ -18,10 +18,23 @@ Example:
         ]
 """
 
+from typing import Any
+
 from django.http import HttpRequest
 from django.shortcuts import render
 
+from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
+from smarter.apps.connection.urls import ConnectionReverseNames
+from smarter.apps.plugin.urls import PluginReverseNames
+from smarter.apps.prompt.urls import PromptReverseNames
+from smarter.apps.provider.urls import ProviderReverseNames
+from smarter.common.conf import smarter_settings
+from smarter.lib import logging
+from smarter.lib.cache import cache_results
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
+
+logger = logging.getLogger(__name__)
 
 
 class ManifestDropZoneView(SmarterAuthenticatedNeverCachedWebView):
@@ -30,7 +43,41 @@ class ManifestDropZoneView(SmarterAuthenticatedNeverCachedWebView):
     for plugin development.
     """
 
+    def get_context(self) -> dict[str, Any]:
+        """
+        Provides context for enabling file drop zone functionality in the dashboard.
+
+        This context processor injects a variable into the template context that can
+        be used to enable or disable file drop zone features in the dashboard interface.
+        This is useful for enhancing user experience by allowing drag-and-drop file uploads.
+
+        :return: A dictionary containing the file drop zone context variable.
+        :rtype: dict
+        """
+
+        @cache_results()
+        def get_cached_file_drop_zone_context() -> dict[str, Any]:
+
+            retval = {
+                "drop_zone": {
+                    "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
+                    "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
+                    "workbench_list_path": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+                    "plugin_list_path": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
+                    "connection_list_path": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+                    "provider_list_path": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
+                }
+            }
+            logger.debug(
+                "%s.get_context() cached file drop zone context: %s",
+                self.formatted_class_name,
+                logging.formatted_json(retval),
+            )
+            return retval
+
+        return get_cached_file_drop_zone_context()
+
     template_path = "prompt/manifest-apply.html"
 
     def get(self, request: HttpRequest, *args, **kwargs):
-        return render(request, self.template_path, context={})
+        return render(request, self.template_path, context=self.get_context())
