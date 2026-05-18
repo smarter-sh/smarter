@@ -253,6 +253,18 @@ def flush(buffer) -> None:
         logger.exception("%s.flush() Failed to execute Redis pipeline.", logger_prefix, exc_info=True)
 
 
+def purge_log_context(context: str):
+    """
+    Delete the Redis stream for a specific logging context.
+    """
+    cache = get_redis_cache()
+    if cache is None:
+        raise RuntimeError("Redis cache is not available")
+    channel = build_channel(context)
+    key = stream_key(channel)
+    cache.delete(key)
+
+
 def redis_worker() -> None:
     """
     Worker function that continuously processes log entries from the queue
