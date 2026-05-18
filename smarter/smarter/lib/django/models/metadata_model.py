@@ -16,7 +16,8 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .timestamped_model import TimestampedModel, validate_no_spaces
+from .timestamped_model import TimestampedModel
+from .utils import validate_no_spaces
 
 logger = getLogger(__name__)
 cache_prefix = f"{__name__}."
