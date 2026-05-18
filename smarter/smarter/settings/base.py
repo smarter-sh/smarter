@@ -646,6 +646,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.admindocs",
+    "django.contrib.humanize",
     "django_hosts",
     "storages",
     # smarter apps
@@ -671,35 +673,54 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_yasg",
     "django_celery_beat",
-    "django.contrib.admindocs",
     "social_django",
     "waffle",
-    # Stripe
-    # -------------------------------
-    # "djstripe",
 ]
 
 MIDDLEWARE = [
-    "smarter.lib.django.middleware.debug.MiddlewareDebugMiddleware",
+    # this is a diagnostic middleware used for local development and testing.
+    # It enforces the return type of all middleware in the request chain.
+    # It should be placed at the beginning of the chain to catch any issues
+    # as early as possible.
+    # "smarter.lib.django.middleware.debug.MiddlewareDebugMiddleware",
+    # -------------------------------
+    #
     "django_hosts.middleware.HostsRequestMiddleware",
+    #
     # this replaces corsheaders.middleware.CorsMiddleware"
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # -------------------------------
+    #
+    #
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    #
+    # -------------------------------
     # -----> BROKEN <--------- "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
+    #
+    #
     # to manage logging context by user. This has to run AFTER
     # authentication middleware so that it can get the user info for logging context.
     # -------------------------------
     "smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware",
+    #
+    # handles cors for deployed chatbots.
+    # -------------------------------
     "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
+    #
+    # custom middleware that returns 400 responses for requests for common
+    # sensitive files like .env, private key files, etc.
+    # -------------------------------
     "smarter.lib.django.middleware.sensitive_files.SmarterBlockSensitiveFilesMiddleware",
-    # to log and block excessive 404 errors, which is a growing problem
+    #
+    # custom throttling middleware to block excessive 404 errors originating
     # from botnets probing for vulnerabilities.
     # -------------------------------
     "smarter.lib.django.middleware.excessive_404.SmarterBlockExcessive404Middleware",
     #
     # -------------------------------
-    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.common.CommonMiddleware",
+    #
+    #
     # this replaces django.middleware.csrf.SmarterCsrfViewMiddleware
     # to add chatbot-specific CSRF handling
     # -------------------------------
@@ -719,19 +740,22 @@ MIDDLEWARE = [
     # -------------------------------
     "smarter.apps.account.pipeline.SmarterSocialAuthExceptionMiddleware",
     #
-    # -------------------------------
     # to ensure that all http responses are in json format
     # -------------------------------
     "smarter.lib.django.middleware.json.SmarterJsonErrorMiddleware",
-    # -------------------------------
+    #
+    #
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "waffle.middleware.WaffleMiddleware",
+    #
+    #
     # minify HTML and strip out commenets to reduce response sizes and obfuscate potential sensitive information in comments
     # -------------------------------
     "smarter.lib.django.middleware.html_minify.HTMLMinifyMiddleware",
-    "django_hosts.middleware.HostsResponseMiddleware",
     #
+    #
+    "django_hosts.middleware.HostsResponseMiddleware",
 ]
 
 if smarter_settings.debug_mode and not "test" in sys.argv:

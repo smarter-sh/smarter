@@ -3,8 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this
-project adheres to [Semantic Versioning](http://semver.org/). See [Change Log Archive](./changelogs/)
-For history.
+project adheres to [Semantic Versioning](http://semver.org/). See [Change Log Archives](./changelogs/)
+For older versions.
 
 ## [0.14.0](https://github.com/smarter-sh/smarter/compare/v0.13.223...v0.14.0-alpha.1) (2026-05-14)
 
@@ -71,10 +71,12 @@ Additionally, we also did the following:
 
 #### Privacy
 
-We introduced a new URL slug hashing scheme that obscures resource
-names (Chatbots, Secrets, Plugins) when running in production which
-helps to further obscure publicly identifying information about your
-AI resources.
+We introduced a new URL slug hashing scheme
+into [TimestampedModel](./smarter/smarter/lib/django/models/timestamped_model.py),
+the base Django model for the entire project, that obscures resource
+names (Chatbots, Secrets, Plugins, Connections) when running in
+production, further obscuring publicly identifiable information
+about your AI resources.
 
 #### Refactored Django apps
 
@@ -186,7 +188,8 @@ reducing server workloads for the most common kinds of object lookups.
   - port html widgets to react ([d3400ba](https://github.com/smarter-sh/smarter/commit/d3400ba6708fcb1831002e37c96c2bcc90cae314))
   - style passthrough component ([9fe56d3](https://github.com/smarter-sh/smarter/commit/9fe56d3b0e34566a9dc6bc54ce60cd62a67f19ab))
   - style the terminal app ([54b4225](https://github.com/smarter-sh/smarter/commit/54b422545a117fac386ac2bda2c0c21a565a19ec))
-  - terminal window should display all log data, including what already was generated ([be6044c](https://github.com/smarter-sh/smarter/commit/be6044c1b11bd455450db66a5100873b5c29e200))
+  - terminal window should display all log data, including what already was
+    generated ([be6044c](https://github.com/smarter-sh/smarter/commit/be6044c1b11bd455450db66a5100873b5c29e200))
   - work on passthrough prompt UX ([e9ee16a](https://github.com/smarter-sh/smarter/commit/e9ee16a62c5d40d1ba5ec1a054f746cc416baf61))
 - User-based Logging Streams
   - batch redis entries, and make stream more thread friendly ([5c3328d](https://github.com/smarter-sh/smarter/commit/5c3328df946febcf46044363312c90d1ab706e15))
@@ -202,7 +205,9 @@ reducing server workloads for the most common kinds of object lookups.
   - override Manager functions ([afb4dd3](https://github.com/smarter-sh/smarter/commit/afb4dd320d5febf2a81b46e52e160392cd5a2a2d))
   - switch to with_ownership_permission_for() ([7048938](https://github.com/smarter-sh/smarter/commit/70489382ca003a296d0eb2457ac0b90470938ba2))
   - switch to with_read_permission_for() ([02b654e](https://github.com/smarter-sh/smarter/commit/02b654efdaa1d3cb802b3d3ca5de2dd0dc9238b7))
-- update bandit, black, celery, cryptography, django, google-genai, levenshtein, mypy, mysqlclient, nltk, openmeteo, pandas, pinecone, pre-commit, pydantic, redis, requests, sphinx, tox, urllib ([7215a0e](https://github.com/smarter-sh/smarter/commit/7215a0e81006201fa460e7c772907ea3109ce205))
+- update bandit, black, celery, cryptography, django, google-genai, levenshtein,
+  mypy, mysqlclient, nltk, openmeteo, pandas, pinecone, pre-commit, pydantic, redis,
+  requests, sphinx, tox, urllib ([7215a0e](https://github.com/smarter-sh/smarter/commit/7215a0e81006201fa460e7c772907ea3109ce205))
 
 ### Bug Fixes
 
@@ -213,12 +218,14 @@ reducing server workloads for the most common kinds of object lookups.
 - add Provider to ChatDbMixin ([dc2e492](https://github.com/smarter-sh/smarter/commit/dc2e492d1a4887539c7513d26a52b81d9a4af90d))
 - add Provider.default_model ([033db0b](https://github.com/smarter-sh/smarter/commit/033db0b94a6e14a2e2392b4d0252fb3ad18104eb))
 - add Provider.default_model ([26436bc](https://github.com/smarter-sh/smarter/commit/26436bcfbf0884fa76064036e425ea4bb9e40e68))
-- add snowfall, weathercode, windspeed_10m, winddirection_10m, windgusts_10m, cloudcover ([fdb447c](https://github.com/smarter-sh/smarter/commit/fdb447c6b063cbac09b8744f8fedf3c9c14a1573))
+- add snowfall, weathercode, windspeed_10m, winddirection_10m, windgusts_10m,
+  cloudcover ([fdb447c](https://github.com/smarter-sh/smarter/commit/fdb447c6b063cbac09b8744f8fedf3c9c14a1573))
 - AttributeError: 'NoneType' object has no attribute 'validate' ([f193275](https://github.com/smarter-sh/smarter/commit/f193275f1f0763b918d88fc6836ad79d57c4d634))
 - fail gracefully when name is not provided ([1adc583](https://github.com/smarter-sh/smarter/commit/1adc5831600a67fcbf1e1170e6df493c74707502))
 - fully validate manifest connection field ([c8d3507](https://github.com/smarter-sh/smarter/commit/c8d3507ea4e658080d57241b0ef2ebc8cbc84918))
 - give the cache a filename ([bad5bc3](https://github.com/smarter-sh/smarter/commit/bad5bc3f2c28e3531f5261c43d806c8f97753a53))
-- make most Account fields optional. freeze UserProfile and Account.account_number ([5d3c82d](https://github.com/smarter-sh/smarter/commit/5d3c82dc1506a654b5ff4bc61a58fe4866e9ae61))
+- make most Account fields optional. freeze UserProfile and
+  Account.account_number ([5d3c82d](https://github.com/smarter-sh/smarter/commit/5d3c82dc1506a654b5ff4bc61a58fe4866e9ae61))
 - middleware infinite recursion edge problem ([0cd1819](https://github.com/smarter-sh/smarter/commit/0cd1819151fedb7e569a3affef9329604b210c20))
 - post-deployment bugs ([44f2fc9](https://github.com/smarter-sh/smarter/commit/44f2fc9a51e87b8b910e810cef4f7a43fc38a0c9))
 - pop related fields from django orm ([1f2f94f](https://github.com/smarter-sh/smarter/commit/1f2f94f6ff3ff1ca386f8ce4a57c8d6e8d4b725c))
@@ -229,11 +236,3 @@ reducing server workloads for the most common kinds of object lookups.
 - use HTTP_X_FORWARDED_PROTO to determine protocol of originating request ([bb4f050](https://github.com/smarter-sh/smarter/commit/bb4f05056bca443b118379fa0b696f690fde75cf))
 - use Pydantic for validations ([90c24f7](https://github.com/smarter-sh/smarter/commit/90c24f7932d3f4f0aa27f1a1758598403621f32d))
 - validate email address ([2874f7e](https://github.com/smarter-sh/smarter/commit/2874f7e3b507fbf0f83e0503186b323478d7a72a))
-
-## [0.13](./changelogs/CHANGELOG-v0.13.md) (2026-04-19)
-
-## [0.12](./changelogs/CHANGELOG-v0.12.md) (2025-06-02)
-
-## [0.11](./changelogs/CHANGELOG-v0.11.md) (2025-04-27)
-
-## [Project Inception Through 0.10](./changelogs/CHANGELOG-v0.10.md) (2025-04-11)
