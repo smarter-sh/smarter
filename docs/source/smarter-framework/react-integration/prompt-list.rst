@@ -16,15 +16,12 @@ with the resources you need—all without requiring a page reload or manual refr
    :align: center
    :width: 100%
 
-Component Usage Example
-------------------------
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Prompt List Component Technical Reference
 
-.. literalinclude:: ../../../../smarter/react/prompt_list/src/components/Prompts/Component.stories.tsx
-   :language: tsx
-
-
-Core Prompts Component
------------------------
-
-.. literalinclude:: ../../../../smarter/react/prompt_list/src/components/Prompts/Component.tsx
-   :language: none
+   prompt-list/api
+   prompt-list/django-view
+   prompt-list/example-usage
+   prompt-list/react-component

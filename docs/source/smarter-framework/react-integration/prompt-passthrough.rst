@@ -36,15 +36,12 @@ API endpoints themselves are provisioned via Smarter's LLM Provider resource mod
    :align: center
    :width: 100%
 
-Component Usage Example
-------------------------
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Prompt Passthrough Component Technical Reference
 
-.. literalinclude:: ../../../../smarter/react/prompt_passthrough/src/components/Prompt/Component.stories.tsx
-   :language: tsx
-
-
-Core Prompt Component
----------------------
-
-.. literalinclude:: ../../../../smarter/react/prompt_passthrough/src/components/Prompt/Component.tsx
-   :language: tsx
+   prompt-passthrough/api
+   prompt-passthrough/django-view
+   prompt-passthrough/example-usage
+   prompt-passthrough/react-component

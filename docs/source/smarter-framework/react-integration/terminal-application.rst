@@ -16,33 +16,21 @@ that both structured and plain-text logs are easy to scan and understand. This
 component is ideal for monitoring, debugging, and teaching, providing a
 seamless, visually rich terminal experience within any web application.
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Terminal Emulator React Component
-
-   ../lib/logging/redis-log-handler
-   ../lib/logging/waffle-switched-logging
-   ../dashboard/views/logs/reactapp
-   ../dashboard/views/logs/urls
-   ../dashboard/views/logs/api
-
-
-
 .. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/terminal-emulator-react-component.png
    :alt: Terminal Emulator React Component Screenshot
    :class: screenshot
    :align: center
    :width: 100%
 
-Component Usage Example
-------------------------
 
-.. literalinclude:: ../../../../smarter/react/terminal_emulator/src/components/Terminal/Component.stories.tsx
-   :language: tsx
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Terminal Emulator Component Technical Reference
 
-
-Core Terminal Component
-------------------------
-
-.. literalinclude:: ../../../../smarter/react/terminal_emulator/src/components/Terminal/Component.tsx
-   :language: tsx
+   terminal-application/api
+   terminal-application/django-view
+   terminal-application/example-usage
+   terminal-application/react-component
+   ../lib/logging/redis-log-handler
+   ../lib/logging/waffle-switched-logging

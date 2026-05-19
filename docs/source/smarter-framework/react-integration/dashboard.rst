@@ -29,15 +29,12 @@ achieve with traditional server-rendered templates.
    :align: center
    :width: 100%
 
-Component Usage Example
-------------------------
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Dashboard Component Technical Reference
 
-.. literalinclude:: ../../../../smarter/react/dashboard/src/components/Dashboard/Component.stories.tsx
-   :language: tsx
-
-
-Core Dashboard Component
---------------------------
-
-.. literalinclude:: ../../../../smarter/react/dashboard/src/components/Dashboard/Component.tsx
-   :language: tsx
+   dashboard/api
+   dashboard/django-view
+   dashboard/example-usage
+   dashboard/react-component
