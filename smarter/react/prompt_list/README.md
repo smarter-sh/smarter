@@ -4,6 +4,14 @@ This is the source code for the Terminal Emulator app located
 at [http://localhost:9357/workbench/](http://localhost:9357/
 workbench/passthrough/).
 
+## Setup
+
+```console
+npm install --include=dev
+npm run build
+npm run dev
+```
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)

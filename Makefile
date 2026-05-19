@@ -182,7 +182,7 @@ docker-shell:
 
 docker-build:
 	make docker-check && \
-	docker-compose build  --progress=plain --build-arg REACT_MANIFESTS_HASH=2
+	docker-compose build  --progress=plain --build-arg REACT_MANIFESTS_HASH=$(shell date +%s)
 	docker image prune -f
 
 docker-run:
