@@ -110,7 +110,7 @@ def main():
     # Update appVersion in Chart.yaml
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
-        r"(appVersion:\s*)[\d\.]+",
+        r"(appVersion:\s*)[^\s]+",
         f"\\g<1>{new_version}",
     )
     # Update version in Chart.yaml (top-level only)
@@ -120,10 +120,7 @@ def main():
         f"version: {new_version}",
     )
     # Update image version in artifacthub.io/images in Chart.yaml
-    docker_image_pattern_chart = (
-        rf"(image:\s*{REGEX_ANY_STRING}/{REGEX_ANY_STRING}:)"
-        rf"(v?{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER})"
-    )
+    docker_image_pattern_chart = r"(image:\s*[^:\s]+:[v]?)\d+\.\d+\.\d+(?:-[A-Za-z0-9.]+)?"
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
         docker_image_pattern_chart,
@@ -132,13 +129,13 @@ def main():
     # Update version in artifacthub.io/changes description in Chart.yaml
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
-        r"(description: bump to app version )\d+\.\d+\.\d+",
+        r"(description: bump to app version )\d+\.\d+\.\d+(?:-[A-Za-z0-9.]+)?",
         f"\\g<1>{new_version}",
     )
     # Update version in helm.sh/chart Chart.yaml
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
-        r"(helm\.sh/chart:\s*smarter-)\d+\.\d+\.\d+",
+        r"(helm\.sh/chart:\s*smarter-)[^\s]+",
         f"\\g<1>{new_version}",
     )
 

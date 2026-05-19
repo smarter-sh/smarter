@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: 0.14.0-alpha.9-alpha.8-alpha.7-alpha.6-alpha.5-alpha.4-alpha.3-alpha.2-alpha.1
+appVersion: 0.14.0-alpha.9
 name: smarter
 description: >
   Smarter is a declarative, cloud-native platform for authoring and
@@ -14,7 +14,7 @@ description: >
   credentials management, team workgroups, RBAC, cost codes, and audit logging.
   Open source with public documentation and rapid self-onboarding.
 type: application
-version: 0.14.0-alpha.1
+version: 0.14.0-alpha.9
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -73,12 +73,12 @@ annotations:
   helm.sh/chart: smarter-0.14.0-alpha.9-alpha.8-alpha.7-alpha.6-alpha.5-alpha.4-alpha.3-alpha.2-alpha.1
   artifacthub.io/changes: |
     - kind: changed
-      description: bump to app version 0.14.0-alpha.9-alpha.8-alpha.7-alpha.6-alpha.5-alpha.4-alpha.3-alpha.2-alpha.1. Refactor and document new cache strategy.
+      description: bump to app version 0.14.0-alpha.9
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
     - name: smarter
-      image: mcdaniel0073/smarter:v0.14.0-alpha.9-alpha.8-alpha.7-alpha.6-alpha.5-alpha.4-alpha.3-alpha.2-alpha.1
+      image: mcdaniel0073/smarter:v0.14.0-alpha.9
       platforms:
         - linux/amd64
         - linux/arm64
