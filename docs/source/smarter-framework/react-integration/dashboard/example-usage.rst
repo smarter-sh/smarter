@@ -1,7 +1,4 @@
-Component Usage Example
-------------------------
-
-Component Usage Example
+Example Usage
 ------------------------
 
 .. literalinclude:: ../../../../../smarter/react/dashboard/src/components/Dashboard/Component.stories.tsx

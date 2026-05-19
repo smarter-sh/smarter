@@ -31,7 +31,6 @@ achieve with traditional server-rendered templates.
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
    :caption: Dashboard Component Technical Reference
 
    dashboard/api

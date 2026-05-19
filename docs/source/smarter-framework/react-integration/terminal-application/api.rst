@@ -1,4 +1,4 @@
-React Component API - Providers
+APIs
 ================================
 
 .. automodule:: smarter.apps.dashboard.views.logs.api.consumers

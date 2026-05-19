@@ -1,4 +1,4 @@
-React Component API - Providers
+API - Providers
 ================================
 
 .. automodule:: smarter.apps.dashboard.views.passthrough.api.providers
