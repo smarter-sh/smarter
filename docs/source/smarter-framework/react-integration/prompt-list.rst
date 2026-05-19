@@ -18,7 +18,6 @@ with the resources you need—all without requiring a page reload or manual refr
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
    :caption: Prompt List Component Technical Reference
 
    prompt-list/api

@@ -1,4 +1,4 @@
-React Django View
+Django View
 ===================
 
 .. automodule:: smarter.apps.dashboard.views.views.dashboard

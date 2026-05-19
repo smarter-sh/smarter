@@ -38,7 +38,6 @@ API endpoints themselves are provisioned via Smarter's LLM Provider resource mod
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
    :caption: Prompt Passthrough Component Technical Reference
 
    prompt-passthrough/api

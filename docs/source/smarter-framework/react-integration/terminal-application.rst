@@ -25,7 +25,6 @@ seamless, visually rich terminal experience within any web application.
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
    :caption: Terminal Emulator Component Technical Reference
 
    terminal-application/api

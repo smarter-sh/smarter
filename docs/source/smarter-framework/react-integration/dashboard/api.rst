@@ -1,4 +1,4 @@
-React Component API
+API
 ===================
 
 .. automodule:: smarter.apps.dashboard.views.views.api.my_resources

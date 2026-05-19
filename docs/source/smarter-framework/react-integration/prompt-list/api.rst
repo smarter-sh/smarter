@@ -1,4 +1,4 @@
-React Component API
+API
 ===================
 
 .. automodule:: smarter.apps.prompt.views.listview.api
