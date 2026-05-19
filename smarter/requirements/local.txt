@@ -231,7 +231,7 @@ httpx==0.28.1
     #   openai
 identify==2.6.17
     # via pre-commit
-idna==3.11
+idna==3.15
     # via
     #   anyio
     #   email-validator
