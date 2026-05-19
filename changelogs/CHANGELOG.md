@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.9](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.8...v0.14.0-alpha.9) (2026-05-19)
+
+### Bug Fixes
+
+* add a complete command bar ([711fc80](https://github.com/smarter-sh/smarter/commit/711fc80cbf018d5990d94dbdc6b81576e64e7651))
+
 ## [0.14.0-alpha.8](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.7...v0.14.0-alpha.8) (2026-05-18)
 
 ### Bug Fixes
