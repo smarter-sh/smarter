@@ -357,11 +357,11 @@ redis:
       enabled: true
     resources:
       requests:
-        memory: "512Mi"
-        cpu: "100m"
+        cpu: "250m"
+        memory: "2Gi"
       limits:
-        memory: "1Gi"
-        cpu: "512m"
+        cpu: "1"
+        memory: "4Gi"
     service:
       headless:
         sessionAffinity: None
