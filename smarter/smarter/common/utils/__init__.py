@@ -34,6 +34,7 @@ from smarter.common.utils.utils import (
 
 from .diagnostics import get_diagnostics
 from .request import is_authenticated_request
+from .request_to_json import request_to_json
 from .uri import smarter_build_absolute_uri
 from .version import get_semantic_version
 
@@ -58,6 +59,7 @@ __all__ = [
     "rfc1034_compliant_str",
     "rfc1034_compliant_to_snake",
     "recursive_sort_dict",
+    "request_to_json",
     "uri",
     "snake_case",
     "snake_to_camel",
