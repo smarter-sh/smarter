@@ -56,8 +56,9 @@ def get_sender_name(sender):
 def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
     """Handle plugin deleting signal."""
     logger.info(
-        "%s %s is being deleted. Pruning its usage records.",
+        "%s by %s %s is being deleted. Pruning its usage records.",
         formatted_text(f"{prefix}.plugin_deleting"),
+        get_sender_name(sender),
         plugin_meta.name,
     )
 
@@ -71,7 +72,9 @@ def handle_chat_session_invoked(sender, instance: SmarterChatSession, request: A
     else:
         url = "missing request object"
 
-    logger.info("%s.%s %s - %s", formatted_text(f"{prefix}.chat_session_invoked"), sender, instance, url)
+    logger.info(
+        "%s by %s %s - %s", formatted_text(f"{prefix}.chat_session_invoked"), get_sender_name(sender), instance, url
+    )
 
 
 @receiver(chat_config_invoked, dispatch_uid="chat_config_invoked")
@@ -79,7 +82,7 @@ def handle_chat_config_invoked_(sender, instance: ChatConfigView, request, data:
     """Handle chat config invoked signal."""
     url: Optional[str] = instance.url
 
-    logger.info("%s url=%s", formatted_text(f"{prefix}.chat_config_invoked"), url)
+    logger.info("%s by %s url=%s", formatted_text(f"{prefix}.chat_config_invoked"), get_sender_name(sender), url)
 
 
 @receiver(chat_started, dispatch_uid="chat_started")
@@ -88,8 +91,9 @@ def handle_chat_started(sender, chat: Optional[Chat] = None, data: Optional[dict
 
     sender_name = get_sender_name(sender)
     logger.info(
-        "%s for chat %s",
+        "%s by %s for chat %s",
         formatted_text(f"{prefix}.chat_started"),
+        sender_name,
         chat,
     )
 
@@ -104,8 +108,9 @@ def handle_chat_completion_request_sent(
     this_prefix = formatted_text(f"{prefix}.chat_completion_request for iteration {iteration}")
 
     logger.info(
-        "%s for chat: %s ",
+        "%s by %s for chat: %s ",
         this_prefix,
+        sender_name,
         chat,
     )
 
@@ -153,11 +158,11 @@ def handle_chat_completion_plugin_called(
     sender, chat: Optional[Chat] = None, plugin: Optional[PluginMeta] = None, input_text: Optional[str] = None, **kwargs
 ):
     """Handle chat completion plugin call signal."""
-    sender_name = get_sender_name(sender)
 
     logger.info(
-        "%s for chat %s, \nplugin: %s, \ninput_text: %s",
+        "%s by %s for chat %s, \nplugin: %s, \ninput_text: %s",
         formatted_text(f"{prefix}.chat_completion_plugin_called"),
+        get_sender_name(sender),
         chat,
         plugin,
         input_text,
@@ -178,11 +183,11 @@ def handle_chat_completion_tool_called(
     """Handle chat completion tool call signal."""
 
     chat_id = chat.id if chat else None  # type: ignore
-    sender_name = get_sender_name(sender)
 
     logger.info(
-        "%s %s %s for chat: %s",
+        "%s by %s %s %s for chat: %s",
         formatted_text(f"{prefix}.chat_completion_tool_called"),
+        get_sender_name(sender),
         function_name,
         function_args,
         chat_id,
@@ -194,8 +199,8 @@ def handle_chat_completion_tool_called(
 def handle_chat_response_success(
     sender,
     chat: Optional[Chat] = None,
-    request: Optional[Union[dict, list]] = None,
-    response: Optional[Union[dict, list]] = None,
+    request: Optional[Union[ASGIRequest, dict, list]] = None,
+    response: Optional[Union[ChatCompletion, dict, list]] = None,
     messages: Optional[list] = None,
     **kwargs,
 ):
@@ -208,17 +213,16 @@ def handle_chat_response_success(
     else:
         response_data = response
 
-    sender_name = get_sender_name(sender)
-
     logger.info(
-        "%s for chat %s, \nrequest: %s, \nresponse: %s",
+        "%s for chat %s, sent by %s \nrequest: %s, \nresponse: %s",
         formatted_text(f"{prefix}.chat_finished"),
         chat,
+        get_sender_name(sender),
         formatted_json(request_data) if request_data else None,
         formatted_json(response_data) if response_data else None,
     )
     if chat:
-        create_chat_history.delay(chat.id, request, response, messages)  # type: ignore
+        create_chat_history.delay(chat.id, request_data, response_data, messages)  # type: ignore
     else:
         logger.warning(
             "%s No chat object provided, skipping chat history creation", formatted_text(f"{prefix}.chat_finished")

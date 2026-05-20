@@ -24,8 +24,7 @@ def request_to_json(request: ASGIRequest | dict | list) -> Union[dict[str, Any],
                     body_json = json.loads(parsed)
                 else:
                     body_json = parsed
-            # pylint: disable=broad-except
-            except Exception:
+            except (json.JSONDecodeError, TypeError):
                 body_json = None
 
         request_data = {
