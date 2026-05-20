@@ -22,5 +22,7 @@ with the resources you need—all without requiring a page reload or manual refr
 
    prompt-list/api
    prompt-list/django-view
+   prompt-list/django-template
+   prompt-list/index
    prompt-list/example-usage
    prompt-list/react-component
