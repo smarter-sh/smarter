@@ -7,10 +7,12 @@ from typing import Optional, Union
 from django.core.handlers.asgi import ASGIRequest
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
+from openai.types.chat.chat_completion import ChatCompletion
 
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import plugin_deleting
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.common.utils import request_to_json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -120,12 +122,18 @@ def handle_chat_completion_response_received(
     sender,
     chat: Optional[Chat] = None,
     iteration: int = 0,
-    request: Optional[Union[dict, list]] = None,
-    response: Optional[Union[dict, list]] = None,
+    request: Optional[Union[ASGIRequest, dict, list]] = None,
+    response: Optional[Union[ChatCompletion, dict, list]] = None,
     messages: Optional[list] = None,
     **kwargs,
 ):
     """Handle chat completion called signal."""
+    request_data = request_to_json(request) if request else None
+
+    if isinstance(response, ChatCompletion):
+        response_data = response.model_dump()
+    else:
+        response_data = response
 
     this_prefix = formatted_text(f"{prefix}.chat_completion_response for iteration {iteration}")
     sender_name = get_sender_name(sender)
@@ -135,8 +143,8 @@ def handle_chat_completion_response_received(
         this_prefix,
         sender_name,
         chat,
-        formatted_json(request) if request else None,
-        formatted_json(response) if response else None,
+        formatted_json(request_data) if request_data else None,
+        formatted_json(response_data) if response_data else None,
     )
 
 
@@ -193,14 +201,21 @@ def handle_chat_response_success(
 ):
     """Handle chat completion returned signal."""
 
+    request_data = request_to_json(request) if request else None
+
+    if isinstance(response, ChatCompletion):
+        response_data = response.model_dump()
+    else:
+        response_data = response
+
     sender_name = get_sender_name(sender)
 
     logger.info(
         "%s for chat %s, \nrequest: %s, \nresponse: %s",
         formatted_text(f"{prefix}.chat_finished"),
         chat,
-        formatted_json(request) if request else None,
-        formatted_json(response) if response else None,
+        formatted_json(request_data) if request_data else None,
+        formatted_json(response_data) if response_data else None,
     )
     if chat:
         create_chat_history.delay(chat.id, request, response, messages)  # type: ignore
