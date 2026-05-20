@@ -1,11 +1,10 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import type { Chatbot } from "@/lib/Types";
+import type { Chatbot, SessionContext } from "@/lib/Types";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { pluginsText } from "@/lib/pluginsText";
 import { Modal } from "@/lib/modalDialogue";
-import type { SessionContext } from "@/lib/Types";
 
 import "./styles.css";
 

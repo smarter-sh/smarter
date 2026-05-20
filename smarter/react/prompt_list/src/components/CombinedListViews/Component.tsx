@@ -1,6 +1,5 @@
-import type { Chatbot } from "@/lib/Types";
+import type { Chatbot, SessionContext } from "@/lib/Types";
 import { ListView } from "@/components/ListView/Component";
-import type { SessionContext } from "@/lib/Types";
 
 import "./styles.css";
 
