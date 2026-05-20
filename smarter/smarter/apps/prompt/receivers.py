@@ -2,7 +2,7 @@
 
 # pylint: disable=W0612,W0613,C0115
 import logging
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from django.core.handlers.asgi import ASGIRequest
 from django.db.models.signals import post_save, pre_delete
@@ -48,7 +48,13 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 prefix = "smarter.apps.prompt.receivers"
 
 
-def get_sender_name(sender):
+def get_sender_name(sender: Any) -> str:
+    """
+    Get a readable name for the sender of a signal, handling both class and
+    instance methods.
+    """
+    if isinstance(sender, type):
+        return f"{sender.__name__}({id(sender)})"
     return f"{sender.__self__.__class__.__name__}.{sender.__name__}({id(sender)})"
 
 
