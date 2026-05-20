@@ -1,43 +1,101 @@
-
-// Modal dialog scaffolds
 export function Modal({
   show,
-  onClose,
   title,
   children,
+  inputLabel,
+  onClose,
+  onOk,
+  onCancel,
 }: {
   show: boolean;
-  onClose: () => void;
   title: string;
   children: React.ReactNode;
+  inputLabel?: string;
+  onClose?: () => void;
+  onOk?: () => void;
+  onCancel?: () => void;
 }) {
+  if (!onClose && !onOk && !onCancel) {
+    throw new Error(
+      "Modal requires at least one of onClose, onOk, or onCancel handlers.",
+    );
+  }
+
   if (!show) return null;
+
   return (
-    <div className="modal fade show" style={{ display: "block" }} tabIndex={-1}>
-      <div className="modal-dialog">
+    <div
+      className="modal show"
+      style={{
+        display: "block",
+        position: "fixed",
+        inset: 0,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        zIndex: 1050,
+      }}
+      tabIndex={-1}
+      onClick={onClose}
+    >
+      <div
+        className="modal-dialog"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">{title}</h5>
-            <button
-              type="button"
-              className="btn-close"
-              aria-label="Close"
-              onClick={onClose}
-            ></button>
+
+            {onClose && (
+              <button
+                type="button"
+                className="btn-close"
+                aria-label="Close"
+                onClick={onClose}
+              />
+            )}
           </div>
+
+          {inputLabel && (
+            <div className="modal-input">
+              <label>{inputLabel}</label>
+              <input type="text" className="form-control" />
+            </div>
+          )}
+
           <div className="modal-body">{children}</div>
+
           <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={onClose}
-            >
-              Close
-            </button>
+            {onClose && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={onClose}
+              >
+                Close
+              </button>
+            )}
+
+            {onOk && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={onOk}
+              >
+                OK
+              </button>
+            )}
+
+            {onCancel && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={onCancel}
+              >
+                Cancel
+              </button>
+            )}
           </div>
         </div>
       </div>
-      <div className="modal-backdrop fade show" onClick={onClose} />
     </div>
   );
 }

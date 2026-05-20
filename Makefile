@@ -182,6 +182,13 @@ docker-shell:
 
 docker-build:
 	make docker-check && \
+	docker-compose build
+	docker image prune -f
+
+# the REACT_MANIFESTS_HASH build argument forces Docker to rebuild the React
+# frontend assets from the CDN distribution.
+docker-build-for-react:
+	make docker-check && \
 	docker-compose build  --progress=plain --build-arg REACT_MANIFESTS_HASH=$(shell date +%s)
 	docker image prune -f
 
@@ -300,8 +307,8 @@ python-requirements:
 # versions of React and other dependencies are used and that the resulting static files are
 # optimized for production use.
 #
-# Note: It is necessary to provide the --include=dev flag to npm install in order for
-# the Vite build process to work correctly.
+# Note: It is necessary to provide the --include=dev flag to npm install
+# because NODE_ENV=production is set, which would otherwise cause npm to skip installing devDependencies.
 # ---------------------------------------------------------
 react-build:
 	@echo "==============================================================================="
