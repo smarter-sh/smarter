@@ -8,6 +8,7 @@ workbench/passthrough/).
 ## Setup
 
 ```console
+export NODE_ENV=production
 npm install --include=dev
 npm run build
 npm run dev
