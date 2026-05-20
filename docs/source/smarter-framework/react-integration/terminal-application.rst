@@ -29,6 +29,8 @@ seamless, visually rich terminal experience within any web application.
 
    terminal-application/api
    terminal-application/django-view
+   terminal-application/django-template
+   terminal-application/index
    terminal-application/example-usage
    terminal-application/react-component
    ../lib/logging/redis-log-handler
