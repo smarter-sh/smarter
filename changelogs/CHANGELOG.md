@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.11](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.10...v0.14.0-alpha.11) (2026-05-20)
+
+### Bug Fixes
+
+* implement react prompt_list Toolbar functionality ([e39ac35](https://github.com/smarter-sh/smarter/commit/e39ac35d78ba41d4714e4ddd20cd20c36b519e36))
+
 ## [0.14.0-alpha.10](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.9...v0.14.0-alpha.10) (2026-05-20)
 
 ### Bug Fixes
