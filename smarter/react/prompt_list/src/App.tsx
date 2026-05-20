@@ -4,26 +4,17 @@
  *
  */
 import Prompts from "./components/Prompts";
+import type { SessionContext } from "@/lib/Types";
 
 interface AppProps {
-  myResourcesApiUrl: string;
-  csrfCookieName: string;
-  csrftoken: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
+  sessionContext: SessionContext;
 }
 
-function App({ myResourcesApiUrl, csrfCookieName, csrftoken, djangoSessionCookieName, cookieDomain }: AppProps) {
+function App({ sessionContext }: AppProps) {
   return (
     <>
       <section className="mt-5 container" id="prompt-list">
-        <Prompts
-          myResourcesApiUrl={myResourcesApiUrl}
-          csrfCookieName={csrfCookieName}
-          csrftoken={csrftoken}
-          djangoSessionCookieName={djangoSessionCookieName}
-          cookieDomain={cookieDomain}
-        />
+        <Prompts sessionContext={sessionContext} />
       </section>
     </>
   );

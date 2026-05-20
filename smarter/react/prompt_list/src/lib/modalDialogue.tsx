@@ -1,3 +1,24 @@
+/**
+ * Modal Component
+ *
+ * A reusable modal dialogue for React applications. Displays a modal overlay with a title, optional input, and customizable content.
+ *
+ * Props:
+ * - show (boolean): Controls visibility of the modal.
+ * - title (string): Title text displayed in the modal header.
+ * - children (React.ReactNode): Content to render inside the modal body.
+ * - inputLabel (string, optional): If provided, displays a labeled input field.
+ * - onClose (function, optional): Handler for closing the modal (overlay click, Close button, or close icon).
+ * - onOk (function, optional): Handler for the OK button.
+ * - onCancel (function, optional): Handler for the Cancel button.
+ *
+ * At least one of onClose, onOk, or onCancel must be provided.
+ *
+ * Usage:
+ * <Modal show={show} title="My Modal" onClose={handleClose} onOk={handleOk}>
+ *   <p>Modal content goes here.</p>
+ * </Modal>
+ */
 export function Modal({
   show,
   title,
@@ -20,6 +41,12 @@ export function Modal({
       "Modal requires at least one of onClose, onOk, or onCancel handlers.",
     );
   }
+  const handleClose = onClose || onCancel;
+  if (!handleClose) {
+    throw new Error(
+      "Modal requires at least one of onClose, onOk, or onCancel handlers.",
+    );
+  }
 
   if (!show) return null;
 
@@ -34,12 +61,9 @@ export function Modal({
         zIndex: 1050,
       }}
       tabIndex={-1}
-      onClick={onClose}
+      onClick={handleClose}
     >
-      <div
-        className="modal-dialog"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">{title}</h5>
@@ -75,11 +99,7 @@ export function Modal({
             )}
 
             {onOk && (
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={onOk}
-              >
+              <button type="button" className="btn btn-primary" onClick={onOk}>
                 OK
               </button>
             )}

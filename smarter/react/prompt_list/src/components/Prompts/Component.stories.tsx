@@ -10,11 +10,13 @@ const meta: Meta<typeof Prompts> = {
     layout: "fullscreen",
   },
   args: {
-    myResourcesApiUrl: "/workbench/api/",
-    csrfCookieName: "csrftoken",
-    csrftoken: "dummy-csrf-token",
-    djangoSessionCookieName: "sessionid",
-    cookieDomain: "localhost",
+    sessionContext: {
+      myResourcesApiUrl: "/workbench/api/",
+      csrfCookieName: "csrftoken",
+      csrftoken: "dummy-csrf-token",
+      djangoSessionCookieName: "sessionid",
+      cookieDomain: "localhost",
+    },
   },
 };
 
@@ -29,9 +31,12 @@ export const Default: Story = {
 
 export const WithCustomCookies: Story = {
   args: {
-    csrfCookieName: "customcsrftoken",
-    csrftoken: "custom-token",
-    djangoSessionCookieName: "customsessionid",
-    cookieDomain: "localhost",
+    sessionContext: {
+      myResourcesApiUrl: "/workbench/api/",
+      csrfCookieName: "customcsrftoken",
+      csrftoken: "custom-token",
+      djangoSessionCookieName: "customsessionid",
+      cookieDomain: "localhost",
+    },
   },
 };

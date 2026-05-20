@@ -94,11 +94,49 @@ class MetaDataModel(TimestampedModel):
         if self.version and not SmarterValidator.is_valid_semantic_version(self.version):
             raise SmarterValueError(f"Version '{self.version}' is not a valid semantic version (MAJOR.MINOR.PATCH).")
 
+    def clone(self, new_name: str, new_version: Optional[str] = None) -> "MetaDataModel":
+        """
+        Clone the model instance with a new name and optional new version.
+
+        :param new_name: The name for the cloned instance.
+        :type new_name: str
+        :param new_version: The version for the cloned instance. If not provided, it will be the same as the original.
+        :type new_version: Optional[str]
+
+        :returns: A new instance of MetaDataModel with the same field values except for name and version.
+        :rtype: MetaDataModel
+        """
+        clone_kwargs = {
+            "name": new_name,
+            "version": new_version if new_version is not None else self.version,
+            "description": self.description,
+            "annotations": self.annotations,
+        }
+        clone_instance = self.__class__(**clone_kwargs)
+        clone_instance.full_clean()  # Validate the cloned instance
+        clone_instance.save()  # Save the new instance to the database
+        return clone_instance
+
+    def rename(self, new_name: str) -> "MetaDataModel":
+        """
+        Rename the model instance with a new name.
+
+        :param new_name: The new name for the instance.
+        :type new_name: str
+
+        :returns: The updated instance of MetaDataModel with the new name.
+        :rtype: MetaDataModel
+        """
+        self.name = new_name
+        self.full_clean()  # Validate the updated instance
+        self.save()  # Save the changes to the database
+        return self
+
     @cached_property
     def tags_list(self) -> list[str]:
         """
         Return the tags as a list of strings. We assume that @cached_property
-        is more efficient at fetch that @cache_results, all things considered
+        is more efficient at fetch than @cache_results, all things considered
         equal, which provides a marginal boost to instances. Meanwhile, the
         @cache_results is persisted to the Django cache, and thus outlives
         this instance. Thus, best of both worlds.

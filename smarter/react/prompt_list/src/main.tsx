@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
+import type { SessionContext } from "@/lib/Types";
 
 const rootEl = document.getElementById("smarter-prompt-list-root");
 if (!rootEl) throw new Error("Root element not found");
@@ -12,10 +13,10 @@ const djangoSessionCookieName = rootEl.getAttribute(
 const cookieDomain =
   rootEl.getAttribute("django-cookie-domain") || window.location.hostname;
 
-const myResourcesApiUrl =
-  rootEl.getAttribute("smarter-prompt-list-api-url")
+const myResourcesApiUrl = rootEl.getAttribute("smarter-prompt-list-api-url");
 
-if (!myResourcesApiUrl) throw new Error("My Resources API URL not found in root element attributes");
+if (!myResourcesApiUrl)
+  throw new Error("My Resources API URL not found in root element attributes");
 if (!csrfCookieName)
   throw new Error("CSRF token not found in root element attributes");
 if (!djangoSessionCookieName)
@@ -27,12 +28,12 @@ if (!cookieDomain)
 if (!csrftoken)
   throw new Error("CSRF token value not found in root element attributes");
 
-createRoot(rootEl).render(
-  <App
-    myResourcesApiUrl={myResourcesApiUrl}
-    csrfCookieName={csrfCookieName}
-    csrftoken={csrftoken}
-    djangoSessionCookieName={djangoSessionCookieName}
-    cookieDomain={cookieDomain}
-  />,
-);
+const sessionContext: SessionContext = {
+  myResourcesApiUrl,
+  csrfCookieName,
+  csrftoken,
+  djangoSessionCookieName,
+  cookieDomain,
+};
+
+createRoot(rootEl).render(<App sessionContext={sessionContext} />);
