@@ -36,6 +36,7 @@ achieve with traditional server-rendered templates.
    dashboard/api
    dashboard/django-view
    dashboard/django-template
+   dashboard/template-tags
    dashboard/index
    dashboard/example-usage
    dashboard/react-component
