@@ -124,7 +124,7 @@ def delete_default_api(url: str, account_number: str, name: str):
         return domain_name
 
     hostname = get_domain_name(url)
-    destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.environment_api_domain)
+    destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.environment_api_domain, task_id=task_id)
     ingress_deleted, certificate_deleted, secret_delete = kubernetes_helper.delete_ingress_resources(
         hostname=hostname, namespace=smarter_settings.environment_namespace
     )

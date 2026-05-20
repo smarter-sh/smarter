@@ -7,16 +7,9 @@ import fetchDjangoUrl from "@/lib/django";
 import CombinedListViews from "@/components/CombinedListViews/Component";
 import CombinedCardViews from "@/components/CombinedCardViews/Component";
 import type { PromptListApiResponse, ViewMode } from "@/lib/Types";
+import type { SessionContext } from "@/lib/Types";
 
 import "./styles.css";
-
-interface PromptListProps {
-  myResourcesApiUrl: string;
-  csrfCookieName: string;
-  csrftoken: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
-}
 
 interface ViewToggleButtonProps {
   viewMode: ViewMode;
@@ -72,13 +65,11 @@ function ToggleButton({ viewMode, setViewMode }: { viewMode: ViewMode; setViewMo
   );
 }
 
-function Prompts({
-  myResourcesApiUrl,
-  csrfCookieName,
-  csrftoken,
-  djangoSessionCookieName,
-  cookieDomain,
-}: PromptListProps) {
+interface PromptsProps {
+  sessionContext: SessionContext;
+}
+
+function Prompts({sessionContext}: PromptsProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -94,11 +85,11 @@ function Prompts({
       try {
         const response = await fetchDjangoUrl(
           JSON.stringify({}),
-          myResourcesApiUrl,
-          csrftoken,
-          djangoSessionCookieName,
-          csrfCookieName,
-          cookieDomain,
+          sessionContext.myResourcesApiUrl,
+          sessionContext.csrftoken,
+          sessionContext.djangoSessionCookieName,
+          sessionContext.csrfCookieName,
+          sessionContext.cookieDomain,
         );
 
         if (!response.ok) {
@@ -127,13 +118,7 @@ function Prompts({
     return () => {
       isMounted = false;
     };
-  }, [
-    myResourcesApiUrl,
-    csrftoken,
-    djangoSessionCookieName,
-    csrfCookieName,
-    cookieDomain,
-  ]);
+  }, [sessionContext]);
 
   const chatbots = useMemo(
     () => apiData?.chatbots ?? { user: [], shared: [] },
@@ -154,9 +139,9 @@ function Prompts({
       <ToggleButton viewMode={viewMode} setViewMode={setViewMode} />
 
       {viewMode === "list" ? (
-        <CombinedListViews chatbots={chatbots} />
+        <CombinedListViews sessionContext={sessionContext} chatbots={chatbots} />
       ) : (
-        <CombinedCardViews chatbots={chatbots} />
+        <CombinedCardViews sessionContext={sessionContext} chatbots={chatbots} />
       )}
     </>
   );

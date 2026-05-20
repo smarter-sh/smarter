@@ -6,9 +6,7 @@ from typing import Optional
 
 from django.db import transaction
 from django.http import (
-    Http404,
     HttpResponseBadRequest,
-    HttpResponseForbidden,
     HttpResponseRedirect,
     JsonResponse,
 )

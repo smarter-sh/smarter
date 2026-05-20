@@ -57,10 +57,11 @@ def validate_provider(value):
         smarter_compatible_client,
     )
 
-    if not value in smarter_compatible_client.all:
+    provider_names = [name.lower() for name in smarter_compatible_client.all]
+    if not value in provider_names:
         raise ValidationError(
             "%(value)s is not a valid provider. Valid providers are: %(providers)s",
-            params={"value": value, "providers": str(smarter_compatible_client.all)},
+            params={"value": value, "providers": str(provider_names)},
         )
 
 
@@ -835,6 +836,72 @@ class ChatBot(MetaDataWithOwnershipModel):
                 self.pk,
             )
             chatbot_undeploy.send(sender=self.__class__, chatbot=self)
+
+    # pylint: disable=C0415
+    def clone(
+        self,
+        new_name: Optional[str] = None,
+        new_version: Optional[str] = None,
+        user_profile: Optional[UserProfile] = None,
+    ) -> "ChatBot":
+        """
+        Clone the ChatBot instance, creating a new instance with the same configuration.
+
+        :param new_name: Optional new name for the cloned ChatBot. If not provided, the name will be suffixed with "-copy".
+        :returns: The cloned ChatBot instance.
+        :rtype: ChatBot
+        """
+        logger_prefix = logging.formatted_text(__name__ + "." + ChatBot.__name__ + ".clone()")
+        logger.debug(
+            "%s.clone() called for ChatBot id: %s with new_name: %s, new_version: %s, user_profile: %s",
+            logger_prefix,
+            self.pk,
+            new_name,
+            new_version,
+            user_profile,
+        )
+
+        cloned_chatbot = super().clone(new_name=new_name, new_version=new_version, user_profile=user_profile)  # type: ignore
+        pk = cloned_chatbot.pk
+
+        try:
+            from .chatbot_functions import ChatBotFunctions
+
+            new_chatbot_functions = ChatBotFunctions.objects.get(chatbot_id=pk)
+            logger.debug(
+                "%s.clone() found ChatBotFunctions for ChatBot id: %s. Cloning related ChatBotFunctions.",
+                logger_prefix,
+                pk,
+            )
+            new_chatbot_functions.pk = pk
+            new_chatbot_functions.save()
+            logger.debug("%s.clone() cloned ChatBotFunctions for ChatBot id: %s", logger_prefix, pk)
+        except ChatBotFunctions.DoesNotExist:
+            logger.debug(
+                "%s.clone() did not find ChatBotFunctions for ChatBot id: %s. Skipping cloning of related ChatBotFunctions.",
+                logger_prefix,
+                pk,
+            )
+
+        try:
+            from .chatbot_plugin import ChatBotPlugin
+
+            new_chatbot_plugin = ChatBotPlugin.objects.get(chatbot_id=pk)
+            logger.debug(
+                "%s.clone() found ChatBotPlugin for ChatBot id: %s. Cloning related ChatBotPlugin.", logger_prefix, pk
+            )
+            new_chatbot_plugin.pk = pk
+            new_chatbot_plugin.save()
+            logger.debug("%s.clone() cloned ChatBotPlugin for ChatBot id: %s", logger_prefix, pk)
+        except ChatBotPlugin.DoesNotExist:
+            logger.debug(
+                "%s.clone() did not find ChatBotPlugin for ChatBot id: %s. Skipping cloning of related ChatBotPlugin.",
+                logger_prefix,
+                pk,
+            )
+
+        logger.debug("%s.clone() completed Returning cloned instance %s", logger_prefix, cloned_chatbot)
+        return cloned_chatbot  # type: ignore[return-value]
 
 
 __all__ = ["ChatBot"]

@@ -21,6 +21,7 @@ from .models import (
     ChatBotPlugin,
     ChatBotRequests,
 )
+from .serializers import ChatBotSerializer
 from .signals import (
     broker_ready,
     chatbot_called,
@@ -91,11 +92,13 @@ def chatbot_saved(sender, instance: ChatBot, created: bool, **kwargs):
     """
     create the default API for the chatbot.
     """
+
     prefix = logging.formatted_text(f"{module_prefix}.chatbot_saved()")
+    data = logging.formatted_json(ChatBotSerializer(instance).data)
     if created:
-        logger.info("%s - created %s", prefix, instance.url)
+        logger.info("%s - created %s, %s", prefix, instance.url, data)
     else:
-        logger.info("%s - updated %s", prefix, instance.url)
+        logger.info("%s - updated %s, %s", prefix, instance.url, data)
 
 
 @receiver(pre_delete, sender=ChatBot)

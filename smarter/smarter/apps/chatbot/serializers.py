@@ -41,6 +41,7 @@ class ChatBotSerializer(MetaDataWithOwnershipModelSerializer):
     url_chatbot = serializers.ReadOnlyField()
     user_profile = UserProfileSerializer()
     default_system_role = serializers.SerializerMethodField()
+    hashed_id = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatBot
@@ -54,6 +55,9 @@ class ChatBotSerializer(MetaDataWithOwnershipModelSerializer):
 
     def get_default_system_role(self, obj: ChatBot):
         return obj.default_system_role_enhanced
+
+    def get_hashed_id(self, obj: ChatBot):
+        return obj.hashed_id
 
 
 class ChatBotConfigSerializer(serializers.ModelSerializer):

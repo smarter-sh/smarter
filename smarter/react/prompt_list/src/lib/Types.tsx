@@ -4,6 +4,7 @@ export type Chatbot = {
   version: string | null;
   createdAt: string;
   updatedAt: string;
+  hashed_id: string;
   provider: string;
   defaultModel: string | null;
   defaultTemperature: number | null;
@@ -39,3 +40,11 @@ export type PromptListApiResponse = {
 };
 
 export type ViewMode = "list" | "thumbnail";
+
+export type SessionContext = {
+  myResourcesApiUrl: string;
+  csrfCookieName: string;
+  csrftoken: string;
+  djangoSessionCookieName: string;
+  cookieDomain: string;
+}

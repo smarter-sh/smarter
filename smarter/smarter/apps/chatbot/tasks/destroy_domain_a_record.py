@@ -39,6 +39,8 @@ Exception
     Any exception during task execution will be logged and may be handled by the caller.
 """
 
+from typing import Optional
+
 from smarter.apps.chatbot.signals import (
     post_destroy_domain_A_record,
     pre_destroy_domain_A_record,
@@ -56,7 +58,7 @@ logger = logging.getSmarterLogger(
 logger_prefix = logging.formatted_text(__name__)
 
 
-def destroy_domain_A_record(hostname: str, api_host_domain: str):
+def destroy_domain_A_record(hostname: str, api_host_domain: str, task_id: Optional[str] = None):
     """
     Destroy the A record for a given domain name in AWS Route53.
 
@@ -91,7 +93,6 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
     if not aws_helper.route53:
         return
 
-    task_id = destroy_domain_A_record.request.id
     pre_destroy_domain_A_record.send(
         sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain, task_id=task_id
     )
@@ -126,7 +127,7 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
             "%s a record not found for %s. Nothing to do, returning. task_id: %s", fn_name, api_host_domain, task_id
         )
         post_destroy_domain_A_record.send(
-            sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain
+            sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain, task_id=task_id
         )
         return
 

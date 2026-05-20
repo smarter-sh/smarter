@@ -3,16 +3,19 @@ import { pluginsText } from "@/lib/pluginsText";
 import { statusCell } from "@/lib/statusCell";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { Toolbar } from "../Toolbar";
+import type { SessionContext } from "@/lib/Types";
+
 import "./styles.css";
 
 
 interface ListViewProps {
+  sessionContext: SessionContext;
   title: string;
   chatbots: Chatbot[];
   cardClassName: string;
 }
 
-export function ListView({ title, chatbots, cardClassName }: ListViewProps) {
+export function ListView({ sessionContext, title, chatbots, cardClassName }: ListViewProps) {
   return (
     <div className={cardClassName}>
       <div className="prompt-list-heading-wrap">
@@ -67,7 +70,7 @@ export function ListView({ title, chatbots, cardClassName }: ListViewProps) {
                 <td>{pluginsText(chatbot)}</td>
                 <td>{statusCell(chatbot)}</td>
                 <td className="text-end min-width-250">
-                  <Toolbar chatbot={chatbot} />
+                  <Toolbar sessionContext={sessionContext} chatbot={chatbot} />
                 </td>
               </tr>
             ))}

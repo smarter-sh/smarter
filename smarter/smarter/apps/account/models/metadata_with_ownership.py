@@ -856,11 +856,69 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             )
             self.__class__.get_cached_objects(invalidate=True, user_profile=self.user_profile)
 
+    def clone(
+        self,
+        new_name: Optional[str] = None,
+        new_version: Optional[str] = None,
+        user_profile: Optional[UserProfile] = None,
+    ) -> "MetaDataWithOwnershipModel":
+        """
+        Create a clone of this instance with a new name, version, and/or user profile.
+
+        :param new_name: The name for the cloned instance. If not provided, the original name will be suffixed with " (clone)".
+        :param new_version: The version for the cloned instance. If not provided, the original version will be used.
+        :param user_profile: The user profile for the cloned instance. If not provided, the original user profile will be used.
+
+        :returns: A new instance of MetaDataWithOwnershipModel that is a clone of this instance with the specified changes.
+        :rtype: MetaDataWithOwnershipModel
+        """
+        logger_prefix = logging.formatted_text(__name__ + f".{self.__class__.__name__}.clone()")
+        logger.debug(
+            "%s.clone() called with new_name: %s, new_version: %s, user_profile: %s",
+            logger_prefix,
+            new_name,
+            new_version,
+            user_profile,
+        )
+        user_profile = user_profile or self.user_profile
+        if not new_name:
+            new_name = f"{self.name} (clone)"
+            while True:
+                i = 0
+                try:
+                    self.__class__.objects.get(name=new_name, user_profile=user_profile)
+                    i += 1
+                    new_name = f"{self.name} (clone {i})"
+                except self.__class__.DoesNotExist:
+                    break
+
+        clone_kwargs = {
+            "name": new_name,
+            "version": new_version or self.version,
+            "user_profile": user_profile,
+        }
+        clone_kwargs.update(
+            {
+                field.name: getattr(self, field.name)
+                for field in self._meta.fields
+                if field.name not in clone_kwargs
+                and field.name not in ("id", "pk", "created_at", "updated_at")
+                and not field.auto_created
+            }
+        )
+        retval = self.__class__.objects.create(**clone_kwargs)
+        logger.debug(
+            "%s.clone() created new instance: %s",
+            logger_prefix,
+            retval,
+        )
+        return retval
+
     def __str__(self):
         return f"{self.pk} {self.name} (owned by {self.user_profile})"
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} pk={self.pk} name={self.name} user_profile={self.user_profile}>"
+        return f"<{self.__class__.__name__} pk={self.pk} name={self.name} version={self.version} user_profile={self.user_profile}>"
 
 
 __all__ = ["MetaDataWithOwnershipModel", "MetaDataWithOwnershipModelManager", "SmarterQuerySetWithPermissions"]

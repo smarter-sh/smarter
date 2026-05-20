@@ -5,6 +5,7 @@ import type { Chatbot } from "@/lib/Types";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { pluginsText } from "@/lib/pluginsText";
 import { Modal } from "@/lib/modalDialogue";
+import type { SessionContext } from "@/lib/Types";
 
 import "./styles.css";
 
@@ -14,6 +15,7 @@ type DetailRowRenderer = (
 ) => ReactNode;
 
 interface CardViewProps {
+  sessionContext: SessionContext;
   title: string;
   chatbots: Chatbot[];
   cardClassName: string;
@@ -21,11 +23,15 @@ interface CardViewProps {
 }
 
 export function CardView({
+  sessionContext,
   title,
   chatbots,
   cardClassName,
   renderDetailRow,
 }: CardViewProps) {
+
+  console.log("Rendering CardView with chatbots:", chatbots, sessionContext);
+
   // Modal state for actions
   const [modal, setModal] = useState<{
     type: null | "clone" | "rename" | "delete";

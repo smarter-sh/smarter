@@ -19,8 +19,13 @@ from .views.detailview import (
     PromptManifestView,
 )
 from .views.listview import (
-    PromptListApiView,
     PromptListView,
+)
+from .views.listview.api import (
+    PromptListApiCloneView,
+    PromptListApiDeleteView,
+    PromptListApiRenameView,
+    PromptListApiView,
 )
 
 app_name = namespace
@@ -67,11 +72,27 @@ class PromptReverseNames:
 
     listview = to_snake_case(PromptListView)
     listview_api = to_snake_case(PromptListApiView)
+    listview_api_clone = to_snake_case(PromptListApiCloneView)
+    listview_api_delete = to_snake_case(PromptListApiDeleteView)
+    listview_api_rename = to_snake_case(PromptListApiRenameView)
 
 
 urlpatterns = [
     path("", PromptListView.as_view(), name=PromptReverseNames.listview),
     path("api/", PromptListApiView.as_view(), name=PromptReverseNames.listview_api),
+    path(
+        "api/clone/<int:chatbot_id>/<str:new_name>/",
+        PromptListApiCloneView.as_view(),
+        name=PromptReverseNames.listview_api_clone,
+    ),
+    path(
+        "api/delete/<int:chatbot_id>/", PromptListApiDeleteView.as_view(), name=PromptReverseNames.listview_api_delete
+    ),
+    path(
+        "api/rename/<int:chatbot_id>/<str:new_name>/",
+        PromptListApiRenameView.as_view(),
+        name=PromptReverseNames.listview_api_rename,
+    ),
     path("chatbots/<str:hashed_id>/", PromptLandingView.as_view(), name=PromptReverseNames.landing_by_hashed_id),
     path(
         "chatbots/<str:hashed_id>/manifest/",

@@ -8,6 +8,7 @@ to be authenticated. It also includes caching to keep the workbench snappy while
 avoiding appearing stale.
 """
 
+from http import HTTPStatus
 from typing import Optional
 
 from django.db import models
@@ -17,7 +18,7 @@ from django.http import (
 from django.http.response import JsonResponse
 
 from smarter.apps.account.serializers import UserProfileSerializer
-from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.models import (
     ChatBot,
     ChatBotHelper,
@@ -95,7 +96,7 @@ class PromptListApiView(SmarterAuthenticatedWebView):
                 if chatbot_helper.chatbot.user_profile != self.user_profile  # type: ignore
             ]
 
-            smarter_admin = get_cached_smarter_admin_user_profile()
+            smarter_admin = smarter_cached_objects.smarter_admin_user_profile
             retval = {
                 "user": UserProfileSerializer(self.user_profile).data,
                 "admin": UserProfileSerializer(smarter_admin).data,
@@ -113,3 +114,89 @@ class PromptListApiView(SmarterAuthenticatedWebView):
             return JsonResponse(retval)
 
         return _get_cached_chatbots_for_user_profile(user_profile_id=self.user_profile.id)  # type: ignore
+
+
+class PromptListApiCloneView(SmarterAuthenticatedWebView):
+    """
+    API view for cloning a ChatBot. This view is protected and requires the user to be authenticated.
+    """
+
+    def post(self, request: HttpRequest, *args, **kwargs):
+        chatbot_id = kwargs.get("chatbot_id")
+        new_name = kwargs.get("new_name")
+        chatbot: ChatBot
+
+        if not chatbot_id or not new_name:
+            return JsonResponse({"error": "chatbot_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
+
+        try:
+            chatbot = ChatBot.objects.get(id=chatbot_id)
+        except ChatBot.DoesNotExist:
+            return JsonResponse({"error": f"ChatBot with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
+
+        try:
+            cloned_chatbot = chatbot.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
+            data = ChatBotSerializer(cloned_chatbot).data
+            return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("Error cloning ChatBot with id %s: %s", chatbot_id, str(e), exc_info=True)
+            return JsonResponse(
+                {"error": f"An error occurred while cloning the ChatBot: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+            )
+
+
+class PromptListApiDeleteView(SmarterAuthenticatedWebView):
+    """
+    API view for deleting a ChatBot. This view is protected and requires the user to be authenticated.
+    """
+
+    def post(self, request: HttpRequest, *args, **kwargs):
+        chatbot_id = kwargs.get("chatbot_id")
+        if not chatbot_id:
+            return JsonResponse({"error": "chatbot_id is required."}, status=HTTPStatus.BAD_REQUEST)
+
+        try:
+            chatbot = ChatBot.objects.with_ownership_permission_for(self.user_profile.user).get(id=chatbot_id)  # type: ignore
+        except ChatBot.DoesNotExist:
+            return JsonResponse({"error": f"ChatBot with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
+
+        try:
+            chatbot.delete()
+            return JsonResponse(
+                {"message": f"ChatBot with id {chatbot_id} deleted successfully."}, status=HTTPStatus.OK
+            )
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("Error deleting ChatBot with id %s: %s", chatbot_id, str(e), exc_info=True)
+            return JsonResponse(
+                {"error": f"An error occurred while deleting the ChatBot: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+            )
+
+
+class PromptListApiRenameView(SmarterAuthenticatedWebView):
+    """
+    API view for renaming a ChatBot. This view is protected and requires the user to be authenticated.
+    """
+
+    def post(self, request: HttpRequest, *args, **kwargs):
+        chatbot_id = kwargs.get("chatbot_id")
+        new_name = kwargs.get("new_name")
+        if not chatbot_id or not new_name:
+            return JsonResponse({"error": "chatbot_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
+
+        try:
+            chatbot = ChatBot.objects.with_ownership_permission_for(self.user_profile.user).get(id=chatbot_id)  # type: ignore
+        except ChatBot.DoesNotExist:
+            return JsonResponse({"error": f"ChatBot with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
+
+        try:
+            chatbot.rename(new_name=new_name)
+            data = ChatBotSerializer(chatbot).data
+            return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("Error renaming ChatBot with id %s: %s", chatbot_id, str(e), exc_info=True)
+            return JsonResponse(
+                {"error": f"An error occurred while renaming the ChatBot: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+            )
