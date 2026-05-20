@@ -6,8 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import fetchDjangoUrl from "@/lib/django";
 import CombinedListViews from "@/components/CombinedListViews/Component";
 import CombinedCardViews from "@/components/CombinedCardViews/Component";
-import type { PromptListApiResponse, ViewMode } from "@/lib/Types";
-import type { SessionContext } from "@/lib/Types";
+import type { PromptListApiResponse, ViewMode, SessionContext } from "@/lib/Types";
 
 import "./styles.css";
 

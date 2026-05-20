@@ -1,8 +1,7 @@
 import { useState } from "react";
-import type { Chatbot } from "@/lib/Types";
+import type { Chatbot, SessionContext } from "@/lib/Types";
 import { Modal } from "@/lib/modalDialogue";
 import fetchDjangoUrl from "@/lib/django";
-import type { SessionContext } from "@/lib/Types";
 
 interface ToolbarProps {
   sessionContext: SessionContext;
@@ -22,51 +21,16 @@ export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
   const [successMessage, setSuccessMessage] = useState<string>("");
 
   const handleCloseModal = () => setModal({ type: null, chatbot: null });
-
-  const handleError = (chatbot: Chatbot) => {
-    // open the error modal for this chatbot
-    handleCloseModal();
-    setModal({ type: "error", chatbot });
-  };
-
-  const handleCloneButtonClicked = (chatbot: Chatbot) => {
-    // open the clone modal for this chatbot
+  const handleCloneButtonClicked = (chatbot: Chatbot) =>
     setModal({ type: "clone", chatbot });
-
-    if (chatbot) {
-      // do the clone operation.
-      return;
-      // on success, close the modal and navigate and refresh the page.
-    }
-
-    // on failure, show the error modal
-    handleError(chatbot);
-  };
-
-  const handleRenameButtonClicked = (chatbot: Chatbot) => {
-    // open the rename modal for this chatbot
+  const handleRenameButtonClicked = (chatbot: Chatbot) =>
     setModal({ type: "rename", chatbot });
-
-    if (chatbot) {
-      // do the rename operation.
-      return;
-      // on success, close the modal and navigate and refresh the page.
-    }
-    // on failure, show the error modal
-    handleError(chatbot);
-  };
-
-  const handleDeleteButtonClicked = (chatbot: Chatbot) => {
-    // open the delete modal for this chatbot
+  const handleDeleteButtonClicked = (chatbot: Chatbot) =>
     setModal({ type: "delete", chatbot });
 
-    if (chatbot) {
-      // do the delete operation.
-      return;
-      // on success, close the modal and navigate and refresh the page.
-    }
-    // on failure, show the error modal
-    handleError(chatbot);
+  const handleError = (chatbot: Chatbot) => {
+    handleCloseModal();
+    setModal({ type: "error", chatbot });
   };
 
   const ModalClone = () => {
@@ -176,8 +140,7 @@ export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
           onClose={handleCloseModal}
         >
           <p>
-            {successMessage}{" "}
-            <strong>{modal.chatbot?.name}</strong>.
+            {successMessage} <strong>{modal.chatbot?.name}</strong>.
           </p>
           <p>
             <em>Operation completed successfully.</em>
@@ -245,14 +208,17 @@ export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
     // implement the rename logic here, e.g. call an API route to perform the rename operation.
     // return a success or failure result.
     handleCloseModal();
+    const url =
+      sessionContext.myResourcesApiUrl +
+      "rename/" +
+      chatbot.id +
+      "/" +
+      newName +
+      "/";
+
     fetchDjangoUrl(
       JSON.stringify({}),
-      sessionContext.myResourcesApiUrl +
-        "rename/" +
-        chatbot.id +
-        "/" +
-        newName +
-        "/",
+      url,
       sessionContext.csrftoken,
       sessionContext.djangoSessionCookieName,
       sessionContext.csrfCookieName,
@@ -292,9 +258,10 @@ export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
     // implement the delete logic here, e.g. call an API route to perform the delete operation.
     // return a success or failure result.
     handleCloseModal();
+    const url = sessionContext.myResourcesApiUrl + "delete/" + chatbot.id + "/";
     fetchDjangoUrl(
       JSON.stringify({}),
-      sessionContext.myResourcesApiUrl + "delete/" + chatbot.id + "/",
+      url,
       sessionContext.csrftoken,
       sessionContext.djangoSessionCookieName,
       sessionContext.csrfCookieName,

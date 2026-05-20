@@ -1,9 +1,8 @@
-import type { Chatbot } from "@/lib/Types";
+import type { Chatbot, SessionContext } from "@/lib/Types";
 import { pluginsText } from "@/lib/pluginsText";
 import { statusCell } from "@/lib/statusCell";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { Toolbar } from "../Toolbar";
-import type { SessionContext } from "@/lib/Types";
 
 import "./styles.css";
 
