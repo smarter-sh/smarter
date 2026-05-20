@@ -43,6 +43,7 @@ API endpoints themselves are provisioned via Smarter's LLM Provider resource mod
    prompt-passthrough/api
    prompt-passthrough/django-view
    prompt-passthrough/django-template
+   prompt-passthrough/template-tags
    prompt-passthrough/index
    prompt-passthrough/example-usage
    prompt-passthrough/react-component
