@@ -83,21 +83,21 @@ export function ListView({ title, chatbots, cardClassName }: ListViewProps) {
                 <td>{statusCell(chatbot)}</td>
                 <td className="text-end min-width-250">
                   <div
-                    className="btn-group pe-2"
+                    className="btn-group pe-2 border"
                     role="group"
                     aria-label="Actions"
                   >
                     <a
                       href={chatbot.urls.chat}
-                      className="btn btn-icon btn-sm btn-primary"
+                      className="btn btn-icon btn-sm border"
                       title="Chat: Open the prompt workbench"
                       tabIndex={0}
                     >
-                      <i className="bi bi-chat-dots" />
+                      <i className="bi bi-chat-dots text-primary" />
                     </a>
                     <a
                       href={chatbot.urls.manifest}
-                      className="btn btn-icon btn-sm btn-info"
+                      className="btn btn-icon btn-sm border"
                       title="Edit: Open the YAML manifest that defines this chatbot resource"
                       tabIndex={0}
                     >
@@ -105,7 +105,7 @@ export function ListView({ title, chatbots, cardClassName }: ListViewProps) {
                     </a>
                     <button
                       type="button"
-                      className="btn btn-icon btn-sm btn-dark"
+                      className="btn btn-icon btn-sm border"
                       title="Clone: Clone this chatbot resource to a new resource owned by you"
                       onClick={() => handleClone(chatbot)}
                       tabIndex={0}
@@ -114,7 +114,7 @@ export function ListView({ title, chatbots, cardClassName }: ListViewProps) {
                     </button>
                     <button
                       type="button"
-                      className="btn btn-icon btn-sm btn-warning"
+                      className="btn btn-icon btn-sm border"
                       title="Rename: Rename this chatbot resource"
                       onClick={() => handleRename(chatbot)}
                       tabIndex={0}
@@ -123,7 +123,7 @@ export function ListView({ title, chatbots, cardClassName }: ListViewProps) {
                     </button>
                     <button
                       type="button"
-                      className="btn btn-icon btn-sm btn-danger"
+                      className="btn btn-icon btn-sm border"
                       title="Delete: Delete this chatbot resource"
                       onClick={() => handleDelete(chatbot)}
                       tabIndex={0}
