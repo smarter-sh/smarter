@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.12](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.11...v0.14.0-alpha.12) (2026-05-21)
+
+### Bug Fixes
+
+* refactor prompt listview api ([ab15c06](https://github.com/smarter-sh/smarter/commit/ab15c065624e087682ae8da91bad4155049edff3))
+
 ## [0.14.0-alpha.11](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.10...v0.14.0-alpha.11) (2026-05-20)
 
 ### Bug Fixes
