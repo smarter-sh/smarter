@@ -72,6 +72,7 @@ class PromptReverseNames:
 
     listview = to_snake_case(PromptListView)
     listview_api = to_snake_case(PromptListApiView)
+    listview_api_all = to_snake_case(PromptListApiView) + "_all"
     listview_api_clone = to_snake_case(PromptListApiCloneView)
     listview_api_delete = to_snake_case(PromptListApiDeleteView)
     listview_api_rename = to_snake_case(PromptListApiRenameView)
@@ -79,7 +80,8 @@ class PromptReverseNames:
 
 urlpatterns = [
     path("", PromptListView.as_view(), name=PromptReverseNames.listview),
-    path("api/", PromptListApiView.as_view(), name=PromptReverseNames.listview_api),
+    path("api/chatbots/", PromptListApiView.as_view(), name=PromptReverseNames.listview_api_all),
+    path("api/chatbots/<str:ownership_filter>/", PromptListApiView.as_view(), name=PromptReverseNames.listview_api),
     path(
         "api/clone/<int:chatbot_id>/<str:new_name>/",
         PromptListApiCloneView.as_view(),

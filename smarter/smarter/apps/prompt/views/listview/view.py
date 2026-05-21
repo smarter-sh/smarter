@@ -26,9 +26,9 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 class PromptListView(SmarterAuthenticatedWebView):
     """
-    list view for smarter workbench web console. This view is protected and
-    requires the user to be authenticated. It generates cards for each
-    ChatBots.
+    list view for smarter workbench web console. This sets up
+    the React component that will render the list of ChatBots. The React
+    component uses the views located in ./api for its data.
 
       id="smarter-prompt-list-root"
       django-csrf-cookie-name="csrftoken"
@@ -50,7 +50,7 @@ class PromptListView(SmarterAuthenticatedWebView):
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "prompt_list_api_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview_api),
+                "prompt_list_api_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview_api_all),
             }
         }
 
