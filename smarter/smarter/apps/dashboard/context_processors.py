@@ -77,7 +77,7 @@ from smarter.apps.account.models import (
     get_resolved_user,
 )
 from smarter.apps.account.urls import AccountReverseNames
-from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
+from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.views.apply_manifest.urls import ApplyManifestReverseNames
 from smarter.apps.dashboard.views.logs.names import DashboardLogsReverseNames
@@ -443,4 +443,4 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
         Account.get_cached_object(invalidate=True, pk=user_profile.account.id)
         UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)  # type: ignore
         PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=True, user_profile_id=user_profile.id)  # type: ignore
-        get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id, invalidate=True)  # type: ignore
+        ChatBot.get_cached_objects(invalidate=True, user_profile=user_profile)  # type: ignore

@@ -49,6 +49,7 @@ class ChatBotFunctions(TimestampedModel):
     - Uniqueness is not enforced, so a chatbot may have multiple entries for the same function if needed.
     """
 
+    # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "ChatBot Functions"
 

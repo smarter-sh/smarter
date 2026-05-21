@@ -9,8 +9,8 @@ avoiding appearing stale.
 """
 
 from http import HTTPStatus
-from typing import Optional
 
+from django.core.paginator import Paginator
 from django.db import models
 from django.http import (
     HttpRequest,
@@ -19,22 +19,18 @@ from django.http.response import JsonResponse
 
 from smarter.apps.account.serializers import UserProfileSerializer
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.chatbot.models import (
-    ChatBot,
-    ChatBotHelper,
-)
+from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.serializers import ChatBotSerializer
-from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
-from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 WORKBENCH_CACHE_TIMEOUT = 30  # 30 seconds. keeps the workbench snappy while avoiding appearing stale.
+DEFAULT_PAGE_SIZE = 25  # default number of chatbots to return per page in the API response
 
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])
@@ -50,6 +46,16 @@ verbose_logger = logging.getSmarterLogger(
 )
 
 
+class PromptListOwnershipFilter:
+    """
+    Enum-like class for ownership filter options in the PromptListApiView.
+    """
+
+    OWNED = "owned"
+    SHARED = "shared"
+    ALL = "all"
+
+
 class PromptListApiView(SmarterAuthenticatedWebView):
     """
     list view for smarter workbench web console. This view is protected and
@@ -57,53 +63,49 @@ class PromptListApiView(SmarterAuthenticatedWebView):
     ChatBots.
     """
 
-    chatbots: Optional[models.QuerySet[ChatBot]] = None
-    chatbot_helpers: list[ChatBotHelper] = []
-
     def post(self, request: HttpRequest, *args, **kwargs):
 
+        ownership_filter = kwargs.get("ownership_filter", PromptListOwnershipFilter.ALL)
+        page = request.GET.get("page", 1)
+        page_size = request.GET.get("page_size", DEFAULT_PAGE_SIZE)
+
+        if ownership_filter not in [
+            PromptListOwnershipFilter.OWNED,
+            PromptListOwnershipFilter.SHARED,
+            PromptListOwnershipFilter.ALL,
+        ]:
+            return JsonResponse(
+                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
         @cache_results(timeout=WORKBENCH_CACHE_TIMEOUT)
-        def _get_cached_chatbots_for_user_profile(user_profile_id: int) -> JsonResponse:
-            """Get cached chatbots for a user profile."""
+        def _get_cached_chatbots_for_user_profile(
+            user_profile_id: int, ownership_filter: str, page: int, page_size: int
+        ) -> JsonResponse:
+            """
+            Get cached chatbots for the given context of a user_profile.
+            """
 
-            # pylint: disable=C0415
-            from smarter.apps.prompt.urls import PromptReverseNames
+            qs: models.QuerySet[ChatBot]
+            if ownership_filter == PromptListOwnershipFilter.OWNED:
+                # chatbots owned by the user_profile who made this request
+                qs = ChatBot.objects.owned_by(self.user_profile.user)  # type: ignore
+            elif ownership_filter == PromptListOwnershipFilter.SHARED:
+                # chatbots not owned by the user_profile who made this request, but shared with them by other users
+                qs = ChatBot.objects.shared_with(self.user_profile.user)  # type: ignore
+            else:
+                # all chatbots the user_profile has access to, including both owned and shared chatbots
+                qs = ChatBot.objects.with_read_permission_for(self.user_profile.user)  # type: ignore
 
-            self.chatbot_helpers = get_cached_chatbots_for_user_profile(user_profile_id=self.user_profile.id)  # type: ignore
-
-            user_chatbots = [
-                {
-                    **ChatBotSerializer(chatbot_helper.chatbot).data,
-                    "urls": {
-                        "manifest": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.manifest_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
-                        "chat": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.chat_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
-                        "config": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.config_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
-                    },
-                }
-                for chatbot_helper in self.chatbot_helpers
-                if chatbot_helper.chatbot.user_profile == self.user_profile  # type: ignore
-            ]
-            shared_chatbots = [
-                {
-                    **ChatBotSerializer(chatbot_helper.chatbot).data,
-                    "urls": {
-                        "manifest": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.manifest_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
-                        "chat": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.chat_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
-                        "config": reverse(":".join([PromptReverseNames.namespace, PromptReverseNames.config_by_hashed_id]), kwargs={"hashed_id": chatbot_helper.chatbot.hashed_id}),  # type: ignore
-                    },
-                }
-                for chatbot_helper in self.chatbot_helpers
-                if chatbot_helper.chatbot.user_profile != self.user_profile  # type: ignore
-            ]
+            paginator = Paginator(qs.order_by("-updated_at"), page_size)
+            chatbots = paginator.get_page(page)
 
             smarter_admin = smarter_cached_objects.smarter_admin_user_profile
             retval = {
                 "user": UserProfileSerializer(self.user_profile).data,
                 "admin": UserProfileSerializer(smarter_admin).data,
-                "chatbots": {
-                    "user": user_chatbots,
-                    "shared": shared_chatbots,
-                },
+                "chatbots": ChatBotSerializer(chatbots, many=True).data,
             }
             logger.debug(
                 "%s.post() caching prompt list for user %s with retval: %s",
@@ -113,7 +115,7 @@ class PromptListApiView(SmarterAuthenticatedWebView):
             )
             return JsonResponse(retval)
 
-        return _get_cached_chatbots_for_user_profile(user_profile_id=self.user_profile.id)  # type: ignore
+        return _get_cached_chatbots_for_user_profile(user_profile_id=self.user_profile.id, ownership_filter=ownership_filter, page=page, page_size=page_size)  # type: ignore
 
 
 class PromptListApiCloneView(SmarterAuthenticatedWebView):

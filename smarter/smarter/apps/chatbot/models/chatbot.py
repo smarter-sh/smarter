@@ -110,6 +110,7 @@ class ChatBot(MetaDataWithOwnershipModel):
     :raises ValidationError: If provider is not valid.
     """
 
+    # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "ChatBots"
         unique_together = ("user_profile", "name")

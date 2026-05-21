@@ -58,6 +58,7 @@ class ChatBotPlugin(TimestampedModel):
     - Uniqueness is enforced for each (chatbot, plugin_meta) pair to prevent duplicate plugin assignments.
     """
 
+    # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "ChatBot Plugins"
         unique_together = ("chatbot", "plugin_meta")

@@ -89,6 +89,28 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
     """
 
+    def owned_by(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
+        """
+        Returns a queryset of resources owned by the given user profile.
+
+        A resource is considered owned by a user profile if it is associated with that user profile through the `user_profile` foreign key.
+
+        :param user: The user to check for ownership.
+        :returns: A queryset of resources owned by the given user.
+        """
+        return self.filter(user_profile__user=user)
+
+    def shared_with(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
+        """
+        Returns a queryset of resources that are shared with the given user profile.
+
+        A resource is considered shared with a user profile if it is not owned by that user profile, but the user profile has read permission for it.
+
+        :param user: The user to check for shared resources.
+        :returns: A queryset of resources shared with the given user.
+        """
+        return self.exclude(user_profile__user=user).with_read_permission_for(user)
+
     def with_read_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
         """
         Returns a queryset of resources that the authenticated user in the
@@ -393,6 +415,28 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
     # Custom permission-based queryset methods for filtering by user_profile
     # read and ownership permissions.
     # --------------------------------------------------------------------------
+    def owned_by(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
+        """
+        Returns a queryset of resources owned by the given user profile.
+
+        A resource is considered owned by a user profile if it is associated with that user profile through the `user_profile` foreign key.
+
+        :param user: The user to check for ownership.
+        :returns: A queryset of resources owned by the given user.
+        """
+        return self.get_queryset().owned_by(user)
+
+    def shared_with(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
+        """
+        Returns a queryset of resources that are shared with the given user.
+
+        A resource is considered shared with a user if it is not owned by that user, but the user has read permission for it.
+
+        :param user: The user to check for shared resources.
+        :returns: A queryset of resources shared with the given user.
+        """
+        return self.get_queryset().shared_with(user)
+
     def with_read_permission_for(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
         """
         A custom Smarter pipeline for filtering any MetaDataWithOwnership
