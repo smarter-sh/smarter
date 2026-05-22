@@ -22,6 +22,9 @@ class MiddlewareDebugMiddleware(SmarterMiddlewareMixin):
         if self.async_mode:
             return self.__acall__(request)
 
+        if request.path in self.amnesty_urls:
+            return self.get_response(request)
+
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
 
         response = self.get_response(request)
