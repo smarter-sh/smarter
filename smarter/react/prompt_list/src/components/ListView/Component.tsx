@@ -22,9 +22,9 @@
  */
 import type { Chatbot, SessionContext } from "@/lib/Types";
 import { pluginsText } from "@/lib/pluginsText";
-import { statusCell } from "@/lib/statusCell";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { Toolbar } from "@/components/Toolbar"
+import { StatusBar } from "@/components/StatusBar";
 
 import "./styles.css";
 
@@ -36,63 +36,71 @@ interface ListViewProps {
 
 export function ListView({ sessionContext, chatbots }: ListViewProps) {
   return (
-    <div className="">
-      <div className="table-responsive prompt-list-table-wrap">
-        <table className="table table-striped table-hover align-middle">
-          <thead className="table-light border-bottom-2">
-            <tr className="">
-              <th className="p-1">Name</th>
-              <th className="width-100">Created</th>
-              <th className="width-100">Updated</th>
-              <th>Provider</th>
-              <th className="min-width-150">Model</th>
-              <th>Plugins</th>
-              <th>Status</th>
-              <th className="text-end min-width-250"></th>
+    <div className="table-responsive prompt-list-table-wrap">
+      <table className="table table-striped table-hover align-middle">
+        <thead className="table-light border-bottom-2">
+          <tr className="">
+            <th className="p-1">Name</th>
+            <th className="width-100">Created</th>
+            <th className="width-100">Updated</th>
+            <th>Provider</th>
+            <th className="min-width-150">Model</th>
+            <th>Plugins</th>
+            <th>Status</th>
+            <th className="text-end min-width-250"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {chatbots.map((chatbot) => (
+            <tr key={chatbot.id}>
+              {/* Name */}
+              <td className="name-col p-1 m-0">
+                <a href={chatbot.urlChatapp}>
+                  {chatbot.name}
+                  {chatbot.version ? ` v${chatbot.version}` : ""}
+                </a>
+              </td>
+              {/* Created Date */}
+              <td className="width-100">
+                {formatDateTime(chatbot.createdAt, "date")}
+              </td>
+              {/* Updated Date */}
+              <td className="width-100">
+                {formatDateTime(
+                  chatbot.updatedAt,
+                  "relative",
+                  chatbot.createdAt,
+                )}
+              </td>
+              {/* Provider */}
+              <td>
+                {chatbot.appLogoUrl ? (
+                  <img
+                    src={chatbot.appLogoUrl}
+                    alt={`${chatbot.provider} logo`}
+                    className="provider-logo d-none"
+                  />
+                ) : null}
+                {chatbot.provider}
+              </td>
+              {/* Model */}
+              <td className="min-width-150">
+                {chatbot.defaultModel || "default"}
+              </td>
+              {/* Plugins */}
+              <td>{pluginsText(chatbot)}</td>
+              {/* Status */}
+              <td>
+                <StatusBar chatbot={chatbot} />
+              </td>
+              {/* Actions */}
+              <td className="text-end min-width-250">
+                <Toolbar sessionContext={sessionContext} chatbot={chatbot} />
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {chatbots.map((chatbot) => (
-              <tr key={chatbot.id}>
-                <td className="name-col p-1 m-0">
-                  <a href={chatbot.urlChatapp}>
-                    {chatbot.name}
-                    {chatbot.version ? ` v${chatbot.version}` : ""}
-                  </a>
-                </td>
-                <td className="width-100">
-                  {formatDateTime(chatbot.createdAt, "date")}
-                </td>
-                <td className="width-100">
-                  {formatDateTime(
-                    chatbot.updatedAt,
-                    "relative",
-                    chatbot.createdAt,
-                  )}
-                </td>
-                <td>
-                  {chatbot.appLogoUrl ? (
-                    <img
-                      src={chatbot.appLogoUrl}
-                      alt={`${chatbot.provider} logo`}
-                      className="provider-logo d-none"
-                    />
-                  ) : null}
-                  {chatbot.provider}
-                </td>
-                <td className="min-width-150">
-                  {chatbot.defaultModel || "default"}
-                </td>
-                <td>{pluginsText(chatbot)}</td>
-                <td>{statusCell(chatbot)}</td>
-                <td className="text-end min-width-250">
-                  <Toolbar sessionContext={sessionContext} chatbot={chatbot} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -19,6 +19,8 @@
  *   <p>Modal content goes here.</p>
  * </Modal>
  */
+import React, { useEffect } from "react";
+
 export function Modal({
   show,
   title,
@@ -36,6 +38,20 @@ export function Modal({
   onOk?: () => void;
   onCancel?: () => void;
 }) {
+  useEffect(() => {
+    if (!show || !onOk) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        onOk();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [show, onOk]);
+
   if (!onClose && !onOk && !onCancel) {
     throw new Error(
       "Modal requires at least one of onClose, onOk, or onCancel handlers.",
