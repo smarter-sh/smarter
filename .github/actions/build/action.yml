@@ -208,8 +208,9 @@ runs:
         username: ${{ inputs.dockerhub-username }}
         password: ${{ inputs.dockerhub-password }}
 
+    # force a cache bust of the React build manifests,
+    # which are used to determine which static assets to load in the React app.
     - name: Set REACT_MANIFESTS_HASH
-      id: set-react-manifests-hash
       shell: bash
       run: echo "REACT_MANIFESTS_HASH=$(date +%s)" >> $GITHUB_ENV
 
@@ -231,5 +232,7 @@ runs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
       env:
+        DOCKER_BUILDKIT: 1
+        BUILDKIT_PROGRESS: plain
         ENVIRONMENT: ${{ inputs.environment }}
         REACT_MANIFESTS_HASH: ${{ env.REACT_MANIFESTS_HASH }}
