@@ -143,12 +143,14 @@ class ChatBotSerializer(MetaDataWithOwnershipModelSerializer):
     custom_url = serializers.SerializerMethodField()
     sandbox_host = serializers.SerializerMethodField()
     sandbox_url = serializers.SerializerMethodField()
+    manifest_url = serializers.SerializerMethodField()
     hostname = serializers.SerializerMethodField()
     url = serializers.SerializerMethodField()
     url_chatbot = serializers.SerializerMethodField()
     url_chat_config = serializers.SerializerMethodField()
     url_chatapp = serializers.SerializerMethodField()
     ready = serializers.SerializerMethodField()
+    is_authentication_required = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatBot
@@ -209,6 +211,9 @@ class ChatBotSerializer(MetaDataWithOwnershipModelSerializer):
     def get_sandbox_url(self, obj: ChatBot):
         return obj.sandbox_url
 
+    def get_manifest_url(self, obj: ChatBot):
+        return obj.manifest_url
+
     def get_hostname(self, obj: ChatBot):
         return obj.hostname
 
@@ -226,6 +231,9 @@ class ChatBotSerializer(MetaDataWithOwnershipModelSerializer):
 
     def get_ready(self, obj: ChatBot):
         return obj.ready
+
+    def get_is_authentication_required(self, obj: ChatBot):
+        return obj.is_authentication_required
 
 
 __all__ = [

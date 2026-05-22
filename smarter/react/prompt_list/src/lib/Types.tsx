@@ -1,35 +1,70 @@
-export type Chatbot = {
+export type Plugin = {
   id: number;
   name: string;
-  version: string | null;
+};
+
+export type User = {
+  username: string;
+  email: string;
+};
+export type UserProfile = {
+  user: User;
+  account?: {
+    accountNumber: string;
+  };
+};
+
+export type Chatbot = {
+  id: number;
+  isAuthenticationRequired: boolean; // ADD ME PLEASE
+  hashedId: string;
   createdAt: string;
   updatedAt: string;
-  hashed_id: string;
-  provider: string;
-  defaultModel: string | null;
-  defaultTemperature: number | null;
-  defaultMaxTokens: number | null;
-  defaultSystemRole: string | null;
-  description: string | null;
-  dnsVerificationStatus: string | null;
-  appAssistant: string | null;
-  appName: string | null;
-  appLogoUrl: string | null;
-  deployed: boolean;
-  isAuthenticationRequired?: boolean;
+  name: string;
+  description: string;
+  version: string;
   tags: string[];
-  urlChatbot: string | null;
-  userProfile: {
-    user: {
-      username: string;
-      email: string;
-    };
-  };
-  urls: {
-    manifest: string;
-    chat: string;
-    config: string;
-  };
+  annotations: Array<Record<string, string | boolean>>;
+  userProfile: UserProfile;
+  functions: any[];
+  plugins: Array<Plugin>;
+  customDomains: any[];
+  apiKeys: any[];
+  rfc1034CompliantName: string;
+  defaultSystemRole: string;
+  baseApiDomain: string;
+  baseDefaultHost: string;
+  defaultHost: string;
+  defaultUrl: string;
+  customHost: string | null;
+  customUrl: string | null;
+  sandboxHost: string;
+  sandboxUrl: string;
+  hostname: string;
+  url: string;
+  urlChatbot: string;
+  urlChatConfig: string;
+  urlChatapp: string;
+  urlManifest: string; // ADD ME PLEASE
+  ready: boolean;
+  deployed: boolean;
+  provider: string;
+  defaultModel: string;
+  defaultTemperature: number;
+  defaultMaxTokens: number;
+  appName: string;
+  appAssistant: string;
+  appWelcomeMessage: string;
+  appExamplePrompts: string[];
+  appPlaceholder: string;
+  appInfoUrl: string;
+  appBackgroundImageUrl: string | null;
+  appLogoUrl: string | null;
+  appFileAttachment: boolean;
+  dnsVerificationStatus: string;
+  tlsCertificateIssuanceStatus: string;
+  subdomain: string | null;
+  customDomain: string | null;
 };
 
 export type PromptListApiResponse = {
@@ -38,8 +73,6 @@ export type PromptListApiResponse = {
     shared: Chatbot[];
   };
 };
-
-export type ViewMode = "list" | "thumbnail";
 
 export type SessionContext = {
   myResourcesApiUrl: string;

@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
+import App from "@/App";
 import type { SessionContext } from "@/lib/Types";
 
 const rootEl = document.getElementById("smarter-prompt-list-root");

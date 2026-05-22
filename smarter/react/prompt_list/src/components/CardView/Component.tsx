@@ -1,3 +1,28 @@
+/**
+ * CardView React Component
+ *
+ * This component renders chatbot resources as individual cards, displaying detailed information and actions for each chatbot.
+ * It is used to present chatbots in a card-based layout, with modals for clone, rename, and delete actions.
+ *
+ * Features:
+ * - Displays chatbot details in a visually distinct card format.
+ * - Integrates action buttons for open, edit, clone, rename, and delete operations.
+ * - Uses modal dialogs for clone, rename, and delete workflows (scaffolded for further logic).
+ * - Supports a custom detail row renderer for flexible display of chatbot attributes.
+ * - Accepts a custom CSS class for layout control.
+ *
+ * Props:
+ * - sessionContext (SessionContext): Authentication and API context for actions.
+ * - title (string): Title displayed above the card list.
+ * - chatbots (Chatbot[]): Array of chatbot objects to display.
+ * - cardClassName (string): CSS class for the outer container, allowing layout customization.
+ * - renderDetailRow (function): Function to render detail rows for chatbot attributes.
+ *
+ * Usage:
+ * <CardView sessionContext={sessionContext} title="Your Chatbots" chatbots={chatbots} cardClassName="mt-15" renderDetailRow={renderDetailRow} />
+ *
+ * This component is intended for use in views where chatbots are presented in a card/grid format.
+ */
 import { useState } from "react";
 import type { ReactNode } from "react";
 
@@ -77,7 +102,7 @@ export function CardView({
                 ) : null}
               </span>
               <h4 className="card-title card-label fw-bold text-gray-800 text-center prompt-list-card-title">
-                <a href={chatbot.urls.chat} className="prompt-list-card-link">
+                <a href={chatbot.urlChatapp} className="prompt-list-card-link">
                   {chatbot.name}
                   {chatbot.version ? ` v${chatbot.version}` : ""}
                 </a>
@@ -104,7 +129,7 @@ export function CardView({
                   )}
                   {renderDetailRow(
                     "URL",
-                    chatbot.urlChatbot || chatbot.urls.chat,
+                    chatbot.urlChatbot || chatbot.urlChatapp,
                   )}
                   {renderDetailRow("Provider", chatbot.provider)}
                   {renderDetailRow("Model", chatbot.defaultModel)}
@@ -125,7 +150,7 @@ export function CardView({
                   aria-label="Actions"
                 >
                   <a
-                    href={chatbot.urls.chat}
+                    href={chatbot.urlChatapp}
                     className="btn btn-sm btn-primary"
                     title="Chat: Open the prompt workbench"
                     tabIndex={0}
@@ -133,7 +158,7 @@ export function CardView({
                     <i className="bi bi-chat-dots"> Chat</i>
                   </a>
                   <a
-                    href={chatbot.urls.manifest}
+                    href={chatbot.urlManifest}
                     className="btn btn-sm btn-info"
                     title="Edit: Open the YAML manifest that defines this chatbot resource"
                     tabIndex={0}

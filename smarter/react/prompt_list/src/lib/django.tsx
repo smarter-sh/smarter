@@ -1,5 +1,5 @@
 
-import getCookie from "./cookie";
+import getCookie from "@/lib/cookie";
 
 /**
  * Sends a POST request to the Smarter Django backend with CSRF and session authentication.

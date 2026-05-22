@@ -1,8 +1,31 @@
+/**
+ * ListView React Component
+ *
+ * This component renders a table-based list of chatbot resources, displaying key details and actions for each chatbot.
+ * It is used to present chatbots in a tabular format, with columns for name, creation and update dates, provider, model, plugins, status, and a toolbar for actions.
+ *
+ * Features:
+ * - Displays chatbot information in a responsive, styled table.
+ * - Integrates the Toolbar component for per-chatbot actions (open, edit, clone, rename, delete).
+ * - Formats dates and status using shared utility functions.
+ * - Supports custom card class names for layout flexibility.
+ *
+ * Props:
+ * - sessionContext (SessionContext): Authentication and API context for actions.
+ * - title (string): Title displayed above the table.
+ * - chatbots (Chatbot[]): Array of chatbot objects to display.
+ * - cardClassName (string): CSS class for the outer container, allowing layout customization.
+ *
+ * Usage:
+ * <ListView sessionContext={sessionContext} title="Your Chatbots" chatbots={chatbots} cardClassName="mt-15" />
+ *
+ * This component is intended for use in views where chatbots are presented in a list/table format.
+ */
 import type { Chatbot, SessionContext } from "@/lib/Types";
 import { pluginsText } from "@/lib/pluginsText";
 import { statusCell } from "@/lib/statusCell";
 import { formatDateTime } from "@/lib/formatDateTime";
-import { Toolbar } from "../Toolbar";
+import { Toolbar } from "@/components/Toolbar"
 
 import "./styles.css";
 
@@ -38,7 +61,7 @@ export function ListView({ sessionContext, title, chatbots, cardClassName }: Lis
             {chatbots.map((chatbot) => (
               <tr key={chatbot.id}>
                 <td className="name-col p-3">
-                  <a href={chatbot.urls.chat}>
+                  <a href={chatbot.urlChatapp}>
                     {chatbot.name}
                     {chatbot.version ? ` v${chatbot.version}` : ""}
                   </a>
