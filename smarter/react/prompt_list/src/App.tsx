@@ -3,7 +3,7 @@
  * Used to send raw JSON prompts to LLM APIs and display raw JSON responses.
  *
  */
-import Prompts from "./components/Prompts";
+import TabbedListView from "@/components/TabbedListView";
 import type { SessionContext } from "@/lib/Types";
 
 interface AppProps {
@@ -14,7 +14,7 @@ function App({ sessionContext }: AppProps) {
   return (
     <>
       <section className="mt-5 container" id="prompt-list">
-        <Prompts sessionContext={sessionContext} />
+        <TabbedListView sessionContext={sessionContext} />
       </section>
     </>
   );

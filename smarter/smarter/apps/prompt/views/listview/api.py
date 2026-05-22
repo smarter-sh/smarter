@@ -74,6 +74,11 @@ class PromptListApiView(SmarterAuthenticatedWebView):
             PromptListOwnershipFilter.SHARED,
             PromptListOwnershipFilter.ALL,
         ]:
+            logging.warning(
+                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'. Defaulting to 'all'.",
+                self.formatted_class_name,
+                ownership_filter,
+            )
             return JsonResponse(
                 {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
                 status=HTTPStatus.BAD_REQUEST,
@@ -129,11 +134,18 @@ class PromptListApiCloneView(SmarterAuthenticatedWebView):
         chatbot: ChatBot
 
         if not chatbot_id or not new_name:
+            logging.warning(
+                "%s.post() Missing required parameters. chatbot_id: %s, new_name: %s",
+                self.formatted_class_name,
+                chatbot_id,
+                new_name,
+            )
             return JsonResponse({"error": "chatbot_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             chatbot = ChatBot.objects.get(id=chatbot_id)
         except ChatBot.DoesNotExist:
+            logger.warning("%s.post() ChatBot with id %s not found for cloning.", self.formatted_class_name, chatbot_id)
             return JsonResponse({"error": f"ChatBot with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -142,7 +154,13 @@ class PromptListApiCloneView(SmarterAuthenticatedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("Error cloning ChatBot with id %s: %s", chatbot_id, str(e), exc_info=True)
+            logger.error(
+                "%s.post() Error cloning ChatBot with id %s: %s",
+                self.formatted_class_name,
+                chatbot_id,
+                str(e),
+                exc_info=True,
+            )
             return JsonResponse(
                 {"error": f"An error occurred while cloning the ChatBot: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
             )
@@ -156,11 +174,15 @@ class PromptListApiDeleteView(SmarterAuthenticatedWebView):
     def post(self, request: HttpRequest, *args, **kwargs):
         chatbot_id = kwargs.get("chatbot_id")
         if not chatbot_id:
+            logger.warning("%s.post() Missing required parameter chatbot_id for deletion.", self.formatted_class_name)
             return JsonResponse({"error": "chatbot_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             chatbot = ChatBot.objects.with_ownership_permission_for(self.user_profile.user).get(id=chatbot_id)  # type: ignore
         except ChatBot.DoesNotExist:
+            logger.warning(
+                "%s.post() ChatBot with id %s not found for deletion.", self.formatted_class_name, chatbot_id
+            )
             return JsonResponse({"error": f"ChatBot with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -170,7 +192,13 @@ class PromptListApiDeleteView(SmarterAuthenticatedWebView):
             )
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("Error deleting ChatBot with id %s: %s", chatbot_id, str(e), exc_info=True)
+            logger.error(
+                "%s.post() Error deleting ChatBot with id %s: %s",
+                self.formatted_class_name,
+                chatbot_id,
+                str(e),
+                exc_info=True,
+            )
             return JsonResponse(
                 {"error": f"An error occurred while deleting the ChatBot: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
             )
@@ -185,11 +213,20 @@ class PromptListApiRenameView(SmarterAuthenticatedWebView):
         chatbot_id = kwargs.get("chatbot_id")
         new_name = kwargs.get("new_name")
         if not chatbot_id or not new_name:
+            logger.warning(
+                "%s.post() Missing required parameters for renaming. chatbot_id: %s, new_name: %s",
+                self.formatted_class_name,
+                chatbot_id,
+                new_name,
+            )
             return JsonResponse({"error": "chatbot_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             chatbot = ChatBot.objects.with_ownership_permission_for(self.user_profile.user).get(id=chatbot_id)  # type: ignore
         except ChatBot.DoesNotExist:
+            logger.warning(
+                "%s.post() ChatBot with id %s not found for renaming.", self.formatted_class_name, chatbot_id
+            )
             return JsonResponse({"error": f"ChatBot with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -198,7 +235,13 @@ class PromptListApiRenameView(SmarterAuthenticatedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("Error renaming ChatBot with id %s: %s", chatbot_id, str(e), exc_info=True)
+            logger.error(
+                "%s.post() Error renaming ChatBot with id %s: %s",
+                self.formatted_class_name,
+                chatbot_id,
+                str(e),
+                exc_info=True,
+            )
             return JsonResponse(
                 {"error": f"An error occurred while renaming the ChatBot: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
             )

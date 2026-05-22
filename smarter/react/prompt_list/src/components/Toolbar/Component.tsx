@@ -1,3 +1,25 @@
+/**
+ * Toolbar React Component
+ *
+ * This component provides a toolbar for managing chatbot resources, used in both ListView and CardView displays.
+ * It offers actions for opening, editing, cloning, renaming, and deleting a chatbot, with modal dialogs for confirmation and error handling.
+ *
+ * Features:
+ * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete chatbot resources.
+ * - Modal dialogs for clone, rename, delete, error, and confirmation workflows.
+ * - Ensures only one modal is open at a time for clear user interaction.
+ * - Handles API calls for clone, rename, and delete operations, with feedback on success or failure.
+ * - Accessible with ARIA labels and keyboard navigation.
+ *
+ * Props:
+ * - sessionContext (SessionContext): Contains authentication and API information for backend operations.
+ * - chatbot (Chatbot): The chatbot resource to manage.
+ *
+ * Usage:
+ * <Toolbar sessionContext={sessionContext} chatbot={chatbot} />
+ *
+ * This component is intended to be embedded in each chatbot row or card in ListView and CardView.
+ */
 import { useState } from "react";
 import type { Chatbot, SessionContext } from "@/lib/Types";
 import { Modal } from "@/lib/modalDialogue";
@@ -301,7 +323,7 @@ export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
     <>
       <div className="btn-group pe-2" role="group" aria-label="Actions">
         <a
-          href={chatbot.urls.chat}
+          href={chatbot.urlChatapp}
           className="btn btn-icon btn-sm border"
           title="Chat: Open the prompt workbench"
           tabIndex={0}
@@ -309,7 +331,7 @@ export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
           <i className="bi bi-chat-dots" />
         </a>
         <a
-          href={chatbot.urls.manifest}
+          href={chatbot.urlManifest}
           className="btn btn-icon btn-sm border"
           title="Edit: Open the YAML manifest that defines this chatbot resource"
           tabIndex={0}

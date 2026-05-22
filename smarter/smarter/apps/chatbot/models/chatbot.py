@@ -1,6 +1,7 @@
 """All models for the OpenAI Function Calling API app."""
 
 import warnings
+from functools import cached_property
 from typing import Optional
 from urllib.parse import urljoin, urlparse
 
@@ -305,7 +306,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return rfc1034_compliant_str(raw_str)
 
     @property
-    def default_system_role_enhanced(self):
+    def default_system_role_enhanced(self) -> str:
         """
         prepends a date/time string to the default_system_role
 
@@ -316,7 +317,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return f"{get_date_time_string()}{self.default_system_role}"
 
     @property
-    def base_api_domain(self):
+    def base_api_domain(self) -> str:
         """
         The base API domain for the ChatBot. This is the domain that is used in the default hostname for the ChatBot.
 
@@ -342,7 +343,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return smarter_settings.proxy_api_domain
 
     @property
-    def base_default_host(self):
+    def base_default_host(self) -> str:
         """
         The base default hostname for the ChatBot. This is the part of the hostname
         that comes after the RFC 1034 compliant name. It includes the account number
@@ -371,7 +372,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return f"{user_profile.account.account_number}.{self.base_api_domain}"
 
     @property
-    def default_host(self):
+    def default_host(self) -> str:
         """
         The default hostname for the ChatBot.
         Examples:
@@ -402,7 +403,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return domain
 
     @property
-    def default_url(self):
+    def default_url(self) -> str:
         """
         The default URL for the ChatBot.
 
@@ -414,7 +415,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)  # type: ignore[return-value]
 
     @property
-    def custom_host(self):
+    def custom_host(self) -> Optional[str]:
         """
         The custom hostname for the ChatBot.
 
@@ -426,7 +427,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         example 'example.example.com'
 
         :returns: custom hostname
-        :rtype: str
+        :rtype: Optional[str]
         """
         if self.custom_domain and self.custom_domain.is_verified:
             domain = f"{self.rfc1034_compliant_name}.{self.custom_domain.domain_name}"
@@ -435,21 +436,21 @@ class ChatBot(MetaDataWithOwnershipModel):
         return None
 
     @property
-    def custom_url(self):
+    def custom_url(self) -> Optional[str]:
         """
         The custom URL for the ChatBot.
 
         example 'https://example.example.com'
 
         :returns: custom URL
-        :rtype: str
+        :rtype: Optional[str]
         """
         if self.custom_host:
             return SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)  # type: ignore[return-value]
         return None
 
     @property
-    def sandbox_host(self):
+    def sandbox_host(self) -> str:
         """
         The sandbox hostname for the ChatBot. This is the hostname that is
         used when the ChatBot is in sandbox mode. For example, when the
@@ -463,7 +464,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return smarter_settings.environment_platform_domain
 
     @property
-    def sandbox_url(self):
+    def sandbox_url(self) -> str:
         """
         The sandbox URL for the ChatBot. This is the URL that is used when
         the ChatBot is in sandbox mode. For example, when the ChatBot is
@@ -483,7 +484,25 @@ class ChatBot(MetaDataWithOwnershipModel):
         return url
 
     @property
-    def hostname(self):
+    def manifest_url(self) -> str:
+        """
+        The URL for the ChatBot's manifest file. This is used for integration with external platforms that require a manifest URL.
+
+        example: 'https://alpha.platform.smarter.sh/workbench/chatbots/<str:hashed_id>/manifest/'
+
+        :returns: manifest URL
+        :rtype: str
+        """
+        # pylint: disable=C0415
+        from smarter.apps.prompt.urls import PromptReverseNames
+
+        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.manifest_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        url = urljoin(smarter_settings.environment_url, path)
+        url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
+        return url
+
+    @property
+    def hostname(self) -> str:
         """
         The hostname for the ChatBot depending on its deployment status.
         Returns either the custom hostname (if deployed), the default hostname, or the sandbox hostname.
@@ -496,7 +515,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return self.sandbox_host
 
     @property
-    def url(self):
+    def url(self) -> str:
         """
         The URL for the ChatBot depending on its deployment status.
 
@@ -510,7 +529,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return self.sandbox_url
 
     @property
-    def url_chatbot(self):
+    def url_chatbot(self) -> str:
         """
         The Smarter Api url returned by ChatConfigView.config() as the
         key, "url_chatbot". This url is consumed by React.js app for http
@@ -538,7 +557,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return url
 
     @property
-    def url_chat_config(self):
+    def url_chat_config(self) -> str:
         """
         The Smarter Api url for the Chat config json dict.
         The React.js app requests this url during react app startup
@@ -583,7 +602,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         return url
 
     @property
-    def ready(self):
+    def ready(self) -> bool:
         """
         The readiness status of the ChatBot.
 
@@ -620,6 +639,22 @@ class ChatBot(MetaDataWithOwnershipModel):
             return False
 
         return True
+
+    @cached_property
+    def is_authentication_required(self) -> bool:
+        """
+        Determines if authentication is required to access the ChatBot.
+
+        :returns: ``True`` if authentication is required, otherwise ``False``.
+        :rtype: bool
+        """
+        # pylint: disable=C0415
+        from smarter.apps.chatbot.models.chatbot_api_key import ChatBotAPIKey
+
+        chatbotapikeys = ChatBotAPIKey.get_cached_objects(chatbot=self)
+        if chatbotapikeys.filter(api_key__is_active=True).exists():
+            return True
+        return False
 
     def mode(self, url: str) -> str:
         """
