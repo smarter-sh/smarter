@@ -200,7 +200,7 @@ function Prompt({
       <div className="row d-flex mb-3">
         <div className="col-lg-12">
           <h3 className="mt-4 p-4">LLM Provider API Passthrough</h3>
-          <ul className="nav nav-tabs mb-3" role="tablist">
+          <ul className="nav nav-tabs" role="tablist">
             <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === "request" ? "active" : ""}`}

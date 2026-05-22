@@ -15,18 +15,17 @@
  * - sessionContext (SessionContext): Authentication and API context for actions.
  * - title (string): Title displayed above the card list.
  * - chatbots (Chatbot[]): Array of chatbot objects to display.
- * - cardClassName (string): CSS class for the outer container, allowing layout customization.
  * - renderDetailRow (function): Function to render detail rows for chatbot attributes.
  *
  * Usage:
- * <CardView sessionContext={sessionContext} title="Your Chatbots" chatbots={chatbots} cardClassName="mt-15" renderDetailRow={renderDetailRow} />
+ * <CardView sessionContext={sessionContext} title="Your Chatbots" chatbots={chatbots} renderDetailRow={renderDetailRow} />
  *
  * This component is intended for use in views where chatbots are presented in a card/grid format.
  */
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import type { Chatbot, SessionContext } from "@/lib/Types";
+import type { Chatbot, SessionContext, TabKey } from "@/lib/Types";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { pluginsText } from "@/lib/pluginsText";
 import { Modal } from "@/lib/modalDialogue";
@@ -40,17 +39,17 @@ type DetailRowRenderer = (
 
 interface CardViewProps {
   sessionContext: SessionContext;
+  activeTab: TabKey;
   title: string;
   chatbots: Chatbot[];
-  cardClassName: string;
   renderDetailRow: DetailRowRenderer;
 }
 
 export function CardView({
   sessionContext,
+  activeTab,
   title,
   chatbots,
-  cardClassName,
   renderDetailRow,
 }: CardViewProps) {
 
@@ -72,14 +71,14 @@ export function CardView({
   const handleCloseModal = () => setModal({ type: null, chatbot: null });
 
   return (
-    <div className={cardClassName}>
+    <div className="">
       <div className="prompt-list-heading-wrap">
         <h3 className="text-center">{title}</h3>
       </div>
       {chatbots.map((chatbot) => (
         <article className="col-12 mt-1 p-2" key={chatbot.id}>
           <div
-            className={`card card-flush h-xl-100 chatbot-card ${title === "Your Chatbots" ? "user-chatbot-card" : "smarter-chatbot-card"}`}
+            className={`card card-flush h-xl-100 chatbot-card ${activeTab === "user" ? "user-chatbot-card" : "smarter-chatbot-card"}`}
           >
             <div className="p-5 prompt-list-card-header">
               <span className="prompt-list-header-icons">

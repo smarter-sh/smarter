@@ -28,17 +28,16 @@
  */
 import { useEffect, useState } from "react";
 import ListView from "@/components/ListView";
-import CardView  from "@/components/CardView";
+import CardView from "@/components/CardView";
 import ToggleButton from "@/components/ToggleButton";
 import type { ViewMode } from "@/components/ToggleButton";
 import { renderDetailRow } from "@/lib/renderDetail";
 
 import fetchDjangoUrl from "@/lib/django";
-import type { Chatbot, SessionContext, UserProfile } from "@/lib/Types";
+import type { Chatbot, SessionContext, UserProfile, TabKey } from "@/lib/Types";
 
 import "./styles.css";
 
-type TabKey = "user" | "shared";
 interface TabNavProps {
   activeTab: TabKey;
   onTabChange: (tab: TabKey) => void;
@@ -46,7 +45,7 @@ interface TabNavProps {
 }
 
 const TabNav: React.FC<TabNavProps> = ({ activeTab, onTabChange, tabs }) => (
-  <ul className="nav nav-tabs mb-3">
+  <ul className="nav nav-tabs">
     {tabs.map((tab) => (
       <li className="nav-item" key={tab.key}>
         <button
@@ -95,7 +94,7 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
 
       try {
         // Join base and slug manually to handle local path base
-        let base = sessionContext.myResourcesApiUrl;
+        let base = sessionContext.promptListApiUrl;
         if (!base.endsWith("/")) base += "/";
         let slug = urlSlug.startsWith("/") ? urlSlug.slice(1) : urlSlug;
         let url = base + slug;
@@ -110,16 +109,16 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
         );
 
         if (!response.ok) {
-            let errorMsg = `Failed to load chatbots (${response.status})`;
-            try {
-              const errorJson = await response.json();
-              if (errorJson && errorJson.error) {
-                errorMsg = errorJson.error;
-              }
-            } catch {
-              console.error("Failed to load chatbots due to an unknown error.");
+          let errorMsg = `Failed to load chatbots (${response.status})`;
+          try {
+            const errorJson = await response.json();
+            if (errorJson && errorJson.error) {
+              errorMsg = errorJson.error;
             }
-            throw new Error(errorMsg);
+          } catch {
+            console.error("Failed to load chatbots due to an unknown error.");
+          }
+          throw new Error(errorMsg);
         }
 
         const payload = (await response.json()) as ChatbotListApiResponse;
@@ -157,46 +156,44 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
   }
 
   return (
-    <div>
-      <TabNav activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
-      <div className="list-view">
+    <div className="pt-5 card card-flush h-xl-100">
+      <div
+        className="card-header rounded align-items-start ps-3"
+        data-bs-theme="light"
+      >
+        <TabNav activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
+      </div>
+      <div className="m-0 p-0 card-body list-view">
         <ToggleButton viewMode={viewMode} setViewMode={setViewMode} />
 
         {activeTab === "user" ? (
           viewMode === "list" ? (
             <ListView
               sessionContext={sessionContext}
-              title="Your Chatbots"
               chatbots={userChatbots}
-              cardClassName="mt-15"
             />
           ) : (
             <CardView
               sessionContext={sessionContext}
+              activeTab={activeTab}
               title="Your Chatbots"
               chatbots={userChatbots}
-              cardClassName="mt-15"
               renderDetailRow={renderDetailRow}
             />
           )
+        ) : viewMode === "list" ? (
+          <ListView
+            sessionContext={sessionContext}
+            chatbots={sharedChatbots}
+          />
         ) : (
-          viewMode === "list" ? (
-            <ListView
-              sessionContext={sessionContext}
-              title="Shared Chatbots"
-              chatbots={sharedChatbots}
-              cardClassName={sharedChatbots.length > 0 ? "mt-5" : "mt-15"}
-            />
-
-          ) : (
-            <CardView
-              sessionContext={sessionContext}
-              title="Shared Chatbots"
-              chatbots={sharedChatbots}
-              cardClassName={sharedChatbots.length > 0 ? "mt-5" : "mt-15"}
-              renderDetailRow={renderDetailRow}
-            />
-          )
+          <CardView
+            sessionContext={sessionContext}
+            activeTab={activeTab}
+            title="Shared Chatbots"
+            chatbots={sharedChatbots}
+            renderDetailRow={renderDetailRow}
+          />
         )}
       </div>
     </div>
