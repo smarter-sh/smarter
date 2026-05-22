@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.13](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.12...v0.14.0-alpha.13) (2026-05-22)
+
+### Bug Fixes
+
+* add pagination api support and tabbed list view to ChatBots prompt list ([bc30ba5](https://github.com/smarter-sh/smarter/commit/bc30ba536ae2496644cea4a8293652c5f16d6e6f))
+
 ## [0.14.0-alpha.12](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.11...v0.14.0-alpha.12) (2026-05-21)
 
 ### Bug Fixes
