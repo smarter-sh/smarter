@@ -53,7 +53,7 @@ export function ListView({ sessionContext, chatbots, onRequery }: ListViewProps)
           </tr>
         </thead>
         <tbody>
-          {chatbots.map((chatbot) => (
+          {Array.isArray(chatbots) && chatbots.map((chatbot) => (
             <tr key={chatbot.id}>
               {/* Name */}
               <td className="name-col p-1 m-0">

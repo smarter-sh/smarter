@@ -111,6 +111,18 @@ class SmarterHelperMixin:
         """
         return ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml"]
 
+    def deserves_amnesty(self, slug: str) -> bool:
+        """
+        Determines if a given URL deserves amnesty based on the amnesty URLs list.
+
+        :param slug: The URL path to check.
+        :type slug: str
+        :return: True if the URL deserves amnesty, False otherwise.
+        :rtype: bool
+        """
+        slug = slug.lower()
+        return any(amnesty_url in slug for amnesty_url in self.amnesty_urls)
+
     def smarter_build_absolute_uri(self, request: "HttpRequest") -> Optional[str]:
         """
         Attempts to get the absolute URI from a request object.
