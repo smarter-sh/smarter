@@ -28,9 +28,10 @@ import fetchDjangoUrl from "@/lib/django";
 interface ToolbarProps {
   sessionContext: SessionContext;
   chatbot: Chatbot;
+  onRequery: () => void;
 }
 
-export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
+export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) => {
   // this is a single way to control which and whether a modal is open.
   // it ensures that only one modal can be open at a time, and simplifies
   // the logic for opening and closing any of the four modals.
@@ -42,7 +43,14 @@ export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
   const [errMessage, setErrMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
-  const handleCloseModal = () => setModal({ type: null, chatbot: null });
+  const handleCloseModal = () => {
+    setModal({ type: null, chatbot: null});
+  };
+  const handleCloseModalWithRequery = () => {
+    setModal({ type: null, chatbot: null });
+    onRequery();
+  };
+
   const handleCloneButtonClicked = (chatbot: Chatbot) =>
     setModal({ type: "clone", chatbot });
   const handleRenameButtonClicked = (chatbot: Chatbot) =>
@@ -159,7 +167,7 @@ export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
         <Modal
           show={modal.type === "confirmation"}
           title="✅ Success"
-          onClose={handleCloseModal}
+          onClose={handleCloseModalWithRequery}
         >
           <p>
             {successMessage} <strong>{modal.chatbot?.name}</strong>.

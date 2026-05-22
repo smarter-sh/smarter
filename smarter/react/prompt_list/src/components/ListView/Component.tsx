@@ -32,9 +32,11 @@ import "./styles.css";
 interface ListViewProps {
   sessionContext: SessionContext;
   chatbots: Chatbot[];
+  onRequery: () => void;
 }
 
-export function ListView({ sessionContext, chatbots }: ListViewProps) {
+export function ListView({ sessionContext, chatbots, onRequery }: ListViewProps) {
+
   return (
     <div className="table-responsive prompt-list-table-wrap">
       <table className="table table-striped table-hover align-middle">
@@ -95,7 +97,7 @@ export function ListView({ sessionContext, chatbots }: ListViewProps) {
               </td>
               {/* Actions */}
               <td className="text-end min-width-250">
-                <Toolbar sessionContext={sessionContext} chatbot={chatbot} />
+                <Toolbar sessionContext={sessionContext} chatbot={chatbot} onRequery={onRequery} />
               </td>
             </tr>
           ))}

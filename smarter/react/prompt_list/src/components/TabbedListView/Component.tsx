@@ -82,12 +82,11 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
     { key: "shared", label: "Shared Chatbots" },
   ];
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const load = async (
+  const load = async (
+      isMounted: boolean,
       setterCallback: React.Dispatch<React.SetStateAction<Chatbot[]>>,
       urlSlug: string,
+      invalidateCache = false,
     ) => {
       setIsLoading(true);
       setErrorMessage(null);
@@ -99,6 +98,7 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
         let slug = urlSlug.startsWith("/") ? urlSlug.slice(1) : urlSlug;
         let url = base + slug;
         if (!url.endsWith("/")) url += "/";
+        url += `?invalidate_cache=${invalidateCache}`;
         const response = await fetchDjangoUrl(
           JSON.stringify({}),
           url,
@@ -136,11 +136,19 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
           setIsLoading(false);
         }
       }
-    };
+  };
+
+  const handleRequery = () => {
+    load(true, setUserChatbots, "owned", true);
+    load(true, setSharedChatbots, "shared", true);
+  }
+
+  useEffect(() => {
+    let isMounted = true;
 
     // See smarter.apps.prompt.views.listview.api.PromptListOwnershipFilter for expected values
-    load(setUserChatbots, "owned");
-    load(setSharedChatbots, "shared");
+    load(isMounted, setUserChatbots, "owned");
+    load(isMounted, setSharedChatbots, "shared");
 
     return () => {
       isMounted = false;
@@ -171,6 +179,7 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
             <ListView
               sessionContext={sessionContext}
               chatbots={userChatbots}
+              onRequery={handleRequery}
             />
           ) : (
             <CardView
@@ -179,12 +188,14 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
               title="Your Chatbots"
               chatbots={userChatbots}
               renderDetailRow={renderDetailRow}
+              onRequery={handleRequery}
             />
           )
         ) : viewMode === "list" ? (
           <ListView
             sessionContext={sessionContext}
             chatbots={sharedChatbots}
+            onRequery={handleRequery}
           />
         ) : (
           <CardView
@@ -193,6 +204,7 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
             title="Shared Chatbots"
             chatbots={sharedChatbots}
             renderDetailRow={renderDetailRow}
+            onRequery={handleRequery}
           />
         )}
       </div>
