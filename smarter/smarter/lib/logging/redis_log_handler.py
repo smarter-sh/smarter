@@ -241,7 +241,7 @@ def flush(buffer) -> None:
         channel = payload["channel"]
         key = stream_key(channel)
         pipe.publish(channel, payload["data"])
-        pipe.xadd(key, {"data": payload["data"]})
+        pipe.xadd(key, {"data": payload["data"]}, maxlen=1000, approximate=True)
         ttl = stream_ttl_seconds(channel)
         if ttl is not None:
             pipe.expire(key, ttl)
