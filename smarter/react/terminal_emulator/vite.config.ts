@@ -66,8 +66,9 @@ export default defineConfig(({ command }: { command: string }) => ({
     // ------------------------------------------------------------------------
     rollupOptions: {
       output: {
-        entryFileNames: "assets/index.js",
-        chunkFileNames: "assets/[name].js",
+        entryFileNames: "assets/[name]-[hash].js",
+        chunkFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
         manualChunks(id: string) {
           if (id.includes("node_modules/xterm") || id.includes("node_modules/@xterm")) {
             return "xterm";
