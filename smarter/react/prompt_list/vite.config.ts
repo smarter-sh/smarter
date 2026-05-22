@@ -92,7 +92,7 @@ export default defineConfig(({ command }: { command: string }) => ({
   // environment as possible.
   server: {
     proxy: {
-      "/workbench/api/chatbots": "http://localhost:9357",
+      "/workbench/api/listview": "http://localhost:9357",
       "/assets": {
         target: "http://localhost:9357", // Django dev server
         changeOrigin: true,

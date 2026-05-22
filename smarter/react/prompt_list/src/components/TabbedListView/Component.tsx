@@ -156,7 +156,7 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
   }
 
   return (
-    <div className="pt-5 card card-flush h-xl-100">
+    <div className="pt-5 pb-5 card card-flush h-xl-100">
       <div
         className="card-header rounded align-items-start ps-3"
         data-bs-theme="light"

@@ -7,7 +7,7 @@ how we got here:
  - /workbench/<str:name>/config/
 """
 
-from django.urls import path
+from django.urls import path, re_path
 
 from smarter.common.utils import to_snake_case
 
@@ -80,18 +80,24 @@ class PromptReverseNames:
 
 urlpatterns = [
     path("", PromptListView.as_view(), name=PromptReverseNames.listview),
-    path("api/chatbots/", PromptListApiView.as_view(), name=PromptReverseNames.listview_api_all),
-    path("api/chatbots/<str:ownership_filter>/", PromptListApiView.as_view(), name=PromptReverseNames.listview_api),
+    path("api/listview/", PromptListApiView.as_view(), name=PromptReverseNames.listview_api_all),
+    re_path(
+        r"^api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
+        PromptListApiView.as_view(),
+        name=PromptReverseNames.listview_api,
+    ),
     path(
-        "api/clone/<int:chatbot_id>/<str:new_name>/",
+        "api/listview/clone/<int:chatbot_id>/<str:new_name>/",
         PromptListApiCloneView.as_view(),
         name=PromptReverseNames.listview_api_clone,
     ),
     path(
-        "api/delete/<int:chatbot_id>/", PromptListApiDeleteView.as_view(), name=PromptReverseNames.listview_api_delete
+        "api/listview/delete/<int:chatbot_id>/",
+        PromptListApiDeleteView.as_view(),
+        name=PromptReverseNames.listview_api_delete,
     ),
     path(
-        "api/rename/<int:chatbot_id>/<str:new_name>/",
+        "api/listview/rename/<int:chatbot_id>/<str:new_name>/",
         PromptListApiRenameView.as_view(),
         name=PromptReverseNames.listview_api_rename,
     ),
