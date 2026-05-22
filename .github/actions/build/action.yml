@@ -226,7 +226,7 @@ runs:
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ github.run_id }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.DATESTAMP }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.TAG }}
-        build-args:
+        build-args: |
           ENVIRONMENT=${{ inputs.environment }}
           REACT_MANIFESTS_HASH=${{ env.REACT_MANIFESTS_HASH }}
         cache-from: type=gha
