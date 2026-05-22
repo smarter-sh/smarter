@@ -180,7 +180,7 @@ export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
     // return a success or failure result.
 
     const url =
-      sessionContext.myResourcesApiUrl +
+      sessionContext.promptListApiUrl +
       "clone/" +
       chatbot.id +
       "/" +
@@ -231,7 +231,7 @@ export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
     // return a success or failure result.
     handleCloseModal();
     const url =
-      sessionContext.myResourcesApiUrl +
+      sessionContext.promptListApiUrl +
       "rename/" +
       chatbot.id +
       "/" +
@@ -280,7 +280,7 @@ export const Toolbar = ({ sessionContext, chatbot }: ToolbarProps) => {
     // implement the delete logic here, e.g. call an API route to perform the delete operation.
     // return a success or failure result.
     handleCloseModal();
-    const url = sessionContext.myResourcesApiUrl + "delete/" + chatbot.id + "/";
+    const url = sessionContext.promptListApiUrl + "delete/" + chatbot.id + "/";
     fetchDjangoUrl(
       JSON.stringify({}),
       url,

@@ -31,7 +31,7 @@ function ListViewToggleButton({ viewMode, onClick }: ViewToggleButtonProps) {
   return (
     <button
       type="button"
-      className={`btn btn-sm ${viewMode === "list" ? "btn-outline-primary active" : "btn-outline-secondary"}`}
+      className={`btn btn-sm ${viewMode === "list" ? "btn-primary" : "btn-outline-secondary"}`}
       title="List View"
       aria-label="List View"
       onClick={onClick}
@@ -48,7 +48,7 @@ function ThumbnailViewToggleButton({
   return (
     <button
       type="button"
-      className={`btn btn-sm ${viewMode === "thumbnail" ? "btn-outline-primary active" : "btn-outline-secondary"}`}
+      className={`btn btn-sm ${viewMode === "thumbnail" ? "btn-primary" : "btn-outline-secondary"}`}
       title="Thumbnail View"
       aria-label="Thumbnail View"
       onClick={onClick}
@@ -66,7 +66,7 @@ export default function ToggleButton({
   setViewMode: (mode: ViewMode) => void;
 }) {
   return (
-    <div id="toggle-buttons" className="mb-4">
+    <div id="toggle-buttons" className="p-3">
       <div
         className="btn-group border border-light rounded-3 bg-white"
         role="group"

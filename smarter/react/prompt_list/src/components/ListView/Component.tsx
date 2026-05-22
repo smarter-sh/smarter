@@ -14,10 +14,9 @@
  * - sessionContext (SessionContext): Authentication and API context for actions.
  * - title (string): Title displayed above the table.
  * - chatbots (Chatbot[]): Array of chatbot objects to display.
- * - cardClassName (string): CSS class for the outer container, allowing layout customization.
  *
  * Usage:
- * <ListView sessionContext={sessionContext} title="Your Chatbots" chatbots={chatbots} cardClassName="mt-15" />
+ * <ListView sessionContext={sessionContext} chatbots={chatbots} />
  *
  * This component is intended for use in views where chatbots are presented in a list/table format.
  */
@@ -32,22 +31,17 @@ import "./styles.css";
 
 interface ListViewProps {
   sessionContext: SessionContext;
-  title: string;
   chatbots: Chatbot[];
-  cardClassName: string;
 }
 
-export function ListView({ sessionContext, title, chatbots, cardClassName }: ListViewProps) {
+export function ListView({ sessionContext, chatbots }: ListViewProps) {
   return (
-    <div className={cardClassName}>
-      <div className="prompt-list-heading-wrap">
-        <h3 className="text-center">{title}</h3>
-      </div>
+    <div className="">
       <div className="table-responsive prompt-list-table-wrap">
         <table className="table table-striped table-hover align-middle">
-          <thead className="table-light">
-            <tr>
-              <th className="p-3">Name</th>
+          <thead className="table-light border-bottom-2">
+            <tr className="">
+              <th className="p-1">Name</th>
               <th className="width-100">Created</th>
               <th className="width-100">Updated</th>
               <th>Provider</th>
@@ -60,7 +54,7 @@ export function ListView({ sessionContext, title, chatbots, cardClassName }: Lis
           <tbody>
             {chatbots.map((chatbot) => (
               <tr key={chatbot.id}>
-                <td className="name-col p-3">
+                <td className="name-col p-1 m-0">
                   <a href={chatbot.urlChatapp}>
                     {chatbot.name}
                     {chatbot.version ? ` v${chatbot.version}` : ""}

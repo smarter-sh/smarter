@@ -1,3 +1,6 @@
+
+export type TabKey = "user" | "shared";
+
 export type Plugin = {
   id: number;
   name: string;
@@ -75,7 +78,7 @@ export type PromptListApiResponse = {
 };
 
 export type SessionContext = {
-  myResourcesApiUrl: string;
+  promptListApiUrl: string;
   csrfCookieName: string;
   csrftoken: string;
   djangoSessionCookieName: string;

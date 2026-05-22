@@ -6,6 +6,17 @@ workbench/passthrough/).
 
 ## Setup
 
+To run this component locally for development purposes:
+
+```console
+export NODE_ENV=dev
+npm install
+npm run build
+npm run dev
+```
+
+For production builds:
+
 ```console
 export NODE_ENV=production
 npm install --include=dev
