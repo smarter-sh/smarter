@@ -180,6 +180,18 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         # initialize request mixin WITHOUT fake users/admin state
         SmarterRequestMixin.__init__(self)
 
+    def __call__(self, request):
+        """
+        Standard Django middleware entry point.
+
+        This method intentionally does not contain any custom logic and
+        simply delegates to the parent class to preserve Django's
+        expected middleware lifecycle behavior.
+        """
+        if request.path in self.amnesty_urls:
+            return self.get_response(request)
+        return super().__call__(request)
+
     @property
     def formatted_class_name(self) -> str:
         return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")

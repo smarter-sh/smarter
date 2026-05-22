@@ -197,6 +197,9 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
         if self.async_mode:
             return self.__acall__(request)
 
+        if request.path in self.amnesty_urls:
+            return self.get_response(request)
+
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
             return self.get_response(request)
 
