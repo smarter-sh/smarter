@@ -75,12 +75,20 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [userChatbots, setUserChatbots] = useState<Chatbot[]>([]);
   const [sharedChatbots, setSharedChatbots] = useState<Chatbot[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [viewMode, _setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem("viewMode");
+    return saved === "thumbnail" ? "thumbnail" : "list";
+  });
   const [activeTab, setActiveTab] = useState<"user" | "shared">("user");
   const tabs: { key: TabKey; label: string }[] = [
     { key: "user", label: "Your Chatbots" },
     { key: "shared", label: "Shared Chatbots" },
   ];
+
+  const setViewMode = (mode: ViewMode) => {
+    _setViewMode(mode);
+    localStorage.setItem("viewMode", mode);
+  };
 
   const load = async (
       isMounted: boolean,

@@ -1,11 +1,47 @@
 # pylint: disable=W0613,C0302
 """
-PromptListView is a Django class-based view that serves the list of ChatBots
-for the Smarter workbench web console. It is responsible for fetching the
-ChatBots associated with the authenticated user, as well as any shared ChatBots,
-and rendering them in a template. The view is protected and requires the user
-to be authenticated. It also includes caching to keep the workbench snappy while
-avoiding appearing stale.
+smarter.apps.prompt.views.listview.api
+======================================
+
+Django class-based API views for managing ChatBots in the Smarter workbench web console.
+
+This module provides API endpoints for listing, cloning, deleting, and renaming ChatBots
+associated with the authenticated user, as well as any shared ChatBots. All views require
+user authentication and leverage caching for responsiveness.
+
+Classes
+-------
+
+- PromptListApiView
+    Returns a paginated list of ChatBots accessible to the authenticated user, supporting
+    filters for owned, shared, or all ChatBots. Supports cache invalidation and pagination.
+
+- PromptListApiCloneView
+    API endpoint for cloning an existing ChatBot. Requires the user to provide a new name.
+
+- PromptListApiDeleteView
+    API endpoint for deleting a ChatBot owned by the user.
+
+- PromptListApiRenameView
+    API endpoint for renaming a ChatBot owned by the user.
+
+Features
+--------
+
+- Requires user authentication for all endpoints.
+- Supports filtering ChatBots by ownership (owned, shared, or all).
+- Provides pagination and cache invalidation options.
+- Returns results as JSON responses.
+- Uses Django's class-based views and serializers.
+
+Example Endpoints
+-----------------
+
+- ``POST /workbench/api/listview/``
+- ``POST /workbench/api/listview/all/?page=1&page_size=50&invalidate_cache=false``
+- ``POST /workbench/api/listview/owned/?page=1&page_size=25&invalidate_cache=true``
+- ``POST /workbench/api/listview/shared/?page=2&page_size=10&invalidate_cache=false``
+
 """
 
 from http import HTTPStatus
@@ -21,15 +57,18 @@ from smarter.apps.account.serializers import UserProfileSerializer
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.serializers import ChatBotSerializer
+from smarter.apps.chatbot.utils import (
+    get_cached_chatbots_available_to_user_profile,
+    get_cached_chatbots_owned_by_user_profile,
+    get_cached_chatbots_shared_with_user_profile,
+)
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
-from smarter.lib.cache import cache_results
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-WORKBENCH_CACHE_TIMEOUT = 30  # 30 seconds. keeps the workbench snappy while avoiding appearing stale.
 DEFAULT_PAGE_SIZE = 25  # default number of chatbots to return per page in the API response
 
 
@@ -82,7 +121,6 @@ class PromptListApiView(SmarterAuthenticatedWebView):
         - Requires user authentication.
 
     Attributes:
-        WORKBENCH_CACHE_TIMEOUT (int): Cache timeout in seconds.
         DEFAULT_PAGE_SIZE (int): Default number of ChatBots per page.
 
     Methods:
@@ -103,7 +141,6 @@ class PromptListApiView(SmarterAuthenticatedWebView):
     def post(self, request: HttpRequest, *args, **kwargs):
 
         qs: models.QuerySet[ChatBot]
-        user_profile_id = self.user_profile.id  # type: ignore
         ownership_filter = kwargs.get("ownership_filter", PromptListOwnershipFilter.ALL)
         page = request.GET.get("page", 1)
         page_size = request.GET.get("page_size", DEFAULT_PAGE_SIZE)
@@ -133,71 +170,19 @@ class PromptListApiView(SmarterAuthenticatedWebView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        @cache_results(timeout=WORKBENCH_CACHE_TIMEOUT)
-        def _get_cached_chatbots_owned_by_user_profile(user_profile_id: int) -> models.QuerySet[ChatBot]:
-            logger.debug(
-                "%s.post() Fetching ChatBots owned by %s",
-                self.formatted_class_name,
-                self.user_profile,
-            )
-            retval = ChatBot.objects.owned_by(self.user_profile.user)  # type: ignore
-            logger.debug(
-                "%s.post() Fetching ChatBots owned by %s: %s",
-                self.formatted_class_name,
-                self.user_profile,
-                logging.formatted_json(ChatBotSerializer(retval, many=True).data),
-            )
-            return retval
-
-        @cache_results(timeout=WORKBENCH_CACHE_TIMEOUT)
-        def _get_cached_chatbots_shared_with_user_profile(user_profile_id: int) -> models.QuerySet[ChatBot]:
-            logger.debug(
-                "%s.post() Fetching ChatBots shared with %s",
-                self.formatted_class_name,
-                self.user_profile,
-            )
-            retval = ChatBot.objects.shared_with(self.user_profile.user)  # type: ignore
-            logger.debug(
-                "%s.post() Fetching ChatBots shared with %s: %s",
-                self.formatted_class_name,
-                self.user_profile,
-                logging.formatted_json(ChatBotSerializer(retval, many=True).data),
-            )
-            return retval
-
-        @cache_results(timeout=WORKBENCH_CACHE_TIMEOUT)
-        def _get_cached_chatbots_available_to_user_profile(user_profile_id) -> models.QuerySet[ChatBot]:
-            logger.debug(
-                "%s.post() Fetching ChatBots available to %s",
-                self.formatted_class_name,
-                self.user_profile,
-            )
-            retval = ChatBot.objects.with_read_permission_for(self.user_profile.user)  # type: ignore
-            logger.debug(
-                "%s.post() Fetching ChatBots available to %s: %s",
-                self.formatted_class_name,
-                self.user_profile,
-                logging.formatted_json(ChatBotSerializer(retval, many=True).data),
-            )
-            return retval
-
         if invalidate_cache:
-            logger.debug(
-                "%s.post() Invalidating cache for ChatBots owned by %s",
-                self.formatted_class_name,
-                self.user_profile,
-            )
-            _get_cached_chatbots_owned_by_user_profile.invalidate(user_profile_id=user_profile_id)
-            _get_cached_chatbots_available_to_user_profile.invalidate(user_profile_id=user_profile_id)
+            get_cached_chatbots_owned_by_user_profile.invalidate(user_profile=self.user_profile)
+            get_cached_chatbots_shared_with_user_profile.invalidate(user_profile=self.user_profile)
+            get_cached_chatbots_available_to_user_profile.invalidate(user_profile=self.user_profile)
 
         if ownership_filter == PromptListOwnershipFilter.OWNED:
-            qs = _get_cached_chatbots_owned_by_user_profile(user_profile_id=user_profile_id)
+            qs = get_cached_chatbots_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
 
         elif ownership_filter == PromptListOwnershipFilter.SHARED:
-            qs = _get_cached_chatbots_shared_with_user_profile(user_profile_id=user_profile_id)
+            qs = get_cached_chatbots_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
 
         else:
-            qs = _get_cached_chatbots_available_to_user_profile(user_profile_id=user_profile_id)
+            qs = get_cached_chatbots_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
 
         paginator = Paginator(qs.order_by("-updated_at"), page_size)
         chatbots = paginator.get_page(page)
