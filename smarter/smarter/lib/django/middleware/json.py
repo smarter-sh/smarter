@@ -253,7 +253,7 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
             return response
 
         logger.debug(
-            ("%s converting non-json error response " "status=%d"),
+            "%s converting non-json error response status=%d",
             self.formatted_class_name,
             response.status_code,
         )

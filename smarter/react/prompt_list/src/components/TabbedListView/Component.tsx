@@ -193,7 +193,6 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
             <CardView
               sessionContext={sessionContext}
               activeTab={activeTab}
-              title="Your Chatbots"
               chatbots={userChatbots}
               renderDetailRow={renderDetailRow}
               onRequery={handleRequery}
@@ -209,7 +208,6 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
           <CardView
             sessionContext={sessionContext}
             activeTab={activeTab}
-            title="Shared Chatbots"
             chatbots={sharedChatbots}
             renderDetailRow={renderDetailRow}
             onRequery={handleRequery}
