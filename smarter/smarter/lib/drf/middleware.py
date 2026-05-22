@@ -47,14 +47,12 @@ Dependencies
 
 from __future__ import annotations
 
-import inspect
 import traceback
 from collections.abc import Awaitable
 from datetime import timedelta
 from http import HTTPStatus
-from typing import Optional
 
-from asgiref.sync import markcoroutinefunction, sync_to_async
+from asgiref.sync import sync_to_async
 from django.contrib.auth import login
 from django.http import HttpResponseBase
 from django.utils import timezone
@@ -305,7 +303,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         if token.created < timezone.now() - max_age:
 
             logger.warning(
-                ("%s token exceeded maximum lifetime " "user=%s " "max_days=%d"),
+                "%s token exceeded maximum lifetime user=%s max_days=%d",
                 self.formatted_class_name,
                 user,
                 smarter_settings.smarter_api_key_max_lifetime_days,

@@ -39,7 +39,6 @@ type DetailRowRenderer = (
 interface CardViewProps {
   sessionContext: SessionContext;
   activeTab: TabKey;
-  title: string;
   chatbots: Chatbot[];
   renderDetailRow: DetailRowRenderer;
   onRequery: () => void;
@@ -48,7 +47,6 @@ interface CardViewProps {
 export function CardView({
   sessionContext,
   activeTab,
-  title,
   chatbots,
   renderDetailRow,
   onRequery,
@@ -58,9 +56,6 @@ export function CardView({
 
   return (
     <div className="">
-      <div className="prompt-list-heading-wrap">
-        <h3 className="text-center">{title}</h3>
-      </div>
       {chatbots.map((chatbot) => (
         <article className="col-12 mt-1 p-2" key={chatbot.id}>
           <div

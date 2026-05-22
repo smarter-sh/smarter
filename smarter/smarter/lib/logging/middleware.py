@@ -64,7 +64,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from .redis_log_handler import (
     get_user_context,
     job_id_factory,
-    purge_log_context,
     user_id_context,
 )
 

@@ -208,6 +208,11 @@ runs:
         username: ${{ inputs.dockerhub-username }}
         password: ${{ inputs.dockerhub-password }}
 
+    - name: Set REACT_MANIFESTS_HASH
+      id: set-react-manifests-hash
+      shell: bash
+      run: echo "REACT_MANIFESTS_HASH=$(date +%s)" >> $GITHUB_ENV
+
     - name: Build and push to Docker Hub
       id: docker-build-docker
       uses: docker/build-push-action@v6
@@ -220,8 +225,11 @@ runs:
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ github.run_id }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.DATESTAMP }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.TAG }}
-        build-args: ENVIRONMENT=${{ inputs.environment }}
+        build-args:
+          ENVIRONMENT=${{ inputs.environment }}
+          REACT_MANIFESTS_HASH=${{ env.REACT_MANIFESTS_HASH }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
       env:
         ENVIRONMENT: ${{ inputs.environment }}
+        REACT_MANIFESTS_HASH: ${{ env.REACT_MANIFESTS_HASH }}
