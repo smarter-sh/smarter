@@ -86,6 +86,9 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         if self.async_mode:
             return self.__acall__(request)
 
+        if self.deserves_amnesty(request.path):
+            return self.get_response(request)
+
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
         return super().__call__(request)
 

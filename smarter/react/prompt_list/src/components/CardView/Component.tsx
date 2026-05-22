@@ -56,7 +56,7 @@ export function CardView({
 
   return (
     <div className="">
-      {chatbots.map((chatbot) => (
+      {Array.isArray(chatbots) && chatbots.map((chatbot) => (
         <article className="col-12 mt-1 p-2" key={chatbot.id}>
           <div
             className={`card card-flush h-xl-100 chatbot-card ${activeTab === "user" ? "user-chatbot-card" : "smarter-chatbot-card"}`}

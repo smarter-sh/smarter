@@ -188,7 +188,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         simply delegates to the parent class to preserve Django's
         expected middleware lifecycle behavior.
         """
-        if request.path in self.amnesty_urls:
+        if self.deserves_amnesty(request.path):
             return self.get_response(request)
         return super().__call__(request)
 

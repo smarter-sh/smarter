@@ -46,7 +46,7 @@ interface TabNavProps {
 
 const TabNav: React.FC<TabNavProps> = ({ activeTab, onTabChange, tabs }) => (
   <ul className="nav nav-tabs">
-    {tabs.map((tab) => (
+    {Array.isArray(tabs) && tabs.map((tab) => (
       <li className="nav-item" key={tab.key}>
         <button
           className={`nav-link${activeTab === tab.key ? " active" : ""}`}

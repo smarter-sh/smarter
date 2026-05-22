@@ -80,10 +80,10 @@ class ChatBotAPIKey(TimestampedModel):
         Returns True if the chatbot has at least one active API key.
         """
         logger_prefix = logging.formatted_text(__name__ + "." + cls.__name__ + ".has_active_api_key()")
-        logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
         @cache_results(cls.cache_expiration)
         def _has_active_api_key(chatbot_id: int, class_name: str) -> bool:
+            logger.debug("%s querying and caching results for chatbot=%s", logger_prefix, chatbot)
             return cls.objects.filter(chatbot_id=chatbot_id, api_key__is_active=True).exists()
 
         if invalidate and chatbot:
@@ -118,12 +118,12 @@ class ChatBotAPIKey(TimestampedModel):
 
         """
         logger_prefix = logging.formatted_text(__name__ + "." + ChatBotAPIKey.__name__ + ".get_cached_objects()")
-        logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
         @cache_results(cls.cache_expiration)
         def _get_api_keys_for_chatbot_id(
             chatbot_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["ChatBotAPIKey"]:
+            logger.debug("%s querying and caching results for chatbot=%s, ", logger_prefix, chatbot)
             return cls.objects.filter(chatbot_id=chatbot_id).select_related(
                 "chatbot",
                 "chatbot__user_profile",
