@@ -109,12 +109,21 @@ class PromptListApiView(SmarterAuthenticatedWebView):
         page_size = request.GET.get("page_size", DEFAULT_PAGE_SIZE)
         invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
 
+        logger.debug(
+            "%s.post() Received request with ownership_filter=%s, page=%s, page_size=%s, invalidate_cache=%s",
+            self.formatted_class_name,
+            ownership_filter,
+            page,
+            page_size,
+            invalidate_cache,
+        )
+
         if ownership_filter not in [
             PromptListOwnershipFilter.OWNED,
             PromptListOwnershipFilter.SHARED,
             PromptListOwnershipFilter.ALL,
         ]:
-            logging.warning(
+            logger.warning(
                 "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'. Defaulting to 'all'.",
                 self.formatted_class_name,
                 ownership_filter,

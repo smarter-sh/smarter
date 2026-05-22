@@ -43,6 +43,7 @@ interface CardViewProps {
   title: string;
   chatbots: Chatbot[];
   renderDetailRow: DetailRowRenderer;
+  onRequery: () => void;
 }
 
 export function CardView({
@@ -51,6 +52,7 @@ export function CardView({
   title,
   chatbots,
   renderDetailRow,
+  onRequery,
 }: CardViewProps) {
 
   console.log("Rendering CardView with chatbots:", chatbots, sessionContext);
@@ -69,6 +71,10 @@ export function CardView({
   const handleDelete = (chatbot: Chatbot) =>
     setModal({ type: "delete", chatbot });
   const handleCloseModal = () => setModal({ type: null, chatbot: null });
+
+  if (false) {
+    onRequery()
+  }
 
   return (
     <div className="">
