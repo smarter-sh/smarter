@@ -60,8 +60,9 @@ export default defineConfig(({ command }: { command: string }) => ({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        entryFileNames: "assets/index.js",
-        chunkFileNames: "assets/[name].js",
+        entryFileNames: "assets/[name]-[hash].js",
+        chunkFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
       },
     },
   },
