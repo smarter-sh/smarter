@@ -87,7 +87,7 @@ spec:
             successThreshold: 1
           readinessProbe:
             httpGet:
-              path: /readiness
+              path: /readiness/
               port: {{ .Values.deployment.containerPort }}
               httpHeaders:
               - name: Host

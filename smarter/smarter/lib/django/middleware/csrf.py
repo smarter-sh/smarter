@@ -265,6 +265,9 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         - NEVER return self.get_response(request)
         """
 
+        if self.deserves_amnesty(request.path):
+            return None
+
         logger.debug(
             "%s.process_view() path=%s",
             self.formatted_class_name,
