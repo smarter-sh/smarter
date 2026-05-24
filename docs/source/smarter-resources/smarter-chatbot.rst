@@ -70,6 +70,7 @@ Technical Reference
    chatbots/tasks
    chatbots/signals
    chatbots/urls
+   chatbots/utils
 
 
 Sandbox Mode

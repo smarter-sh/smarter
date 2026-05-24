@@ -155,21 +155,6 @@ class PromptListApiView(SmarterAuthenticatedWebView):
             invalidate_cache,
         )
 
-        if ownership_filter not in [
-            PromptListOwnershipFilter.OWNED,
-            PromptListOwnershipFilter.SHARED,
-            PromptListOwnershipFilter.ALL,
-        ]:
-            logger.warning(
-                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'. Defaulting to 'all'.",
-                self.formatted_class_name,
-                ownership_filter,
-            )
-            return JsonResponse(
-                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
         if invalidate_cache:
             get_cached_chatbots_owned_by_user_profile.invalidate(user_profile=self.user_profile)
             get_cached_chatbots_shared_with_user_profile.invalidate(user_profile=self.user_profile)
@@ -181,8 +166,18 @@ class PromptListApiView(SmarterAuthenticatedWebView):
         elif ownership_filter == PromptListOwnershipFilter.SHARED:
             qs = get_cached_chatbots_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
 
-        else:
+        elif ownership_filter == PromptListOwnershipFilter.ALL:
             qs = get_cached_chatbots_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
+        else:
+            logger.warning(
+                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'. Defaulting to 'all'.",
+                self.formatted_class_name,
+                ownership_filter,
+            )
+            return JsonResponse(
+                {"error": "Invalid ownership_filter. Must be one of 'owned', 'shared', or 'all'."},
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
         paginator = Paginator(qs.order_by("-updated_at"), page_size)
         chatbots = paginator.get_page(page)
