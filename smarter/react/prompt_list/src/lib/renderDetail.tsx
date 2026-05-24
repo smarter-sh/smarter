@@ -1,7 +1,4 @@
-export const renderDetailRow = (
-  label: string,
-  value: string | number | null | undefined,
-) => {
+export const renderDetailRow = (label: string, value: string | number | null | undefined) => {
   if (value === null || value === undefined || value === "") {
     return null;
   }

@@ -53,15 +53,11 @@ export function Modal({
   }, [show, onOk]);
 
   if (!onClose && !onOk && !onCancel) {
-    throw new Error(
-      "Modal requires at least one of onClose, onOk, or onCancel handlers.",
-    );
+    throw new Error("Modal requires at least one of onClose, onOk, or onCancel handlers.");
   }
   const handleClose = onClose || onCancel;
   if (!handleClose) {
-    throw new Error(
-      "Modal requires at least one of onClose, onOk, or onCancel handlers.",
-    );
+    throw new Error("Modal requires at least one of onClose, onOk, or onCancel handlers.");
   }
 
   if (!show) return null;
@@ -84,14 +80,7 @@ export function Modal({
           <div className="modal-header">
             <h5 className="modal-title">{title}</h5>
 
-            {onClose && (
-              <button
-                type="button"
-                className="btn-close"
-                aria-label="Close"
-                onClick={onClose}
-              />
-            )}
+            {onClose && <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />}
           </div>
 
           {inputLabel && (
@@ -105,11 +94,7 @@ export function Modal({
 
           <div className="modal-footer">
             {onClose && (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={onClose}
-              >
+              <button type="button" className="btn btn-secondary" onClick={onClose}>
                 Close
               </button>
             )}
@@ -121,11 +106,7 @@ export function Modal({
             )}
 
             {onCancel && (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={onCancel}
-              >
+              <button type="button" className="btn btn-secondary" onClick={onCancel}>
                 Cancel
               </button>
             )}

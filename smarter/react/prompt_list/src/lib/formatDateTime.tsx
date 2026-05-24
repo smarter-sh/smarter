@@ -29,15 +29,11 @@ export const formatDateTime = (
     return "-";
   }
 
-  if (
-    (formatType == "relative" && !referenceValue) ||
-    (referenceValue && isNaN(Date.parse(referenceValue)))
-  ) {
+  if ((formatType == "relative" && !referenceValue) || (referenceValue && isNaN(Date.parse(referenceValue)))) {
     throw new Error(
       `formatDateTime: referenceValue must be a valid date string when formatType is "relative". Received: "${referenceValue}"`,
     );
   }
-
 
   // for comparing an 'update' date to the 'create' date.
   // If the difference is less than 'a few' seconds, we'll assume it was never updated.
@@ -47,9 +43,7 @@ export const formatDateTime = (
       console.warn(`Invalid reference date value: ${referenceValue}`);
       return "-";
     }
-    const secondsDifference = Math.abs(
-      (date.getTime() - referenceDate.getTime()) / 1000,
-    );
+    const secondsDifference = Math.abs((date.getTime() - referenceDate.getTime()) / 1000);
     if (secondsDifference < 5) {
       return "never";
     } else {

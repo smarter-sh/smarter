@@ -1,4 +1,3 @@
-
 export type TabKey = "user" | "shared";
 
 export type Plugin = {
@@ -83,4 +82,4 @@ export type SessionContext = {
   csrftoken: string;
   djangoSessionCookieName: string;
   cookieDomain: string;
-}
+};
