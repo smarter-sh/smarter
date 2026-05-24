@@ -24,6 +24,8 @@ npm run build
 npm run dev
 ```
 
+To generate Storybooks:
+
 ```console
 npx storybook@latest init
 npm run build-storybook
