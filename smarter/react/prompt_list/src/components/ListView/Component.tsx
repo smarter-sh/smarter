@@ -41,14 +41,14 @@ export function ListView({ sessionContext, chatbots, onRequery }: ListViewProps)
       <table className="table table-striped table-hover align-middle border">
         <thead className="table-light border-bottom-2">
           <tr className="">
-            <th className="p-1">Name</th>
+            <th className=" p-1">Name</th>
             <th className="d-none d-lg-table-cell width-100">Created</th>
             <th className="d-none d-lg-table-cell width-100">Updated</th>
             <th className="">Provider</th>
             <th className="min-width-150">Model</th>
             <th className="d-none d-xl-table-cell">Plugins</th>
             <th className="d-none d-md-table-cell">Status</th>
-            <th className="min-width-250">Operations</th>
+            <th className="">Operations</th>
           </tr>
         </thead>
         <tbody>
@@ -56,13 +56,7 @@ export function ListView({ sessionContext, chatbots, onRequery }: ListViewProps)
             chatbots.map((chatbot) => (
               <tr className="" key={chatbot.id}>
                 {/* Name */}
-                <td className="d-none d-lg-table-cell name-col p-1 m-0">
-                  <a href={chatbot.urlChatapp}>
-                    {chatbot.name}
-                    {chatbot.version ? ` v${chatbot.version}` : ""}
-                  </a>
-                </td>
-                <td className="d-lg-none name-col p-1 m-0">
+                <td className="p-1 m-0">
                   <a href={chatbot.urlChatapp}>{chatbot.name}</a>
                 </td>
                 {/* Created Date */}
@@ -82,7 +76,7 @@ export function ListView({ sessionContext, chatbots, onRequery }: ListViewProps)
                   <StatusBar chatbot={chatbot} />
                 </td>
                 {/* Actions */}
-                <td className="text-end min-width-250">
+                <td className="text-end ">
                   <Toolbar sessionContext={sessionContext} chatbot={chatbot} onRequery={onRequery} />
                 </td>
               </tr>

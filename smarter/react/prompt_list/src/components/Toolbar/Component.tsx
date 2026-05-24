@@ -285,7 +285,7 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
 
   return (
     <>
-      <div className="btn-group pe-2" role="group" aria-label="Actions">
+      <div className="toolbar btn-group pe-2" role="group" aria-label="Actions">
         <a
           href={chatbot.urlChatapp}
           className="btn btn-icon btn-sm border"
