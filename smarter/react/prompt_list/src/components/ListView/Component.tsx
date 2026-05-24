@@ -23,7 +23,6 @@
  * This component is intended for use in views where chatbots are presented in a list/table format.
  */
 import type { Chatbot, SessionContext } from "@/lib/Types";
-import { pluginsText } from "@/lib/pluginsText";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
@@ -77,7 +76,7 @@ export function ListView({ sessionContext, chatbots, onRequery }: ListViewProps)
                 {/* Model */}
                 <td className="min-width-150">{chatbot.defaultModel || "default"}</td>
                 {/* Plugins */}
-                <td className="d-none d-xl-table-cell">{pluginsText(chatbot)}</td>
+                <td className="d-none d-xl-table-cell">{chatbot.plugins?.map(p => p?.name || "").filter(Boolean).join(", ")}</td>
                 {/* Status */}
                 <td className="d-none d-md-table-cell ">
                   <StatusBar chatbot={chatbot} />

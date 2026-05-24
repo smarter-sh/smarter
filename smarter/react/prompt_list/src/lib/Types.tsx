@@ -1,5 +1,27 @@
-import type { ReactNode } from "react";
-
+/**
+ * @file Types.tsx
+ * @module prompt_list/lib/Types
+ *
+ * Central type definitions for the Prompt List React application.
+ *
+ * This module exports TypeScript types and interfaces used throughout the CardView,
+ * chatbot, and API response layers. It provides strong typing for user, plugin,
+ * chatbot, API response, and session context data structures.
+ *
+ * Exports:
+ *   - TabKey: Type for tab keys ("user" | "shared").
+ *   - Plugin: Type for plugin objects.
+ *   - User, UserProfile: Types for user and profile data.
+ *   - Chatbot: Type for chatbot configuration and metadata.
+ *   - PromptListApiResponse: Type for API response structure.
+ *   - SessionContext: Type for session and authentication context.
+ *
+ * Usage:
+ *   Import these types to ensure type safety and consistency across components and API calls.
+ *
+ * @author Smarter Team
+ * @copyright Smarter, 2026
+ */
 
 export type TabKey = "user" | "shared";
 
@@ -19,11 +41,13 @@ export type UserProfile = {
   };
 };
 
-export type DetailRowRenderer = (
-  label: string,
-  value: unknown,
-  dataType?: "string" | "url" | "dateTime" | "number" | "bool" | "json" | "str[]" | null,
-) => ReactNode;
+export type Function = {
+  chatbot: number;
+  createdAt: string;
+  id: number;
+  name: string;
+  updatedAt: string;
+}
 
 export type Chatbot = {
   id: number;
@@ -37,7 +61,7 @@ export type Chatbot = {
   tags: string[];
   annotations: Array<Record<string, string | boolean>>;
   userProfile: UserProfile;
-  functions: any[];
+  functions: Function[];
   plugins: Array<Plugin>;
   customDomains: any[];
   apiKeys: any[];
