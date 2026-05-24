@@ -107,6 +107,13 @@ logger_prefix = logging.formatted_text(__name__)
 logger_prefix_cache_invalidations = logging.formatted_text_blue(f"{__name__}.cache_invalidations()")
 
 
+def static_version(request):
+
+    return {
+        "STATIC_VERSION": smarter_settings.version,
+    }
+
+
 def sidebar(request: "HttpRequest") -> dict[str, Any]:
     """
     Resolve and cache the href targets for every dashboard sidebar navigation link.

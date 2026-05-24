@@ -48,18 +48,18 @@
   {% endblock %}
 
   <!-- Apple -->
-  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/logo/apple-touch-icon.png' %}">
-  <link rel="apple-touch-icon-precomposed" href="{% static 'images/logo/apple-touch-icon-precomposed.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/logo/apple-touch-icon.png' %}?v={{ STATIC_VERSION }}">
+  <link rel="apple-touch-icon-precomposed" href="{% static 'images/logo/apple-touch-icon-precomposed.png' %}?v={{ STATIC_VERSION }}">
 
   <!-- Favicons -->
-  <link rel="icon" href="{% static 'images/logo/favicon.ico' %}">
-  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/logo/favicon-16x16.png' %}">
-  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/logo/favicon-32x32.png' %}">
-  <link rel="icon" type="image/png" sizes="48x48" href="{% static 'images/logo/favicon-48x48.png' %}">
-  <link rel="icon" type="image/png" sizes="256x256" href="{% static 'images/logo/favicon-256x256.png' %}">
+  <link rel="icon" href="{% static 'images/logo/favicon.ico' %}?v={{ STATIC_VERSION }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/logo/favicon-16x16.png' %}?v={{ STATIC_VERSION }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/logo/favicon-32x32.png' %}?v={{ STATIC_VERSION }}">
+  <link rel="icon" type="image/png" sizes="48x48" href="{% static 'images/logo/favicon-48x48.png' %}?v={{ STATIC_VERSION }}">
+  <link rel="icon" type="image/png" sizes="256x256" href="{% static 'images/logo/favicon-256x256.png' %}?v={{ STATIC_VERSION }}">
 
   <!-- Manifest -->
-  <link rel="manifest" href="{% static 'site.webmanifest' %}">
+  <link rel="manifest" href="{% static 'site.webmanifest' %}?v={{ STATIC_VERSION }}">
 
   <!-- Theme -->
   <meta name="theme-color" content="#ff8c00">
@@ -71,14 +71,14 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
   <!--end::Fonts-->
   <!--begin::Vendor Stylesheets(used for this page only)-->
-  <link href="{% static 'assets/plugins/custom/fullcalendar/fullcalendar.bundle.css' %}" rel="stylesheet"
+  <link href="{% static 'assets/plugins/custom/fullcalendar/fullcalendar.bundle.css' %}?v={{ STATIC_VERSION }}" rel="stylesheet"
     type="text/css" />
-  <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+  <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}?v={{ STATIC_VERSION }}" rel="stylesheet" type="text/css" />
   <!--end::Vendor Stylesheets-->
   <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-  <link href="{% static 'assets/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
-  <link href="{% static 'assets/css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
-  <link href="{% static 'assets/css/file-drop-zone.css' %}" rel="stylesheet" type="text/css" />
+  <link href="{% static 'assets/plugins/global/plugins.bundle.css' %}?v={{ STATIC_VERSION }}" rel="stylesheet" type="text/css" />
+  <link href="{% static 'assets/css/style.bundle.css' %}?v={{ STATIC_VERSION }}" rel="stylesheet" type="text/css" />
+  <link href="{% static 'assets/css/file-drop-zone.css' %}?v={{ STATIC_VERSION }}" rel="stylesheet" type="text/css" />
   <!--end::Global Stylesheets Bundle-->
   <script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
   {% endblock %}
@@ -131,9 +131,9 @@
     gtag('config', 'G-SK81M5HQYS');
   </script>
   <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-  <script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
-  <script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
-  <script src="{% static 'js/smarter-base.js' %}"></script>
+  <script src="{% static 'assets/plugins/global/plugins.bundle.js' %}?v={{ STATIC_VERSION }}"></script>
+  <script src="{% static 'assets/js/scripts.bundle.js' %}?v={{ STATIC_VERSION }}"></script>
+  <script src="{% static 'js/smarter-base.js' %}?v={{ STATIC_VERSION }}"></script>
   <!--end::Global Javascript Bundle-->
   <!--end::Javascript-->
   {% endblock %}

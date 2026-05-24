@@ -760,6 +760,11 @@ MIDDLEWARE = [
     #
     #
     "django_hosts.middleware.HostsResponseMiddleware",
+    #
+    #
+    # compress static files and serve them with WhiteNoise.
+    # -------------------------------
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 if smarter_settings.debug_mode and not "test" in sys.argv:
@@ -812,6 +817,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "smarter.apps.account.context_processors.base",
                 "smarter.apps.dashboard.context_processors.branding",
+                "smarter.apps.dashboard.context_processors.static_version",
                 "smarter.apps.dashboard.context_processors.base",
                 "smarter.apps.dashboard.context_processors.footer",
                 "smarter.apps.dashboard.context_processors.sidebar",
@@ -1269,16 +1275,6 @@ a specific app.
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#staticfiles-dirs
 """
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
-"""
-The static files storage backend for Smarter. This is set to use WhiteNoise's
-CompressedStaticFilesStorage, which provides efficient static file serving
-with compression and caching support.
-
-This is the recommended static files storage backend for production deployments
-of Django applications.
-"""
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -1510,6 +1506,8 @@ derived from the environment variable "TAGGIT_CASE_INSENSITIVE", which defaults
 to "True". If set to True, tags will be treated as case insensitive
 (e.g. "Tag" and "tag" will be considered the same tag).
 """
+
+WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
 
 
 # step 2: load environment variables from .env file (if present)
