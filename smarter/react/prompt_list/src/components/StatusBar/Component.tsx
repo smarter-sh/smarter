@@ -10,34 +10,13 @@ export const StatusBar = ({ chatbot }: StatusbarProps) => {
       {/* Ready */}
       <span
         className="status-icon"
-        title={
-          chatbot.ready
-            ? "Ready: Chatbot is ready to serve requests"
-            : "Not ready: Chatbot is initializing"
-        }
+        title={chatbot.ready ? "Ready: Chatbot is ready to serve requests" : "Not ready: Chatbot is initializing"}
       >
-        <i
-          className={
-            chatbot.ready
-              ? "bi bi-check-circle text-success"
-              : "bi bi-x-circle text-secondary"
-          }
-        />
+        <i className={chatbot.ready ? "bi bi-check-circle text-success" : "bi bi-x-circle text-secondary"} />
       </span>
       {/* Deployed */}
-      <span
-        className="status-icon"
-        title={
-          chatbot.deployed ? "Deployed: Chatbot is deployed" : "Not deployed"
-        }
-      >
-        <i
-          className={
-            chatbot.deployed
-              ? "bi bi-cloud-check"
-              : "bi bi-cloud-slash"
-          }
-        />
+      <span className="status-icon" title={chatbot.deployed ? "Deployed: Chatbot is deployed" : "Not deployed"}>
+        <i className={chatbot.deployed ? "bi bi-cloud-check" : "bi bi-cloud-slash"} />
       </span>
       {/* Authentication Required */}
       <span
@@ -48,30 +27,14 @@ export const StatusBar = ({ chatbot }: StatusbarProps) => {
             : "No authentication required"
         }
       >
-        <i
-          className={
-            chatbot.isAuthenticationRequired
-              ? "bi bi-lock"
-              : "bi bi-unlock"
-          }
-        />
+        <i className={chatbot.isAuthenticationRequired ? "bi bi-lock" : "bi bi-unlock"} />
       </span>
       {/* DNS Verification */}
       <span
         className="status-icon"
-        title={
-          chatbot.dnsVerificationStatus === "verified"
-            ? "DNS verified"
-            : "DNS verification pending or failed"
-        }
+        title={chatbot.dnsVerificationStatus === "verified" ? "DNS verified" : "DNS verification pending or failed"}
       >
-        <i
-          className={
-            chatbot.dnsVerificationStatus === "verified"
-              ? "bi bi-globe"
-              : "bi bi-exclamation-circle"
-          }
-        />
+        <i className={chatbot.dnsVerificationStatus === "verified" ? "bi bi-globe" : "bi bi-exclamation-circle"} />
       </span>
       {/* TLS Certificate */}
       <span
@@ -84,9 +47,7 @@ export const StatusBar = ({ chatbot }: StatusbarProps) => {
       >
         <i
           className={
-            chatbot.tlsCertificateIssuanceStatus === "issued"
-              ? "bi bi-shield-lock"
-              : "bi bi-shield-exclamation"
+            chatbot.tlsCertificateIssuanceStatus === "issued" ? "bi bi-shield-lock" : "bi bi-shield-exclamation"
           }
         />
       </span>
@@ -98,10 +59,7 @@ export const StatusBar = ({ chatbot }: StatusbarProps) => {
       )}
       {/* Custom Domain */}
       {chatbot.customDomain && (
-        <span
-          className="status-icon"
-          title={`Custom domain: ${chatbot.customDomain}`}
-        >
+        <span className="status-icon" title={`Custom domain: ${chatbot.customDomain}`}>
           <i className="bi bi-link text-info" />
         </span>
       )}

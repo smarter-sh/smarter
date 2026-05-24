@@ -1,4 +1,3 @@
-
 /**
  * ToggleButton React Component
  *
@@ -21,7 +20,6 @@
  */
 export type ViewMode = "list" | "thumbnail";
 
-
 interface ViewToggleButtonProps {
   viewMode: ViewMode;
   onClick: () => void;
@@ -41,10 +39,7 @@ function ListViewToggleButton({ viewMode, onClick }: ViewToggleButtonProps) {
   );
 }
 
-function ThumbnailViewToggleButton({
-  viewMode,
-  onClick,
-}: ViewToggleButtonProps) {
+function ThumbnailViewToggleButton({ viewMode, onClick }: ViewToggleButtonProps) {
   return (
     <button
       type="button"
@@ -67,19 +62,9 @@ export default function ToggleButton({
 }) {
   return (
     <div id="toggle-buttons" className="p-3">
-      <div
-        className="btn-group border border-light rounded-3 bg-white"
-        role="group"
-        aria-label="View toggle"
-      >
-        <ListViewToggleButton
-          viewMode={viewMode}
-          onClick={() => setViewMode("list")}
-        />
-        <ThumbnailViewToggleButton
-          viewMode={viewMode}
-          onClick={() => setViewMode("thumbnail")}
-        />
+      <div className="btn-group border border-light rounded-3 bg-white" role="group" aria-label="View toggle">
+        <ListViewToggleButton viewMode={viewMode} onClick={() => setViewMode("list")} />
+        <ThumbnailViewToggleButton viewMode={viewMode} onClick={() => setViewMode("thumbnail")} />
       </div>
     </div>
   );
