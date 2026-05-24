@@ -202,7 +202,7 @@ class PromptListApiCloneView(SmarterAuthenticatedWebView):
         chatbot: ChatBot
 
         if not chatbot_id or not new_name:
-            logging.warning(
+            logger.warning(
                 "%s.post() Missing required parameters. chatbot_id: %s, new_name: %s",
                 self.formatted_class_name,
                 chatbot_id,
@@ -217,6 +217,7 @@ class PromptListApiCloneView(SmarterAuthenticatedWebView):
             return JsonResponse({"error": f"ChatBot with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
+            new_name = self.camel_to_snake(new_name.strip())
             cloned_chatbot = chatbot.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             data = ChatBotSerializer(cloned_chatbot).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
@@ -298,6 +299,7 @@ class PromptListApiRenameView(SmarterAuthenticatedWebView):
             return JsonResponse({"error": f"ChatBot with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
+            new_name = self.camel_to_snake(new_name.strip())
             chatbot.rename(new_name=new_name)
             data = ChatBotSerializer(chatbot).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore

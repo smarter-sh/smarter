@@ -11,10 +11,32 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_green,
     formatted_text_red,
 )
+from smarter.common.utils import (
+    bool_environment_variable as utils_bool_environment_variable,
+)
+from smarter.common.utils import camel_to_snake as utils_camel_to_snake
+from smarter.common.utils import camel_to_snake_dict as utils_camel_to_snake_dict
+from smarter.common.utils import dict_is_contained_in as utils_dict_is_contained_in
+from smarter.common.utils import dict_is_subset as utils_dict_is_subset
+from smarter.common.utils import (
+    generate_fernet_encryption_key as utils_generate_fernet_encryption_key,
+)
+from smarter.common.utils import get_readonly_csv_file as utils_get_readonly_csv_file
+from smarter.common.utils import get_readonly_yaml_file as utils_get_readonly_yaml_file
 from smarter.common.utils import mask_string as util_mask_string
+from smarter.common.utils import mask_string as utils_mask_string
+from smarter.common.utils import pascal_to_snake as utils_pascal_to_snake
+from smarter.common.utils import recursive_sort_dict as utils_recursive_sort_dict
+from smarter.common.utils import rfc1034_compliant_str as utils_rfc1034_compliant_str
+from smarter.common.utils import (
+    rfc1034_compliant_to_snake as utils_rfc1034_compliant_to_snake,
+)
 from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
+from smarter.common.utils import snake_case as utils_snake_case
+from smarter.common.utils import snake_to_camel as utils_snake_to_camel
+from smarter.common.utils import to_snake_case as utils_to_snake_case
 from smarter.lib import json
 
 from .logger import logger
@@ -202,6 +224,220 @@ class SmarterHelperMixin:
         :rtype: dict
         """
         return {k: data[k] for k in sorted(data.keys())}
+
+    def bool_environment_variable(self, var_name: str, default: bool = False) -> bool:
+        """
+        Retrieves a boolean value from an environment variable.
+
+        This method checks the specified environment variable and returns its value as a boolean.
+        It recognizes common truthy values such as "true", "1", "yes", and "on". If the variable
+        is not set or cannot be interpreted as a boolean, it returns the provided default value.
+
+        :param var_name: The name of the environment variable to check.
+        :type var_name: str
+        :param default: The default boolean value to return if the environment variable is not set or invalid.
+        :type default: bool
+        :return: The boolean value of the environment variable or the default.
+        :rtype: bool
+        """
+        return utils_bool_environment_variable(var_name=var_name, default=default)
+
+    def to_snake_case(self, name: str) -> str:
+        """
+        Converts a string to snake_case.
+
+        This method takes a string in any case format (e.g., camelCase, PascalCase, kebab-case)
+        and converts it to snake_case, which is commonly used in Python for variable and function names.
+
+        :param name: The string to convert to snake_case.
+        :type name: str
+        :return: The converted string in snake_case.
+        :rtype: str
+        """
+        return utils_to_snake_case(name)
+
+    def camel_to_snake(self, name: str) -> str:
+        """
+        Converts a camelCase or PascalCase string to snake_case.
+
+        This method takes a string in camelCase or PascalCase format and converts it to snake_case.
+        It is useful for standardizing naming conventions across different formats.
+
+        :param name: The camelCase or PascalCase string to convert.
+        :type name: str
+        :return: The converted string in snake_case.
+        :rtype: str
+        """
+        return str(utils_camel_to_snake(name))
+
+    def camel_to_snake_dict(self, data: dict) -> dict:
+        """
+        Converts all keys in a dictionary from camelCase to snake_case.
+
+        This method takes a dictionary with keys in camelCase format and returns a new dictionary
+        with all keys converted to snake_case. The values are preserved as they are.
+
+        :param data: The dictionary with camelCase keys to convert.
+        :type data: dict
+        :return: A new dictionary with keys converted to snake_case.
+        :rtype: dict
+        """
+        return utils_camel_to_snake_dict(data)
+
+    def dict_is_contained_in(self, dict1: dict, dict2: dict) -> bool:
+        """
+        Checks if one dictionary is contained within another.
+        This method determines if all key-value pairs in `dict1` are present in `dict2`.
+
+        :param dict1: The dictionary to check for containment.
+        :type dict1: dict
+        :param dict2: The dictionary to check against for containment.
+        :type dict2: dict
+        :return: True if `dict1` is contained in `dict2`, False otherwise.
+        :rtype: bool
+        """
+        return utils_dict_is_contained_in(dict1=dict1, dict2=dict2)
+
+    def dict_is_subset(self, small: dict, big: dict) -> bool:
+        """
+        Checks if one dictionary is a subset of another.
+
+        This method determines if all key-value pairs in the `small` dictionary are present
+        in the `big` dictionary. It returns True if the `small` dictionary is a subset of the `big` dictionary,
+        and False otherwise.
+
+        :param small: The dictionary to check as a subset.
+        :type small: dict
+        :param big: The dictionary to check against as a superset.
+        :type big: dict
+        :return: True if the `small` dictionary is a subset of the `big` dictionary, False otherwise.
+        :rtype: bool
+        """
+        return utils_dict_is_subset(small=small, big=big)
+
+    def generate_fernet_encryption_key(self) -> str:
+        """
+        Generates a Fernet encryption key.
+
+        This method creates a new Fernet encryption key, which can be used for secure encryption and decryption of data.
+        The generated key is returned as a URL-safe base64-encoded string.
+
+        :return: A new Fernet encryption key.
+        :rtype: str
+        """
+        return utils_generate_fernet_encryption_key()
+
+    def get_readonly_csv_file(self, file_path: str):
+        """
+        Retrieves a read-only file object for a CSV file.
+
+        This method opens the specified CSV file in read-only mode and returns a file object that can be used to read its contents.
+        It ensures that the file is not modified during the reading process.
+
+        :param file_path: The path to the CSV file to open.
+        :type file_path: str
+        :return: A read-only file object for the specified CSV file.
+        :rtype: file
+        """
+        return utils_get_readonly_csv_file(file_path)
+
+    def get_readonly_yaml_file(self, file_path: str):
+        """
+        Retrieves a read-only file object for a YAML file.
+
+        This method opens the specified YAML file in read-only mode and returns a file object that can be used to read its contents.
+        It ensures that the file is not modified during the reading process.
+
+        :param file_path: The path to the YAML file to open.
+        :type file_path: str
+        :return: A read-only file object for the specified YAML file.
+        :rtype: file
+        """
+        return utils_get_readonly_yaml_file(file_path)
+
+    def snake_case(self, name: str) -> str:
+        """
+        Converts a string to snake_case.
+
+        This method takes a string in any case format (e.g., camelCase, PascalCase, kebab-case)
+        and converts it to snake_case, which is commonly used in Python for variable and function names.
+
+        :param name: The string to convert to snake_case.
+        :type name: str
+        :return: The converted string in snake_case.
+        :rtype: str
+        """
+        return utils_snake_case(name)
+
+    def snake_to_camel(self, name: str) -> str:
+        """
+        Converts a snake_case string to camelCase.
+
+        This method takes a string in snake_case format and converts it to camelCase.
+        It is useful for standardizing naming conventions across different formats.
+
+        :param name: The snake_case string to convert.
+        :type name: str
+        :return: The converted string in camelCase.
+        :rtype: str
+        """
+        return str(utils_snake_to_camel(name))
+
+    def pascal_to_snake(self, name: str) -> str:
+        """
+        Converts a PascalCase string to snake_case.
+
+        This method takes a string in PascalCase format and converts it to snake_case.
+        It is useful for standardizing naming conventions across different formats.
+
+        :param name: The PascalCase string to convert.
+        :type name: str
+        :return: The converted string in snake_case.
+        :rtype: str
+        """
+        return utils_pascal_to_snake(name)
+
+    def rfc1034_compliant_str(self, name: str) -> str:
+        """
+        Converts a string to an RFC 1034 compliant format.
+
+        This method takes a string and converts it to a format that complies with RFC 1034, which is commonly used for domain names.
+        It replaces invalid characters with hyphens and ensures the resulting string is lowercase.
+
+        :param name: The string to convert to RFC 1034 compliant format.
+        :type name: str
+        :return: The converted string in RFC 1034 compliant format.
+        :rtype: str
+        """
+        return utils_rfc1034_compliant_str(name)
+
+    def rfc1034_compliant_to_snake(self, name: str) -> str:
+        """
+        Converts an RFC 1034 compliant string to snake_case.
+
+        This method takes a string in RFC 1034 compliant format and converts it to snake_case.
+        It replaces hyphens with underscores and ensures the resulting string is lowercase.
+
+        :param name: The RFC 1034 compliant string to convert.
+        :type name: str
+        :return: The converted string in snake_case.
+        :rtype: str
+        """
+        return utils_rfc1034_compliant_to_snake(name)
+
+    def recursive_sort_dict(self, data: dict) -> dict:
+        """
+        Recursively sorts a dictionary by its keys.
+
+        This method takes a dictionary and returns a new dictionary with all keys sorted in ascending order.
+        If any values are also dictionaries, they will be sorted recursively as well.
+
+        :param data: The dictionary to sort.
+        :type data: dict
+        :return: A new dictionary with all keys sorted.
+        :rtype: dict
+        """
+        return utils_recursive_sort_dict(data)
 
 
 __all__ = [
