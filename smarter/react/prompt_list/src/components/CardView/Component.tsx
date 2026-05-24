@@ -22,16 +22,12 @@
  *
  * This component is intended for use in views where chatbots are presented in a card/grid format.
  */
-import type { ReactNode } from "react";
-
-import type { Chatbot, SessionContext, TabKey } from "@/lib/Types";
-import { formatDateTime } from "@/lib/formatDateTime";
+import type { Chatbot, SessionContext, TabKey, DetailRowRenderer } from "@/lib/Types";
 import { pluginsText } from "@/lib/pluginsText";
 import { Toolbar } from "@/components/Toolbar";
 
 import "./styles.css";
 
-type DetailRowRenderer = (label: string, value: string | number | null | undefined) => ReactNode;
 
 interface CardViewProps {
   sessionContext: SessionContext;
@@ -45,54 +41,73 @@ export function CardView({ sessionContext, activeTab, chatbots, renderDetailRow,
   console.log("Rendering CardView with chatbots:", chatbots, sessionContext);
 
   return (
-    <div className="">
+    <div className="row g-4 p-4">
       {Array.isArray(chatbots) &&
         chatbots.map((chatbot) => (
-          <article className="col-12 mt-1 p-2" key={chatbot.id}>
-            <div
-              className={`card card-flush h-xl-100 chatbot-card ${activeTab === "user" ? "user-chatbot-card" : "smarter-chatbot-card"}`}
-            >
-              <div className="p-5 prompt-list-card-header">
-                <span className="prompt-list-header-icons">
-                  {chatbot.isAuthenticationRequired ? (
-                    <i className="fas fa-lock prompt-list-icon-lock" aria-label="Authentication required" />
-                  ) : (
-                    <i className="fas fa-unlock prompt-list-icon-unlock" aria-label="No authentication required" />
-                  )}
-                  {chatbot.deployed ? (
-                    <i className="fas fa-check prompt-list-icon-deployed" aria-label="Deployed" />
-                  ) : null}
-                </span>
-                <h4 className="card-title card-label fw-bold text-gray-800 text-center prompt-list-card-title">
-                  <a href={chatbot.urlChatapp} className="prompt-list-card-link">
-                    {chatbot.name}
-                    {chatbot.version ? ` v${chatbot.version}` : ""}
-                  </a>
-                </h4>
-              </div>
-              <div className="card-body py-2">
-                <table className="prompt-list-details-table">
-                  <tbody>
-                    {renderDetailRow("Owner", chatbot.userProfile?.user?.username)}
-                    {renderDetailRow("Created", formatDateTime(chatbot.createdAt, "date"))}
-                    {renderDetailRow("Last updated", formatDateTime(chatbot.updatedAt, "relative", chatbot.createdAt))}
-                    {renderDetailRow("URL", chatbot.urlChatbot || chatbot.urlChatapp)}
-                    {renderDetailRow("Provider", chatbot.provider)}
-                    {renderDetailRow("Model", chatbot.defaultModel)}
-                    {renderDetailRow("Temperature", chatbot.defaultTemperature)}
-                    {renderDetailRow("Max Tokens", chatbot.defaultMaxTokens)}
-                    {renderDetailRow("System Role", chatbot.defaultSystemRole)}
-                    {renderDetailRow("Description", chatbot.description)}
-                    {renderDetailRow("DNS status", chatbot.dnsVerificationStatus)}
-                    {renderDetailRow("App assistant", chatbot.appAssistant)}
-                    {renderDetailRow("App name", chatbot.appName)}
-                    {renderDetailRow("Plugins", pluginsText(chatbot))}
-                  </tbody>
-                </table>
+          <div className="col-12" key={chatbot.id}>
+            <div className="card h-100">
+              <div className="card-header d-flex justify-content-between align-items-center bg-white border-bottom-0 pb-0">
                 <Toolbar sessionContext={sessionContext} chatbot={chatbot} onRequery={onRequery} />
               </div>
+              <div className="card-body">
+                <h5 className="card-title mb-3 text-primary fw-bold text-center">
+                  <a href={chatbot.urlChatapp} className="text-decoration-none text-primary">{chatbot.name}</a>
+                </h5>
+                <table className="table table-bordered table-sm align-middle mb-0">
+                  <tbody>
+                    {renderDetailRow("Hashed ID", chatbot.hashedId)}
+                    {renderDetailRow("Authentication Required", chatbot.isAuthenticationRequired ? "Yes" : "No")}
+                    {renderDetailRow("Status", chatbot.deployed ? "Deployed" : "Not deployed")}
+                    {renderDetailRow("Ready", chatbot.ready, "bool")}
+                    {renderDetailRow("Owner", chatbot.userProfile?.user?.username)}
+                    {renderDetailRow("Created", chatbot.createdAt, "dateTime")}
+                    {renderDetailRow("Last updated", chatbot.updatedAt, "dateTime")}
+                    {renderDetailRow("Version", chatbot.version)}
+                    {renderDetailRow("Description", chatbot.description)}
+                    {renderDetailRow("Tags", chatbot.tags?.join(", "))}
+                    {renderDetailRow("Annotations", chatbot.annotations, "json")}
+                    {renderDetailRow("Functions", chatbot.functions?.length ? chatbot.functions.length : undefined)}
+                    {renderDetailRow("Plugins", pluginsText(chatbot))}
+                    {renderDetailRow("Custom Domains", chatbot.customDomains?.length ? JSON.stringify(chatbot.customDomains) : undefined)}
+                    {renderDetailRow("API Keys", chatbot.apiKeys?.length ? JSON.stringify(chatbot.apiKeys) : undefined)}
+                    {renderDetailRow("RFC1034 Name", chatbot.rfc1034CompliantName)}
+                    {renderDetailRow("Default System Role", chatbot.defaultSystemRole)}
+                    {renderDetailRow("Base API Domain", chatbot.baseApiDomain)}
+                    {renderDetailRow("Base Default Host", chatbot.baseDefaultHost)}
+                    {renderDetailRow("Default Host", chatbot.defaultHost)}
+                    {renderDetailRow("Default URL", chatbot.defaultUrl, "url")}
+                    {renderDetailRow("Custom Host", chatbot.customHost)}
+                    {renderDetailRow("Custom URL", chatbot.customUrl, "url")}
+                    {renderDetailRow("Sandbox Host", chatbot.sandboxHost)}
+                    {renderDetailRow("Sandbox URL", chatbot.sandboxUrl, "url")}
+                    {renderDetailRow("Hostname", chatbot.hostname)}
+                    {renderDetailRow("URL", chatbot.url, "url")}
+                    {renderDetailRow("URL Chatbot", chatbot.urlChatbot, "url")}
+                    {renderDetailRow("URL Chat Config", chatbot.urlChatConfig, "url")}
+                    {renderDetailRow("URL Chatapp", chatbot.urlChatapp, "url")}
+                    {renderDetailRow("URL Manifest", chatbot.urlManifest, "url")}
+                    {renderDetailRow("Provider", chatbot.provider)}
+                    {renderDetailRow("Model", chatbot.defaultModel)}
+                    {renderDetailRow("Temperature", chatbot.defaultTemperature, "number")}
+                    {renderDetailRow("Max Tokens", chatbot.defaultMaxTokens, "number")}
+                    {renderDetailRow("App Name", chatbot.appName)}
+                    {renderDetailRow("App Assistant", chatbot.appAssistant)}
+                    {renderDetailRow("App Welcome Message", chatbot.appWelcomeMessage)}
+                    {renderDetailRow("App Example Prompts", chatbot.appExamplePrompts, "str[]")}
+                    {renderDetailRow("App Placeholder", chatbot.appPlaceholder)}
+                    {renderDetailRow("App Info URL", chatbot.appInfoUrl, "url")}
+                    {renderDetailRow("App Background Image URL", chatbot.appBackgroundImageUrl, "url")}
+                    {renderDetailRow("App Logo URL", chatbot.appLogoUrl, "url")}
+                    {renderDetailRow("App File Attachment", chatbot.appFileAttachment ? "Yes" : "No")}
+                    {renderDetailRow("DNS Status", chatbot.dnsVerificationStatus)}
+                    {renderDetailRow("TLS Certificate Issuance Status", chatbot.tlsCertificateIssuanceStatus)}
+                    {renderDetailRow("Subdomain", chatbot.subdomain)}
+                    {renderDetailRow("Custom Domain", chatbot.customDomain)}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </article>
+          </div>
         ))}
     </div>
   );

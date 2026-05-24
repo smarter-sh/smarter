@@ -1,3 +1,6 @@
+import type { ReactNode } from "react";
+
+
 export type TabKey = "user" | "shared";
 
 export type Plugin = {
@@ -15,6 +18,12 @@ export type UserProfile = {
     accountNumber: string;
   };
 };
+
+export type DetailRowRenderer = (
+  label: string,
+  value: unknown,
+  dataType?: "string" | "url" | "dateTime" | "number" | "bool" | "json" | "str[]" | null,
+) => ReactNode;
 
 export type Chatbot = {
   id: number;
