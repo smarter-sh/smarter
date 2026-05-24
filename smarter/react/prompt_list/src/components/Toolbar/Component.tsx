@@ -44,19 +44,16 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
   const [successMessage, setSuccessMessage] = useState<string>("");
 
   const handleCloseModal = () => {
-    setModal({ type: null, chatbot: null});
+    setModal({ type: null, chatbot: null });
   };
   const handleCloseModalWithRequery = () => {
     setModal({ type: null, chatbot: null });
     onRequery();
   };
 
-  const handleCloneButtonClicked = (chatbot: Chatbot) =>
-    setModal({ type: "clone", chatbot });
-  const handleRenameButtonClicked = (chatbot: Chatbot) =>
-    setModal({ type: "rename", chatbot });
-  const handleDeleteButtonClicked = (chatbot: Chatbot) =>
-    setModal({ type: "delete", chatbot });
+  const handleCloneButtonClicked = (chatbot: Chatbot) => setModal({ type: "clone", chatbot });
+  const handleRenameButtonClicked = (chatbot: Chatbot) => setModal({ type: "rename", chatbot });
+  const handleDeleteButtonClicked = (chatbot: Chatbot) => setModal({ type: "delete", chatbot });
 
   const handleError = (chatbot: Chatbot) => {
     handleCloseModal();
@@ -74,8 +71,7 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
           onCancel={handleCloseModal}
         >
           <p>
-            Clone chatbot <strong>{modal.chatbot?.name}</strong> to a new
-            resource owned by you.
+            Clone chatbot <strong>{modal.chatbot?.name}</strong> to a new resource owned by you.
           </p>
           <p>
             <em>Provide the new name for the cloned chatbot.</em>
@@ -126,8 +122,7 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
           onCancel={handleCloseModal}
         >
           <p>
-            Are you sure you want to delete chatbot{" "}
-            <strong>{modal.chatbot?.name}</strong>?
+            Are you sure you want to delete chatbot <strong>{modal.chatbot?.name}</strong>?
           </p>
           <p>
             <em>Data is not recoverable.</em>
@@ -140,22 +135,11 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
   const ModalError = () => {
     return (
       <>
-        <Modal
-          show={modal.type === "error"}
-          title="❌ Error"
-          onClose={handleCloseModal}
-        >
+        <Modal show={modal.type === "error"} title="❌ Error" onClose={handleCloseModal}>
           <p>
-            An error occurred while performing the operation on chatbot{" "}
-            <strong>{modal.chatbot?.name}</strong>.
+            An error occurred while performing the operation on chatbot <strong>{modal.chatbot?.name}</strong>.
           </p>
-          <p>
-            {errMessage ? (
-              <span className="text-danger">{errMessage}</span>
-            ) : (
-              <em>An unknown error occurred.</em>
-            )}
-          </p>
+          <p>{errMessage ? <span className="text-danger">{errMessage}</span> : <em>An unknown error occurred.</em>}</p>
         </Modal>
       </>
     );
@@ -164,11 +148,7 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
   const ModalConfirmation = () => {
     return (
       <>
-        <Modal
-          show={modal.type === "confirmation"}
-          title="✅ Success"
-          onClose={handleCloseModalWithRequery}
-        >
+        <Modal show={modal.type === "confirmation"} title="✅ Success" onClose={handleCloseModalWithRequery}>
           <p>
             {successMessage} <strong>{modal.chatbot?.name}</strong>.
           </p>
@@ -187,13 +167,7 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
     // implement the clone logic here, e.g. call an API route to perform the clone operation.
     // return a success or failure result.
 
-    const url =
-      sessionContext.promptListApiUrl +
-      "clone/" +
-      chatbot.id +
-      "/" +
-      new_name +
-      "/";
+    const url = sessionContext.promptListApiUrl + "clone/" + chatbot.id + "/" + new_name + "/";
     handleCloseModal();
     fetchDjangoUrl(
       JSON.stringify({}),
@@ -210,14 +184,10 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
             .then((errorData) => {
               const errorMessage = errorData.error || response.statusText;
               setErrMessage(errorMessage);
-              throw new Error(
-                `Failed to clone chatbot (${response.status}): ${errorMessage}`,
-              );
+              throw new Error(`Failed to clone chatbot (${response.status}): ${errorMessage}`);
             })
             .catch(() => {
-              throw new Error(
-                `Failed to clone chatbot (${response.status}): ${response.statusText}`,
-              );
+              throw new Error(`Failed to clone chatbot (${response.status}): ${response.statusText}`);
             });
         }
         return response.json();
@@ -238,13 +208,7 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
     // implement the rename logic here, e.g. call an API route to perform the rename operation.
     // return a success or failure result.
     handleCloseModal();
-    const url =
-      sessionContext.promptListApiUrl +
-      "rename/" +
-      chatbot.id +
-      "/" +
-      newName +
-      "/";
+    const url = sessionContext.promptListApiUrl + "rename/" + chatbot.id + "/" + newName + "/";
 
     fetchDjangoUrl(
       JSON.stringify({}),
@@ -260,14 +224,10 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
             .json()
             .then((errorData) => {
               const errorMessage = errorData.error || response.statusText;
-              throw new Error(
-                `Failed to rename chatbot (${response.status}): ${errorMessage}`,
-              );
+              throw new Error(`Failed to rename chatbot (${response.status}): ${errorMessage}`);
             })
             .catch(() => {
-              throw new Error(
-                `Failed to rename chatbot (${response.status}): ${response.statusText}`,
-              );
+              throw new Error(`Failed to rename chatbot (${response.status}): ${response.statusText}`);
             });
         }
         return response.json();
@@ -303,14 +263,10 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
             .json()
             .then((errorData) => {
               const errorMessage = errorData.error || response.statusText;
-              throw new Error(
-                `Failed to delete chatbot (${response.status}): ${errorMessage}`,
-              );
+              throw new Error(`Failed to delete chatbot (${response.status}): ${errorMessage}`);
             })
             .catch(() => {
-              throw new Error(
-                `Failed to delete chatbot (${response.status}): ${response.statusText}`,
-              );
+              throw new Error(`Failed to delete chatbot (${response.status}): ${response.statusText}`);
             });
         }
         return response.json();

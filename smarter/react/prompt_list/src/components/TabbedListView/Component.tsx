@@ -46,17 +46,18 @@ interface TabNavProps {
 
 const TabNav: React.FC<TabNavProps> = ({ activeTab, onTabChange, tabs }) => (
   <ul className="nav nav-tabs">
-    {Array.isArray(tabs) && tabs.map((tab) => (
-      <li className="nav-item" key={tab.key}>
-        <button
-          className={`nav-link${activeTab === tab.key ? " active" : ""}`}
-          onClick={() => onTabChange(tab.key)}
-          type="button"
-        >
-          {tab.label}
-        </button>
-      </li>
-    ))}
+    {Array.isArray(tabs) &&
+      tabs.map((tab) => (
+        <li className="nav-item" key={tab.key}>
+          <button
+            className={`nav-link${activeTab === tab.key ? " active" : ""}`}
+            onClick={() => onTabChange(tab.key)}
+            type="button"
+          >
+            {tab.label}
+          </button>
+        </li>
+      ))}
   </ul>
 );
 
@@ -91,65 +92,63 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
   };
 
   const load = async (
-      isMounted: boolean,
-      setterCallback: React.Dispatch<React.SetStateAction<Chatbot[]>>,
-      urlSlug: string,
-      invalidateCache = false,
-    ) => {
-      setIsLoading(true);
-      setErrorMessage(null);
+    isMounted: boolean,
+    setterCallback: React.Dispatch<React.SetStateAction<Chatbot[]>>,
+    urlSlug: string,
+    invalidateCache = false,
+  ) => {
+    setIsLoading(true);
+    setErrorMessage(null);
 
-      try {
-        // Join base and slug manually to handle local path base
-        let base = sessionContext.promptListApiUrl;
-        if (!base.endsWith("/")) base += "/";
-        let slug = urlSlug.startsWith("/") ? urlSlug.slice(1) : urlSlug;
-        let url = base + slug;
-        if (!url.endsWith("/")) url += "/";
-        url += `?invalidate_cache=${invalidateCache}`;
-        const response = await fetchDjangoUrl(
-          JSON.stringify({}),
-          url,
-          sessionContext.csrftoken,
-          sessionContext.djangoSessionCookieName,
-          sessionContext.csrfCookieName,
-          sessionContext.cookieDomain,
-        );
+    try {
+      // Join base and slug manually to handle local path base
+      let base = sessionContext.promptListApiUrl;
+      if (!base.endsWith("/")) base += "/";
+      let slug = urlSlug.startsWith("/") ? urlSlug.slice(1) : urlSlug;
+      let url = base + slug;
+      if (!url.endsWith("/")) url += "/";
+      url += `?invalidate_cache=${invalidateCache}`;
+      const response = await fetchDjangoUrl(
+        JSON.stringify({}),
+        url,
+        sessionContext.csrftoken,
+        sessionContext.djangoSessionCookieName,
+        sessionContext.csrfCookieName,
+        sessionContext.cookieDomain,
+      );
 
-        if (!response.ok) {
-          let errorMsg = `Failed to load chatbots (${response.status})`;
-          try {
-            const errorJson = await response.json();
-            if (errorJson && errorJson.error) {
-              errorMsg = errorJson.error;
-            }
-          } catch {
-            console.error("Failed to load chatbots due to an unknown error.");
+      if (!response.ok) {
+        let errorMsg = `Failed to load chatbots (${response.status})`;
+        try {
+          const errorJson = await response.json();
+          if (errorJson && errorJson.error) {
+            errorMsg = errorJson.error;
           }
-          throw new Error(errorMsg);
+        } catch {
+          console.error("Failed to load chatbots due to an unknown error.");
         }
-
-        const payload = (await response.json()) as ChatbotListApiResponse;
-        if (isMounted) {
-          setterCallback(payload.chatbots);
-        }
-      } catch (error) {
-        if (isMounted) {
-          setErrorMessage(
-            error instanceof Error ? error.message : "Unable to load chatbots.",
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        throw new Error(errorMsg);
       }
+
+      const payload = (await response.json()) as ChatbotListApiResponse;
+      if (isMounted) {
+        setterCallback(payload.chatbots);
+      }
+    } catch (error) {
+      if (isMounted) {
+        setErrorMessage(error instanceof Error ? error.message : "Unable to load chatbots.");
+      }
+    } finally {
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    }
   };
 
   const handleRequery = () => {
     load(true, setUserChatbots, "owned", true);
     load(true, setSharedChatbots, "shared", true);
-  }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -173,10 +172,7 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
 
   return (
     <div className="pt-5 pb-5 card card-flush h-xl-100">
-      <div
-        className="card-header rounded align-items-start ps-3"
-        data-bs-theme="light"
-      >
+      <div className="card-header rounded align-items-start ps-3" data-bs-theme="light">
         <TabNav activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
       </div>
       <div className="m-0 p-0 card-body list-view">
@@ -184,11 +180,7 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
 
         {activeTab === "user" ? (
           viewMode === "list" ? (
-            <ListView
-              sessionContext={sessionContext}
-              chatbots={userChatbots}
-              onRequery={handleRequery}
-            />
+            <ListView sessionContext={sessionContext} chatbots={userChatbots} onRequery={handleRequery} />
           ) : (
             <CardView
               sessionContext={sessionContext}
@@ -199,11 +191,7 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
             />
           )
         ) : viewMode === "list" ? (
-          <ListView
-            sessionContext={sessionContext}
-            chatbots={sharedChatbots}
-            onRequery={handleRequery}
-          />
+          <ListView sessionContext={sessionContext} chatbots={sharedChatbots} onRequery={handleRequery} />
         ) : (
           <CardView
             sessionContext={sessionContext}
