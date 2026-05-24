@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.17](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.16...v0.14.0-alpha.17) (2026-05-24)
+
+### Bug Fixes
+
+* ensure that new name is camel_case ([8a75ca7](https://github.com/smarter-sh/smarter/commit/8a75ca71ab4c50518a9b81b4d648b633610dfcfe))
+
 ## [0.14.0-alpha.16](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.15...v0.14.0-alpha.16) (2026-05-24)
 
 ### Bug Fixes
