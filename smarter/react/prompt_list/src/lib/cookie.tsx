@@ -13,7 +13,10 @@
  * @param defaultValue - Value returned when the cookie is not found. Defaults to `null`.
  * @returns The cookie value, or `defaultValue` if not found.
  */
-export default function getCookie(cookie: { name: string; expiration: number | null; domain: string; value: string | null }, defaultValue: string | null = null) {
+export default function getCookie(
+  cookie: { name: string; expiration: number | null; domain: string; value: string | null },
+  defaultValue: string | null = null,
+) {
   if (cookie.value !== null) {
     return cookie.value;
   }
@@ -47,7 +50,10 @@ export default function getCookie(cookie: { name: string; expiration: number | n
  * @param cookie.value - Unused in this function; present for shape consistency.
  * @param value - The value to store, or `null` to delete the cookie.
  */
-export function setCookie(cookie: { name: string; expiration: number; domain: string; value: string | null }, value: string | null) {
+export function setCookie(
+  cookie: { name: string; expiration: number; domain: string; value: string | null },
+  value: string | null,
+) {
   const currentPath = window.location.pathname;
   if (value) {
     const expirationDate = new Date();
@@ -73,7 +79,12 @@ export function setCookie(cookie: { name: string; expiration: number; domain: st
  * @param cookieValue - Pre-set value to bypass cookie lookup. Defaults to `null`.
  * @returns A cookie descriptor object.
  */
-export function cookieMetaFactory(cookieName: string, cookieExpiration: number | null, cookieDomain: string, cookieValue: string | null = null) {
+export function cookieMetaFactory(
+  cookieName: string,
+  cookieExpiration: number | null,
+  cookieDomain: string,
+  cookieValue: string | null = null,
+) {
   /*
   Create a cookie object.
    */
