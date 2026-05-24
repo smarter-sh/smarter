@@ -158,7 +158,7 @@ from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-logger = logging.getSmarterLogger(__name__)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
     logger.debug(

@@ -7,9 +7,16 @@ from collections.abc import Awaitable
 from django.http import HttpRequest, HttpResponseBase
 
 from smarter.common.mixins import SmarterMiddlewareMixin
+from smarter.common.mixins.helper_mixin import SmarterHelperMixin
 from smarter.lib import logging
+from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
 
-logger = logging.getSmarterLogger(__name__)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
+logger.debug(
+    "%s is %s",
+    logging.formatted_text(__name__ + ".SmarterDebugMiddleware"),
+    SmarterHelperMixin().formatted_state_ready,
+)
 
 
 class MiddlewareDebugMiddleware(SmarterMiddlewareMixin):

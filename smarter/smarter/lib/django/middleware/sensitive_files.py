@@ -227,7 +227,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 GetResponseCallable = Callable[[HttpRequest], HttpResponse]
 AsyncGetResponseCallable = Callable[[HttpRequest], Awaitable[HttpResponse]]
 
-logger = logging.getSmarterLogger(__name__)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
     logger.debug(
