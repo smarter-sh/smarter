@@ -20,7 +20,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from ..models import ChatBot, get_cached_chatbot_by_request
 
-logger = logging.getSmarterLogger(__name__)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 logger.debug(
     "%s is %s",
     logging.formatted_text(__name__ + ".SmarterSecurityMiddleware"),
