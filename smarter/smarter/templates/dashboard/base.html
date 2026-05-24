@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block root %}
-<link rel="stylesheet" href="{% static 'common-styles.css' %}">
+<link rel="stylesheet" href="{% static 'common-styles.css' %}?v={{ STATIC_VERSION }}">
 {% block style_extra %}
 <style>
   .not-selectable {
@@ -54,6 +54,6 @@
 {% endblock %}
 {% block javascript_extra %}
 {{ block.super }}
-  <script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
-  <script src="{% static 'js/dashboard/base.js' %}"></script>
+  <script src="{% static 'assets/js/widgets.bundle.js' %}?v={{ STATIC_VERSION }}"></script>
+  <script src="{% static 'js/dashboard/base.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
