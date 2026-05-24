@@ -52,11 +52,11 @@ services:
         BUILD_REACT_COMPONENTS: ${BUILD_REACT_COMPONENTS}
     image: smarter
     command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- uvicorn smarter.asgi:application --host 0.0.0.0 --port 9357
-    volumes:
-      - type: bind
-        source: ./smarter
-        target: /smarter
-        consistency: cached
+    # volumes:
+    #   - type: bind
+    #     source: ./smarter
+    #     target: /smarter
+    #     consistency: cached
     ports:
       - 9357:9357
     depends_on:
@@ -97,11 +97,11 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=worker
-    volumes:
-      - type: bind
-        source: ./smarter
-        target: /smarter
-        consistency: cached
+    # volumes:
+    #   - type: bind
+    #     source: ./smarter
+    #     target: /smarter
+    #     consistency: cached
     healthcheck:
       test:
         ["CMD", "celery", "-A", "smarter.workers.celery.app", "inspect", "ping"]
@@ -138,11 +138,11 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=beat
-    volumes:
-      - type: bind
-        source: ./smarter
-        target: /smarter
-        consistency: cached
+    # volumes:
+    #   - type: bind
+    #     source: ./smarter
+    #     target: /smarter
+    #     consistency: cached
     healthcheck:
       test:
         [
