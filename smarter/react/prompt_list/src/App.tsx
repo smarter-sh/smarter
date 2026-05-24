@@ -13,7 +13,7 @@ interface AppProps {
 function App({ sessionContext }: AppProps) {
   return (
     <>
-      <section className="mt-5 container" id="prompt-list">
+      <section className="mt-5 mb-5 container" id="prompt-list">
         <TabbedListView sessionContext={sessionContext} />
       </section>
     </>
