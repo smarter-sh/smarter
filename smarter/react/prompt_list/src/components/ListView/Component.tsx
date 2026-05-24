@@ -37,8 +37,8 @@ interface ListViewProps {
 
 export function ListView({ sessionContext, chatbots, onRequery }: ListViewProps) {
   return (
-    <div className="table-responsive prompt-list-table-wrap">
-      <table className="table table-striped table-hover align-middle">
+    <div className="table-responsive prompt-list-table-wrap ps-3 pe-3">
+      <table className="table table-striped table-hover align-middle border">
         <thead className="table-light border-bottom-2">
           <tr className="">
             <th className="p-1">Name</th>
@@ -54,7 +54,7 @@ export function ListView({ sessionContext, chatbots, onRequery }: ListViewProps)
         <tbody>
           {Array.isArray(chatbots) &&
             chatbots.map((chatbot) => (
-              <tr key={chatbot.id}>
+              <tr className="" key={chatbot.id}>
                 {/* Name */}
                 <td className="d-none d-lg-table-cell name-col p-1 m-0">
                   <a href={chatbot.urlChatapp}>

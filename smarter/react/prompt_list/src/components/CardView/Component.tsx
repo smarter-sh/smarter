@@ -29,7 +29,6 @@ import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "./styles.css";
 
-
 interface CardViewProps {
   sessionContext: SessionContext;
   chatbots: Chatbot[];
@@ -48,17 +47,29 @@ export function CardView({ sessionContext, chatbots, onRequery }: CardViewProps)
               <div className="card-header d-flex justify-content-between align-items-center bg-white border-bottom-0 pb-0">
                 <Toolbar sessionContext={sessionContext} chatbot={chatbot} onRequery={onRequery} />
                 <span className="border rounded p-2">
-                  <StatusBar chatbot={chatbot}  />
+                  <StatusBar chatbot={chatbot} />
                 </span>
               </div>
               <div className="card-body">
                 <h5 className="card-title mb-3 text-primary fw-bold text-center">
-                  <a href={chatbot.urlChatapp} className="text-decoration-none text-primary">{chatbot.name}</a>
+                  <a href={chatbot.urlChatapp} className="text-decoration-none text-primary">
+                    {chatbot.name}
+                  </a>
                 </h5>
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
-                    {renderDetailRow("Hashed ID", chatbot.hashedId, "string", "Unique identifier for the chatbot, used in URLs and API calls")}
-                    {renderDetailRow("Authentication Required", chatbot.isAuthenticationRequired, "bool", "Indicates whether one or more active API keys are attached to this chatbot")}
+                    {renderDetailRow(
+                      "Hashed ID",
+                      chatbot.hashedId,
+                      "string",
+                      "Unique identifier for the chatbot, used in URLs and API calls",
+                    )}
+                    {renderDetailRow(
+                      "Authentication Required",
+                      chatbot.isAuthenticationRequired,
+                      "bool",
+                      "Indicates whether one or more active API keys are attached to this chatbot",
+                    )}
                     {renderDetailRow("Status", chatbot.deployed ? "Deployed" : "Not deployed")}
                     {renderDetailRow("Ready", chatbot.ready, "bool")}
                     {renderDetailRow("Owner", chatbot.userProfile?.user?.username)}
@@ -66,40 +77,84 @@ export function CardView({ sessionContext, chatbots, onRequery }: CardViewProps)
                     {renderDetailRow("Last updated", chatbot.updatedAt, "dateTime")}
                     {renderDetailRow("Version", chatbot.version)}
                     {renderDetailRow("Description", chatbot.description)}
-                    {renderDetailRow("Tags", chatbot.tags, "str[]", "User-defined list of search tags for categorizing the chatbot.")}
-                    {renderDetailRow("Annotations", chatbot.annotations, "json", "User-defined list of key-value pairs for informational or platform extensibility purposes.")}
+                    {renderDetailRow(
+                      "Tags",
+                      chatbot.tags,
+                      "str[]",
+                      "User-defined list of search tags for categorizing the chatbot.",
+                    )}
+                    {renderDetailRow(
+                      "Annotations",
+                      chatbot.annotations,
+                      "json",
+                      "User-defined list of key-value pairs for informational or platform extensibility purposes.",
+                    )}
                     {renderDetailRow(
                       "Functions",
                       Array.isArray(chatbot.functions)
-                        ? chatbot.functions.map(f => f?.name + "()" || "").filter(Boolean).join(", ")
+                        ? chatbot.functions
+                            .map((f) => f?.name + "()" || "")
+                            .filter(Boolean)
+                            .join(", ")
                         : "",
                       "string",
-                      "Comma-separated list of function names attached to this chatbot."
+                      "Comma-separated list of function names attached to this chatbot.",
                     )}
                     {renderDetailRow(
                       "Plugins",
                       Array.isArray(chatbot.plugins)
-                        ? chatbot.plugins.map(p => p?.name || "").filter(Boolean).join(", ")
+                        ? chatbot.plugins
+                            .map((p) => p?.name || "")
+                            .filter(Boolean)
+                            .join(", ")
                         : "",
                       "string",
-                      "Comma-separated list of plugin names attached to this chatbot."
+                      "Comma-separated list of plugin names attached to this chatbot.",
                     )}
-                    {renderDetailRow("Custom Domains", chatbot.customDomains?.length ? JSON.stringify(chatbot.customDomains) : undefined)}
+                    {renderDetailRow(
+                      "Custom Domains",
+                      chatbot.customDomains?.length ? JSON.stringify(chatbot.customDomains) : undefined,
+                    )}
                     {renderDetailRow("API Keys", chatbot.apiKeys?.length ? JSON.stringify(chatbot.apiKeys) : undefined)}
-                    {renderDetailRow("RFC1034 Name", chatbot.rfc1034CompliantName, null, "RFC 1034 compliant name derived from the chatbot name, used for subdomain generation")}
+                    {renderDetailRow(
+                      "RFC1034 Name",
+                      chatbot.rfc1034CompliantName,
+                      null,
+                      "RFC 1034 compliant name derived from the chatbot name, used for subdomain generation",
+                    )}
                     {renderDetailRow("Default System Role", chatbot.defaultSystemRole)}
                     {renderDetailRow("Base API Domain", chatbot.baseApiDomain)}
                     {renderDetailRow("Base Default Host", chatbot.baseDefaultHost)}
                     {renderDetailRow("Default Host", chatbot.defaultHost)}
                     {renderDetailRow("Base Default URL", chatbot.defaultUrl, "url")}
                     {renderDetailRow("Custom Host", chatbot.customHost, null, "Custom host set by the user, if any.")}
-                    {renderDetailRow("Custom URL", chatbot.customUrl, "url", "Custom domain and base URL set by the user, if any.")}
+                    {renderDetailRow(
+                      "Custom URL",
+                      chatbot.customUrl,
+                      "url",
+                      "Custom domain and base URL set by the user, if any.",
+                    )}
                     {renderDetailRow("Sandbox Host", chatbot.sandboxHost)}
                     {renderDetailRow("Base Sandbox URL", chatbot.sandboxUrl, "url")}
                     {renderDetailRow("Hostname", chatbot.hostname)}
-                    {renderDetailRow("Base URL", chatbot.url, "url", "Note that the base URL does not resolve to a working endpoint. Add '/chat' or '/config' to this URL.")}
-                    {renderDetailRow("URL Chatbot", chatbot.urlChatbot, "url", "POST only endpoint for chatbot interactions.")}
-                    {renderDetailRow("URL Chat Config", chatbot.urlChatConfig, "url", "POST only endpoint for chatbot configuration retrieval.")}
+                    {renderDetailRow(
+                      "Base URL",
+                      chatbot.url,
+                      "url",
+                      "Note that the base URL does not resolve to a working endpoint. Add '/chat' or '/config' to this URL.",
+                    )}
+                    {renderDetailRow(
+                      "URL Chatbot",
+                      chatbot.urlChatbot,
+                      "url",
+                      "POST only endpoint for chatbot interactions.",
+                    )}
+                    {renderDetailRow(
+                      "URL Chat Config",
+                      chatbot.urlChatConfig,
+                      "url",
+                      "POST only endpoint for chatbot configuration retrieval.",
+                    )}
                     {renderDetailRow("URL Chatapp", chatbot.urlChatapp, "url")}
                     {renderDetailRow("URL Manifest", chatbot.urlManifest, "url")}
                     {renderDetailRow("Provider", chatbot.provider)}
