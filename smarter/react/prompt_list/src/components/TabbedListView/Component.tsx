@@ -31,7 +31,6 @@ import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 import ToggleButton from "@/components/ToggleButton";
 import type { ViewMode } from "@/components/ToggleButton";
-import { renderDetailRow } from "@/lib/renderDetail";
 
 import fetchDjangoUrl from "@/lib/django";
 import type { Chatbot, SessionContext, UserProfile, TabKey } from "@/lib/Types";
@@ -182,24 +181,12 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
           viewMode === "list" ? (
             <ListView sessionContext={sessionContext} chatbots={userChatbots} onRequery={handleRequery} />
           ) : (
-            <CardView
-              sessionContext={sessionContext}
-              activeTab={activeTab}
-              chatbots={userChatbots}
-              renderDetailRow={renderDetailRow}
-              onRequery={handleRequery}
-            />
+            <CardView sessionContext={sessionContext} chatbots={userChatbots} onRequery={handleRequery} />
           )
         ) : viewMode === "list" ? (
           <ListView sessionContext={sessionContext} chatbots={sharedChatbots} onRequery={handleRequery} />
         ) : (
-          <CardView
-            sessionContext={sessionContext}
-            activeTab={activeTab}
-            chatbots={sharedChatbots}
-            renderDetailRow={renderDetailRow}
-            onRequery={handleRequery}
-          />
+          <CardView sessionContext={sessionContext} chatbots={sharedChatbots} onRequery={handleRequery} />
         )}
       </div>
     </div>

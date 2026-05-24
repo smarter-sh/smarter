@@ -1,5 +1,20 @@
 import type { Chatbot } from "@/lib/Types";
-
+/**
+ * @file Component.tsx
+ * @module StatusBar/Component
+ *
+ * StatusBar React component for displaying the status of a Chatbot instance.
+ * Shows readiness, deployment, authentication, DNS, TLS, subdomain, and custom domain status using icons and tooltips.
+ *
+ * Exports:
+ *   - StatusBar: Functional component that takes a Chatbot and renders its status indicators.
+ *
+ * Usage:
+ *   <StatusBar chatbot={chatbot} />
+ *
+ * @author Smarter Team
+ * @copyright Smarter, 2026
+ */
 interface StatusbarProps {
   chatbot: Chatbot;
 }

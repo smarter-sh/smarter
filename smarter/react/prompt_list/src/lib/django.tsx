@@ -1,5 +1,3 @@
-import getCookie from "@/lib/cookie";
-
 /**
  * Sends a POST request to the Smarter Django backend with CSRF and session authentication.
  *
@@ -11,6 +9,8 @@ import getCookie from "@/lib/cookie";
  * @param cookieDomain - The domain used when reading cookies.
  * @returns A `Promise<Response>` from the Fetch API.
  */
+import getCookie from "@/lib/cookie";
+
 export default async function fetchDjangoUrl(
   requestJson: string,
   url: string,
