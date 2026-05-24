@@ -49,7 +49,7 @@ export function ListView({ sessionContext, chatbots, onRequery }: ListViewProps)
             <th className="min-width-150">Model</th>
             <th>Plugins</th>
             <th>Status</th>
-            <th className="text-end min-width-250"></th>
+            <th className="min-width-250">Operations</th>
           </tr>
         </thead>
         <tbody>
