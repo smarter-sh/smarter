@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
                         max_length=255,
                         validators=[
                             smarter.lib.django.validators.SmarterValidator.validate_snake_case,
-                            smarter.lib.django.models.timestamped_model.validate_no_spaces,
+                            smarter.lib.django.validators.SmarterValidator.validate_no_spaces,
                         ],
                     ),
                 ),

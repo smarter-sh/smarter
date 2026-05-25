@@ -112,7 +112,8 @@ class SAMChatBroker(AbstractBroker):
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMChatBrokerError(
-                f"Failed to convert {self.kind} {self.manifest.metadata.name} config to dict", thing=self.kind
+                f"Failed to convert {self.kind} {self.manifest.metadata.name} config to dict. Got {type(config_dump)}",
+                thing=self.kind,
             )
         return {**metadata, **config_dump}
 
@@ -127,7 +128,7 @@ class SAMChatBroker(AbstractBroker):
         chat_dict = self.snake_to_camel(chat_dict)
         if not isinstance(chat_dict, dict):
             raise SAMChatBrokerError(
-                f"Failed to convert {self.kind} {self.chat_object.id} Django ORM model to dict", thing=self.kind  # type: ignore
+                f"Failed to convert {self.kind} {self.chat_object.id} Django ORM model to dict. Got {type(chat_dict)}", thing=self.kind  # type: ignore
             )
         chat_dict.pop("id")
 

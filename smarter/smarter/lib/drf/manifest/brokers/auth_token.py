@@ -179,7 +179,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMSmarterAuthTokenBrokerError(
-                message=f"Invalid config dump for {self.kind} manifest: {config_dump}",
+                message=f"Invalid config dump for {self.kind} manifest: {config_dump}. Got type {type(config_dump)}",
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )

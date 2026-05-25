@@ -270,7 +270,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
         data = self.camel_to_snake(data) if data else None
         if not isinstance(data, dict):
             raise SAMBrokerErrorNotReady(
-                f"Manifest is not ready for {self.kind} broker. Cannot apply. manifest: {self.manifest.model_dump() if self.manifest else None}",
+                f"Manifest is not ready for {self.kind} broker. Cannot apply because data is not a dict. Got {type(data)}. manifest: {self.manifest.model_dump() if self.manifest else None}",
                 thing=self.thing,
                 command=SmarterJournalCliCommands.APPLY,
             )

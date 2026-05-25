@@ -4,13 +4,19 @@
 import logging
 import typing
 
-from django.core.handlers.asgi import ASGIRequest
 from django.forms.models import model_to_dict
+from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.prompt.manifest.models.chat_plugin_usage.const import MANIFEST_KIND
+from smarter.apps.prompt.manifest.models.chat_plugin_usage.metadata import (
+    SAMChatPluginUsageMetadata,
+)
 from smarter.apps.prompt.manifest.models.chat_plugin_usage.model import (
     SAMChatPluginUsage,
+)
+from smarter.apps.prompt.manifest.models.chat_plugin_usage.spec import (
+    SAMChatPluginUsageSpecConfig,
 )
 from smarter.apps.prompt.models import Chat, ChatPluginUsage
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
@@ -77,10 +83,10 @@ class SAMChatPluginUsageBroker(AbstractBroker):
     """
 
     # override the base abstract manifest model with the SAMChatPluginUsage model
-    _manifest: SAMChatPluginUsage = None
+    _manifest: SAMChatPluginUsage
     _pydantic_model: typing.Type[SAMChatPluginUsage] = SAMChatPluginUsage
-    _chat_history: ChatPluginUsage = None
-    _session_key: str = None
+    _chat_history: ChatPluginUsage
+    _session_key: str
 
     @property
     def session_key(self) -> str:
@@ -110,11 +116,12 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         Transform the Smarter API SAMChatPluginUsage manifest into a Django ORM model.
         """
         metadata = super().manifest_to_django_orm()
-        config_dump = self.manifest.spec.config.model_dump()
+        config_dump = self.manifest.spec.model_dump()
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMChatPluginUsageBrokerError(
-                f"Failed to convert {self.kind} {self.manifest.metadata.name} config to dict", thing=self.kind
+                f"Failed to convert {self.kind} {self.manifest.metadata.name} config to dict. Got {type(config_dump)}",
+                thing=self.kind,
             )
         return {**metadata, **config_dump}
 
@@ -125,15 +132,19 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         """
         chat_dict = model_to_dict(self.chat_plugin_usage)
         chat_dict = self.snake_to_camel(chat_dict)
+        if not isinstance(chat_dict, dict):
+            raise SAMChatPluginUsageBrokerError(
+                f"Failed to convert {self.kind} {self.chat_plugin_usage.id} to dict. Got {type(chat_dict)}", thing=self.kind  # type: ignore
+            )
         chat_dict.pop("id")
 
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: self.chat_plugin_usage.name,
-                SAMMetadataKeys.DESCRIPTION.value: self.chat_plugin_usage.description,
-                SAMMetadataKeys.VERSION.value: self.chat_plugin_usage.version,
+                SAMMetadataKeys.NAME.value: self.chat_plugin_usage.plugin.name,
+                SAMMetadataKeys.DESCRIPTION.value: self.chat_plugin_usage.plugin.description,
+                SAMMetadataKeys.VERSION.value: self.chat_plugin_usage.plugin.version,
             },
             SAMKeys.SPEC.value: None,
             SAMKeys.STATUS.value: {
@@ -202,19 +213,20 @@ class SAMChatPluginUsageBroker(AbstractBroker):
                 )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
+            metadata = SAMChatPluginUsageMetadata(**self.loader.manifest_metadata)
+            spec = SAMChatPluginUsageSpecConfig(**self.loader.manifest_spec)
             self._manifest = SAMChatPluginUsage(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=self.loader.manifest_metadata,
-                spec=self.loader.manifest_spec,
-                status=self.loader.manifest_status,
+                metadata=metadata,
+                spec=spec,
             )
         return self._manifest
 
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: ASGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = {
@@ -229,20 +241,20 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: ASGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
 
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        self._session_key: str = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
+        self._session_key: str = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)  # type: ignore
         self._session_key = self.clean_cli_param(
             param=self._session_key,
             param_name=SMARTER_CHAT_SESSION_KEY_NAME,
             url=self.smarter_build_absolute_uri(request),
-        )
+        )  # type: ignore
         data = []
         plugin_usages = []
         if self.session_key:
-            chat: Chat = None
+            chat: Chat
             try:
                 chat = Chat.objects.get(session_key=self.session_key)
             except Chat.DoesNotExist:
@@ -261,13 +273,13 @@ class SAMChatPluginUsageBroker(AbstractBroker):
                 model_dump = ChatPluginUsageSerializer(plugin_usage).data
                 if not model_dump:
                     raise SAMChatPluginUsageBrokerError(
-                        f"Model dump failed for {self.kind} {plugin_usage.id}", thing=self.kind, command=command
+                        f"Model dump failed for {self.kind} {plugin_usage.id}", thing=self.kind, command=command  # type: ignore
                     )
                 camel_cased_model_dump = self.snake_to_camel(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMChatPluginUsageBrokerError(
-                    f"Model dump failed for {self.kind} {plugin_usage.id}", thing=self.kind, command=command
+                    f"Model dump failed for {self.kind} {plugin_usage.id}", thing=self.kind, command=command  # type: ignore
                 ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -281,7 +293,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: ASGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Chat is a read-only django table, populated by the LLM handlers
         """
@@ -289,15 +301,15 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError(f"Cannot apply {self.kind} {self.session_key}", thing=self.kind, command=command)
 
-    def chat(self, request: ASGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: ASGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
-        self._session_key: str = kwargs.get("session_id", None)
+        self._session_key: str = kwargs.get("session_id", None)  # type: ignore
         if self.chat_plugin_usage:
             try:
                 data = self.django_orm_to_manifest_dict()
@@ -310,29 +322,29 @@ class SAMChatPluginUsageBroker(AbstractBroker):
             f"Cannot describe {self.kind} {self.session_key}", thing=self.kind, command=command
         )
 
-    def delete(self, request: ASGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError(f"Cannot delete {self.kind} {self.session_key}", thing=self.kind, command=command)
 
-    def deploy(self, request: ASGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(
             f"Cannot deploy {self.kind} {self.session_key}", thing=self.kind, command=command
         )
 
-    def undeploy(self, request: ASGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(
             f"Cannot undeploy {self.kind} {self.session_key}", thing=self.kind, command=command
         )
 
-    def logs(self, request: ASGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
-        self._session_key: str = kwargs.get("session_id", None)
+        self._session_key: str = kwargs.get("session_id", None)  # type: ignore
         if self.chat_plugin_usage:
             data = {}
             return self.json_response_ok(command=command, data=data)
