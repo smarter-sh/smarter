@@ -1,7 +1,7 @@
 Utils
 =========
 
-.. automodule:: smarter.apps.chatbot.utils
+.. automodule:: smarter.apps.chatbot.caching
    :members:
    :undoc-members:
    :show-inheritance:
