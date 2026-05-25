@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.19](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.18...v0.14.0-alpha.19) (2026-05-25)
+
+### Bug Fixes
+
+* type clashes in snake_to_camel() and camel_to_snake() ([b48c003](https://github.com/smarter-sh/smarter/commit/b48c003527e6e2b922c43409b8eeb441fa663d03))
+
 ## [0.14.0-alpha.18](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.17...v0.14.0-alpha.18) (2026-05-25)
 
 ### Bug Fixes
