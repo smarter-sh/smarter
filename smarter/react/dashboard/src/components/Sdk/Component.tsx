@@ -56,7 +56,7 @@ function Sdk({  }: SdkProps) {
                       <img
                         src="/static/assets/media/framework-logos/react.png"
                         className="h-10px"
-                        alt=""
+                        alt="ReactJS Logo"
                       />
                     </span>
                     React NPM Package
@@ -81,7 +81,7 @@ function Sdk({  }: SdkProps) {
                       <img
                         src="/static/images/python-logo.png"
                         className="h-10px"
-                        alt=""
+                        alt="Python Logo"
                       />
                     </span>
                     Python PyPi Library
@@ -93,13 +93,13 @@ function Sdk({  }: SdkProps) {
             {/* begin::Illustrations */}
             <img
               src="/static/images/npm-logo.png"
-              className="position-absolute me-3 top-0 end-0 h-75px pt-3"
-              alt=""
+              className="position-absolute me-3 top-0 end-0 h-75px pt-3 d-none d-xl-table-cell"
+              alt="NPM Logo"
             />
             <img
               src="/static/images/pypi-logo-small.svg"
-              className="position-absolute me-5 bottom-0 end-0 h-75px pt-3 mb-3"
-              alt=""
+              className="position-absolute me-5 bottom-0 end-0 h-75px pt-3 mb-3 d-none d-xl-table-cell"
+              alt="PyPI Logo"
             />
             {/* end::Illustrations */}
           </div>
