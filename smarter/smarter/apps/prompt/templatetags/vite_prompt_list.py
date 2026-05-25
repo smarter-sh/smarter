@@ -93,7 +93,9 @@ def load_manifest() -> dict[str, Any]:
     manifest_path = os.path.join(settings.STATIC_ROOT, "react/prompt_list/manifest.json")
     with open(manifest_path, encoding="utf-8") as f:
         retval = json.load(f)
-        logger.debug("%s.load_manifest() Loaded Vite manifest: %s", logger_prefix, logging.formatted_json(retval))
+        logger.debug(
+            "%s.load_manifest() Loaded and cached Vite manifest: %s", logger_prefix, logging.formatted_json(retval)
+        )
         return retval
 
 
@@ -120,6 +122,9 @@ def collect_css(manifest: dict[str, Any], key: str, seen: set[str] | None = None
     for imported_key in entry.get("imports", []):
         css.extend(collect_css(manifest, imported_key, seen))
 
+    logger.debug(
+        "%s.collect_css() collected and cached CSS for key=%s: %s", logger_prefix, key, logging.formatted_json(css)
+    )
     return css
 
 
@@ -162,6 +167,9 @@ def prompt_list_vite_assets(entry: str = "index.html") -> dict[str, Any]:
     }
 
     logger.debug(
-        "%s.prompt_list_vite_assets() entry=%s assets=%s", logger_prefix, entry, logging.formatted_json(assets)
+        "%s.prompt_list_vite_assets() fetched and cached assets for entry=%s: %s",
+        logger_prefix,
+        entry,
+        logging.formatted_json(assets),
     )
     return assets

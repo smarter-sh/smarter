@@ -150,13 +150,14 @@ class MetaDataModel(TimestampedModel):
             """
             Helper to cache tags retrieval.
             """
+            retval = [tag.name for tag in self.tags.all()]
             verbose_logger.debug(
-                "%s.tags_list - Retrieving tags for %s with pk=%d from database",
+                "%s.tags_list - fetched and cached tags for %s with pk=%d from database",
                 self.formatted_class_name,
                 cls_name,
                 pk,
             )
-            return [tag.name for tag in self.tags.all()]
+            return retval
 
         return _get_tags_by_class_and_pk(self.__class__.__name__, self.pk)
 
@@ -190,9 +191,6 @@ class MetaDataModel(TimestampedModel):
         :rtype: Optional["MetaDataModel"]
         """
         logger_prefix = formatted_text(__name__ + "." + MetaDataModel.__name__ + ".get_cached_object()")
-        verbose_logger.debug(
-            "%s.get_cached_object() called with pk: %s, name: %s, invalidate: %s", logger_prefix, pk, name, invalidate
-        )
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -206,12 +204,20 @@ class MetaDataModel(TimestampedModel):
         def _get_object_by_name(name: str, class_name: str = cls.__name__) -> "MetaDataModel":
             try:
                 verbose_logger.debug(
-                    "%s._get_object_by_name() cache miss for %s name: %s",
+                    "%s.get_cached_object() called with pk: %s, name: %s, invalidate: %s",
+                    logger_prefix,
+                    pk,
+                    name,
+                    invalidate,
+                )
+                retval = cls.objects.prefetch_related("tags").get(name=name)
+                verbose_logger.debug(
+                    "%s._get_object_by_name() fetched and cached %s name: %s",
                     logger_prefix,
                     class_name,
                     name,
                 )
-                return cls.objects.prefetch_related("tags").get(name=name)
+                return retval
             except cls.DoesNotExist as e:
                 verbose_logger.debug(
                     "%s._get_object_by_name() no %s object found for name: %s",

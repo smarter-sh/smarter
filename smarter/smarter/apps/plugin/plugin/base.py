@@ -58,7 +58,6 @@ from smarter.common.exceptions import (
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
-from smarter.lib.django.mixins import SmarterConverterMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
@@ -86,7 +85,7 @@ class SmarterPluginError(SmarterException):
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
+class PluginBase(ABC, AccountMixin):
     """
     Abstract base class for Smarter plugins.
 

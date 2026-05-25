@@ -521,21 +521,21 @@ class UserProfile(MetaDataModel):
         :rtype: Optional["UserProfile"]
         """
         logger_prefix = logging.formatted_text(__name__ + ".UserProfile.get_cached_object()")
-        logger.debug(
-            "%s called with pk: %s, name: %s, user: %s, username: %s, account: %s, invalidate: %s",
-            logger_prefix,
-            pk,
-            name,
-            user,
-            username,
-            account,
-            invalidate,
-        )
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_user_and_account(
             user: User, account: Account, class_name: str = cls.__name__
         ) -> "UserProfile":
+            logger.debug(
+                "%s called with pk: %s, name: %s, user: %s, username: %s, account: %s, invalidate: %s",
+                logger_prefix,
+                pk,
+                name,
+                user,
+                username,
+                account,
+                invalidate,
+            )
             try:
                 retval = (
                     UserProfile.objects.prefetch_related("tags")
@@ -686,16 +686,16 @@ class UserProfile(MetaDataModel):
         :rtype: QuerySet[UserProfile]
         """
         logger_prefix = logging.formatted_text(__name__ + f".{UserProfile.__name__}.get_cached_objects()")
-        logger.debug(
-            "%s called with invalidate: %s,  user: %s, kwargs: %s",
-            logger_prefix,
-            invalidate,
-            user,
-            kwargs,
-        )
 
         @cache_results(cls.cache_expiration)
         def _get_objects_by_user(user_id: int, class_name: str = cls.__name__) -> QuerySet["UserProfile"]:
+            logger.debug(
+                "%s called with invalidate: %s,  user: %s, kwargs: %s",
+                logger_prefix,
+                invalidate,
+                user,
+                kwargs,
+            )
             retval = UserProfile.objects.prefetch_related("tags").select_related("user", "account").filter(user=user)
             logger.debug(
                 "%s._get_objects_by_user() fetched %s objects for user_id: %s. count: %s",

@@ -559,16 +559,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :rtype: models.Model
         """
         logger_prefix = logging.formatted_text(cls.__name__ + ".get_cached_object()")
-        logger.debug(
-            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
-            logger_prefix,
-            pk,
-            name,
-            user,
-            user_profile,
-            username,
-            account,
-        )
 
         if username and not user and not user_profile:
             logger.debug("%s Resolving user_profile from username: %s", logger_prefix, username)
@@ -594,6 +584,16 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :returns: The model instance if found, otherwise None.
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
+            logger.debug(
+                "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
+                logger_prefix,
+                pk,
+                name,
+                user,
+                user_profile,
+                username,
+                account,
+            )
             if not isinstance(pk, int):
                 raise SmarterValueError(
                     f"{logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()")} invalid pk value: {pk}. Expected an integer."
@@ -642,6 +642,16 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :returns: The model instance if found, otherwise None.
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
+            logger.debug(
+                "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
+                logger_prefix,
+                pk,
+                name,
+                user,
+                user_profile,
+                username,
+                account,
+            )
             try:
                 if taggit:
                     retval = (
@@ -692,6 +702,16 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :returns: The model instance if found, otherwise None.
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
+            logger.debug(
+                "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
+                logger_prefix,
+                pk,
+                name,
+                user,
+                user_profile,
+                username,
+                account,
+            )
             try:
                 if taggit:
                     retval = (
@@ -740,6 +760,16 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :returns: The model instance if found, otherwise None.
             :rtype: Optional["MetaDataWithOwnershipModel"]
             """
+            logger.debug(
+                "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
+                logger_prefix,
+                pk,
+                name,
+                user,
+                user_profile,
+                username,
+                account,
+            )
             try:
                 if taggit:
                     retval = (
@@ -837,13 +867,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         logger_prefix = logging.formatted_text(
             __name__ + f".{MetaDataWithOwnershipModel.__name__}.get_cached_objects()"
         )
-        logger.debug(
-            "%s called for %s with user_profile: %s invalidate: %s",
-            logger_prefix,
-            cls.__name__,
-            user_profile,
-            invalidate,
-        )
 
         # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
@@ -859,6 +882,13 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile ID.
             :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
             """
+            logger.debug(
+                "%s called for %s with user_profile: %s invalidate: %s",
+                logger_prefix,
+                cls.__name__,
+                user_profile,
+                invalidate,
+            )
             if taggit:
                 return (
                     cls.objects.prefetch_related("tags")
@@ -892,13 +922,25 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         super().save(*args, **kwargs)
         if not is_new and type(self).__bases__[0] == MetaDataWithOwnershipModel:
             self.__class__.get_cached_object(pk=self.pk, class_name=self.__class__.__name__, invalidate=True)
-            self.__class__.get_cached_object(
-                name=self.name, user_profile=self.user_profile, class_name=self.__class__.__name__, invalidate=True
-            )
-            self.__class__.get_cached_object(
-                name=self.name, account=self.user_profile.account, class_name=self.__class__.__name__, invalidate=True
-            )
-            self.__class__.get_cached_objects(invalidate=True, user_profile=self.user_profile)
+            try:
+                self.__class__.get_cached_object(
+                    name=self.name, user_profile=self.user_profile, class_name=self.__class__.__name__, invalidate=True
+                )
+            except self.__class__.DoesNotExist:
+                pass
+            try:
+                self.__class__.get_cached_object(
+                    name=self.name,
+                    account=self.user_profile.account,
+                    class_name=self.__class__.__name__,
+                    invalidate=True,
+                )
+            except self.__class__.DoesNotExist:
+                pass
+            try:
+                self.__class__.get_cached_objects(invalidate=True, user_profile=self.user_profile)
+            except self.__class__.DoesNotExist:
+                pass
 
     def clone(
         self,

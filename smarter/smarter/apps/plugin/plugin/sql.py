@@ -817,7 +817,7 @@ class SqlPlugin(PluginBase):
                 raise SmarterSqlPluginError(
                     f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
                 )
-            return sql_connection.execute_query(
+            retval = sql_connection.execute_query(
                 sql=sql,
                 limit=(
                     self.plugin_data.limit
@@ -825,6 +825,12 @@ class SqlPlugin(PluginBase):
                     else MAX_SQL_QUERY_LENGTH
                 ),
             )
+            logger.debug(
+                "%s.tool_call_fetch_plugin_response() fetched and cached SQL query result for query: %s",
+                self.formatted_class_name,
+                sql,
+            )
+            return retval
 
         retval = get_cached_query_result(sql)
 

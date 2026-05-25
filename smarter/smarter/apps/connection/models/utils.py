@@ -59,22 +59,36 @@ def get_cached_connection_detail_view_and_kind(
     @cache_results()
     def cached_sqlconnection_by_id_and_name(account_id: int, name: str) -> Union["SqlConnection", None]:
         try:
-            return (
+            retval = (
                 SqlConnection.objects.prefetch_related("tags")
                 .select_related("user_profile", "user_profile__account", "user_profile__user")
                 .get(user_profile__account__id=account_id, name=name)
             )
+            logger.debug(
+                "%s.cached_sqlconnection_by_id_and_name() fetched and cached SqlConnection for account_id: %s, name: %s",
+                logger_prefix,
+                account_id,
+                name,
+            )
+            return retval
         except SqlConnection.DoesNotExist:
             return None
 
     @cache_results()
     def cached_apiconnection_by_id_and_name(account_id: int, name: str) -> Union["ApiConnection", None]:
         try:
-            return (
+            retval = (
                 ApiConnection.objects.prefetch_related("tags")
                 .select_related("user_profile", "user_profile__account", "user_profile__user")
                 .get(user_profile__account__id=account_id, name=name)
             )
+            logger.debug(
+                "%s.cached_apiconnection_by_id_and_name() fetched and cached ApiConnection for account_id: %s, name: %s",
+                logger_prefix,
+                account_id,
+                name,
+            )
+            return retval
         except ApiConnection.DoesNotExist:
             return None
 

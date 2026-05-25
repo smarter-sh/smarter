@@ -115,7 +115,11 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
             invalidate,
             user_profile,
         )
-        return ChatBot.objects.filter(deployed=False).with_ownership_permission_for(user=user_profile.user).count() or 0  # type: ignore
+        retval = ChatBot.objects.filter(deployed=False).with_ownership_permission_for(user=user_profile.user).count() or 0  # type: ignore
+        logger.debug(
+            "%s.get_pending_deployments() retrieved and cached pending deployments count: %s", logger_prefix, retval
+        )
+        return retval
 
     if not user_profile:
         logger.warning("%s.get_pending_deployments() called without user_profile. Returning None.", logger_prefix)
@@ -202,7 +206,9 @@ def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] =
             invalidate,
             user_profile,
         )
-        return ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+        retval = ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+        logger.debug("%s.get_api_keys() retrieved and cached API keys count: %s", logger_prefix, retval)
+        return retval
 
     if not user_profile:
         logger.warning("%s.get_api_keys() called without user_profile. Returning None.", logger_prefix)
@@ -240,7 +246,9 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
             invalidate,
             user_profile,
         )
-        return ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+        retval = ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+        logger.debug("%s.get_custom_domains() retrieved and cached custom domains count: %s", logger_prefix, retval)
+        return retval
 
     if not user_profile:
         logger.warning("%s.get_custom_domains() called without user_profile. Returning None.", logger_prefix)
@@ -272,6 +280,7 @@ def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile
         return 0
 
     retval = ConnectionBase.get_cached_connections_for_user(invalidate=invalidate, user=user_profile.user) or []
+    logger.debug("%s.get_connections() retrieved and cached connections count: %s", logger_prefix, len(retval))
     return len(retval)
 
 

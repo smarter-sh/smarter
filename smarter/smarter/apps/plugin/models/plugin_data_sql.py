@@ -269,7 +269,13 @@ class PluginDataSql(PluginDataBase):
                     logger_prefix,
                     plugin_id,
                 )
-                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
+                retval = cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
+                logger.debug(
+                    "%s._get_model_by_plugin_meta() fetched and cached PluginDataBase for plugin_id: %s",
+                    logger_prefix,
+                    plugin_id,
+                )
+                return retval
             except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
@@ -303,7 +309,13 @@ class PluginDataSql(PluginDataBase):
         @cache_results()
         def data_by_plugin_id(plugin_id: int) -> Union["PluginDataSql", None]:
             try:
-                return cls.objects.select_related("plugin").get(plugin_id=plugin_id)
+                retval = cls.objects.select_related("plugin").get(plugin_id=plugin_id)
+                logger.debug(
+                    "%s.get_cached_data_by_plugin() fetched and cached PluginDataSql for plugin_id: %s",
+                    cls.formatted_class_name,
+                    plugin_id,
+                )
+                return retval
             except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",

@@ -220,6 +220,11 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
                 queryset = cls.objects.select_related(
                     "user_profile", "user_profile__account", "user_profile__user"
                 ).filter(user=user_profile.cached_user)
+                logger.debug(
+                    "%s._get_cached_objects_for_user_profile() fetched and cached objects for user_profile_id: %s",
+                    logger_prefix,
+                    user_profile_id,
+                )
                 return queryset
             # pylint: disable=broad-except
             except Exception as e:
@@ -267,6 +272,12 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
                 except Exception as e2:
                     logger.error("Error retrieving objects without cache: %s", e2)
                     queryset = cls.objects.filter(user=user_profile.cached_user, name=name)
+            logger.debug(
+                "%s._get_cached_objects_for_user_profile_and_name() fetched and cached objects for user_profile_id: %s, name: %s",
+                logger_prefix,
+                user_profile_id,
+                name,
+            )
             return queryset
 
         if invalidate:

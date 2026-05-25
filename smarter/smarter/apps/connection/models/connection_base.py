@@ -84,7 +84,6 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         raise NotImplementedError
 
     @classmethod
-    @cache_results()
     def get_cached_connections_for_user(cls, user: User, invalidate: bool = False) -> list["ConnectionBase"]:
         """
         Return a list of all instances of all concrete subclasses of :class:`ConnectionBase`.
@@ -111,27 +110,36 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         - :class:`ApiConnection`
         - :func:`smarter.apps.account.utils.get_cached_account_for_user`
         """
+
         if user is None:
             logger.warning("%s.get_cached_connections_for_user: user is None", cls.formatted_class_name)
             return []
-        user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
-        admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore
-        admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore
-        instances = []
-        for subclass in ConnectionBase.__subclasses__():
-            instances.extend(subclass.objects.filter(user_profile=user_profile).order_by("name"))
-            instances.extend(subclass.objects.filter(user_profile=admin_user_profile).order_by("name"))
-            instances.extend(
-                subclass.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile).order_by("name")
+
+        # pylint: disable=W0613
+        @cache_results()
+        def _get_connections_for_user(username: str) -> list["ConnectionBase"]:
+            user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
+            admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore
+            admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore
+            instances = []
+            for subclass in ConnectionBase.__subclasses__():
+                instances.extend(subclass.objects.filter(user_profile=user_profile).order_by("name"))
+                instances.extend(subclass.objects.filter(user_profile=admin_user_profile).order_by("name"))
+                instances.extend(
+                    subclass.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile).order_by(
+                        "name"
+                    )
+                )
+            logger.debug(
+                "%s.get_cached_connections_for_user: Found and cached these connections %s for user %s",
+                logging.formatted_text(ConnectionBase.__name__),
+                instances,
+                user,
             )
-        logger.debug(
-            "%s.get_cached_connections_for_user: Found these connections %s for user %s",
-            logging.formatted_text(ConnectionBase.__name__),
-            instances,
-            user,
-        )
-        unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
-        return list(unique_instances)
+            unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
+            return list(unique_instances)
+
+        return _get_connections_for_user(user.username)
 
 
 __all__ = [

@@ -788,17 +788,24 @@ class ChatBot(MetaDataWithOwnershipModel):
 
         """
         logger_prefix = logging.formatted_text(__name__ + "." + ChatBot.__name__ + ".get_cached_objects()")
-        logger.debug("%s called with user_profile=%s, invalidate=%s", logger_prefix, user_profile, invalidate)
 
         @cache_results()
         def _get_chatbots_for_user_profile_id(
             user_profile_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["ChatBot"]:
-            return (
+            logger.debug("%s called with user_profile=%s, invalidate=%s", logger_prefix, user_profile, invalidate)
+            retval = (
                 cls.objects.with_read_permission_for(user=user_profile.user)  # type: ignore
                 .prefetch_related("tags")
                 .select_related("user_profile", "user_profile__account", "user_profile__user")
             )
+            logger.debug(
+                "%s._get_chatbots_for_user_profile_id() fetched and cached %s chatbots for user_profile_id: %s",
+                logger_prefix,
+                len(retval),
+                user_profile_id,
+            )
+            return retval
 
         if invalidate and user_profile:
             _get_chatbots_for_user_profile_id.invalidate(user_profile_id=user_profile.id, class_name=cls.__name__)  # type: ignore[union-attr]

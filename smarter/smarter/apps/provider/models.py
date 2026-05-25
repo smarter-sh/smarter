@@ -473,7 +473,14 @@ class Provider(MetaDataWithOwnershipModel):
                     account_id,
                     name,
                 )
-                return cls.objects.get(user_profile__account__id=account_id, name=name)
+                retval = cls.objects.get(user_profile__account__id=account_id, name=name)
+                logger.debug(
+                    "%s.cached_provider_by_account_id_and_name() fetched and cached provider for account_id: %s, name: %s",
+                    logger_prefix,
+                    account_id,
+                    name,
+                )
+                return retval
             except cls.DoesNotExist:
                 logger.debug(
                     "%s.cached_provider_by_account_id_and_name() no provider found for account_id: %s, name: %s",
@@ -500,6 +507,9 @@ class Provider(MetaDataWithOwnershipModel):
         def cached_providers_by_user_id(user_id: int) -> Sequence["Provider"]:
             logger.debug("%s cache miss for user_id: %s", logger_prefix, user_id)
             retval = Provider.objects.with_read_permission_for(user_profile.user)
+            logger.debug(
+                "%s.cached_providers_by_user_id() fetched and cached providers for user_id: %s", logger_prefix, user_id
+            )
             return list(retval) if retval else []
 
         try:
@@ -694,6 +704,7 @@ def get_provider(provider_name: str) -> Provider:
     if not provider.is_active:
         raise SmarterBusinessRuleViolation(f"Provider {provider_name} is not active.")
 
+    logger.debug("Fetched and cached provider %s for provider_name: %s", provider, provider_name)
     return provider
 
 
@@ -710,6 +721,7 @@ def get_providers() -> list[Provider]:
     except Provider.DoesNotExist as e:
         raise SmarterValueError("No active providers found.") from e
 
+    logger.debug("Fetched and cached providers: %s", list(providers))
     return list(providers)
 
 
@@ -745,6 +757,7 @@ def get_model_for_provider(provider_name: str, model_name: Optional[str] = None)
     if not model.is_active:
         raise SmarterBusinessRuleViolation(f"Model {model_name} for provider {provider_name} is not active.")
 
+    logger.debug("Fetched and cached model %s for provider_name: %s, model_name: %s", model, provider_name, model_name)
     return {
         ProviderModelEnum.API_KEY.value: provider.production_api_key(mask=False),
         ProviderModelEnum.PROVIDER_NAME.value: provider.name,
@@ -781,6 +794,7 @@ def get_models_for_provider(provider_name: str) -> list[ProviderModelTypedDict]:
     provider = get_provider(provider_name=provider_name)
     provider_models = ProviderModel.objects.filter(provider=provider, is_active=True)
 
+    logger.debug("Fetched and cached models for provider_name: %s, models: %s", provider_name, list(provider_models))
     return [
         get_model_for_provider(provider_name=provider_name, model_name=provider_model.name)
         for provider_model in provider_models
