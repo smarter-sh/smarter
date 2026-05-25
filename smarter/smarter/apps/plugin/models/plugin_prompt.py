@@ -82,7 +82,13 @@ class PluginPrompt(TimestampedModel, SmarterHelperMixin):
         @cache_results()
         def prompt_by_plugin_id(plugin_id: int) -> Union["PluginPrompt", None]:
             try:
-                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
+                retval = cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
+                logger.debug(
+                    "%s.get_cached_prompt_by_plugin() fetched and cached PluginPrompt for plugin_id: %s",
+                    cls.formatted_class_name,
+                    plugin_id,
+                )
+                return retval
             except cls.DoesNotExist as e:
                 logger.warning(
                     "%s.get_cached_prompt_by_plugin: Prompt not found for plugin_id: %s",

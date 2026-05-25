@@ -103,12 +103,19 @@ class ChatBotPlugin(TimestampedModel):
             class_name: str = self.__class__.__name__,
         ) -> PluginController:
 
-            return PluginController(
+            retval = PluginController(
                 account=self.chatbot.user_profile.cached_account,
                 user=admin_user,
                 plugin_meta=self.plugin_meta,
                 user_profile=user_profile,
             )
+            logger.debug(
+                "%s.get_cached_plugin_controller() fetched and cached plugin controller for chatbot_id: %s, plugin_meta_id: %s",
+                class_name,
+                self.chatbot.id,
+                self.plugin_meta.id,
+            )
+            return retval
 
         plugin_controller = get_cached_plugin_controller(
             account_id=self.chatbot.user_profile.cached_account.id,
@@ -203,7 +210,6 @@ class ChatBotPlugin(TimestampedModel):
 
         """
         logger_prefix = logging.formatted_text(__name__ + "." + ChatBotPlugin.__name__ + ".get_cached_objects()")
-        logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
         @cache_results()
         def _get_plugins_for_chatbot_id(
@@ -218,8 +224,9 @@ class ChatBotPlugin(TimestampedModel):
             :returns: A queryset of ChatBotPlugin instances associated with the ChatBot.
             :rtype: models.QuerySet["ChatBotPlugin"]
             """
+            logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
-            return cls.objects.filter(chatbot_id=chatbot_id).select_related(
+            retval = cls.objects.filter(chatbot_id=chatbot_id).select_related(
                 "plugin_meta",
                 "plugin_meta__user_profile",
                 "plugin_meta__user_profile__user",
@@ -228,6 +235,13 @@ class ChatBotPlugin(TimestampedModel):
                 "chatbot__user_profile__user",
                 "chatbot__user_profile__account",
             )
+            logger.debug(
+                "%s._get_plugins_for_chatbot_id() fetched and cached %s plugins for chatbot_id: %s",
+                logger_prefix,
+                len(retval),
+                chatbot_id,
+            )
+            return retval
 
         if invalidate and chatbot:
             _get_plugins_for_chatbot_id.invalidate(chatbot_id=chatbot.id, class_name=cls.__name__)  # type: ignore[union-attr]

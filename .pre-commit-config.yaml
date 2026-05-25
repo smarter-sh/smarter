@@ -27,7 +27,7 @@ repos:
         args: [--no-error-on-unmatched-pattern]
         exclude: "^smarter/|^helm/|^docs/source/example-manifests/"
   - repo: https://github.com/psf/black
-    rev: 26.3.1
+    rev: 26.5.1
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8

@@ -654,6 +654,7 @@ def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, li
         s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
         result = re.sub("_+", "_", result)
+        result = re.sub("-+", "_", result)
         return result
 
     if isinstance(data, str):
@@ -667,6 +668,8 @@ def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, li
     for key, value in dictionary.items():
         if isinstance(value, dict):
             value = camel_to_snake(value)
+        elif isinstance(value, list):
+            value = [camel_to_snake(item) for item in value]
         new_key = convert(key)
         retval[new_key] = value
     return retval

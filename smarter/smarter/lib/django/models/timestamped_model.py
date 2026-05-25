@@ -529,7 +529,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :rtype: Optional[models.Model]
         """
         logger_prefix = formatted_text(__name__ + "." + TimestampedModel.__name__ + ".get_cached_object()")
-        verbose_logger.debug("%s.get_cached_object() called with pk: %s, invalidate=%s", logger_prefix, pk, invalidate)
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -541,12 +540,16 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             try:
                 verbose_logger.debug(
-                    "%s._get_model_by_pk() cache miss for %s pk: %s",
+                    "%s.get_cached_object() called with pk: %s, invalidate=%s", logger_prefix, pk, invalidate
+                )
+                retval = cls.objects.get(pk=pk)
+                verbose_logger.debug(
+                    "%s._get_model_by_pk() fetched and cached %s pk: %s",
                     logger_prefix,
                     class_name,
                     pk,
                 )
-                return cls.objects.get(pk=pk)
+                return retval
             except cls.DoesNotExist as e:
                 verbose_logger.debug(
                     "%s._get_model_by_pk() no object found for %s pk: %s",
@@ -589,12 +592,18 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
         if cls._meta.abstract:
             raise NotImplementedError(
-                "get_cached_object() must be called on a concrete model class, not an abstract base class."
+                "get_cached_objects() must be called on a concrete model class, not an abstract base class."
             )
 
         @cache_results(timeout=cls.cache_expiration)
         def _get_all_models(class_name: str = cls.__name__) -> QuerySet["TimestampedModel"]:
-            return cls.objects.all()
+            retval = cls.objects.all()
+            verbose_logger.debug(
+                "%s._get_all_models() fetched and cached all %s instances",
+                logger_prefix,
+                class_name,
+            )
+            return retval
 
         if invalidate:
             _get_all_models.invalidate(cls.__name__)

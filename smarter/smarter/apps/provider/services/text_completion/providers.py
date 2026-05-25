@@ -194,6 +194,13 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
                     f"Multiple default providers found for user {username}. Choosing the first one: {provider_orm}."
                 )
 
+            logger.debug(
+                "%s.get_client_orm_by_provider_name_and_user() fetched and cached provider ORM for provider_name: %s, username: %s: %s",
+                self.formatted_class_name + ".get_client_orm_by_provider_name_and_user()",
+                provider_name,
+                username,
+                provider_orm,
+            )
             return provider_orm
 
         return get_cached_provider_orm_by_name_and_username(provider_name, user.username)  # type: ignore
@@ -218,6 +225,13 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
                 provider=provider_orm.name,
                 base_url=provider_orm.base_url,
                 api_key=api_key.get_secret_value() if api_key else "",
+            )
+            logger.debug(
+                "%s.get_openai_client_for_provider() instantiated and cached OpenAIPassthroughClient for provider_name: %s, username: %s: %s",
+                self.formatted_class_name + ".get_openai_client_for_provider()",
+                provider_name,
+                username,
+                retval,
             )
             return retval
 

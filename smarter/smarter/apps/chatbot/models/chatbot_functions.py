@@ -113,7 +113,6 @@ class ChatBotFunctions(TimestampedModel):
 
         """
         logger_prefix = logging.formatted_text(__name__ + "." + ChatBotFunctions.__name__ + ".get_cached_objects()")
-        logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
 
         @cache_results(cls.cache_expiration)
         def _get_functions_for_chatbot_id(
@@ -128,7 +127,8 @@ class ChatBotFunctions(TimestampedModel):
             :returns: A queryset of ChatBotFunctions instances associated with the ChatBot.
             :rtype: models.QuerySet["ChatBotFunctions"]
             """
-            return cls.objects.filter(chatbot_id=chatbot_id).select_related(
+            logger.debug("%s called with chatbot=%s, invalidate=%s", logger_prefix, chatbot, invalidate)
+            retval = cls.objects.filter(chatbot_id=chatbot_id).select_related(
                 "plugin_meta",
                 "plugin_meta__user_profile",
                 "plugin_meta__user_profile__user",
@@ -137,6 +137,13 @@ class ChatBotFunctions(TimestampedModel):
                 "chatbot__user_profile__user",
                 "chatbot__user_profile__account",
             )
+            logger.debug(
+                "%s._get_functions_for_chatbot_id() fetched and cached %s functions for chatbot_id: %s",
+                logger_prefix,
+                len(retval),
+                chatbot_id,
+            )
+            return retval
 
         if invalidate and chatbot:
             _get_functions_for_chatbot_id.invalidate(chatbot_id=chatbot.id, class_name=cls.__name__)  # type: ignore[union-attr]

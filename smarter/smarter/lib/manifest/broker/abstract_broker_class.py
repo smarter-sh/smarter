@@ -34,7 +34,6 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
-from smarter.lib.django.mixins import SmarterConverterMixin
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
@@ -75,7 +74,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
+class AbstractBroker(ABC, SmarterRequestMixin):
     """
     Abstract base class for the Smarter Broker Model.
 

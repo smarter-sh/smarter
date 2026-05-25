@@ -238,11 +238,19 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     user_profile_id,
                     plugin_class,
                 )
-                return (
+                retval = (
                     cls.objects.prefetch_related("tags")
                     .select_related("user_profile", "user_profile__account", "user_profile__user")
                     .get(name=name, user_profile_id=user_profile_id, plugin_class=plugin_class)
                 )
+                logger.debug(
+                    "%s._get_model_by_name_and_userprofile_and_plugin_class() fetched and cached PluginMeta for name: %s, user_profile_id: %s, plugin_class: %s",
+                    logger_prefix,
+                    name,
+                    user_profile_id,
+                    plugin_class,
+                )
+                return retval
             except cls.DoesNotExist as e:
                 logger.debug(
                     "%s._get_model_by_name_and_userprofile_and_plugin_class() no PluginMeta found for name: %s, user_profile_id: %s, plugin_class: %s",
@@ -326,10 +334,6 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :rtype: QuerySet[PluginMeta]
         """
 
-        # pylint: disable=W0621
-        logger_prefix = formatted_text(f"{__name__}.{PluginMeta.__name__}.get_cached_objects()")
-        logger.debug("%s called with user_profile=%s, invalidate=%s", logger_prefix, user_profile, invalidate)
-
         return super().get_cached_objects(invalidate=invalidate, user_profile=user_profile)  # type: ignore[return-value]
 
     @classmethod
@@ -389,12 +393,6 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                         str(e),
                     )
                     user_plugins = PluginMeta.objects.none()
-                logger.debug(
-                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d user plugins for %s",
-                    logger_prefix,
-                    len(user_plugins),
-                    user_profile,
-                )
 
                 try:
                     admin_plugins = PluginMeta.get_cached_objects(user_profile=admin_user_profile, invalidate=invalidate)  # type: ignore[assignment]
@@ -406,12 +404,6 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                         str(e),
                     )
                     admin_plugins = PluginMeta.objects.none()
-                logger.debug(
-                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d admin plugins for %s",
-                    logger_prefix,
-                    len(admin_plugins),
-                    admin_user_profile,
-                )
 
                 try:
                     smarter_plugins = PluginMeta.get_cached_objects(
@@ -425,12 +417,6 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                         str(e),
                     )
                     smarter_plugins = PluginMeta.objects.none()
-                logger.debug(
-                    "%s.get_cached_plugins_for_user_profile_id() - Retrieved %d smarter plugins for %s",
-                    logger_prefix,
-                    len(smarter_plugins),
-                    smarter_cached_objects.smarter_admin_user_profile,
-                )
 
                 @cache_results(15)
                 def _combined_plugins_list(use_profile_id: int, class_name: str = PluginMeta.__name__) -> QuerySet:
@@ -445,6 +431,12 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                         combined_plugins.distinct()
                         .select_related("user_profile", "user_profile__account", "user_profile__user")
                         .order_by("name")
+                    )
+                    logger.debug(
+                        "%s._combined_plugins_list() fetched and cached combined plugins list for user_profile_id=%s: %d plugins",
+                        logger_prefix,
+                        use_profile_id,
+                        len(combined_plugins),
                     )
                     return combined_plugins
 
