@@ -43,7 +43,7 @@ function SelfHost({  }: SelfHostProps) {
                   >
                     Installation Guide
                   </a>
-                  <span className="me-2"> Self-host Smarter</span>
+                  <span className="me-2 d-none d-md-table-cell"> Self-host Smarter</span>
                 </span>
               </div>
               {/* end::Title */}
