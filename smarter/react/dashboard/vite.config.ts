@@ -93,7 +93,8 @@ export default defineConfig(({ command }: { command: string }) => ({
   // environment as possible.
   server: {
     proxy: {
-      "/dashboard/logs/api": "http://localhost:9357",
+      "/dashboard/api/my-resources": "http://localhost:9357",
+      "/dashboard/api/service-health": "http://localhost:9357",
       "/assets": {
         target: "http://localhost:9357", // Django dev server
         changeOrigin: true,
@@ -108,6 +109,10 @@ export default defineConfig(({ command }: { command: string }) => ({
         target: "http://localhost:5173",
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/static\/dashboard\//, "/"),
+      },
+      "/static": {
+        target: "http://localhost:9357",
+        changeOrigin: true,
       },
     },
   },

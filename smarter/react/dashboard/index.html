@@ -21,10 +21,12 @@
     <!-- only used for development via 'npm run dev' -->
     <div
       id="smarter-dashboard-root"
+      django-csrftoken="6Lm5xVGyoyJ5VXQS9C8wSYqrwqRfLVDbZHOfzHiYj8AKjQX7c4wxVOHKTuN152z2"
+      smarter-cookie-domain="localhost"
       smarter-csrf-cookie-name="csrftoken"
-      django-csrftoken="1UNIA5jlXRTUifBGjVT3yKCn2On8MNzrFiVxN65QVrl6vPZKPx1AC15NcT07RB88"
       smarter-django-session-cookie-name="sessionid"
-      smarter-api-path="/dashboard/logs/api/stream/"
+      smarter-my-resources-api-url="/dashboard/api/my-resources/"
+      smarter-service-health-api-url="/dashboard/api/service-health/"
       >
     </div>
     <script type="module" src="/src/main.tsx"></script>

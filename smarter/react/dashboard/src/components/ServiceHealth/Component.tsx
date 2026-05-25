@@ -106,7 +106,7 @@ function ServiceHealthChecks() {
         <div className="col-3 d-flex justify-content-end">
           <div className="w-80px flex-shrink-0 me-2">
             <div
-              className="min-h-auto ms-n3"
+              className="min-h-auto ms-n3 d-none d-md-table-cell"
               id="kt_slider_widget_smarter_health"
               style={{ height: "100px" }}
             >

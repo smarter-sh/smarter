@@ -115,7 +115,7 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         def _get_connections_for_user(username: str) -> list["ConnectionBase"]:
             instances: list["ConnectionBase"] = []
             for subclass in ConnectionBase.__subclasses__():
-                instances.extend(subclass.objects.with_read_permission_for(user).order_by("name"))
+                instances.extend(subclass.objects.with_read_permission_for(user))
             unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
             logger.debug(
                 "%s.get_cached_connections_for_user: Found and cached these connections %s for user %s",

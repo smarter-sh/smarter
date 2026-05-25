@@ -94,7 +94,12 @@ function Contribute({  }: ContributeProps) {
             {/* begin::Illustration */}
             <img
               src="/static/assets/media/illustrations/dozzy-1/13-dark.png"
-              className="position-absolute me-3 bottom-0 end-0 h-250px"
+              className="position-absolute me-3 bottom-0 end-0 h-250px d-none d-md-table-cell "
+              alt=""
+            />
+            <img
+              src="/static/assets/media/illustrations/dozzy-1/13-dark.png"
+              className="position-absolute me-3 bottom-0 end-0 d-md-none img-fluid h-50"
               alt=""
             />
             {/* end::Illustration */}

@@ -27,7 +27,7 @@ function YTVideo({ videoId }: YTVideoProps) {
 
   return (
     <>
-      <section aria-label="YTVideo" className="col-xl-6 mb-xl-10">
+      <section aria-label="YTVideo" className="col-xl-6 mb-xl-10 d-none d-md-table-cell">
         <YouTube videoId={videoId} opts={{ width: "560", height: "315" }} />
       </section>
     </>

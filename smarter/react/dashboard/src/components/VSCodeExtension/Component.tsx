@@ -86,7 +86,12 @@ function VSCodeExtension({  }: VSCodeExtensionProps) {
             {/* begin::Illustration */}
             <img
               src="/static/images/vs-code-logo.png"
-              className="position-absolute me-5 mt-3 top-0 end-0 h-100px pt-3"
+              className="position-absolute me-5 mt-3 top-0 end-0 h-100px pt-3 d-none d-md-table-cell"
+              alt=""
+            />
+            <img
+              src="/static/images/vs-code-logo.png"
+              className="position-absolute me-5 mt-3 top-0 end-0 pt-3 d-md-none img-fluid h-25"
               alt=""
             />
             {/* end::Illustration */}
