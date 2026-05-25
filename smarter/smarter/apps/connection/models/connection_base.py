@@ -7,11 +7,6 @@ from django.db import models
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
     User,
-    UserProfile,
-)
-from smarter.apps.account.utils import (
-    get_cached_admin_user_for_account,
-    smarter_cached_objects,
 )
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.helpers.logger_helpers import formatted_text
@@ -118,26 +113,20 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         # pylint: disable=W0613
         @cache_results()
         def _get_connections_for_user(username: str) -> list["ConnectionBase"]:
-            user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
-            admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore
-            admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore
-            instances = []
+            instances: list["ConnectionBase"] = []
             for subclass in ConnectionBase.__subclasses__():
-                instances.extend(subclass.objects.filter(user_profile=user_profile).order_by("name"))
-                instances.extend(subclass.objects.filter(user_profile=admin_user_profile).order_by("name"))
-                instances.extend(
-                    subclass.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile).order_by(
-                        "name"
-                    )
-                )
+                instances.extend(subclass.objects.with_read_permission_for(user).order_by("name"))
+            unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
             logger.debug(
                 "%s.get_cached_connections_for_user: Found and cached these connections %s for user %s",
                 logging.formatted_text(ConnectionBase.__name__),
-                instances,
+                unique_instances,
                 user,
             )
-            unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
             return list(unique_instances)
+
+        if invalidate:
+            _get_connections_for_user.invalidate(user.username)
 
         return _get_connections_for_user(user.username)
 
