@@ -24,7 +24,6 @@ from smarter.common.utils import (
 from smarter.common.utils import get_readonly_csv_file as utils_get_readonly_csv_file
 from smarter.common.utils import get_readonly_yaml_file as utils_get_readonly_yaml_file
 from smarter.common.utils import mask_string as util_mask_string
-from smarter.common.utils import mask_string as utils_mask_string
 from smarter.common.utils import pascal_to_snake as utils_pascal_to_snake
 from smarter.common.utils import recursive_sort_dict as utils_recursive_sort_dict
 from smarter.common.utils import rfc1034_compliant_str as utils_rfc1034_compliant_str
@@ -256,7 +255,7 @@ class SmarterHelperMixin:
         """
         return utils_to_snake_case(name)
 
-    def camel_to_snake(self, name: str) -> str:
+    def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
         """
         Converts a camelCase or PascalCase string to snake_case.
 
@@ -266,9 +265,9 @@ class SmarterHelperMixin:
         :param name: The camelCase or PascalCase string to convert.
         :type name: str
         :return: The converted string in snake_case.
-        :rtype: str
+        :rtype: Optional[Union[str, dict, list]]
         """
-        return str(utils_camel_to_snake(name))
+        return utils_camel_to_snake(data)
 
     def camel_to_snake_dict(self, data: dict) -> dict:
         """
@@ -369,7 +368,9 @@ class SmarterHelperMixin:
         """
         return utils_snake_case(name)
 
-    def snake_to_camel(self, name: str) -> str:
+    def snake_to_camel(
+        self, data: Union[str, dict, list], convert_values: bool = False
+    ) -> Optional[Union[str, dict, list]]:
         """
         Converts a snake_case string to camelCase.
 
@@ -379,9 +380,9 @@ class SmarterHelperMixin:
         :param name: The snake_case string to convert.
         :type name: str
         :return: The converted string in camelCase.
-        :rtype: str
+        :rtype: Optional[Union[str, dict, list]]
         """
-        return str(utils_snake_to_camel(name))
+        return utils_snake_to_camel(data, convert_values=convert_values)
 
     def pascal_to_snake(self, name: str) -> str:
         """

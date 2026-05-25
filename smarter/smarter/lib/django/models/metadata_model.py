@@ -17,7 +17,6 @@ from smarter.lib.json import SmarterJSONEncoder
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .timestamped_model import TimestampedModel
-from .utils import validate_no_spaces
 
 logger = getLogger(__name__)
 cache_prefix = f"{__name__}."
@@ -58,7 +57,7 @@ class MetaDataModel(TimestampedModel):
     name = models.CharField(
         max_length=255,
         help_text="Name in camelCase, e.g., 'apiKey', no special characters.",
-        validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
+        validators=[SmarterValidator.validate_snake_case, SmarterValidator.validate_no_spaces],
     )
     description = models.TextField(
         help_text="A brief description of this resource. Be verbose, but not too verbose.",

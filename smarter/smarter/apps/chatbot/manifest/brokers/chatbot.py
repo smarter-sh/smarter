@@ -438,7 +438,8 @@ class SAMChatbotBroker(AbstractBroker):
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMChatbotBrokerError(
-                f"Failed to convert {self.kind} {self.manifest.metadata.name} to dict", thing=self.kind
+                f"Failed to convert {self.kind} {self.manifest.metadata.name} to dict. Got {type(config_dump)}",
+                thing=self.kind,
             )
         retval = {
             **metadata,

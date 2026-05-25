@@ -7,7 +7,6 @@ It includes helpers for validating string values, cleaning dictionary keys, and 
 
 **Main Features:**
 
-- `validate_no_spaces(value)`: Ensures a string contains no spaces, raising a `SmarterValueError` if it does.
 - `dict_key_cleaner(key)`: Cleans a string key by replacing whitespace characters with underscores.
 - `dict_keys_to_list(data, keys=None)`: Recursively extracts all keys from a nested dictionary into a flat list.
 - `list_of_dicts_to_list(data)`: Converts a list of dictionaries into a list of cleaned keys from the first key in each dict.
@@ -21,17 +20,10 @@ These utilities are intended to simplify common data manipulation tasks in Djang
 
 from typing import Optional
 
-from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 
 logger = logging.getSmarterLogger(__name__)
 cache_prefix = f"{__name__}."
-
-
-def validate_no_spaces(value) -> None:
-    """Validate that the string does not contain spaces."""
-    if " " in value:
-        raise SmarterValueError(f"Value must not contain spaces: {value}")
 
 
 def dict_key_cleaner(key: str) -> str:

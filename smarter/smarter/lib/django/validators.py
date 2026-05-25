@@ -1629,3 +1629,9 @@ class SmarterValidator:
     def raise_error(msg: str) -> None:
         """Raise a SmarterValueError with the given message"""
         raise SmarterValueError(msg)
+
+    @staticmethod
+    def validate_no_spaces(value) -> None:
+        """Validate that the string does not contain spaces."""
+        if " " in value:
+            raise SmarterValueError(f"Value must not contain spaces: {value}")

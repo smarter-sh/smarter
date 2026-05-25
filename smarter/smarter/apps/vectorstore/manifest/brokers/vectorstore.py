@@ -912,7 +912,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                 dump = self.camel_to_snake(dump)
                 if not isinstance(metadata, dict) or not isinstance(dump, dict):
                     raise SAMVectorstoreBrokerError(
-                        f"Expected metadata and dump to be dictionaries for {self.kind} {name}",
+                        f"Expected metadata and dump to be dictionaries for {self.kind} {name} but got {type(metadata)} and {type(dump)}",
                         thing=self.kind,
                         command=command,
                     )
@@ -948,7 +948,9 @@ class SAMVectorstoreBroker(AbstractBroker):
                 dump = self.camel_to_snake(dump)
                 if not isinstance(dump, dict):
                     raise SAMBrokerInternalError(
-                        f"Expected dump to be a dictionary for {self.kind} {name}", thing=self.kind, command=command
+                        f"Expected dump to be a dictionary for {self.kind} {name} but got {type(dump)}",
+                        thing=self.kind,
+                        command=command,
                     )
                 data = {**dump}
                 self._index_model_interface = _map_fields(data, self._index_model_interface)  # type: ignore
