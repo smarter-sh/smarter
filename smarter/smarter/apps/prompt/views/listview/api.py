@@ -55,13 +55,14 @@ from django.http.response import JsonResponse
 
 from smarter.apps.account.serializers import UserProfileSerializer
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.chatbot.models import ChatBot
-from smarter.apps.chatbot.serializers import ChatBotSerializer
-from smarter.apps.chatbot.utils import (
+from smarter.apps.chatbot.caching import (
     get_cached_chatbots_available_to_user_profile,
     get_cached_chatbots_owned_by_user_profile,
     get_cached_chatbots_shared_with_user_profile,
+    invalidate_all_cached_chatbots_for_user_profile,
 )
+from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.views import (
@@ -139,6 +140,24 @@ class PromptListApiView(SmarterAuthenticatedWebView):
     """
 
     def post(self, request: HttpRequest, *args, **kwargs):
+        """
+        Handle POST requests to retrieve a list of ChatBots based on ownership filters and pagination.
+        The response includes the authenticated user's profile, an admin profile for reference,
+        and the list of ChatBots serialized as JSON.
+
+        :param request: The HTTP request object containing query parameters for filtering and pagination.
+        :type request: HttpRequest
+        :param args: Additional positional arguments (not used).
+        :param kwargs: Additional keyword arguments, including:
+
+            - ownership_filter (str, optional): Filter for ChatBots based on ownership. Can be 'owned', 'shared', or 'all'. Defaults to 'all'.
+            - page (int, optional): Page number for pagination. Defaults to 1.
+            - page_size (int, optional): Number of ChatBots to return per page. Defaults to DEFAULT_PAGE_SIZE.
+            - invalidate_cache (bool, optional): If true, invalidates the cache for the user's ChatBots before fetching results. Defaults to False.
+
+        :returns: A JsonResponse containing the user's profile, an admin profile, and a list of ChatBots based on the specified filters and pagination.
+        :rtype: JsonResponse
+        """
 
         qs: models.QuerySet[ChatBot]
         ownership_filter = kwargs.get("ownership_filter", PromptListOwnershipFilter.ALL)
@@ -156,9 +175,7 @@ class PromptListApiView(SmarterAuthenticatedWebView):
         )
 
         if invalidate_cache:
-            get_cached_chatbots_owned_by_user_profile.invalidate(user_profile=self.user_profile)
-            get_cached_chatbots_shared_with_user_profile.invalidate(user_profile=self.user_profile)
-            get_cached_chatbots_available_to_user_profile.invalidate(user_profile=self.user_profile)
+            invalidate_all_cached_chatbots_for_user_profile(user_profile=self.user_profile)  # type: ignore
 
         if ownership_filter == PromptListOwnershipFilter.OWNED:
             qs = get_cached_chatbots_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
@@ -193,10 +210,53 @@ class PromptListApiView(SmarterAuthenticatedWebView):
 
 class PromptListApiCloneView(SmarterAuthenticatedWebView):
     """
-    API view for cloning a ChatBot. This view is protected and requires the user to be authenticated.
+    API view for cloning a ChatBot. This view is protected and requires the
+    user to be authenticated. The user must provide the ID of the ChatBot to
+    clone and a new name for the cloned ChatBot.
+
+    The view handles POST requests to clone an existing ChatBot. It validates
+    the input parameters, checks for the existence of the ChatBot to be cloned,
+    and creates a new ChatBot with the specified name. After cloning, it
+    invalidates the cache for the user's ChatBots to ensure that the new
+    ChatBot appears in subsequent listings.
+
+    Example URL Paths:
+
+        /workbench/api/listview/clone/<int:chatbot_id>/<str:new_name>/
+        /workbench/api/listview/clone/123/?new_name=cloned_chatbot/
+
+
+
+    :param request: The HTTP request object containing the parameters for cloning.
+    :type request: HttpRequest
+    :param args: Additional positional arguments (not used).
+    :param kwargs: Additional keyword arguments, including:
+
+        - chatbot_id (str): The ID of the ChatBot to be cloned.
+        - new_name (str): The new name for the cloned ChatBot.
+
+    :returns: A JsonResponse containing the serialized data of the newly cloned ChatBot if successful, or an error message if the cloning fails.
+    :rtype: JsonResponse
     """
 
     def post(self, request: HttpRequest, *args, **kwargs):
+        """
+        Handle POST requests to clone an existing ChatBot. Validates input
+        parameters, checks for the existence of the ChatBot to be cloned, and
+        creates a new ChatBot with the specified name. Invalidates the cache
+        for the user's ChatBots after cloning.
+
+        :param request: The HTTP request object containing the parameters for cloning.
+        :type request: HttpRequest
+        :param args: Additional positional arguments (not used).
+        :param kwargs: Additional keyword arguments, including:
+
+            - chatbot_id (str): The ID of the ChatBot to be cloned.
+            - new_name (str): The new name for the cloned ChatBot.
+
+        :returns: A JsonResponse containing the serialized data of the newly cloned ChatBot if successful, or an error message if the cloning fails.
+        :rtype: JsonResponse
+        """
         chatbot_id = kwargs.get("chatbot_id")
         new_name = kwargs.get("new_name")
         chatbot: ChatBot
@@ -211,7 +271,7 @@ class PromptListApiCloneView(SmarterAuthenticatedWebView):
             return JsonResponse({"error": "chatbot_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            chatbot = ChatBot.objects.get(id=chatbot_id)
+            chatbot = ChatBot.objects.with_read_permission_for(self.user_profile.user).get(id=chatbot_id)  # type: ignore
         except ChatBot.DoesNotExist:
             logger.warning("%s.post() ChatBot with id %s not found for cloning.", self.formatted_class_name, chatbot_id)
             return JsonResponse({"error": f"ChatBot with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
@@ -219,6 +279,7 @@ class PromptListApiCloneView(SmarterAuthenticatedWebView):
         try:
             new_name = self.camel_to_snake(new_name.strip())
             cloned_chatbot = chatbot.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
+            invalidate_all_cached_chatbots_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = ChatBotSerializer(cloned_chatbot).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
@@ -241,6 +302,22 @@ class PromptListApiDeleteView(SmarterAuthenticatedWebView):
     """
 
     def post(self, request: HttpRequest, *args, **kwargs):
+        """
+        Handle POST requests to delete an existing ChatBot. Validates input
+        parameters, checks for the existence of the ChatBot to be deleted, and
+        deletes the ChatBot if it exists. Invalidates the cache for the user's
+        ChatBots after deletion.
+
+        :param request: The HTTP request object containing the parameters for deletion.
+        :type request: HttpRequest
+        :param args: Additional positional arguments (not used).
+        :param kwargs: Additional keyword arguments, including:
+
+            - chatbot_id (str): The ID of the ChatBot to be deleted.
+
+        :returns: A JsonResponse indicating the success or failure of the deletion.
+        :rtype: JsonResponse
+        """
         chatbot_id = kwargs.get("chatbot_id")
         if not chatbot_id:
             logger.warning("%s.post() Missing required parameter chatbot_id for deletion.", self.formatted_class_name)
@@ -256,6 +333,7 @@ class PromptListApiDeleteView(SmarterAuthenticatedWebView):
 
         try:
             chatbot.delete()
+            invalidate_all_cached_chatbots_for_user_profile(user_profile=self.user_profile)  # type: ignore
             return JsonResponse(
                 {"message": f"ChatBot with id {chatbot_id} deleted successfully."}, status=HTTPStatus.OK
             )
@@ -275,10 +353,29 @@ class PromptListApiDeleteView(SmarterAuthenticatedWebView):
 
 class PromptListApiRenameView(SmarterAuthenticatedWebView):
     """
-    API view for renaming a ChatBot. This view is protected and requires the user to be authenticated.
+    API view for renaming a ChatBot. This view is protected and requires the
+    user to be authenticated. The user must provide the ID of the ChatBot to
+    rename and a new name for the ChatBot.
     """
 
     def post(self, request: HttpRequest, *args, **kwargs):
+        """
+        Handle POST requests to rename an existing ChatBot. Validates input
+        parameters, checks for the existence of the ChatBot to be renamed, and
+        renames the ChatBot if it exists. Invalidates the cache for the user's
+        ChatBots after renaming.
+
+        :param request: The HTTP request object containing the parameters for renaming.
+        :type request: HttpRequest
+        :param args: Additional positional arguments (not used).
+        :param kwargs: Additional keyword arguments, including:
+
+            - chatbot_id (str): The ID of the ChatBot to be renamed.
+            - new_name (str): The new name for the ChatBot.
+
+        :returns: A JsonResponse indicating the success or failure of the renaming.
+        :rtype: JsonResponse
+        """
         chatbot_id = kwargs.get("chatbot_id")
         new_name = kwargs.get("new_name")
         if not chatbot_id or not new_name:
@@ -301,6 +398,7 @@ class PromptListApiRenameView(SmarterAuthenticatedWebView):
         try:
             new_name = self.camel_to_snake(new_name.strip())
             chatbot.rename(new_name=new_name)
+            invalidate_all_cached_chatbots_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = ChatBotSerializer(chatbot).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
