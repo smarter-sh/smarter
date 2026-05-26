@@ -819,17 +819,19 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         except UserProfile.DoesNotExist:
             user_profile = None
         except UserProfile.MultipleObjectsReturned:
-            logger.error(
-                "%s.get_cached_object() Multiple UserProfiles found for user %s and account %s. Defaulting to first result.",
-                logging.formatted_text(cls.__name__ + ".get_cached_object()"),
-                user,
-                account,
-            )
             user_profile = (
                 UserProfile.objects.select_related("user_profile", "user_profile__account", "user_profile__user")
                 .prefetch_related("tags")
                 .filter(user=user, account=account)
+                .order_by("-pk")
                 .first()
+            )
+            logger.warning(
+                "%s.get_cached_object() Multiple UserProfiles found for user %s and account %s. Defaulting to newest result: %s",
+                logging.formatted_text(cls.__name__ + ".get_cached_object()"),
+                user,
+                account,
+                user_profile,
             )
 
         if user_profile:

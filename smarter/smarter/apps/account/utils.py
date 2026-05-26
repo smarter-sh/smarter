@@ -29,6 +29,7 @@ from smarter.apps.account.models import (
     User,
     UserProfile,
 )
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
@@ -446,7 +447,16 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
             )
             return user_profile.cached_user  # type: ignore[return-value]
         else:
-            raise User.DoesNotExist(f"No admin user found for account {account}.")
+            logger.warning("%s no admin user found for account %s. Creating new admin user.", console_prefix, account)
+            username = f"{account.account_number}-admin"
+            new_user = User.objects.create(
+                username=username,
+                email=f"{username}@{smarter_settings.root_domain}",
+                is_staff=True,
+                is_superuser=True,
+                is_active=True,
+            )
+            user_profile = UserProfile.objects.create(name=username, user=new_user, account=account)
 
     if invalidate:
         _admin_user_for_account_number.invalidate(account_number=account.account_number, class_name=User.__name__)

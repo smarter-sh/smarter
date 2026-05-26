@@ -584,16 +584,18 @@ class UserProfile(MetaDataModel):
                 )
                 raise UserProfile.DoesNotExist(f"No UserProfile found for user {user} and account {account}") from e
             except UserProfile.MultipleObjectsReturned as e:
-                logger.error(
-                    "%s.get_cached_object() Multiple UserProfiles found for user %s. Defaulting to first result.",
-                    logging.formatted_text(__name__ + ".UserProfile.get_cached_object()"),
-                    user.email,
-                )
                 retval = (
                     UserProfile.objects.prefetch_related("tags")
                     .select_related("user", "account")
                     .filter(user=user)
+                    .order_by("-pk")
                     .first()
+                )
+                logger.warning(
+                    "%s.get_cached_object() Multiple UserProfiles found for user %s. Defaulting to newest result: %s",
+                    logging.formatted_text(__name__ + ".UserProfile.get_cached_object()"),
+                    user.email,
+                    retval,
                 )
                 if not retval:
                     raise UserProfile.DoesNotExist(

@@ -19,6 +19,10 @@
 {% block dashboard_content %}
   {{ block.super }}
 
+  <!--
+  context variables originate from
+  smarter.apps.dashboard.views.views.dashboard.DashboardView
+  -->
   <div
     id="{{ react_dashboard.root_id }}"
     smarter-csrf-cookie-name="{{ react_dashboard.csrf_cookie_name }}"
