@@ -7,7 +7,9 @@ developer environment completely up and running.
 
 ## Local System Dependencies
 
-Use setup.sh to automate installation where possible.
+Use [setup.sh](./setup.sh) to automate installation where possible. Use the
+example [.zshrc](./.zshrc.example) as a reference for adding the necessary PATHs and
+compiler and linker flags.
 
 ### Developer Environment IDE
 
