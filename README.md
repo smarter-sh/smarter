@@ -120,7 +120,7 @@ architected on the philosophy of a compact core that does not require
 customization nor forking. It is horizontally scalable. It is natively
 multi-tenant, and can be installed alongside your existing systems. ## Quickstart
 
-## Smarter Helm Chart
+## Helm Chart
 
 See [ghcr.io/smarter-sh/charts/smarter](https://ghcr.io/smarter-sh/charts/smarter)
 or [Artifact Hub](https://artifacthub.io/packages/helm/project-smarter/smarter).

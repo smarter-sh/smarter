@@ -91,16 +91,30 @@ function Sdk({  }: SdkProps) {
             </div>
             {/* end::Action */}
             {/* begin::Illustrations */}
-            <img
-              src="/static/images/npm-logo.png"
-              className="position-absolute me-3 top-0 end-0 h-75px pt-3 d-none d-xl-table-cell"
-              alt="NPM Logo"
-            />
-            <img
-              src="/static/images/pypi-logo-small.svg"
-              className="position-absolute me-5 bottom-0 end-0 h-75px pt-3 mb-3 d-none d-xl-table-cell"
-              alt="PyPI Logo"
-            />
+            <div className="d-none d-xl-table-cell">
+              <img
+                src="/static/images/npm-logo.png"
+                className="position-absolute me-3 top-0 end-0 h-75px pt-3"
+                alt="NPM Logo"
+              />
+              <img
+                src="/static/images/pypi-logo-small.svg"
+                className="position-absolute me-5 bottom-0 end-0 h-75px pt-3 mb-3"
+                alt="PyPI Logo"
+              />
+            </div>
+            <div className="d-block d-xl-none d-table-cell">
+              <img
+                src="/static/images/npm-logo.png"
+                className="position-absolute me-3 top-0 end-0 h-75px pt-3"
+                alt="NPM Logo"
+              />
+              <img
+                src="/static/images/pypi-logo-small.svg"
+                className="position-absolute me-5 bottom-0 end-0 h-75px pt-3 mb-3"
+                alt="PyPI Logo"
+              />
+            </div>
             {/* end::Illustrations */}
           </div>
           {/* end::Body */}

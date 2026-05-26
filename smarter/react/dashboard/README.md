@@ -2,6 +2,17 @@
 
 ## Setup
 
+To run this component locally for development purposes:
+
+```console
+export NODE_ENV=dev
+npm install
+npm run build
+npm run dev
+```
+
+For production builds:
+
 ```console
 export NODE_ENV=production
 npm install --include=dev
@@ -9,11 +20,19 @@ npm run build
 npm run dev
 ```
 
+To generate Storybooks:
+
 ```console
 npx storybook@latest init
 npm run build-storybook
 npm run storybook
 ```
+
+## Screen Shot
+
+![Dashboard Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/dashboard-screenshot.png)
+
+## Vite Plugins
 
 Currently, two official plugins are available:
 
