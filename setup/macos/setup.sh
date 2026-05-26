@@ -76,6 +76,8 @@ else
 	echo -e "\033[0;32m[OK]\033[0m Symlink for docker-compose exists."
 fi
 
+brew update
+brew upgrade
 brew install gcc python@3.13 go node nvm
 brew install awscli kubectl
 brew install blis zlib zstd openblas libffi openssl libxml2 libxslt sqlite mariadb-connector-c geos mysql-client jq k9s
