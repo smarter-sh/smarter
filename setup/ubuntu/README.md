@@ -1,4 +1,4 @@
-# Smarter Development Environment for macOS
+# Smarter Development Environment for Debian/Ubuntu
 
 The Smarter developer environment is Docker based, which helps to abstract away
 many of the platform's run-time dependencies. However, there are still quite a
@@ -7,30 +7,20 @@ environment completely up and running.
 
 ## Local System Dependencies
 
-Below are the required packages and their purposes for macOS setup. Use Homebrew
-or other recommended tools to automate installation where possible.
-
-### Developer Environment IDE and Management Tools
-
-| Package            | Description                                 |
-| ------------------ | ------------------------------------------- |
-| VS Code            | Extensible integrated developer environment |
-| Xcode              | Apple macOS development environment         |
-| Xcode Command Line | C/C++ build tools (clang, make)             |
-| Homebrew           | Package manager for macOS                   |
+Use setup.sh to automate installation where possible.
 
 ### Build, Deploy & Management Tools
 
-| Package        | Description                                     |
-| -------------- | ----------------------------------------------- |
-| k9s            | Kubernetes ASCII console admin software         |
-| awscli         | AWS CLI for managing AWS services               |
-| kubectl        | Kubernetes CLI for cluster management           |
-| Docker Desktop | Docker, docker-compose and docker CLI           |
-| jq             | Command-line JSON processor for CI-CD           |
-| go             | Go programming language (Smarter CLI)           |
-| node           | Node.js runtime (JS tooling and ReactJS builds) |
-| nvm            | Node Version Manager                            |
+| Package | Description                                     |
+| ------- | ----------------------------------------------- |
+| k9s     | Kubernetes ASCII console admin software         |
+| awscli  | AWS CLI for managing AWS services               |
+| kubectl | Kubernetes CLI for cluster management           |
+| Docker  | Docker daemon, docker-compose and docker CLI    |
+| go      | Go programming language (Smarter CLI)           |
+| node    | Node.js runtime (JS tooling and ReactJS builds) |
+| nvm     | Node Version Manager                            |
+| jq      | Command-line JSON processor for CI-CD           |
 
 ### Python Virtual Environment Dependencies
 

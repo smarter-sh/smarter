@@ -7,10 +7,9 @@ developer environment completely up and running.
 
 ## Local System Dependencies
 
-This file lists the required packages and their purposes for Windows setup.
-Use setup.ps1 to automate installation where possible.
+Use setup.sh to automate installation where possible.
 
-### Developer Environment IDE and Management Tools
+### Developer Environment IDE
 
 | Package            | Description                                 |
 | ------------------ | ------------------------------------------- |
