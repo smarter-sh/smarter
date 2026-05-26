@@ -32,6 +32,12 @@ npm run build-storybook
 npm run storybook
 ```
 
+## Screen Shot
+
+![Prompt List Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/prompt-list-screenshot.png)
+
+## Vite Plugins
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
