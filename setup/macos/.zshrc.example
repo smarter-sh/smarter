@@ -39,21 +39,21 @@ export LDFLAGS="-L/opt/homebrew/opt/python@3.13/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/python@3.13/include"
 export PKG_CONFIG_PATH="/opt/homebrew/opt/python@3.13/lib/pkgconfig"
 
- # 4. Homebrew Aliases and Shellenv
- # --------------------------------
- #
- # Homebrew can be installed for both ARM (Apple Silicon) and Intel (x86_64)
- # architectures on macOS. Some formulae only work on one architecture.
- #
- # - brew86: Runs Homebrew under Intel emulation for x86_64-only packages.
- # - brewARM: Runs the ARM-native Homebrew (Apple Silicon, default).
- # - brew: Alias for ARM Homebrew for convenience.
- # - eval "$(brewARM shellenv)": Sets up environment variables so your shell
- #   uses the correct Homebrew paths and configuration for ARM.
- #
- # This setup makes it easy to switch between ARM and Intel Homebrew and
- # ensures your shell uses the right environment for most tasks.
- #
+# 4. Homebrew Aliases and Shellenv
+# --------------------------------
+#
+# Homebrew can be installed for both ARM (Apple Silicon) and Intel (x86_64)
+# architectures on macOS. Some formulae only work on one architecture.
+#
+# - brew86: Runs Homebrew under Intel emulation for x86_64-only packages.
+# - brewARM: Runs the ARM-native Homebrew (Apple Silicon, default).
+# - brew: Alias for ARM Homebrew for convenience.
+# - eval "$(brewARM shellenv)": Sets up environment variables so your shell
+#   uses the correct Homebrew paths and configuration for ARM.
+#
+# This setup makes it easy to switch between ARM and Intel Homebrew and
+# ensures your shell uses the right environment for most tasks.
+#
 export PATH="$PATH:/opt/homebrew/bin:/opt/homebrew/sbin"
 alias brew86="arch -x86_64 /usr/local/homebrew/bin/brew"
 alias brewARM="/opt/homebrew/bin/brew"
