@@ -3,3 +3,17 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+
+
+## [0.14.0-alpha.21](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.20...v0.14.0-alpha.21) (2026-05-26)
+
+### Bug Fixes
+
+* user_profile ORM anomalies ([877b89c](https://github.com/smarter-sh/smarter/commit/877b89c1f2f65df21991e0306749cf64f84b7367))
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
