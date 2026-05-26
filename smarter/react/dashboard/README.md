@@ -1,5 +1,16 @@
 # Smarter Dashboard app. React + TypeScript + Vite
 
+This is the source code for the Dashboard app located
+at [http://localhost:9357/dashboard/](http://localhost:9357/dashboard/).
+
+This component is served by Django in production. See:
+
+- builds are distributed from s3://smarter.sh/react/dashboard/ and gathered
+by Dockerfile during builds into Django's static asset folder.
+- smarter.apps.dashboard.views.views.dashboard.DashboardView
+- smarter.apps.dashboard.templatetags.vite_dashboard.dashboard_vite_assets
+- templates/react/dashboard.html
+
 ## Setup
 
 To run this component locally for development purposes:
