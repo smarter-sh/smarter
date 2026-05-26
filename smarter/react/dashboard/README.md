@@ -7,9 +7,9 @@ This component is served by Django in production. See:
 
 - builds are distributed from s3://smarter.sh/react/dashboard/ and gathered
 by Dockerfile during builds into Django's static asset folder.
-- smarter.apps.dashboard.views.views.dashboard.DashboardView
-- smarter.apps.dashboard.templatetags.vite_dashboard.dashboard_vite_assets
-- templates/react/dashboard.html
+- [smarter.apps.dashboard.views.views.dashboard.DashboardView](../../smarter/apps/dashboard/views/views/dashboard.py)
+- [smarter.apps.dashboard.templatetags.vite_dashboard.dashboard_vite_assets](../../smarter/apps/dashboard/templatetags/vite_dashboard.py)
+- [templates/react/dashboard.html](../../smarter/templates/react/dashboard.html)
 
 ## Setup
 
