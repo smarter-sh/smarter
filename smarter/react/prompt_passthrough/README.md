@@ -5,6 +5,15 @@ This is the source code for the LLM API prompt passthrough dashboard
 app located at [http://localhost:9357/workbench/passthrough/](http://localhost:9357/
 workbench/passthrough/).
 
+This component is served by Django in production. See:
+
+- builds are distributed from s3://smarter.sh/react/passthrough/ and gathered
+by Dockerfile during builds into Django's static asset folder.
+- smarter.apps.passthrough.views.passthrough.view.PromptPassthroughView
+- smarter.apps.passthrough.templatetags.vite_prompt_passthrough.prompt_passthrough_vite_assets
+- templates/react/passthrough.html
+
+
 ## Setup
 
 To run this component locally for development purposes:

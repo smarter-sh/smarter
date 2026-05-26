@@ -18,7 +18,15 @@
 
   </head>
   <body>
-    <!-- only used for development via 'npm run dev' -->
+    <!--
+    only used for development via 'npm run dev'. In production, this file is rendered
+    by Django.
+
+    See:
+    - smarter.apps.passthrough.views.passthrough.view.PromptPassthroughView
+    - smarter.apps.passthrough.templatetags.vite_prompt_passthrough.prompt_passthrough_vite_assets
+    - templates/react/passthrough.html
+    -->
     <div
       id="smarter-prompt-passthrough-root"
       smarter-csrf-cookie-name="csrftoken"

@@ -17,7 +17,15 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   </head>
   <body>
-    <!-- only used for development via 'npm run dev' -->
+    <!--
+    only used for development via 'npm run dev'. In production, this file is rendered
+    by Django.
+
+    See:
+    - smarter.apps.prompt.views.listview.view.PromptListView
+    - smarter.apps.prompt.templatetags.vite_prompt_list.prompt_list_vite_assets
+    - templates/react/prompt-list.html
+    -->
     <div
       id="smarter-prompt-list-root"
       django-cookie-domain="localhost"

@@ -18,7 +18,14 @@
 
   </head>
   <body>
-    <!-- only used for development via 'npm run dev' -->
+    <!--
+    only used for development via 'npm run dev'. In production, this file is rendered
+    by Django.
+
+    See:
+    - smarter.apps.dashboard.views.logs.reactapp.TerminalEmulatorLogView
+    - templates/react/terminal-emulator.html
+    -->
     <div
       id="smarter-terminal-emulator-root"
       smarter-csrf-cookie-name="csrftoken"
