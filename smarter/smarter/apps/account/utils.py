@@ -457,6 +457,7 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
                 is_active=True,
             )
             user_profile = UserProfile.objects.create(name=username, user=new_user, account=account)
+            return user_profile.user  # type: ignore[return-value]
 
     if invalidate:
         _admin_user_for_account_number.invalidate(account_number=account.account_number, class_name=User.__name__)

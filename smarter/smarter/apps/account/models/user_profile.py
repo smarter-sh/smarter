@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """Account UserProfile model."""
 
 import os
@@ -155,6 +156,7 @@ class SmarterBaseModelManager(Manager[_GenericTypeVar]):
         """Returns a SmarterBaseQuerySetWithPermissions with the applied complex filter."""
         return self.get_queryset().complex_filter(filter_obj)
 
+    # pylint: disable=W0622
     def union(self, *other_qs, all=False) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
         """Returns a SmarterBaseQuerySetWithPermissions representing the union of querysets."""
         return self.get_queryset().union(*other_qs, all=all)
