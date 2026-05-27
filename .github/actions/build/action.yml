@@ -214,13 +214,13 @@ runs:
 
     # force a cache bust of the React build manifests,
     # which are used to determine which static assets to load in the React app.
-    - name: Set REACT_MANIFESTS_HASH
+    - name: Set DOCKER_REACT_REMOTE_CACHE_BUSTER
       shell: bash
       run: |
         if [ -z "${{ inputs.cdn-url-base }}" ]; then
-          echo "REACT_MANIFESTS_HASH=" >> $GITHUB_ENV
+          echo "DOCKER_REACT_REMOTE_CACHE_BUSTER=" >> $GITHUB_ENV
         else
-          echo "REACT_MANIFESTS_HASH=$(date +%s)" >> $GITHUB_ENV
+          echo "DOCKER_REACT_REMOTE_CACHE_BUSTER=$(date +%s)" >> $GITHUB_ENV
         fi
     - name: Build and push to Docker Hub
       id: docker-build-docker
@@ -236,13 +236,14 @@ runs:
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.TAG }}
         build-args: |
           ENVIRONMENT=${{ inputs.environment }}
-          REACT_MANIFESTS_HASH=${{ env.REACT_MANIFESTS_HASH }}
-          CDN_URL_BASE=${{ inputs.cdn-url-base }}
+          DOCKER_COLLECT_STATIC_FILES=true
+          DOCKER_REACT_REMOTE_CACHE_BUSTER=${{ env.DOCKER_REACT_REMOTE_CACHE_BUSTER }}
+          DOCKER_REACT_REMOTE_CDN_URL=${{ inputs.cdn-url-base }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
       env:
         DOCKER_BUILDKIT: 1
         BUILDKIT_PROGRESS: plain
         ENVIRONMENT: ${{ inputs.environment }}
-        REACT_MANIFESTS_HASH: ${{ env.REACT_MANIFESTS_HASH }}
-        CDN_URL_BASE: ${{ inputs.cdn-url-base }}
+        DOCKER_REACT_REMOTE_CACHE_BUSTER: ${{ env.DOCKER_REACT_REMOTE_CACHE_BUSTER }}
+        DOCKER_REACT_REMOTE_CDN_URL: ${{ inputs.cdn-url-base }}
