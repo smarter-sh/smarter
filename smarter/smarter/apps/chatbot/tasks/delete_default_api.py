@@ -45,7 +45,6 @@ from django.http import HttpRequest
 
 from smarter.apps.account.models import Account
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.chatbot.models.chatbot import ChatBot
 from smarter.apps.chatbot.signals import (
     post_delete_default_api,
     pre_delete_default_api,
