@@ -180,13 +180,6 @@ runs:
       with:
         node-version: 25
 
-
-    - name: Install Python venv
-      id: install-python-venv
-      shell: bash
-      run: |
-        make python-init
-
     - name: Build React Components
       id: build-react-components
       shell: bash
