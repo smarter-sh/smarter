@@ -179,7 +179,6 @@ runs:
       uses: actions/setup-node@v6
       with:
         node-version: 25
-        cache: npm
 
 
     - name: Install Python venv
