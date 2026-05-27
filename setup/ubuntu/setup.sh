@@ -68,7 +68,8 @@ echo "gcc:"
 gcc --version | head -n 1
 
 echo "python:"
-python3 --version
+python --version
+echo "Python interpreter path: $(which python)"
 
 echo "go:"
 go version
