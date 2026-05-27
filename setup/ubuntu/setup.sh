@@ -28,7 +28,6 @@
 sudo apt-get update
 sudo apt-get install -y \
 	build-essential \
-    python3 python3-venv python3-pip \
 	golang \
 	nodejs npm \
 	docker.io docker-compose \
