@@ -48,8 +48,9 @@ services:
         # in order to fine tune the build requirements.
         SCHEMA: APP
         ENVIRONMENT: ${ENVIRONMENT}
-        COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
-        BUILD_REACT_COMPONENTS: ${BUILD_REACT_COMPONENTS}
+        DOCKER_COLLECT_STATIC_FILES: ${DOCKER_COLLECT_STATIC_FILES}
+        DOCKER_REACT_REMOTE_CACHE_BUSTER: ${DOCKER_REACT_REMOTE_CACHE_BUSTER}
+        DOCKER_REACT_REMOTE_CDN_URL: ${DOCKER_REACT_REMOTE_CDN_URL}
     image: smarter
     command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- uvicorn smarter.asgi:application --host 0.0.0.0 --port 9357
     # volumes:
@@ -84,8 +85,9 @@ services:
         # in order to fine tune the build requirements.
         SCHEMA: APP
         ENVIRONMENT: ${ENVIRONMENT}
-        COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
-        BUILD_REACT_COMPONENTS: ${BUILD_REACT_COMPONENTS}
+        DOCKER_COLLECT_STATIC_FILES: ${DOCKER_COLLECT_STATIC_FILES}
+        DOCKER_REACT_REMOTE_CACHE_BUSTER: ${DOCKER_REACT_REMOTE_CACHE_BUSTER}
+        DOCKER_REACT_REMOTE_CDN_URL: ${DOCKER_REACT_REMOTE_CDN_URL}
     image: smarter
     command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
     depends_on:
@@ -103,8 +105,7 @@ services:
     #     target: /smarter
     #     consistency: cached
     healthcheck:
-      test:
-        ["CMD", "celery", "-A", "smarter.workers.celery.app", "inspect", "ping"]
+      test: ["CMD", "celery", "-A", "smarter.workers.celery.app", "inspect", "ping"]
       interval: 30s
       timeout: 30s
       retries: 3
@@ -125,8 +126,9 @@ services:
         # in order to fine tune the build requirements.
         SCHEMA: APP
         ENVIRONMENT: ${ENVIRONMENT}
-        COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
-        BUILD_REACT_COMPONENTS: ${BUILD_REACT_COMPONENTS}
+        DOCKER_COLLECT_STATIC_FILES: ${DOCKER_COLLECT_STATIC_FILES}
+        DOCKER_REACT_REMOTE_CACHE_BUSTER: ${DOCKER_REACT_REMOTE_CACHE_BUSTER}
+        DOCKER_REACT_REMOTE_CDN_URL: ${DOCKER_REACT_REMOTE_CDN_URL}
     image: smarter
     command: celery -A smarter.workers.celerybeat.app beat --loglevel=info
     depends_on:
@@ -144,15 +146,7 @@ services:
     #     target: /smarter
     #     consistency: cached
     healthcheck:
-      test:
-        [
-          "CMD",
-          "celery",
-          "-A",
-          "smarter.workers.celerybeat.app",
-          "inspect",
-          "ping",
-        ]
+      test: ["CMD", "celery", "-A", "smarter.workers.celerybeat.app", "inspect", "ping"]
       interval: 30s
       timeout: 30s
       retries: 3

@@ -40,8 +40,9 @@ init:
 	make check-python							# verify Python 3.13 is installed
 	make docker-check							# verify Docker is installed and running
 	make python-init							# create/replace Python virtual environment and install dependencies
+	make react-build							# build React frontend apps and collect static files
 	make collectstatic							# collect static files for the Django admin interface and other components
-	make build			    					# build the Smarter Docker container
+	make docker-build-for-react			        # build the Smarter containers, including building the React frontend components
 	make docker-init							# initialize MySQL and create the smarter database
 	make pre-commit-init						# install and configure pre-commit
 	@echo ""
@@ -180,16 +181,26 @@ docker-shell:
 	make docker-check && \
 	docker exec -it smarter-app /bin/bash
 
+# An abbreviated build to improve developer workflow efficiency by skipping
+# static asset collection (including by not building the React frontend components)
 docker-build:
 	make docker-check && \
-	docker-compose build
+	docker-compose build \
+	  --build-arg DOCKER_COLLECT_STATIC_FILES=false \
+      --build-arg DOCKER_REACT_REMOTE_CACHE_BUSTER= \
+      --build-arg DOCKER_REACT_REMOTE_CDN_URL= && \
 	docker image prune -f
 
-# the REACT_MANIFESTS_HASH build argument forces Docker to rebuild the React
+# the DOCKER_REACT_REMOTE_CACHE_BUSTER build argument forces Docker to rebuild the React
 # frontend assets from the CDN distribution.
+#
+# example usage: docker-compose build  --progress=plain --build-arg DOCKER_REACT_REMOTE_CACHE_BUSTER=$(shell date +%s) --build-arg DOCKER_REACT_REMOTE_CDN_URL=https://cdn.smarter.sh/react
 docker-build-for-react:
 	make docker-check && \
-	docker-compose build  --progress=plain --build-arg REACT_MANIFESTS_HASH=$(shell date +%s) --build-arg CDN_URL_BASE=https://cdn.smarter.sh/react
+	docker-compose build  --progress=plain \
+	  --build-arg DOCKER_COLLECT_STATIC_FILES=true \
+      --build-arg DOCKER_REACT_REMOTE_CACHE_BUSTER=$(shell date +%s) \
+      --build-arg DOCKER_REACT_REMOTE_CDN_URL=
 	docker image prune -f
 
 docker-run:
