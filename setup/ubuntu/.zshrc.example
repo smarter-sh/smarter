@@ -37,6 +37,9 @@ export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/home/linuxbrew/.linuxbrew/opt/python
 alias python="/home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin/python3.13"
 alias python3="/home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin/python3.13"
 
+ln -sf /home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin/python3.13 /usr/local/bin/python
+ln -sf /home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin/python3.13 /usr/local/bin/python3
+
 
 
 # 4. Node Version Manager (nvm)
