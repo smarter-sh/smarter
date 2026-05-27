@@ -335,7 +335,6 @@ react-build:
 	cd smarter/react/terminal_emulator && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
 	cd smarter/react/prompt_passthrough && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
 	cd smarter/react/dashboard && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
-	python smarter/manage.py collectstatic --noinput
 
 # -------------------------------------------------------------------------
 # Sphinx Documentation
