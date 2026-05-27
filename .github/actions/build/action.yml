@@ -174,11 +174,12 @@ runs:
         fi
         echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
 
-    - name: Install Dependencies
-      id: install-dependencies
-      shell: bash
-      run: |
-        bash setup/ubuntu/setup.sh
+    - name: Install Node
+      id: install-node
+      uses: actions/setup-node@v6
+      with:
+        node-version: 25
+        cache: npm
 
 
     - name: Install Python venv
