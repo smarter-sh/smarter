@@ -25,9 +25,15 @@ export COMPOSE_BAKE=true
 
 # 3. Python Configuration
 # -----------------------
-# Use system Python 3.10 as default
-alias python="/usr/bin/python3.10"
-alias python3="/usr/bin/python3.10"
+## Use Homebrew Python 3.13 as default (installed via Linuxbrew)
+# Ensure Homebrew Python 3.13 is first in PATH
+export PATH="/home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin:$PATH"
+
+export PATH="/home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin:$PATH"
+export LDFLAGS="${LDFLAGS} -L/home/linuxbrew/.linuxbrew/opt/python@3.13/lib"
+export CPPFLAGS="${CPPFLAGS} -I/home/linuxbrew/.linuxbrew/opt/python@3.13/include"
+export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/home/linuxbrew/.linuxbrew/opt/python@3.13/lib/pkgconfig"
+
 
 # 4. Node Version Manager (nvm)
 # -----------------------------
