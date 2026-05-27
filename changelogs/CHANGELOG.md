@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.23](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.22...v0.14.0-alpha.23) (2026-05-27)
+
+### Bug Fixes
+
+* remove race condition inside ChatBot delete receiver ([302ddee](https://github.com/smarter-sh/smarter/commit/302ddee0597ff9c55dac9493f7194a02912cee5e))
+
 ## [0.14.0-alpha.22](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.21...v0.14.0-alpha.22) (2026-05-27)
 
 ### Bug Fixes
