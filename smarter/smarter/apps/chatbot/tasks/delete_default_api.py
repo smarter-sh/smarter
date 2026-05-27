@@ -6,7 +6,7 @@ This module defines Celery tasks for deleting AWS and Kubernetes resources assoc
 Main Tasks
 ----------
 
-- delete_default_api(url, account_number, name):
+- delete_default_api(api_url, account_number, name):
     Deletes the default domain Route53 A record and Kubernetes ingress resources (ingress, certificate, secret) for a chatbot API.
 
 Signals
@@ -30,7 +30,7 @@ Usage
 
 Import this module and call the Celery task as needed to asynchronously delete chatbot API resources:
 
-    delete_default_api.delay(url, account_number, name)
+    delete_default_api.delay(api_url, account_number, name)
 
 Raises
 ------
@@ -43,6 +43,7 @@ from urllib.parse import urlparse
 
 from django.http import HttpRequest
 
+from smarter.apps.account.models import Account
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.models.chatbot import ChatBot
 from smarter.apps.chatbot.signals import (
@@ -72,18 +73,18 @@ logger_prefix = logging.formatted_text(__name__)
     max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
     queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
-def delete_default_api(chatbot_id: int):
+def delete_default_api(name: str, account_id: int, api_url: str):
     """
     Delete AWS and Kubernetes resources for a customer API.
     Deletes the Kubernetes ingress, certificate, and secret associated with the
     chatbot's named API url, which is of the form "https://{chatbot_name}.{account_number}.api_host_domain/".
     Also deletes the default domain Route53 A record for the chatbot.
-    Example url: https://stackademy-api.3141-5926-5359.alpha.api.ubc.smarter.sh/
+    Example api_url: https://stackademy-api.3141-5926-5359.alpha.api.ubc.smarter.sh/
 
     This Celery task performs the following steps:
     1. Sends a pre-delete signal for the API resources.
     2. Logs the deletion request.
-    3. Extracts the domain name from the provided URL.
+    3. Extracts the domain name from the provided api_url.
     4. Deletes the default domain Route53 A record for the chatbot.
     5. Deletes Kubernetes ingress resources: ingress, certificate, and secret.
     6. Logs the result of the deletion operations.
@@ -108,29 +109,45 @@ def delete_default_api(chatbot_id: int):
         Any exception raised during the deletion process will trigger a retry according to Celery settings.
     """
 
-    def dummy_request_factory(chatbot: ChatBot):
+    def _get_url_path(api_url):
+        """
+        Extracts the path component from a given URL.
+        """
+        parsed_url = urlparse(api_url)
+        return parsed_url.path
+
+    def _get_domain_name(api_url):
+        """
+        Extracts the domain name (netloc) from a given URL.
+        """
+        parsed_url = urlparse(api_url)
+        domain_name = parsed_url.netloc
+        return domain_name
+
+    def _dummy_request_factory(path: str):
         """
         Creates a dummy HttpRequest object with the necessary attributes to be
         used with SmarterRequestMixin for a given chatbot.
         """
         request = HttpRequest()
         request.user = smarter_cached_objects.smarter_admin
-        request.path = chatbot.default_host
+        request.path = path
         request.method = "POST"
         return request
 
     if not is_taskable():
         return
 
-    chatbot: ChatBot
+    account: Account
     try:
-        chatbot = ChatBot.objects.get(id=chatbot_id)
-    except ChatBot.DoesNotExist as e:
+        account = Account.get_cached_object(pk=account_id)
+    except Account.DoesNotExist as e:
         raise SmarterConfigurationError(
-            f"{logger_prefix} - ChatBot with id {chatbot_id} does not exist. Task cannot proceed."
+            f"{logger_prefix} - Account with id {account_id} does not exist for chatbot API deletion."
         ) from e
 
-    request = dummy_request_factory(chatbot)
+    request_path = _get_url_path(api_url)
+    request = _dummy_request_factory(request_path)
     request_mixin = SmarterRequestMixin(request=request)
     if not request_mixin.is_chatbot:
         raise SmarterConfigurationError(
@@ -141,54 +158,44 @@ def delete_default_api(chatbot_id: int):
             f"{logger_prefix} - Request path {request.path} is not recognized as a chatbot named URL."
         )
 
-    # url looks something like https://stackademy-api.3141-5926-5359.alpha.api.ubc.smarter.sh/
-    url: str = chatbot.default_url
-    account_number: str = chatbot.user_profile.cached_account.account_number
-    name: str = chatbot.name
-
     task_id = delete_default_api.request.id
     pre_delete_default_api.send(
-        sender=delete_default_api, url=url, account_number=account_number, name=name, task_id=task_id
+        sender=delete_default_api, url=api_url, account_number=account.account_number, name=name, task_id=task_id
     )
 
     prefix = logger_prefix + f".{delete_default_api.__name__}()"
     logger.info(
-        "%s - chatbot %s account_number: %s name: %s task_id: %s",
+        "%s - chatbot %s account: %s name: %s task_id: %s",
         prefix,
-        url,
-        account_number,
+        api_url,
+        account,
         name,
         task_id,
     )
 
-    def get_domain_name(url):
-        parsed_url = urlparse(url)
-        domain_name = parsed_url.netloc
-        return domain_name
-
-    hostname = get_domain_name(url)
+    hostname = _get_domain_name(api_url)
     destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.environment_api_domain, task_id=task_id)
     ingress_deleted, certificate_deleted, secret_delete = kubernetes_helper.delete_ingress_resources(
         hostname=hostname, namespace=smarter_settings.environment_namespace
     )
     if ingress_deleted and certificate_deleted and secret_delete:
         logger.info(
-            "%s - chatbot %s account_number: %s name: %s all resources successfully deleted task_id: %s",
+            "%s - chatbot %s account: %s name: %s all resources successfully deleted task_id: %s",
             prefix,
-            url,
-            account_number,
+            api_url,
+            account,
             name,
             task_id,
         )
     else:
         logger.error(
-            "%s - chatbot %s account_number: %s name: %s one or more resources were not deleted task_id: %s",
+            "%s - chatbot %s account: %s name: %s one or more resources were not deleted task_id: %s",
             prefix,
-            url,
-            account_number,
+            api_url,
+            account,
             name,
             task_id,
         )
     post_delete_default_api.send(
-        sender=delete_default_api, url=url, account_number=account_number, name=name, task_id=task_id
+        sender=delete_default_api, url=api_url, account_number=account.account_number, name=name, task_id=task_id
     )
