@@ -11,9 +11,14 @@ by Dockerfile during builds into Django's static asset folder.
 - [smarter.apps.dashboard.templatetags.vite_dashboard.dashboard_vite_assets](../../smarter/apps/dashboard/templatetags/vite_dashboard.py)
 - [templates/react/dashboard.html](../../smarter/templates/react/dashboard.html)
 
-## Setup
+## Developer Setup and Guide
 
-To run this component locally for development purposes:
+### Running Locally
+
+This configures Vite to serve the app locally, with console.debug() output enabled.
+Run the app from from http://localhost:5173/. Note that Django also should be running
+locally and be available at http://localhost:9357 in order for the React app to
+be able to fetch from the Django API endpoints.
 
 ```console
 export NODE_ENV=dev
@@ -21,6 +26,30 @@ npm install
 npm run build
 npm run dev
 ```
+
+### Running Locally From Django
+
+This configures Vite to generate a production React build, with the final build
+bundle collected into Django's static asset folder. Run the Django web console
+from http://localhost:9357/
+
+```console
+cd to/the/root/of/this/repo/
+
+# Causes React to generate a production-optimized build.
+export NODE_ENV=production
+
+# builds ALL React apps, and also run Django static asset collection
+make react-build
+
+# Builds the Django Docker container.
+make build
+
+# Starts the Django app container
+make run
+```
+
+### Production Build
 
 For production builds:
 
@@ -30,6 +59,8 @@ npm install --include=dev
 npm run build
 npm run dev
 ```
+
+### Generate Storybook
 
 To generate Storybooks:
 
