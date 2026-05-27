@@ -43,18 +43,11 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 brew install python@3.13
 
-alias python="/home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin/python"
-alias python3="/home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin/python3"
-
-# Prepend the Homebrew Python bin directory to PATH
-export PATH="/home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin:$PATH"
-
-# Optionally, set these for building Python packages (Linuxbrew path)
-export LDFLAGS="-L/home/linuxbrew/.linuxbrew/opt/python@3.13/lib"
-export CPPFLAGS="-I/home/linuxbrew/.linuxbrew/opt/python@3.13/include"
-export PKG_CONFIG_PATH="/home/linuxbrew/.linuxbrew/opt/python@3.13/lib/pkgconfig"
-
 sudo snap install k9s
+
+cp .zshrc.example ~/.zshrc
+source ~/.zshrc
+echo $PATH
 
 # NVM (Node Version Manager) is not available via apt. Install manually:
 # curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
