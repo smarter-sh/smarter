@@ -41,13 +41,19 @@ Exception
 
 from urllib.parse import urlparse
 
+from django.http import HttpRequest
+
+from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.chatbot.models.chatbot import ChatBot
 from smarter.apps.chatbot.signals import (
     post_delete_default_api,
     pre_delete_default_api,
 )
 from smarter.common.conf import smarter_settings
+from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
 from smarter.lib import logging
+from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
 
@@ -66,9 +72,13 @@ logger_prefix = logging.formatted_text(__name__)
     max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
     queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
-def delete_default_api(url: str, account_number: str, name: str):
+def delete_default_api(chatbot_id: int):
     """
     Delete AWS and Kubernetes resources for a customer API.
+    Deletes the Kubernetes ingress, certificate, and secret associated with the
+    chatbot's named API url, which is of the form "https://{chatbot_name}.{account_number}.api_host_domain/".
+    Also deletes the default domain Route53 A record for the chatbot.
+    Example url: https://stackademy-api.3141-5926-5359.alpha.api.ubc.smarter.sh/
 
     This Celery task performs the following steps:
     1. Sends a pre-delete signal for the API resources.
@@ -81,12 +91,9 @@ def delete_default_api(url: str, account_number: str, name: str):
 
     Parameters
     ----------
-    url : str
-        The URL of the customer API whose resources are to be deleted.
-    account_number : str
-        The AWS account number associated with the customer API.
-    name : str
-        The name of the chatbot or API for which resources are being deleted.
+    chatbot_id : int
+        The ID of the chatbot whose resources are to be deleted.
+
 
     Signals
     -------
@@ -100,8 +107,44 @@ def delete_default_api(url: str, account_number: str, name: str):
     Exception
         Any exception raised during the deletion process will trigger a retry according to Celery settings.
     """
+
+    def dummy_request_factory(chatbot: ChatBot):
+        """
+        Creates a dummy HttpRequest object with the necessary attributes to be
+        used with SmarterRequestMixin for a given chatbot.
+        """
+        request = HttpRequest()
+        request.user = smarter_cached_objects.smarter_admin
+        request.path = chatbot.default_host
+        request.method = "POST"
+        return request
+
     if not is_taskable():
         return
+
+    chatbot: ChatBot
+    try:
+        chatbot = ChatBot.objects.get(id=chatbot_id)
+    except ChatBot.DoesNotExist as e:
+        raise SmarterConfigurationError(
+            f"{logger_prefix} - ChatBot with id {chatbot_id} does not exist. Task cannot proceed."
+        ) from e
+
+    request = dummy_request_factory(chatbot)
+    request_mixin = SmarterRequestMixin(request=request)
+    if not request_mixin.is_chatbot:
+        raise SmarterConfigurationError(
+            f"{logger_prefix} - Request path {request.path} is not recognized as a chatbot URL."
+        )
+    if not request_mixin.is_chatbot_named_url:
+        raise SmarterConfigurationError(
+            f"{logger_prefix} - Request path {request.path} is not recognized as a chatbot named URL."
+        )
+
+    # url looks something like https://stackademy-api.3141-5926-5359.alpha.api.ubc.smarter.sh/
+    url: str = chatbot.default_url
+    account_number: str = chatbot.user_profile.cached_account.account_number
+    name: str = chatbot.name
 
     task_id = delete_default_api.request.id
     pre_delete_default_api.send(

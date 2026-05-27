@@ -18,6 +18,8 @@
  *     <MyResources apiUrl="https://customer.smarter.sh/dashboard/api/my-resources" />
  */
 import { useEffect, useState } from "react";
+import { loggerPrefix } from "@/const";
+
 import Loading from "../Loading";
 import "./styles.css";
 
@@ -47,7 +49,6 @@ function MyResources({ apiUrl }: MyResourcesProps) {
 
     async function load() {
       try {
-        console.log("Loading My Resources from API:", apiUrl);
         setLoading(true);
         setError(null);
 
@@ -63,14 +64,13 @@ function MyResources({ apiUrl }: MyResourcesProps) {
         }
 
         const json = (await res.json()) as MyResourcesData;
-        console.log("Loaded My Resources data:", json);
+        console.debug(loggerPrefix, "fetched My Resources data:", json);
         setData(json);
       } catch (err) {
-        console.error("Error loading My Resources:", err);
+        console.error(loggerPrefix, "Error loading My Resources:", err);
         if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
-        console.log("Finished loading My Resources");
         setLoading(false);
       }
     }

@@ -4,28 +4,13 @@
  *
  */
 import Dashboard from "./components/Dashboard";
+import type { AppContextInterface } from "@/main";
 
-interface AppProps {
-  myResourcesApiUrl: string;
-  serviceHealthApiUrl: string;
-  csrfCookieName: string;
-  csrftoken: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
-}
-
-function App({ myResourcesApiUrl, serviceHealthApiUrl, csrfCookieName, csrftoken, djangoSessionCookieName, cookieDomain }: AppProps) {
+function App({ appContext }: { appContext: AppContextInterface }) {
   return (
     <>
       <section className="mt-5 container" id="dashboard">
-        <Dashboard
-          myResourcesApiUrl={myResourcesApiUrl}
-          serviceHealthApiUrl={serviceHealthApiUrl}
-          csrfCookieName={csrfCookieName}
-          csrftoken={csrftoken}
-          djangoSessionCookieName={djangoSessionCookieName}
-          cookieDomain={cookieDomain}
-        />
+        <Dashboard appContext={appContext} />
       </section>
     </>
   );

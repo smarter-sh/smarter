@@ -11,7 +11,6 @@ const meta: Meta<typeof TabbedListView> = {
 		sessionContext: {
 			promptListApiUrl: "/prompt-list/api/",
 			csrfCookieName: "csrftoken",
-			csrftoken: "dummy-csrf-token",
 			djangoSessionCookieName: "sessionid",
 			cookieDomain: "localhost",
 		},
@@ -32,7 +31,6 @@ export const WithCustomCookies: Story = {
 		sessionContext: {
 			promptListApiUrl: "/prompt-list/api/",
 			csrfCookieName: "customcsrftoken",
-			csrftoken: "custom-token",
 			djangoSessionCookieName: "customsessionid",
 			cookieDomain: "localhost",
 		},

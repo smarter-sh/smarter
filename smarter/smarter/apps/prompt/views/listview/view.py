@@ -32,7 +32,6 @@ class PromptListView(SmarterAuthenticatedWebView):
 
       id="smarter-prompt-list-root"
       django-csrf-cookie-name="csrftoken"
-      django-csrf-token="1UNIA5jlXRTUifBGjVT3yKCn2On8MNzrFiVxN65QVrl6vPZKPx1AC15NcT07RB88"
       django-session-cookie-name="sessionid"
       smarter-prompt-list-api-url="/prompt/api/chatbots/"
 

@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import { execSync } from "child_process";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import packageJson from "./package.json" with { type: "json" };
 
 export default defineConfig(({ command }: { command: string }) => ({
   plugins: [
@@ -16,11 +17,11 @@ export default defineConfig(({ command }: { command: string }) => ({
       name: "post-build",
       closeBundle() {
         execSync(
-          "aws s3 sync ../../smarter/static/react/terminal_emulator s3://smarter.sh/react/terminal_emulator/ --acl public-read --delete",
+          `aws s3 sync ../../smarter/static/react/terminal_emulator ${packageJson.config.s3BucketPath} --acl public-read --delete`,
           { stdio: "inherit" },
         );
         execSync(
-          "aws --no-cli-pager cloudfront create-invalidation --distribution-id E2NUOFBC8HY0W9 --paths '/react/terminal_emulator/*'",
+          `aws --no-cli-pager cloudfront create-invalidation --distribution-id ${packageJson.config.cloudfrontDistributionId} --paths '/react/terminal_emulator/*'`,
           { stdio: "inherit" },
         );
       },

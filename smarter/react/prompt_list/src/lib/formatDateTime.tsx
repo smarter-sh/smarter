@@ -11,6 +11,7 @@
  *   formatDateTime("2024-05-19T12:00:00Z", "date");
  *   formatDateTime("2024-05-19T12:00:00Z", "relative", "2024-05-19T11:59:00Z");
  */
+import { loggerPrefix } from "@/const";
 import { formatDistanceToNow } from "date-fns";
 
 export const formatDateTime = (
@@ -19,13 +20,13 @@ export const formatDateTime = (
   referenceValue: string | null | undefined = null,
 ) => {
   if (!value) {
-    console.warn(`Invalid date value: ${value}`);
+    console.warn(loggerPrefix, `Invalid date value: ${value}`);
     return "-";
   }
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    console.warn(`Invalid date value: ${value}`);
+    console.warn(loggerPrefix, `Invalid date value: ${value}`);
     return "-";
   }
 
@@ -40,7 +41,7 @@ export const formatDateTime = (
   if (formatType == "relative" && referenceValue) {
     const referenceDate = new Date(referenceValue);
     if (Number.isNaN(referenceDate.getTime())) {
-      console.warn(`Invalid reference date value: ${referenceValue}`);
+      console.warn(loggerPrefix, `Invalid reference date value: ${referenceValue}`);
       return "-";
     }
     const secondsDifference = Math.abs((date.getTime() - referenceDate.getTime()) / 1000);

@@ -5,12 +5,9 @@
  * certification tracks and exposes call-to-action links for details and
  * applications.
  *
- * :param apiUrl: Base API URL passed in by the parent context. This value is
- *     currently logged for diagnostics and reserved for future data-driven
- *     content loading.
- * :type apiUrl: str
- *
  * :returns: A JSX fragment containing the certification programs widget.
+ * :rtype: JSX.Element
+ *
  * :rtype: JSX.Element
  *
  * :example:
@@ -19,12 +16,7 @@
  */
 import "./styles.css";
 
-interface CertificateProgramProps {
-  apiUrl: string;
-}
-
-function CertificateProgram({ apiUrl }: CertificateProgramProps) {
-  console.log("Rendering CertificateProgram with apiUrl:", apiUrl);
+function CertificateProgram() {
 
   return (
     <>

@@ -212,10 +212,12 @@ ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator
 
 ARG REACT_MANIFESTS_HASH
 ENV REACT_MANIFESTS_HASH=${REACT_MANIFESTS_HASH}
+ARG CDN_URL_BASE=https://cdn.smarter.sh/react
+ENV CDN_URL_BASE=${CDN_URL_BASE}
 
 # Download all manifests and compute a combined hash for cache busting
 RUN for app in $REACT_COMPONENTS; do \
-      url="https://cdn.smarter.sh/react/${app}/manifest.json"; \
+      url="${CDN_URL_BASE}/${app}/manifest.json"; \
       echo "Downloading manifest for ${app} from ${url}"; \
       echo "Last-Modified for $url: $(curl -sI "$url" | grep -i '^Last-Modified:')" \
       curl -fsSL "$url" -o "/tmp/${app}_manifest.json"; \

@@ -43,6 +43,17 @@ npm run storybook
 
 ![Dashboard Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/dashboard-screenshot.png)
 
+## Developer Notes
+
+When running locally you should expect to see console error/warning messages
+from the YouTube video player of the form
+
+```console
+Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://www.youtube.com') does not match the recipient window's origin ('http://localhost:9357').
+```
+
+These messages are benign and should be ignored.
+
 ## Vite Plugins
 
 Currently, two official plugins are available:

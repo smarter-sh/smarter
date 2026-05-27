@@ -21,6 +21,7 @@
  * @copyright Smarter, 2026
  */
 import type { ReactNode } from "react";
+import { loggerPrefix } from "@/const";
 
 import { formatDateTime } from "@/lib/formatDateTime";
 
@@ -106,7 +107,7 @@ export const renderDetailRow: DetailRowRenderer = (label, value, dataType, micro
     }
     displayValue = <pre style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{jsonString}</pre>;
   } else if (dataType === "str[]") {
-    console.log("Rendering str[] value:", value);
+    console.debug(loggerPrefix, "Rendering str[] value:", value);
     if (Array.isArray(value)) {
       displayValue = (
         <ul style={{ margin: 0, paddingLeft: "1.2em" }}>
