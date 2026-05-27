@@ -29,6 +29,7 @@ sudo apt-get update
 sudo apt-get install -y \
 	build-essential \
 	python3.10 python3.10-venv python3-pip \
+	python3.13 python3.13-venv \
 	golang \
 	nodejs npm \
 	docker.io docker-compose \

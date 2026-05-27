@@ -174,17 +174,12 @@ runs:
         fi
         echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
 
-    - name: Install React Dependencies
-      id: install-react-deps
-      uses: actions/setup-node@v6
-      with:
-        node-version: 25
+    - name: Install Dependencies
+      id: install-dependencies
+      shell: bash
+      run: |
+        bash setup/ubuntu/setup.sh
 
-    - name: Install Python
-      id: install-python
-      uses: actions/setup-python@v6
-      with:
-        python-version: 3.13
 
     - name: Install Python venv
       id: install-python-venv
