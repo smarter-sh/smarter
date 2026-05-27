@@ -28,8 +28,7 @@
 sudo apt-get update
 sudo apt-get install -y \
 	build-essential \
-	python3.10 python3.10-venv python3-pip \
-	python3.13 python3.13-venv \
+    python3 python3-venv python3-pip \
 	golang \
 	nodejs npm \
 	docker.io docker-compose \
@@ -37,6 +36,13 @@ sudo apt-get install -y \
 	kubectl \
 	libblis-dev zlib1g-dev libzstd-dev libopenblas-dev libffi-dev libssl-dev \
 	libxml2-dev libxslt1-dev sqlite3 libmariadb-dev libgeos-dev mysql-client jq
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+brew install python@3.13
+
 sudo snap install k9s
 
 # NVM (Node Version Manager) is not available via apt. Install manually:
