@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.24](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.23...v0.14.0-alpha.24) (2026-05-27)
+
+### Bug Fixes
+
+* switch from mysql to mariadb for command-line operations ([c6618e1](https://github.com/smarter-sh/smarter/commit/c6618e1441a529951bdf2cb57721fae3cc60f034))
+
 ## [0.14.0-alpha.23](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.22...v0.14.0-alpha.23) (2026-05-27)
 
 ### Bug Fixes
