@@ -4,6 +4,7 @@
   "version": "0.2.1",
   "type": "module",
   "config": {
+    "cdnDeploy": false,
     "s3BucketPath": "s3://smarter.sh/react/terminal_emulator/",
     "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
   },

@@ -50,6 +50,10 @@ inputs:
     required: false
     type: string
     default: "smarter"
+  cdn-url-base:
+    description: "The base URL for the CDN where React components are published (e.g. https://cdn.example.com/react/). If not set, the build process will skip downloading React components from the CDN and will instead use the local versions in the repository."
+    required: false
+    type: string
 
 runs:
   using: "composite"
@@ -212,8 +216,12 @@ runs:
     # which are used to determine which static assets to load in the React app.
     - name: Set REACT_MANIFESTS_HASH
       shell: bash
-      run: echo "REACT_MANIFESTS_HASH=$(date +%s)" >> $GITHUB_ENV
-
+      run: |
+        if [ -z "${{ inputs.cdn-url-base }}" ]; then
+          echo "REACT_MANIFESTS_HASH=" >> $GITHUB_ENV
+        else
+          echo "REACT_MANIFESTS_HASH=$(date +%s)" >> $GITHUB_ENV
+        fi
     - name: Build and push to Docker Hub
       id: docker-build-docker
       uses: docker/build-push-action@v6
@@ -229,6 +237,7 @@ runs:
         build-args: |
           ENVIRONMENT=${{ inputs.environment }}
           REACT_MANIFESTS_HASH=${{ env.REACT_MANIFESTS_HASH }}
+          CDN_URL_BASE=${{ inputs.cdn-url-base }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
       env:
@@ -236,3 +245,4 @@ runs:
         BUILDKIT_PROGRESS: plain
         ENVIRONMENT: ${{ inputs.environment }}
         REACT_MANIFESTS_HASH: ${{ env.REACT_MANIFESTS_HASH }}
+        CDN_URL_BASE: ${{ inputs.cdn-url-base }}
