@@ -174,6 +174,12 @@ runs:
         fi
         echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
 
+    - name: Install React Dependencies
+      id: install-react-deps
+      uses: actions/setup-node@v6
+      with:
+        node-version: 25
+
     - name: Build React Components
       id: build-react-components
       shell: bash
