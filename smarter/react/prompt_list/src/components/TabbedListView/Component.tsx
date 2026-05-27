@@ -27,6 +27,7 @@
  * The component expects all required context and API URLs to be provided via the sessionContext prop.
  */
 import { useEffect, useState } from "react";
+import { loggerPrefix } from "@/const";
 import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 import ToggleButton from "@/components/ToggleButton";
@@ -110,7 +111,6 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
       const response = await fetchDjangoUrl(
         JSON.stringify({}),
         url,
-        sessionContext.csrftoken,
         sessionContext.djangoSessionCookieName,
         sessionContext.csrfCookieName,
         sessionContext.cookieDomain,
@@ -124,17 +124,19 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
             errorMsg = errorJson.error;
           }
         } catch {
-          console.error("Failed to load chatbots due to an unknown error.");
+          console.error(loggerPrefix, "Failed to load chatbots due to an unknown error.");
         }
         throw new Error(errorMsg);
       }
 
       const payload = (await response.json()) as ChatbotListApiResponse;
+      console.debug(loggerPrefix, `fetched ${payload.chatbots.length} chatbots from ${urlSlug} endpoint: `, payload);
       if (isMounted) {
         setterCallback(payload.chatbots);
       }
     } catch (error) {
       if (isMounted) {
+        console.error(loggerPrefix, "Error loading chatbots:", error);
         setErrorMessage(error instanceof Error ? error.message : "Unable to load chatbots.");
       }
     } finally {

@@ -21,6 +21,7 @@
  * This component is intended to be embedded in each chatbot row or card in ListView and CardView.
  */
 import { useState } from "react";
+import { loggerPrefix } from "@/const";
 import type { Chatbot, SessionContext } from "@/lib/Types";
 import { Modal } from "@/lib/modalDialogue";
 import fetchDjangoUrl from "@/lib/django";
@@ -172,7 +173,6 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
     fetchDjangoUrl(
       JSON.stringify({}),
       url,
-      sessionContext.csrftoken,
       sessionContext.djangoSessionCookieName,
       sessionContext.csrfCookieName,
       sessionContext.cookieDomain,
@@ -193,11 +193,12 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
         return response.json();
       })
       .then((data: Chatbot) => {
+        console.debug(loggerPrefix, "Successfully cloned chatbot:", data);
         setModal({ type: "confirmation", chatbot: data as Chatbot });
         setSuccessMessage(`Successfully cloned chatbot`);
       })
       .catch((error) => {
-        console.error("Error cloning chatbot:", error);
+        console.error(loggerPrefix, "Error cloning chatbot:", error);
         setErrMessage(error.message);
         handleError(chatbot);
       });
@@ -213,7 +214,6 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
     fetchDjangoUrl(
       JSON.stringify({}),
       url,
-      sessionContext.csrftoken,
       sessionContext.djangoSessionCookieName,
       sessionContext.csrfCookieName,
       sessionContext.cookieDomain,
@@ -233,11 +233,12 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
         return response.json();
       })
       .then((data: Chatbot) => {
+        console.debug(loggerPrefix, "Successfully renamed chatbot:", data);
         setModal({ type: "confirmation", chatbot: data as Chatbot });
         setSuccessMessage(`Successfully renamed chatbot`);
       })
       .catch((error) => {
-        console.error("Error renaming chatbot:", error);
+        console.error(loggerPrefix, "Error renaming chatbot:", error);
         setErrMessage(error.message);
         handleError(chatbot);
       });
@@ -252,7 +253,6 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
     fetchDjangoUrl(
       JSON.stringify({}),
       url,
-      sessionContext.csrftoken,
       sessionContext.djangoSessionCookieName,
       sessionContext.csrfCookieName,
       sessionContext.cookieDomain,
@@ -272,11 +272,12 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
         return response.json();
       })
       .then(() => {
+        console.debug(loggerPrefix, "Successfully deleted chatbot:", chatbot);
         setModal({ type: "confirmation", chatbot });
         setSuccessMessage(`Successfully deleted chatbot`);
       })
       .catch((error) => {
-        console.error("Error deleting chatbot:", error);
+        console.error(loggerPrefix, "Error deleting chatbot:", error);
         setErrMessage(error.message);
         handleError(chatbot);
       });

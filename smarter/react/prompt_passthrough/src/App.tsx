@@ -6,40 +6,25 @@
 import Hero from "./components/Hero";
 import Prompt from "./components/Prompt";
 
+import type { SessionContextType } from "@/main";
+
 interface AppProps {
-  apiUrl: string;
-  csrfCookieName: string;
-  csrftoken: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
-  llmProviderId: string;
-  templateId: string;
-  providerApiUrl: string;
+  sessionContext: SessionContextType;
 }
 
-function App({
-  apiUrl,
-  csrfCookieName,
-  csrftoken,
-  djangoSessionCookieName,
-  cookieDomain,
-  llmProviderId,
-  templateId,
-  providerApiUrl,
-}: AppProps) {
+function App({ sessionContext }: AppProps) {
   return (
     <>
       <section className="mt-5 container" id="prompt-passthrough">
         <Hero />
         <Prompt
-          apiUrl={apiUrl}
-          csrfCookieName={csrfCookieName}
-          csrftoken={csrftoken}
-          djangoSessionCookieName={djangoSessionCookieName}
-          cookieDomain={cookieDomain}
-          defaultLLMProviderId={llmProviderId}
-          defaultTemplateId={templateId}
-          providerApiUrl={providerApiUrl}
+          apiUrl={sessionContext.apiUrl}
+          csrfCookieName={sessionContext.csrfCookieName}
+          djangoSessionCookieName={sessionContext.djangoSessionCookieName}
+          cookieDomain={sessionContext.cookieDomain}
+          defaultLLMProviderId={sessionContext.llmProviderId}
+          defaultTemplateId={sessionContext.templateId}
+          providerApiUrl={sessionContext.providerApiUrl}
         />
       </section>
     </>

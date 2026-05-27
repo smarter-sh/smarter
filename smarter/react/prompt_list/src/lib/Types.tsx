@@ -112,7 +112,6 @@ export type PromptListApiResponse = {
 export type SessionContext = {
   promptListApiUrl: string;
   csrfCookieName: string;
-  csrftoken: string;
   djangoSessionCookieName: string;
   cookieDomain: string;
 };

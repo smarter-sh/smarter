@@ -20,13 +20,14 @@
  */
 import { useEffect, useState } from "react";
 import type * as monaco from "monaco-editor";
+
+import { loggerPrefix } from "@/const";
 import getPromptTemplate from "./templates";
 import LLMProviderMetaData from "@/components/LLMProviderMetaData";
 import LLMProviders, { type LLMProvider } from "@/components/LLMProviders";
 import LLMProviderPassthroughResponse from "@/components/LLMProviderPassthroughResponse";
 import LLMProviderPassthroughRequest from "@/components/LLMProviderPassthroughRequest";
 
-import getCookie from "@/lib/cookie";
 import fetchDjangoUrl from "@/lib/django";
 
 import "./styles.css";
@@ -34,18 +35,16 @@ import "./styles.css";
 interface PromptProps {
   apiUrl: string;
   csrfCookieName: string;
-  csrftoken: string;
   djangoSessionCookieName: string;
   cookieDomain: string;
-  defaultLLMProviderId: string | undefined;
-  defaultTemplateId: string | undefined;
+  defaultLLMProviderId: string;
+  defaultTemplateId: string;
   providerApiUrl: string;
 }
 
 function Prompt({
   apiUrl,
   csrfCookieName,
-  csrftoken,
   djangoSessionCookieName,
   cookieDomain,
   defaultLLMProviderId,
@@ -53,8 +52,7 @@ function Prompt({
   providerApiUrl,
 }: PromptProps) {
   // UI state
-  const [editor, setEditor] =
-    useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [apiResponse, setApiResponse] = useState<{
     status: number;
@@ -63,8 +61,7 @@ function Prompt({
 
   // LLM provider and template state
   const [providersJson, setProviders] = useState<LLMProvider[]>([]);
-  const [selectedProviderJson, setSelectedProviderJson] =
-    useState<LLMProvider | null>(null);
+  const [selectedProviderJson, setSelectedProviderJson] = useState<LLMProvider | null>(null);
   const [templateId, setTemplateId] = useState(defaultTemplateId ?? "1");
   const [llmProviderId, setLLMProvider] = useState(defaultLLMProviderId ?? "1");
 
@@ -86,12 +83,10 @@ function Prompt({
         // the "isDefault" flag (or fallback to first provider if none
         // marked as default).
         setProviders(providers);
-        const default_provider =
-          providers.filter((p) => Boolean(p.isDefault) === true)[0] ||
-          providers[0];
+        const default_provider = providers.filter((p) => Boolean(p.isDefault) === true)[0] || providers[0];
         setSelectedProviderJson(default_provider);
         if (!default_provider) {
-          console.warn("No LLM providers found from API");
+          console.warn(loggerPrefix, "No LLM providers found from API");
           return;
         }
 
@@ -102,15 +97,12 @@ function Prompt({
 
         // lastly, generate the initial request JSON based on the default
         // provider and template.
-        const templateJson = getPromptTemplate(
-          templateId,
-          default_provider.defaultModel,
-        );
+        const templateJson = getPromptTemplate(templateId, default_provider.defaultModel);
         setRequestJson(templateJson);
       })
       .catch((err: Error) => {
         if (err.name !== "AbortError") {
-          console.error("Error fetching LLM providers:", err);
+          console.error(loggerPrefix, "Error fetching LLM providers:", err);
         }
       });
     return () => controller.abort();
@@ -127,9 +119,7 @@ function Prompt({
     }
   }, [providersJson, llmProviderId]);
 
-  const handleEditorDidMount = (
-    editorInstance: monaco.editor.IStandaloneCodeEditor,
-  ) => {
+  const handleEditorDidMount = (editorInstance: monaco.editor.IStandaloneCodeEditor) => {
     setEditor(editorInstance);
   };
   const handleLLMProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -159,34 +149,16 @@ function Prompt({
 
     setIsSending(true);
     try {
-      const csrftokenFromCookie =
-        getCookie(
-          {
-            name: csrfCookieName,
-            expiration: null,
-            domain: cookieDomain,
-            value: null,
-          },
-          "",
-        ) || "";
-      if (csrftokenFromCookie !== csrftoken) {
-        console.warn(
-          "CSRF token mismatch. Cookie value:",
-          csrftokenFromCookie,
-          "Expected value:",
-          csrftoken,
-        );
-      }
       const url = new URL(providerSlug + "/", apiUrl).toString();
       const res = await fetchDjangoUrl(
         requestJson,
         url,
-        csrftoken,
         djangoSessionCookieName,
         csrfCookieName,
         cookieDomain,
       );
       const data = await res.json();
+      console.debug(loggerPrefix, `fetched response from ${url}:`, data);
 
       setApiResponse({ status: res.status, body: data });
       setActiveTab("response");
@@ -247,9 +219,7 @@ function Prompt({
             <LLMProviderPassthroughResponse apiResponse={apiResponse} isProcessing={isSending} />
           )}
         </div>
-        {activeTab === "request" && (
-          <LLMProviderMetaData provider={selectedProviderJson} />
-        )}
+        {activeTab === "request" && <LLMProviderMetaData provider={selectedProviderJson} />}
       </div>
     </>
   );

@@ -17,6 +17,7 @@
  *
  *     <DownloadNpm apiUrl="https://customer.smarter.sh/dashboard/api/npm" />
  */
+import { loggerPrefix } from "@/const";
 import "./styles.css";
 
 interface DownloadNpmProps {
@@ -24,7 +25,7 @@ interface DownloadNpmProps {
 }
 
 function DownloadNpm({ apiUrl }: DownloadNpmProps) {
-  console.log("Rendering DownloadNpm with apiUrl:", apiUrl);
+  console.debug(loggerPrefix, "Rendering DownloadNpm with apiUrl:", apiUrl);
   return (
     <>
       <section

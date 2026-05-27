@@ -18,6 +18,7 @@
  *     <ServiceHealth apiUrl="https://api.smarter.sh/health" />
  */
 import { useEffect, useState } from "react";
+import { loggerPrefix } from "@/const";
 import HealthRing from "./HealthRing";
 import GitHubStatus from "./GitHubStatus";
 import Loading from "@/components/Loading";
@@ -157,9 +158,10 @@ function ServiceHealth({ apiUrl }: ServiceHealthProps) {
         }
 
         const json = (await res.json()) as ServiceHealthData;
+        console.debug(loggerPrefix, "Service Health data fetched from ", apiUrl, json);
         setData(json);
       } catch (err) {
-        console.error("Error loading Service Health:", err);
+        console.error(loggerPrefix, "Error loading Service Health:", err);
         if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {

@@ -32,6 +32,8 @@
  *       cookieDomain=".smarter.sh"
  *     />
  */
+import type { AppContextInterface } from "@/main";
+
 import "./styles.css";
 import MyResources from "../MyResources/Component";
 import ServiceHealth from "../ServiceHealth/Component";
@@ -43,24 +45,9 @@ import SelfHost from "../SelfHost/Component";
 import Contribute from "../Contribute/Component";
 import YTVideo from "../YTVideo/Component";
 
-interface DashboardProps {
-  myResourcesApiUrl: string;
-  serviceHealthApiUrl: string;
-  csrfCookieName: string;
-  csrftoken: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
-}
 
-function Dashboard({ myResourcesApiUrl, serviceHealthApiUrl, csrfCookieName, csrftoken, djangoSessionCookieName, cookieDomain }: DashboardProps) {
-  console.log("Dashboard props:", {
-    myResourcesApiUrl,
-    serviceHealthApiUrl,
-    csrfCookieName,
-    csrftoken,
-    djangoSessionCookieName,
-    cookieDomain,
-  });
+function Dashboard({ appContext }: { appContext: AppContextInterface }) {
+
   return (
     <>
       <section
@@ -73,11 +60,11 @@ function Dashboard({ myResourcesApiUrl, serviceHealthApiUrl, csrfCookieName, csr
           className="app-container container-xxl"
         >
           <div className="row g-5 g-xl-10 mt-3">
-            <MyResources apiUrl={myResourcesApiUrl} />
+            <MyResources apiUrl={appContext.myResourcesApiUrl} />
             <div className="col-xl-8 mb-5 mb-xl-10">
               <div className="row g-5 g-xl-10">
-                <ServiceHealth apiUrl={serviceHealthApiUrl} />
-                <CertificateProgram apiUrl={serviceHealthApiUrl} />
+                <ServiceHealth apiUrl={appContext.serviceHealthApiUrl} />
+                <CertificateProgram />
               </div>
               <VSCodeExtension />
             </div>

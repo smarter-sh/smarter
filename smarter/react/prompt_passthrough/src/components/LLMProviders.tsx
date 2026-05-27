@@ -5,6 +5,7 @@
  * The function uses the AbortController to cancel the fetch request if the function
  * is called again before the fetch completes.
  *****************************************************************************/
+import { loggerPrefix } from "@/const";
 export interface LLMProvider {
   id: number;
   tags: string[];
@@ -103,6 +104,7 @@ async function LLMProviders(providerApiUrl: string, signal?: AbortSignal): Promi
   }
 
   const data = (await response.json()) as ProvidersApiResponse;
+  console.debug(loggerPrefix, `Django fetched response from ${providerApiUrl}:`, data);
   return parseProviders(data);
 }
 

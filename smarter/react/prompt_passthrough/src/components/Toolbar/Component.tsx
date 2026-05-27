@@ -1,4 +1,5 @@
 // ToolbarButton component for rendering toolbar buttons
+import { loggerPrefix } from "@/const";
 
 interface ToolbarButtonProps {
   onClick: () => void;
@@ -92,7 +93,7 @@ function Toolbar({ editor }: ToolbarProps) {
     if (value) {
       await navigator.clipboard.writeText(value);
 
-      console.log("Copied to clipboard:", value);
+      console.debug(loggerPrefix, "Copied to clipboard:", value);
 
       setShowCopied(true);
       setCopyIcon("ki-copy-success");

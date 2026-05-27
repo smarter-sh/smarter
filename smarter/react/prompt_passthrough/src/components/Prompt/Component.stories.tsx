@@ -12,7 +12,6 @@ const meta: Meta<typeof Prompt> = {
   args: {
     apiUrl: "http://localhost:9357/api/v1/prompts/passthrough/",
     csrfCookieName: "csrftoken",
-    csrftoken: "dummy-csrf-token",
     djangoSessionCookieName: "sessionid",
     cookieDomain: "localhost",
     defaultLLMProviderId: "1",

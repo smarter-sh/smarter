@@ -189,7 +189,7 @@ docker-build:
 # frontend assets from the CDN distribution.
 docker-build-for-react:
 	make docker-check && \
-	docker-compose build  --progress=plain --build-arg REACT_MANIFESTS_HASH=$(shell date +%s)
+	docker-compose build  --progress=plain --build-arg REACT_MANIFESTS_HASH=$(shell date +%s) --build-arg CDN_URL_BASE=https://cdn.smarter.sh/react
 	docker image prune -f
 
 docker-run:

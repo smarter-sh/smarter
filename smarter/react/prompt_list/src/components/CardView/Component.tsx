@@ -23,6 +23,7 @@
  * This component is intended for use in views where chatbots are presented in a card/grid format.
  */
 import type { Chatbot, SessionContext } from "@/lib/Types";
+import { loggerPrefix } from "@/const";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
@@ -36,7 +37,7 @@ interface CardViewProps {
 }
 
 export function CardView({ sessionContext, chatbots, onRequery }: CardViewProps) {
-  console.log("Rendering CardView with chatbots:", chatbots, sessionContext);
+  console.debug(loggerPrefix, "Rendering CardView with chatbots:", chatbots, sessionContext);
 
   return (
     <div className="row g-4 p-4">
