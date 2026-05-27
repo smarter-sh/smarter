@@ -180,6 +180,18 @@ runs:
       with:
         node-version: 25
 
+    - name: Install Python
+      id: install-python
+      uses: actions/setup-python@v6
+      with:
+        python-version: 3.13
+
+    - name: Install Python venv
+      id: install-python-venv
+      shell: bash
+      run: |
+        make python-init
+
     - name: Build React Components
       id: build-react-components
       shell: bash
