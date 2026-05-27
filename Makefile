@@ -265,7 +265,12 @@ check-python:
 	@echo "Verifying that Python $(PYTHON) is installed ..."
 	@echo "==============================================================================="
 	@echo ""
-	@command -v $(PYTHON) >/dev/null 2>&1 || { echo >&2 "This project requires $(PYTHON) but it's not installed.  Aborting."; exit 1; }
+	@command -v $(PYTHON) >/dev/null 2>&1 || { \
+	echo >&2 "This project requires $(PYTHON) but it's not installed.  Aborting."; \
+	echo >&2 "python --version output:"; \
+	python --version 2>&1; \
+	exit 1; \
+}
 
 python-init:
 	@echo "==============================================================================="
