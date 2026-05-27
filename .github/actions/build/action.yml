@@ -165,6 +165,9 @@ runs:
       run: |
         aws ecr describe-repositories --repository-names ${{ env.AWS_ECR_REPO }} || aws ecr create-repository --repository-name ${{ env.AWS_ECR_REPO }}
 
+    # -------------------------------------------------------------------------
+    # Generate a datestamp for the Docker image tag.
+    # -------------------------------------------------------------------------
     - name: Get the date
       shell: bash
       run: |
@@ -174,14 +177,49 @@ runs:
         fi
         echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
 
+    # -------------------------------------------------------------------------
+    # Compute a hash of the React manifest.json files to use as a cache key for
+    # the React build output. This works only because the contents of the
+    # manifest.json files themselves include hashed filenames of the React
+    # build output.
+    # -------------------------------------------------------------------------
+    - name: React manifest.json Hash
+      id: react-cache-hash
+      shell: bash
+      run: |
+        if [ -d "smarter/smarter/react" ]; then
+          find smarter/smarter/react -type f -print0 | sort -z | xargs -0 cat | sha256sum | awk '{print $1}' > react-folder.sha256
+          echo "REACT_FOLDER_HASH=$(cat react-folder.sha256)" >> $GITHUB_ENV
+        else
+          echo "React folder does not exist, skipping hash."
+          echo "REACT_FOLDER_HASH=no-content" >> $GITHUB_ENV
+        fi
+
+    - name: Cache React manifest.json Hash
+      uses: actions/cache@v5
+      id: react-manifest-cache
+      with:
+        path: react-folder.sha256
+        key: react-folder-${{ env.REACT_FOLDER_HASH }}
+
+
     - name: Install Node
       id: install-node
+      if: steps.react-manifest-cache.outputs.cache-hit != 'true'
       uses: actions/setup-node@v6
       with:
         node-version: 25
 
+    - name: Cache React Build Output
+      uses: actions/cache@v5
+      id: react-build-cache
+      with:
+        path: smarter/smarter/static/react/
+        key: react-build-${{ env.REACT_FOLDER_HASH }}
+
     - name: Build React Components
       id: build-react-components
+      if: steps.react-build-cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
         make react-build
@@ -233,14 +271,6 @@ runs:
 
     # force a cache bust of the React build manifests,
     # which are used to determine which static assets to load in the React app.
-    - name: Set DOCKER_REACT_REMOTE_CACHE_BUSTER
-      shell: bash
-      run: |
-        if [ -z "${{ inputs.cdn-url-base }}" ]; then
-          echo "DOCKER_REACT_REMOTE_CACHE_BUSTER=" >> $GITHUB_ENV
-        else
-          echo "DOCKER_REACT_REMOTE_CACHE_BUSTER=$(date +%s)" >> $GITHUB_ENV
-        fi
     - name: Build and push to Docker Hub
       id: docker-build-docker
       uses: docker/build-push-action@v6
@@ -252,7 +282,7 @@ runs:
           ${{ github.ref_name == 'main' && format('{0}/{1}:latest', inputs.dockerhub-account, inputs.dockerhub-repo) || '' }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ github.run_id }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.DATESTAMP }}
-          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.TAG }}
+          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.LATEST_TAG }}
         build-args: |
           ENVIRONMENT=${{ inputs.environment }}
           DOCKER_COLLECT_STATIC_FILES=true
@@ -261,8 +291,6 @@ runs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
       env:
-        DOCKER_BUILDKIT: 1
-        BUILDKIT_PROGRESS: plain
         ENVIRONMENT: ${{ inputs.environment }}
         DOCKER_REACT_REMOTE_CACHE_BUSTER: ${{ env.DOCKER_REACT_REMOTE_CACHE_BUSTER }}
         DOCKER_REACT_REMOTE_CDN_URL: ${{ inputs.cdn-url-base }}
