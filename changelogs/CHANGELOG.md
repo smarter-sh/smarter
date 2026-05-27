@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.25](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.24...v0.14.0-alpha.25) (2026-05-27)
+
+### Bug Fixes
+
+* make react remote cdn distribution optional ([8f09fa5](https://github.com/smarter-sh/smarter/commit/8f09fa527433e2317d3ff6e08213e5669325d6e3))
+
 ## [0.14.0-alpha.24](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.23...v0.14.0-alpha.24) (2026-05-27)
 
 ### Bug Fixes
