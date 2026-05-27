@@ -25,13 +25,6 @@
 #   1 — Missing prerequisite or failed installation
 #
 ###############################################################################
-sudo apt-get update
-sudo apt update
-sudo apt install software-properties-common -y
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt update
-sudo apt install python3.13 -y
-
 sudo apt-get install -y \
 	build-essential \
 	golang \
@@ -41,6 +34,17 @@ sudo apt-get install -y \
 	kubectl \
 	libblis-dev zlib1g-dev libzstd-dev libopenblas-dev libffi-dev libssl-dev \
 	libxml2-dev libxslt1-dev sqlite3 libmariadb-dev libgeos-dev mysql-client jq
+
+sudo apt-get update
+sudo apt update
+sudo apt install software-properties-common -y
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.13 -y
+
+echo "installed python:"
+python --version
+echo "Python interpreter path: $(which python)"
 
 sudo snap install k9s
 
