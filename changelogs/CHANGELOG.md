@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.22](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.21...v0.14.0-alpha.22) (2026-05-27)
+
+### Bug Fixes
+
+* add package.json configuration parameters and console loggerPrefix. remove csrf token value. fix delete_default_api() task ([0832e94](https://github.com/smarter-sh/smarter/commit/0832e945f4b7e0f02352699a2af6e65b3f846789))
+
 ## [0.14.0-alpha.21](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.20...v0.14.0-alpha.21) (2026-05-26)
 
 ### Bug Fixes
