@@ -40,7 +40,7 @@ sudo apt update
 sudo apt install software-properties-common -y
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt update
-sudo apt install python3.13 -y
+sudo apt install python3.13-venv python3.13-full python3.13-dev -y
 
 echo "installed python:"
 python --version
