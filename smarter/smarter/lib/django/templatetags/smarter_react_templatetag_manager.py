@@ -10,14 +10,14 @@ enabling Django templates to include the correctly-sequenced JavaScript
 and CSS assets built by Vite for each app.
 
 Key Features
-------------
+-------------
 - Loads and caches the manifest.json for each React app from the static files directory.
 - Recursively collects CSS and JS dependencies for a given entry point, including all imports, preserving dependency order.
 - Provides a method to retrieve the JS and CSS assets for a manifest entry, suitable for use in Django template tags.
 - Designed as a base class to be instantiated for each React app; singletons are used to register template tags per app.
 
 Main Classes and Functions
--------------------------
+---------------------------
 - SmarterReactTemplateTagManager: Base class for managing Vite manifest loading and asset collection for a React app.
 - collect_assets(): Recursively collects asset files (CSS or JS) for a manifest entry and its imports.
 - reactapp_build_assets(): Returns the JS and CSS assets for the configured entry point.

@@ -23,38 +23,17 @@ Example manifest.json structure:
     .. code-block:: json
 
         {
-            "_rolldown-runtime.js": {
-                "file": "assets/rolldown-runtime.js",
-                "name": "rolldown-runtime"
-            },
-            "_xterm-TdnZ7DQy.css": {
-                "file": "assets/xterm-TdnZ7DQy.css",
-                "src": "_xterm-TdnZ7DQy.css"
-            },
-            "_xterm.js": {
-                "file": "assets/xterm.js",
-                "name": "xterm",
-                "imports": [
-                    "_rolldown-runtime.js"
-                ],
-                "css": [
-                    "assets/xterm-TdnZ7DQy.css"
-                ]
-            },
             "index.html": {
-                "file": "assets/index.js",
+                "file": "assets/index-D6-GPOR-.js",
                 "name": "index",
                 "src": "index.html",
                 "isEntry": true,
-                "imports": [
-                    "_rolldown-runtime.js",
-                    "_xterm.js"
-                ],
                 "css": [
-                    "assets/index-DvLY75bJ.css"
+                "assets/index-B011HLqe.css"
                 ]
-            }
         }
+            }
+
 """
 
 
@@ -66,17 +45,19 @@ def prompt_passthrough_react_assets() -> AssetDict:
 
     Example output::
 
-        {
-            "js": [
-                "assets/index-CZK_Bxxh.js",
-                "assets/rolldown-runtime-B3igc2qu.js",
-                "assets/xterm-D5XSfLrr.js"
-            ],
-            "css": [
-                "assets/index-58MXwt-L.css",
-                "assets/xterm-kHJ-D0s7.css"
-            ]
-        }
+        .. code-block:: json
+
+            {
+                "js": [
+                    "assets/index-CZK_Bxxh.js",
+                    "assets/rolldown-runtime-B3igc2qu.js",
+                    "assets/xterm-D5XSfLrr.js"
+                ],
+                "css": [
+                    "assets/index-58MXwt-L.css",
+                    "assets/xterm-kHJ-D0s7.css"
+                ]
+            }
 
     """
     return templatetag_manager.reactapp_build_assets()
