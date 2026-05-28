@@ -23,6 +23,12 @@ env:
   ROOT_DOMAIN: "smarter.sh"
   PLATFORM_SUBDOMAIN: "ubc"
   DOCKER_REACT_REMOTE_CDN_URL: ""
+  ENVIRONMENT: "prod"
+  REACT_FOLDER_HASH: "no-value"
+  AWS_ECR_REPO: "no-value"
+  DATESTAMP: "no-value"
+  TAG: "no-value"
+  LATEST_TAG: "no-value"
 
 jobs:
   build:
@@ -49,16 +55,211 @@ jobs:
             exit 1
           fi
 
-      - name: Build
-        uses: ./.github/actions/build
+      - name: Initialize environment variables
+        shell: bash
+        run: |
+          echo "NAMESPACE=smarter-${{ env.PLATFORM_SUBDOMAIN }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+          echo "AWS_ECR_REPO=smarter-${{ env.PLATFORM_SUBDOMAIN }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+
+      - name: Get latest release version
+        id: get-latest-version-tag
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            VERSION_TAG=$(git describe --tags --abbrev=0)
+            TAG="$VERSION_TAG"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
         with:
-          platform-subdomain: ${{ env.PLATFORM_SUBDOMAIN }}
-          environment: ${{ env.ENVIRONMENT }}
+          platforms: arm64
+
+      - name: Get latest release version
+        id: get-latest-release
+        shell: bash
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            FINAL_TAG="$LATEST_TAG"
+          else
+            FINAL_TAG="${LATEST_TAG}.${GITHUB_REF_NAME}"
+          fi
+          echo "LATEST_TAG=$FINAL_TAG" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Configure AWS credentials
+        id: aws-credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
-          dockerhub-password: ${{ secrets.DOCKERHUB_PAT }}
-          dockerhub-account: ${{ secrets.DOCKERHUB_ACCOUNT }}
-          dockerhub-repo: ${{ secrets.DOCKERHUB_REPO }}
-          cdn-url-base: ${{ env.DOCKER_REACT_REMOTE_CDN_URL }}
+
+      - name: Check awscli version and identity
+        id: awscli-version
+        shell: bash
+        run: |
+          echo "aws cli version:"
+          echo "----------------"
+          aws --version
+          echo
+          echo "aws IAM user:"
+          echo "-------------"
+          aws sts get-caller-identity
+
+      - name: Upgrade ECR Basic Scanning
+        id: upgrade-ecr-scanning
+        shell: bash
+        run: |
+          echo "Checking current ECR scanning version:"
+          echo "-------------------------------------"
+          current_setting=$(aws ecr get-account-setting --name BASIC_SCAN_TYPE_VERSION --query 'value' --output text 2>/dev/null || echo "CLAIR")
+          echo "Current setting: $current_setting"
+          if [ "$current_setting" != "AWS_NATIVE" ]; then
+            echo "Upgrading to AWS_NATIVE scanning..."
+            aws ecr put-account-setting --name BASIC_SCAN_TYPE_VERSION --value AWS_NATIVE
+            echo "ECR scanning upgraded to AWS_NATIVE"
+          else
+            echo "ECR scanning already using AWS_NATIVE version"
+          fi
+
+      - name: Add to .env
+        shell: bash
+        run: |
+          touch .env
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set Docker image
+        id: set-docker-image
+        shell: bash
+        run: |
+          echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
+
+      - name: Create the repository
+        id: create-repo
+        shell: bash
+        run: |
+          aws ecr describe-repositories --repository-names ${{ env.AWS_ECR_REPO }} || aws ecr create-repository --repository-name ${{ env.AWS_ECR_REPO }}
+
+      - name: Get the date
+        shell: bash
+        run: |
+          DATESTAMP=$(date +'%Y-%m-%dT%H-%M-%S')
+          if [ "${GITHUB_REF_NAME}" != "main" ]; then
+            DATESTAMP="${DATESTAMP}.${GITHUB_REF_NAME}"
+          fi
+          echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
+
+      - name: React manifest.json Hash
+        id: react-cache-hash
+        shell: bash
+        run: |
+          if [ -d "smarter/smarter/react" ]; then
+            find smarter/smarter/react -type f -print0 | sort -z | xargs -0 cat | sha256sum | awk '{print $1}' > react-folder.sha256
+            echo "REACT_FOLDER_HASH=$(cat react-folder.sha256)" >> $GITHUB_ENV
+          else
+            echo "React folder does not exist, skipping hash."
+            echo "REACT_FOLDER_HASH=no-content" >> $GITHUB_ENV
+          fi
+
+      - name: Cache React manifest.json Hash
+        uses: actions/cache@v5
+        id: react-manifest-cache
+        with:
+          path: react-folder.sha256
+          key: react-folder-${{ env.REACT_FOLDER_HASH }}
+
+      - name: Install Node
+        id: install-node
+        if: steps.react-manifest-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 25
+
+      - name: Cache React Build Output
+        uses: actions/cache@v5
+        id: react-build-cache
+        with:
+          path: smarter/smarter/static/react/
+          key: react-build-${{ env.REACT_FOLDER_HASH }}
+
+      - name: Build React Components
+        id: build-react-components
+        if: steps.react-build-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          make react-build
+
+      - name: Build and push to AWS ECR
+        id: build-and-push-to-ecr
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ github.ref_name == 'main' && format('{0}/{1}:latest', secrets.DOCKERHUB_ACCOUNT, secrets.DOCKERHUB_REPO) || '' }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ github.run_id }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.DATESTAMP }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.TAG }}
+          build-args: |
+            ENVIRONMENT=${{ env.ENVIRONMENT }}
+            DOCKER_COLLECT_STATIC_FILES=true
+            DOCKER_REACT_REMOTE_CACHE_BUSTER=${{ env.REACT_FOLDER_HASH }}
+            DOCKER_REACT_REMOTE_CDN_URL=${{ env.DOCKER_REACT_REMOTE_CDN_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+        env:
+          DOCKER_BUILDKIT: 1
+          BUILDKIT_PROGRESS: plain
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+          DOCKER_REACT_REMOTE_CACHE_BUSTER: ${{ env.REACT_FOLDER_HASH }}
+          DOCKER_REACT_REMOTE_CDN_URL: ${{ env.DOCKER_REACT_REMOTE_CDN_URL }}
+
+      - name: Trigger ECR image scan
+        id: trigger-scan
+        shell: bash
+        run: |
+          echo "Triggering new image scan for latest tag..."
+          aws ecr start-image-scan --repository-name ${{ env.AWS_ECR_REPO }} --image-id imageTag=latest || echo "Scan already in progress or failed"
+          echo "ECR image scan triggered"
+
+      - name: Login to Docker Hub
+        id: login-dockerhub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PAT }}
+
+      - name: Build and push to Docker Hub
+        id: build-and-push-to-dockerhub
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ github.ref_name == 'main' && format('{0}/{1}:latest', secrets.DOCKERHUB_ACCOUNT, secrets.DOCKERHUB_REPO) || '' }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ github.run_id }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.DATESTAMP }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.LATEST_TAG }}
+          build-args: |
+            ENVIRONMENT=${{ env.ENVIRONMENT }}
+            DOCKER_COLLECT_STATIC_FILES=true
+            DOCKER_REACT_REMOTE_CACHE_BUSTER=${{ env.REACT_FOLDER_HASH }}
+            DOCKER_REACT_REMOTE_CDN_URL=${{ env.DOCKER_REACT_REMOTE_CDN_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+        env:
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+          DOCKER_REACT_REMOTE_CACHE_BUSTER: ${{ env.REACT_FOLDER_HASH }}
+          DOCKER_REACT_REMOTE_CDN_URL: ${{ env.DOCKER_REACT_REMOTE_CDN_URL }}

@@ -33,10 +33,7 @@ export CPPFLAGS="${CPPFLAGS} -I/home/linuxbrew/.linuxbrew/opt/python@3.13/includ
 export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/home/linuxbrew/.linuxbrew/opt/python@3.13/lib/pkgconfig"
 
 # various ways to ensure that anything that wants python gets python3.13
-alias python="/home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin/python3.13"
-alias python3="/home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin/python3.13"
-rm -f /usr/bin/python
-sudo ln -sf /home/linuxbrew/.linuxbrew/bin/python3.13 /usr/bin/python
+alias python3.13="/home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin/python3.13"
 
 
 
