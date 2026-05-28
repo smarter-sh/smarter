@@ -1,5 +1,5 @@
 """
-Vite manifest.json loader and asset collector base class for Django
+Vite-generated React manifest.json loader and asset collector base class for Django
 templatetags.
 
 This module provides a reusable base class and supporting types for
@@ -18,7 +18,7 @@ Key Features
 
 Main Classes and Functions
 ---------------------------
-- SmarterReactTemplateTagManager: Base class for managing Vite manifest loading and asset collection for a React app.
+- SmarterReactTemplateTagManager: Base class for managing Vite-generated React manifest loading and asset collection for a React app.
 - collect_assets(): Recursively collects asset files (CSS or JS) for a manifest entry and its imports.
 - reactapp_build_assets(): Returns the JS and CSS assets for the configured entry point.
 
@@ -32,9 +32,9 @@ In a Django template, use the registered template tag for your app to get asset 
         <link class="smarter" rel="stylesheet" href="{% static css_file %}">
     {% endfor %}
 
-Example Vite Manifest
----------------------
-A typical vite manifest.json looks like this::
+Example React manifest.json
+---------------------------
+A typical React manifest.json looks like this::
 
     {
         "_rolldown-runtime.js": {
@@ -211,7 +211,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         that, for example, JavaScript files are loaded in the correct order so
         that dependencies are available before their dependents execute.
 
-        :param manifest: The Vite manifest dictionary.
+        :param manifest: The React manifest.json dictionary.
         :param key: The key of the manifest entry to collect assets for.
         :param asset_type: The type of asset to collect (e.g., "css" or "js").
         :param seen: A set of already seen keys to avoid circular dependencies.
@@ -277,7 +277,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         for key, value in self.manifest.items():
             if isinstance(value, dict) and REACT_ENTRY_KEY in value:
                 return key
-        raise SmarterValueError(f"No entry with '{REACT_ENTRY_KEY}' found in Vite manifest")
+        raise SmarterValueError(f"No entry with '{REACT_ENTRY_KEY}' found in manifest.json for app '{self.app_name}'")
 
     def reactapp_build_assets(self) -> AssetDict:
         """
@@ -295,10 +295,14 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         Example output::
 
             {
-                "js": ["assets/index.js"],
+                "js": [
+                    "assets/index-CZK_Bxxh.js",
+                    "assets/rolldown-runtime-B3igc2qu.js",
+                    "assets/xterm-D5XSfLrr.js"
+                ],
                 "css": [
-                    "assets/index-DvLY75bJ.css",
-                    "assets/xterm-TdnZ7DQy.css"
+                    "assets/index-58MXwt-L.css",
+                    "assets/xterm-kHJ-D0s7.css"
                 ]
             }
         """

@@ -9,7 +9,7 @@
   <!--
   Vite assets for the terminal emulator
   see: smarter.apps.dashboard.templatetags.react_terminal_emulator.
-  reads the vite manifest.json file to determine the correct hashed filenames to include.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
   -->
   {% terminal_emulator_react_assets as assets %}
   {% for css_file in assets.css %}
@@ -36,7 +36,7 @@
   <!--
   Vite assets for the terminal emulator
   see: smarter.apps.dashboard.templatetags.react_terminal_emulator.
-  reads the vite manifest.json file to determine the correct .js entry filename to include.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
   -->
   {% terminal_emulator_react_assets as assets %}
   {% for js_file in assets.js %}
