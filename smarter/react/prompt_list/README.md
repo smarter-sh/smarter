@@ -9,7 +9,7 @@ This component is served by Django in production. See:
 - builds are distributed from s3://smarter.sh/react/prompt_list/ and gathered
 by Dockerfile during builds into Django's static asset folder.
 - [smarter.apps.prompt.views.listview.view.PromptListView](../../smarter/apps/prompt/views/listview/view.py)
-- [smarter.apps.prompt.templatetags.vite_prompt_list.prompt_list_vite_assets](../../smarter/apps/prompt/templatetags/vite_prompt_list.py)
+- [smarter.apps.prompt.templatetags.react_prompt_list.prompt_list_react_assets](../../smarter/apps/prompt/templatetags/react_prompt_list.py)
 - [templates/react/prompt-list.html](../../smarter/templates/react/prompt-list.html)
 
 ## Setup
