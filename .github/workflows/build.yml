@@ -210,10 +210,10 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ github.ref_name == 'main' && format('{0}/{1}:latest', secrets.DOCKERHUB_ACCOUNT, secrets.DOCKERHUB_REPO) || '' }}
-            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ github.run_id }}
-            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.DATESTAMP }}
-            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.TAG }}
+            ${{ github.ref_name == 'main' && format('{0}/{1}:latest', steps.login-ecr.outputs.registry, env.AWS_ECR_REPO) || '' }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.LATEST_TAG }}
           build-args: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
             DOCKER_COLLECT_STATIC_FILES=true
