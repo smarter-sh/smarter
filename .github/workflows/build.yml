@@ -81,6 +81,9 @@ jobs:
         with:
           platforms: arm64
 
+      # Get the latest release tag and append branch name for non-main branches
+      # example: v0.14.0-alpha.27
+      #
       - name: Get latest release version
         id: get-latest-release
         shell: bash
@@ -172,6 +175,7 @@ jobs:
           else
             echo "React folder does not exist, skipping hash."
             echo "REACT_FOLDER_HASH=no-content" >> $GITHUB_ENV
+            touch react-folder.sha256
           fi
 
       - name: Cache React manifest.json Hash
@@ -202,6 +206,14 @@ jobs:
         run: |
           make react-build
 
+      # -----------------------------------------------------------------------
+      # Build and push to AWS ECR
+      # Creates the tags of the following formats:
+      # - 26594738590
+      # - 2026-05-28T18-39-51.alpha
+      # - v0.14.0-alpha.27.alpha
+      #
+      # -----------------------------------------------------------------------
       - name: Build and push to AWS ECR
         id: build-and-push-to-ecr
         uses: docker/build-push-action@v6
@@ -210,7 +222,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ github.ref_name == 'main' && format('{0}/{1}:latest', steps.login-ecr.outputs.registry, env.AWS_ECR_REPO) || '' }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.LATEST_TAG }}
@@ -251,7 +263,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ github.ref_name == 'main' && format('{0}/{1}:latest', secrets.DOCKERHUB_ACCOUNT, secrets.DOCKERHUB_REPO) || '' }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ github.run_id }}
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.DATESTAMP }}
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.LATEST_TAG }}
