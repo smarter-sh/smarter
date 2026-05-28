@@ -216,7 +216,7 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.LATEST_TAG }}
           build-args: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
-            DOCKER_COLLECT_STATIC_FILES=true
+            DOCKER_COLLECT_STATIC_FILES=${ steps.react-build-cache.outputs.cache-hit == 'true' && 'false' || 'true' }
             DOCKER_REACT_REMOTE_CACHE_BUSTER=${{ env.REACT_FOLDER_HASH }}
             DOCKER_REACT_REMOTE_CDN_URL=${{ env.DOCKER_REACT_REMOTE_CDN_URL }}
           cache-from: type=gha
@@ -257,7 +257,7 @@ jobs:
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.LATEST_TAG }}
           build-args: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
-            DOCKER_COLLECT_STATIC_FILES=true
+            DOCKER_COLLECT_STATIC_FILES=${ steps.react-build-cache.outputs.cache-hit == 'true' && 'false' || 'true' }
             DOCKER_REACT_REMOTE_CACHE_BUSTER=${{ env.REACT_FOLDER_HASH }}
             DOCKER_REACT_REMOTE_CDN_URL=${{ env.DOCKER_REACT_REMOTE_CDN_URL }}
           cache-from: type=gha
