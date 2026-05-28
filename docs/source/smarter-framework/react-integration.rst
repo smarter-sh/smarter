@@ -426,7 +426,66 @@ A live example of a Django view that serves the dashboard template:
   :width: 100%
 
 
+Build-Deploy and CI-CD Considerations
+---------------------------------------
 
+From Django’s perspective, compiled React assets are ultimately treated no
+differently than any other static resource such as CSS, images, or JavaScript
+files. This architectural decision is intentional and is central to Smarter’s
+integration strategy. By ensuring that React build artifacts are emitted directly
+into Django’s static file hierarchy before the collectstatic process runs,
+the React build pipeline can remain cleanly decoupled from the Django application
+runtime itself.
+
+This separation provides several operational advantages. React applications can
+be developed, versioned, and rebuilt independently while still integrating
+seamlessly into Django’s deployment pipeline. At runtime, Django remains fully
+responsible for static asset serving, cache management, CDN integration, and
+template rendering, while React remains focused exclusively on frontend behavior
+and presentation logic.
+
+There are several important operational considerations related to the build,
+deployment, and CI/CD lifecycle of React applications within the Smarter platform:
+
+* Source Control Exclusion
+    Compiled React build artifacts are intentionally
+    excluded from the Git repository and are never committed to source control.
+    Build outputs are considered ephemeral deployment artifacts and must therefore
+    be regenerated as part of the build process.
+* Build Prerequisites
+    Because Django templates and template tags depend
+    on the existence of manifest.json and its associated static assets, the
+    React build process must execute successfully at least once before the Django
+    application can correctly render React-integrated pages. Keep this in mind
+    when for example, you are tinkering with versions in package.json.
+* CI/CD Pipeline Initialization
+    GitHub Actions workflows begin with a clean
+    repository checkout that does not contain compiled frontend assets. Accordingly,
+    React build steps must run early in the workflow before Docker builds,
+    collectstatic, integration tests, or deployment stages that depend on
+    these assets.
+* Static File Synchronization
+    During local development, developers should remain aware of the distinction
+    between Vite’s live development server, Django’s static asset directories,
+    and the Django staticfiles runtime directory. Stale build artifacts can
+    occasionally lead to confusing runtime behavior if these environments become
+    out of sync.
+* Container Build Dependencies
+    Docker images intended to serve React-enabled
+    Django pages must be built only after the frontend asset pipeline has completed.
+    This ensures that all compiled React bundles and manifest metadata are available
+    inside the container image at runtime.
+* Convenience Tooling
+    Smarter provides helper commands such as `make react-build` and `make docker-build-for-react`
+    to simplify common frontend integration workflows and to keep Django’s
+    static directories aligned with current React build outputs.
+
+Collectively, these conventions provide a predictable and highly reproducible
+deployment model that works consistently across local development environments,
+CI/CD workflows, Docker container builds, and production infrastructure. The
+result is a React integration architecture that preserves the operational
+simplicity of Django deployments while still enabling modern frontend build
+pipelines and advanced React development workflows.
 
 .. toctree::
   :maxdepth: 1
