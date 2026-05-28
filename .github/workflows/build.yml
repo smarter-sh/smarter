@@ -29,6 +29,10 @@ env:
   DATESTAMP: "no-value"
   TAG: "no-value"
   LATEST_TAG: "no-value"
+  MAJOR_RELEASE: "0"
+  MINOR_RELEASE: "0"
+  PATCH_RELEASE: "0"
+  PRERELEASE: ""
 
 jobs:
   build:
@@ -84,7 +88,7 @@ jobs:
       # Get the latest release tag and append branch name for non-main branches
       # example: v0.14.0-alpha.27
       #
-      - name: Get latest release version
+      - name: Get latest release version and parse tag components
         id: get-latest-release
         shell: bash
         run: |
@@ -95,6 +99,34 @@ jobs:
             FINAL_TAG="${LATEST_TAG}.${GITHUB_REF_NAME}"
           fi
           echo "LATEST_TAG=$FINAL_TAG" >> $GITHUB_ENV
+
+          # Parse tag components (e.g., v0.14.0-alpha.27 or v0.14.0)
+          TAG_NO_PREFIX=${LATEST_TAG#v}
+          # Extract prerelease if present
+          if [[ "$TAG_NO_PREFIX" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-.+)?$ ]]; then
+            MAJOR="${BASH_REMATCH[1]}"
+            MINOR="${BASH_REMATCH[2]}"
+            PATCH="${BASH_REMATCH[3]}"
+            PRERELEASE="${BASH_REMATCH[4]}"
+          else
+            MAJOR="0"; MINOR="0"; PATCH="0"; PRERELEASE=""
+          fi
+
+          # Compose tag variants
+          MAJOR_RELEASE="v$MAJOR"
+          MINOR_RELEASE="v$MAJOR.$MINOR"
+          PATCH_RELEASE="v$MAJOR.$MINOR.$PATCH"
+          # Remove leading '-' from prerelease if present
+          if [[ -n "$PRERELEASE" ]]; then
+            PRERELEASE_TAG="v$MAJOR.$MINOR.$PATCH$PRERELEASE"
+          else
+            PRERELEASE_TAG=""
+          fi
+
+          echo "MAJOR_RELEASE=$MAJOR_RELEASE" >> $GITHUB_ENV
+          echo "MINOR_RELEASE=$MINOR_RELEASE" >> $GITHUB_ENV
+          echo "PATCH_RELEASE=$PATCH_RELEASE" >> $GITHUB_ENV
+          echo "PRERELEASE=$PRERELEASE_TAG" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -209,6 +241,7 @@ jobs:
       # -----------------------------------------------------------------------
       # Build and push to AWS ECR
       # Creates the tags of the following formats:
+      # - latest
       # - 26594738590
       # - 2026-05-28T18-39-51.alpha
       # - v0.14.0-alpha.27.alpha
@@ -223,12 +256,14 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:v${{ env.MAJOR_RELEASE }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:v${{ env.MAJOR_RELEASE }}.${{ env.MINOR_RELEASE }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:v${{ env.MAJOR_RELEASE }}.${{ env.MINOR_RELEASE }}.${{ env.PATCH_RELEASE }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.LATEST_TAG }}
           build-args: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
-            DOCKER_COLLECT_STATIC_FILES=${ steps.react-build-cache.outputs.cache-hit == 'true' && 'false' || 'true' }
             DOCKER_REACT_REMOTE_CACHE_BUSTER=${{ env.REACT_FOLDER_HASH }}
             DOCKER_REACT_REMOTE_CDN_URL=${{ env.DOCKER_REACT_REMOTE_CDN_URL }}
           cache-from: type=gha
@@ -263,13 +298,15 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:latest
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:v${{ env.MAJOR_RELEASE }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:v${{ env.MAJOR_RELEASE }}.${{ env.MINOR_RELEASE }}
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:v${{ env.MAJOR_RELEASE }}.${{ env.MINOR_RELEASE }}.${{ env.PATCH_RELEASE }}
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ github.run_id }}
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.DATESTAMP }}
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.LATEST_TAG }}
           build-args: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
-            DOCKER_COLLECT_STATIC_FILES=${ steps.react-build-cache.outputs.cache-hit == 'true' && 'false' || 'true' }
             DOCKER_REACT_REMOTE_CACHE_BUSTER=${{ env.REACT_FOLDER_HASH }}
             DOCKER_REACT_REMOTE_CDN_URL=${{ env.DOCKER_REACT_REMOTE_CDN_URL }}
           cache-from: type=gha
