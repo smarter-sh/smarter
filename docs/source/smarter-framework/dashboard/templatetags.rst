@@ -5,6 +5,6 @@ Dashboard Templatetags
 .. toctree::
    :maxdepth: 1
 
-   templatetags/vite_dashboard
-   templatetags/vite_prompt_passthrough
-   templatetags/vite_terminal_emulator
+   templatetags/react_dashboard
+   templatetags/react_prompt_passthrough
+   templatetags/react_terminal_emulator

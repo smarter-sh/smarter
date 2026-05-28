@@ -1,5 +1,5 @@
 Django Template Tag for Dashboard Vite Build Assets
 ============================================================
 
-.. automodule:: smarter.apps.dashboard.templatetags.vite_dashboard
+.. automodule:: smarter.apps.dashboard.templatetags.react_dashboard
    :members:
