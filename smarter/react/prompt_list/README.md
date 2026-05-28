@@ -1,8 +1,7 @@
 # Smarter Chatbots List app. React + TypeScript + Vite
 
 This is the source code for the Terminal Emulator app located
-at [http://localhost:9357/workbench/](http://localhost:9357/
-workbench/prompt_list/).
+at [http://localhost:9357/workbench/](http://localhost:9357/workbench/prompt_list/).
 
 This component is served by Django in production. See:
 

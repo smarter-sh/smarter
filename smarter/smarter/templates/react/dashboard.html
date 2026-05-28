@@ -8,7 +8,7 @@
   <!--
   Vite assets for the dashboard
   see: smarter.apps.dashboard.templatetags.react_dashboard.
-  reads the vite manifest.json file to determine the correct hashed filenames to include.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
   -->
   {% dashboard_react_assets as assets %}
   {% for css_file in assets.css %}
@@ -41,7 +41,7 @@
   <!--
   Vite assets for the dashboard
   see: smarter.apps.dashboard.templatetags.react_dashboard.
-  reads the vite manifest.json file to determine the correct .js entry filename to include.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
   -->
   {% dashboard_react_assets as assets %}
   {% for js_file in assets.js %}
