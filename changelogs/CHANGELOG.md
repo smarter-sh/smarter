@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.27](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.26...v0.14.0-alpha.27) (2026-05-28)
+
+### Bug Fixes
+
+* create SmarterReactTemplateTagManager to generalize manifest.json analysis ([2bcaea3](https://github.com/smarter-sh/smarter/commit/2bcaea31a2891f8101793c03a2838d37e9f8a86f))
+
 ## [0.14.0-alpha.26](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.25...v0.14.0-alpha.26) (2026-05-28)
 
 ### Bug Fixes
