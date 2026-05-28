@@ -4,7 +4,7 @@ Django template tags for the Prompt Passthrough app.
 
 from django import template
 
-from smarter.lib.django.templatetags.base import (
+from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
     AssetDict,
     SmarterReactTemplateTagManager,
 )

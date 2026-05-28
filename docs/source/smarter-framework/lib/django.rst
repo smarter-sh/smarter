@@ -30,6 +30,7 @@ For more information about Django, see the `official Django documentation <https
    django/signals
    django/tasks
    django/templates
+   django/templatetags
    django/token-generators
    django/validators
    django/view-helpers
