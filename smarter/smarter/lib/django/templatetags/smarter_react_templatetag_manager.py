@@ -1,25 +1,30 @@
 """
-Vite manifest loader and asset collector for Django templates.
+Vite manifest.json loader and asset collector base class for Django
+templatetags.
 
-This module provides template tags and utility functions to load and process
-the Vite manifest.json for the terminal emulator frontend, enabling Django
-templates to include the correct JavaScript and CSS assets built by Vite.
+This module provides a reusable base class and supporting types for
+managing Vite-generated React manifest.json files and collecting
+frontend assets for React apps in Django projects. It is designed
+to be instantiated as a singleton representing a specific React app,
+enabling Django templates to include the correctly-sequenced JavaScript
+and CSS assets built by Vite for each app.
 
-Features
---------
-- Loads the manifest.json from the static files directory.
-- Recursively collects CSS dependencies for a given entry point, including imports.
-- Provides a Django template tag to retrieve the JS and CSS assets for a manifest entry.
+Key Features
+------------
+- Loads and caches the manifest.json for each React app from the static files directory.
+- Recursively collects CSS and JS dependencies for a given entry point, including all imports, preserving dependency order.
+- Provides a method to retrieve the JS and CSS assets for a manifest entry, suitable for use in Django template tags.
+- Designed as a base class to be instantiated for each React app; singletons are used to register template tags per app.
 
-Functions
----------
-- load_manifest(): Loads and caches the manifest.json as a dictionary.
-- collect_assets(manifest, key, seen=None): Recursively collects CSS files for a manifest entry and its imports.
-- reactapp_build_assets(entry="index.html"): Django template tag that returns the JS and CSS assets for a given manifest entry.
+Main Classes and Functions
+-------------------------
+- SmarterReactTemplateTagManager: Base class for managing Vite manifest loading and asset collection for a React app.
+- collect_assets(): Recursively collects asset files (CSS or JS) for a manifest entry and its imports.
+- reactapp_build_assets(): Returns the JS and CSS assets for the configured entry point.
 
-Example
--------
-In a Django template, use the provided tag to get asset paths::
+Usage Example
+-------------
+In a Django template, use the registered template tag for your app to get asset paths::
 
     {% load vite_reactapp %}
     {% reactapp_build_assets "index.html" as assets %}
@@ -105,11 +110,22 @@ class AssetDict(TypedDict):
 
 class SmarterReactTemplateTagManager(SmarterHelperMixin):
     """
-    Manager for smarter template tags, providing utilities for loading Vite manifests
-    and collecting assets for Django templates.
+    Base class for per-React-app singleton managers that load
+    and analyze Vite-generated React manifest.json files in order
+    to generate ordered lists of JS and CSS assets.
 
-    This class encapsulates the logic for loading the Vite manifest, collecting CSS
-    dependencies, and providing a template tag to retrieve assets for a given entry point.
+    This class is intended to be instantiated once per React app, providing a
+    long-lived singleton that manages loading and caching the React manifest.json
+    and collecting all required JS and CSS assets for the app's entry point.
+
+    After instantiation, the only public method called is reactapp_build_assets(),
+    which returns ordered lists of the JS and CSS assets for the configured
+    entry point. The results of this method are cached for the effective lifetime
+    of the object instance (until server reboot).
+
+    This design ensures that asset collection is efficient and consistent, and that
+    Django templates can reliably include the dependency-ordered asset files for each
+    React app.
     """
 
     _manifest: ManifestType
@@ -301,9 +317,10 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
             serialized_assets = json.dumps(assets)
 
             logger.debug(
-                "%s.reactapp_build_assets() caching build assets for React entry_key=%s assets=%s",
+                "%s[%s].reactapp_build_assets() caching build assets for React app %s: %s",
                 self.formatted_class_name,
-                self.entry_key,
+                id(self),
+                self.app_name,
                 logging.formatted_json(json.loads(serialized_assets)),
             )
             return assets
