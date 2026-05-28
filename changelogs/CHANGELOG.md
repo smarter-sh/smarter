@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.26](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.25...v0.14.0-alpha.26) (2026-05-28)
+
+### Bug Fixes
+
+* generalize the proxy paths so that all components use the same set ([5521a28](https://github.com/smarter-sh/smarter/commit/5521a286bc4ff5a631ef97327cbdd0b317b742b3))
+
 ## [0.14.0-alpha.25](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.24...v0.14.0-alpha.25) (2026-05-27)
 
 ### Bug Fixes
