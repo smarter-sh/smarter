@@ -26,10 +26,10 @@ Usage Example
 -------------
 In a Django template, use the registered template tag for your app to get asset paths::
 
-    {% load vite_reactapp %}
-    {% reactapp_build_assets "index.html" as assets %}
+    {% load react_dashboard %}
+    {% dashboard_react_assets as assets %}
     {% for css_file in assets.css %}
-        <link class="smarter" rel="stylesheet" href="{% static css_file %}">
+        <link class="smarter" rel="stylesheet" href="{% static 'react/dashboard/' %}{{ css_file }}">
     {% endfor %}
 
 Example React manifest.json
@@ -94,7 +94,8 @@ ManifestType = dict[str, ManifestValues]
 
 class AssetDict(TypedDict):
     """
-    TypedDict representing the structure of assets returned for a Vite entry point.
+    TypedDict representing the structure of assets returned for a
+    manifest.json entry point.
 
     Attributes
     ----------
@@ -281,14 +282,16 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
 
     def reactapp_build_assets(self) -> AssetDict:
         """
-        Load CSS and JS files for a Vite entry point from the manifest.
+        Load CSS and JS files for a Vite-generated React manifest.json entry
+        point from the manifest, including all dependencies, cache and return
+        them as an ordered dictionary.
 
-        This function retrieves the JavaScript and CSS assets for a given Vite entry
-        point (defaulting to "index.html") by loading the manifest and collecting
+        This function retrieves the JavaScript and CSS assets for a given manifest.json
+        entry point (defaulting to "index.html") by loading the manifest and collecting
         all CSS dependencies recursively. It returns a dictionary with the main JS file
         and a list of CSS files, all prefixed for Django static file usage.
 
-        :param entry: The Vite entry point to retrieve assets for (default: "index.html").
+        :param entry: The manifest.json entry point to retrieve assets for (default: "index.html").
         :return: A dictionary containing the JS file and a list of CSS files.
         :rtype: AssetDict
 
