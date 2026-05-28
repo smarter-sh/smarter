@@ -351,8 +351,7 @@ generate the correct asset paths and filenames.
     {% endfor %}
   {% endblock %}
 
-See this :doc:`custom Django Template Tag <react-integration/example-template-tag>`
-implementation for the Terminal App React component.
+See :doc:`SmarterReactTemplateTagManager <lib/django/templatetags>`.
 
 Django Template
 -------------------
@@ -438,6 +437,7 @@ A live example of a Django view that serves the dashboard template:
   react-integration/terminal-application
   react-integration/prompt-passthrough
   react-integration/smarter-chat
+  lib/django/templatetags
 
 .. toctree::
   :maxdepth: 1
