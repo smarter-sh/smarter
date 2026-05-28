@@ -92,15 +92,8 @@ jobs:
         id: get-latest-release
         shell: bash
         run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0)
-          if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            FINAL_TAG="$LATEST_TAG"
-          else
-            FINAL_TAG="${LATEST_TAG}.${GITHUB_REF_NAME}"
-          fi
-          echo "LATEST_TAG=$FINAL_TAG" >> $GITHUB_ENV
 
-          # Parse tag components (e.g., v0.14.0-alpha.27 or v0.14.0)
+          LATEST_TAG=$(git describe --tags --abbrev=0)
           TAG_NO_PREFIX=${LATEST_TAG#v}
           # Extract prerelease if present
           if [[ "$TAG_NO_PREFIX" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-.+)?$ ]]; then
@@ -116,12 +109,23 @@ jobs:
           MAJOR_RELEASE="v$MAJOR"
           MINOR_RELEASE="v$MAJOR.$MINOR"
           PATCH_RELEASE="v$MAJOR.$MINOR.$PATCH"
+
           # Remove leading '-' from prerelease if present
           if [[ -n "$PRERELEASE" ]]; then
             PRERELEASE_TAG="v$MAJOR.$MINOR.$PATCH$PRERELEASE"
           else
             PRERELEASE_TAG=""
           fi
+
+          # Set FINAL_TAG: only append branch name if not a prerelease
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            FINAL_TAG="$LATEST_TAG"
+          elif [[ -z "$PRERELEASE" ]]; then
+            FINAL_TAG="${LATEST_TAG}.${GITHUB_REF_NAME}"
+          else
+            FINAL_TAG="$LATEST_TAG"
+          fi
+          echo "LATEST_TAG=$FINAL_TAG" >> $GITHUB_ENV
 
           echo "MAJOR_RELEASE=$MAJOR_RELEASE" >> $GITHUB_ENV
           echo "MINOR_RELEASE=$MINOR_RELEASE" >> $GITHUB_ENV
