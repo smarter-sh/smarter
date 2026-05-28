@@ -105,7 +105,7 @@ export default defineConfig(({ command }: ConfigEnv) => ({
   // environment as possible.
   server: {
     proxy: {
-      "/workbench/api/listview": "http://localhost:9357",
+      "/api": "http://localhost:9357",
       "/assets": {
         target: "http://localhost:9357", // Django dev server
         changeOrigin: true,
@@ -116,11 +116,17 @@ export default defineConfig(({ command }: ConfigEnv) => ({
         changeOrigin: true,
         rewrite: (path: string) => `/static${path}`,
       },
+      "/dashboard/": "http://localhost:9357",
       [`/static/react/${packageName}/`]: {
         target: "http://localhost:5173",
         changeOrigin: true,
         rewrite: (path: string) => path.replace(new RegExp(`^/static/react/${packageName}/`), "/"),
       },
+      "/static": {
+        target: "http://localhost:9357",
+        changeOrigin: true,
+      },
+      "/workbench/": "http://localhost:9357",
     },
   },
 }));
