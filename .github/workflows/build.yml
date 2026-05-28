@@ -37,6 +37,9 @@ jobs:
       - name: Checkout code
         id: checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Ensures all history and tags are fetched
+          fetch-tags: true
 
       - name: Set environment variable
         shell: bash
