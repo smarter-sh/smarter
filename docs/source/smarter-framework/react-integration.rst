@@ -36,8 +36,6 @@ React component needs in order to function.
     smarter-service-health-api-url="/dashboard/api/service-health/"
   >
 
-See this [live example](../../../smarter/smarter/templates/react/dashboard.html) of a Django template.
-
 Django View
 ~~~~~~~~~~~~~
 
@@ -45,7 +43,30 @@ The Django view is responsible for mapping the URL end point to the Django html 
 and for generating and passing the view context to the template. This is to say that the
 Django view is deliberately simple.
 
-See this [Django View](../../../smarter/smarter/apps/dashboard/views/views/dashboard.py) of a Django view.
+A live example of a Django view that serves the dashboard template:
+
+.. code-block:: python
+
+  class DashboardView(SmarterAuthenticatedNeverCachedWebView):
+
+      template_path = "react/dashboard.html"
+
+      def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+
+          context = {
+              "react_dashboard": {
+                  "root_id": "smarter-dashboard-root",
+                  "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
+                  "django_session_cookie_name": settings.SESSION_COOKIE_NAME,
+                  "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
+                  "my_resources_api_url": /path/to/my/resources/api/,
+                  "service_health_api_url": /path/to/service/health/api/,
+              }
+          }
+          self.template_path = "react/dashboard.html"
+
+          return render(request, self.template_path, context=context)
+
 
 Vite Configuration
 ~~~~~~~~~~~~~~~~~~~~
@@ -68,7 +89,82 @@ Examples:
 - Enabling hot module replacement in development for a smooth and efficient
   React development experience.
 
-See this [Vite Configuration](../../../smarter/react/dashboard/vite.config.ts) for Smarter's Vite configuration.
+Here's a live example of Smarter's Vite configuration for the React-based web console dashboard component.
+
+.. code-block:: javascript
+
+  const postBuildPlugin: PluginOption = {
+    name: "post-build",
+
+    closeBundle() {
+      if (packageJson.config.cdnDeploy === true) {
+        execSync(
+          `aws s3 sync ../../smarter/static/react/${packageName} ${packageJson.config.s3BucketPath} --acl public-read --delete`,
+          { stdio: "inherit" },
+        );
+        execSync(
+          `aws --no-cli-pager cloudfront create-invalidation --distribution-id ${packageJson.config.cloudfrontDistributionId} --paths '/react/${packageName}/*'`,
+          { stdio: "inherit" },
+        );
+      }
+    },
+  };
+
+  export default defineConfig(({ command }: ConfigEnv) => ({
+    plugins: [
+      react(),
+      postBuildPlugin,
+    ],
+    esbuild: {
+      pure: ["console.debug"],
+    },
+    base: command === "serve" ? "/" : `/static/react/${packageName}/`,
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
+    build: {
+      minify: "esbuild" as const,
+      manifest: "manifest.json",
+      outDir: `../../smarter/static/react/${packageName}`,
+      emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          entryFileNames: "assets/[name]-[hash].js",
+          chunkFileNames: "assets/[name]-[hash].js",
+          assetFileNames: "assets/[name]-[hash][extname]",
+          manualChunks(id: string) {
+            if (id.includes("node_modules/xterm") || id.includes("node_modules/@xterm")) {
+              return "xterm";
+            }
+            return undefined;
+          },
+        },
+      },
+    },
+    server: {
+      proxy: {
+        "/workbench/api/listview": "http://localhost:9357",
+        "/assets": {
+          target: "http://localhost:9357", // Django dev server
+          changeOrigin: true,
+          rewrite: (path: string) => `/static${path}`,
+        },
+        "/common-styles.css": {
+          target: "http://localhost:9357",
+          changeOrigin: true,
+          rewrite: (path: string) => `/static${path}`,
+        },
+        [`/static/react/${packageName}/`]: {
+          target: "http://localhost:5173",
+          changeOrigin: true,
+          rewrite: (path: string) => path.replace(new RegExp(`^/static/react/${packageName}/`), "/"),
+        },
+      },
+    },
+  }));
+
 
 Django Template Tags
 ~~~~~~~~~~~~~~~~~~~~~~
