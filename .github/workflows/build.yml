@@ -28,7 +28,7 @@ env:
   AWS_ECR_REPO: "no-value"
   DATESTAMP: "no-value"
   TAG: "no-value"
-  LATEST_TAG: "no-value"
+  LATEST_RELEASE: "no-value"
   MAJOR_RELEASE: "0"
   MINOR_RELEASE: "0"
   PATCH_RELEASE: "0"
@@ -93,8 +93,8 @@ jobs:
         shell: bash
         run: |
 
-          LATEST_TAG=$(git describe --tags --abbrev=0)
-          TAG_NO_PREFIX=${LATEST_TAG#v}
+          LATEST_RELEASE=$(git describe --tags --abbrev=0)
+          TAG_NO_PREFIX=${LATEST_RELEASE#v}
           # Extract prerelease if present
           if [[ "$TAG_NO_PREFIX" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-.+)?$ ]]; then
             MAJOR="${BASH_REMATCH[1]}"
@@ -119,13 +119,13 @@ jobs:
 
           # Set FINAL_TAG: only append branch name if not a prerelease
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            FINAL_TAG="$LATEST_TAG"
+            FINAL_TAG="$LATEST_RELEASE"
           elif [[ -z "$PRERELEASE" ]]; then
-            FINAL_TAG="${LATEST_TAG}.${GITHUB_REF_NAME}"
+            FINAL_TAG="${LATEST_RELEASE}.${GITHUB_REF_NAME}"
           else
-            FINAL_TAG="$LATEST_TAG"
+            FINAL_TAG="$LATEST_RELEASE"
           fi
-          echo "LATEST_TAG=$FINAL_TAG" >> $GITHUB_ENV
+          echo "LATEST_RELEASE=$FINAL_TAG" >> $GITHUB_ENV
 
           echo "MAJOR_RELEASE=$MAJOR_RELEASE" >> $GITHUB_ENV
           echo "MINOR_RELEASE=$MINOR_RELEASE" >> $GITHUB_ENV
@@ -260,12 +260,12 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.LATEST_RELEASE }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.MAJOR_RELEASE }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.MINOR_RELEASE }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.PATCH_RELEASE }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.LATEST_TAG }}
           build-args: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
             DOCKER_REACT_REMOTE_CACHE_BUSTER=${{ env.REACT_FOLDER_HASH }}
@@ -303,12 +303,12 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:latest
+            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.LATEST_RELEASE }}
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.MAJOR_RELEASE }}
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.MINOR_RELEASE }}
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.PATCH_RELEASE }}
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ github.run_id }}
             ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.DATESTAMP }}
-            ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}:${{ env.LATEST_TAG }}
           build-args: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
             DOCKER_REACT_REMOTE_CACHE_BUSTER=${{ env.REACT_FOLDER_HASH }}
