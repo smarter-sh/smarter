@@ -1,16 +1,16 @@
 {% extends "dashboard/base.html" %}
 {% load static %}
-{% load vite_prompt_list %}
+{% load react_prompt_list %}
 
 {% block style_extra %}
   {{ block.super }}
 
   <!--
   Vite assets for the prompt list
-  see: smarter.apps.prompt_list.templatetags.vite_prompt_list.
+  see: smarter.apps.prompt_list.templatetags.react_prompt_list.
   reads the vite manifest.json file to determine the correct hashed filenames to include.
   -->
-  {% prompt_list_vite_assets "index.html" as assets %}
+  {% prompt_list_react_assets as assets %}
   {% for css_file in assets.css %}
     <link class="smarter" rel="stylesheet" href="{% static 'react/prompt_list/' %}{{ css_file }}">
   {% endfor %}
@@ -35,9 +35,12 @@
 
   <!--
   Vite assets for the prompt list
-  see: smarter.apps.prompt_list.templatetags.vite_prompt_list.
+  see: smarter.apps.prompt_list.templatetags.react_prompt_list.
   reads the vite manifest.json file to determine the correct .js entry filename to include.
   -->
-  {% prompt_list_vite_assets "index.html" as assets %}
-  <script class="smarter" type="module" src="{% static 'react/prompt_list/' %}{{ assets.js }}"></script>
+  {% prompt_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/prompt_list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
 {% endblock %}

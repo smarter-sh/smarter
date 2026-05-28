@@ -1,16 +1,16 @@
 {% extends "dashboard/base.html" %}
 {% load static %}
-{% load vite_dashboard %}
+{% load react_dashboard %}
 
 {% block style_extra %}
   {{ block.super }}
 
   <!--
   Vite assets for the dashboard
-  see: smarter.apps.dashboard.templatetags.vite_dashboard.
+  see: smarter.apps.dashboard.templatetags.react_dashboard.
   reads the vite manifest.json file to determine the correct hashed filenames to include.
   -->
-  {% dashboard_vite_assets "index.html" as assets %}
+  {% dashboard_react_assets as assets %}
   {% for css_file in assets.css %}
     <link class="smarter" rel="stylesheet" href="{% static 'react/dashboard/' %}{{ css_file }}">
   {% endfor %}
@@ -39,10 +39,13 @@
   {{ block.super }}
 
   <!--
-  Vite assets for the prompt dashboard
-  see: smarter.apps.dashboard.templatetags.vite_dashboard.
+  Vite assets for the dashboard
+  see: smarter.apps.dashboard.templatetags.react_dashboard.
   reads the vite manifest.json file to determine the correct .js entry filename to include.
   -->
-  {% dashboard_vite_assets "index.html" as assets %}
-  <script class="smarter" type="module" src="{% static 'react/dashboard/' %}{{ assets.js }}"></script>
+  {% dashboard_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/dashboard/' %}{{ js_file }}"></script>
+  {% endfor %}
+
 {% endblock %}

@@ -10,7 +10,7 @@ This component is served by Django in production. See:
 - builds are distributed from s3://smarter.sh/react/passthrough/ and gathered
 by Dockerfile during builds into Django's static asset folder.
 - [smarter.apps.dashboard.views.passthrough.view.PromptPassthroughView](../../smarter/apps/dashboard/views/passthrough/view.py)
-- [smarter.apps.dashboard.templatetags.vite_prompt_passthrough.prompt_passthrough_vite_assets](../../smarter/apps/dashboard/templatetags/vite_prompt_passthrough.py)
+- [smarter.apps.dashboard.templatetags.vite_prompt_passthrough.prompt_passthrough_react_assets](../../smarter/apps/dashboard/templatetags/vite_prompt_passthrough.py)
 - [templates/react/prompt-passthrough.html](../../smarter/templates/react/prompt-passthrough.html)
 
 

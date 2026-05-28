@@ -1,6 +1,6 @@
 {% extends "dashboard/base.html" %}
 {% load static %}
-{% load vite_terminal_emulator %}
+{% load react_terminal_emulator %}
 
 
 {% block style_extra %}
@@ -8,10 +8,10 @@
 
   <!--
   Vite assets for the terminal emulator
-  see: smarter.apps.dashboard.templatetags.vite_terminal_emulator.
+  see: smarter.apps.dashboard.templatetags.react_terminal_emulator.
   reads the vite manifest.json file to determine the correct hashed filenames to include.
   -->
-  {% terminal_emulator_vite_assets "index.html" as assets %}
+  {% terminal_emulator_react_assets as assets %}
   {% for css_file in assets.css %}
     <link class="smarter" rel="stylesheet" href="{% static 'react/terminal_emulator/' %}{{ css_file }}">
   {% endfor %}
@@ -35,9 +35,11 @@
 
   <!--
   Vite assets for the terminal emulator
-  see: smarter.apps.dashboard.templatetags.vite_terminal_emulator.
+  see: smarter.apps.dashboard.templatetags.react_terminal_emulator.
   reads the vite manifest.json file to determine the correct .js entry filename to include.
   -->
-  {% terminal_emulator_vite_assets "index.html" as assets %}
-  <script class="smarter" type="module" src="{% static 'react/terminal_emulator/' %}{{ assets.js }}"></script>
+  {% terminal_emulator_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/terminal_emulator/' %}{{ js_file }}"></script>
+  {% endfor %}
 {% endblock %}

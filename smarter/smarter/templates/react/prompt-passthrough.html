@@ -1,16 +1,16 @@
 {% extends "dashboard/base.html" %}
 {% load static %}
-{% load vite_prompt_passthrough %}
+{% load react_prompt_passthrough %}
 
 {% block style_extra %}
   {{ block.super }}
 
   <!--
   Vite assets for the prompt passthrough
-  see: smarter.apps.dashboard.templatetags.vite_prompt_passthrough.
+  see: smarter.apps.dashboard.templatetags.react_prompt_passthrough.
   reads the vite manifest.json file to determine the correct hashed filenames to include.
   -->
-  {% prompt_passthrough_vite_assets "index.html" as assets %}
+  {% prompt_passthrough_react_assets as assets %}
   {% for css_file in assets.css %}
     <link class="smarter" rel="stylesheet" href="{% static 'react/prompt_passthrough/' %}{{ css_file }}">
   {% endfor %}
@@ -38,9 +38,11 @@
 
   <!--
   Vite assets for the prompt passthrough
-  see: smarter.apps.dashboard.templatetags.vite_prompt_passthrough.
+  see: smarter.apps.dashboard.templatetags.react_prompt_passthrough.
   reads the vite manifest.json file to determine the correct .js entry filename to include.
   -->
-  {% prompt_passthrough_vite_assets "index.html" as assets %}
-  <script class="smarter" type="module" src="{% static 'react/prompt_passthrough/' %}{{ assets.js }}"></script>
+  {% prompt_passthrough_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/prompt_passthrough/' %}{{ js_file }}"></script>
+  {% endfor %}
 {% endblock %}
