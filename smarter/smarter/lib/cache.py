@@ -5,8 +5,8 @@ Smarter cache decorator and lazy cache wrapper.
 import hashlib
 import logging
 import pickle
-from functools import cached_property, wraps
-from typing import Any, Callable, Optional
+from functools import cached_property, lru_cache, wraps
+from typing import Any, Callable, Optional, Union
 
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import (
@@ -15,12 +15,15 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_green,
     formatted_text_red,
 )
+from smarter.lib import json
 
 logger = logging.getLogger(__name__)
 logger_prefix_normal = formatted_text(f"{__name__}.@cache_results()")
 logger_prefix_green = formatted_text_green(f"{__name__}.@cache_results()")
 logger_prefix_red = formatted_text_red(f"{__name__}.@cache_results()")
 logger_prefix_blue = formatted_text_blue(f"{__name__}.@cache_results()")
+
+LRU_CACHE_MAXSIZE = 128
 
 
 class CacheSentinel:
@@ -314,11 +317,120 @@ leading to buggy cache misses such as browser session values not being stored.
 """
 
 
+@lru_cache(maxsize=LRU_CACHE_MAXSIZE)
+def _generate_sorted_kwargs_cached(sorted_items: tuple) -> tuple:
+    """
+    Returns a tuple of sorted keyword argument items.
+
+    This function is a helper used to ensure that keyword arguments are consistently
+    ordered for cache key generation. It is decorated with `functools.lru_cache` to
+    optimize repeated calls with the same input, improving performance when generating
+    cache keys for functions with identical keyword arguments.
+
+    :param sorted_items: A tuple of keyword argument items (key-value pairs), already sorted.
+    :type sorted_items: tuple
+    :return: A tuple of sorted keyword argument items.
+    :rtype: tuple
+    """
+    return tuple(sorted(sorted_items))
+
+
+def _generate_sorted_kwargs(kwargs: dict) -> tuple:
+    """
+    Sorts the keyword arguments for consistent generation of sha256 cache key,
+    which is created, in part, on the results of this function.
+
+
+    :param kwargs: The keyword arguments to sort.
+    :return: A tuple of sorted keyword argument items.
+    :rtype: tuple
+    """
+
+    def _make_hashable(obj):
+        if isinstance(obj, dict):
+            return tuple(sorted((k, _make_hashable(v)) for k, v in obj.items()))
+        elif isinstance(obj, (list, tuple)):
+            return tuple(_make_hashable(x) for x in obj)
+        elif isinstance(obj, set):
+            return tuple(sorted(_make_hashable(x) for x in obj))
+        else:
+            return obj
+
+    hashable_items = tuple(sorted((k, _make_hashable(v)) for k, v in kwargs.items()))
+    return _generate_sorted_kwargs_cached(hashable_items)
+
+
+@lru_cache(maxsize=LRU_CACHE_MAXSIZE)
+def _json_cache_key_cached(key_tuple: tuple) -> Union[bytes, None]:
+    """
+    Serializes the key data to JSON and encodes it as bytes for hashing.
+
+    This function takes a tuple representing cache key data, serializes it to a JSON string
+    with sorted keys and compact separators, and encodes the result as UTF-8 bytes.
+    This byte representation is suitable for deterministic hashing (e.g., with SHA-256)
+    to generate cache keys. If serialization fails due to non-serializable data,
+    the function logs an error and returns ``None``.
+
+    :param key_tuple: The tuple containing key data to serialize (typically function name, args, kwargs).
+    :type key_tuple: tuple
+    :return: The JSON-encoded bytes representation of the key data, or ``None`` if serialization fails.
+    :rtype: Optional[bytes]
+    """
+    try:
+        return json.dumps(key_tuple, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    except (TypeError, ValueError) as e:
+        logger.error("%s Failed to JSON serialize key data: %s", logger_prefix_normal, e)
+        return None
+
+
+def _generate_key_data(func: Callable, args: tuple, kwargs: dict) -> Optional[bytes]:
+    """
+    Generates a raw cache key based on the function name, arguments,
+    and sorted keyword arguments.
+
+    :param func: The function for which to generate the key.
+    :param args: The positional arguments passed to the function.
+    :param kwargs: The keyword arguments passed to the function.
+    :return: The raw key data as bytes.
+    :rtype: Optional[bytes]
+    """
+
+    sorted_kwargs = _generate_sorted_kwargs(kwargs)
+    key_tuple = (func.__name__, args, sorted_kwargs)
+    return _json_cache_key_cached(key_tuple)
+
+
+@lru_cache(maxsize=LRU_CACHE_MAXSIZE)
+def _generate_cache_key_cached(func: Callable, key_data: bytes) -> str:
+    """
+    Generates a deterministic cache key str based on
+    the module name, function name and a 32-character hash of
+    the complete set of key data.
+
+    :param func: The function for which to generate the key.
+    :param key_data: The raw key data as bytes.
+    :return: The generated cache key as a string.
+    :rtype: str
+    """
+    return f"{func.__module__}.{func.__name__}()_" + hashlib.sha256(key_data).hexdigest()[:32]
+
+
 def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=False):
     """
     A decorator that caches the result of a function based on the arguments
-    passed to it. When
-    the decorated function is called, the decorator first checks if a cached
+    passed to it.
+
+    .. important::
+
+        This decorator is intended for expensive and long-lasting, persistable
+        caching scenarios such as Django ORM reads, where the results of the
+        decorated function should endure application restarts and deployments.
+        This caching decorator itself is using Python function caching in order
+        to generate cache keys, which is to say that using this decorator could
+        be counter-productive for caching scenarios that are better served by
+        in-memory caching of short-lived results.
+
+    When the decorated function is called, the decorator first checks if a cached
     result exists for the given arguments. If a cached result is found, it is
     returned immediately. If not, the original function is called, its result
     is cached, and then returned. Smarter's cache infrastructure is based on
@@ -373,64 +485,6 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
     """
 
     def decorator(func: Callable) -> Callable:
-
-        def generate_sorted_kwargs(kwargs: dict) -> tuple:
-            """
-            Sorts the keyword arguments for consistent generation of sha256 cache key,
-            which is created, in part, on the results of this function.
-
-
-            :param kwargs: The keyword arguments to sort.
-            :return: A tuple of sorted keyword argument items.
-            :rtype: tuple
-
-            """
-            return tuple(sorted(kwargs.items()))
-
-        def generate_key_data(func: Callable, args: tuple, kwargs: dict) -> Optional[bytes]:
-            """
-            Generates a raw cache key based on the function name, arguments,
-            and sorted keyword arguments.
-
-            :param func: The function for which to generate the key.
-            :param args: The positional arguments passed to the function.
-            :param kwargs: The keyword arguments passed to the function.
-            :return: The raw key data as bytes.
-            :rtype: Optional[bytes]
-            """
-            sorted_kwargs = generate_sorted_kwargs(kwargs)
-            try:
-                key_data = pickle.dumps((func.__name__, args, sorted_kwargs))
-            except pickle.PickleError as e:
-                logger.error("%s Failed to pickle key data: %s", logger_prefix_normal, e)
-                return None
-
-            return key_data
-
-        def generate_cache_key(func: Callable, key_data: bytes) -> str:
-            """
-            Generates a deterministic cache key str based on
-            the module name, function name and a 32-character hash of
-            the complete set of key data.
-
-            :param func: The function for which to generate the key.
-            :param key_data: The raw key data as bytes.
-            :return: The generated cache key as a string.
-            :rtype: str
-            """
-            return f"{func.__module__}.{func.__name__}()_" + hashlib.sha256(key_data).hexdigest()[:32]
-
-        # pylint: disable=unused-variable
-        def unpickle_key_data(key_data: bytes) -> Optional[tuple]:
-            """
-            Unpickles the key data to retrieve the original function name, arguments, and sorted keyword arguments.
-            """
-            try:
-                return pickle.loads(key_data)  # nosec
-            # pylint: disable=W0718
-            except Exception as e:
-                logger.error("%s Failed to unpickle key data: %s", logger_prefix_normal, e)
-                return None
 
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -496,15 +550,14 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
             :return: The result of the decorated function, either from cache or freshly computed.
             :rtype: Any
             """
-            key_data: Optional[bytes] = generate_key_data(func, args, kwargs)
+            key_data: Optional[bytes] = _generate_key_data(func, args, kwargs)
             # If key_data is None, we cannot generate a cache key, so we call the function directly
             # and return the result without caching.
             # This is a fallback to avoid breaking the application in case of pickling errors.
             if key_data is None:
                 logger.error("%s Failed to generate cache key data for %s", logger_prefix_normal, func.__name__)
                 return func(*args, **kwargs)
-            cache_key = generate_cache_key(func, key_data)
-            # unpickled_cache_key = unpickle_key_data(key_data)
+            cache_key = _generate_cache_key_cached(func, key_data)
 
             # look for a cached result ...
             cached_result = lazy_cache.get(cache_key, CACHE_MISS_SENTINEL)
@@ -584,10 +637,10 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
                 args,
                 kwargs,
             )
-            key_data: Optional[bytes] = generate_key_data(func, args, kwargs)
+            key_data: Optional[bytes] = _generate_key_data(func, args, kwargs)
             if key_data is None:
                 return
-            cache_key: str = generate_cache_key(func, key_data)
+            cache_key: str = _generate_cache_key_cached(func, key_data)
             if lazy_cache.has_key(cache_key):
                 cached_value = lazy_cache.get(cache_key)
                 lazy_cache.delete(cache_key)

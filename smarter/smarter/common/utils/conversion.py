@@ -348,11 +348,10 @@ def to_snake_case(obj) -> str:
         print(to_snake_case(MyClass))        # Output: my_class
 
     """
-
     if isinstance(obj, str):
         retval = _convert_to_snake_case(obj)
     else:
-        retval = _convert_to_snake_case(obj.__name__)
+        retval = _convert_to_snake_case(obj.__name__) if hasattr(obj, "__name__") else str(obj)
     logger.debug("%s.to_snake_case() - converted '%s' to '%s'", logger_prefix, obj, retval)
     return retval
 

@@ -389,23 +389,28 @@ class SmarterHelperMixin:
     # Case conversion utilities
     ###########################################################################
 
-    def to_snake_case(self, name: object) -> str:
+    def to_snake_case(self, obj: object) -> str:
         """
         Converts a string to snake_case.
 
         This method takes a string in any case format (e.g., camelCase, PascalCase, kebab-case)
         and converts it to snake_case, which is commonly used in Python for variable and function names.
 
-        :param name: The object to convert to snake_case.
-        :type name: object
+        :param obj: The object to convert to snake_case.
+        :type obj: object
         :return: The converted string in snake_case.
         :rtype: str
         """
 
-        def _to_snake_case(name: object) -> str:
-            return utils_to_snake_case(name)
+        @cache_results(timeout=FOREVER)
+        def _string_to_snake_case(string_name: str) -> str:
+            return utils_to_snake_case(string_name)
 
-        return _to_snake_case(name)
+        if isinstance(obj, str):
+            return _string_to_snake_case(obj)
+
+        string_name = obj.__name__ if hasattr(obj, "__name__") else str(obj)  # type: ignore[attr-defined]
+        return _string_to_snake_case(string_name)
 
     def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
         """
@@ -414,11 +419,18 @@ class SmarterHelperMixin:
         This method takes a string in camelCase or PascalCase format and converts it to snake_case.
         It is useful for standardizing naming conventions across different formats.
 
-        :param name: The camelCase or PascalCase string to convert.
-        :type name: str
+        :param data: The camelCase or PascalCase string to convert.
+        :type data: Union[str, dict, list]
         :return: The converted string in snake_case.
         :rtype: Optional[Union[str, dict, list]]
         """
+
+        @cache_results(timeout=FOREVER)
+        def _string_camel_to_snake(string_name: str) -> str:
+            return utils_camel_to_snake(string_name)  # type: ignore
+
+        if isinstance(data, str):
+            return _string_camel_to_snake(data)
         return utils_camel_to_snake(data)
 
     def camel_to_snake_dict(self, data: dict) -> dict:
@@ -449,6 +461,13 @@ class SmarterHelperMixin:
         :return: The converted string in camelCase.
         :rtype: Optional[Union[str, dict, list]]
         """
+
+        @cache_results(timeout=FOREVER)
+        def _string_snake_to_camel(name: str) -> str:
+            return utils_snake_to_camel(name)  # type: ignore
+
+        if isinstance(data, str):
+            return _string_snake_to_camel(data)
         return utils_snake_to_camel(data, convert_values=convert_values)
 
     def pascal_to_snake(self, name: Union[str, dict, list]) -> Union[str, dict, list]:
@@ -464,6 +483,12 @@ class SmarterHelperMixin:
         :rtype: Union[str, dict, list]
         """
 
+        @cache_results(timeout=FOREVER)
+        def _string_pascal_to_snake(name: str) -> str:
+            return utils_pascal_to_snake(name)  # type: ignore
+
+        if isinstance(name, str):
+            return _string_pascal_to_snake(name)
         return utils_pascal_to_snake(name)
 
     def rfc1034_compliant_str(self, name: str) -> str:

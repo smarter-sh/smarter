@@ -1,7 +1,7 @@
 """Django template and view helper functions."""
 
 import re
-from functools import wraps
+from functools import cached_property, wraps
 from http import HTTPStatus
 
 from bs4 import BeautifulSoup
@@ -160,7 +160,7 @@ class SmarterView(View, SmarterRequestMixin):
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
 
-    @property
+    @cached_property
     def logger_prefix(self):
         return formatted_text(f"{__name__}.{self.__class__.__name__}")
 
