@@ -5,6 +5,7 @@ smarter.common.utils.dict
 Module providing dictionary utility functions for the Smarter framework.
 
 This module includes helper functions for:
+
 - Recursively sorting dictionaries by key for deterministic output.
 - Checking if all keys and values in one dictionary are present in another (deep containment).
 - Recursively verifying if a dictionary or list is a subset of another.
@@ -87,12 +88,6 @@ def dict_is_contained_in(dict1, dict2):
     :return: Returns ``True`` if every key in ``dict1`` exists in ``dict2`` and the corresponding values match (including nested dictionaries). Returns ``False`` otherwise.
     :rtype: bool
 
-    .. note::
-        This function prints diagnostic messages to standard output if a key or value is missing or mismatched. Nested dictionaries are checked recursively.
-
-    .. warning::
-        The function is not silent: it prints to standard output when a mismatch is found. This may not be suitable for production use where logging is preferred.
-
     **Example usage:**
 
     .. code-block:: python
@@ -130,15 +125,12 @@ def dict_is_contained_in(dict1, dict2):
     logger.debug("%s.dict_is_contained_in()", logger_prefix)
     for key, value in dict1.items():
         if key not in dict2:
-            print(f"the key {key} is not present in the model dict: ")
             return False
         if isinstance(value, dict):
             if not dict_is_contained_in(value, dict2[key]):
-                print("dict not in the model dict: ", value)
                 return False
         else:
             if dict2[key] != value:
-                print(f"value {value} is not present in the model dict: ")
                 return False
     return True
 
@@ -160,9 +152,6 @@ def dict_is_subset(small, big) -> bool:
         - For dictionaries, all keys and their corresponding values must exist in ``big``.
         - For lists, all elements in ``small`` must be present in ``big``; order does not matter.
         - Nested dictionaries and lists are checked recursively.
-
-    .. warning::
-        This function does not print diagnostic messages. It is designed for silent, recursive subset checking. For more verbose output, use ``dict_is_contained_in``.
 
     **Example usage:**
 
