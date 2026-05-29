@@ -3,25 +3,20 @@ Smarter cache decorator and lazy cache wrapper.
 """
 
 import hashlib
-import logging
 import pickle
 from functools import cached_property, lru_cache, wraps
 from typing import Any, Callable, Optional, Union
 
+from django.apps import apps
+
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-    formatted_text_blue,
-    formatted_text_green,
-    formatted_text_red,
-)
-from smarter.lib import json
+from smarter.lib import json, logging
 
 logger = logging.getLogger(__name__)
-logger_prefix_normal = formatted_text(f"{__name__}.@cache_results()")
-logger_prefix_green = formatted_text_green(f"{__name__}.@cache_results()")
-logger_prefix_red = formatted_text_red(f"{__name__}.@cache_results()")
-logger_prefix_blue = formatted_text_blue(f"{__name__}.@cache_results()")
+logger_prefix_normal = logging.formatted_text(f"{__name__}.@cache_results()")
+logger_prefix_green = logging.formatted_text_green(f"{__name__}.@cache_results()")
+logger_prefix_red = logging.formatted_text_red(f"{__name__}.@cache_results()")
+logger_prefix_blue = logging.formatted_text_blue(f"{__name__}.@cache_results()")
 
 LRU_CACHE_MAXSIZE = 128
 
@@ -119,7 +114,18 @@ class LazyCache:
         :rtype: django.core.cache.Cache
         """
         if self._cache is None:
-            logger_prefix = formatted_text(f"{__name__}.{LazyCache.__name__}.cache()")
+            logger_prefix = logging.formatted_text(f"{__name__}.{LazyCache.__name__}.cache()")
+            if apps.ready:
+                logger.debug(
+                    "%s Django apps are ready. Proceeding to initialize django.core.cache.",
+                    logger_prefix,
+                )
+            else:
+                logger.warning(
+                    "%s Django cache is being accessed before Django apps are ready. This may lead to premature initialization issues and unexpected cache backend fallbacks.",
+                    logger_prefix,
+                )
+                return None
             from django.core.cache import cache, caches
             from django_redis.cache import RedisCache
 
@@ -633,7 +639,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
             logger.debug(
                 "%s -> %s called with args: %s kwargs: %s",
                 logger_prefix_blue,
-                formatted_text_blue(func.__name__ + "().invalidate()"),
+                logging.formatted_text_blue(func.__name__ + "().invalidate()"),
                 args,
                 kwargs,
             )
@@ -646,14 +652,14 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
                 lazy_cache.delete(cache_key)
                 logger.info(
                     "%s - invalidated %s - %s",
-                    logger_prefix_green + formatted_text_green(func.__name__ + "().invalidate()"),
+                    logger_prefix_green + logging.formatted_text_green(func.__name__ + "().invalidate()"),
                     type(cached_value).__name__,
                     cache_key,
                 )
             else:
                 logger.debug(
                     "%s - no cache entry found for %s (nothing to invalidate)",
-                    logger_prefix_red + formatted_text_red(func.__name__ + "().invalidate()"),
+                    logger_prefix_red + logging.formatted_text_red(func.__name__ + "().invalidate()"),
                     cache_key,
                 )
 
@@ -661,3 +667,6 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
         return wrapper
 
     return decorator
+
+
+__all__ = ["cache_results", "lazy_cache"]
