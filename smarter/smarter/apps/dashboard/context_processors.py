@@ -106,6 +106,8 @@ logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 logger_prefix_cache_invalidations = logging.formatted_text_blue(f"{__name__}.cache_invalidations()")
 
+FOREVER = 60 * 60 * 24 * 365  # one year, in seconds
+
 
 def static_version(request):
 
@@ -136,7 +138,7 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
     :rtype: dict[str, Any]
     """
 
-    @cache_results()
+    @cache_results(timeout=FOREVER)
     def cached_sidebar_context() -> dict[str, Any]:
         retval = {
             "sidebar": {
@@ -208,7 +210,7 @@ def base(request: "HttpRequest") -> dict[str, Any]:
         else:
             user = None
 
-    @cache_results()
+    @cache_results(timeout=FOREVER)
     def get_cached_context(username: Optional[str]) -> dict[str, Any]:
         """
         Constructs and returns the cached dashboard context for the specified user.
@@ -221,8 +223,8 @@ def base(request: "HttpRequest") -> dict[str, Any]:
         The context is tailored to the authenticated user and is used by the main
         ``base`` context processor to populate the dashboard template.
 
-        :param user: The user for whom the dashboard context is being constructed.
-        :type user: Optional[User]
+        :param username: The username for whom the dashboard context is being constructed.
+        :type username: Optional[str]
         :return: A dictionary containing the dashboard context variables for the user.
         :rtype: dict
         """
@@ -303,7 +305,7 @@ def branding(request: "HttpRequest") -> dict[str, Any]:
     This processor is intended to be added to the ``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings, making the ``branding`` context variable available in all templates rendered by Django that inherit from ``base.html``.
     """
 
-    @cache_results()
+    @cache_results(timeout=FOREVER)
     def get_cached_context() -> dict[str, Any]:
         current_year = datetime.now().year
         root_url = request.build_absolute_uri("/").rstrip("/")
