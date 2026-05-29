@@ -11,18 +11,11 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 
 """
 
-from smarter.common.utils.utils import (
-    bool_environment_variable,
+from .conversion import (
     camel_to_snake,
     camel_to_snake_dict,
     dict_is_contained_in,
     dict_is_subset,
-    generate_fernet_encryption_key,
-    get_readonly_csv_file,
-    get_readonly_yaml_file,
-    hash_factory,
-    is_async_context,
-    mask_string,
     pascal_to_snake,
     recursive_sort_dict,
     rfc1034_compliant_str,
@@ -31,11 +24,18 @@ from smarter.common.utils.utils import (
     snake_to_camel,
     to_snake_case,
 )
-
 from .diagnostics import get_diagnostics
+from .file_handlers import get_readonly_csv_file, get_readonly_yaml_file
 from .request import is_authenticated_request
 from .request_to_json import request_to_json
 from .uri import smarter_build_absolute_uri
+from .utils import (
+    bool_environment_variable,
+    generate_fernet_encryption_key,
+    hash_factory,
+    is_async_context,
+    mask_string,
+)
 from .version import get_semantic_version
 
 __all__ = [
