@@ -140,6 +140,10 @@ def handle_chat_completion_response_received(
 ):
     """Handle chat completion called signal."""
     request_data = request_to_json(request) if request else None
+    if isinstance(request_data, (dict, list)):
+        formatted_request_data = formatted_json(dict(request_data) if isinstance(request_data, dict) else request_data)
+    else:
+        formatted_request_data = str(request_data)
 
     if isinstance(response, ChatCompletion):
         response_data = response.model_dump()
@@ -154,7 +158,7 @@ def handle_chat_completion_response_received(
         this_prefix,
         sender_name,
         chat,
-        formatted_json(request_data) if request_data else None,
+        formatted_request_data,
         formatted_json(response_data) if response_data else None,
     )
 
@@ -213,6 +217,10 @@ def handle_chat_response_success(
     """Handle chat completion returned signal."""
 
     request_data = request_to_json(request) if request else None
+    if isinstance(request_data, (dict, list)):
+        formatted_request_data = formatted_json(dict(request_data) if isinstance(request_data, dict) else request_data)
+    else:
+        formatted_request_data = str(request_data)
 
     if isinstance(response, ChatCompletion):
         response_data = response.model_dump()
@@ -224,7 +232,7 @@ def handle_chat_response_success(
         formatted_text(f"{prefix}.chat_finished"),
         chat,
         get_sender_name(sender),
-        formatted_json(request_data) if request_data else None,
+        formatted_request_data,
         formatted_json(response_data) if response_data else None,
     )
     if chat:

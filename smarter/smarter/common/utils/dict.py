@@ -1,5 +1,38 @@
 """
-Utility functions for the Smarter framework.
+smarter.common.utils.dict
+==========================
+
+Module providing dictionary utility functions for the Smarter framework.
+
+This module includes helper functions for:
+- Recursively sorting dictionaries by key for deterministic output.
+- Checking if all keys and values in one dictionary are present in another (deep containment).
+- Recursively verifying if a dictionary or list is a subset of another.
+
+These utilities are useful for testing, serialization, comparison, and data validation tasks.
+
+Functions
+---------
+- recursive_sort_dict(d): Recursively sorts a dictionary by its keys.
+- dict_is_contained_in(dict1, dict2): Checks if all keys and values in dict1 are present in dict2, recursively.
+- dict_is_subset(small, big): Recursively checks that all items in the dictionary or list 'small' exist in 'big'.
+
+Example
+-------
+.. code-block:: python
+
+    from smarter.common.utils import recursive_sort_dict, dict_is_contained_in, dict_is_subset
+
+    d = {"b": 2, "a": {"d": 4, "c": 3}}
+    sorted_d = recursive_sort_dict(d)
+
+    model = {"name": "Alice", "profile": {"age": 30}}
+    test = {"name": "Alice", "profile": {"age": 30}, "extra": "value"}
+    result = dict_is_contained_in(model, test)
+
+    big = {"roles": ["admin", "user"]}
+    small = {"roles": ["admin"]}
+    result = dict_is_subset(small, big)
 """
 
 from smarter.lib import logging
@@ -17,12 +50,6 @@ def recursive_sort_dict(d):
 
     :return: A new dictionary with all keys sorted in ascending order. If a value is itself a dictionary, it is also sorted recursively.
     :rtype: dict
-
-    .. note::
-        This function is useful for producing deterministic dictionary outputs, such as for testing, serialization, or comparison purposes.
-
-    .. warning::
-        Non-dictionary values are left unchanged. Lists, sets, and other types within the dictionary are not sorted or modified.
 
     **Example usage:**
 

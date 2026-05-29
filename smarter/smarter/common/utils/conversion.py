@@ -1,13 +1,31 @@
 """
-Utility functions for the Smarter framework.
+smarter.common.utils.conversion
+===============================
 
-This module provides a collection of helper functions and classes
-that are ostensibly implemented in more than one Smarter base class.
-Hence, they are only here in order to keep the code DRY (Don't Repeat Yourself).
+Conversion utility functions for the Smarter framework.
 
-The module is intended for internal use within the Smarter framework and is
-designed to be compatible with Python 3, Django, DRF, and Pydantic.
+This module provides functions to convert between different naming conventions,
+such as camelCase, PascalCase, and snake_case, for strings, dictionary keys, and lists.
+These utilities help maintain consistency in data representation across the framework
+and are compatible with Python 3, Django, DRF, and Pydantic.
 
+Functions
+---------
+- to_snake_case(obj): Converts camelCase or PascalCase strings (or class/type objects) to snake_case.
+- camel_to_snake(data): Converts camelCase strings, dict keys, or lists to snake_case.
+- camel_to_snake_dict(dictionary): Recursively converts dict keys from camelCase to snake_case.
+- pascal_to_snake(name): Converts PascalCase strings, dict keys, or lists to snake_case.
+- snake_to_camel(data, convert_values=False): Converts snake_case strings, dict keys, or lists to camelCase.
+
+Example
+-------
+.. code-block:: python
+
+    from smarter.common.utils import to_snake_case, camel_to_snake, snake_to_camel
+
+    print(to_snake_case("UserProfile"))  # Output: user_profile
+    print(camel_to_snake("userName"))    # Output: user_name
+    print(snake_to_camel("user_name"))   # Output: userName
 """
 
 import re
@@ -30,7 +48,7 @@ def _convert_to_camel(name: str):
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
-def camel_to_snake_dict(dictionary: dict) -> dict:
+def camel_to_snake_dict(dictionary: dict, is_recursive: bool = False) -> dict:
     """
     Converts the keys of a dictionary from camelCase to snake_case recursively.
 
@@ -69,18 +87,13 @@ def camel_to_snake_dict(dictionary: dict) -> dict:
 
     retval = {}
     for key, value in dictionary.items():
-        if isinstance(value, dict):
-            value = camel_to_snake_dict(value)
+        if isinstance(value, dict) and is_recursive:
+            value = camel_to_snake_dict(value, is_recursive=True)
         new_key = _convert_to_camel(key)
         retval[new_key] = value
-    logger.debug("%s.camel_to_snake_dict() - converted '%s' to '%s'", logger_prefix, dictionary, retval)
+    if not is_recursive:
+        logger.debug("%s.camel_to_snake_dict() - converted '%s' to '%s'", logger_prefix, dictionary, retval)
     return retval
-
-
-###############################################################################
-# Conversion functions for string case formats (camelCase, snake_case,
-# PascalCase)
-###############################################################################
 
 
 @lru_cache(maxsize=LRU_MAXSIZE)
@@ -89,7 +102,9 @@ def _convert_snake_to_camel(name: str) -> str:
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-def snake_to_camel(data: Union[str, dict, list], convert_values: bool = False) -> Optional[Union[str, dict, list]]:
+def snake_to_camel(
+    data: Union[str, dict, list], convert_values: bool = False, is_recursive: bool = False
+) -> Optional[Union[str, dict, list]]:
     """
     Converts snake_case strings, dictionary keys, or lists of such, to camelCase format.
 
@@ -139,11 +154,14 @@ def snake_to_camel(data: Union[str, dict, list], convert_values: bool = False) -
         # Output: {'userName': 'firstName'}
 
     """
+    if not isinstance(data, (str, dict, list)):
+        raise SmarterValueError(f"Expected data to be a str, dict, or list, got: {type(data)}")
+
     if isinstance(data, str):
         return _convert_snake_to_camel(data)
 
     if isinstance(data, list):
-        return [snake_to_camel(item, convert_values=convert_values) for item in data]
+        return [snake_to_camel(item, convert_values=convert_values, is_recursive=True) for item in data]
 
     if not isinstance(data, dict):
         raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
@@ -152,14 +170,15 @@ def snake_to_camel(data: Union[str, dict, list], convert_values: bool = False) -
     retval = {}
     for key, value in dictionary.items():
         if isinstance(value, dict):
-            value = snake_to_camel(data=value, convert_values=convert_values)
+            value = snake_to_camel(data=value, convert_values=convert_values, is_recursive=True)
         new_key = _convert_snake_to_camel(key)
         if convert_values:
             new_value = _convert_snake_to_camel(value) if isinstance(value, str) else value
         else:
             new_value = value
         retval[new_key] = new_value
-    logger.debug("%s.snake_to_camel() - converted '%s' to '%s'", logger_prefix, data, retval)
+    if not is_recursive:
+        logger.debug("%s.snake_to_camel() - converted '%s' to '%s'", logger_prefix, data, retval)
     return retval
 
 

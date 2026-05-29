@@ -1,5 +1,25 @@
 """
-Module: smarter.common.utils.is_authenticated_request
+smarter.common.utils.request
+=============================
+
+Helpers for request authentication detection in Django and DRF.
+
+This module provides the ``is_authenticated_request`` function, which determines whether a given
+request object is authenticated. It supports Django's ``HttpRequest``, Django REST Framework's ``Request``,
+and ASGIRequest types, and provides extensive logging for debugging and auditing purposes.
+
+**Example usage:**
+
+.. code-block:: python
+
+    from smarter.common.utils import is_authenticated_request
+    from django.http import HttpRequest
+
+    request = HttpRequest()
+    request.user = SomeUserObject()
+    authenticated = is_authenticated_request(request)
+    print(authenticated)  # True or False depending on user.is_authenticated
+
 """
 
 from typing import TYPE_CHECKING, Optional, Union

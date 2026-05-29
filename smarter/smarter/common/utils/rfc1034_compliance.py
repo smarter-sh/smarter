@@ -1,5 +1,27 @@
 """
-Utility functions for the Smarter framework.
+smarter.common.utils.rfc1034_compliance
+========================================
+
+Helpers for generating and converting RFC 1034-compliant strings.
+
+This module provides utility functions for working with DNS-safe names and resource identifiers
+that comply with RFC 1034. It includes:
+
+- ``rfc1034_compliant_str``: Converts arbitrary strings to RFC 1034-compliant DNS labels.
+- ``rfc1034_compliant_to_snake``: Converts RFC 1034-compliant names to Pythonic ``snake_case``.
+
+**Example usage:**
+
+.. code-block:: python
+
+    from smarter.common.utils import rfc1034_compliant_str, rfc1034_compliant_to_snake
+
+    label = rfc1034_compliant_str("My_ChatBot_2025")
+    print(label)  # Output: my-chatbot-2025
+
+    snake = rfc1034_compliant_to_snake(label)
+    print(snake)  # Output: my_chatbot_2025
+
 """
 
 import re
@@ -14,10 +36,6 @@ logger_prefix = logging.formatted_text(__name__)
 LRU_MAXSIZE = 128  # Default max size for LRU caches in this module
 
 
-###############################################################################
-# Conversion functions for generating RFC 1034-compliant names and converting
-# them back to snake_case
-###############################################################################
 @lru_cache(maxsize=LRU_MAXSIZE)
 def rfc1034_compliant_str(val) -> str:
     """
