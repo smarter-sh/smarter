@@ -1321,16 +1321,23 @@ LOGGING = {
             "datefmt": "[%Y-%m-%d %H:%M:%S]",
         },
     },
+    "filters": {
+        "health_check": {
+            "()": "smarter.lib.logging.filters.HealthCheckFilter",
+        },
+    },
     "handlers": {
         "default": {
             "level": smarter_settings.log_level_name,
             "class": "logging.StreamHandler",
             "formatter": "verbose",
+            "filters": ["health_check"],
         },
         "redis": {
-            "level": smarter_settings.log_level_name,
+            "level": logging.INFO,
             "class": "smarter.lib.logging.RedisLogHandler",
             "formatter": "truncated",
+            "filters": ["health_check"],
         },
     },
     "root": {
@@ -1348,6 +1355,63 @@ LOGGING = {
         },
     },
 }
+"""
+Comprehensive logging configuration for the Smarter platform.
+
+This dictionary configures Python's built-in logging system for the Smarter
+application. It defines log formatters, handlers, filters, and loggers to
+control how log messages are processed and where they are sent.
+
+Formatters
+----------
+verbose
+    Includes timestamp, log level, process name, and message. Used for detailed logs.
+truncated
+    Shorter format with timestamp, log level, and message. Used for Redis logs.
+
+Filters
+-------
+health_check
+    Uses :class:`smarter.lib.logging.filters.HealthCheckFilter` to suppress log entries
+    for health check endpoints (e.g., /healthz/, /readiness/).
+
+Handlers
+--------
+default
+    Console handler (logging.StreamHandler) for standard output. Uses the 'verbose'
+    formatter and applies the health_check filter. Log level is set by
+    ``smarter_settings.log_level_name``.
+redis
+    Custom handler (:class:`smarter.lib.logging.RedisLogHandler`) for sending logs
+    to Redis. Uses the 'truncated' formatter and applies the health_check filter.
+    Log level is set by ``smarter_settings.log_level_name``.
+
+Root Logger
+-----------
+Handlers: ['default', 'redis']
+Level: Set by ``smarter_settings.log_level_name``
+All log messages are sent to both the console and Redis unless filtered out.
+
+Loggers
+-------
+celery, celery.task
+    Both propagate to the root logger and use the same log level as the rest
+    of the application.
+
+Log Level
+---------
+The log level for all handlers and loggers is dynamically set by
+``smarter_settings.log_level_name`` (e.g., 'INFO', 'DEBUG', 'WARNING').
+
+References
+----------
+- Django logging documentation: https://docs.djangoproject.com/en/5.0/topics/logging/
+- Python logging documentation: https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
+
+This configuration ensures that health check requests do not clutter logs, and
+that logs are available both in the console and in Redis for further processing
+or monitoring.
+"""
 
 logging.config.dictConfig(LOGGING)
 

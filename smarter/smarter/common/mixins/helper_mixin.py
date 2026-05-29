@@ -167,6 +167,16 @@ class SmarterHelperMixin:
         return True
 
     @cached_property
+    def health_check_urls(self) -> list[str]:
+        """
+        Returns a list of URL paths that are considered health check endpoints.
+
+        :return: List of health check URL path strings.
+        :rtype: list[str]
+        """
+        return ["readiness", "healthz"]
+
+    @cached_property
     def amnesty_urls(self) -> list[str]:
         """
         Returns a list of URLs that are exempt from certain checks.
@@ -174,7 +184,7 @@ class SmarterHelperMixin:
         :return: List of URL path strings that are exempt.
         :rtype: list[str]
         """
-        return ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml"]
+        return self.health_check_urls + ["favicon.ico", "robots.txt", "sitemap.xml"]
 
     def deserves_amnesty(self, slug: str) -> bool:
         """
