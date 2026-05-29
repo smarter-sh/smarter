@@ -1,6 +1,36 @@
 """
-A logger that can be controlled with a condition function.
-This allows for more flexible logging behavior based on runtime conditions.
+smarter.lib.logging.waffle_switched_logger
+==========================================
+
+Conditional logger wrapper for the Smarter application.
+
+This module provides a logger wrapper, :class:`WaffleSwitchedLoggerWrapper`, that enables conditional logging
+based on a user-supplied function. This allows for dynamic control of logging behavior at runtime, such as
+toggling detailed logging with a feature flag (e.g., Django Waffle switches).
+
+Classes
+-------
+WaffleSwitchedLoggerWrapper
+    A logger wrapper that only emits log messages if a condition function returns True for the given log level.
+
+Examples
+--------
+To use the conditional logger wrapper with a Django Waffle switch::
+
+    import logging
+    from smarter.lib.django import waffle
+    from smarter.lib.django.waffle import SmarterWaffleSwitches
+    from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
+
+    def should_log_detailed(level):
+        return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
+
+    base_logger = logging.getLogger(__name__)
+    logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_detailed)
+    logger.debug("This is a debug message.")
+
+The logger will only emit messages if the condition function returns True for the log level, or if the log level
+is WARNING or higher (forced by REQUIRED_LOG_LEVEL).
 """
 
 import logging

@@ -10,6 +10,7 @@ Logging Technical References
    :maxdepth: 1
    :caption: Technical References
 
+   logging/filters
    logging/logging-style-guide
    logging/redis-log-handler
    logging/waffle-switched-logging
