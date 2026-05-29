@@ -1384,7 +1384,7 @@ default
 redis
     Custom handler (:class:`smarter.lib.logging.RedisLogHandler`) for sending logs
     to Redis. Uses the 'truncated' formatter and applies the health_check filter.
-    Log level is set by ``smarter_settings.log_level_name``.
+    Log level is hardcoded to INFO.
 
 Root Logger
 -----------
