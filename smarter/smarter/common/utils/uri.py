@@ -2,18 +2,17 @@
 Module: smarter.common.utils.smarter_build_absolute_uri
 """
 
-import logging
 from typing import Optional
 from unittest.mock import Mock
 
 from django.http import HttpRequest
 
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
+from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 
 logger = logging.getLogger(__name__)
 
-logger_prefix = formatted_text(f"{__name__}.smarter_build_absolute_uri()")
+logger_prefix = logging.formatted_text(f"{__name__}.smarter_build_absolute_uri()")
 
 
 def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
@@ -131,8 +130,8 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         except Exception as e:
             logger.warning(
                 "%s.smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
+                logging.formatted_text_red(str(e)),
                 logger_prefix,
-                formatted_text_red(str(e)),
             )
 
     # Try to build from scheme, host, and path
@@ -148,14 +147,14 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         logger.debug(
             "%s.smarter_build_absolute_uri() could not build url from request attributes due to a KeyError: %s",
             logger_prefix,
-            formatted_text_red(str(e)),
+            logging.formatted_text_red(str(e)),
         )
     # pylint: disable=W0718
     except Exception as e:
         logger.debug(
             "%s.smarter_build_absolute_uri() failed to build URL from request attributes: %s (%s)",
             logger_prefix,
-            formatted_text_red(str(e)),
+            logging.formatted_text_red(str(e)),
             type(e),
         )
 

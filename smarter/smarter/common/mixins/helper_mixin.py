@@ -34,7 +34,6 @@ from smarter.common.utils import (
 from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
-from smarter.common.utils import snake_case as utils_snake_case
 from smarter.common.utils import snake_to_camel as utils_snake_to_camel
 from smarter.common.utils import to_snake_case as utils_to_snake_case
 from smarter.lib import json
@@ -435,25 +434,6 @@ class SmarterHelperMixin:
         :rtype: dict
         """
         return utils_camel_to_snake_dict(data)
-
-    def snake_case(self, name: str) -> str:
-        """
-        Converts a string to snake_case.
-
-        This method takes a string in any case format (e.g., camelCase, PascalCase, kebab-case)
-        and converts it to snake_case, which is commonly used in Python for variable and function names.
-
-        :param name: The string to convert to snake_case.
-        :type name: str
-        :return: The converted string in snake_case.
-        :rtype: str
-        """
-
-        @cache_results(timeout=FOREVER)
-        def _snake_case(name: str) -> str:
-            return utils_snake_case(name)
-
-        return _snake_case(name)
 
     def snake_to_camel(
         self, data: Union[str, dict, list], convert_values: bool = False

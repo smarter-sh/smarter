@@ -14,20 +14,16 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 from .conversion import (
     camel_to_snake,
     camel_to_snake_dict,
-    dict_is_contained_in,
-    dict_is_subset,
     pascal_to_snake,
-    recursive_sort_dict,
-    rfc1034_compliant_str,
-    rfc1034_compliant_to_snake,
-    snake_case,
     snake_to_camel,
     to_snake_case,
 )
 from .diagnostics import get_diagnostics
+from .dict import dict_is_contained_in, dict_is_subset, recursive_sort_dict
 from .file_handlers import get_readonly_csv_file, get_readonly_yaml_file
 from .request import is_authenticated_request
 from .request_to_json import request_to_json
+from .rfc1034_compliance import rfc1034_compliant_str, rfc1034_compliant_to_snake
 from .uri import smarter_build_absolute_uri
 from .utils import (
     bool_environment_variable,
@@ -61,6 +57,5 @@ __all__ = [
     "recursive_sort_dict",
     "request_to_json",
     "uri",
-    "snake_case",
     "snake_to_camel",
 ]
