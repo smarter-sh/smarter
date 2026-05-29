@@ -74,6 +74,7 @@ def is_aware(value):
     return value.utcoffset() is not None
 
 
+# pylint: disable=C0209
 def duration_iso_string(duration):
     if duration < datetime.timedelta(0):
         sign = "-"

@@ -5,10 +5,14 @@ Extensions to Django's built-in shortcuts.
 from django.urls import reverse as django_reverse
 
 from smarter.lib import logging
+from smarter.lib.cache import cache_results
 
 logger = logging.getSmarterLogger(__name__)
 
+FOREVER = 60 * 60 * 24 * 365  # 1 year in seconds
 
+
+@cache_results(timeout=FOREVER)
 def reverse(*args, **kwargs) -> str:
     """
     Converts a series of args into a URL path. This is a wrapper around
