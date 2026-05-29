@@ -1,7 +1,10 @@
 Smarter Caching
 =================
 
-.. automodule:: smarter.lib.cache
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+   :maxdepth: 1
+   :caption: Technical References
+
+   caching/cache_results
+   caching/cache_sentinel
+   caching/lazy_cache
