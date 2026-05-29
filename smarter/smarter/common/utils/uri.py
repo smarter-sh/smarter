@@ -1,5 +1,27 @@
 """
-Module: smarter.common.utils.smarter_build_absolute_uri
+smarter.common.utils.uri
+=========================
+
+Helpers for building absolute URIs from Django or DRF request objects.
+
+This module provides the ``smarter_build_absolute_uri`` function, which attempts to construct
+an absolute URI from a given request object. It supports Django's ``HttpRequest``, Django REST Framework's
+``Request``, and mock objects for testing. The function is robust to missing or malformed request data and
+returns a fallback test URL if the request cannot be resolved.
+
+**Example usage:**
+
+.. code-block:: python
+
+    from smarter.common.utils import smarter_build_absolute_uri
+    from django.http import HttpRequest
+
+    request = HttpRequest()
+    request.META['HTTP_HOST'] = 'localhost:9357'
+    request.path = '/api/v1/resource/'
+    url = smarter_build_absolute_uri(request)
+    print(url)  # Output: http://localhost:9357/api/v1/resource/
+
 """
 
 from typing import Optional

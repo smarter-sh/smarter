@@ -1,16 +1,32 @@
 """
-Utility functions for the Smarter framework.
+smarter.common.utils.file_handlers
+==================================
 
-This module provides a collection of helper functions and classes
-that are ostensibly implemented in more than one Smarter base class.
-Hence, they are only here in order to keep the code DRY (Don't Repeat Yourself).
+Utility functions for the Smarter framework for reading YAML and CSV files.
 
-The module is intended for internal use within the Smarter framework and is
-designed to be compatible with Python 3, Django, DRF, and Pydantic.
+This module provides helper functions to read YAML and CSV files in a safe and convenient way,
+returning their contents as Python data structures. It is intended for use throughout the Smarter
+framework wherever configuration or data files need to be loaded.
 
+Functions
+---------
+- get_readonly_yaml_file(file_path): Reads a YAML file and returns its contents as a dictionary.
+- get_readonly_csv_file(file_path): Reads a CSV file and returns its contents as a list of dictionaries.
+
+Raises
+------
+Exceptions may be raised if files do not exist, are unreadable, or contain invalid data.
+
+Example
+-------
+.. code-block:: python
+
+    from smarter.common.utils import get_readonly_yaml_file, get_readonly_csv_file
+
+    config = get_readonly_yaml_file('/path/to/config.yaml')
+    data = get_readonly_csv_file('/path/to/data.csv')
 """
 
-import asyncio
 import csv
 
 import yaml
@@ -19,14 +35,6 @@ from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
-
-
-def is_async_context():
-    try:
-        asyncio.get_running_loop()
-        return True
-    except RuntimeError:
-        return False
 
 
 def get_readonly_yaml_file(file_path) -> dict:

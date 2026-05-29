@@ -1,12 +1,25 @@
 """
+smarter.common.utils.utils
+==========================
+
 Utility functions for the Smarter framework.
 
-This module provides a collection of helper functions and classes
-that are ostensibly implemented in more than one Smarter base class.
-Hence, they are only here in order to keep the code DRY (Don't Repeat Yourself).
+This module provides a collection of helper functions and classes that are shared across
+multiple Smarter base classes to keep the code DRY (Don't Repeat Yourself).
+It is intended for internal use within the Smarter framework and is designed to be compatible
+with Python 3, Django, Django REST Framework (DRF), and Pydantic.
 
-The module is intended for internal use within the Smarter framework and is
-designed to be compatible with Python 3, Django, DRF, and Pydantic.
+Functions in this module include helpers for asynchronous context detection, random hash generation,
+environment variable parsing, encryption key generation, and string masking.
+
+**Example usage:**
+
+.. code-block:: python
+
+    from smarter.common.utils import hash_factory, bool_environment_variable
+
+    token = hash_factory(length=16)
+    debug_mode = bool_environment_variable('DEBUG', default=False)
 
 """
 
@@ -15,15 +28,26 @@ import hashlib
 import os
 import random
 import warnings
+from functools import lru_cache
 from typing import Union
+
+from cryptography.fernet import Fernet
 
 from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 
+LRU_MAXSIZE = 128  # Default max size for LRU caches in this module
+
 
 def is_async_context():
+    """
+    Checks if the current context is asynchronous.
+
+    :return: True if running in an asynchronous context, False otherwise.
+    :rtype: bool
+    """
     try:
         asyncio.get_running_loop()
         return True
@@ -169,16 +193,37 @@ def generate_fernet_encryption_key() -> str:
         print(key)  # e.g., 'gAAAAABh...'
 
     """
-    logger.debug("%s.generate_fernet_encryption_key()", logger_prefix)
-    # pylint: disable=C0415
-    from cryptography.fernet import Fernet
-
     logger.debug("%s.generate_fernet_encryption_key() Generating new Fernet encryption key.", logger_prefix)
     return Fernet.generate_key().decode("utf-8")
 
 
+@lru_cache(maxsize=LRU_MAXSIZE)
 def bool_environment_variable(var_name: str, default: bool) -> bool:
-    """Get a boolean environment variable"""
+    """
+    Retrieve a boolean value from an environment variable.
+
+    This function checks for the presence of an environment variable with the given name,
+    or with the prefix "SMARTER_" added to the name. If the variable is not set, the provided
+    default value is returned. The value is interpreted as True if it matches any of the following
+    (case-insensitive): "true", "1", "t", "y", or "yes".
+
+    :param var_name: The name of the environment variable to check.
+    :type var_name: str
+    :param default: The default boolean value to return if the environment variable is not set.
+    :type default: bool
+    :return: The boolean value of the environment variable, or the default if not set.
+    :rtype: bool
+
+    **Example usage:**
+
+    .. code-block:: python
+
+        from smarter.common.utils import bool_environment_variable
+
+        # Returns True if the environment variable 'DEBUG' is set to a truthy value
+        debug_mode = bool_environment_variable('DEBUG', default=False)
+
+    """
     logger.debug("%s.bool_environment_variable()", logger_prefix)
     value = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
     if value is None:

@@ -1,5 +1,20 @@
 """
+smarter.common.utils.version
+=============================
+
 Utility functions for version management.
+
+This module provides helpers for retrieving and normalizing semantic version
+numbers for the smarter project. It ensures compatibility with PyPI versioning
+requirements and strips unsupported suffixes from version strings.
+
+Functions
+---------
+- get_semantic_version: Returns the normalized semantic version string.
+
+Notes
+-----
+- PyPI does not allow version numbers with dashes, 'v' prefixes, or 'next' suffixes.
 """
 
 import re
