@@ -1,7 +1,7 @@
 """manage.py create_account command."""
 
 from smarter.apps.account.models import Account
-from smarter.common.utils import snake_case
+from smarter.common.utils import to_snake_case
 from smarter.lib.django.management.base import SmarterCommand
 
 
@@ -25,7 +25,7 @@ class Command(SmarterCommand):
             account, created = Account.objects.get_or_create(account_number=account_number)
             account.company_name = company_name
             if created:
-                account.name = snake_case(company_name)
+                account.name = to_snake_case(company_name)
                 account.description = f"Account for {company_name}"
             account.save()
         else:

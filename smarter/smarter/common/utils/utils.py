@@ -12,29 +12,15 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 
 import asyncio
 import hashlib
-import logging
 import os
 import random
 import warnings
 from typing import Union
 
-from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__)
-
-
-# pylint: disable=W0613
-def should_log_verbose(level):
-    """Check if logging should be done based on the waffle switch."""
-    # pylint: disable=C0415
-    from smarter.common.conf import smarter_settings
-
-    return smarter_settings.verbose_logging
-
-
-verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
+logger_prefix = logging.formatted_text(__name__)
 
 
 def is_async_context():
@@ -130,7 +116,7 @@ def mask_string(string: Union[str, bytes], mask_char: str = "*", mask_length: in
         print(masked)  # Output: abc
 
     """
-    verbose_logger.debug("%s.mask_string()", logger_prefix)
+    logger.debug("%s.mask_string()", logger_prefix)
     warnings.warn(
         "mask_string is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2
     )
@@ -183,17 +169,17 @@ def generate_fernet_encryption_key() -> str:
         print(key)  # e.g., 'gAAAAABh...'
 
     """
-    verbose_logger.debug("%s.generate_fernet_encryption_key()", logger_prefix)
+    logger.debug("%s.generate_fernet_encryption_key()", logger_prefix)
     # pylint: disable=C0415
     from cryptography.fernet import Fernet
 
-    verbose_logger.debug("%s.generate_fernet_encryption_key() Generating new Fernet encryption key.", logger_prefix)
+    logger.debug("%s.generate_fernet_encryption_key() Generating new Fernet encryption key.", logger_prefix)
     return Fernet.generate_key().decode("utf-8")
 
 
 def bool_environment_variable(var_name: str, default: bool) -> bool:
     """Get a boolean environment variable"""
-    verbose_logger.debug("%s.bool_environment_variable()", logger_prefix)
+    logger.debug("%s.bool_environment_variable()", logger_prefix)
     value = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
     if value is None:
         return default

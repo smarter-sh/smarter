@@ -12,27 +12,13 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 
 import asyncio
 import csv
-import logging
 
 import yaml
 
-from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__)
-
-
-# pylint: disable=W0613
-def should_log_verbose(level):
-    """Check if logging should be done based on the waffle switch."""
-    # pylint: disable=C0415
-    from smarter.common.conf import smarter_settings
-
-    return smarter_settings.verbose_logging
-
-
-verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
+logger_prefix = logging.formatted_text(__name__)
 
 
 def is_async_context():

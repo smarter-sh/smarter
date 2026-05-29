@@ -32,7 +32,7 @@ from smarter.common.const import (
 # our stuff
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import (
+from smarter.common.utils.utils import (
     bool_environment_variable,
     generate_fernet_encryption_key,
 )

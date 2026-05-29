@@ -7,7 +7,7 @@ import os
 from typing import Any, Optional
 
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import bool_environment_variable
+from smarter.common.utils.utils import bool_environment_variable
 from smarter.lib import json
 
 logger = logging.getLogger(__name__)
