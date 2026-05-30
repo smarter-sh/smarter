@@ -3,6 +3,7 @@
 import base64
 import os
 
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils.utils import (
     bool_environment_variable,
     generate_fernet_encryption_key,
@@ -10,7 +11,10 @@ from smarter.common.utils.utils import (
     is_async_context,
     mask_string,
 )
+from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
+
+logger = logging.getLogger(__name__)
 
 
 class TestUtils(SmarterTestBase):
@@ -47,7 +51,20 @@ class TestUtils(SmarterTestBase):
         os.environ["TEST_BOOL"] = "no"
         self.assertFalse(bool_environment_variable("TEST_BOOL", True))
         del os.environ["TEST_BOOL"]
-        self.assertTrue(bool_environment_variable("TEST_BOOL", True))
+
+        self.assertTrue(bool_environment_variable("MISSING_TEST_BOOL", True))
+        self.assertFalse(bool_environment_variable("MISSING_TEST_BOOL", False))
+
+        os.environ["ANOTHER_TEST_BOOL"] = "True"
+        self.assertTrue(bool_environment_variable("ANOTHER_TEST_BOOL", False))
+        os.environ["ANOTHER_TEST_BOOL"] = "true"
+        self.assertTrue(bool_environment_variable("ANOTHER_TEST_BOOL", False))
+        os.environ["ANOTHER_TEST_BOOL"] = "False"
+        self.assertFalse(bool_environment_variable("ANOTHER_TEST_BOOL", True))
+        os.environ["ANOTHER_TEST_BOOL"] = "false"
+        self.assertFalse(bool_environment_variable("ANOTHER_TEST_BOOL", True))
+        os.environ["ANOTHER_TEST_BOOL"] = "1"
+        self.assertTrue(bool_environment_variable("ANOTHER_TEST_BOOL", False))
 
     def test_generate_fernet_encryption_key(self):
         key = generate_fernet_encryption_key()
@@ -57,9 +74,10 @@ class TestUtils(SmarterTestBase):
         base64.urlsafe_b64decode(key.encode())
 
     def test_mask_string_basic(self):
-        masked = mask_string("supersecretpassword", mask_char="*", mask_length=4)
+        string_length = 12
+        masked = mask_string("supersecretpassword", mask_char="*", mask_length=4, string_length=string_length)
         self.assertTrue(masked.endswith("word"))
-        self.assertEqual(len(masked), len("supersecretpassword"))
+        self.assertEqual(len(masked), min(len("supersecretpassword"), string_length))
 
     def test_mask_string_truncate(self):
         masked = mask_string("supersecretpassword", mask_char="#", mask_length=3, string_length=8)

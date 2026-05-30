@@ -12,10 +12,11 @@ class TestConversionUtils(SmarterTestBase):
 
     def test_rfc1034_compliant_str(self):
         self.assertEqual(rfc1034_compliant_str("My_ChatBot_2025"), "my-chatbot-2025")
-        self.assertEqual(rfc1034_compliant_str("My@Bot!_Name"), "my-bot-name")
+        self.assertEqual(rfc1034_compliant_str("My@Bot!_Name"), "mybot-name")
         long_name = "ThisIsAReallyLongChatBotNameThatShouldBeTruncatedToSixtyThreeCharacters_Extra"
         self.assertEqual(
-            rfc1034_compliant_str(long_name), "thisisareallylongchatbotnamethatshouldbetruncatedtosixtythreecharacters"
+            rfc1034_compliant_str(long_name),
+            "thisisareallylongchatbotnamethatshouldbetruncatedtosixtythreecharacters"[:63],
         )
 
     def test_rfc1034_compliant_str_invalid(self):

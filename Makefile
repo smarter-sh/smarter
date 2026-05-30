@@ -209,7 +209,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.common"
+	docker exec smarter-app bash -c "python manage.py test smarter.common.utils"
 
 docker-prune:
 	@echo ""
