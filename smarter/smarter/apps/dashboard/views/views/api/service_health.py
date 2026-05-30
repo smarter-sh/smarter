@@ -26,7 +26,6 @@ from django.http import JsonResponse
 from django.http.request import HttpRequest
 
 from smarter.common.conf import smarter_settings
-from smarter.common.utils.decorators import camel_case
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )
@@ -58,8 +57,7 @@ class ServiceHealthView(SmarterAuthenticatedWebView):
         }
     """
 
-    @camel_case()
-    def post(self, request: HttpRequest, *args, **kwargs):
+    def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to return platform health metadata.
         :param request: The incoming HTTP POST request from the client.
