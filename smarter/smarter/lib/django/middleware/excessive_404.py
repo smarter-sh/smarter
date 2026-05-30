@@ -200,8 +200,8 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
 
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
 
-        response = self.get_response(request)
-        self.process_response(request, response)
+        response = super().__call__(request)
+        self.process_response(request, response)  # type: ignore
         return response
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
@@ -210,7 +210,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
             return await sync_to_async(self.get_response)(request)
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        response = await self.get_response(request)
+        response = await super().__acall__(request)
         await self.async_process_response(request, response)
         return response
 

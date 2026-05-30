@@ -22,6 +22,7 @@ and ASGIRequest types, and provides extensive logging for debugging and auditing
 
 """
 
+import random
 from typing import TYPE_CHECKING, Optional, Union
 
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
@@ -79,100 +80,99 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         authenticated = is_authenticated_request(drf_request)
         print(authenticated)
     """
-    logger.debug("%s.is_authenticated_request()", logger_prefix)
-    try:
-        # pylint: disable=import-outside-toplevel
-        from django.core.handlers.asgi import ASGIRequest
-        from django.http import HttpRequest
-        from rest_framework.request import Request
+    # pylint: disable=import-outside-toplevel
+    from django.core.handlers.asgi import ASGIRequest
+    from django.http import HttpRequest
+    from rest_framework.request import Request
 
-        is_valid_request_object = isinstance(request, (HttpRequest, Request, ASGIRequest))
-        if is_valid_request_object:
-            logger.debug(
-                "%s.is_authenticated_request() Valid request object of type %s",
-                logger_prefix,
-                type(request),
-            )
-        else:
-            # suggests buggy code, hence the warning
-            logger.warning(
-                "%s.is_authenticated_request() Invalid request object of type %s - returning False",
-                logger_prefix,
-                type(request),
-            )
-            return False
+    from smarter.lib.cache import cache_results
 
-        has_user = hasattr(request, "user")
-        if has_user:
-            logger.debug(
-                "%s.is_authenticated_request() Request has 'user' attribute of type %s",
-                logger_prefix,
-                type(request.user),
-            )
-        else:
-            logger.debug(
-                "%s.is_authenticated_request() Request does not have 'user' attribute - returning False",
-                logger_prefix,
-            )
+    smarter_process_id = getattr(request, "smarter_process_id", None)
+    logger.debug("%s.is_authenticated_request() smarter_process_id: %s", logger_prefix, smarter_process_id or "Not set")
+    if not smarter_process_id:
+        smarter_process_id = str(random.randint(100000, 999999))
 
-        has_is_authenticated = has_user and hasattr(request.user, "is_authenticated")
-        if has_is_authenticated:
-            logger.debug(
-                "%s.is_authenticated_request() Request.user has 'is_authenticated' attribute",
-                logger_prefix,
-            )
-        else:
-            # this should not happen in normal code, hence the warning
-            logger.warning(
-                "%s.is_authenticated_request() Request.user of type %s does not have 'is_authenticated' attribute - returning False",
-                logger_prefix,
-                type(request.user),
-            )
-
-        url = smarter_build_absolute_uri(request)
-        if is_valid_request_object and has_user and has_is_authenticated:
-            retval = request.user.is_authenticated
-            logger.debug(
-                "%s.is_authenticated_request() Request is_authenticated: %s URL: %s, user: %s",
-                logger_prefix,
-                retval,
-                url,
-                request.user,
-            )
-        else:
-            retval = False
-            logger.debug(
-                "%s.is_authenticated_request() Request is not authenticated - returning False URL: %s",
-                logger_prefix,
-                url,
-            )
-        if hasattr(request, SMARTER_IS_INTERNAL_API_REQUEST):
-            logger.debug(
-                "%s.is_authenticated_request() Request has SMARTER_IS_INTERNAL_API_REQUEST=%s",
-                logger_prefix,
-                getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False),
-            )
-
-        # check request head for Authorization
-        if hasattr(request, "headers") and request.headers is not None:
-            auth_header = request.headers.get("Authorization")
-            if auth_header:
-                logger.debug(
-                    "%s.is_authenticated_request() Request has Authorization header (first 4 chars): %s",
+    @cache_results(cache_key=smarter_process_id)
+    def cached_is_authenticated_request() -> bool:
+        try:
+            if not isinstance(request, (HttpRequest, Request, ASGIRequest)):
+                logger.warning(
+                    "%s.is_authenticated_request() - Invalid request type: %s, expected HttpRequest, Request, or ASGIRequest",
                     logger_prefix,
-                    str(auth_header)[:4],
+                    type(request),
                 )
+                return False
+
+            is_valid_request_object = isinstance(request, (HttpRequest, Request, ASGIRequest))
+            if not is_valid_request_object:
+                # suggests buggy code, hence the warning
+                logger.warning(
+                    "%s.is_authenticated_request() Invalid request object of type %s - returning False",
+                    logger_prefix,
+                    type(request),
+                )
+                return False
+
+            has_user = hasattr(request, "user")
+            if not has_user:
+                logger.debug(
+                    "%s.is_authenticated_request() Request does not have 'user' attribute - returning False",
+                    logger_prefix,
+                )
+                return False
+
+            has_is_authenticated = has_user and hasattr(request.user, "is_authenticated")
+            if not has_is_authenticated:
+                # this should not happen in normal code, hence the warning
+                logger.warning(
+                    "%s.is_authenticated_request() Request.user of type %s does not have 'is_authenticated' attribute - returning False",
+                    logger_prefix,
+                    type(request.user),
+                )
+                return False
+
+            url = smarter_build_absolute_uri(request)
+            if is_valid_request_object and has_user and has_is_authenticated:
+                retval = request.user.is_authenticated
+                if retval:
+                    return True
             else:
                 logger.debug(
-                    "%s.is_authenticated_request() Request does not have Authorization header",
+                    "%s.is_authenticated_request() Request is not authenticated - returning False URL: %s",
                     logger_prefix,
+                    url,
                 )
-        return retval
+                return False
+            if hasattr(request, SMARTER_IS_INTERNAL_API_REQUEST):
+                logger.debug(
+                    "%s.is_authenticated_request() Request has SMARTER_IS_INTERNAL_API_REQUEST=%s",
+                    logger_prefix,
+                    getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False),
+                )
 
-    # pylint: disable=W0718
-    except Exception as e:
-        logger.error("%s.is_authenticated_request() failed: %s", logger_prefix, logging.formatted_text(str(e)))
-        return False
+            # check request head for Authorization
+            if hasattr(request, "headers") and request.headers is not None:
+                auth_header = request.headers.get("Authorization")
+                if auth_header:
+                    logger.debug(
+                        "%s.is_authenticated_request() Request has Authorization header (first 4 chars): %s",
+                        logger_prefix,
+                        str(auth_header)[:4],
+                    )
+                else:
+                    logger.debug(
+                        "%s.is_authenticated_request() Request does not have Authorization header",
+                        logger_prefix,
+                    )
+                return retval
+            return False
+
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.error("%s.is_authenticated_request() failed: %s", logger_prefix, logging.formatted_text(str(e)))
+            return False
+
+    return cached_is_authenticated_request()
 
 
 __all__ = ["is_authenticated_request"]
