@@ -13,6 +13,7 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 """
 
 from .conversion import (
+    ConvertibleCaseType,
     camel_to_snake,
     camel_to_snake_dict,
     pascal_to_snake,
@@ -60,4 +61,5 @@ __all__ = [
     "RequestData",
     "uri",
     "snake_to_camel",
+    "ConvertibleCaseType",
 ]

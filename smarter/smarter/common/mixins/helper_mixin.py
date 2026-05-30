@@ -2,7 +2,7 @@
 
 import re
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import yaml
 
@@ -11,6 +11,9 @@ from smarter.common.helpers.console_helpers import (
     formatted_text,
     formatted_text_green,
     formatted_text_red,
+)
+from smarter.common.utils import (
+    ConvertibleCaseType,
 )
 from smarter.common.utils import (
     bool_environment_variable as utils_bool_environment_variable,
@@ -414,7 +417,7 @@ class SmarterHelperMixin:
 
         return utils_to_snake_case(obj)
 
-    def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
+    def camel_to_snake(self, data: ConvertibleCaseType) -> Any:
         """
         Converts a camelCase or PascalCase string to snake_case.
 
@@ -429,7 +432,7 @@ class SmarterHelperMixin:
 
         return utils_camel_to_snake(data)
 
-    def camel_to_snake_dict(self, data: dict) -> dict:
+    def camel_to_snake_dict(self, data: dict[str, object]) -> dict[str, object]:
         """
         Converts all keys in a dictionary from camelCase to snake_case.
 
@@ -443,9 +446,7 @@ class SmarterHelperMixin:
         """
         return utils_camel_to_snake_dict(data)
 
-    def snake_to_camel(
-        self, data: Union[str, dict, list], convert_values: bool = False
-    ) -> Optional[Union[str, dict, list]]:
+    def snake_to_camel(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
         """
         Converts a snake_case string to camelCase.
 
@@ -460,7 +461,7 @@ class SmarterHelperMixin:
 
         return utils_snake_to_camel(data, convert_values=convert_values)
 
-    def pascal_to_snake(self, name: Union[str, dict, list]) -> Union[str, dict, list]:
+    def pascal_to_snake(self, name: ConvertibleCaseType) -> Any:
         """
         Converts a PascalCase string to snake_case.
 
@@ -468,7 +469,7 @@ class SmarterHelperMixin:
         It is useful for standardizing naming conventions across different formats.
 
         :param name: The PascalCase string to convert.
-        :type name: Union[str, dict, list]
+        :type name: ConvertibleCaseType
         :return: The converted string in snake_case.
         :rtype: Union[str, dict, list]
         """
