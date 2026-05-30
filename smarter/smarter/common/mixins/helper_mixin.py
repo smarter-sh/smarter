@@ -412,15 +412,7 @@ class SmarterHelperMixin:
         :rtype: str
         """
 
-        @cache_results(timeout=FOREVER)
-        def _string_to_snake_case(string_name: str) -> str:
-            return utils_to_snake_case(string_name)
-
-        if isinstance(obj, str):
-            return _string_to_snake_case(obj)
-
-        string_name = obj.__name__ if hasattr(obj, "__name__") else str(obj)  # type: ignore[attr-defined]
-        return _string_to_snake_case(string_name)
+        return utils_to_snake_case(obj)
 
     def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
         """
@@ -435,12 +427,6 @@ class SmarterHelperMixin:
         :rtype: Optional[Union[str, dict, list]]
         """
 
-        @cache_results(timeout=FOREVER)
-        def _string_camel_to_snake(string_name: str) -> str:
-            return utils_camel_to_snake(string_name)  # type: ignore
-
-        if isinstance(data, str):
-            return _string_camel_to_snake(data)
         return utils_camel_to_snake(data)
 
     def camel_to_snake_dict(self, data: dict) -> dict:
@@ -472,12 +458,6 @@ class SmarterHelperMixin:
         :rtype: Optional[Union[str, dict, list]]
         """
 
-        @cache_results(timeout=FOREVER)
-        def _string_snake_to_camel(name: str) -> str:
-            return utils_snake_to_camel(name)  # type: ignore
-
-        if isinstance(data, str):
-            return _string_snake_to_camel(data)
         return utils_snake_to_camel(data, convert_values=convert_values)
 
     def pascal_to_snake(self, name: Union[str, dict, list]) -> Union[str, dict, list]:
@@ -493,12 +473,6 @@ class SmarterHelperMixin:
         :rtype: Union[str, dict, list]
         """
 
-        @cache_results(timeout=FOREVER)
-        def _string_pascal_to_snake(name: str) -> str:
-            return utils_pascal_to_snake(name)  # type: ignore
-
-        if isinstance(name, str):
-            return _string_pascal_to_snake(name)
         return utils_pascal_to_snake(name)
 
     def rfc1034_compliant_str(self, name: str) -> str:
@@ -514,11 +488,7 @@ class SmarterHelperMixin:
         :rtype: str
         """
 
-        @cache_results(timeout=FOREVER)
-        def _utils_rfc1034_compliant_str(name: str) -> str:
-            return utils_rfc1034_compliant_str(name)
-
-        return _utils_rfc1034_compliant_str(name)
+        return utils_rfc1034_compliant_str(name)
 
     def rfc1034_compliant_to_snake(self, name: str) -> str:
         """
@@ -533,11 +503,7 @@ class SmarterHelperMixin:
         :rtype: str
         """
 
-        @cache_results(timeout=FOREVER)
-        def _rfc1034_compliant_to_snake(name: str) -> str:
-            return utils_rfc1034_compliant_to_snake(name)
-
-        return _rfc1034_compliant_to_snake(name)
+        return utils_rfc1034_compliant_to_snake(name)
 
 
 __all__ = [
