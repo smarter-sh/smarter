@@ -23,6 +23,7 @@ from smarter.apps.plugin.models import (
     PluginDataStatic,
     PluginMeta,
 )
+from smarter.common.utils.decorators import camel_case
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
@@ -65,6 +66,7 @@ class SAMTestBroker(AbstractBroker):
         config_dump = self.to_snake_case(config_dump)
         return config_dump  # type: ignore[return-value]
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Transform the Django ORM model into a Pydantic readable

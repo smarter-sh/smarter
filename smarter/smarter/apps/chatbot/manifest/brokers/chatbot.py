@@ -32,6 +32,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import settings_defaults
+from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -453,6 +454,7 @@ class SAMChatbotBroker(AbstractBroker):
 
         return retval
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
         Transform the Django ORM ChatBot model instance into a dictionary compatible with the Smarter API Chatbot manifest format.

@@ -17,9 +17,8 @@ from smarter.apps.account.manifest.models.user.status import SAMUserStatus
 from smarter.apps.account.models import AccountContact, User, UserProfile
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.account.signals import broker_ready
-from smarter.apps.account.utils import (
-    get_cached_smarter_admin_user_profile,
-)
+from smarter.apps.account.utils import smarter_cached_objects
+from smarter.common.utils.decorators import camel_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -475,6 +474,7 @@ class SAMUserBroker(AbstractBroker):
         )
         return retval
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> Optional[dict[str, Any]]:
         """
         Convert a Django ORM `User` model instance into a dictionary formatted for Pydantic manifest consumption.
@@ -805,7 +805,7 @@ class SAMUserBroker(AbstractBroker):
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.example_manifest() called", self.formatted_class_name)
-        smarter_admin_profile = get_cached_smarter_admin_user_profile()
+        smarter_admin_profile = smarter_cached_objects.smarter_admin_user_profile
         self.brokered_user = smarter_admin_profile.user
         self.brokered_user_profile = smarter_admin_profile
         data = self.django_orm_to_manifest_dict()
