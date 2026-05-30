@@ -19,6 +19,7 @@ from smarter.apps.provider.manifest.models.provider.spec import (
 from smarter.apps.provider.manifest.models.provider.status import SAMProviderStatus
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
+from smarter.common.utils.decorators import camel_case
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -170,6 +171,7 @@ class SAMProviderBroker(AbstractBroker):
             )
         return {**metadata, **dump}
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
         Convert a Django ORM `Provider` model instance into a dictionary formatted for Pydantic manifest consumption.

@@ -10,6 +10,7 @@ from pydantic_core import ValidationError as PydanticValidationError
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import User
+from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
 from smarter.lib.drf.manifest.models.auth_token.const import MANIFEST_KIND
@@ -195,6 +196,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         )
         return retval
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Transform the Django ORM model into a Pydantic readable

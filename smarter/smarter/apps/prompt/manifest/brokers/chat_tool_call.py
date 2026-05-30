@@ -18,6 +18,7 @@ from smarter.apps.prompt.manifest.models.chat_tool_call.spec import (
 )
 from smarter.apps.prompt.models import Chat, ChatToolCall
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.common.utils.decorators import camel_case
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -123,6 +124,7 @@ class SAMChatToolCallBroker(AbstractBroker):
             )
         return {**metadata, **config_dump}
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Transform the Django ORM model into a Pydantic readable

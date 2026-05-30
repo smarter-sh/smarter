@@ -18,9 +18,7 @@ from smarter.apps.account.manifest.models.account.spec import (
 from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.signals import broker_ready
-from smarter.apps.account.utils import (
-    smarter_cached_objects,
-)
+from smarter.common.utils.decorators import camel_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -430,6 +428,7 @@ class SAMAccountBroker(AbstractBroker):
             **config_dump,
         }
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Converts a Django ORM `Account` model instance into a Pydantic-compatible Smarter API Account manifest dictionary.

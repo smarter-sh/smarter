@@ -26,6 +26,7 @@ from smarter.apps.secret.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.secret.manifest.transformers.secret import SecretTransformer
 from smarter.apps.secret.models import Secret
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
+from smarter.common.utils.decorators import camel_case
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -334,6 +335,7 @@ class SAMSecretBroker(AbstractBroker):
             config_dump = json.loads(json.dumps(config_dump))
         return {**metadata, **config_dump}
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> Optional[dict[str, Any]]:
         """
         Convert a Django ORM `Secret` model instance into a Pydantic-compatible manifest dictionary.

@@ -32,6 +32,7 @@ from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
+from smarter.common.utils.decorators import snake_case
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
@@ -698,6 +699,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             logger.warning("%s.name() could not determine name, returning None", self.abstract_broker_logger_prefix)
         return self._name
 
+    @snake_case()
     def manifest_to_django_orm(self) -> dict[str, Any]:
         """
         Convert the Smarter API manifest metadata into a dictionary suitable for creating or updating a Django ORM ChatBot model.
