@@ -38,6 +38,8 @@ Any log entries containing a health check URL substring (as defined in ``health_
 will be suppressed by this filter.
 """
 
+import sys
+
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 
@@ -104,11 +106,11 @@ class HealthCheckFilter(logging.Filter, SmarterHelperMixin):
         .. code-block:: python
 
             (
-                "192.168.9.92:60250",  # client address
+                "192.168.9.92:60250",   # client address
                 "GET",                  # HTTP method
                 "/healthz/",            # path
                 "1.1",                  # HTTP version
-                200,                     # status code
+                200,                    # status code
             )
 
         Parameters
