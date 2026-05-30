@@ -60,10 +60,11 @@ logger_prefix_red = logging.formatted_text_red(f"{__name__}.@cache_results()")
 logger_prefix_blue = logging.formatted_text_blue(f"{__name__}.@cache_results()")
 
 LRU_CACHE_MAXSIZE = 128
+KwargsTupleType = tuple[tuple[str, object], ...]
 
 
 @lru_cache(maxsize=LRU_CACHE_MAXSIZE)
-def _generate_sorted_kwargs_cached(sorted_items: tuple) -> tuple:
+def _generate_sorted_kwargs_cached(sorted_items: KwargsTupleType) -> KwargsTupleType:
     """
     Returns a tuple of sorted keyword argument items.
 
@@ -80,7 +81,7 @@ def _generate_sorted_kwargs_cached(sorted_items: tuple) -> tuple:
     return tuple(sorted(sorted_items))
 
 
-def _generate_sorted_kwargs(kwargs: dict) -> tuple:
+def _generate_sorted_kwargs(kwargs: dict[str, object]) -> KwargsTupleType:
     """
     Sorts the keyword arguments for consistent generation of sha256 cache key,
     which is created, in part, on the results of this function.
@@ -88,7 +89,7 @@ def _generate_sorted_kwargs(kwargs: dict) -> tuple:
 
     :param kwargs: The keyword arguments to sort.
     :return: A tuple of sorted keyword argument items.
-    :rtype: tuple
+    :rtype: KwargsTupleType
     """
 
     def _make_hashable(obj):
@@ -106,7 +107,7 @@ def _generate_sorted_kwargs(kwargs: dict) -> tuple:
 
 
 @lru_cache(maxsize=LRU_CACHE_MAXSIZE)
-def _json_cache_key_cached(key_tuple: tuple) -> Union[bytes, None]:
+def _json_cache_key_cached(key_tuple: tuple[KwargsTupleType, ...]) -> Union[bytes, None]:
     """
     Serializes the key data to JSON and encodes it as bytes for hashing.
 
@@ -128,7 +129,7 @@ def _json_cache_key_cached(key_tuple: tuple) -> Union[bytes, None]:
         return None
 
 
-def _generate_key_data(func: Callable, args: tuple, kwargs: dict) -> Optional[bytes]:
+def _generate_key_data(func: Callable, args: tuple[object, ...], kwargs: dict[str, object]) -> Optional[bytes]:
     """
     Generates a raw cache key based on the function name, arguments,
     and sorted keyword arguments.
