@@ -39,9 +39,10 @@ will be suppressed by this filter.
 """
 
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 
 
-class HealthCheckFilter(SmarterHelperMixin):
+class HealthCheckFilter(logging.Filter, SmarterHelperMixin):
     """
     Logging filter to suppress log records for health check endpoints.
 
@@ -84,7 +85,7 @@ class HealthCheckFilter(SmarterHelperMixin):
     The filter will then suppress log entries for any request matching the URLs in ``health_check_urls``.
     """
 
-    def filter(self, record):
+    def filter(self, record: logging.LogRecord) -> bool:
         """
         Determine whether a log record should be emitted based on health check URLs.
 
@@ -119,8 +120,7 @@ class HealthCheckFilter(SmarterHelperMixin):
         >>> filter.filter(DummyRecord())
         True
         """
-
-        msg = getattr(record, "msg", "")
+        msg = record.getMessage()
 
         for url in self.health_check_urls:
             if url in msg:
