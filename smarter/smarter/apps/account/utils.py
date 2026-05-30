@@ -68,6 +68,9 @@ class SmarterCachedObjects:
     _smarter_admin_user_profile: Optional[UserProfile] = None
     _admin_user: Optional[User] = None
 
+    def __init__(self):
+        self.base_cache_key = f"{__name__}.{SmarterCachedObjects.__name__}[{id(self)}]"
+
     @property
     def smarter_account(self) -> Account:
         """
@@ -105,7 +108,7 @@ class SmarterCachedObjects:
         :raises SmarterConfigurationError: If the UserProfile cannot be found.
         """
 
-        @cache_results()
+        @cache_results(cache_key=self.base_cache_key + ".smarter_admin_user_profile")
         def _requery_smarter_admin_user_profile(class_name=SmarterCachedObjects.__name__) -> None:
             if isinstance(self._smarter_admin_user_profile, UserProfile):
                 logger.debug(
@@ -149,7 +152,7 @@ class SmarterCachedObjects:
         :raises SmarterConfigurationError: If the admin user cannot be found.
         """
 
-        @cache_results()
+        @cache_results(cache_key=self.base_cache_key + ".admin_user")
         def _requery_admin_user(class_name=SmarterCachedObjects.__name__) -> None:
             if self._admin_user:
                 self._admin_user.refresh_from_db()
@@ -207,7 +210,7 @@ def get_cached_default_account(invalidate: bool = False) -> Account:
         default_account = get_cached_default_account(invalidate=True)
     """
 
-    @cache_results()
+    @cache_results(cache_key="smarter.apps.account.utils.get_cached_default_account")
     def _get_default_account() -> Account:
         try:
             return Account.objects.get(is_default_account=True)

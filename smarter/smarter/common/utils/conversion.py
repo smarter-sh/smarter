@@ -34,7 +34,7 @@ from smarter.lib import logging
 logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 
-LRU_MAXSIZE = 128  # Default max size for LRU caches in this module
+LRU_MAXSIZE = 32  # Default max size for LRU caches in this module
 SNAKE_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 
 ConvertibleCaseType = Union[str, dict[str, object], list[object], object]
