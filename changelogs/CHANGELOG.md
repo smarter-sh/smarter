@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.33](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.32...v0.14.0-alpha.33) (2026-05-30)
+
+### Bug Fixes
+
+* setup a dedicated uvicorn logging handler ([fc2fb90](https://github.com/smarter-sh/smarter/commit/fc2fb90a54bb680b2d2e5a076dfe3371a8642004))
+
 ## [0.14.0-alpha.32](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.31...v0.14.0-alpha.32) (2026-05-30)
 
 ### Bug Fixes
