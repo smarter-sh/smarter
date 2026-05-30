@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.32](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.31...v0.14.0-alpha.32) (2026-05-30)
+
+### Bug Fixes
+
+* pare down the situations where we actually use HealthCheckFilter ([251dbc4](https://github.com/smarter-sh/smarter/commit/251dbc4a40c74986707b1546df7933ddda7efbd1))
+
 ## [0.14.0-alpha.31](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.30...v0.14.0-alpha.31) (2026-05-30)
 
 ### Bug Fixes
