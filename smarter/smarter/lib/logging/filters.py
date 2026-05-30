@@ -38,8 +38,6 @@ Any log entries containing a health check URL substring (as defined in ``health_
 will be suppressed by this filter.
 """
 
-import sys
-
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 
@@ -137,14 +135,20 @@ class HealthCheckFilter(logging.Filter, SmarterHelperMixin):
         >>> filter.filter(DummyRecord())
         True
         """
+        # belt & suspenders check to be extra sure we only filter Uvicorn
+        # access logs and avoid any potential issues with non-standard log records
         if record.name != "uvicorn.access":
             return True
+        # it's nearly impossible for this to not be a list/tuple, but we check
+        # just in case to avoid any potential issues
         if not isinstance(record.args, (list, tuple)):
             return True
 
         try:
             path = record.args[2]  # /healthz/ or /readiness/ etc.
             if not isinstance(path, str):
+                # ditto here. it's virtually inconceivable that this could be
+                # something other than a string, but we check just in case
                 return True
             path = path.strip("/").lower()  # normalized path
         except (IndexError, TypeError):
