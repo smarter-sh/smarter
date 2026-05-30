@@ -267,7 +267,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
 
         # update the common meta fields
         data = self.manifest.metadata.model_dump() if self.manifest else None
-        data = self.camel_to_snake(data) if data else None
+        data = self.to_snake_case(data) if data else None
         if not isinstance(data, dict):
             raise SAMBrokerErrorNotReady(
                 f"Manifest is not ready for {self.kind} broker. Cannot apply because data is not a dict. Got {type(data)}. manifest: {self.manifest.model_dump() if self.manifest else None}",

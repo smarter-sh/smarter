@@ -21,7 +21,7 @@ from smarter.apps.connection.signals import (
 )
 from smarter.apps.secret.models import Secret
 from smarter.common.helpers.logger_helpers import formatted_text
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -165,7 +165,7 @@ class ApiConnection(ConnectionBase):
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""
         if isinstance(self.name, str) and not SmarterValidator.is_valid_snake_case(self.name):
-            snake_case_name = camel_to_snake(self.name)
+            snake_case_name = to_snake_case(self.name)
             logger.warning(
                 "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
                 self.formatted_class_name,

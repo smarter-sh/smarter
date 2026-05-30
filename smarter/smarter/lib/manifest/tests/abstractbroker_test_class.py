@@ -62,7 +62,7 @@ class SAMTestBroker(AbstractBroker):
         Transform the Smarter API User manifest into a Django ORM model.
         """
         config_dump = self.manifest.spec.model_dump()  # type: ignore[return-value]
-        config_dump = self.camel_to_snake(config_dump)
+        config_dump = self.to_snake_case(config_dump)
         return config_dump  # type: ignore[return-value]
 
     def django_orm_to_manifest_dict(self) -> dict:

@@ -329,7 +329,7 @@ class SAMSecretBroker(AbstractBroker):
             )
         metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
-        config_dump = self.camel_to_snake(config_dump)
+        config_dump = self.to_snake_case(config_dump)
         if not isinstance(config_dump, dict):
             config_dump = json.loads(json.dumps(config_dump))
         return {**metadata, **config_dump}

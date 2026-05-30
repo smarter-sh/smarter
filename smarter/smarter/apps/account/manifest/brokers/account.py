@@ -404,7 +404,7 @@ class SAMAccountBroker(AbstractBroker):
             )
         metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.config.model_dump()
-        config_dump = self.camel_to_snake(config_dump)
+        config_dump = self.to_snake_case(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMAccountBrokerError(
                 message=f"Invalid config dump for {self.kind} manifest: {config_dump}",

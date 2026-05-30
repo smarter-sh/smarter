@@ -727,10 +727,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 command=SmarterJournalCliCommands.APPLY,
             )
         metadata = self.manifest.metadata.model_dump()
-        metadata = self.camel_to_snake(metadata)
+        metadata = self.to_snake_case(metadata)
         if not isinstance(metadata, dict):
             raise SAMBrokerError(
-                message=f"Manifest metadata could not be converted to a dictionary. Expected a dictionary after camel_to_snake transformation, but got {type(metadata)}",
+                message=f"Manifest metadata could not be converted to a dictionary. Expected a dictionary after to_snake_case transformation, but got {type(metadata)}",
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )

@@ -117,7 +117,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         """
         metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.model_dump()
-        config_dump = self.camel_to_snake(config_dump)
+        config_dump = self.to_snake_case(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMChatPluginUsageBrokerError(
                 f"Failed to convert {self.kind} {self.manifest.metadata.name} config to dict. Got {type(config_dump)}",

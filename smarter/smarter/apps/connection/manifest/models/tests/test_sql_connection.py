@@ -34,7 +34,7 @@ from smarter.apps.connection.tests.factories import secret_factory
 from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import camel_to_snake, camel_to_snake_dict
+from smarter.common.utils import to_snake_case
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -623,7 +623,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
             secret = secret_factory(user_profile=self.user_profile, name=secret_name, value=clear_password)
             model_dump["password"] = secret
 
-        model_dump = camel_to_snake_dict(model_dump)
+        model_dump = to_snake_case(model_dump)
         logger.debug("test_django_orm_tcpip model_dump: %s", model_dump)
 
         django_model = SqlConnection(**model_dump)
@@ -632,7 +632,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.user_profile, self.user_profile)
 
-        snake_case_name = camel_to_snake(self.model.metadata.name)
+        snake_case_name = to_snake_case(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
         self.assertEqual(django_model.db_engine, self.model.spec.connection.dbEngine)
@@ -709,7 +709,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
             secret = secret_factory(user_profile=self.user_profile, name=secret_name, value=clear_password)
             model_dump["password"] = secret
 
-        model_dump = camel_to_snake_dict(model_dump)
+        model_dump = to_snake_case(model_dump)
 
         logger.debug("test_django_orm_tcpip_ssl model_dump: %s", model_dump)
 
@@ -721,7 +721,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.user_profile, self.user_profile)
 
-        snake_case_name = camel_to_snake(self.model.metadata.name)
+        snake_case_name = to_snake_case(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
         self.assertEqual(django_model.db_engine, self.model.spec.connection.dbEngine)
@@ -811,7 +811,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
             )
             model_dump["proxyPassword"] = proxy_secret
 
-        model_dump = camel_to_snake_dict(model_dump)
+        model_dump = to_snake_case(model_dump)
 
         logger.debug("test_django_orm_tcpip_ssh model_dump: %s", model_dump)
 
@@ -849,7 +849,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.user_profile, self.user_profile)
 
-        snake_case_name = camel_to_snake(self.model.metadata.name)
+        snake_case_name = to_snake_case(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
         self.assertEqual(django_model.db_engine, self.model.spec.connection.dbEngine)

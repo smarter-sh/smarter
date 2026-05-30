@@ -7,7 +7,7 @@ from typing import Optional
 from smarter.apps.account.models import UserProfile
 from smarter.apps.secret.models import Secret
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import to_snake_case
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -43,7 +43,7 @@ def secret_factory(
     encrypted_value = Secret.encrypt(value)
     secret = Secret.objects.create(
         user_profile=user_profile,
-        name=camel_to_snake(name),
+        name=to_snake_case(name),
         description=description,
         encrypted_value=encrypted_value,
         expires_at=expiration,

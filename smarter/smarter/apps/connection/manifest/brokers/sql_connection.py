@@ -453,7 +453,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 command=SmarterJournalCliCommands.APPLY,
             )
         connection = self.manifest.spec.connection.model_dump()  # type: ignore
-        connection = self.camel_to_snake(connection)
+        connection = self.to_snake_case(connection)
         if not isinstance(connection, dict):
             logger.debug(
                 "%s.manifest_to_django_orm() recasting connection: %s (%s)",
@@ -468,7 +468,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         connection[SAMKeys.KIND.value] = self.kind
 
         # retrieve the password Secret
-        password = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
+        password = self.to_snake_case(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
         try:
             connection[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.get_or_create_secret(
                 user_profile=self.user_profile, name=connection.get(password)  # type: ignore
@@ -485,7 +485,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             ) from e
 
         # retrieve the proxyUsername Secret, if it exists
-        proxy_password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
+        proxy_password_name = self.to_snake_case(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
         if isinstance(connection.get(proxy_password_name), str):
             connection[proxy_password_name] = self.get_or_create_secret(
                 user_profile=self.user_profile,  # type: ignore
@@ -654,7 +654,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         if self._connection:
             return self._connection
 
-        name = self.camel_to_snake(self.name)  # type: ignore
+        name = self.to_snake_case(self.name)  # type: ignore
         if not name:
             return None
 
@@ -682,7 +682,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 )
                 return None
             model_dump = self._manifest.spec.connection.model_dump()
-            model_dump = self.camel_to_snake(model_dump)
+            model_dump = self.to_snake_case(model_dump)
             if not isinstance(model_dump, dict):
                 model_dump = json.loads(json.dumps(model_dump))
             # model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
@@ -1022,8 +1022,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 command=command,
             )
         try:
-            password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
-            proxy_password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
+            password_name = self.to_snake_case(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
+            proxy_password_name = self.to_snake_case(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
             data = self.manifest_to_django_orm()
             tags = data.get("tags", [])
 

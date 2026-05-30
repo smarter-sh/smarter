@@ -8,7 +8,7 @@ from django.shortcuts import render
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.manifest import ApiV1CliManifestApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.common.utils import pascal_to_snake
+from smarter.common.utils import to_snake_case
 
 from .base import DocsBaseView
 
@@ -44,7 +44,7 @@ class DocsExampleManifestBaseView(DocsBaseView):
         rather than the HTML page.
         """
         self.file_name = str(self.kind)
-        self.file_name = str(pascal_to_snake(self.file_name)) + ".yaml"
+        self.file_name = str(to_snake_case(self.file_name)) + ".yaml"
 
         view = ApiV1CliManifestApiView.as_view()
         json_response = self.get_brokered_json_response(
