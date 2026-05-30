@@ -35,9 +35,6 @@ from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
 from smarter.common.utils import to_camel_case as utils_snake_to_camel
-from smarter.common.utils import to_snake_case as utils_camel_to_snake
-from smarter.common.utils import to_snake_case as utils_camel_to_snake_dict
-from smarter.common.utils import to_snake_case as utils_pascal_to_snake
 from smarter.common.utils import to_snake_case as utils_to_snake_case
 from smarter.lib import json
 from smarter.lib.cache import cache_results
@@ -435,21 +432,6 @@ class SmarterHelperMixin:
         """
 
         return utils_snake_to_camel(data, convert_values=convert_values)
-
-    def to_snake_case(self, name: ConvertibleCaseType) -> Any:
-        """
-        Converts a PascalCase string to snake_case.
-
-        This method takes a string in PascalCase format and converts it to snake_case.
-        It is useful for standardizing naming conventions across different formats.
-
-        :param name: The PascalCase string to convert.
-        :type name: ConvertibleCaseType
-        :return: The converted string in snake_case.
-        :rtype: Union[str, dict, list]
-        """
-
-        return utils_pascal_to_snake(name)
 
     def rfc1034_compliant_str(self, name: str) -> str:
         """
