@@ -161,7 +161,7 @@ def _generate_cache_key_cached(func: Callable, key_data: bytes) -> str:
     return f"{func.__module__}.{func.__name__}()_" + hashlib.sha256(key_data).hexdigest()[:32]
 
 
-def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=False):
+def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional[str] = None, logging_enabled=False):
     """
     A decorator that caches the result of a function based on the arguments
     passed to it.
@@ -209,6 +209,8 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
 
     :param timeout: The cache timeout in seconds. Defaults to ``smarter_settings.cache_expiration``.
     :type timeout: int
+    :param cache_key: An optional pre-computed cache key to use instead of generating one from the function arguments.
+    :type cache_key: Optional[str]
     :param logging_enabled: Whether to enable logging for cache hits and misses. Defaults to ``True``.
     :type logging_enabled: bool
     :return: The decorated function with caching applied.
@@ -296,17 +298,20 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
             :return: The result of the decorated function, either from cache or freshly computed.
             :rtype: Any
             """
-            key_data: Optional[bytes] = _generate_key_data(func, args, kwargs)
-            # If key_data is None, we cannot generate a cache key, so we call the function directly
-            # and return the result without caching.
-            # This is a fallback to avoid breaking the application in case of pickling errors.
-            if key_data is None:
-                logger.error("%s Failed to generate cache key data for %s", logger_prefix_normal, func.__name__)
-                return func(*args, **kwargs)
-            cache_key = _generate_cache_key_cached(func, key_data)
+            if cache_key:
+                computed_cache_key = cache_key
+            else:
+                key_data: Optional[bytes] = _generate_key_data(func, args, kwargs)
+                # If key_data is None, we cannot generate a cache key, so we call the function directly
+                # and return the result without caching.
+                # This is a fallback to avoid breaking the application in case of pickling errors.
+                if key_data is None:
+                    logger.error("%s Failed to generate cache key data for %s", logger_prefix_normal, func.__name__)
+                    return func(*args, **kwargs)
+                computed_cache_key = _generate_cache_key_cached(func, key_data)
 
             # look for a cached result ...
-            cached_result = lazy_cache.get(cache_key, CACHE_MISS_SENTINEL)
+            cached_result = lazy_cache.get(computed_cache_key, CACHE_MISS_SENTINEL)
             if cached_result is not CACHE_MISS_SENTINEL:
                 # cache hit, hooray!
                 result = (
@@ -319,7 +324,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
                         "%s cache hit for %s%s: %s args: %s kwargs: %s",
                         logger_prefix_green,
                         class_name,
-                        cache_key,
+                        computed_cache_key,
                         "None" if result is None else result,
                         args,
                         kwargs,
@@ -331,7 +336,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
                         "%s cache hit for %s: %s args: %s kwargs: %s",
                         logger_prefix_green,
                         class_name,
-                        cache_key,
+                        computed_cache_key,
                         args,
                         kwargs,
                     )
@@ -339,13 +344,13 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
                 # Cache miss, boo! Call the function ...
                 result = func(*args, **kwargs)
                 cache_value = CACHE_NONE_SENTINEL if result is None else result
-                lazy_cache.set(cache_key, cache_value, timeout)
+                lazy_cache.set(computed_cache_key, cache_value, timeout)
                 if logging_enabled or lazy_cache.verbose_logging:
                     logger.info(
                         "%s caching %s - %s, with timeout %s args: %s kwargs: %s for %s",
                         logger_prefix_red,
                         type(cache_value).__name__,
-                        cache_key,
+                        computed_cache_key,
                         timeout,
                         args,
                         kwargs,
@@ -376,6 +381,7 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
             :param kwargs: Keyword arguments for which to invalidate the cache.
             :type kwargs: dict
             """
+            cache_key = kwargs.pop("cache_key", None)
             logger.debug(
                 "%s -> %s called with args: %s kwargs: %s",
                 logger_prefix_blue,
@@ -383,24 +389,27 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Fal
                 args,
                 kwargs,
             )
-            key_data: Optional[bytes] = _generate_key_data(func, args, kwargs)
-            if key_data is None:
-                return
-            cache_key: str = _generate_cache_key_cached(func, key_data)
-            if lazy_cache.has_key(cache_key):
-                cached_value = lazy_cache.get(cache_key)
-                lazy_cache.delete(cache_key)
+            if cache_key:
+                computed_cache_key = cache_key
+            else:
+                key_data: Optional[bytes] = _generate_key_data(func, args, kwargs)
+                if key_data is None:
+                    return
+                computed_cache_key: str = _generate_cache_key_cached(func, key_data)
+            if lazy_cache.has_key(computed_cache_key):
+                cached_value = lazy_cache.get(computed_cache_key)
+                lazy_cache.delete(computed_cache_key)
                 logger.info(
                     "%s - invalidated %s - %s",
                     logger_prefix_green + logging.formatted_text_green(func.__name__ + "().invalidate()"),
                     type(cached_value).__name__,
-                    cache_key,
+                    computed_cache_key,
                 )
             else:
                 logger.debug(
                     "%s - no cache entry found for %s (nothing to invalidate)",
                     logger_prefix_red + logging.formatted_text_red(func.__name__ + "().invalidate()"),
-                    cache_key,
+                    computed_cache_key,
                 )
 
         wrapper.invalidate = invalidate  # type: ignore[attr-defined]

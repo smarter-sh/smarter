@@ -78,6 +78,7 @@ from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.urls import ProviderReverseNames
 from smarter.apps.secret.models import Secret
+from smarter.common.utils.decorators import snake_case
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
@@ -340,17 +341,20 @@ class MyResourcesView(SmarterAuthenticatedWebView):
         user = get_resolved_user(request.user)
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
 
-        retval = {
-            "pending_deployments": get_pending_deployments(user_profile=user_profile),
-            "chatbots_qty": get_chatbots(user_profile=user_profile),
-            "chatbots_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
-            "plugins_qty": get_plugins(user_profile=user_profile),
-            "plugins_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
-            "connections_qty": get_connections(user_profile=user_profile),
-            "connections_url": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
-            "providers_qty": get_providers(user_profile=user_profile),
-            "providers_url": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
-        }
+        @snake_case()
+        def _get_resources() -> dict[str, object]:
+            return {
+                "pending_deployments": get_pending_deployments(user_profile=user_profile),
+                "chatbots_qty": get_chatbots(user_profile=user_profile),
+                "chatbots_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+                "plugins_qty": get_plugins(user_profile=user_profile),
+                "plugins_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
+                "connections_qty": get_connections(user_profile=user_profile),
+                "connections_url": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+                "providers_qty": get_providers(user_profile=user_profile),
+                "providers_url": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
+            }
 
+        retval = _get_resources()
         logger.debug("%s.post() returning: %s", self.formatted_class_name, logging.formatted_json(retval))
         return JsonResponse(retval, status=HTTPStatus.OK)
