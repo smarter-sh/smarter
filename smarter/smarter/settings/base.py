@@ -1335,7 +1335,7 @@ LOGGING = {
         "uvicorn": {
             "level": logging.INFO,
             "class": "logging.StreamHandler",
-            "formatter": "verbose",
+            "formatter": "truncated",
             "filters": ["health_check"],
         },
         "redis": {

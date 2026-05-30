@@ -89,7 +89,7 @@ def hash_factory(length: int = 16) -> str:
     return hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:length]
 
 
-def mask_string(string: Union[str, bytes], mask_char: str = "*", mask_length: int = 4, string_length: int = 8) -> str:
+def mask_string(string: Union[str, bytes], mask_char: str = "*", mask_length: int = 4, string_length: int = 12) -> str:
     """
     Masks a string by replacing all but the last ``mask_length`` characters with ``mask_char``.
 

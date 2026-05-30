@@ -43,60 +43,6 @@ SNAKE_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 
 
 @lru_cache(maxsize=LRU_MAXSIZE)
-def _convert_to_camel(name: str):
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
-
-
-def camel_to_snake_dict(dictionary: dict, is_recursive: bool = False) -> dict:
-    """
-    Converts the keys of a dictionary from camelCase to snake_case recursively.
-
-    :param dictionary: The input dictionary whose keys are in camelCase format. Nested dictionaries are also converted.
-    :type dictionary: dict
-
-    :return: A new dictionary with all keys converted to snake_case. Nested dictionaries are processed recursively.
-    :rtype: dict
-
-    .. note::
-        This function only converts dictionary keys. Values are preserved as-is, except for nested dictionaries, which are also converted.
-
-    .. warning::
-        Keys that are not strings will not be converted. If a key is already in snake_case, it will remain unchanged.
-
-    **Example usage:**
-
-    .. code-block:: python
-
-        from smarter.common.utils import camel_to_snake_dict
-
-        data = {
-            "userName": "alice",
-            "userProfile": {
-                "firstName": "Alice",
-                "lastName": "Smith"
-            }
-        }
-
-        result = camel_to_snake_dict(data)
-        print(result)
-        # Output: {'user_name': 'alice', 'user_profile': {'first_name': 'Alice', 'last_name': 'Smith'}}
-
-    """
-    logger.debug("%s.camel_to_snake_dict()", logger_prefix)
-
-    retval = {}
-    for key, value in dictionary.items():
-        if isinstance(value, dict) and is_recursive:
-            value = camel_to_snake_dict(value, is_recursive=True)
-        new_key = _convert_to_camel(key)
-        retval[new_key] = value
-    if not is_recursive:
-        logger.debug("%s.camel_to_snake_dict() - converted '%s' to '%s'", logger_prefix, dictionary, retval)
-    return retval
-
-
-@lru_cache(maxsize=LRU_MAXSIZE)
 def _convert_snake_to_camel(name: str) -> str:
     components = name.split("_")
     return components[0] + "".join(x.title() for x in components[1:])
@@ -353,6 +299,54 @@ def to_snake_case(obj) -> str:
     else:
         retval = _convert_to_snake_case(obj.__name__) if hasattr(obj, "__name__") else str(obj)
     logger.debug("%s.to_snake_case() - converted '%s' to '%s'", logger_prefix, obj, retval)
+    return retval
+
+
+def camel_to_snake_dict(dictionary: dict, is_recursive: bool = False) -> dict:
+    """
+    Converts the keys of a dictionary from camelCase to snake_case recursively.
+
+    :param dictionary: The input dictionary whose keys are in camelCase format. Nested dictionaries are also converted.
+    :type dictionary: dict
+
+    :return: A new dictionary with all keys converted to snake_case. Nested dictionaries are processed recursively.
+    :rtype: dict
+
+    .. note::
+        This function only converts dictionary keys. Values are preserved as-is, except for nested dictionaries, which are also converted.
+
+    .. warning::
+        Keys that are not strings will not be converted. If a key is already in snake_case, it will remain unchanged.
+
+    **Example usage:**
+
+    .. code-block:: python
+
+        from smarter.common.utils import camel_to_snake_dict
+
+        data = {
+            "userName": "alice",
+            "userProfile": {
+                "firstName": "Alice",
+                "lastName": "Smith"
+            }
+        }
+
+        result = camel_to_snake_dict(data)
+        print(result)
+        # Output: {'user_name': 'alice', 'user_profile': {'first_name': 'Alice', 'last_name': 'Smith'}}
+
+    """
+    logger.debug("%s.camel_to_snake_dict()", logger_prefix)
+
+    retval = {}
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            value = camel_to_snake_dict(value, is_recursive=True)
+        new_key = to_snake_case(key)
+        retval[new_key] = value
+    if not is_recursive:
+        logger.debug("%s.camel_to_snake_dict() - converted '%s' to '%s'", logger_prefix, dictionary, retval)
     return retval
 
 
