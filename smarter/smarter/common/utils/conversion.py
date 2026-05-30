@@ -132,8 +132,16 @@ def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
 
 @lru_cache(maxsize=LRU_MAXSIZE)
 def _convert_camel_to_snake(name: str):
+    # convert PascalCase to pascalCase to ensure proper snake_case conversion
+    name = name[0].lower() + name[1:] if len(name) > 1 and name[0].isupper() else name.lower()
+
+    # replace spaces with underscores
     name = name.replace(" ", "_")
+
+    # convert camelCase to snake_case using regex
     name = name[0].lower() + name[1:] if name and len(name) > 1 and name[0].isupper() else name
+
+    # handle acronyms and consecutive uppercase letters
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
     result = re.sub("_+", "_", result)
@@ -186,9 +194,7 @@ def camel_to_snake(data: ConvertibleCaseType, convert_values: bool = False) -> A
     """
 
     if isinstance(data, str):
-        # convert PascalCase to pascalCase to ensure proper snake_case conversion
-        val = data[0].lower() + data[1:] if len(data) > 1 and data[0].isupper() else data.lower()
-        return _convert_camel_to_snake(val)
+        return _convert_camel_to_snake(data)
     elif isinstance(data, list):
         if convert_values:
             return [camel_to_snake(item, convert_values=convert_values) for item in data]
@@ -197,12 +203,12 @@ def camel_to_snake(data: ConvertibleCaseType, convert_values: bool = False) -> A
         if convert_values:
             retval = {}
             for key, value in data.items():
-                if isinstance(value, dict):
-                    value = camel_to_snake(value, convert_values=convert_values)
-                elif isinstance(value, list):
+                key = _convert_camel_to_snake(key)
+                if isinstance(value, dict) and convert_values:
+                    value = camel_to_snake(data=value, convert_values=convert_values)
+                elif isinstance(value, list) and convert_values:
                     value = [camel_to_snake(item, convert_values=convert_values) for item in value]
-                camel_case_key = _convert_camel_to_snake(key)
-                retval[camel_case_key] = value
+                retval[key] = value
             return retval
         return data
     else:
