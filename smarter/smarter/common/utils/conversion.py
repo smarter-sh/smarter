@@ -12,19 +12,19 @@ and are compatible with Python 3, Django, DRF, and Pydantic.
 Functions
 ---------
 - to_snake_case(obj): Converts camelCase or PascalCase strings (or class/type objects) to snake_case.
-- camel_to_snake(data): Converts camelCase strings, dict keys, or lists to snake_case.
-- camel_to_snake_dict(dictionary): Recursively converts dict keys from camelCase to snake_case.
-- pascal_to_snake(name): Converts PascalCase strings, dict keys, or lists to snake_case.
+- to_snake_case(data): Converts camelCase strings, dict keys, or lists to snake_case.
+- to_snake_case(dictionary): Recursively converts dict keys from camelCase to snake_case.
+- to_snake_case(name): Converts PascalCase strings, dict keys, or lists to snake_case.
 - to_camel_case(data, convert_values=False): Converts snake_case strings, dict keys, or lists to camelCase.
 
 Example
 -------
 .. code-block:: python
 
-    from smarter.common.utils import to_snake_case, camel_to_snake, to_camel_case
+    from smarter.common.utils import to_snake_case, to_snake_case, to_camel_case
 
     print(to_snake_case("UserProfile"))  # Output: user_profile
-    print(camel_to_snake("userName"))    # Output: user_name
+    print(to_snake_case("userName"))    # Output: user_name
     print(to_camel_case("user_name"))   # Output: userName
 """
 
@@ -149,7 +149,7 @@ def _convert_camel_to_snake(name: str):
     return result
 
 
-def camel_to_snake(data: ConvertibleCaseType, convert_values: bool = False) -> Any:
+def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False) -> Any:
     """
     Converts camelCase strings, dictionary keys, or lists of such, to snake_case format.
 
@@ -172,10 +172,10 @@ def camel_to_snake(data: ConvertibleCaseType, convert_values: bool = False) -> A
 
     .. code-block:: python
 
-        from smarter.common.utils import camel_to_snake
+        from smarter.common.utils import to_snake_case
 
         # Convert a string
-        print(camel_to_snake("userName"))  # Output: user_name
+        print(to_snake_case("userName"))  # Output: user_name
 
         # Convert a dictionary
         data = {
@@ -185,11 +185,11 @@ def camel_to_snake(data: ConvertibleCaseType, convert_values: bool = False) -> A
                 "lastName": "Smith"
             }
         }
-        print(camel_to_snake(data))
+        print(to_snake_case(data))
         # Output: {'user_name': 'alice', 'user_profile': {'first_name': 'Alice', 'last_name': 'Smith'}}
 
         # Convert a list of strings
-        print(camel_to_snake(["firstName", "lastName"]))
+        print(to_snake_case(["firstName", "lastName"]))
         # Output: ['first_name', 'last_name']
     """
 
@@ -197,7 +197,7 @@ def camel_to_snake(data: ConvertibleCaseType, convert_values: bool = False) -> A
         return _convert_camel_to_snake(data)
     elif isinstance(data, list):
         if convert_values:
-            return [camel_to_snake(item, convert_values=convert_values) for item in data]
+            return [to_snake_case(item, convert_values=convert_values) for item in data]
         return data
     elif isinstance(data, dict):
         if convert_values:
@@ -205,37 +205,22 @@ def camel_to_snake(data: ConvertibleCaseType, convert_values: bool = False) -> A
             for key, value in data.items():
                 key = _convert_camel_to_snake(key)
                 if isinstance(value, dict) and convert_values:
-                    value = camel_to_snake(data=value, convert_values=convert_values)
+                    value = to_snake_case(data=value, convert_values=convert_values)
                 elif isinstance(value, list) and convert_values:
-                    value = [camel_to_snake(item, convert_values=convert_values) for item in value]
+                    value = [to_snake_case(item, convert_values=convert_values) for item in value]
                 retval[key] = value
             return retval
         return data
     else:
         try:
             data_str = data.__name__ if hasattr(data, "__name__") else str(data)  # type: ignore
-            return camel_to_snake(data_str, convert_values=convert_values)
+            return to_snake_case(data_str, convert_values=convert_values)
         except Exception as e:
             raise SmarterValueError(f"Received an unsupported type: {type(data)}") from e
 
 
-def pascal_to_snake(name: ConvertibleCaseType) -> Any:
-    return camel_to_snake(name)
-
-
-def to_snake_case(obj: ConvertibleCaseType, convert_values: bool = False) -> str:
-    return camel_to_snake(obj, convert_values=convert_values)
-
-
-def camel_to_snake_dict(dictionary: dict[str, object], convert_values: bool = False) -> dict[str, object]:
-    return camel_to_snake(dictionary, convert_values=convert_values)
-
-
 __all__ = [
     "to_snake_case",
-    "camel_to_snake",
-    "camel_to_snake_dict",
-    "pascal_to_snake",
     "to_camel_case",
     "ConvertibleCaseType",
 ]

@@ -434,8 +434,8 @@ class TestAbstractBrokerClass(TestAccountMixin):
             "test_camel_case2": "test_camel_case2",
             "test_camel_case3": "test_camel_case3",
         }
-        camel_to_snake = self.broker.camel_to_snake(data=d)
-        self.assertEqual(camel_to_snake, d_result)
+        to_snake_case = self.broker.to_snake_case(data=d)
+        self.assertEqual(to_snake_case, d_result)
 
     def test_snake_to_camel(self) -> None:
         # 516,

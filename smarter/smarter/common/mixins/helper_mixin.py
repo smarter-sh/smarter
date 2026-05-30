@@ -18,8 +18,6 @@ from smarter.common.utils import (
 from smarter.common.utils import (
     bool_environment_variable as utils_bool_environment_variable,
 )
-from smarter.common.utils import camel_to_snake as utils_camel_to_snake
-from smarter.common.utils import camel_to_snake_dict as utils_camel_to_snake_dict
 from smarter.common.utils import dict_is_contained_in as utils_dict_is_contained_in
 from smarter.common.utils import dict_is_subset as utils_dict_is_subset
 from smarter.common.utils import (
@@ -28,7 +26,6 @@ from smarter.common.utils import (
 from smarter.common.utils import get_readonly_csv_file as utils_get_readonly_csv_file
 from smarter.common.utils import get_readonly_yaml_file as utils_get_readonly_yaml_file
 from smarter.common.utils import mask_string as util_mask_string
-from smarter.common.utils import pascal_to_snake as utils_pascal_to_snake
 from smarter.common.utils import recursive_sort_dict as utils_recursive_sort_dict
 from smarter.common.utils import rfc1034_compliant_str as utils_rfc1034_compliant_str
 from smarter.common.utils import (
@@ -38,6 +35,9 @@ from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
 from smarter.common.utils import to_camel_case as utils_snake_to_camel
+from smarter.common.utils import to_snake_case as utils_camel_to_snake
+from smarter.common.utils import to_snake_case as utils_camel_to_snake_dict
+from smarter.common.utils import to_snake_case as utils_pascal_to_snake
 from smarter.common.utils import to_snake_case as utils_to_snake_case
 from smarter.lib import json
 from smarter.lib.cache import cache_results
@@ -107,7 +107,7 @@ class SmarterHelperMixin:
     - ``recursive_sort_dict(data)``: Recursively sorts a dictionary.
     - ``get_readonly_csv_file(file_path)``: Opens a CSV file in read-only mode.
     - ``get_readonly_yaml_file(file_path)``: Opens a YAML file in read-only mode.
-    - Case conversion utilities: ``to_snake_case``, ``camel_to_snake``, ``camel_to_snake_dict``, ``snake_case``, ``to_camel_case``, ``pascal_to_snake``, ``rfc1034_compliant_str``, ``rfc1034_compliant_to_snake``.
+    - Case conversion utilities: ``to_snake_case``, ``to_snake_case``, ``to_snake_case``, ``snake_case``, ``to_camel_case``, ``to_snake_case``, ``rfc1034_compliant_str``, ``rfc1034_compliant_to_snake``.
 
 
     """
@@ -402,24 +402,7 @@ class SmarterHelperMixin:
     # Case conversion utilities
     ###########################################################################
 
-    def to_snake_case(self, obj: object, convert_values: bool = False) -> str:
-        """
-        Converts a string to snake_case.
-
-        This method takes a string in any case format (e.g., camelCase, PascalCase, kebab-case)
-        and converts it to snake_case, which is commonly used in Python for variable and function names.
-
-        :param obj: The object to convert to snake_case.
-        :type obj: object
-        :param convert_values: Whether to convert the values of dictionaries and lists recursively.
-        :type convert_values: bool
-        :return: The converted string in snake_case.
-        :rtype: str
-        """
-
-        return utils_to_snake_case(obj, convert_values=convert_values)
-
-    def camel_to_snake(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
+    def to_snake_case(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
         """
         Converts a camelCase or PascalCase string to snake_case.
 
@@ -434,23 +417,7 @@ class SmarterHelperMixin:
         :rtype: Optional[Union[str, dict, list]]
         """
 
-        return utils_camel_to_snake(data, convert_values=convert_values)
-
-    def camel_to_snake_dict(self, data: dict[str, object], convert_values: bool = False) -> dict[str, object]:
-        """
-        Converts all keys in a dictionary from camelCase to snake_case.
-
-        This method takes a dictionary with keys in camelCase format and returns a new dictionary
-        with all keys converted to snake_case. The values are preserved as they are.
-
-        :param data: The dictionary with camelCase keys to convert.
-        :type data: dict
-        :param convert_values: Whether to convert the values of dictionaries and lists recursively.
-        :type convert_values: bool
-        :return: A new dictionary with keys converted to snake_case.
-        :rtype: dict
-        """
-        return utils_camel_to_snake_dict(data, convert_values=convert_values)
+        return utils_to_snake_case(data, convert_values=convert_values)
 
     def to_camel_case(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
         """
@@ -459,15 +426,17 @@ class SmarterHelperMixin:
         This method takes a string in snake_case format and converts it to camelCase.
         It is useful for standardizing naming conventions across different formats.
 
-        :param name: The snake_case string to convert.
-        :type name: str
+        :param data: The snake_case string to convert.
+        :type data: ConvertibleCaseType
+        :param convert_values: Whether to convert the values of dictionaries and lists recursively.
+        :type convert_values: bool
         :return: The converted string in camelCase.
         :rtype: Optional[Union[str, dict, list]]
         """
 
         return utils_snake_to_camel(data, convert_values=convert_values)
 
-    def pascal_to_snake(self, name: ConvertibleCaseType) -> Any:
+    def to_snake_case(self, name: ConvertibleCaseType) -> Any:
         """
         Converts a PascalCase string to snake_case.
 

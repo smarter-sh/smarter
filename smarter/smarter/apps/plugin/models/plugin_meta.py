@@ -26,7 +26,7 @@ from smarter.apps.plugin.manifest.enum import (
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.common.utils import camel_to_snake, rfc1034_compliant_str
+from smarter.common.utils import rfc1034_compliant_str, to_snake_case
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
@@ -118,7 +118,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :return: None
         """
         if isinstance(self.name, str) and not SmarterValidator.is_valid_snake_case(self.name):
-            snake_case_name = camel_to_snake(self.name)
+            snake_case_name = to_snake_case(self.name)
             logger.warning(
                 "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
                 self.formatted_class_name,

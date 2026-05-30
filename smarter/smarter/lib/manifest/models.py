@@ -27,7 +27,7 @@ from smarter.apps.account.models import (
 from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import to_snake_case
 from smarter.lib import json
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
@@ -189,7 +189,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
             )
             v = slugified
         if not SmarterValidator.is_valid_snake_case(v):
-            snake_case_name = camel_to_snake(v)
+            snake_case_name = to_snake_case(v)
             logger.warning(
                 "%s.name '%s' is not in snake_case. Converting to snake_case: %s. Please use snake_case for names.",
                 logger_prefix + f".{cls.__name__}",

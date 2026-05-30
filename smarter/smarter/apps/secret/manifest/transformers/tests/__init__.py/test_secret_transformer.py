@@ -14,7 +14,7 @@ from smarter.apps.secret.manifest.transformers.secret import (
     SmarterSecretTransformerError,
 )
 from smarter.apps.secret.models import Secret
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import to_snake_case
 from smarter.lib.manifest.loader import SAMLoader
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -249,7 +249,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
 
         secret_transformer = SecretTransformer(name=manifest.metadata.name, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
-        self.assertEqual(secret_transformer.name, camel_to_snake(manifest.metadata.name))
+        self.assertEqual(secret_transformer.name, to_snake_case(manifest.metadata.name))
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_transformer.secret, Secret)
         secret_transformer.delete()

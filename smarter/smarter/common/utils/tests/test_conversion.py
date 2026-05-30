@@ -1,9 +1,6 @@
 """Test utility functions."""
 
 from smarter.common.utils import (
-    camel_to_snake,
-    camel_to_snake_dict,
-    pascal_to_snake,
     to_camel_case,
     to_snake_case,
 )
@@ -17,16 +14,16 @@ class TestConversionUtils(SmarterTestBase):
     """Test conversion utility functions."""
 
     def test_camel_to_snake(self):
-        self.assertEqual(camel_to_snake("camelCase"), "camel_case")
-        self.assertEqual(camel_to_snake("CamelCase"), "camel_case")
-        self.assertEqual(camel_to_snake("Camel Case"), "camel_case")
-        self.assertEqual(camel_to_snake("MyEverlastingSUPERDUPERGobstopper"), "my_everlasting_superduper_gobstopper")
-        self.assertEqual(camel_to_snake("already_snake_case"), "already_snake_case")
-        self.assertEqual(camel_to_snake(""), "")
+        self.assertEqual(to_snake_case("camelCase"), "camel_case")
+        self.assertEqual(to_snake_case("CamelCase"), "camel_case")
+        self.assertEqual(to_snake_case("Camel Case"), "camel_case")
+        self.assertEqual(to_snake_case("MyEverlastingSUPERDUPERGobstopper"), "my_everlasting_superduper_gobstopper")
+        self.assertEqual(to_snake_case("already_snake_case"), "already_snake_case")
+        self.assertEqual(to_snake_case(""), "")
 
     def test_camel_to_snake_dict(self):
         d = {"camelCase": 1, "nestedDict": {"innerKey": 2}}
-        result = camel_to_snake_dict(d)
+        result = to_snake_case(d)
         logger.debug("test_camel_to_snake_dict - result: %s", result)
 
         self.assertIn("camel_case", result)
@@ -43,8 +40,8 @@ class TestConversionUtils(SmarterTestBase):
         self.assertEqual(to_camel_case({"user_name": "first_name"}, convert_values=True), {"userName": "firstName"})
 
     def test_pascal_to_snake(self):
-        self.assertEqual(pascal_to_snake("UserProfile"), "user_profile")
-        self.assertEqual(pascal_to_snake("FirstName LastName"), "first_name_last_name")
+        self.assertEqual(to_snake_case("UserProfile"), "user_profile")
+        self.assertEqual(to_snake_case("FirstName LastName"), "first_name_last_name")
 
     def test_to_snake_case(self):
         self.assertEqual(to_snake_case("CamelCase"), "camel_case")

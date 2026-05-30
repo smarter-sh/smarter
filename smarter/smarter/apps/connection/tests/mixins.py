@@ -17,7 +17,7 @@ from smarter.apps.connection.manifest.models.sql_connection.model import (
 )
 from smarter.apps.connection.models import ApiConnection, SqlConnection
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import camel_to_snake_dict, get_readonly_yaml_file
+from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.loader import SAMLoader
@@ -126,7 +126,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         cls.connection_manifest_path = connection_manifest_path
         cls.connection_manifest = connection_manifest
         cls.connection_model = connection_model
-        connection_model_dump = camel_to_snake_dict(connection_model_dump)
+        connection_model_dump = to_snake_case(connection_model_dump)
         cls.connection_django_model = ApiConnection(**connection_model_dump)
         cls.connection_django_model.save()
 
@@ -213,7 +213,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         cls.connection_manifest_path = connection_manifest_path
         cls.connection_manifest = connection_manifest
         cls.connection_model = connection_model
-        connection_model_dump = camel_to_snake_dict(connection_model_dump)
+        connection_model_dump = to_snake_case(connection_model_dump)
         connection_model_dump["kind"] = connection_model.kind
         cls.connection_django_model = SqlConnection(**connection_model_dump)
         cls.connection_django_model.save()

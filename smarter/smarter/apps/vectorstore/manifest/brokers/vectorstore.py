@@ -909,7 +909,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                 # unpack the manifest into a snake_case dictionary and map it to the ORM model
                 metadata = super().manifest_to_django_orm()
                 dump = self.manifest.spec.vectorstore.model_dump()  # type: ignore[return-value]
-                dump = self.camel_to_snake(dump)
+                dump = self.to_snake_case(dump)
                 if not isinstance(metadata, dict) or not isinstance(dump, dict):
                     raise SAMVectorstoreBrokerError(
                         f"Expected metadata and dump to be dictionaries for {self.kind} {name} but got {type(metadata)} and {type(dump)}",
@@ -945,7 +945,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                     vectorstore=self._vectorstore_meta
                 )
                 dump = self.manifest.spec.indexModel.model_dump()  # type: ignore[return-value]
-                dump = self.camel_to_snake(dump)
+                dump = self.to_snake_case(dump)
                 if not isinstance(dump, dict):
                     raise SAMBrokerInternalError(
                         f"Expected dump to be a dictionary for {self.kind} {name} but got {type(dump)}",
@@ -978,7 +978,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                     vectorstore=self._vectorstore_meta
                 )
                 dump = self._manifest.spec.vectorstore.model_dump()  # type: ignore[return-value]
-                dump = self.camel_to_snake(dump)
+                dump = self.to_snake_case(dump)
                 if not isinstance(dump, dict):
                     raise SAMBrokerInternalError(
                         f"Expected dump to be a dictionary for {self.kind} {name}", thing=self.kind, command=command
@@ -1025,7 +1025,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                     vectorstore=self._vectorstore_meta
                 )
                 dump = self._manifest.spec.embeddings.model_dump()  # type: ignore[return-value]
-                dump = self.camel_to_snake(dump)
+                dump = self.to_snake_case(dump)
                 if not isinstance(dump, dict):
                     raise SAMBrokerInternalError(
                         f"Expected dump to be a dictionary for {self.kind} {name}", thing=self.kind, command=command

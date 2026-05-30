@@ -26,7 +26,7 @@ from smarter.apps.connection.models import ApiConnection
 from smarter.apps.connection.serializers import ApiConnectionSerializer
 from smarter.apps.plugin.manifest.enum import SAMApiConnectionSpecConnectionKeys
 from smarter.apps.secret.models import Secret
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -391,7 +391,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 thing=self.kind,
             )
 
-        config_dump = self.camel_to_snake(config_dump)
+        config_dump = self.to_snake_case(config_dump)
         if not isinstance(config_dump, dict):
             config_dump = json.loads(json.dumps(config_dump))
         config_dump[SAMMetadataKeys.NAME.value] = (
@@ -412,7 +412,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             )
 
         # retrieve the apiKey Secret
-        api_key_name = str(camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value))
+        api_key_name = str(to_snake_case(SAMApiConnectionSpecConnectionKeys.API_KEY.value))
         if api_key_name:
             try:
                 secret = (
@@ -430,7 +430,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
 
         # retrieve the proxyUsername Secret, if it exists
-        proxy_password_name = str(camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value))
+        proxy_password_name = str(to_snake_case(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value))
         if proxy_password_name:
             try:
                 secret = (
@@ -590,7 +590,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         if self._connection:
             return self._connection
 
-        name = str(self.camel_to_snake(self.name))  # type: ignore
+        name = str(self.to_snake_case(self.name))  # type: ignore
         if not name:
             return None
         self._connection = ApiConnection.objects.filter(name=name).with_read_permission_for(user=self.user).first()  # type: ignore
@@ -608,7 +608,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 model_dump = (
                     self._manifest.spec.connection.model_dump() if self._manifest and self._manifest.spec else None
                 )
-                model_dump = self.camel_to_snake(model_dump) if isinstance(model_dump, dict) else model_dump
+                model_dump = self.to_snake_case(model_dump) if isinstance(model_dump, dict) else model_dump
                 if not isinstance(model_dump, dict):
                     raise SAMConnectionBrokerError(
                         f"Manifest spec.connection is not a dict: {type(model_dump)}",
@@ -901,8 +901,8 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             )
 
         # update the spec
-        api_key_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value)
-        proxy_password_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
+        api_key_name = to_snake_case(SAMApiConnectionSpecConnectionKeys.API_KEY.value)
+        proxy_password_name = to_snake_case(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
         data = self.manifest_to_django_orm()
         tags = data.get("tags", [])
         for field in readonly_fields:

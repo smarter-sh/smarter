@@ -32,7 +32,7 @@ from smarter.apps.connection.tests.base_classes import TestConnectionBase
 from smarter.apps.connection.tests.factories import secret_factory
 from smarter.apps.secret.models import Secret
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import camel_to_snake, camel_to_snake_dict
+from smarter.common.utils import to_snake_case
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -270,7 +270,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(self.model.spec)
         self.assertIsNotNone(self.model.spec.connection)
 
-        snake_case_name = camel_to_snake(self.model.metadata.name)
+        snake_case_name = to_snake_case(self.model.metadata.name)
         self.assertEqual(self.model.metadata.name, snake_case_name)
 
         self.assertEqual(self.model.metadata.description, "points to smarter api localhost")
@@ -556,14 +556,14 @@ class TestApiConnectionLegacy(TestConnectionBase):
             )
             model_dump["proxyPassword"] = proxy_secret
 
-        model_dump = camel_to_snake_dict(model_dump)
+        model_dump = to_snake_case(model_dump)
         django_model = ApiConnection(**model_dump)
         django_model.save()
 
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.user_profile, self.user_profile)
 
-        snake_case_name = camel_to_snake(self.model.metadata.name)
+        snake_case_name = to_snake_case(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
         self.assertEqual(django_model.base_url, self.model.spec.connection.baseUrl)

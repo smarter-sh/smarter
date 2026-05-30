@@ -159,7 +159,7 @@ class SAMProviderBroker(AbstractBroker):
         """
         metadata = super().manifest_to_django_orm()
         dump = self.manifest.spec.provider.model_dump()  # type: ignore[return-value]
-        dump = self.camel_to_snake(dump)
+        dump = self.to_snake_case(dump)
         if not isinstance(self.manifest, SAMProvider):
             raise SAMProviderBrokerError(
                 f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}", thing=self.kind

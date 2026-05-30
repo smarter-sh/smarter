@@ -14,7 +14,7 @@ from django.test import RequestFactory
 
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.common.utils import camel_to_snake, hash_factory
+from smarter.common.utils import hash_factory, to_snake_case
 from smarter.lib import json
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
         logger.debug(msg)
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
-        cls.name = str(camel_to_snake("smarterTestBase_" + cls.hash_suffix))
+        cls.name = str(to_snake_case("smarterTestBase_" + cls.hash_suffix))
         cls.uid = SmarterTestBase.generate_uid()
         cache.clear()
 

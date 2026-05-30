@@ -72,7 +72,7 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import to_snake_case
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -465,7 +465,7 @@ class ApiPlugin(PluginBase):
             raise SmarterApiPluginError(
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required API data."
             )
-        api_data = {camel_to_snake(key): value for key, value in api_data.items()}
+        api_data = {to_snake_case(key): value for key, value in api_data.items()}
 
         connection_name = self._manifest.spec.connection if self._manifest else None
         if connection_name:
