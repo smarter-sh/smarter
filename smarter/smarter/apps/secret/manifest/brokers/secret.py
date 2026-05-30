@@ -386,7 +386,7 @@ class SAMSecretBroker(AbstractBroker):
 
         try:
             secret_dict = model_to_dict(self.secret)
-            secret_dict = self.snake_to_camel(secret_dict)  # type: ignore[assignment]
+            secret_dict = self.to_camel_case(secret_dict)  # type: ignore[assignment]
             secret_dict.pop("id")
         except Exception as e:
             raise SAMSecretBrokerError(
@@ -727,7 +727,7 @@ class SAMSecretBroker(AbstractBroker):
                     raise SAMSecretBrokerError(
                         f"Model dump failed for {self.kind} {secret}", thing=self.kind, command=command
                     )
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMSecretBrokerError(

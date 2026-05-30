@@ -17,7 +17,7 @@ from .conversion import (
     camel_to_snake,
     camel_to_snake_dict,
     pascal_to_snake,
-    snake_to_camel,
+    to_camel_case,
     to_snake_case,
 )
 from .decorators import camel_case, snake_case
@@ -63,6 +63,6 @@ __all__ = [
     "request_to_json",
     "RequestData",
     "uri",
-    "snake_to_camel",
+    "to_camel_case",
     "ConvertibleCaseType",
 ]

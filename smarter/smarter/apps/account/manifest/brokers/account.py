@@ -727,7 +727,7 @@ class SAMAccountBroker(AbstractBroker):
                 logger.debug("%s.get() processing Account: %s", self.formatted_class_name, account)
                 self.brokered_account = account
                 model_dump = AccountSerializer(account).data
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 logger.error("Error in %s: %s", command, e)

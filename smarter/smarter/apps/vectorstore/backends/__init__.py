@@ -96,7 +96,7 @@ class Backends:
         return BackendClass(db, embeddings=embeddings, vector_store=vector_store)  # type: ignore
 
     @classmethod
-    def snake_to_camel(cls, snake_str):
+    def to_camel_case(cls, snake_str):
         components = snake_str.split("_")
         return components[0] + "".join(x.title() for x in components[1:])
 
@@ -114,7 +114,7 @@ class Backends:
             backend = backend[:-1]
 
         # ensure backend is in camel case
-        backend = cls.snake_to_camel(backend)
+        backend = cls.to_camel_case(backend)
         lower_kind = backend.lower()
 
         # perform a lower case search to find and return the original key

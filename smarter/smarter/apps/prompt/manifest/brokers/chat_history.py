@@ -133,7 +133,7 @@ class SAMChatHistoryBroker(AbstractBroker):
                 f"ChatHistory not found for session key {self.session_key}", thing=self.kind
             )
         chat_dict = model_to_dict(self.chat_history)
-        chat_dict = self.snake_to_camel(chat_dict)
+        chat_dict = self.to_camel_case(chat_dict)
         if not isinstance(chat_dict, dict):
             raise SAMChatHistoryBrokerError(
                 f"Failed to convert {self.kind} {self.chat_history.id} to dict", thing=self.kind  # type: ignore
@@ -279,7 +279,7 @@ class SAMChatHistoryBroker(AbstractBroker):
                     raise SAMChatHistoryBrokerError(
                         f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command  # type: ignore
                     )
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMChatHistoryBrokerError(

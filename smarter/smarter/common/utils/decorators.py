@@ -5,7 +5,7 @@ Decorators for converting function return values between camelCase and snake_cas
 from functools import wraps
 from typing import Callable
 
-from .conversion import camel_to_snake, snake_to_camel
+from .conversion import camel_to_snake, to_camel_case
 
 
 def snake_case(convert_values: bool = False):
@@ -38,7 +38,7 @@ def camel_case(convert_values: bool = False):
         def wrapper(*args, **kwargs):
 
             function_return = func(*args, **kwargs)
-            converted_return = snake_to_camel(function_return, convert_values=convert_values)
+            converted_return = to_camel_case(function_return, convert_values=convert_values)
             return converted_return
 
         return wrapper

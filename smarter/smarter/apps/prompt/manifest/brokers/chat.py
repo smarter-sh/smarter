@@ -125,7 +125,7 @@ class SAMChatBroker(AbstractBroker):
         if not self.chat_object:
             return None
         chat_dict = model_to_dict(self.chat_object)
-        chat_dict = self.snake_to_camel(chat_dict)
+        chat_dict = self.to_camel_case(chat_dict)
         if not isinstance(chat_dict, dict):
             raise SAMChatBrokerError(
                 f"Failed to convert {self.kind} {self.chat_object.id} Django ORM model to dict. Got {type(chat_dict)}", thing=self.kind  # type: ignore
@@ -262,7 +262,7 @@ class SAMChatBroker(AbstractBroker):
                 model_dump = ChatSerializer(chat).data
                 if not model_dump:
                     raise SAMChatBrokerError(f"Model dump failed for {self.kind} {chat.id}")  # type: ignore
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMChatBrokerError(

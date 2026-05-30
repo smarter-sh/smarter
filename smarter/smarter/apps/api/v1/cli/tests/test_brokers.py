@@ -27,8 +27,8 @@ class TestApiCliV1Brokers(SmarterTestBase):
 
     def test_snake_to_camel(self):
         """test that snake case strings are converted to camel case correctly."""
-        self.assertEqual(Brokers.snake_to_camel("snake_case"), "snakeCase")
-        self.assertEqual(Brokers.snake_to_camel("super_snake_case"), "superSnakeCase")
+        self.assertEqual(Brokers.to_camel_case("snake_case"), "snakeCase")
+        self.assertEqual(Brokers.to_camel_case("super_snake_case"), "superSnakeCase")
 
     def test_get_broker_kind(self):
         """

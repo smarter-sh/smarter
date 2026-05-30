@@ -37,7 +37,7 @@ from smarter.common.utils import (
 from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
-from smarter.common.utils import snake_to_camel as utils_snake_to_camel
+from smarter.common.utils import to_camel_case as utils_snake_to_camel
 from smarter.common.utils import to_snake_case as utils_to_snake_case
 from smarter.lib import json
 from smarter.lib.cache import cache_results
@@ -107,7 +107,7 @@ class SmarterHelperMixin:
     - ``recursive_sort_dict(data)``: Recursively sorts a dictionary.
     - ``get_readonly_csv_file(file_path)``: Opens a CSV file in read-only mode.
     - ``get_readonly_yaml_file(file_path)``: Opens a YAML file in read-only mode.
-    - Case conversion utilities: ``to_snake_case``, ``camel_to_snake``, ``camel_to_snake_dict``, ``snake_case``, ``snake_to_camel``, ``pascal_to_snake``, ``rfc1034_compliant_str``, ``rfc1034_compliant_to_snake``.
+    - Case conversion utilities: ``to_snake_case``, ``camel_to_snake``, ``camel_to_snake_dict``, ``snake_case``, ``to_camel_case``, ``pascal_to_snake``, ``rfc1034_compliant_str``, ``rfc1034_compliant_to_snake``.
 
 
     """
@@ -452,7 +452,7 @@ class SmarterHelperMixin:
         """
         return utils_camel_to_snake_dict(data, convert_values=convert_values)
 
-    def snake_to_camel(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
+    def to_camel_case(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
         """
         Converts a snake_case string to camelCase.
 
