@@ -29,6 +29,7 @@ from django.utils.decorators import method_decorator
 from smarter.apps.account.models import get_resolved_user
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
+from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.views import (
@@ -82,7 +83,8 @@ class ProviderApiView(SmarterView):
         user = get_resolved_user(request.user)
 
         @cache_results()
-        def _get_cached_providers_for_user(user_id):
+        @camel_case()
+        def _get_cached_providers_for_user(user_id) -> dict:
 
             providers = Provider.objects.with_read_permission_for(user=user).prefetch_related("tags")  # type: ignore
             serialized_providers = ProviderSerializer(providers, many=True).data

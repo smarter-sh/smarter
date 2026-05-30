@@ -94,6 +94,7 @@ from smarter.apps.secret.urls import SecretReverseNames
 from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
+from smarter.common.utils import camel_case
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
@@ -139,6 +140,7 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
     """
 
     @cache_results(timeout=FOREVER)
+    @camel_case()
     def cached_sidebar_context() -> dict[str, Any]:
         retval = {
             "sidebar": {
@@ -211,6 +213,7 @@ def base(request: "HttpRequest") -> dict[str, Any]:
             user = None
 
     @cache_results(timeout=FOREVER)
+    @camel_case()
     def get_cached_context(username: Optional[str]) -> dict[str, Any]:
         """
         Constructs and returns the cached dashboard context for the specified user.
@@ -306,6 +309,7 @@ def branding(request: "HttpRequest") -> dict[str, Any]:
     """
 
     @cache_results(timeout=FOREVER)
+    @camel_case()
     def get_cached_context() -> dict[str, Any]:
         current_year = datetime.now().year
         root_url = request.build_absolute_uri("/").rstrip("/")
@@ -361,6 +365,7 @@ def branding(request: "HttpRequest") -> dict[str, Any]:
     return get_cached_context()
 
 
+@camel_case()
 def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
     """
     Provides organization-specific legal context for dashboard templates.
@@ -396,6 +401,7 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
     return context
 
 
+@camel_case()
 def cache_buster(request) -> dict[str, Any]:
     """
     Adds a cache-busting query parameter to static asset URLs during development.
