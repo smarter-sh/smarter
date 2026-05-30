@@ -131,7 +131,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         Smarter API SAMChatPluginUsage manifest dict.
         """
         chat_dict = model_to_dict(self.chat_plugin_usage)
-        chat_dict = self.snake_to_camel(chat_dict)
+        chat_dict = self.to_camel_case(chat_dict)
         if not isinstance(chat_dict, dict):
             raise SAMChatPluginUsageBrokerError(
                 f"Failed to convert {self.kind} {self.chat_plugin_usage.id} to dict. Got {type(chat_dict)}", thing=self.kind  # type: ignore
@@ -275,7 +275,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
                     raise SAMChatPluginUsageBrokerError(
                         f"Model dump failed for {self.kind} {plugin_usage.id}", thing=self.kind, command=command  # type: ignore
                     )
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMChatPluginUsageBrokerError(

@@ -6,6 +6,7 @@ from typing import Optional
 from django.http import HttpRequest
 from rest_framework import serializers
 
+from smarter.common.utils import to_camel_case, to_snake_case
 from smarter.lib import logging
 
 logger = logging.getSmarterLogger(__name__)
@@ -40,10 +41,12 @@ class SmarterCamelCaseSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         """Convert field names to camelCase."""
+
         representation = super().to_representation(instance)
         new_representation = {}
         for key, value in representation.items():
-            components = key.split("_")
-            camel_key = components[0] + "".join(x.title() for x in components[1:])
+            # double check that the key is a snake_case string before converting to camelCase
+            snake_key = to_snake_case(key)
+            camel_key = to_camel_case(snake_key)
             new_representation[camel_key] = value
         return new_representation

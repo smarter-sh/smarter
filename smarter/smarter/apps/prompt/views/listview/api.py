@@ -64,7 +64,6 @@ from smarter.apps.chatbot.caching import (
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.common.conf import smarter_settings
-from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
@@ -140,7 +139,6 @@ class PromptListApiView(SmarterAuthenticatedWebView):
                     to DEFAULT_PAGE_SIZE.
     """
 
-    @camel_case()
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to retrieve a list of ChatBots based on ownership filters and pagination.
@@ -241,7 +239,6 @@ class PromptListApiCloneView(SmarterAuthenticatedWebView):
     :rtype: JsonResponse
     """
 
-    @camel_case()
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to clone an existing ChatBot. Validates input
@@ -304,7 +301,6 @@ class PromptListApiDeleteView(SmarterAuthenticatedWebView):
     API view for deleting a ChatBot. This view is protected and requires the user to be authenticated.
     """
 
-    @camel_case()
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to delete an existing ChatBot. Validates input
@@ -362,7 +358,6 @@ class PromptListApiRenameView(SmarterAuthenticatedWebView):
     rename and a new name for the ChatBot.
     """
 
-    @camel_case()
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to rename an existing ChatBot. Validates input

@@ -126,7 +126,7 @@ class Brokers:
         return cls._brokers.get(kind) or cls._lower_brokers().get(kind.lower())
 
     @classmethod
-    def snake_to_camel(cls, snake_str):
+    def to_camel_case(cls, snake_str):
         components = snake_str.split("_")
         return components[0] + "".join(x.title() for x in components[1:])
 
@@ -144,7 +144,7 @@ class Brokers:
             kind = kind[:-1]
 
         # ensure kind is in camel case
-        kind = cls.snake_to_camel(kind)
+        kind = cls.to_camel_case(kind)
         lower_kind = kind.lower()
 
         # perform a lower case search to find and return the original key

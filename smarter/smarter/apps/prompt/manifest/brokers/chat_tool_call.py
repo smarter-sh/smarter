@@ -129,7 +129,7 @@ class SAMChatToolCallBroker(AbstractBroker):
         Smarter API SAMChatToolCall manifest dict.
         """
         chat_dict = model_to_dict(self.chat_tool_call)
-        chat_dict = self.snake_to_camel(chat_dict)
+        chat_dict = self.to_camel_case(chat_dict)
         if not isinstance(chat_dict, dict):
             raise SAMChatToolCallBrokerError(
                 f"Failed to convert {self.kind} {self.chat_tool_call.id} to dict. Got {type(chat_dict)}", thing=self.kind  # type: ignore
@@ -273,7 +273,7 @@ class SAMChatToolCallBroker(AbstractBroker):
                     raise SAMChatToolCallBrokerError(
                         f"Model dump failed for {self.kind} {tool_call.id}", thing=self.kind, command=command  # type: ignore
                     )
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMChatToolCallBrokerError(

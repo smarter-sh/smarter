@@ -73,7 +73,7 @@ class SAMTestBroker(AbstractBroker):
         if not self.user:
             raise SAMUserBrokerError("No user set for the broker")
         user_dict = model_to_dict(self.user) if isinstance(self.user, User) else {}
-        user_dict = self.snake_to_camel(user_dict)
+        user_dict = self.to_camel_case(user_dict)
         user_dict.pop("id")  # type: ignore[union-attr]
 
         data = {

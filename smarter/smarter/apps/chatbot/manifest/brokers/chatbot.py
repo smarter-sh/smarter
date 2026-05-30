@@ -499,7 +499,7 @@ class SAMChatbotBroker(AbstractBroker):
             )
             return None
         chatbot_dict = model_to_dict(self.chatbot)
-        chatbot_dict = self.snake_to_camel(chatbot_dict)
+        chatbot_dict = self.to_camel_case(chatbot_dict)
         if not isinstance(chatbot_dict, dict):
             raise SAMChatbotBrokerError(f"Failed to convert {self.kind} {self.chatbot.name} to dict", thing=self.kind)
         chatbot_dict.pop("id")
@@ -837,7 +837,7 @@ class SAMChatbotBroker(AbstractBroker):
                     raise SAMChatbotBrokerError(
                         f"Model dump failed for {self.kind} {chatbot.name}", thing=self.kind, command=command
                     )
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 logger.error(

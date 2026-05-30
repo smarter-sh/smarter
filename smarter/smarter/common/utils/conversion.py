@@ -15,17 +15,17 @@ Functions
 - camel_to_snake(data): Converts camelCase strings, dict keys, or lists to snake_case.
 - camel_to_snake_dict(dictionary): Recursively converts dict keys from camelCase to snake_case.
 - pascal_to_snake(name): Converts PascalCase strings, dict keys, or lists to snake_case.
-- snake_to_camel(data, convert_values=False): Converts snake_case strings, dict keys, or lists to camelCase.
+- to_camel_case(data, convert_values=False): Converts snake_case strings, dict keys, or lists to camelCase.
 
 Example
 -------
 .. code-block:: python
 
-    from smarter.common.utils import to_snake_case, camel_to_snake, snake_to_camel
+    from smarter.common.utils import to_snake_case, camel_to_snake, to_camel_case
 
     print(to_snake_case("UserProfile"))  # Output: user_profile
     print(camel_to_snake("userName"))    # Output: user_name
-    print(snake_to_camel("user_name"))   # Output: userName
+    print(to_camel_case("user_name"))   # Output: userName
 """
 
 import re
@@ -55,7 +55,7 @@ def _convert_snake_to_camel(name: str) -> str:
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-def snake_to_camel(data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = False) -> Any:
+def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = False) -> Any:
     """
     Converts snake_case strings, dictionary keys, or lists of such, to camelCase format.
 
@@ -79,10 +79,10 @@ def snake_to_camel(data: ConvertibleCaseType, convert_values: bool = False, is_r
 
     .. code-block:: python
 
-        from smarter.common.utils import snake_to_camel
+        from smarter.common.utils import to_camel_case
 
         # Convert a string
-        print(snake_to_camel("user_name"))  # Output: userName
+        print(to_camel_case("user_name"))  # Output: userName
 
         # Convert a dictionary
         data = {
@@ -92,16 +92,16 @@ def snake_to_camel(data: ConvertibleCaseType, convert_values: bool = False, is_r
                 "last_name": "Smith"
             }
         }
-        print(snake_to_camel(data))
+        print(to_camel_case(data))
         # Output: {'userName': 'alice', 'userProfile': {'firstName': 'Alice', 'lastName': 'Smith'}}
 
         # Convert a list of strings
-        print(snake_to_camel(["first_name", "last_name"]))
+        print(to_camel_case(["first_name", "last_name"]))
         # Output: ['firstName', 'lastName']
 
         # Convert values as well
         data = {"user_name": "first_name"}
-        print(snake_to_camel(data, convert_values=True))
+        print(to_camel_case(data, convert_values=True))
         # Output: {'userName': 'firstName'}
 
     """
@@ -109,7 +109,7 @@ def snake_to_camel(data: ConvertibleCaseType, convert_values: bool = False, is_r
         return _convert_snake_to_camel(data)
 
     if isinstance(data, list) and convert_values:
-        return [snake_to_camel(item, convert_values=convert_values, is_recursive=True) for item in data]
+        return [to_camel_case(item, convert_values=convert_values, is_recursive=True) for item in data]
 
     if not isinstance(data, dict):
         return data
@@ -118,7 +118,7 @@ def snake_to_camel(data: ConvertibleCaseType, convert_values: bool = False, is_r
     retval = {}
     for key, value in data.items():
         if isinstance(value, dict):
-            value = snake_to_camel(data=value, convert_values=convert_values, is_recursive=True)
+            value = to_camel_case(data=value, convert_values=convert_values, is_recursive=True)
         new_key = _convert_snake_to_camel(key)
         if convert_values:
             new_value = _convert_snake_to_camel(value) if isinstance(value, str) else value
@@ -126,7 +126,7 @@ def snake_to_camel(data: ConvertibleCaseType, convert_values: bool = False, is_r
             new_value = value
         retval[new_key] = new_value
     if not is_recursive:
-        logger.debug("%s.snake_to_camel() - converted '%s' to '%s'", logger_prefix, data, retval)
+        logger.debug("%s.to_camel_case() - converted '%s' to '%s'", logger_prefix, data, retval)
     return retval
 
 
@@ -230,6 +230,6 @@ __all__ = [
     "camel_to_snake",
     "camel_to_snake_dict",
     "pascal_to_snake",
-    "snake_to_camel",
+    "to_camel_case",
     "ConvertibleCaseType",
 ]

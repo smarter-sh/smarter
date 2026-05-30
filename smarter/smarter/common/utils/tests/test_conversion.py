@@ -4,7 +4,7 @@ from smarter.common.utils import (
     camel_to_snake,
     camel_to_snake_dict,
     pascal_to_snake,
-    snake_to_camel,
+    to_camel_case,
     to_snake_case,
 )
 from smarter.lib import logging
@@ -34,13 +34,13 @@ class TestConversionUtils(SmarterTestBase):
         self.assertIn("inner_key", result["nested_dict"])
 
     def test_snake_to_camel(self):
-        self.assertEqual(snake_to_camel("user_name"), "userName")
-        self.assertEqual(snake_to_camel(["first_name", "last_name"]), ["firstName", "lastName"])
+        self.assertEqual(to_camel_case("user_name"), "userName")
+        self.assertEqual(to_camel_case(["first_name", "last_name"]), ["firstName", "lastName"])
         self.assertEqual(
-            snake_to_camel({"user_name": "alice", "user_profile": {"first_name": "Alice"}}),
+            to_camel_case({"user_name": "alice", "user_profile": {"first_name": "Alice"}}),
             {"userName": "alice", "userProfile": {"firstName": "Alice"}},
         )
-        self.assertEqual(snake_to_camel({"user_name": "first_name"}, convert_values=True), {"userName": "firstName"})
+        self.assertEqual(to_camel_case({"user_name": "first_name"}, convert_values=True), {"userName": "firstName"})
 
     def test_pascal_to_snake(self):
         self.assertEqual(pascal_to_snake("UserProfile"), "user_profile")

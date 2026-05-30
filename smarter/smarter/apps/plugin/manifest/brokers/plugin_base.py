@@ -575,7 +575,7 @@ class SAMPluginBaseBroker(AbstractBroker):
         try:
             metadata = model_to_dict(self.plugin_meta)  # type: ignore[no-any-return]
             metadata = json.loads(json.dumps(metadata))
-            metadata = self.snake_to_camel(metadata)
+            metadata = self.to_camel_case(metadata)
             if not isinstance(metadata, dict):
                 raise SAMPluginBrokerError(
                     f"Model dump failed for {self.kind} {self.plugin.name}",
@@ -656,7 +656,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 command=command,
             )
         plugin_data = model_to_dict(self.plugin_data)  # type: ignore[no-any-return]
-        plugin_data = self.snake_to_camel(plugin_data)
+        plugin_data = self.to_camel_case(plugin_data)
         if not isinstance(plugin_data, dict):
             raise SAMPluginBrokerError(
                 f"Model dump failed for {self.kind} {self.plugin.name}",
@@ -885,7 +885,7 @@ class SAMPluginBaseBroker(AbstractBroker):
         try:
             plugin_selector = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
             plugin_selector = model_to_dict(plugin_selector)  # type: ignore[no-any-return]
-            plugin_selector = self.snake_to_camel(plugin_selector)
+            plugin_selector = self.to_camel_case(plugin_selector)
             if not isinstance(plugin_selector, dict):
                 raise SAMPluginBrokerError(
                     f"Model dump failed for {self.kind} {self.plugin.name}",
@@ -1023,7 +1023,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 self.plugin_meta = plugin
 
                 model_dump = PluginSerializer(plugin).data
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
 
             except Exception as e:

@@ -871,7 +871,7 @@ class SAMUserBroker(AbstractBroker):
             try:
                 self.brokered_user = user
                 model_dump = UserSerializer(user).data
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMUserBrokerError(
