@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.35](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.34...v0.14.0-alpha.35) (2026-05-30)
+
+### Bug Fixes
+
+* force a new release ([7859355](https://github.com/smarter-sh/smarter/commit/785935537ba65f2dfd7105528db50f39cebd777e))
+
 ## [0.14.0-alpha.34](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.33...v0.14.0-alpha.34) (2026-05-30)
 
 ### Bug Fixes

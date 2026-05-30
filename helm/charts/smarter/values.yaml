@@ -139,7 +139,7 @@ global:
   image:
     pullPolicy: Always
     repository: lpm0073/smarter
-    tag: v0.14.0-alpha.34-alpha.33-alpha.32-alpha.31-alpha.30-alpha.29-alpha.28-alpha.27-alpha.26-alpha.25-alpha.24-alpha.23-alpha.22-alpha.21-alpha.20-alpha.19-alpha.18-alpha.17-alpha.16-alpha.15-alpha.14-alpha.13-alpha.12-alpha.11-alpha.10-alpha.9-alpha.8-alpha.7-alpha.6-alpha.5-alpha.4-alpha.3-alpha.2-alpha.1
+    tag: v0.14.0-alpha.35-alpha.34-alpha.33-alpha.32-alpha.31-alpha.30-alpha.29-alpha.28-alpha.27-alpha.26-alpha.25-alpha.24-alpha.23-alpha.22-alpha.21-alpha.20-alpha.19-alpha.18-alpha.17-alpha.16-alpha.15-alpha.14-alpha.13-alpha.12-alpha.11-alpha.10-alpha.9-alpha.8-alpha.7-alpha.6-alpha.5-alpha.4-alpha.3-alpha.2-alpha.1
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
