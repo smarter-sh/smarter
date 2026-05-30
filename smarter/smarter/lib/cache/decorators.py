@@ -209,7 +209,11 @@ def cache_results(timeout=smarter_settings.cache_expiration, cache_key: Optional
 
     :param timeout: The cache timeout in seconds. Defaults to ``smarter_settings.cache_expiration``.
     :type timeout: int
-    :param cache_key: An optional pre-computed cache key to use instead of generating one from the function arguments.
+    :param cache_key: An optional pre-computed cache key to use instead of
+        generating one from the function arguments. This marginally increases
+        performance by skipping the cache key generation step, but should only
+        be used if you are certain that the provided cache key is unique and
+        correctly represents the function arguments. Defaults to ``None``.
     :type cache_key: Optional[str]
     :param logging_enabled: Whether to enable logging for cache hits and misses. Defaults to ``True``.
     :type logging_enabled: bool

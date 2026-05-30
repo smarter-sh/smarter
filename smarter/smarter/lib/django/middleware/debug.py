@@ -34,7 +34,7 @@ class MiddlewareDebugMiddleware(SmarterMiddlewareMixin):
 
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
 
-        response = self.get_response(request)
+        response = super().__call__(request)
         logger.debug("type(response)=%s, response=%s", type(response), response)
         if not isinstance(response, HttpResponseBase):
             raise TypeError(
@@ -46,7 +46,7 @@ class MiddlewareDebugMiddleware(SmarterMiddlewareMixin):
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        response = await self.get_response(request)
+        response = await super().__acall__(request)
         logger.debug("type(response)=%s, response=%s", type(response), response)
 
         if not isinstance(response, HttpResponseBase):

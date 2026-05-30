@@ -32,7 +32,13 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
     checking authentication indicators, and other middleware-related helpers.
     Inherits from :class:`SmarterHelperMixin`.
 
+    Adds a `smarter_process_id` attribute to the request which is helpful for
+    caching and logging to correlate logs across the same request flow, especially
+    in async contexts where thread-local storage is not reliable.
+
     """
+
+    smarter_process_id: int
 
     def __init__(self, get_response, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -45,20 +51,31 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
             markcoroutinefunction(self)
 
         self.get_response = get_response
+        self.smarter_process_id = id(self)
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
         if self.async_mode:
             return self.__acall__(request)
+
+        self.set_smarter_process_id(request)
         result = self.get_response(request)
         assert isinstance(result, HttpResponseBase)
         response = result
         return response
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
+
+        self.set_smarter_process_id(request)
         result = self.get_response(request)
         assert not isinstance(result, HttpResponseBase)
         response = await result
         return response
+
+    def set_smarter_process_id(self, request):
+        """Set smarter_process_id on request if not already set."""
+        smarter_process_id = getattr(request, "smarter_process_id", None)
+        if not smarter_process_id:
+            setattr(request, "smarter_process_id", self.smarter_process_id)
 
     def get_client_ip(self, request) -> Optional[str]:
         """

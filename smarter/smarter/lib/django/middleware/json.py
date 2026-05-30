@@ -198,14 +198,14 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
             return self.__acall__(request)
 
         if self.deserves_amnesty(request.path):
-            return self.get_response(request)
+            return super().__call__(request)
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
-            return self.get_response(request)
+            return super().__call__(request)
 
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        response = self.get_response(request)
-        response = self.process_response(request, response)
+        response = super().__call__(request)
+        response = self.process_response(request, response)  # type: ignore
 
         return response
 
@@ -215,8 +215,9 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
             return await sync_to_async(self.get_response)(request)
 
         logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
-        response = await sync_to_async(self.get_response)(request)
-        response = await self.async_process_response(request, response)
+        callback = super().__acall__
+        response = await sync_to_async(callback)(request)  # type: ignore
+        response = await self.async_process_response(request, response)  # type: ignore
 
         return response
 

@@ -104,10 +104,10 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
             return self.__acall__(request)
 
         if self.deserves_amnesty(request.path):
-            return self.get_response(request)
+            return super().__call__(request)
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT):
-            return self.get_response(request)
+            return super().__call__(request)
 
         context = self.get_sync_context(request)
         logger.debug("%s called. Setting context=%s", self.formatted_class_name, context)
@@ -122,7 +122,7 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
 
-        async_get_response = cast(Callable[[HttpRequest], Awaitable[HttpResponseBase]], self.get_response)
+        async_get_response = cast(Callable[[HttpRequest], Awaitable[HttpResponseBase]], super().__acall__)
 
         if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT):
             return await async_get_response(request)
