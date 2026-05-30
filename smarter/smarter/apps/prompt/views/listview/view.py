@@ -11,6 +11,7 @@ avoiding appearing stale.
 from django.conf import settings
 from django.http import (
     HttpRequest,
+    HttpResponse,
 )
 from django.shortcuts import render
 
@@ -39,7 +40,7 @@ class PromptListView(SmarterAuthenticatedWebView):
 
     template_path = "react/prompt-list.html"
 
-    def get(self, request: HttpRequest, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         # pylint: disable=C0415
         from smarter.apps.prompt.urls import PromptReverseNames
 

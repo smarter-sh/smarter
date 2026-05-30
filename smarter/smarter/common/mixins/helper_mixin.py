@@ -402,7 +402,7 @@ class SmarterHelperMixin:
     # Case conversion utilities
     ###########################################################################
 
-    def to_snake_case(self, obj: object) -> str:
+    def to_snake_case(self, obj: object, convert_values: bool = False) -> str:
         """
         Converts a string to snake_case.
 
@@ -411,13 +411,15 @@ class SmarterHelperMixin:
 
         :param obj: The object to convert to snake_case.
         :type obj: object
+        :param convert_values: Whether to convert the values of dictionaries and lists recursively.
+        :type convert_values: bool
         :return: The converted string in snake_case.
         :rtype: str
         """
 
-        return utils_to_snake_case(obj)
+        return utils_to_snake_case(obj, convert_values=convert_values)
 
-    def camel_to_snake(self, data: ConvertibleCaseType) -> Any:
+    def camel_to_snake(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
         """
         Converts a camelCase or PascalCase string to snake_case.
 
@@ -426,13 +428,15 @@ class SmarterHelperMixin:
 
         :param data: The camelCase or PascalCase string to convert.
         :type data: Union[str, dict, list]
+        :param convert_values: Whether to convert the values of dictionaries and lists recursively.
+        :type convert_values: bool
         :return: The converted string in snake_case.
         :rtype: Optional[Union[str, dict, list]]
         """
 
-        return utils_camel_to_snake(data)
+        return utils_camel_to_snake(data, convert_values=convert_values)
 
-    def camel_to_snake_dict(self, data: dict[str, object]) -> dict[str, object]:
+    def camel_to_snake_dict(self, data: dict[str, object], convert_values: bool = False) -> dict[str, object]:
         """
         Converts all keys in a dictionary from camelCase to snake_case.
 
@@ -441,10 +445,12 @@ class SmarterHelperMixin:
 
         :param data: The dictionary with camelCase keys to convert.
         :type data: dict
+        :param convert_values: Whether to convert the values of dictionaries and lists recursively.
+        :type convert_values: bool
         :return: A new dictionary with keys converted to snake_case.
         :rtype: dict
         """
-        return utils_camel_to_snake_dict(data)
+        return utils_camel_to_snake_dict(data, convert_values=convert_values)
 
     def snake_to_camel(self, data: ConvertibleCaseType, convert_values: bool = False) -> Any:
         """
