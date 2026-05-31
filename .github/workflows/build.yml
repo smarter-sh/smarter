@@ -220,14 +220,14 @@ jobs:
               HASH_INPUT+="$MANIFEST:MISSING-$(date +%s)\n"
             fi
           done
-          echo -e "$HASH_INPUT" | sort | sha256sum | awk '{print $1}' > react-folder.sha256
-          echo "REACT_FOLDER_HASH=$(cat react-folder.sha256)" >> $GITHUB_ENV
+          echo -e "$HASH_INPUT" | sort | sha256sum | awk '{print $1}' > react-builds-cache-key
+          echo "REACT_FOLDER_HASH=$(cat react-builds-cache-key)" >> $GITHUB_ENV
 
       - name: Cache React manifest.json Hash
         uses: actions/cache@v5
         id: react-manifest-cache
         with:
-          path: react-folder.sha256
+          path: react-builds-cache-key
           key: react-folder-${{ env.REACT_FOLDER_HASH }}
 
       - name: Install Node
