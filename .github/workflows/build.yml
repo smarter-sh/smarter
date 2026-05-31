@@ -208,7 +208,7 @@ jobs:
           REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
           HASH_INPUT=""
           for comp in $REACT_COMPONENTS; do
-            MANIFEST="smarter/smarter/react/$comp/manifest.json"
+            MANIFEST="smarter/react/$comp/manifest.json"
             if [ -f "$MANIFEST" ]; then
               # Append file path and content hash for robustness
               HASH_INPUT+="$MANIFEST:$(sha256sum "$MANIFEST" | awk '{print $1}')\n"
