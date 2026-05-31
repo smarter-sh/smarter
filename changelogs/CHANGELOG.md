@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.37](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.36...v0.14.0-alpha.37) (2026-05-31)
+
+### Bug Fixes
+
+* add custom manifest.json meta data ([1899755](https://github.com/smarter-sh/smarter/commit/18997551cfb3628b1a3e7099f1979ebb08eed083))
+
 ## [0.14.0-alpha.36](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.35...v0.14.0-alpha.36) (2026-05-31)
 
 ### Bug Fixes
