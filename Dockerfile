@@ -203,6 +203,7 @@ RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt
 # components.
 FROM venv AS react_build_args
 
+ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
 
 # from .env file, alternatively from docker-compose.yml.
 # This is used to control the base URL for downloading React
@@ -226,7 +227,6 @@ FROM react_build_args AS react_cdn_distribution
 
 ENV DOCKER_REACT_REMOTE_CACHE_BUSTER=${DOCKER_REACT_REMOTE_CACHE_BUSTER}
 ENV DOCKER_REACT_REMOTE_CDN_URL=${DOCKER_REACT_REMOTE_CDN_URL}
-ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
 
 # Download all manifests and compute a combined hash for cache busting
 RUN if [ -n "$DOCKER_REACT_REMOTE_CDN_URL" ]; then \
@@ -296,7 +296,6 @@ fi
 # }
 FROM react_cdn_distribution AS react_assets
 
-ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
 ENV REACT_STAGING_FOLDER=/tmp/react_assets
 RUN mkdir -p ${REACT_STAGING_FOLDER}
 
