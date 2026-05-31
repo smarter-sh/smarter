@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.40](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.39...v0.14.0-alpha.40) (2026-05-31)
+
+### Bug Fixes
+
+* track shared and owned list fetches separately ([7f25321](https://github.com/smarter-sh/smarter/commit/7f2532142421ea1d36cf3ad87879b2df4849d321))
+
 ## [0.14.0-alpha.39](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.38...v0.14.0-alpha.39) (2026-05-31)
 
 ### Bug Fixes
