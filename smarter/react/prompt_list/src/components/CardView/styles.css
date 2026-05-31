@@ -1,17 +1,14 @@
-
 /* This desaturates the command button colors in the button group */
 .btn-group .btn {
   filter: saturate(0.8);
 }
 
-
 .card-view {
-	display: block;
+  display: block;
 }
 
-
 .chatbot-card > .card-header {
-	border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .smarter-chatbot-card {
@@ -21,26 +18,25 @@
 }
 
 .card-body > p {
-	margin-bottom: 2px !important;
+  margin-bottom: 2px !important;
 }
 
-
 .prompt-list-card-link {
-	text-decoration: none;
-	color: inherit;
+  text-decoration: none;
+  color: inherit;
 }
 
 .prompt-list-card-header {
-	position: relative;
+  position: relative;
 }
 
 .prompt-list-card-title {
-	border-bottom: 1px solid red;
-	padding-bottom: 6px;
+  border-bottom: 1px solid red;
+  padding-bottom: 6px;
 }
 
 .prompt-list-card-actions {
-	display: flex;
-	gap: 8px;
-	margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
 }

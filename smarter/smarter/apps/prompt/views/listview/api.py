@@ -65,9 +65,7 @@ from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
-from smarter.lib.django.views import (
-    SmarterAuthenticatedWebView,
-)
+from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 DEFAULT_PAGE_SIZE = 25  # default number of chatbots to return per page in the API response
@@ -96,7 +94,7 @@ class PromptListOwnershipFilter:
     ALL = "all"
 
 
-class PromptListApiView(SmarterAuthenticatedWebView):
+class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
     """
     List API view for the Smarter workbench web console.
 
@@ -208,7 +206,7 @@ class PromptListApiView(SmarterAuthenticatedWebView):
         return JsonResponse(retval)
 
 
-class PromptListApiCloneView(SmarterAuthenticatedWebView):
+class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
     """
     API view for cloning a ChatBot. This view is protected and requires the
     user to be authenticated. The user must provide the ID of the ChatBot to
@@ -296,7 +294,7 @@ class PromptListApiCloneView(SmarterAuthenticatedWebView):
             )
 
 
-class PromptListApiDeleteView(SmarterAuthenticatedWebView):
+class PromptListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
     """
     API view for deleting a ChatBot. This view is protected and requires the user to be authenticated.
     """
@@ -351,7 +349,7 @@ class PromptListApiDeleteView(SmarterAuthenticatedWebView):
             )
 
 
-class PromptListApiRenameView(SmarterAuthenticatedWebView):
+class PromptListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
     """
     API view for renaming a ChatBot. This view is protected and requires the
     user to be authenticated. The user must provide the ID of the ChatBot to

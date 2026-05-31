@@ -47,7 +47,7 @@ export type Function = {
   id: number;
   name: string;
   updatedAt: string;
-}
+};
 
 export type Chatbot = {
   id: number;

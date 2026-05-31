@@ -30,10 +30,7 @@ const postBuildPlugin: PluginOption = {
 };
 
 export default defineConfig(({ command }: ConfigEnv) => ({
-  plugins: [
-    react(),
-    postBuildPlugin,
-  ],
+  plugins: [react(), postBuildPlugin],
   // We use esbuild to remove console.debug statements in production builds
   // in order to avoid leaking potentially sensitive information in
   // production environments.

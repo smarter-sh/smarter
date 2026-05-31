@@ -29,16 +29,23 @@ export type DetailRowRenderer = (
   label: string,
   value: unknown,
   dataType?: "string" | "url" | "dateTime" | "number" | "bool" | "json" | "str[]" | null,
-  microHelp?: string | null
+  microHelp?: string | null,
 ) => ReactNode;
-
 
 export const renderDetailRow: DetailRowRenderer = (label, value, dataType, microHelp) => {
   const colClasses = "w-25 prompt-list-detail-label";
   const dataClasses = "prompt-list-detail-value";
-  const tdLabel = microHelp
-    ? <td className={colClasses}>{label}<sup className="text-danger" title={microHelp}> (*)</sup></td>
-    : <td className={colClasses}>{label}</td>;
+  const tdLabel = microHelp ? (
+    <td className={colClasses}>
+      {label}
+      <sup className="text-danger" title={microHelp}>
+        {" "}
+        (*)
+      </sup>
+    </td>
+  ) : (
+    <td className={colClasses}>{label}</td>
+  );
 
   if (value === null || value === undefined || value === "") {
     return (
@@ -47,9 +54,7 @@ export const renderDetailRow: DetailRowRenderer = (label, value, dataType, micro
         <td className={dataClasses}>No value</td>
       </tr>
     );
-
   }
-
 
   let displayValue: React.ReactNode = (() => {
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
@@ -64,7 +69,6 @@ export const renderDetailRow: DetailRowRenderer = (label, value, dataType, micro
     }
     return String(value);
   })();
-
 
   if (dataType === "dateTime") {
     if (typeof value === "string" || typeof value === "number") {
@@ -119,8 +123,7 @@ export const renderDetailRow: DetailRowRenderer = (label, value, dataType, micro
     } else {
       displayValue = String(value);
     }
-  }
-  else if (dataType === "string" || dataType === null || dataType === undefined) {
+  } else if (dataType === "string" || dataType === null || dataType === undefined) {
     // leave as is
   }
 
