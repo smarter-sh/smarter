@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.36](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.35...v0.14.0-alpha.36) (2026-05-31)
+
+### Bug Fixes
+
+* show ghost rows while isLoading ([2771e2c](https://github.com/smarter-sh/smarter/commit/2771e2c25687e4c71b6a8389e4cc41a7125b42b9))
+
 ## [0.14.0-alpha.35](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.34...v0.14.0-alpha.35) (2026-05-30)
 
 ### Bug Fixes
