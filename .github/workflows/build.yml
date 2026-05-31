@@ -201,28 +201,31 @@ jobs:
           fi
           echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
 
+      #------------------------------------------------------------------------
+      # Since the React build manifest.json files reference hashed filenames,
+      # we can use the content of these manifest files to create a cache key.
+      #
+      # Hash all files in the component directory recursively, sort for determinism
+      #------------------------------------------------------------------------
       - name: React manifest.json Hash
         id: react-cache-hash
         shell: bash
         run: |
           REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
           HASH_INPUT=""
-          pwd
-          ls -lha
           for comp in $REACT_COMPONENTS; do
-            MANIFEST="smarter/smarter/static/react/$comp/manifest.json"
-            if [ -f "$MANIFEST" ]; then
-              # Append file path and content hash for robustness
-              HASH_INPUT+="$MANIFEST:$(sha256sum "$MANIFEST" | awk '{print $1}')\n"
-            else
-              echo "Manifest file $MANIFEST not found. Using timestamp as cache buster."
-              # Use a timestamp as a cache buster if manifest is missing
-              HASH_INPUT+="$MANIFEST:MISSING-$(date +%s)\n"
-            fi
+            REACT_DIR="smarter/react/$comp/"
+            find "$REACT_DIR" -type f -exec sha256sum {} \; | sort | sha256sum | awk '{print $1}' >> react-builds-cache-key
           done
-          echo -e "$HASH_INPUT" | sort | sha256sum | awk '{print $1}' > react-builds-cache-key
-          echo "REACT_FOLDER_HASH=$(cat react-builds-cache-key)" >> $GITHUB_ENV
+          # Combine all component hashes into a single hash for the folder
+          REACT_FOLDER_HASH=$(sha256sum react-builds-cache-key | awk '{print $1}')
+          echo "REACT_FOLDER_HASH=$REACT_FOLDER_HASH" >> $GITHUB_ENV
 
+      #------------------------------------------------------------------------
+      # Look for the hash key that we created in the previous step. If we have
+      # a cache hit, then we know that the React builds have not changed and we
+      # can therefore skip installing Node and building the React components.
+      #------------------------------------------------------------------------
       - name: Cache React manifest.json Hash
         uses: actions/cache@v5
         id: react-manifest-cache
@@ -230,6 +233,10 @@ jobs:
           path: react-builds-cache-key
           key: react-folder-${{ env.REACT_FOLDER_HASH }}
 
+      #------------------------------------------------------------------------
+      # If we have a cache miss for the React manifest hash, then we need to
+      # install Node and build the React components.
+      #------------------------------------------------------------------------
       - name: Install Node
         id: install-node
         if: steps.react-manifest-cache.outputs.cache-hit != 'true'
