@@ -1,30 +1,33 @@
 /**
- * ListView React Component
+ * ListView
  *
- * This component renders a table-based list of chatbot resources, displaying
- * key details and actions for each chatbot. It is used to present chatbots
- * in a tabular format, with columns for name, creation and update dates,
- * provider, model, plugins, status, and a toolbar for actions.
- *
+ * Renders a responsive, table-based list of chatbot resources with key details and actions.
  * Features:
- * - Displays chatbot information in a responsive, styled table.
- * - Integrates the Toolbar component for per-chatbot actions (open, edit, clone, rename, delete).
- * - Formats dates and status using shared utility functions.
- * - Supports custom card class names for layout flexibility.
- * - Supports skeleton loading (ghost rows) when data is loading, based on isLoading and ghostRows props.
+ * - Displays chatbot information in a styled table with columns for name, dates, provider, model, plugins, status, and actions.
+ * - Integrates Toolbar for per-chatbot actions (open, edit, clone, rename, delete).
+ * - Formats dates and status using shared utilities.
+ * - Shows skeleton (ghost) rows while loading, and supports incremental rendering for large lists.
  *
  * Props:
- * - isLoading (boolean): Whether the chatbot data is loading (shows skeleton rows if true).
- * - ghostRows (number): Number of skeleton rows to display while loading.
- * - sessionContext (SessionContext): Authentication and API context for actions.
- * - chatbots (Chatbot[]): Array of chatbot objects to display.
- * - onRequery (function): Callback to refresh chatbot data.
+ * @param isLoading - Whether the chatbot data is loading (shows skeleton rows if true).
+ * @param ghostRows - Number of skeleton rows to display while loading.
+ * @param sessionContext - Authentication and API context for actions.
+ * @param chatbots - Array of chatbot objects to display.
+ * @param onRequery - Callback to refresh chatbot data.
  *
  * Usage:
- * <ListView sessionContext={sessionContext} chatbots={chatbots} isLoading={isLoading} ghostRows={ghostRows} onRequery={onRequery} />
+ * <ListView
+ *   sessionContext={sessionContext}
+ *   chatbots={chatbots}
+ *   isLoading={isLoading}
+ *   ghostRows={ghostRows}
+ *   onRequery={onRequery}
+ * />
  *
- * This component is intended for use in views where chatbots are presented in a list/table format.
+ * Intended for views where chatbots are presented in a list/table format.
  */
+import { useState, useEffect } from "react";
+
 import type { Chatbot, SessionContext } from "@/lib/Types";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { Toolbar } from "@/components/Toolbar";
@@ -42,6 +45,11 @@ interface ListViewProps {
   onRequery: () => void;
 }
 
+/**
+ * TableHeader
+ *
+ * Renders the table header row for the chatbot list, including column titles for all displayed fields.
+ */
 const TableHeader = () => {
   return (
     <thead className="table-light border-bottom-2">
@@ -59,6 +67,15 @@ const TableHeader = () => {
   );
 };
 
+/**
+ * ChatbotRow
+ *
+ * Renders a single chatbot as a table row, displaying its details and action toolbar.
+ *
+ * @param chatbot - The chatbot object to display.
+ * @param sessionContext - Session context for actions.
+ * @param onRequery - Callback to refresh chatbot data after an action.
+ */
 const ChatbotRow = ({
   chatbot,
   sessionContext,
@@ -126,17 +143,31 @@ const ChatbotRow = ({
   );
 };
 
+/**
+ * LoadingText
+ *
+ * Displays a muted "Loading..." text, typically used in skeleton or ghost rows to indicate loading state.
+ */
 const LoadingText = () => {
   return <span className="text-muted fw-semibold">Loading...</span>;
-}
-// A skeleton row component to display while chatbot data is loading.
-// It mimics the structure of a regular ChatbotRow but with placeholder content.
+};
+
+/**
+ * ChatbotRowGhost
+ *
+ * A skeleton row component to display while chatbot data is loading.
+ * It mimics the structure of a regular ChatbotRow but with placeholder content.
+ */
 const ChatbotRowGhost = () => {
   console.debug(`${loggerPrefix} Rendering ChatbotRowGhost`);
   return (
     <tr className="ghost">
-      <td className="p-1 m-0"><Loading /></td>
-      <td className="d-none d-lg-table-cell width-100"><LoadingText /></td>
+      <td className="p-1 m-0">
+        <Loading />
+      </td>
+      <td className="d-none d-lg-table-cell width-100">
+        <LoadingText />
+      </td>
       <td className="d-none d-lg-table-cell width-100"></td>
       <td className=""></td>
       <td className="min-width-150"></td>
@@ -147,6 +178,81 @@ const ChatbotRowGhost = () => {
   );
 };
 
+/**
+ * ChatbotRowGhosts
+ *
+ * Renders a specified number of skeleton (ghost) rows to indicate loading state in the chatbot list.
+ *
+ * @param count - Number of skeleton rows to render.
+ */
+const ChatbotRowGhosts = ({ count }: { count: number }) => {
+  console.debug(`${loggerPrefix} Rendering ChatbotRowGhosts with count: ${count}`);
+  return (
+    <>
+      {Array.from({ length: count }).map((_, idx) => (
+        <ChatbotRowGhost key={idx} />
+      ))}
+    </>
+  );
+};
+
+/**
+ * ChunkedRows
+ *
+ * Incrementally renders chatbot rows in chunks to avoid UI blocking.
+ * Uses requestIdleCallback (if available) or setTimeout as a fallback to schedule rendering.
+ *
+ * @param chatbots - Array of chatbot objects to render.
+ * @param sessionContext - Session context for actions.
+ * @param onRequery - Callback to refresh chatbot data.
+ * @param chunkSize - Number of rows to render per chunk (default: 5).
+ */
+function ChunkedRows({
+  chatbots,
+  sessionContext,
+  onRequery,
+  chunkSize = 5,
+}: {
+  chatbots: Chatbot[];
+  sessionContext: SessionContext;
+  onRequery: () => void;
+  chunkSize?: number;
+}) {
+  const [visibleCount, setVisibleCount] = useState(chunkSize);
+
+  const schedule = window.requestIdleCallback || ((cb: Function) => setTimeout(cb, 0));
+  const cancel = window.cancelIdleCallback || clearTimeout;
+
+  useEffect(() => {
+    let idleId: any = null;
+    if (visibleCount < chatbots.length) {
+      idleId = schedule(() => {
+        setVisibleCount((c) => Math.min(c + chunkSize, chatbots.length));
+      });
+      return () => cancel(idleId);
+    }
+  }, [visibleCount, chatbots.length, chunkSize]);
+  return (
+    <>
+      {chatbots.slice(0, visibleCount).map((chatbot) => (
+        <ChatbotRow key={chatbot.id} chatbot={chatbot} sessionContext={sessionContext} onRequery={onRequery} />
+      ))}
+    </>
+  );
+}
+
+/**
+ * ListView
+ *
+ * Main component for displaying a responsive, table-based list of chatbot resources.
+ * Handles loading state with skeleton rows and incremental rendering for large lists.
+ *
+ * @param isLoading - Whether the chatbot data is loading (shows skeleton rows if true).
+ * @param ghostRows - Number of skeleton rows to display while loading.
+ * @param sessionContext - Authentication and API context for actions.
+ * @param chatbots - Array of chatbot objects to display.
+ * @param onRequery - Callback to refresh chatbot data.
+ */
 export function ListView({ isLoading, ghostRows, sessionContext, chatbots, onRequery }: ListViewProps) {
   console.debug(
     `${loggerPrefix} Rendering ListView - {isLoading: ${isLoading}, ghostRows: ${ghostRows}, chatbots length: ${Array.isArray(chatbots) ? chatbots.length : "N/A"}}`,
@@ -156,12 +262,11 @@ export function ListView({ isLoading, ghostRows, sessionContext, chatbots, onReq
       <table className="table table-striped table-hover align-middle border">
         <TableHeader />
         <tbody>
-          {isLoading
-            ? Array.from({ length: ghostRows }).map((_, idx) => <ChatbotRowGhost key={idx} />)
-            : Array.isArray(chatbots) &&
-              chatbots.map((chatbot) => (
-                <ChatbotRow key={chatbot.id} chatbot={chatbot} sessionContext={sessionContext} onRequery={onRequery} />
-              ))}
+          {isLoading ? (
+            <ChatbotRowGhosts count={ghostRows} />
+          ) : (
+            <ChunkedRows chatbots={chatbots} sessionContext={sessionContext} onRequery={onRequery} />
+          )}
         </tbody>
       </table>
     </div>
