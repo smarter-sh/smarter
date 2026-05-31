@@ -6,7 +6,7 @@ at [http://localhost:9357/dashboard/](http://localhost:9357/dashboard/).
 This component is served by Django in production. See:
 
 - builds are distributed from s3://smarter.sh/react/dashboard/ and gathered
-by Dockerfile during builds into Django's static asset folder.
+  by Dockerfile during builds into Django's static asset folder.
 - [smarter.apps.dashboard.views.views.dashboard.DashboardView](../../smarter/apps/dashboard/views/views/dashboard.py)
 - [smarter.apps.dashboard.templatetags.react_dashboard.dashboard_react_assets](../../smarter/apps/dashboard/templatetags/react_dashboard.py)
 - [templates/react/dashboard.html](../../smarter/templates/react/dashboard.html)
@@ -60,6 +60,35 @@ npm run build
 npm run dev
 ```
 
+The Smarter GitHub Action build workflow caches the React app build output to
+speed up the build process in the expected cases where React source code has
+not changed.
+
+The manifest.json file includes meta data that can be used for trouble shooting
+purposes. http://example.com/static/react/dashboard/manifest.json
+
+```json
+{
+  "index.html": {
+    "file": "assets/index-A7LvGMNl.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "css": ["assets/index-B011HLqe.css"]
+  },
+  "_custom": {
+    "buildTime": "2026-05-31T21:17:32.505Z",
+    "version": "0.2.2",
+    "config": {
+      "cdnDeploy": false,
+      "s3BucketPath": "s3://smarter.sh/react/dashboard/",
+      "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
+    },
+    "buildEnv": "production"
+  }
+}
+```
+
 ### Generate Storybook
 
 To generate Storybooks:
@@ -104,9 +133,9 @@ configuration to enable type-aware lint rules:
 
 ```js
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(["dist"]),
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ["**/*.{ts,tsx}"],
     extends: [
       // Other configs...
 
@@ -121,40 +150,40 @@ export default defineConfig([
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
     },
   },
-])
+]);
 ```
 
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js
 // eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+import reactX from "eslint-plugin-react-x";
+import reactDom from "eslint-plugin-react-dom";
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(["dist"]),
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ["**/*.{ts,tsx}"],
     extends: [
       // Other configs...
       // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
+      reactX.configs["recommended-typescript"],
       // Enable lint rules for React DOM
       reactDom.configs.recommended,
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
     },
   },
-])
+]);
 ```
