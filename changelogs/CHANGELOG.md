@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.39](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.38...v0.14.0-alpha.39) (2026-05-31)
+
+### Bug Fixes
+
+* add list row chunking ([ac79e4d](https://github.com/smarter-sh/smarter/commit/ac79e4d7bcbe1008d7add996bfe9908f825a1823))
+
 ## [0.14.0-alpha.38](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.37...v0.14.0-alpha.38) (2026-05-31)
 
 ### Bug Fixes
