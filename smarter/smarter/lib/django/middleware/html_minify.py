@@ -326,10 +326,10 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
             response.content = minified_html.encode("utf-8")
             response["Content-Length"] = str(len(response.content))
 
-            logger.debug("%s minified HTML response", self.formatted_class_name)
+            logger.debug("%s.minify_response() - minified HTML response", self.formatted_class_name)
 
         except Exception as exc:  # pylint: disable=broad-except
-            logging.exception("%s failed to minify HTML: %s", self.formatted_class_name, exc)
+            logging.exception("%s.minify_response() - failed to minify HTML: %s", self.formatted_class_name, exc)
 
         return response
 

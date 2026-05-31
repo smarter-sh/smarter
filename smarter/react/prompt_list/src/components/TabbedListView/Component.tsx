@@ -175,7 +175,7 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
         sessionContext.cookieDomain,
       );
       // sleep for 5 seconds to simulate loading state (for testing purposes)
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      // await new Promise((resolve) => setTimeout(resolve, 5000));
 
       if (!response.ok) {
         let errorMsg = `Failed to load chatbots (${response.status})`;

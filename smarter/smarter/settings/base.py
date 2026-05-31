@@ -702,6 +702,8 @@ MIDDLEWARE = [
     "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
     #
     #
+    "waffle.middleware.WaffleMiddleware",
+    #
     # to manage logging context by user. This has to run AFTER
     # authentication middleware so that it can get the user info for logging context.
     # -------------------------------
@@ -744,27 +746,19 @@ MIDDLEWARE = [
     # -------------------------------
     "smarter.apps.account.pipeline.SmarterSocialAuthExceptionMiddleware",
     #
-    # to ensure that all http responses are in json format
-    # -------------------------------
-    "smarter.lib.django.middleware.json.SmarterJsonErrorMiddleware",
     #
-    #
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "waffle.middleware.WaffleMiddleware",
-    #
-    #
-    # minify HTML and strip out commenets to reduce response sizes and obfuscate potential sensitive information in comments
-    # -------------------------------
-    "smarter.lib.django.middleware.html_minify.HTMLMinifyMiddleware",
-    #
-    #
-    "django_hosts.middleware.HostsResponseMiddleware",
-    #
+    ###########################################################################
+    # Response middleware
+    ###########################################################################
     #
     # compress static files and serve them with WhiteNoise.
     # -------------------------------
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_hosts.middleware.HostsResponseMiddleware",
+    "smarter.lib.django.middleware.json.SmarterJsonErrorMiddleware",
+    "smarter.lib.django.middleware.html_minify.HTMLMinifyMiddleware",
 ]
 
 if smarter_settings.debug_mode and not "test" in sys.argv:
