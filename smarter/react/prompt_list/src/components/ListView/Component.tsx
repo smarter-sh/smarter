@@ -26,7 +26,7 @@
  *
  * Intended for views where chatbots are presented in a list/table format.
  */
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 import type { Chatbot, SessionContext } from "@/lib/Types";
 import { formatDateTime } from "@/lib/formatDateTime";
@@ -76,7 +76,7 @@ const TableHeader = () => {
  * @param sessionContext - Session context for actions.
  * @param onRequery - Callback to refresh chatbot data after an action.
  */
-const ChatbotRow = ({
+const ChatbotRow = React.memo(function ChatbotRow({
   chatbot,
   sessionContext,
   onRequery,
@@ -84,7 +84,7 @@ const ChatbotRow = ({
   chatbot: Chatbot;
   sessionContext: SessionContext;
   onRequery: () => void;
-}) => {
+}) {
   const CreatedDate = ({ date }: { date: string }) => {
     return <span>{formatDateTime(date, "date")}</span>;
   };
@@ -141,7 +141,7 @@ const ChatbotRow = ({
       </td>
     </tr>
   );
-};
+});
 
 /**
  * LoadingText
@@ -158,7 +158,7 @@ const LoadingText = () => {
  * A skeleton row component to display while chatbot data is loading.
  * It mimics the structure of a regular ChatbotRow but with placeholder content.
  */
-const ChatbotRowGhost = () => {
+const ChatbotRowGhost = React.memo(function ChatbotRowGhost() {
   console.debug(`${loggerPrefix} Rendering ChatbotRowGhost`);
   return (
     <tr className="ghost">
@@ -176,7 +176,7 @@ const ChatbotRowGhost = () => {
       <td className="text-end "></td>
     </tr>
   );
-};
+});
 
 /**
  * ChatbotRowGhosts
@@ -185,7 +185,7 @@ const ChatbotRowGhost = () => {
  *
  * @param count - Number of skeleton rows to render.
  */
-const ChatbotRowGhosts = ({ count }: { count: number }) => {
+const ChatbotRowGhosts = React.memo(function ChatbotRowGhosts({ count }: { count: number }) {
   console.debug(`${loggerPrefix} Rendering ChatbotRowGhosts with count: ${count}`);
   return (
     <>
@@ -194,7 +194,7 @@ const ChatbotRowGhosts = ({ count }: { count: number }) => {
       ))}
     </>
   );
-};
+});
 
 /**
  * ChunkedRows
