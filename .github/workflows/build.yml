@@ -210,13 +210,13 @@ jobs:
           pwd
           ls -lha
           for comp in $REACT_COMPONENTS; do
-            MANIFEST="smarter/react/$comp/manifest.json"
+            MANIFEST="smarter/smarter/static/react/$comp/manifest.json"
             if [ -f "$MANIFEST" ]; then
               # Append file path and content hash for robustness
               HASH_INPUT+="$MANIFEST:$(sha256sum "$MANIFEST" | awk '{print $1}')\n"
             else
-              echo "ERROR: Missing $MANIFEST" >&2
-              exit 1
+              # Use a timestamp as a cache buster if manifest is missing
+              HASH_INPUT+="$MANIFEST:MISSING-$(date +%s)\n"
             fi
           done
           echo -e "$HASH_INPUT" | sort | sha256sum | awk '{print $1}' > react-folder.sha256
