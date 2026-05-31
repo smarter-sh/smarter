@@ -205,14 +205,20 @@ jobs:
         id: react-cache-hash
         shell: bash
         run: |
-          if [ -d "smarter/smarter/react" ]; then
-            find smarter/smarter/react -type f -print0 | sort -z | xargs -0 cat | sha256sum | awk '{print $1}' > react-folder.sha256
-            echo "REACT_FOLDER_HASH=$(cat react-folder.sha256)" >> $GITHUB_ENV
-          else
-            echo "React folder does not exist, skipping hash."
-            echo "REACT_FOLDER_HASH=no-content" >> $GITHUB_ENV
-            touch react-folder.sha256
-          fi
+          REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
+          HASH_INPUT=""
+          for comp in $REACT_COMPONENTS; do
+            MANIFEST="smarter/smarter/react/$comp/manifest.json"
+            if [ -f "$MANIFEST" ]; then
+              # Append file path and content hash for robustness
+              HASH_INPUT+="$MANIFEST:$(sha256sum "$MANIFEST" | awk '{print $1}')\n"
+            else
+              echo "ERROR: Missing $MANIFEST" >&2
+              exit 1
+            fi
+          done
+          echo -e "$HASH_INPUT" | sort | sha256sum | awk '{print $1}' > react-folder.sha256
+          echo "REACT_FOLDER_HASH=$(cat react-folder.sha256)" >> $GITHUB_ENV
 
       - name: Cache React manifest.json Hash
         uses: actions/cache@v5
