@@ -1,4 +1,3 @@
-
 /* This desaturates the command button colors in the button group */
 .btn-group .btn {
   filter: saturate(0.8);

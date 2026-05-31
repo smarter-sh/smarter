@@ -21,10 +21,7 @@
     "user": [
       {
         "id": 4,
-        "tags": [
-          "calculator",
-          "capstone-project"
-        ],
+        "tags": ["calculator", "capstone-project"],
         "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNAx/chat/",
         "userProfile": {
           "user": {
@@ -80,10 +77,7 @@
       },
       {
         "id": 7,
-        "tags": [
-          "capstone-project",
-          "dates"
-        ],
+        "tags": ["capstone-project", "dates"],
         "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNwx/chat/",
         "userProfile": {
           "user": {
@@ -139,11 +133,7 @@
       },
       {
         "id": 8,
-        "tags": [
-          "gibberish",
-          "jabberwocky",
-          "talk-talk-talk"
-        ],
+        "tags": ["gibberish", "jabberwocky", "talk-talk-talk"],
         "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwOAx/chat/",
         "userProfile": {
           "user": {
@@ -207,11 +197,7 @@
       },
       {
         "id": 3,
-        "tags": [
-          "gibberish",
-          "jabberwocky",
-          "talk-talk-talk"
-        ],
+        "tags": ["gibberish", "jabberwocky", "talk-talk-talk"],
         "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwMwx/chat/",
         "userProfile": {
           "user": {
@@ -275,11 +261,7 @@
       },
       {
         "id": 10,
-        "tags": [
-          "gibberish",
-          "jabberwocky",
-          "talk-talk-talk"
-        ],
+        "tags": ["gibberish", "jabberwocky", "talk-talk-talk"],
         "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAxMAx/chat/",
         "userProfile": {
           "user": {
@@ -343,11 +325,7 @@
       },
       {
         "id": 11,
-        "tags": [
-          "gibberish",
-          "jabberwocky",
-          "talk-talk-talk"
-        ],
+        "tags": ["gibberish", "jabberwocky", "talk-talk-talk"],
         "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAxMQx/chat/",
         "userProfile": {
           "user": {
@@ -411,9 +389,7 @@
       },
       {
         "id": 9,
-        "tags": [
-          "simple-chatbot"
-        ],
+        "tags": ["simple-chatbot"],
         "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwOQx/chat/",
         "userProfile": {
           "user": {
@@ -469,11 +445,7 @@
       },
       {
         "id": 6,
-        "tags": [
-          "smarter",
-          "presales",
-          "sales-agent"
-        ],
+        "tags": ["smarter", "presales", "sales-agent"],
         "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNgx/chat/",
         "userProfile": {
           "user": {
@@ -541,11 +513,7 @@
       },
       {
         "id": 2,
-        "tags": [
-          "stackademy",
-          "api",
-          "chatbot"
-        ],
+        "tags": ["stackademy", "api", "chatbot"],
         "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwMgx/chat/",
         "userProfile": {
           "user": {
@@ -606,11 +574,7 @@
       },
       {
         "id": 1,
-        "tags": [
-          "stackademy",
-          "sql",
-          "chatbot"
-        ],
+        "tags": ["stackademy", "sql", "chatbot"],
         "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwMQx/chat/",
         "userProfile": {
           "user": {
@@ -674,11 +638,7 @@
       },
       {
         "id": 5,
-        "tags": [
-          "talk-talk-talk",
-          "weather",
-          "forecast"
-        ],
+        "tags": ["talk-talk-talk", "weather", "forecast"],
         "urlChatbot": "http://localhost:9357/api/v1/chatbots/rMTAwMDAwNQx/chat/",
         "userProfile": {
           "user": {

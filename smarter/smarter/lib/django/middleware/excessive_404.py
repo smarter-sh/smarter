@@ -195,12 +195,12 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         if self.async_mode:
             return self.__acall__(request)
 
-        if self.deserves_amnesty(request.path):
-            return self.get_response(request)
-
         logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
 
         response = super().__call__(request)
+        if self.deserves_amnesty(request.path):
+            return response
+
         self.process_response(request, response)  # type: ignore
         return response
 

@@ -71,8 +71,14 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
         response = await result
         return response
 
-    def set_smarter_process_id(self, request):
-        """Set smarter_process_id on request if not already set."""
+    def set_smarter_process_id(self, request) -> None:
+        """
+        Set smarter_process_id on request if not already set. This has to consider
+        the pipeline of middlewares. Each middleware class sets its own unique
+        smarter_process_id, but if a previous middleware has already set the request
+        object's smarter_process_id then we should not overwrite it. This allows all middlewares
+        in the pipeline to share the same process ID for logging and caching purposes.
+        """
         smarter_process_id = getattr(request, "smarter_process_id", None)
         if not smarter_process_id:
             setattr(request, "smarter_process_id", self.smarter_process_id)

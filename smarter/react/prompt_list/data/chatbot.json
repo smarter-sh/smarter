@@ -6,11 +6,7 @@
   "name": "stackademy_sql",
   "description": "Stackademy University course catalogue inquiries using the Stackademy SQL plugin.",
   "version": "1.0.0",
-  "tags": [
-    "stackademy",
-    "sql",
-    "chatbot"
-  ],
+  "tags": ["stackademy", "sql", "chatbot"],
   "annotations": [
     {
       "smarter.sh/chatbot/stackademy-sql/creator": "QA Team"

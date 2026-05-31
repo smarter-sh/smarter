@@ -9,6 +9,8 @@
  * - Displays loading and error states during data fetching.
  * - Allows switching between list and card views for each tab.
  * - Uses child components for rendering (ListView, CardView, ToggleButton, TabNav).
+ * - Persists view mode preference in localStorage.
+ * - Stores and retrieves chatbot counts in cookies for each tab (owned/shared) to optimize UI skeleton loading.
  *
  * Props:
  * - sessionContext (SessionContext): Contains authentication and API information for fetching chatbot data.
@@ -20,6 +22,11 @@
  * - sharedChatbots: List of chatbots shared with the user.
  * - viewMode: Current view mode ("list" or "card").
  * - activeTab: Currently selected tab ("user" or "shared").
+ *
+ * Internal Helpers:
+ * - setCookie: Persists chatbot count for a tab in a cookie.
+ * - getCookie: Retrieves chatbot count from a cookie for a tab.
+ * - load: Fetches chatbot data and updates state, using cookies for skeleton row counts.
  *
  * Usage:
  * <TabbedListView sessionContext={sessionContext} />
@@ -91,6 +98,58 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
     localStorage.setItem("viewMode", mode);
   };
 
+  /**
+   * Sets a cookie to store the chatbot count for a given URL slug.
+   *
+   * @param urlSlug - The unique identifier for the chatbot group.
+   * @param chatbotCount - The number of chatbots to store.
+   * @param days - Number of days until the cookie expires.
+   */
+  const setCookie = (urlSlug: string, chatbotCount: number, days: number) => {
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+    const expires = new Date(Date.now() + days * MS_PER_DAY).toUTCString();
+    const cookieValue = `${urlSlug}_chatbot_count=${chatbotCount}; path=/; expires=${expires};`;
+    try {
+      document.cookie = cookieValue;
+      console.debug(loggerPrefix, `setCookie(): ${cookieValue}`);
+    } catch (e) {
+      console.warn(loggerPrefix, "setCookie(): Unable to set chatbot count cookie", e);
+    }
+  };
+
+  /**
+   * Retrieves the chatbot count stored in a cookie for a given URL slug.
+   *
+   * @param urlSlug - The unique identifier for the chatbot group.
+   * @returns The number of chatbots stored in the cookie, or undefined if not found or invalid.
+   */
+  const getCookie = (urlSlug: string): number | undefined => {
+    const cookieName = `${urlSlug}_chatbot_count`;
+    const cookies = document.cookie.split(";").map((c) => c.trim());
+    for (const cookie of cookies) {
+      if (cookie.startsWith(cookieName + "=")) {
+        const strVal = cookie.substring(cookieName.length + 1);
+        const numVal = parseInt(strVal, 10);
+        const retVal = isNaN(numVal) ? undefined : numVal;
+        console.debug(loggerPrefix, `getCookie(): Retrieved cookie for ${cookieName}:`, retVal);
+        return retVal;
+      }
+    }
+    console.warn(
+      loggerPrefix,
+      `getCookie(): Cookie for ${cookieName} not found. If you are not under /, it may not be visible due to cookie path restrictions.`,
+    );
+    return undefined;
+  };
+
+  /**
+   * Loads chatbot data from the backend API and updates state.
+   *
+   * @param isMounted - Whether the component is still mounted (prevents state updates on unmounted components).
+   * @param setterCallback - State setter for updating the chatbot list.
+   * @param urlSlug - The API slug for the chatbot group (e.g., "owned" or "shared").
+   * @param invalidateCache - If true, forces the backend to invalidate its cache (default: false).
+   */
   const load = async (
     isMounted: boolean,
     setterCallback: React.Dispatch<React.SetStateAction<Chatbot[]>>,
@@ -115,6 +174,8 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
         sessionContext.csrfCookieName,
         sessionContext.cookieDomain,
       );
+      // sleep for 5 seconds to simulate loading state (for testing purposes)
+      await new Promise((resolve) => setTimeout(resolve, 5000));
 
       if (!response.ok) {
         let errorMsg = `Failed to load chatbots (${response.status})`;
@@ -124,19 +185,21 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
             errorMsg = errorJson.error;
           }
         } catch {
-          console.error(loggerPrefix, "Failed to load chatbots due to an unknown error.");
+          console.error(loggerPrefix, "load(): Failed to load chatbots due to an unknown error.");
         }
         throw new Error(errorMsg);
       }
 
       const payload = (await response.json()) as ChatbotListApiResponse;
-      console.debug(loggerPrefix, `fetched ${payload.chatbots.length} chatbots from ${urlSlug} endpoint: `, payload);
+
+      setCookie(urlSlug, payload.chatbots.length, 7);
+
       if (isMounted) {
         setterCallback(payload.chatbots);
       }
     } catch (error) {
       if (isMounted) {
-        console.error(loggerPrefix, "Error loading chatbots:", error);
+        console.error(loggerPrefix, "load(): Error loading chatbots:", error);
         setErrorMessage(error instanceof Error ? error.message : "Unable to load chatbots.");
       }
     } finally {
@@ -151,6 +214,11 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
     load(true, setSharedChatbots, "shared", true);
   };
 
+  const maxGhostRows = 25;
+  const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
+  const userGhostCount = clamp(getCookie("owned") || 6, 0, maxGhostRows);
+  const sharedGhostCount = clamp(getCookie("shared") || 6, 0, maxGhostRows);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -162,10 +230,6 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
       isMounted = false;
     };
   }, [sessionContext]);
-
-  if (isLoading) {
-    return <div className="prompt-list-feedback">Loading chatbots...</div>;
-  }
 
   if (errorMessage) {
     return <div className="alert alert-danger">{errorMessage}</div>;
@@ -181,12 +245,24 @@ function TabbedListView({ sessionContext }: TabbedListViewProps) {
 
         {activeTab === "user" ? (
           viewMode === "list" ? (
-            <ListView sessionContext={sessionContext} chatbots={userChatbots} onRequery={handleRequery} />
+            <ListView
+              isLoading={isLoading}
+              ghostRows={userGhostCount}
+              sessionContext={sessionContext}
+              chatbots={userChatbots}
+              onRequery={handleRequery}
+            />
           ) : (
             <CardView sessionContext={sessionContext} chatbots={userChatbots} onRequery={handleRequery} />
           )
         ) : viewMode === "list" ? (
-          <ListView sessionContext={sessionContext} chatbots={sharedChatbots} onRequery={handleRequery} />
+          <ListView
+            isLoading={isLoading}
+            ghostRows={sharedGhostCount}
+            sessionContext={sessionContext}
+            chatbots={sharedChatbots}
+            onRequery={handleRequery}
+          />
         ) : (
           <CardView sessionContext={sessionContext} chatbots={sharedChatbots} onRequery={handleRequery} />
         )}
