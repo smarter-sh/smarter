@@ -207,6 +207,8 @@ jobs:
         run: |
           REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
           HASH_INPUT=""
+          pwd
+          ls -lha
           for comp in $REACT_COMPONENTS; do
             MANIFEST="smarter/react/$comp/manifest.json"
             if [ -f "$MANIFEST" ]; then
