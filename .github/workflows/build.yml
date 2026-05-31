@@ -215,6 +215,7 @@ jobs:
               # Append file path and content hash for robustness
               HASH_INPUT+="$MANIFEST:$(sha256sum "$MANIFEST" | awk '{print $1}')\n"
             else
+              echo "Manifest file $MANIFEST not found. Using timestamp as cache buster."
               # Use a timestamp as a cache buster if manifest is missing
               HASH_INPUT+="$MANIFEST:MISSING-$(date +%s)\n"
             fi
