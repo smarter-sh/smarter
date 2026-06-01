@@ -203,7 +203,7 @@ RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt
 # components.
 FROM venv AS react_build_args
 
-ENV REACT_COMPONENTS="dashboard prompt_list prompt_passthrough terminal_emulator"
+ENV REACT_COMPONENTS="dashboard prompt_passthrough terminal_emulator prompt_list plugin_list"
 
 # from .env file, alternatively from docker-compose.yml.
 # This is used to control the base URL for downloading React

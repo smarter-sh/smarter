@@ -29,6 +29,7 @@ from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import rfc1034_compliant_str, to_snake_case
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -179,6 +180,44 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         if self.kind:
             return rfc1034_compliant_str(self.kind.value)
         return None
+
+    @property
+    def manifest_url(self) -> str:
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        # pylint: disable=C0415
+        from smarter.apps.plugin.urls import PluginReverseNames
+
+        return reverse(
+            f"{PluginReverseNames.namespace}:{PluginReverseNames.detailview}",
+            kwargs={"name": self.rfc1034_compliant_name},
+        )
+
+    @property
+    def ready(self) -> bool:
+        """
+        Returns True if the plugin is ready to be used.
+
+        This property checks if the plugin has all the necessary data and configuration to be considered ready for use.
+        The specific criteria for readiness may depend on the plugin class and other factors, and can be implemented as needed.
+
+        :return: True if the plugin is ready, False otherwise.
+        :rtype: bool
+        """
+        return super().ready  # type: ignore[return-value]
 
     # pylint: disable=W0221
     @classmethod

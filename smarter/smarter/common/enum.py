@@ -106,3 +106,13 @@ class SmarterEnum:
 
     def __str__(self) -> str:
         return str(self.value) if hasattr(self, "value") else super().__str__()  # type: ignore
+
+
+class SmarterResourceOwnershipFilterEnum:
+    """
+    Enum-like class for ownership filter options.
+    """
+
+    OWNED = "owned"
+    SHARED = "shared"
+    ALL = "all"

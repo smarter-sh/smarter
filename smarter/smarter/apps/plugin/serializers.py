@@ -83,7 +83,20 @@ class PluginMetaSerializer(MetaDataWithOwnershipModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginMeta
-        fields = ["name", "user_profile", "description", "plugin_class", "version", "annotations", "tags"]
+        fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "name",
+            "user_profile",
+            "description",
+            "plugin_class",
+            "version",
+            "annotations",
+            "tags",
+            "manifest_url",
+            "ready",
+        ]
         read_only_fields = ["user_profile"]
 
 
@@ -384,4 +397,30 @@ class PluginApiSerializer(SmarterCamelCaseSerializer):
             "headers",
             "body",
             "limit",
+        ]
+
+
+class PluginSerializer(PluginMetaSerializer):
+    """
+    Serializer for the PluginMeta model, including nested serializers for plugin configuration.
+
+    This serializer provides a comprehensive representation of a plugin, including its metadata and
+    associated configuration for selectors, prompts, static data, SQL data, and API data. It is used
+    to serialize and deserialize complete plugin information for API responses and requests.
+    """
+
+    selector = PluginSelectorSerializer(source="plugin_selector_plugin", read_only=True)
+    prompt = PluginPromptSerializer(source="plugin_prompt_plugin", read_only=True)
+    static_data = PluginStaticSerializer(source="plugin_data_base_plugin.plugindatastatic", read_only=True)
+    sql_data = PluginSqlSerializer(source="plugin_data_base_plugin.plugindatasql", read_only=True)
+    api_data = PluginApiSerializer(source="plugin_data_base_plugin.plugindataapi", read_only=True)
+
+    # pylint: disable=C0115
+    class Meta(PluginMetaSerializer.Meta):
+        fields = PluginMetaSerializer.Meta.fields + [
+            "selector",
+            "prompt",
+            "static_data",
+            "sql_data",
+            "api_data",
         ]

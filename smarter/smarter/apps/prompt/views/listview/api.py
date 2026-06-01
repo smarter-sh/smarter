@@ -64,6 +64,7 @@ from smarter.apps.chatbot.caching import (
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.common.conf import smarter_settings
+from smarter.common.enum import SmarterResourceOwnershipFilterEnum
 from smarter.lib import logging
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -82,16 +83,6 @@ def should_log_verbose(level):
 verbose_logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING], condition_func=should_log_verbose
 )
-
-
-class PromptListOwnershipFilter:
-    """
-    Enum-like class for ownership filter options in the PromptListApiView.
-    """
-
-    OWNED = "owned"
-    SHARED = "shared"
-    ALL = "all"
 
 
 class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
@@ -158,7 +149,7 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
         """
 
         qs: models.QuerySet[ChatBot]
-        ownership_filter = kwargs.get("ownership_filter", PromptListOwnershipFilter.ALL)
+        ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
         page = request.GET.get("page", 1)
         page_size = request.GET.get("page_size", DEFAULT_PAGE_SIZE)
         invalidate_cache = request.GET.get("invalidate_cache", "false").lower() == "true"
@@ -175,13 +166,13 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
         if invalidate_cache:
             invalidate_all_cached_chatbots_for_user_profile(user_profile=self.user_profile)  # type: ignore
 
-        if ownership_filter == PromptListOwnershipFilter.OWNED:
+        if ownership_filter == SmarterResourceOwnershipFilterEnum.OWNED:
             qs = get_cached_chatbots_owned_by_user_profile(user_profile=self.user_profile)  # type: ignore
 
-        elif ownership_filter == PromptListOwnershipFilter.SHARED:
+        elif ownership_filter == SmarterResourceOwnershipFilterEnum.SHARED:
             qs = get_cached_chatbots_shared_with_user_profile(user_profile=self.user_profile)  # type: ignore
 
-        elif ownership_filter == PromptListOwnershipFilter.ALL:
+        elif ownership_filter == SmarterResourceOwnershipFilterEnum.ALL:
             qs = get_cached_chatbots_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
         else:
             logger.warning(
