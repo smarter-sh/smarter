@@ -61,11 +61,11 @@ npm run dev
 ```
 
 The Smarter GitHub Action build workflow caches the React app build output to
-speed up the build process in the expected cases where React source code has
+speed up the build process in the expected case where React source code has
 not changed.
 
-The manifest.json file includes meta data that can be used for trouble shooting
-purposes. http://example.com/static/react/dashboard/manifest.json
+Note that the manifest.json file includes meta data that can be used for
+trouble shooting purposes. http://example.com/static/react/dashboard/manifest.json
 
 ```json
 {
