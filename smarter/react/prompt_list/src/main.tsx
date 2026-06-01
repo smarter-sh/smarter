@@ -10,15 +10,15 @@ const csrfCookieName = rootEl.getAttribute("django-csrf-cookie-name");
 const djangoSessionCookieName = rootEl.getAttribute("django-session-cookie-name");
 const cookieDomain = rootEl.getAttribute("django-cookie-domain") || window.location.hostname;
 
-const promptListApiUrl = rootEl.getAttribute("smarter-prompt-list-api-url");
+const ApiUrl = rootEl.getAttribute("smarter-prompt-list-api-url");
 
-if (!promptListApiUrl) throw new Error("Prompt list API URL not found in root element attributes");
+if (!ApiUrl) throw new Error("Prompt list API URL not found in root element attributes");
 if (!csrfCookieName) throw new Error("CSRF token not found in root element attributes");
 if (!djangoSessionCookieName) throw new Error("Django session cookie name not found in root element attributes");
 if (!cookieDomain) throw new Error("Cookie domain not found in root element attributes");
 
 const sessionContext: SessionContext = {
-  promptListApiUrl,
+  ApiUrl,
   csrfCookieName,
   djangoSessionCookieName,
   cookieDomain,

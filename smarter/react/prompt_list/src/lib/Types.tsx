@@ -13,14 +13,11 @@
  *   - Plugin: Type for plugin objects.
  *   - User, UserProfile: Types for user and profile data.
  *   - Chatbot: Type for chatbot configuration and metadata.
- *   - PromptListApiResponse: Type for API response structure.
+ *   - ApiResponse: Type for API response structure.
  *   - SessionContext: Type for session and authentication context.
  *
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
- *
- * @author Smarter Team
- * @copyright Smarter, 2026
  */
 
 export type TabKey = "user" | "shared";
@@ -102,7 +99,7 @@ export type Chatbot = {
   customDomain: string | null;
 };
 
-export type PromptListApiResponse = {
+export type ApiResponse = {
   chatbots: {
     user: Chatbot[];
     shared: Chatbot[];
@@ -110,7 +107,7 @@ export type PromptListApiResponse = {
 };
 
 export type SessionContext = {
-  promptListApiUrl: string;
+  ApiUrl: string;
   csrfCookieName: string;
   djangoSessionCookieName: string;
   cookieDomain: string;

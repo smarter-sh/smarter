@@ -11,9 +11,6 @@ import type { Chatbot } from "@/lib/Types";
  *
  * Usage:
  *   <StatusBar chatbot={chatbot} />
- *
- * @author Smarter Team
- * @copyright Smarter, 2026
  */
 interface StatusbarProps {
   chatbot: Chatbot;

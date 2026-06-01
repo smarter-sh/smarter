@@ -37,14 +37,6 @@ import Loading from "@/components/Loading";
 
 import "./styles.css";
 
-interface ListViewProps {
-  isLoading: boolean;
-  ghostRows: number;
-  sessionContext: SessionContext;
-  chatbots: Chatbot[];
-  onRequery: () => void;
-}
-
 /**
  * TableHeader
  *
@@ -241,6 +233,15 @@ function ChunkedRows({
   );
 }
 
+interface ListViewProps {
+  isLoading: boolean;
+  ghostRows: number;
+  sessionContext: SessionContext;
+  objects: Chatbot[];
+  onRequery: () => void;
+}
+
+
 /**
  * ListView
  *
@@ -253,9 +254,9 @@ function ChunkedRows({
  * @param chatbots - Array of chatbot objects to display.
  * @param onRequery - Callback to refresh chatbot data.
  */
-export function ListView({ isLoading, ghostRows, sessionContext, chatbots, onRequery }: ListViewProps) {
+export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequery }: ListViewProps) {
   console.debug(
-    `${loggerPrefix} Rendering ListView - {isLoading: ${isLoading}, ghostRows: ${ghostRows}, chatbots length: ${Array.isArray(chatbots) ? chatbots.length : "N/A"}}`,
+    `${loggerPrefix} Rendering ListView - {isLoading: ${isLoading}, ghostRows: ${ghostRows}, objects length: ${Array.isArray(objects) ? objects.length : "N/A"}}`,
   );
   return (
     <div className="table-responsive prompt-list-table-wrap ps-3 pe-3">
@@ -265,7 +266,7 @@ export function ListView({ isLoading, ghostRows, sessionContext, chatbots, onReq
           {isLoading ? (
             <ChatbotRowGhosts count={ghostRows} />
           ) : (
-            <ChunkedRows chatbots={chatbots} sessionContext={sessionContext} onRequery={onRequery} />
+            <ChunkedRows chatbots={objects} sessionContext={sessionContext} onRequery={onRequery} />
           )}
         </tbody>
       </table>

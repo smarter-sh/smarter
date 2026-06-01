@@ -168,7 +168,7 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
     // implement the clone logic here, e.g. call an API route to perform the clone operation.
     // return a success or failure result.
 
-    const url = sessionContext.promptListApiUrl + "clone/" + chatbot.id + "/" + new_name + "/";
+    const url = sessionContext.ApiUrl + "clone/" + chatbot.id + "/" + new_name + "/";
     handleCloseModal();
     fetchDjangoUrl(
       JSON.stringify({}),
@@ -209,7 +209,7 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
     // implement the rename logic here, e.g. call an API route to perform the rename operation.
     // return a success or failure result.
     handleCloseModal();
-    const url = sessionContext.promptListApiUrl + "rename/" + chatbot.id + "/" + newName + "/";
+    const url = sessionContext.ApiUrl + "rename/" + chatbot.id + "/" + newName + "/";
 
     fetchDjangoUrl(
       JSON.stringify({}),
@@ -249,7 +249,7 @@ export const Toolbar = ({ sessionContext, chatbot, onRequery }: ToolbarProps) =>
     // implement the delete logic here, e.g. call an API route to perform the delete operation.
     // return a success or failure result.
     handleCloseModal();
-    const url = sessionContext.promptListApiUrl + "delete/" + chatbot.id + "/";
+    const url = sessionContext.ApiUrl + "delete/" + chatbot.id + "/";
     fetchDjangoUrl(
       JSON.stringify({}),
       url,
