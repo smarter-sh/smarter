@@ -201,22 +201,22 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
         retval = {
             "user": UserProfileSerializer(self.user_profile).data,
             "admin": UserProfileSerializer(smarter_admin).data,
-            "chatbots": ChatBotSerializer(chatbots, many=True).data,
+            "objects": ChatBotSerializer(chatbots, many=True).data,
         }
         return JsonResponse(retval)
 
 
 class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
     """
-    API view for cloning a ChatBot. This view is protected and requires the
-    user to be authenticated. The user must provide the ID of the ChatBot to
-    clone and a new name for the cloned ChatBot.
+    API view for cloning a listObject. This view is protected and requires the
+    user to be authenticated. The user must provide the ID of the listObject to
+    clone and a new name for the cloned listObject.
 
-    The view handles POST requests to clone an existing ChatBot. It validates
-    the input parameters, checks for the existence of the ChatBot to be cloned,
-    and creates a new ChatBot with the specified name. After cloning, it
-    invalidates the cache for the user's ChatBots to ensure that the new
-    ChatBot appears in subsequent listings.
+    The view handles POST requests to clone an existing listObject. It validates
+    the input parameters, checks for the existence of the listObject to be cloned,
+    and creates a new listObject with the specified name. After cloning, it
+    invalidates the cache for the user's listObjects to ensure that the new
+    listObject appears in subsequent listings.
 
     Example URL Paths:
 

@@ -18,9 +18,9 @@
  * - renderDetailRow (function): Function to render detail rows for chatbot attributes.
  *
  * Usage:
- * <CardView sessionContext={sessionContext} title="Your Chatbots" chatbots={chatbots} renderDetailRow={renderDetailRow} />
+ * <CardView sessionContext={sessionContext} title="Your Chatbots" objects={chatbots} renderDetailRow={renderDetailRow} />
  *
- * This component is intended for use in views where chatbots are presented in a card/grid format.
+ * This component is intended for use in views where objects are presented in a card/grid format.
  */
 import type { Chatbot, SessionContext } from "@/lib/Types";
 import { loggerPrefix } from "@/const";
@@ -32,17 +32,17 @@ import "./styles.css";
 
 interface CardViewProps {
   sessionContext: SessionContext;
-  chatbots: Chatbot[];
+  objects: Chatbot[];
   onRequery: () => void;
 }
 
-export function CardView({ sessionContext, chatbots, onRequery }: CardViewProps) {
-  console.debug(loggerPrefix, "Rendering CardView with chatbots:", chatbots, sessionContext);
+export function CardView({ sessionContext, objects, onRequery }: CardViewProps) {
+  console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);
 
   return (
     <div className="row g-4 p-4">
-      {Array.isArray(chatbots) &&
-        chatbots.map((chatbot) => (
+      {Array.isArray(objects) &&
+        objects.map((chatbot) => (
           <div className="col-12" key={chatbot.id}>
             <div className="card h-100">
               <div className="card-header d-flex justify-content-between align-items-center bg-white border-bottom-0 pb-0">

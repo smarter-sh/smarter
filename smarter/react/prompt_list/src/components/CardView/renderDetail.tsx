@@ -16,9 +16,6 @@
  *   renderDetailRow('Created At', '2024-05-24T12:00:00Z', 'dateTime')
  *   renderDetailRow('Website', 'https://example.com', 'url')
  *   renderDetailRow('Tags', ['tag1', 'tag2'], 'str[]')
- *
- * @author Smarter Team
- * @copyright Smarter, 2026
  */
 import type { ReactNode } from "react";
 import { loggerPrefix } from "@/const";

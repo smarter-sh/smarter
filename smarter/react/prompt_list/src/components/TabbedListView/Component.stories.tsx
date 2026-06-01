@@ -9,7 +9,7 @@ const meta: Meta<typeof TabbedListView> = {
   },
   args: {
     sessionContext: {
-      promptListApiUrl: "/prompt-list/api/",
+      ApiUrl: "/prompt-list/api/",
       csrfCookieName: "csrftoken",
       djangoSessionCookieName: "sessionid",
       cookieDomain: "localhost",
@@ -29,7 +29,7 @@ export const Default: Story = {
 export const WithCustomCookies: Story = {
   args: {
     sessionContext: {
-      promptListApiUrl: "/prompt-list/api/",
+      ApiUrl: "/prompt-list/api/",
       csrfCookieName: "customcsrftoken",
       djangoSessionCookieName: "customsessionid",
       cookieDomain: "localhost",

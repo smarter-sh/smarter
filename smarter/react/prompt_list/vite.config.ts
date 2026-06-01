@@ -163,11 +163,11 @@ export default defineConfig(({ command }: ConfigEnv) => ({
   // so that these requests are served from the Django dev server instead
   // of the React dev server.
   //
-  // Most of these cases stem from <link> elements added to this index.html
+  // Most of these cases stem from <link> elements added to index.html
   // containing platform-wide stylesheets and scripts that originate from
   // and are served by the Django dev server. These are added to index.html
-  // in order to keep this React dev environment as close to the runtime
-  // environment as possible.
+  // in order to keep this React dev environment consistent with the Django
+  // runtime environment.
   server: {
     proxy: {
       "/api": "http://localhost:9357",
