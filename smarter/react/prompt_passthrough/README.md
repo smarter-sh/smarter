@@ -1,22 +1,27 @@
 
 # Smarter Prompt Passthrough app. React + TypeScript + Vite
 
-This is the source code for the LLM API prompt passthrough dashboard
-app located at [http://localhost:9357/workbench/passthrough/](http://localhost:9357/
+This is the source code for the LLM API prompt passthrough prompt_passthrough
+app located at [http://localhost:9357/dashboard/passthrough/](http://localhost:9357/
 workbench/passthrough/).
 
 This component is served by Django in production. See:
 
 - builds are distributed from s3://smarter.sh/react/passthrough/ and gathered
 by Dockerfile during builds into Django's static asset folder.
-- [smarter.apps.dashboard.views.passthrough.view.PromptPassthroughView](../../smarter/apps/dashboard/views/passthrough/view.py)
-- [smarter.apps.dashboard.templatetags.react_prompt_passthrough.prompt_passthrough_react_assets](../../smarter/apps/dashboard/templatetags/react_prompt_passthrough.py)
+- [smarter.apps.prompt_passthrough.views.passthrough.view.PromptPassthroughView](../../smarter/apps/prompt_passthrough/views/passthrough/view.py)
+- [smarter.apps.prompt_passthrough.templatetags.react_prompt_passthrough.prompt_passthrough_react_assets](../../smarter/apps/prompt_passthrough/templatetags/react_prompt_passthrough.py)
 - [templates/react/prompt-passthrough.html](../../smarter/templates/react/prompt-passthrough.html)
 
 
 ## Setup
 
-To run this component locally for development purposes:
+### Running Locally
+
+This configures Vite to serve the app locally, with console.debug() output enabled.
+Run the app from from http://localhost:5173/. Note that Django also should be running
+locally and be available at http://localhost:9357 in order for the React app to
+be able to fetch from the Django API endpoints.
 
 ```console
 export NODE_ENV=dev
@@ -24,6 +29,30 @@ npm install
 npm run build
 npm run dev
 ```
+
+### Running Locally From Django
+
+This configures Vite to generate a production React build, with the final build
+bundle collected into Django's static asset folder. Run the Django web console
+from http://localhost:9357/
+
+```console
+cd to/the/root/of/this/repo/
+
+# Causes React to generate a production-optimized build.
+export NODE_ENV=production
+
+# builds ALL React apps, and also run Django static asset collection
+make react-build
+
+# Builds the Django Docker container.
+make build
+
+# Starts the Django app container
+make run
+```
+
+### Production Build
 
 For production builds:
 
@@ -33,6 +62,37 @@ npm install --include=dev
 npm run build
 npm run dev
 ```
+
+The Smarter GitHub Action build workflow caches the React app build output to
+speed up the build process in the expected case where React source code has
+not changed.
+
+Note that the manifest.json file includes meta data that can be used for
+trouble shooting purposes. http://example.com/static/react/prompt_passthrough/manifest.json
+
+```json
+{
+  "index.html": {
+    "file": "assets/index-A7LvGMNl.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "css": ["assets/index-B011HLqe.css"]
+  },
+  "_custom": {
+    "buildTime": "2026-05-31T21:17:32.505Z",
+    "version": "0.2.2",
+    "config": {
+      "cdnDeploy": false,
+      "s3BucketPath": "s3://smarter.sh/react/prompt_passthrough/",
+      "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
+    },
+    "buildEnv": "production"
+  }
+}
+```
+
+### Generate Storybook
 
 To generate Storybooks:
 
