@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.41](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.40...v0.14.0-alpha.41) (2026-06-01)
+
+### Bug Fixes
+
+* add plugin_list react component ([3817fec](https://github.com/smarter-sh/smarter/commit/3817fec8026673c2f6435124d4cf7450731f4d2f))
+
 ## [0.14.0-alpha.40](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.39...v0.14.0-alpha.40) (2026-05-31)
 
 ### Bug Fixes
