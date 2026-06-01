@@ -52,7 +52,7 @@ def _get_cached_plugins_owned_by_user_profile(user_profile_id: int) -> models.Qu
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = PluginMeta.objects.owned_by(user_profile.user)  # type: ignore
     logger.debug(
-        "%s.post() Fetching PluginMetas: %s",
+        "%s.post() Fetching and caching PluginMetas owned by user: %s",
         logger_prefix,
         logging.formatted_json(PluginMetaSerializer(retval, many=True).data),
     )
@@ -97,7 +97,7 @@ def _get_cached_plugins_shared_with_user_profile(user_profile_id: int) -> models
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = PluginMeta.objects.shared_with(user_profile.user)  # type: ignore
     logger.debug(
-        "%s.post() Fetching PluginMetas: %s",
+        "%s.post() Fetching and caching PluginMetas shared with user: %s",
         logger_prefix,
         logging.formatted_json(PluginMetaSerializer(retval, many=True).data),
     )
@@ -141,7 +141,7 @@ def _get_cached_plugins_available_to_user_profile(user_profile_id) -> models.Que
     user_profile = UserProfile.objects.get(id=user_profile_id)  # type: ignore
     retval = PluginMeta.objects.with_read_permission_for(user_profile.user)  # type: ignore
     logger.debug(
-        "%s.post() Fetching PluginMetas: %s",
+        "%s.post() Fetching and caching PluginMetas available to user: %s",
         logger_prefix,
         logging.formatted_json(PluginMetaSerializer(retval, many=True).data),
     )

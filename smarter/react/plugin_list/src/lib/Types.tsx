@@ -100,6 +100,7 @@ export type Plugin = {
   updatedAt: string;
   manifestUrl: string;
   name: string;
+  kind: string;
   userProfile: UserProfile;
   description: string;
   pluginClass: PluginClass;
