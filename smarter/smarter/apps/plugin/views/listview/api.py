@@ -12,7 +12,7 @@ from typing import Union
 from django.core.handlers.asgi import ASGIRequest
 from django.core.paginator import Paginator
 from django.db import models
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.serializers import UserProfileSerializer
 from smarter.apps.account.utils import smarter_cached_objects
@@ -115,14 +115,177 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
     Clone a plugin for the authenticated user.
     """
 
+    def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Handle POST requests to clone an existing PluginMeta. Validates input
+        parameters, checks for the existence of the PluginMeta to be cloned, and
+        creates a new PluginMeta with the specified name. Invalidates the cache
+        for the user's ChatBots after cloning.
+
+        :param request: The HTTP request object containing the parameters for cloning.
+        :type request: HttpRequest
+        :param args: Additional positional arguments (not used).
+        :param kwargs: Additional keyword arguments, including:
+
+            - chatbot_id (str): The ID of the PluginMeta to be cloned.
+            - new_name (str): The new name for the cloned PluginMeta.
+
+        :returns: A JsonResponse containing the serialized data of the newly cloned PluginMeta if successful, or an error message if the cloning fails.
+        :rtype: JsonResponse
+        """
+        chatbot_id = kwargs.get("chatbot_id")
+        new_name = kwargs.get("new_name")
+        chatbot: PluginMeta
+
+        if not chatbot_id or not new_name:
+            logger.warning(
+                "%s.post() Missing required parameters. chatbot_id: %s, new_name: %s",
+                self.formatted_class_name,
+                chatbot_id,
+                new_name,
+            )
+            return JsonResponse({"error": "chatbot_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
+
+        try:
+            chatbot = PluginMeta.objects.with_read_permission_for(self.user_profile.user).get(id=chatbot_id)  # type: ignore
+        except PluginMeta.DoesNotExist:
+            logger.warning(
+                "%s.post() PluginMeta with id %s not found for cloning.", self.formatted_class_name, chatbot_id
+            )
+            return JsonResponse({"error": f"PluginMeta with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
+
+        try:
+            new_name = self.to_snake_case(new_name.strip())
+            cloned_chatbot = chatbot.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
+            invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
+            data = PluginSerializer(cloned_chatbot).data
+            return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.post() Error cloning PluginMeta with id %s: %s",
+                self.formatted_class_name,
+                chatbot_id,
+                str(e),
+                exc_info=True,
+            )
+            return JsonResponse(
+                {"error": f"An error occurred while cloning the PluginMeta: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+            )
+
 
 class PluginListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
     """
     Delete a plugin for the authenticated user.
     """
 
+    def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Handle POST requests to delete an existing PluginMeta. Validates input
+        parameters, checks for the existence of the PluginMeta to be deleted, and
+        deletes the PluginMeta if it exists. Invalidates the cache for the user's
+        ChatBots after deletion.
+
+        :param request: The HTTP request object containing the parameters for deletion.
+        :type request: HttpRequest
+        :param args: Additional positional arguments (not used).
+        :param kwargs: Additional keyword arguments, including:
+
+            - chatbot_id (str): The ID of the PluginMeta to be deleted.
+
+        :returns: A JsonResponse indicating the success or failure of the deletion.
+        :rtype: JsonResponse
+        """
+        chatbot_id = kwargs.get("chatbot_id")
+        if not chatbot_id:
+            logger.warning("%s.post() Missing required parameter chatbot_id for deletion.", self.formatted_class_name)
+            return JsonResponse({"error": "chatbot_id is required."}, status=HTTPStatus.BAD_REQUEST)
+
+        try:
+            chatbot = PluginMeta.objects.with_ownership_permission_for(self.user_profile.user).get(id=chatbot_id)  # type: ignore
+        except PluginMeta.DoesNotExist:
+            logger.warning(
+                "%s.post() PluginMeta with id %s not found for deletion.", self.formatted_class_name, chatbot_id
+            )
+            return JsonResponse({"error": f"PluginMeta with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
+
+        try:
+            chatbot.delete()
+            invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
+            return JsonResponse(
+                {"message": f"PluginMeta with id {chatbot_id} deleted successfully."}, status=HTTPStatus.OK
+            )
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.post() Error deleting PluginMeta with id %s: %s",
+                self.formatted_class_name,
+                chatbot_id,
+                str(e),
+                exc_info=True,
+            )
+            return JsonResponse(
+                {"error": f"An error occurred while deleting the PluginMeta: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+            )
+
 
 class PluginListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
     """
     Rename a plugin for the authenticated user.
     """
+
+    def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Handle POST requests to rename an existing PluginMeta. Validates input
+        parameters, checks for the existence of the PluginMeta to be renamed, and
+        renames the PluginMeta if it exists. Invalidates the cache for the user's
+        ChatBots after renaming.
+
+        :param request: The HTTP request object containing the parameters for renaming.
+        :type request: HttpRequest
+        :param args: Additional positional arguments (not used).
+        :param kwargs: Additional keyword arguments, including:
+
+            - chatbot_id (str): The ID of the PluginMeta to be renamed.
+            - new_name (str): The new name for the PluginMeta.
+
+        :returns: A JsonResponse indicating the success or failure of the renaming.
+        :rtype: JsonResponse
+        """
+        chatbot_id = kwargs.get("chatbot_id")
+        new_name = kwargs.get("new_name")
+        if not chatbot_id or not new_name:
+            logger.warning(
+                "%s.post() Missing required parameters for renaming. chatbot_id: %s, new_name: %s",
+                self.formatted_class_name,
+                chatbot_id,
+                new_name,
+            )
+            return JsonResponse({"error": "chatbot_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
+
+        try:
+            chatbot = PluginMeta.objects.with_ownership_permission_for(self.user_profile.user).get(id=chatbot_id)  # type: ignore
+        except PluginMeta.DoesNotExist:
+            logger.warning(
+                "%s.post() PluginMeta with id %s not found for renaming.", self.formatted_class_name, chatbot_id
+            )
+            return JsonResponse({"error": f"PluginMeta with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
+
+        try:
+            new_name = self.to_snake_case(new_name.strip())
+            chatbot.rename(new_name=new_name)
+            invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
+            data = PluginSerializer(chatbot).data
+            return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.post() Error renaming PluginMeta with id %s: %s",
+                self.formatted_class_name,
+                chatbot_id,
+                str(e),
+                exc_info=True,
+            )
+            return JsonResponse(
+                {"error": f"An error occurred while renaming the PluginMeta: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+            )

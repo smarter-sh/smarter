@@ -48,9 +48,7 @@ from http import HTTPStatus
 
 from django.core.paginator import Paginator
 from django.db import models
-from django.http import (
-    HttpRequest,
-)
+from django.http import HttpRequest
 from django.http.response import JsonResponse
 
 from smarter.apps.account.serializers import UserProfileSerializer

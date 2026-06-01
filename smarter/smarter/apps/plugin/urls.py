@@ -5,13 +5,13 @@ from django.urls import path, re_path
 from smarter.common.utils import to_snake_case
 
 from .const import namespace
+from .views.detailview import PluginDetailView
 from .views.listview.api import (
     PluginListApiCloneView,
     PluginListApiDeleteView,
     PluginListApiRenameView,
     PluginListApiView,
 )
-from .views.listview.detailview import PluginDetailView
 from .views.listview.view import PluginListView
 
 app_name = namespace

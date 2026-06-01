@@ -49,7 +49,7 @@ const TableHeader = () => {
         <th className=" p-1">Name</th>
         <th className="d-none d-lg-table-cell width-100">Created</th>
         <th className="d-none d-lg-table-cell width-100">Updated</th>
-        <th className="">Class</th>
+        <th className="">Kind</th>
         <th className="min-width-150">Selector</th>
         <th className="d-none d-xl-table-cell">Model</th>
         <th className="d-none d-md-table-cell">Status</th>
@@ -100,8 +100,8 @@ const PluginRow = React.memo(function PluginRow({
       <td className="d-none d-lg-table-cell width-100">
         <UpdatedDate date={plugin.updatedAt} createdAt={plugin.createdAt} />
       </td>
-      {/* Class */}
-      <td className="">{plugin.pluginClass}</td>
+      {/* Kind */}
+      <td className="">{plugin.kind}</td>
       {/* Selector */}
       <td className="min-width-150">{plugin.selector.directive}</td>
       {/* Model */}

@@ -79,6 +79,7 @@ class PluginMetaSerializer(MetaDataWithOwnershipModelSerializer):
 
     user_profile = UserProfileSerializer(read_only=True)
     annotations = serializers.JSONField()
+    kind = serializers.CharField(source="kind.value", read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -96,6 +97,7 @@ class PluginMetaSerializer(MetaDataWithOwnershipModelSerializer):
             "tags",
             "manifest_url",
             "ready",
+            "kind",
         ]
         read_only_fields = ["user_profile"]
 
