@@ -9,8 +9,6 @@ import logging
 from typing import Optional
 
 import yaml
-from django.contrib.auth.models import AnonymousUser
-from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponse
 from django.shortcuts import render
 
@@ -27,7 +25,6 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
-from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -87,7 +84,8 @@ class PluginDetailView(DocsBaseView):
         Process:
         1. Extract and validate 'name' and 'kind' from kwargs.
         2. Retrieve the plugin metadata using the provided name and user context.
-        3. If the plugin is found, call the API view to get the plugin details        4. Convert the JSON response to YAML format for better readability.
+        3. If the plugin is found, call the API view to get the plugin details
+        4. Convert the JSON response to YAML format for better readability.
         5. Render the plugin manifest detail template with the retrieved data.
         6. Handle any errors that occur during the process and return appropriate error responses.
 
@@ -109,10 +107,7 @@ class PluginDetailView(DocsBaseView):
         name = kwargs.pop("name", None)
         self.name = rfc1034_compliant_to_snake(name) if name else None
         self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
-        if self.kind is None:
-            logger.error("%s.setup() Plugin kind is required but not provided.", self.formatted_class_name)
-            return SmarterHttpResponseNotFound(request=request, error_message="Plugin kind is required")
-        if not self.kind or self.kind not in SAMKinds.all_plugins():
+        if self.kind and self.kind not in SAMKinds.all_plugins():
             logger.error("%s.setup() Plugin kind %s is not supported.", self.formatted_class_name, self.kind)
             return SmarterHttpResponseNotFound(
                 request=request, error_message=f"Plugin kind {self.kind} is not supported"
@@ -136,6 +131,7 @@ class PluginDetailView(DocsBaseView):
                     )
                 except PluginMeta.DoesNotExist:
                     pass
+        self.kind = self.plugin.kind if self.plugin else self.kind
         if not self.plugin:
             logger.error(
                 "%s.setup() Plugin with name %s and kind %s not found for user %s.",
@@ -156,7 +152,7 @@ class PluginDetailView(DocsBaseView):
         kwargs.pop("name", None)
         kwargs.pop("kind", None)
         kwargs["name"] = self.name
-        kwargs["kind"] = self.kind.value
+        kwargs["kind"] = self.kind.value if self.kind else None
         view = ApiV1CliDescribeApiView.as_view()
         json_response = self.get_brokered_json_response(
             reverse_name=ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe,
@@ -199,41 +195,3 @@ class PluginDetailView(DocsBaseView):
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
         return response
-
-
-class PluginListView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Render the plugin list view for the Smarter Workbench web console.
-
-    This view displays all plugins available to the authenticated user as cards, providing a quick overview and access to plugin details.
-
-    :param request: Django HTTP request object.
-    :type request: ASGIRequest
-    :param args: Additional positional arguments.
-    :type args: tuple
-    :param kwargs: Additional keyword arguments.
-    :type kwargs: dict
-
-    :returns: Rendered HTML page with a card for each plugin, or a 404 error page if the user is not authenticated.
-    :rtype: HttpResponse
-    """
-
-    template_path = "plugin/plugin_list.html"
-    plugins: list[PluginMeta]
-
-    def get(self, request: ASGIRequest, *args, **kwargs):
-        logger.debug(
-            "%s.get() Rendering plugin list view for user %s with args=%s, kwargs=%s.",
-            self.formatted_class_name,
-            request.user.username if request.user else "None",  # type: ignore[union-attr]
-            args,
-            kwargs,
-        )
-        if request.user is None or isinstance(request.user, AnonymousUser):
-            logger.error(
-                "%s.get() Request user is None or anonymous. This should not happen.", self.formatted_class_name
-            )
-            return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.plugins = PluginMeta.get_cached_plugins_for_user_profile_id(user_profile_id=self.user_profile.id)  # type: ignore[attr-defined]
-        context = {"plugins": self.plugins, "smarter_admin": smarter_cached_objects.smarter_admin}
-        return self.clean_http_response(request=request, template_path=self.template_path, context=context)

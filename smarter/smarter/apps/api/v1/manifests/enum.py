@@ -134,10 +134,12 @@ class SAMKinds(SmarterEnumAbstract):
         """
         if isinstance(kind_str, bytes):
             kind_str = kind_str.decode("utf-8")
+        if not isinstance(kind_str, str):
+            return None
 
         # Try case-insensitive key lookup
         for _, member in cls.__members__.items():
-            if member.value.lower() == kind_str.lower():
+            if hasattr(member, "value") and isinstance(member.value, str) and member.value.lower() == kind_str.lower():
                 return member
 
         raise SmarterValueError(f"Invalid SAMKinds value: {kind_str}.")
