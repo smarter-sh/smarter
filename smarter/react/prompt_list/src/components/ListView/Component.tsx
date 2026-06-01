@@ -38,6 +38,16 @@ import Loading from "@/components/Loading";
 import "./styles.css";
 
 /**
+ * LoadingText
+ *
+ * Displays a muted "Loading..." text, typically used in skeleton or ghost rows to indicate loading state.
+ */
+const LoadingText = () => {
+  return <span className="text-muted fw-semibold">Loading...</span>;
+};
+
+
+/**
  * TableHeader
  *
  * Renders the table header row for the chatbot list, including column titles for all displayed fields.
@@ -49,6 +59,7 @@ const TableHeader = () => {
         <th className=" p-1">Name</th>
         <th className="d-none d-lg-table-cell width-100">Created</th>
         <th className="d-none d-lg-table-cell width-100">Updated</th>
+        <th className="">Description</th>
         <th className="">Provider</th>
         <th className="min-width-150">Model</th>
         <th className="d-none d-xl-table-cell">Plugins</th>
@@ -115,6 +126,8 @@ const ChatbotRow = React.memo(function ChatbotRow({
       <td className="d-none d-lg-table-cell width-100">
         <UpdatedDate date={chatbot.updatedAt} createdAt={chatbot.createdAt} />
       </td>
+      {/* Description */}
+      <td className="">{chatbot.description}</td>
       {/* Provider */}
       <td className="">{chatbot.provider}</td>
       {/* Model */}
@@ -136,15 +149,6 @@ const ChatbotRow = React.memo(function ChatbotRow({
 });
 
 /**
- * LoadingText
- *
- * Displays a muted "Loading..." text, typically used in skeleton or ghost rows to indicate loading state.
- */
-const LoadingText = () => {
-  return <span className="text-muted fw-semibold">Loading...</span>;
-};
-
-/**
  * ChatbotRowGhost
  *
  * A skeleton row component to display while chatbot data is loading.
@@ -154,17 +158,27 @@ const ChatbotRowGhost = React.memo(function ChatbotRowGhost() {
   console.debug(`${loggerPrefix} Rendering ChatbotRowGhost`);
   return (
     <tr className="ghost">
+      {/* Name */}
       <td className="p-1 m-0">
         <Loading />
       </td>
+      {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">
         <LoadingText />
       </td>
+      {/* Updated Date */}
       <td className="d-none d-lg-table-cell width-100"></td>
+      {/* Description */}
       <td className=""></td>
+      {/* Provider */}
+      <td className=""></td>
+      {/* Model */}
       <td className="min-width-150"></td>
+      {/* Plugins */}
       <td className="d-none d-xl-table-cell"></td>
+      {/* Status */}
       <td className="d-none d-md-table-cell "></td>
+      {/* Operations */}
       <td className="text-end "></td>
     </tr>
   );

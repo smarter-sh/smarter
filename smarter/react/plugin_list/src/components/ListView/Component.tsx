@@ -38,6 +38,15 @@ import Loading from "@/components/Loading";
 import "./styles.css";
 
 /**
+ * LoadingText
+ *
+ * Displays a muted "Loading..." text, typically used in skeleton or ghost rows to indicate loading state.
+ */
+const LoadingText = () => {
+  return <span className="text-muted fw-semibold">Loading...</span>;
+};
+
+/**
  * TableHeader
  *
  * Renders the table header row for the plugin list, including column titles for all displayed fields.
@@ -50,8 +59,8 @@ const TableHeader = () => {
         <th className="d-none d-lg-table-cell width-100">Created</th>
         <th className="d-none d-lg-table-cell width-100">Updated</th>
         <th className="">Kind</th>
+        <th className="">Description</th>
         <th className="min-width-150">Selector</th>
-        <th className="d-none d-xl-table-cell">Model</th>
         <th className="d-none d-md-table-cell">Status</th>
         <th className="">Operations</th>
       </tr>
@@ -85,7 +94,6 @@ const PluginRow = React.memo(function PluginRow({
     return <span>{formatDateTime(date, "relative", createdAt)}</span>;
   };
 
-
   return (
     <tr className="" key={plugin.id}>
       {/* Name */}
@@ -102,10 +110,10 @@ const PluginRow = React.memo(function PluginRow({
       </td>
       {/* Kind */}
       <td className="">{plugin.kind}</td>
+      {/* Description */}
+      <td className="">{plugin.description}</td>
       {/* Selector */}
       <td className="min-width-150">{plugin.selector.directive}</td>
-      {/* Model */}
-      <td className="">{plugin.prompt.model}</td>
       {/* Status */}
       <td className="d-none d-md-table-cell ">
         <StatusBar plugin={plugin} />
@@ -119,15 +127,6 @@ const PluginRow = React.memo(function PluginRow({
 });
 
 /**
- * LoadingText
- *
- * Displays a muted "Loading..." text, typically used in skeleton or ghost rows to indicate loading state.
- */
-const LoadingText = () => {
-  return <span className="text-muted fw-semibold">Loading...</span>;
-};
-
-/**
  * PluginRowGhost
  *
  * A skeleton row component to display while plugin data is loading.
@@ -137,17 +136,25 @@ const PluginRowGhost = React.memo(function PluginRowGhost() {
   console.debug(`${loggerPrefix} Rendering PluginRowGhost`);
   return (
     <tr className="ghost">
+      {/* Name */}
       <td className="p-1 m-0">
         <Loading />
       </td>
+      {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">
         <LoadingText />
       </td>
+      {/* Updated Date */}
       <td className="d-none d-lg-table-cell width-100"></td>
+      {/* Kind */}
       <td className=""></td>
+      {/* Description */}
       <td className="min-width-150"></td>
+      {/* Selector */}
       <td className="d-none d-xl-table-cell"></td>
+      {/* Status */}
       <td className="d-none d-md-table-cell "></td>
+      {/* Actions */}
       <td className="text-end "></td>
     </tr>
   );
@@ -223,7 +230,6 @@ interface ListViewProps {
   objects: Plugin[];
   onRequery: () => void;
 }
-
 
 /**
  * ListView
