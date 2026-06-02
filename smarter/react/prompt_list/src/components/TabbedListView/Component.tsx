@@ -14,9 +14,10 @@
  *
  * Features:
  * - Loads owned and shared chatbot lists from the backend using session context.
+ * - Hydrates the UI from cached results before the initial fetch resolves.
  * - Shows loading and error states during fetches.
  * - Allows switching between list and card views.
- * - Persists the selected view mode in localStorage.
+ * - Persists the selected view mode in sessionStorage.
  * - Uses cookie-backed counts (owned/shared) to size loading skeleton rows.
  * - Supports requery with cache invalidation.
  *
@@ -36,6 +37,16 @@
  * Internal Helpers:
  * - getCookie: Reads cookie values used for skeleton sizing.
  * - load (from ./load): Fetches chatbot data and updates state via setters.
+ *
+ * Page Rendering Performance and Caching behavior:
+ * - Improves the perceived load time by rendering cached results immediately when
+ *   available while a fresh backend fetch is still in flight. It is not uncommon
+ *   for the backend response to take up to 1-2 seconds, so this is important from
+ *   a UX perspective.
+ * - Reads the most recent owned/shared chatbot results from sessionStorage on mount,
+ *   keyed by API URL and tab.
+ * - Writes successful fetch results back to the cache so the next initial page load
+ *   can show recent data without waiting on the network.
  *
  * Usage:
  * <TabbedListView sessionContext={sessionContext} />
@@ -63,7 +74,13 @@ export default function TabbedListView({ sessionContext }: { sessionContext: Ses
   const [userListObjects, setUserListObjects] = useState<Chatbot[]>([]);
   const [sharedListObjects, setSharedListObjects] = useState<Chatbot[]>([]);
 
-  // controls whether to invalidate backend cache on next load - toggled by requery action
+  // cache keys for session-based local caching of owned/shared lists
+  // to improve perceived load times on repeat visits
+  const sharedListCacheKey = makeCacheKey(sessionContext.ApiUrl, "shared");
+  const ownedListCacheKey = makeCacheKey(sessionContext.ApiUrl, "owned");
+
+  // controls whether to invalidate backend (Django-Redis) cache on next load
+  // toggled by requery action.
   const [invalidateCacheFlag, setInvalidateCacheFlag] = useState<boolean>(false);
 
   // define 2-tab layout with cookie-based persistent active tab state
@@ -73,12 +90,12 @@ export default function TabbedListView({ sessionContext }: { sessionContext: Ses
   ];
   const [activeTab, setActiveTab] = useState<"user" | "shared">("user");
   const [viewMode, _setViewMode] = useState<ViewMode>(() => {
-    const saved = localStorage.getItem("viewMode");
+    const saved = sessionStorage.getItem("viewMode");
     return saved === "thumbnail" ? "thumbnail" : "list";
   });
   const setViewMode = (mode: ViewMode) => {
     _setViewMode(mode);
-    localStorage.setItem("viewMode", mode);
+    sessionStorage.setItem("viewMode", mode);
   };
 
   // throttle duration for requerying to prevent excessive backend requests
@@ -95,7 +112,7 @@ export default function TabbedListView({ sessionContext }: { sessionContext: Ses
   const handleLoad = async () => {
     const ownedObjects = await load(sessionContext, invalidateCacheFlag, setIsLoadingOwned, "owned", setErrorMessage);
     setUserListObjects(ownedObjects);
-    writeCache(makeCacheKey(sessionContext.ApiUrl, "owned"), ownedObjects);
+    writeCache(ownedListCacheKey, ownedObjects);
 
     const sharedObjects = await load(
       sessionContext,
@@ -105,7 +122,7 @@ export default function TabbedListView({ sessionContext }: { sessionContext: Ses
       setErrorMessage,
     );
     setSharedListObjects(sharedObjects);
-    writeCache(makeCacheKey(sessionContext.ApiUrl, "shared"), sharedObjects);
+    writeCache(sharedListCacheKey, sharedObjects);
   };
 
   const onRequery = () => {
@@ -125,10 +142,10 @@ export default function TabbedListView({ sessionContext }: { sessionContext: Ses
   };
 
   useEffect(() => {
-    const ownedCached = readCache(makeCacheKey(sessionContext.ApiUrl, "owned"));
+    const ownedCached = readCache(ownedListCacheKey);
     if (ownedCached) setUserListObjects(ownedCached);
 
-    const sharedCached = readCache(makeCacheKey(sessionContext.ApiUrl, "shared"));
+    const sharedCached = readCache(sharedListCacheKey);
     if (sharedCached) setSharedListObjects(sharedCached);
 
     void handleLoad();
