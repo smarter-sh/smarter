@@ -1,4 +1,3 @@
-
 import { loggerPrefix } from "@/const";
 import type { Plugin, SessionContext, UserProfile } from "@/lib/Types";
 import fetchDjangoUrl from "@/lib/django";
@@ -21,51 +20,49 @@ interface ApiResponse {
 export const load = async (
   sessionContext: SessionContext,
   invalidateCacheFlag: boolean,
-  setterCallback: React.Dispatch<React.SetStateAction<Plugin[]>>,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   urlSlug: string,
   onError: (error: string | null) => void,
-) => {
-    setLoading(true);
-    onError(null);
+): Promise<Plugin[]> => {
+  setLoading(true);
+  onError(null);
 
-    try {
-      let base = sessionContext.ApiUrl;
-      if (!base.endsWith("/")) base += "/";
-      let slug = urlSlug.startsWith("/") ? urlSlug.slice(1) : urlSlug;
-      let url = base + slug;
-      if (!url.endsWith("/")) url += "/";
-      url += `?invalidate_cache=${invalidateCacheFlag}`;
-      const response = await fetchDjangoUrl(
-        JSON.stringify({}),
-        url,
-        sessionContext.djangoSessionCookieName,
-        sessionContext.csrfCookieName,
-        sessionContext.cookieDomain,
-      );
+  try {
+    let base = sessionContext.ApiUrl;
+    if (!base.endsWith("/")) base += "/";
+    let slug = urlSlug.startsWith("/") ? urlSlug.slice(1) : urlSlug;
+    let url = base + slug;
+    if (!url.endsWith("/")) url += "/";
+    url += `?invalidate_cache=${invalidateCacheFlag}`;
+    const response = await fetchDjangoUrl(
+      JSON.stringify({}),
+      url,
+      sessionContext.djangoSessionCookieName,
+      sessionContext.csrfCookieName,
+      sessionContext.cookieDomain,
+    );
 
-      if (!response.ok) {
-        let errorMsg = `Failed to load objects (${response.status})`;
-        try {
-          const errorJson = await response.json();
-          if (errorJson && errorJson.error) {
-            errorMsg = errorJson.error;
-          }
-        } catch {
-          console.error(loggerPrefix, "load(): Failed to load objects due to an unknown error.");
+    if (!response.ok) {
+      let errorMsg = `Failed to load objects (${response.status})`;
+      try {
+        const errorJson = await response.json();
+        if (errorJson && errorJson.error) {
+          errorMsg = errorJson.error;
         }
-        throw new Error(errorMsg);
+      } catch {
+        console.error(loggerPrefix, "load(): Failed to load objects due to an unknown error.");
       }
-
-      const payload = (await response.json()) as ApiResponse;
-
-      setCookie(urlSlug, "plugin_count", payload.objects.length, 7);
-
-      setterCallback(payload.objects);
-    } catch (error) {
-      console.error(loggerPrefix, "load(): Error loading objects:", error);
-      onError(error instanceof Error ? error.message : "Unable to load objects.");
-    } finally {
-      setLoading(false);
+      throw new Error(errorMsg);
     }
-  };
+
+    const payload = (await response.json()) as ApiResponse;
+    setCookie(urlSlug, "plugin_count", payload.objects.length, 7);
+    return payload.objects;
+  } catch (error) {
+    console.error(loggerPrefix, "load(): Error loading objects:", error);
+    onError(error instanceof Error ? error.message : "Unable to load objects.");
+    return [];
+  } finally {
+    setLoading(false);
+  }
+};
