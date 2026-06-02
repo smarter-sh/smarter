@@ -50,7 +50,9 @@ import type { Chatbot, SessionContext, TabKey } from "@/lib/Types";
 import { getCookie } from "./cookie";
 import { TabNav } from "./TabNavigation";
 import { load } from "./load";
+import { makeCacheKey, readCache, writeCache } from "./cache";
 import "./styles.css";
+
 
 export default function TabbedListView({ sessionContext }: { sessionContext: SessionContext }) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -90,9 +92,20 @@ export default function TabbedListView({ sessionContext }: { sessionContext: Ses
   const sharedGhostCount = clamp(getCookie("shared", "chatbot_count") || 6, 0, maxGhostRows);
 
   // initiate load of both owned and shared chatbot lists on component mount and whenever session context changes
-  const handleLoad = () => {
-    load(sessionContext, invalidateCacheFlag, setUserListObjects, setIsLoadingOwned, "owned", setErrorMessage);
-    load(sessionContext, invalidateCacheFlag, setSharedListObjects, setIsLoadingShared, "shared", setErrorMessage);
+  const handleLoad = async () => {
+    const ownedObjects = await load(sessionContext, invalidateCacheFlag, setIsLoadingOwned, "owned", setErrorMessage);
+    setUserListObjects(ownedObjects);
+    writeCache(makeCacheKey(sessionContext.ApiUrl, "owned"), ownedObjects);
+
+    const sharedObjects = await load(
+      sessionContext,
+      invalidateCacheFlag,
+      setIsLoadingShared,
+      "shared",
+      setErrorMessage,
+    );
+    setSharedListObjects(sharedObjects);
+    writeCache(makeCacheKey(sessionContext.ApiUrl, "shared"), sharedObjects);
   };
 
   const onRequery = () => {
@@ -112,7 +125,13 @@ export default function TabbedListView({ sessionContext }: { sessionContext: Ses
   };
 
   useEffect(() => {
-    handleLoad();
+    const ownedCached = readCache(makeCacheKey(sessionContext.ApiUrl, "owned"));
+    if (ownedCached) setUserListObjects(ownedCached);
+
+    const sharedCached = readCache(makeCacheKey(sessionContext.ApiUrl, "shared"));
+    if (sharedCached) setSharedListObjects(sharedCached);
+
+    void handleLoad();
   }, [sessionContext]);
 
   if (errorMessage) {

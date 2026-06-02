@@ -277,7 +277,7 @@ export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequ
       <table className="table table-striped table-hover align-middle border">
         <TableHeader />
         <tbody>
-          {isLoading ? (
+          {isLoading && (!objects || objects.length === 0) ? (
             <ChatbotRowGhosts count={ghostRows} />
           ) : (
             <ChunkedRows chatbots={objects} sessionContext={sessionContext} onRequery={onRequery} />
