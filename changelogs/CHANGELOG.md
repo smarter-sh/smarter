@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.43](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.42...v0.14.0-alpha.43) (2026-06-02)
+
+### Bug Fixes
+
+* standardize cache keys ([70d7b87](https://github.com/smarter-sh/smarter/commit/70d7b87c32dde5d0cf9c7cf33436ee49e64cb548))
+
 ## [0.14.0-alpha.42](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.41...v0.14.0-alpha.42) (2026-06-02)
 
 ### Bug Fixes
