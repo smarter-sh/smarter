@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.42](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.41...v0.14.0-alpha.42) (2026-06-02)
+
+### Bug Fixes
+
+* cache each api fetch and use this as interim page content during component initialization ([1c08dd5](https://github.com/smarter-sh/smarter/commit/1c08dd50f7ba649a9144335f83ec6529b1287b23))
+
 ## [0.14.0-alpha.41](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.40...v0.14.0-alpha.41) (2026-06-01)
 
 ### Bug Fixes
