@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.44](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.43...v0.14.0-alpha.44) (2026-06-02)
+
+### Bug Fixes
+
+* switch to session-based storage ([f2ba419](https://github.com/smarter-sh/smarter/commit/f2ba4193fa55c36f398ada5299ae3162f172bc89))
+
 ## [0.14.0-alpha.43](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.42...v0.14.0-alpha.43) (2026-06-02)
 
 ### Bug Fixes
