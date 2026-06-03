@@ -73,7 +73,7 @@ A typical React manifest.json looks like this::
 
 import os
 from functools import cached_property
-from typing import Any, List, TypedDict
+from typing import Any, List, Optional, TypedDict
 
 from django import template
 from django.conf import settings
@@ -171,32 +171,47 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
             cache the result.
             """
             manifest_path = os.path.join(settings.STATIC_ROOT, f"react/{self.app_name}/manifest.json")
-            retval: ManifestType
-            with open(manifest_path, encoding="utf-8") as f:
-                try:
-                    retval = json.load(f)
-                except json.JSONDecodeError as e:
-                    logger.error(
-                        "%s.load_manifest() Failed to parse manifest.json at %s: %s",
-                        self.formatted_class_name,
-                        manifest_path,
-                        e,
-                    )
-                    raise SmarterValueError(f"Failed to parse manifest.json at {manifest_path}: {e}") from e
+            retval: ManifestType = {}
+            try:
+                with open(manifest_path, encoding="utf-8") as f:
+                    try:
+                        retval = json.load(f)
+                    except json.JSONDecodeError as e:
+                        logger.error(
+                            "%s.load_manifest() Failed to parse manifest.json at %s: %s",
+                            self.formatted_class_name,
+                            manifest_path,
+                            e,
+                        )
+                        logger.error(
+                            "%s.load_manifest() failed to parse manifest.json at %s: content: %s. This error was raised %s",
+                            self.formatted_class_name,
+                            manifest_path,
+                            f.read(),
+                            e,
+                        )
+            except FileNotFoundError:
+                logger.error(
+                    "%s.load_manifest() manifest.json not found at expected path: %s. Ensure Vite build has been run and static files are collected.",
+                    self.formatted_class_name,
+                    manifest_path,
+                )
             logger.debug(
                 "%s.load_manifest() loaded and cached manifest.json for %s: %s",
                 self.formatted_class_name,
                 self.app_name,
-                logging.formatted_json(retval),
+                logging.formatted_json(retval) if retval else "None",
             )
             if not isinstance(retval, dict):
                 logger.error(
                     "%s.load_manifest() manifest.json is not a dictionary: %s", self.formatted_class_name, type(retval)
                 )
-                raise SmarterValueError(f"manifest.json is not a dictionary: {type(retval)}")
+                return {}
             return retval
 
-        self._manifest = _load_manifest()
+        manifest_data = _load_manifest()
+        if manifest_data:
+            self._manifest = manifest_data
         return self._manifest
 
     def collect_assets(
@@ -274,6 +289,8 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
                     ]
                 }
         """
+        if not self.manifest:
+            return None  # type: ignore[return-value]
         REACT_ENTRY_KEY = "isEntry"
         for key, value in self.manifest.items():
             if isinstance(value, dict) and REACT_ENTRY_KEY in value:
@@ -309,13 +326,19 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
                 ]
             }
         """
+        if not self.manifest:
+            logger.error(
+                "%s.reactapp_build_assets() No manifest.json found for app '%s'. Cannot collect assets.",
+                self.formatted_class_name,
+                self.app_name,
+            )
+            return {"js": [], "css": []}
 
         # pylint: disable=W0613
         @cache_results(timeout=CACHE_TIMEOUT)
         def _collect_reactapp_assets(cache_key: int) -> AssetDict:
-
-            css_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="css")
-            js_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="file")
+            css_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="css")  # type: ignore[assignment]
+            js_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="file")  # type: ignore[assignment]
 
             assets: AssetDict = {
                 "js": js_files,
