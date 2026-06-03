@@ -327,6 +327,7 @@ react-build-common:
 	npm config delete omit && \
 	npm config get production && \
 	npm config get omit && \
+    rm -rf dist && \
 	rm -f package-lock.json && \
 	rm -rf node_modules && \
 	rm -f smarter-common*.tgz && \
@@ -340,13 +341,15 @@ react-build:
 	@echo "==============================================================================="
 	@echo "Building and collecting static files on local filesystem ..."
 	@echo "==============================================================================="
+	NODE_ENV_BACKUP=$$NODE_ENV && \
 	make react-build-common && \
 	export NODE_ENV=production && \
-	cd smarter/react/smarter-dashboard && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-plugin-list && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-prompt-list && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-prompt-passthrough && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-terminal-emulator && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
+	cd smarter/react/smarter-dashboard && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-plugin-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-prompt-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-prompt-passthrough && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-terminal-emulator && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
+	export NODE_ENV=$$NODE_ENV_BACKUP
 
 
 # -------------------------------------------------------------------------

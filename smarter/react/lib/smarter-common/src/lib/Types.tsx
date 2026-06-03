@@ -6,7 +6,7 @@
  * chatbot, API response, and session context data structures.
  *
  * Exports:
- *   - TabKey: Type for tab keys ("user" | "shared").
+ *   - TabKey: Type for tab keys ("owned" | "shared").
  *   - Plugin: Type for plugin objects.
  *   - User, UserProfile: Types for user and profile data.
  *   - Chatbot: Type for chatbot configuration and metadata.
@@ -17,7 +17,13 @@
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
 
-export type TabKey = "user" | "shared";
+export type TabKey = "owned" | "shared";
+
+export type Tabs = {
+  key: TabKey;
+  label: string
+}[];
+
 
 export type User = {
   username: string;
@@ -61,6 +67,7 @@ export type SessionContext = {
 export type TabbedViewContext<TObject> = {
   objectType: TObject;
   objectTypeName: string;
+  tabs: Tabs;
   ListView: React.ComponentType<ListViewBaseProps<TObject, SessionContext>>;
   CardView: React.ComponentType<CardViewBaseProps<TObject, SessionContext>>;
 };
