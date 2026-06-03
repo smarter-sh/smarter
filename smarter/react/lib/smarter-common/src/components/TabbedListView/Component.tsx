@@ -52,15 +52,14 @@
  * <TabbedListView sessionContext={sessionContext} />
  */
 import { useEffect, useRef, useState } from "react";
-import ToggleButton from "@smarter-common/components/ToggleButton";
-import type { ViewMode } from "@smarter-common/components/ToggleButton";
+import ToggleButton from "../ToggleButton";
+import type { ViewMode } from "../ToggleButton";
 
-import type { SessionContext, TabKey } from "@smarter-common/lib/Types";
+import type { SessionContext, TabKey } from "../../lib/Types";
 import { getCookie } from "./cookie";
 import { TabNav } from "./TabNavigation";
 import { load } from "./load";
 import { makeCacheKey, readCache, writeCache } from "./cache";
-import "./styles.css";
 
 
 export default function TabbedListView<TObject>({ sessionContext }: { sessionContext: SessionContext<TObject> }) {
@@ -103,8 +102,8 @@ export default function TabbedListView<TObject>({ sessionContext }: { sessionCon
   // for sizing the skeleton loaders that are rendered while data is loading
   const maxGhostRows = 25;
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
-  const userGhostCount = clamp(getCookie("owned", "chatbot_count") || 6, 0, maxGhostRows);
-  const sharedGhostCount = clamp(getCookie("shared", "chatbot_count") || 6, 0, maxGhostRows);
+  const userGhostCount = clamp(getCookie(sessionContext.ApiUrl + "owned/") || 6, 0, maxGhostRows);
+  const sharedGhostCount = clamp(getCookie(sessionContext.ApiUrl + "shared/") || 6, 0, maxGhostRows);
 
   // initiate load of both owned and shared chatbot lists on component mount and whenever session context changes
   const handleLoad = async () => {

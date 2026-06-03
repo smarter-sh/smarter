@@ -1,5 +1,5 @@
-import { loggerPrefix } from "@smarter-common/lib/const";
-import { packageName, packageVersion } from "@smarter-common/lib/const";
+import { loggerPrefix } from "../../lib/const";
+import { packageName, packageVersion } from "../../lib/const";
 
 const COOKIE_NAME_PREFIX = `${packageName}_v${packageVersion}`;
 export const getUrlPath = (url: string): string => {

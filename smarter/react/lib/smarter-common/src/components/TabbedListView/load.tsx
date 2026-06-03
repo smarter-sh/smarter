@@ -1,8 +1,42 @@
-import { loggerPrefix } from "@smarter-common/lib/const";
-import type { SessionContext } from "@smarter-common/lib/Types";
-import fetchDjangoUrl from "@smarter-common/lib/django";
+import { loggerPrefix } from "../../lib/const";
+import type { SessionContext } from "../../lib/Types";
+import fetchDjangoUrl from "../../lib/django";
 import { setCookie } from "./cookie";
-import type { ApiResponse } from "@smarter-common/lib/Types";
+
+type LoadApiResponse<TObject> = {
+  objects: TObject[];
+  error?: string;
+};
+
+const buildLoadUrl = (apiUrl: string, urlSlug: string, invalidateCacheFlag: boolean): string => {
+  const normalizedBase = apiUrl.endsWith("/") ? apiUrl : `${apiUrl}/`;
+  const normalizedSlug = urlSlug.replace(/^\/+|\/+$/g, "");
+  const url = new URL(`${normalizedSlug}/`, normalizedBase);
+  url.searchParams.set("invalidate_cache", String(invalidateCacheFlag));
+  return url.toString();
+};
+
+const readJsonSafely = async (response: Response): Promise<unknown | null> => {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
+const getErrorMessage = (status: number, responseBody: unknown): string => {
+  if (
+    typeof responseBody === "object" &&
+    responseBody !== null &&
+    "error" in responseBody &&
+    typeof responseBody.error === "string" &&
+    responseBody.error.trim().length > 0
+  ) {
+    return responseBody.error;
+  }
+
+  return `Failed to load objects (${status})`;
+};
 
 /**
  * Loads chatbot data from the backend API and updates state.
@@ -12,23 +46,18 @@ import type { ApiResponse } from "@smarter-common/lib/Types";
  * @param urlSlug - The API slug for the chatbot group (e.g., "owned" or "shared").
  * @param invalidateCache - If true, forces the backend to invalidate its cache (default: false).
  */
-export const load = async (
-  sessionContext: SessionContext,
+export const load = async <TObject,>(
+  sessionContext: SessionContext<TObject>,
   invalidateCacheFlag: boolean,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   urlSlug: string,
   onError: (error: string | null) => void,
-): Promise<Chatbot[]> => {
+): Promise<TObject[]> => {
   setLoading(true);
   onError(null);
 
   try {
-    let base = sessionContext.ApiUrl;
-    if (!base.endsWith("/")) base += "/";
-    let slug = urlSlug.startsWith("/") ? urlSlug.slice(1) : urlSlug;
-    let url = base + slug;
-    if (!url.endsWith("/")) url += "/";
-    url += `?invalidate_cache=${invalidateCacheFlag}`;
+    const url = buildLoadUrl(sessionContext.ApiUrl, urlSlug, invalidateCacheFlag);
     const response = await fetchDjangoUrl(
       JSON.stringify({}),
       url,
@@ -37,21 +66,23 @@ export const load = async (
       sessionContext.cookieDomain,
     );
 
+    const responseBody = await readJsonSafely(response);
+
     if (!response.ok) {
-      let errorMsg = `Failed to load objects (${response.status})`;
-      try {
-        const errorJson = await response.json();
-        if (errorJson && errorJson.error) {
-          errorMsg = errorJson.error;
-        }
-      } catch {
-        console.error(loggerPrefix, "load(): Failed to load objects due to an unknown error.");
-      }
-      throw new Error(errorMsg);
+      throw new Error(getErrorMessage(response.status, responseBody));
     }
 
-    const payload = (await response.json()) as ApiResponse;
-    setCookie(urlSlug, "chatbot_count", payload.objects.length, 7);
+    if (
+      typeof responseBody !== "object" ||
+      responseBody === null ||
+      !("objects" in responseBody) ||
+      !Array.isArray(responseBody.objects)
+    ) {
+      throw new Error("Invalid response payload: expected objects array.");
+    }
+
+    const payload = responseBody as LoadApiResponse<TObject>;
+    setCookie(urlSlug, payload.objects.length, 7);
     return payload.objects;
   } catch (error) {
     console.error(loggerPrefix, "load(): Error loading objects:", error);

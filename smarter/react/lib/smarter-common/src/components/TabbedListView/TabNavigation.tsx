@@ -1,4 +1,4 @@
-import type { TabKey } from "@smarter-common/lib/Types";
+import type { TabKey } from "../../lib/Types";
 
 interface TabNavProps {
   activeTab: TabKey;

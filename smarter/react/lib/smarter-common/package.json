@@ -1,46 +1,47 @@
 {
-  "name": "smarter-common",
-  "private": true,
+  "name": "@smarter/common",
+  "private": false,
   "version": "0.1.0",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && rsync -a --prune-empty-dirs --include='*/' --include='*.css' --exclude='*' src/ dist/ && npm run build:dist-manifest",
+    "build:dist-manifest": "node --input-type=module -e \"import fs from 'node:fs'; const pkg = JSON.parse(fs.readFileSync('package.json','utf8')); const out = { name: pkg.name, version: pkg.version, type: pkg.type, main: './index.js', types: './index.d.ts', peerDependencies: pkg.peerDependencies ?? {}, dependencies: pkg.dependencies ?? {} }; fs.writeFileSync('dist/package.json', JSON.stringify(out, null, 2) + '\\n');\"",
     "lint": "eslint .",
-    "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
+  "peerDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
   "dependencies": {
-    "date-fns": "^4.2.1",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "date-fns": "^4.2.1"
   },
   "devDependencies": {
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "@eslint/js": "^10.0.1",
     "@storybook/react": "^10.3.6",
     "@types/node": "^24.12.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^10.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
-    "vite": "^8.0.13",
     "storybook": "^10.4.0",
-    "@storybook/react-vite": "^10.4.0",
     "@chromatic-com/storybook": "^5.2.1",
     "@storybook/addon-vitest": "^10.4.0",
     "@storybook/addon-a11y": "^10.4.0",
     "@storybook/addon-docs": "^10.4.0",
     "@storybook/addon-onboarding": "^10.4.0",
     "eslint-plugin-storybook": "^10.4.0",
-    "vitest": "^4.1.6",
-    "playwright": "^1.60.0",
-    "@vitest/browser-playwright": "^4.1.6",
-    "@vitest/coverage-v8": "^4.1.6"
+    "playwright": "^1.60.0"
   }
 }
