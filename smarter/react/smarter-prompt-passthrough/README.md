@@ -24,7 +24,7 @@ locally and be available at http://localhost:9357 in order for the React app to
 be able to fetch from the Django API endpoints.
 
 ```console
-export NODE_ENV=dev
+export NODE_ENV=development
 npm install
 npm run build
 npm run dev

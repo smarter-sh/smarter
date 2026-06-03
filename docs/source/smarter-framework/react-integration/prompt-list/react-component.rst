@@ -1,5 +1,5 @@
 React Component
 -----------------------
 
-.. literalinclude:: ../../../../../smarter/react/prompt_list/src/components/TabbedListView/Component.tsx
+.. literalinclude:: ../../../../../smarter/react/smarter-prompt-list/src/components/TabbedListView/Component.tsx
    :language: none
