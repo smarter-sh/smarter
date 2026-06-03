@@ -196,17 +196,19 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
                     self.formatted_class_name,
                     manifest_path,
                 )
+            if not isinstance(retval, dict):
+                logger.error(
+                    "%s.load_manifest() manifest.json is not a dictionary. Received an object of type %s",
+                    self.formatted_class_name,
+                    type(retval),
+                )
+                return {}
             logger.debug(
                 "%s.load_manifest() loaded and cached manifest.json for %s: %s",
                 self.formatted_class_name,
                 self.app_name,
                 logging.formatted_json(retval) if retval else "None",
             )
-            if not isinstance(retval, dict):
-                logger.error(
-                    "%s.load_manifest() manifest.json is not a dictionary: %s", self.formatted_class_name, type(retval)
-                )
-                return {}
             return retval
 
         manifest_data = _load_manifest()
