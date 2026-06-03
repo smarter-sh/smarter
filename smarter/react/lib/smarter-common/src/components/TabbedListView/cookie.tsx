@@ -2,8 +2,17 @@ import { loggerPrefix } from "../../lib/const";
 import { packageName, packageVersion } from "../../lib/const";
 
 const COOKIE_NAME_PREFIX = `${packageName}_v${packageVersion}`;
+
+const getUrlOrigin = (): string => {
+  if (typeof window !== "undefined" && typeof window.location?.origin === "string") {
+    return window.location.origin;
+  }
+  return "http://localhost";
+};
+
 export const getUrlPath = (url: string): string => {
-  return new URL(url).pathname;
+  console.debug(loggerPrefix, `getUrlPath(): Extracting path from URL: ${url}`);
+  return new URL(url, getUrlOrigin()).pathname;
 };
 
 /**
@@ -16,7 +25,8 @@ export const getUrlPath = (url: string): string => {
 export const setCookie = (url: string, chatbotCount: number, days: number) => {
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
   const expires = new Date(Date.now() + days * MS_PER_DAY).toUTCString();
-  const cookieValue = `${COOKIE_NAME_PREFIX}_${getUrlPath(url)}=${chatbotCount}; path=/; expires=${expires};`;
+  const cookieName = `${COOKIE_NAME_PREFIX}_${getUrlPath(url)}`;
+  const cookieValue = `${cookieName}=${chatbotCount}; path=/; expires=${expires};`;
   try {
     document.cookie = cookieValue;
     console.debug(loggerPrefix, `setCookie(): ${cookieValue}`);

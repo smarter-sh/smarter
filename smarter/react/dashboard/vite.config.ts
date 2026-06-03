@@ -28,7 +28,7 @@ import fs from "fs";
 import path from "path";
 import packageJson from "./package.json" with { type: "json" };
 
-const packageName = "dashboard";
+const packageName = packageJson.name;
 
 /**
  * Vite Plugin: addCustomManifestData

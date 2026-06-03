@@ -26,7 +26,6 @@ Example index.html
       -->
       <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
       <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
-      <link href="/prompt_passthrough/assets/index.css" rel="stylesheet" type="text/css" />
       <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
       <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
       <link href="/common-styles.css" rel="stylesheet" type="text/css" />
@@ -34,8 +33,8 @@ Example index.html
       <!--
        These are ViteJS build assets
       -->
-      <script type="module" crossorigin src="/static/react/prompt_passthrough/assets/index.js"></script>
-      <link rel="stylesheet" crossorigin href="/static/react/prompt_passthrough/assets/index-DszUmXV6.css">
+      <script type="module" crossorigin src="/static/react/smarter-prompt-passthrough/assets/index.js"></script>
+      <link rel="stylesheet" crossorigin href="/static/react/smarter-prompt-passthrough/assets/index-DszUmXV6.css">
     </head>
     <body>
       <!-- only used for development via 'npm run dev' -->

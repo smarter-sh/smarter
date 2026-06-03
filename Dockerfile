@@ -203,7 +203,7 @@ RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt
 # components.
 FROM venv AS react_build_args
 
-ENV REACT_COMPONENTS="dashboard prompt_passthrough terminal_emulator prompt_list plugin_list"
+ENV REACT_COMPONENTS="smarter-plugin-list smarter-prompt-passthrough dashboard terminal_emulator prompt_list"
 
 # from .env file, alternatively from docker-compose.yml.
 # This is used to control the base URL for downloading React
@@ -228,7 +228,7 @@ FROM react_build_args AS react_cdn_distribution
 ENV DOCKER_REACT_REMOTE_CACHE_BUSTER=${DOCKER_REACT_REMOTE_CACHE_BUSTER}
 ENV DOCKER_REACT_REMOTE_CDN_URL=${DOCKER_REACT_REMOTE_CDN_URL}
 
-# Download all manifests and compute a combined hash for cache busting
+# Download all manifests from remote CDN and compute a combined hash for cache busting
 RUN if [ -n "$DOCKER_REACT_REMOTE_CDN_URL" ]; then \
   for app in $REACT_COMPONENTS; do \
     url="${DOCKER_REACT_REMOTE_CDN_URL}/${app}/manifest.json"; \
@@ -372,8 +372,11 @@ COPY --chown=smarter_user:smarter_user ./smarter ./smarter
 COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
 RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
 
-COPY --from=react_assets /tmp/react_assets/ /home/smarter_user/smarter/smarter/static/react/
-
+# copy the smarter-common npm package from the react build stage. This is needed because
+# the smarter-common package includes shared code used by several of the React components.
+COPY --chown=smarter_user:smarter_user --from=react_assets /tmp/react_assets/ /home/smarter_user/smarter/smarter/static/react/
+RUN mkdir -p /home/smarter_user/smarter/smarter/static/react/lib/
+COPY --chown=smarter_user:smarter_user ./smarter/react/lib/ /home/smarter_user/smarter/static/react/lib/
 
 ################################# permissions #######################################
 # This stage is for setting file permissions for the smarter_user. We want to approach
@@ -434,6 +437,8 @@ COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compos
 # - downloaded from the CDN in the steps above
 FROM data AS collect_assets
 
+USER smarter_user
+
 # from .env file. This is used to control whether we collect static files during the build process.
 ARG DOCKER_COLLECT_STATIC_FILES=true
 
@@ -449,6 +454,11 @@ RUN if [ "$DOCKER_COLLECT_STATIC_FILES" = "true" ]; then \
       echo "Skipping collectstatic"; \
     fi
 
+RUN echo "Inspecting /home/smarter_user/smarter/staticfiles" && \
+    ls -lha /home/smarter_user/smarter/staticfiles/react/ || true && \
+    if [ ! -d "/home/smarter_user/smarter/staticfiles" ] || [ -z "$(ls -A /home/smarter_user/smarter/staticfiles 2>/dev/null)" ]; then \
+      echo "Error: /home/smarter_user/smarter/staticfiles is missing or empty" >&2; exit 1; \
+    fi
 ################################# final #######################################
 # This is the final stage that will be used to run the application.
 # Uvicorn is used as the application server.

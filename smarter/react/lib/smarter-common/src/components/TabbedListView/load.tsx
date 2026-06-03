@@ -8,12 +8,26 @@ type LoadApiResponse<TObject> = {
   error?: string;
 };
 
+const getUrlOrigin = (): string => {
+  if (typeof window !== "undefined" && typeof window.location?.origin === "string") {
+    return window.location.origin;
+  }
+  return "http://localhost";
+};
+
 const buildLoadUrl = (apiUrl: string, urlSlug: string, invalidateCacheFlag: boolean): string => {
+  const origin = getUrlOrigin();
+  const isAbsoluteApiUrl = /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(apiUrl);
   const normalizedBase = apiUrl.endsWith("/") ? apiUrl : `${apiUrl}/`;
   const normalizedSlug = urlSlug.replace(/^\/+|\/+$/g, "");
-  const url = new URL(`${normalizedSlug}/`, normalizedBase);
+  const url = new URL(`${normalizedSlug}/`, new URL(normalizedBase, origin));
   url.searchParams.set("invalidate_cache", String(invalidateCacheFlag));
-  return url.toString();
+
+  if (isAbsoluteApiUrl) {
+    return url.toString();
+  }
+
+  return `${url.pathname}${url.search}${url.hash}`;
 };
 
 const readJsonSafely = async (response: Response): Promise<unknown | null> => {
@@ -82,7 +96,7 @@ export const load = async <TObject,>(
     }
 
     const payload = responseBody as LoadApiResponse<TObject>;
-    setCookie(urlSlug, payload.objects.length, 7);
+    setCookie(sessionContext.ApiUrl + urlSlug + "/", payload.objects.length, 7);
     return payload.objects;
   } catch (error) {
     console.error(loggerPrefix, "load(): Error loading objects:", error);

@@ -1,11 +1,11 @@
 # Smarter Plugins List app. React + TypeScript + Vite
 
 This is the source code for the Terminal Emulator app located
-at [http://localhost:9357/workbench/](http://localhost:9357/workbench/plugin_list/).
+at [http://localhost:9357/workbench/](http://localhost:9357/workbench/smarter-plugin-list/).
 
 This component is served by Django in production. See:
 
-- builds are distributed from s3://smarter.sh/react/plugin_list/ and gathered
+- builds are distributed from s3://smarter.sh/react/smarter-plugin-list/ and gathered
   by Dockerfile during builds into Django's static asset folder.
 - [smarter.apps.plugin.views.listview.view.PluginListView](../../smarter/apps/plugin/views/listview/view.py)
 - [smarter.apps.plugin.templatetags.react_plugin_list.plugin_list_react_assets](../../smarter/apps/plugin/templatetags/react_plugin_list.py)
@@ -65,7 +65,7 @@ speed up the build process in the expected case where React source code has
 not changed.
 
 Note that the manifest.json file includes meta data that can be used for
-trouble shooting purposes. http://example.com/static/react/plugin_list/manifest.json
+trouble shooting purposes. http://example.com/static/react/smarter-plugin-list/manifest.json
 
 ```json
 {
@@ -81,7 +81,7 @@ trouble shooting purposes. http://example.com/static/react/plugin_list/manifest.
     "version": "0.2.2",
     "config": {
       "cdnDeploy": false,
-      "s3BucketPath": "s3://smarter.sh/react/plugin_list/",
+      "s3BucketPath": "s3://smarter.sh/react/smarter-plugin-list/",
       "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
     },
     "buildEnv": "production"
