@@ -1,7 +1,4 @@
 /**
- * @file renderDetail.tsx
- * @module CardView/renderDetail
- *
  * Provides utilities for rendering labeled detail rows in CardView tables, supporting multiple data types.
  *
  * Exports:
@@ -18,9 +15,8 @@
  *   renderDetailRow('Tags', ['tag1', 'tag2'], 'str[]')
  */
 import type { ReactNode } from "react";
-import { loggerPrefix } from "@/const";
-
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDateTime } from "@smarter/common";
+import { loggerPrefix } from "@/lib/const";
 
 export type DetailRowRenderer = (
   label: string,

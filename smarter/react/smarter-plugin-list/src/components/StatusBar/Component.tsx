@@ -1,7 +1,4 @@
-import type { Plugin } from "@/lib/Types";
 /**
- * @file Component.tsx
- * @module StatusBar/Component
  *
  * StatusBar React component for displaying the status of a Plugin instance.
  * Shows readiness, deployment, authentication, DNS, TLS, subdomain, and custom domain status using icons and tooltips.
@@ -12,6 +9,7 @@ import type { Plugin } from "@/lib/Types";
  * Usage:
  *   <StatusBar plugin={plugin} />
  */
+import type { Plugin } from "@/lib/Types";
 interface StatusbarProps {
   plugin: Plugin;
 }

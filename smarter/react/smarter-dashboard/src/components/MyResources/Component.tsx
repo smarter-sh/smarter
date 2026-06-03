@@ -18,9 +18,9 @@
  *     <MyResources apiUrl="https://customer.smarter.sh/dashboard/api/my-resources" />
  */
 import { useEffect, useState } from "react";
+import { Loading } from "@smarter/common";
 import { loggerPrefix } from "@/const";
 
-import Loading from "../Loading";
 import "./styles.css";
 
 interface MyResourcesProps {
