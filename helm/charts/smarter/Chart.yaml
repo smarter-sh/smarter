@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: 0.14.0-alpha.45
+appVersion: 0.14.0-alpha.46
 name: smarter
 description: >
   Smarter is a declarative, cloud-native platform for authoring and
@@ -70,10 +70,10 @@ keywords:
   - remote-data
   - smarter
 annotations:
-  helm.sh/chart: smarter-0.14.0-alpha.45
+  helm.sh/chart: smarter-0.14.0-alpha.46
   artifacthub.io/changes: |
     - kind: changed
-      description: bump to app version 0.14.0-alpha.45
+      description: bump to app version 0.14.0-alpha.46
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
