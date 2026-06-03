@@ -1,4 +1,4 @@
-# Smarter Chatbots List app. React + TypeScript + Vite
+# Smarter Common React Components
 
 This is the Smarter Common source code for React apps that are
 part of the web console. It is a local package dependency of several
