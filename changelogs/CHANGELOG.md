@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.45](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.44...v0.14.0-alpha.45) (2026-06-03)
+
+### Bug Fixes
+
+* scaffold common code library ([7ebd670](https://github.com/smarter-sh/smarter/commit/7ebd67022f4ba3d3cced2bbdf07bc2a5799e29da))
+
 ## [0.14.0-alpha.44](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.43...v0.14.0-alpha.44) (2026-06-02)
 
 ### Bug Fixes
