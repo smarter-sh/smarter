@@ -21,11 +21,11 @@
  * This component is intended to be embedded in each plugin row or card in ListView and CardView.
  */
 import { useState } from "react";
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "@/lib/const";
 import type { SessionContext } from "@smarter/common";
 import type { Plugin } from "@/lib/Types";
-import { Modal } from "@/lib/modalDialogue";
-import fetchDjangoUrl from "@/lib/django";
+import { Modal } from "@smarter/common";
+import { fetchDjangoUrl } from "@smarter/common";
 
 interface ToolbarProps {
   sessionContext: SessionContext;

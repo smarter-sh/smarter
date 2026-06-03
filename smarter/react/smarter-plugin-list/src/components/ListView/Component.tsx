@@ -28,13 +28,12 @@
  */
 import React, { useState, useEffect } from "react";
 import { Loading } from "@smarter/common";
-
 import type { SessionContext } from "@smarter/common";
 import type { Plugin, PluginListViewProps } from "@/lib/Types";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDateTime } from "@smarter/common";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "@/lib/const";
 
 import "./styles.css";
 

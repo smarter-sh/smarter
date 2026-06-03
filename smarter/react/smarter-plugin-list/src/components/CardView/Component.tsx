@@ -23,13 +23,12 @@
  * This component is intended for use in views where objects are presented in a card/grid format.
  */
 import type { PluginCardViewProps } from "@/lib/Types";
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "@/lib/const";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { renderDetailRow } from "@/components/CardView/renderDetail";
 
 import "./styles.css";
-
 
 function CardView({ sessionContext, objects, onRequery }: PluginCardViewProps) {
   console.debug(loggerPrefix, "Rendering CardView with objects:", objects, sessionContext);

@@ -18,10 +18,11 @@
  *     <ServiceHealth apiUrl="https://api.smarter.sh/health" />
  */
 import { useEffect, useState } from "react";
+import { Loading } from "@smarter/common";
+
 import { loggerPrefix } from "@/const";
 import HealthRing from "./HealthRing";
 import GitHubStatus from "./GitHubStatus";
-import Loading from "@/components/Loading";
 import "./styles.css";
 
 interface ServiceHealthProps {

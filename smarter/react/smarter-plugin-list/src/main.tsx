@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { loggerPrefix } from "./const";
+import { loggerPrefix } from "./lib/const";
 import App from "@/App";
 
 
