@@ -61,13 +61,11 @@ occasional updates on major React releases:
 
 ## SessionContext
 
-This is a common container that includes both a.) the information needed to
-integration to Django, and b.) the
+This is a common container that includes the information needed for integration
+to Django. It is intended to be instantiated in the main.tsx of the React app
+and then passed downstream as needed.
 
 ```typescript
-import type { Plugin } from "@/lib/Types";
-import ListView from "@/components/ListView"
-import CardView from "@/components/CardView"
 import type { SessionContext } from "@smarter/common";
 
 const sessionContext: SessionContext = {
@@ -75,6 +73,22 @@ const sessionContext: SessionContext = {
   csrfCookieName,
   djangoSessionCookieName,
   cookieDomain,
+};
+
+createRoot(rootEl).render(<App sessionContext={sessionContext} />);
+```
+
+## TabbedViewContext
+
+This is a common container that provide the definitions for the object type,
+and status and command bar React components to use for TabbedListView.
+
+```typescript
+import type { PluginTabbedViewContext, Plugin } from "@/lib/Types";
+import ListView from "@/components/ListView"
+import CardView from "@/components/CardView"
+
+const pluginTabbedViewContext: PluginTabbedViewContext = {
   objectType: {} as Plugin,
   objectTypeName: "plugin",
   ListView: ListView,
@@ -84,17 +98,16 @@ const sessionContext: SessionContext = {
 
 ## TabbedListView
 
+A common 2-tab list/card view that includes robust support features for managing
+fetch operations to the back end and browser object caching.
+
 ```typescript
 import { TabbedListView } from "@smarter/common";
-import type { SessionContext } from "@smarter/common";
-import type { Plugin } from "@/lib/Types";
 
-function App({ sessionContext }: {sessionContext: SessionContext<Plugin>}) {
+function App({ sessionContext }: { sessionContext: SessionContext; }) {
   return (
     <>
-      <section className="mt-5 mb-5 container" id="plugin-list">
-        <TabbedListView sessionContext={sessionContext} />
-      </section>
+      <TabbedListView sessionContext={sessionContext} tabbedViewContext={pluginTabbedViewContext}/>
     </>
   );
 }
