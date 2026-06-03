@@ -61,7 +61,7 @@ const getErrorMessage = (status: number, responseBody: unknown): string => {
  * @param invalidateCache - If true, forces the backend to invalidate its cache (default: false).
  */
 export const load = async <TObject,>(
-  sessionContext: SessionContext<TObject>,
+  sessionContext: SessionContext,
   invalidateCacheFlag: boolean,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   urlSlug: string,

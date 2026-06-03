@@ -29,7 +29,8 @@
 import React, { useState, useEffect } from "react";
 import { Loading } from "@smarter/common";
 
-import type { Plugin, SessionContext, ListViewProps } from "@/lib/Types";
+import type { SessionContext } from "@smarter/common";
+import type { Plugin, PluginListViewProps } from "@/lib/Types";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
@@ -236,7 +237,7 @@ function ChunkedRows({
  * @param plugins - Array of plugin objects to display.
  * @param onRequery - Callback to refresh plugin data.
  */
-export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequery }: ListViewProps) {
+export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequery }: PluginListViewProps) {
   console.debug(
     `${loggerPrefix} Rendering ListView - {isLoading: ${isLoading}, ghostRows: ${ghostRows}, objects length: ${Array.isArray(objects) ? objects.length : "N/A"}}`,
   );

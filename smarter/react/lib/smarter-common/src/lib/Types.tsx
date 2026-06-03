@@ -1,7 +1,4 @@
 /**
- * @file Types.tsx
- * @module prompt_list/lib/Types
- *
  * Central type definitions for the Prompt List React application.
  *
  * This module exports TypeScript types and interfaces used throughout the CardView,
@@ -54,13 +51,16 @@ type CardViewBaseProps<TObject, TSessionContext> = {
   onRequery: () => void;
 };
 
-export type SessionContext<TObject> = {
+export type SessionContext = {
   ApiUrl: string;
   csrfCookieName: string;
   djangoSessionCookieName: string;
   cookieDomain: string;
+};
+
+export type TabbedViewContext<TObject> = {
   objectType: TObject;
   objectTypeName: string;
-  ListView: React.ComponentType<ListViewBaseProps<TObject, SessionContext<TObject>>>;
-  CardView: React.ComponentType<CardViewBaseProps<TObject, SessionContext<TObject>>>;
+  ListView: React.ComponentType<ListViewBaseProps<TObject, SessionContext>>;
+  CardView: React.ComponentType<CardViewBaseProps<TObject, SessionContext>>;
 };

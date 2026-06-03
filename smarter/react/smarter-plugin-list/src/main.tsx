@@ -2,15 +2,8 @@ import { createRoot } from "react-dom/client";
 import { loggerPrefix } from "./const";
 import App from "@/App";
 
-// new entry point based on the smarter-common TabbedListView component
-// which provides a generalized interface for rendering lists of
-// owned/shared objects (e.g. chatbots, plugins, etc.) with built-in
-// support for loading states, error handling, and caching.
-import type { Plugin } from "@/lib/Types";
-import ListView from "@/components/ListView"
-import CardView from "@/components/CardView"
 
-import type { SessionContext } from "@/lib/Types";
+import type { SessionContext } from "@smarter/common";
 
 const rootEl = document.getElementById("smarter-plugin-list-root");
 if (!rootEl) throw new Error("Root element not found");
@@ -31,10 +24,6 @@ const sessionContext: SessionContext = {
   csrfCookieName,
   djangoSessionCookieName,
   cookieDomain,
-  objectType: {} as Plugin,
-  objectTypeName: "plugin",
-  ListView: ListView,
-  CardView: CardView,
 };
 console.debug(`${loggerPrefix} Session context initialized:`, sessionContext);
 createRoot(rootEl).render(<App sessionContext={sessionContext} />);

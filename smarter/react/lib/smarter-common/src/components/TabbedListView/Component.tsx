@@ -55,14 +55,18 @@ import { useEffect, useRef, useState } from "react";
 import ToggleButton from "../ToggleButton";
 import type { ViewMode } from "../ToggleButton";
 
-import type { SessionContext, TabKey } from "../../lib/Types";
+import type { SessionContext, TabbedViewContext, TabKey } from "../../lib/Types";
 import { getCookie } from "./cookie";
 import { TabNav } from "./TabNavigation";
 import { load } from "./load";
 import { makeCacheKey, readCache, writeCache } from "./cache";
 
+type TabbedListViewProps<TObject> = {
+  sessionContext: SessionContext;
+  tabbedViewContext: TabbedViewContext<TObject>;
+};
 
-export default function TabbedListView<TObject>({ sessionContext }: { sessionContext: SessionContext<TObject> }) {
+export default function TabbedListView<TObject>({ sessionContext, tabbedViewContext }: TabbedListViewProps<TObject>) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // list state management for owned/shared object lists.
@@ -107,11 +111,11 @@ export default function TabbedListView<TObject>({ sessionContext }: { sessionCon
 
   // initiate load of both owned and shared chatbot lists on component mount and whenever session context changes
   const handleLoad = async () => {
-    const ownedObjects = await load(sessionContext, invalidateCacheFlag, setIsLoadingOwned, "owned", setErrorMessage);
+    const ownedObjects = await load<TObject>(sessionContext, invalidateCacheFlag, setIsLoadingOwned, "owned", setErrorMessage);
     setUserListObjects(ownedObjects);
     writeCache(ownedListCacheKey, ownedObjects);
 
-    const sharedObjects = await load(
+    const sharedObjects = await load<TObject>(
       sessionContext,
       invalidateCacheFlag,
       setIsLoadingShared,
@@ -162,7 +166,7 @@ export default function TabbedListView<TObject>({ sessionContext }: { sessionCon
 
         {activeTab === "user" ? (
           viewMode === "list" ? (
-            <sessionContext.ListView
+            <tabbedViewContext.ListView
               isLoading={isLoadingOwned}
               ghostRows={userGhostCount}
               sessionContext={sessionContext}
@@ -170,10 +174,10 @@ export default function TabbedListView<TObject>({ sessionContext }: { sessionCon
               onRequery={onRequery}
             />
           ) : (
-            <sessionContext.CardView sessionContext={sessionContext} objects={userListObjects} onRequery={onRequery} />
+            <tabbedViewContext.CardView sessionContext={sessionContext} objects={userListObjects} onRequery={onRequery} />
           )
         ) : viewMode === "list" ? (
-          <sessionContext.ListView
+          <tabbedViewContext.ListView
             isLoading={isLoadingShared}
             ghostRows={sharedGhostCount}
             sessionContext={sessionContext}
@@ -181,7 +185,7 @@ export default function TabbedListView<TObject>({ sessionContext }: { sessionCon
             onRequery={onRequery}
           />
         ) : (
-          <sessionContext.CardView sessionContext={sessionContext} objects={sharedListObjects} onRequery={onRequery} />
+          <tabbedViewContext.CardView sessionContext={sessionContext} objects={sharedListObjects} onRequery={onRequery} />
         )}
       </div>
     </div>

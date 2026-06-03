@@ -22,7 +22,8 @@
  */
 import { useState } from "react";
 import { loggerPrefix } from "@/const";
-import type { Plugin, SessionContext } from "@/lib/Types";
+import type { SessionContext } from "@smarter/common";
+import type { Plugin } from "@/lib/Types";
 import { Modal } from "@/lib/modalDialogue";
 import fetchDjangoUrl from "@/lib/django";
 
