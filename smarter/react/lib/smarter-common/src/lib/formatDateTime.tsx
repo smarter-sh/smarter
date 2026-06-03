@@ -11,7 +11,7 @@
  *   formatDateTime("2024-05-19T12:00:00Z", "date");
  *   formatDateTime("2024-05-19T12:00:00Z", "relative", "2024-05-19T11:59:00Z");
  */
-import { loggerPrefix } from "@smarter-common/lib/const";
+import { loggerPrefix } from "./const";
 import { formatDistanceToNow } from "date-fns";
 
 export const formatDateTime = (

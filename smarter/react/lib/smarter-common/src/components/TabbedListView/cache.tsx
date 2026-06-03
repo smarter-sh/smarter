@@ -4,7 +4,7 @@
  * Stores plugin objects in sessionStorage using a key scoped by API URL and slug,
  * with a one-week TTL and automatic cleanup of expired entries.
  */
-import {packageName, packageVersion} from "@smarter-common/lib/const";
+import { packageName, packageVersion } from "../../lib/const";
 
 const CACHE_PREFIX = `${packageName}_v${packageVersion}_objects_v1`;
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week

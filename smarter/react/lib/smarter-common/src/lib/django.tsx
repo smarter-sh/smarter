@@ -8,8 +8,8 @@
  * @param cookieDomain - The domain used when reading cookies.
  * @returns A `Promise<Response>` from the Fetch API.
  */
-import { loggerPrefix } from "@smarter-common/const";
-import getCookie from "@smarter-common/lib/cookie";
+import { loggerPrefix } from "./const";
+import { getCookie } from "./cookie";
 
 export default async function fetchDjangoUrl(
   requestJson: string,

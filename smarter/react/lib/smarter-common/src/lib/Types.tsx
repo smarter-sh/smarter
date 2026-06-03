@@ -35,7 +35,7 @@ export type UserProfile = {
 
 export type ApiResponse<TObject> = {
   chatbots: {
-    user: TObject[];
+    user: UserProfile[];
     shared: TObject[];
   };
 };
