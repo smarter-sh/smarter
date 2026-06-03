@@ -330,7 +330,6 @@ react-build:
 	@echo "==============================================================================="
 	@echo "Collecting static files on local filesystem ..."
 	@echo "==============================================================================="
-	rm -r -f smarter/staticfiles/react/
 	cd smarter/react/lib/smarter-common && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../../
 	mkdir -p smarter/smarter/static/react/lib/smarter-common/
 	cp -r smarter/react/lib/smarter-common/dist smarter/smarter/static/react/lib/smarter-common/dist
