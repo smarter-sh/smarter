@@ -11,14 +11,6 @@ Contains the following:
 
 ## Setup
 
-### Running Locally
-
-```console
-export NODE_ENV=development
-npm install
-npm run build
-```
-
 ### Production Build
 
 Downstream React apps install this package as
@@ -37,8 +29,8 @@ For production builds:
 
 ```console
 export NODE_ENV=production
-npm install --include=dev
-npm run build
+npm install
+npm pack
 ```
 
 Be aware that this package has the following peer dependencies that might require
