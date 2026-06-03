@@ -21,10 +21,32 @@ npm run build
 
 ### Production Build
 
+Downstream React apps install this package as
+`npm install ../lib/smarter-common/dist`, leading to the
+following dependency being created in package.json:
+
+```json
+  "dependencies": {
+    "@smarter/common": "file:../lib/smarter-common/dist",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+  },
+```
+
 For production builds:
 
 ```console
 export NODE_ENV=production
 npm install --include=dev
 npm run build
+```
+
+Be aware that this package has the following peer dependencies that might require
+updating on major React releases:
+
+```json
+  "peerDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
 ```

@@ -3,8 +3,8 @@
  * Used to display a list of available plugins.
  *
  */
-import { TabbedListView } from "smarter-common";
-import type { SessionContext } from "smarter-common/lib/Types";
+import { TabbedListView } from "@smarter/common";
+import type { SessionContext } from "@smarter/common";
 import type { Plugin } from "@/lib/Types";
 
 //import TabbedListView from "@/components/TabbedListView";

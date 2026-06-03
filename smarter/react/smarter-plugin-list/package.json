@@ -1,7 +1,7 @@
 {
   "name": "smarter-plugin-list",
-  "private": true,
-  "version": "0.1.2",
+  "description": "A React component library for displaying a list of Plugins on the Smarter web console.",
+  "version": "0.2.0",
   "type": "module",
   "config": {
     "cdnDeploy": false,
@@ -20,8 +20,7 @@
     "@smarter/common": "file:../lib/smarter-common/dist",
     "date-fns": "^4.2.1",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "smarter-common": "file:../lib/smarter-common/dist"
+    "react-dom": "^19.2.5"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.2.1",
