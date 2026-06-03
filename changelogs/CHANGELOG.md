@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.47](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.46...v0.14.0-alpha.47) (2026-06-03)
+
+### Bug Fixes
+
+* should not touch staticfiles when building react apps ([c84e408](https://github.com/smarter-sh/smarter/commit/c84e408e2c66678d86f11e909659e63fcdae01b3))
+
 ## [0.14.0-alpha.46](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.45...v0.14.0-alpha.46) (2026-06-03)
 
 ### Bug Fixes
