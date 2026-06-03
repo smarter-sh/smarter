@@ -19,8 +19,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import React from 'react';
-import type { SessionContext, TabbedViewContext } from "@smarter/common";
+import type { SessionContext } from "@smarter/common";
 
 export type TabKey = "user" | "shared";
 
@@ -131,15 +130,3 @@ export interface PluginListViewProps {
   objects: Plugin[];
   onRequery: () => void;
 }
-
-// Set the TabbedViewContext generic object type to Plugin,
-// then omit the two abstrasct attributes ListView and CardView
-// from TabbedViewContext and replace these with
-// concrete React component types from this package.
-export type PluginTabbedViewContext = Omit<
-  TabbedViewContext<Plugin>,
-  "ListView" | "CardView"
-> & {
-  ListView: React.ComponentType<PluginListViewProps>;
-  CardView: React.ComponentType<PluginCardViewProps>;
-};
