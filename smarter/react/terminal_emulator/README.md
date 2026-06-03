@@ -65,7 +65,7 @@ speed up the build process in the expected case where React source code has
 not changed.
 
 Note that the manifest.json file includes meta data that can be used for
-trouble shooting purposes. http://example.com/static/react/prompt_passthrough/manifest.json
+trouble shooting purposes. http://example.com/static/react/smarter-prompt-passthrough/manifest.json
 
 ```json
 {
@@ -81,7 +81,7 @@ trouble shooting purposes. http://example.com/static/react/prompt_passthrough/ma
     "version": "0.2.2",
     "config": {
       "cdnDeploy": false,
-      "s3BucketPath": "s3://smarter.sh/react/prompt_passthrough/",
+      "s3BucketPath": "s3://smarter.sh/react/smarter-prompt-passthrough/",
       "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
     },
     "buildEnv": "production"

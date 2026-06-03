@@ -1,5 +1,5 @@
 React Component
 -----------------------
 
-.. literalinclude:: ../../../../../smarter/react/prompt_passthrough/src/components/Prompt/Component.tsx
+.. literalinclude:: ../../../../../smarter/react/smarter-prompt-passthrough/src/components/Prompt/Component.tsx
    :language: tsx

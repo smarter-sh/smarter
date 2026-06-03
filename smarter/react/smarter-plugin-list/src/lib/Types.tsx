@@ -19,12 +19,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-export type SessionContext = {
-  ApiUrl: string;
-  csrfCookieName: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
-};
+import type { SessionContext as SessionContextBase } from "smarter-common/lib/Types";
 
 export type TabKey = "user" | "shared";
 
@@ -120,4 +115,30 @@ export type ApiResponse = {
     user: Plugin[];
     shared: Plugin[];
   };
+};
+
+export interface CardViewProps {
+  sessionContext: SessionContext;
+  objects: Plugin[];
+  onRequery: () => void;
+}
+
+export interface ListViewProps {
+  isLoading: boolean;
+  ghostRows: number;
+  sessionContext: SessionContext;
+  objects: Plugin[];
+  onRequery: () => void;
+}
+
+// Set the SessionContextBase generic object type to Plugin,
+// then omit the two abstrasct attributes ListView and CardView
+// from SessionContextBase and replace these with
+// concrete React component types from this package.
+export type SessionContext = Omit<
+  SessionContextBase<Plugin>,
+  "ListView" | "CardView"
+> & {
+  ListView: React.ComponentType<ListViewProps>;
+  CardView: React.ComponentType<CardViewProps>;
 };

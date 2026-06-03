@@ -1,11 +1,11 @@
 {
-  "name": "plugin_list",
+  "name": "smarter-prompt-passthrough",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.2",
   "type": "module",
   "config": {
     "cdnDeploy": false,
-    "s3BucketPath": "s3://smarter.sh/react/plugin_list/",
+    "s3BucketPath": "s3://smarter.sh/react/smarter-prompt-passthrough/",
     "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
   },
   "scripts": {
@@ -17,7 +17,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "date-fns": "^4.2.1",
+    "@monaco-editor/react": "^4.7.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },

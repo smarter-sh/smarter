@@ -331,11 +331,14 @@ react-build:
 	@echo "Collecting static files on local filesystem ..."
 	@echo "==============================================================================="
 	rm -r -f smarter/staticfiles/react/
+	cd smarter/react/lib/smarter-common && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../../
+	mkdir -p smarter/smarter/static/react/lib/smarter-common/
+	cp -r smarter/react/lib/smarter-common/dist smarter/smarter/static/react/lib/smarter-common/dist
+	cd smarter/react/smarter-plugin-list && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
 	cd smarter/react/terminal_emulator && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
-	cd smarter/react/prompt_passthrough && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
+	cd smarter/react/smarter-prompt-passthrough && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
 	cd smarter/react/dashboard && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
 	cd smarter/react/prompt_list && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
-	cd smarter/react/plugin_list && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
 
 # -------------------------------------------------------------------------
 # Sphinx Documentation

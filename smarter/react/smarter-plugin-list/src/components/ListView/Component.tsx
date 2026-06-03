@@ -27,13 +27,13 @@
  * Intended for views where plugins are presented in a list/table format.
  */
 import React, { useState, useEffect } from "react";
+import { Loading } from "@smarter/common";
 
-import type { Plugin, SessionContext } from "@/lib/Types";
+import type { Plugin, SessionContext, ListViewProps } from "@/lib/Types";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { loggerPrefix } from "@/const";
-import Loading from "@/components/Loading";
 
 import "./styles.css";
 
@@ -223,13 +223,6 @@ function ChunkedRows({
   );
 }
 
-interface ListViewProps {
-  isLoading: boolean;
-  ghostRows: number;
-  sessionContext: SessionContext;
-  objects: Plugin[];
-  onRequery: () => void;
-}
 
 /**
  * ListView
