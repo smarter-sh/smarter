@@ -63,10 +63,10 @@ import { makeCacheKey, readCache, writeCache } from "./cache";
 
 type TabbedListViewProps<TObject> = {
   sessionContext: SessionContext;
-  tabbedViewContext: TabbedViewContext<TObject>;
+  tabbedListViewContext: TabbedViewContext<TObject>;
 };
 
-export default function TabbedListView<TObject>({ sessionContext, tabbedViewContext }: TabbedListViewProps<TObject>) {
+export default function TabbedListView<TObject>({ sessionContext, tabbedListViewContext }: TabbedListViewProps<TObject>) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // list state management for owned/shared object lists.
@@ -85,11 +85,7 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedViewCont
   const [invalidateCacheFlag, setInvalidateCacheFlag] = useState<boolean>(false);
 
   // define 2-tab layout with cookie-based persistent active tab state
-  const tabs: { key: TabKey; label: string }[] = [
-    { key: "user", label: "Your Chatbots" },
-    { key: "shared", label: "Shared Chatbots" },
-  ];
-  const [activeTab, setActiveTab] = useState<"user" | "shared">("user");
+  const [activeTab, setActiveTab] = useState<TabKey>("owned");
   const [viewMode, _setViewMode] = useState<ViewMode>(() => {
     const saved = sessionStorage.getItem("viewMode");
     return saved === "thumbnail" ? "thumbnail" : "list";
@@ -159,14 +155,14 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedViewCont
   return (
     <div className="pt-5 pb-5 card card-flush h-xl-100">
       <div className="card-header rounded align-items-start ps-3" data-bs-theme="light">
-        <TabNav activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
+        <TabNav activeTab={activeTab} onTabChange={setActiveTab} tabs={tabbedListViewContext.tabs} />
       </div>
       <div className="m-0 p-0 card-body list-view">
         <ToggleButton viewMode={viewMode} setViewMode={setViewMode} />
 
-        {activeTab === "user" ? (
+        {activeTab === "owned" ? (
           viewMode === "list" ? (
-            <tabbedViewContext.ListView
+            <tabbedListViewContext.ListView
               isLoading={isLoadingOwned}
               ghostRows={userGhostCount}
               sessionContext={sessionContext}
@@ -174,10 +170,10 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedViewCont
               onRequery={onRequery}
             />
           ) : (
-            <tabbedViewContext.CardView sessionContext={sessionContext} objects={userListObjects} onRequery={onRequery} />
+            <tabbedListViewContext.CardView sessionContext={sessionContext} objects={userListObjects} onRequery={onRequery} />
           )
         ) : viewMode === "list" ? (
-          <tabbedViewContext.ListView
+          <tabbedListViewContext.ListView
             isLoading={isLoadingShared}
             ghostRows={sharedGhostCount}
             sessionContext={sessionContext}
@@ -185,7 +181,7 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedViewCont
             onRequery={onRequery}
           />
         ) : (
-          <tabbedViewContext.CardView sessionContext={sessionContext} objects={sharedListObjects} onRequery={onRequery} />
+          <tabbedListViewContext.CardView sessionContext={sessionContext} objects={sharedListObjects} onRequery={onRequery} />
         )}
       </div>
     </div>

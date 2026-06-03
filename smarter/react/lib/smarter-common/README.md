@@ -88,7 +88,7 @@ import type { PluginTabbedViewContext, Plugin } from "@/lib/Types";
 import ListView from "@/components/ListView"
 import CardView from "@/components/CardView"
 
-const pluginTabbedViewContext: PluginTabbedViewContext = {
+const pluginTabbedListViewContext: PluginTabbedViewContext = {
   objectType: {} as Plugin,
   objectTypeName: "plugin",
   ListView: ListView,
@@ -107,7 +107,7 @@ import { TabbedListView } from "@smarter/common";
 function App({ sessionContext }: { sessionContext: SessionContext; }) {
   return (
     <>
-      <TabbedListView sessionContext={sessionContext} tabbedViewContext={pluginTabbedViewContext}/>
+      <TabbedListView sessionContext={sessionContext} tabbedListViewContext={pluginTabbedListViewContext}/>
     </>
   );
 }
