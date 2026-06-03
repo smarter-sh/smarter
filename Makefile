@@ -319,25 +319,20 @@ python-requirements:
 
 # ---------------------------------------------------------
 # React
-# We assume that NODE_ENV=production for all React builds, which ensures that the production
-# versions of React and other dependencies are used and that the resulting static files are
-# optimized for production use.
-#
-# Note: It is necessary to provide the --include=dev flag to npm install
-# because NODE_ENV=production is set, which would otherwise cause npm to skip installing devDependencies.
 # ---------------------------------------------------------
 react-build:
 	@echo "==============================================================================="
-	@echo "Collecting static files on local filesystem ..."
+	@echo "Building and collecting static files on local filesystem ..."
 	@echo "==============================================================================="
-	cd smarter/react/lib/smarter-common && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../../
-	mkdir -p smarter/smarter/static/react/lib/smarter-common/
-	cp -r smarter/react/lib/smarter-common/dist smarter/smarter/static/react/lib/smarter-common/dist
-	cd smarter/react/smarter-dashboard && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
-	cd smarter/react/smarter-plugin-list && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
-	cd smarter/react/smarter-prompt-list && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
-	cd smarter/react/smarter-prompt-passthrough && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
-	cd smarter/react/smarter-terminal-emulator && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
+	export NODE_ENV=development && \
+	cd smarter/react/lib/smarter-common && rm -f package-lock.json && npm install && npm run build && cd ../../../../ && \
+	mkdir -p smarter/smarter/static/react/lib/smarter-common/ && \
+	cp -r smarter/react/lib/smarter-common/dist smarter/smarter/static/react/lib/smarter-common/dist && \
+	cd smarter/react/smarter-dashboard && rm -f package-lock.json && npm install && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-plugin-list && rm -f package-lock.json && npm install && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-prompt-list && rm -f package-lock.json && npm install && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-prompt-passthrough && rm -f package-lock.json && npm install && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-terminal-emulator && rm -f package-lock.json && npm install && npm run build && cd ../../../
 
 # -------------------------------------------------------------------------
 # Sphinx Documentation

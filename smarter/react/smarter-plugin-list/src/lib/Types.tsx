@@ -19,7 +19,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext as SessionContextBase } from "smarter-common/lib/Types";
+import type { SessionContext as SessionContextBase } from "@smarter/common";
 
 export type TabKey = "user" | "shared";
 

@@ -27,6 +27,8 @@ npm run build
 npm run dev
 ```
 
+Build artifacts are persisted to smarter/smarter/static/react/smarter-dashboard/.
+
 ### Running Locally From Django
 
 This configures Vite to generate a production React build, with the final build
@@ -34,18 +36,27 @@ bundle collected into Django's static asset folder. Run the Django web console
 from http://localhost:9357/
 
 ```console
-cd to/the/root/of/this/repo/
-
-# Causes React to generate a production-optimized build.
+# Direct React to generate a production-optimized build.
 export NODE_ENV=production
 
-# builds ALL React apps, and also run Django static asset collection
-make react-build
+# Move to this source code on your local file system.
+cd smarter/react/smarter-dashboard
 
-# Builds the Django Docker container.
+# build to smarter/smarter/static/react/smarter-dashboard/
+# on your local file system.
+npm run build
+
+# Copy smarter/smarter/static/react/smarter-dashboard/ to
+# Django's static file server location on your local file system.
+  smarter/staticfiles/react/smarter-dashboard/
+make collectstatic
+
+# Build Docker container
 make build
 
-# Starts the Django app container
+# Start the Django app container.
+# From inside the running Docker container you'll find your build artifacts at
+# /home/smarter_user/smarter/staticfiles/react/smarter-dashboard/
 make run
 ```
 

@@ -1,6 +1,6 @@
 {
   "name": "smarter-prompt-list",
-  "private": true,
+  "description": "A React component library for displaying a list of Prompts (Chatbots) on the Smarter web console.",
   "version": "0.3.1",
   "type": "module",
   "config": {
