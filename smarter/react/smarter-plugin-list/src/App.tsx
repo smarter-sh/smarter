@@ -4,8 +4,8 @@
  *
  */
 import { TabbedListView } from "@smarter/common";
-import type { SessionContext, TabKey, Tabs } from "@smarter/common";
-import type { PluginTabbedViewContext, Plugin } from "@/lib/Types";
+import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
+import type { Plugin, PluginListViewProps, PluginCardViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 
@@ -13,6 +13,18 @@ const tabs: Tabs = [
   { key: "owned" as TabKey, label: "Your Plugins" },
   { key: "shared" as TabKey, label: "Shared Plugins" },
 ];
+
+// Set the TabbedViewContext generic object type to Plugin,
+// then omit the two abstrasct attributes ListView and CardView
+// from TabbedViewContext and replace these with
+// concrete React component types from this package.
+export type PluginTabbedViewContext = Omit<
+  TabbedViewContext<Plugin>,
+  "ListView" | "CardView"
+> & {
+  ListView: React.ComponentType<PluginListViewProps>;
+  CardView: React.ComponentType<PluginCardViewProps>;
+};
 
 const pluginTabbedListViewContext: PluginTabbedViewContext = {
   objectType: {} as Plugin,
