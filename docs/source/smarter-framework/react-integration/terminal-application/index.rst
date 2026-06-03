@@ -26,7 +26,7 @@ Example index.html
       -->
       <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
       <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
-      <link href="/terminal_emulator/assets/index.css" rel="stylesheet" type="text/css" />
+      <link href="/smarter-terminal-emulator/assets/index.css" rel="stylesheet" type="text/css" />
       <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
       <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
       <link href="/common-styles.css" rel="stylesheet" type="text/css" />
@@ -34,11 +34,11 @@ Example index.html
       <!--
        These are ViteJS build assets
       -->
-      <script type="module" crossorigin src="/static/react/terminal_emulator/assets/index.js"></script>
-      <link rel="modulepreload" crossorigin href="/static/react/terminal_emulator/assets/rolldown-runtime.js">
-      <link rel="modulepreload" crossorigin href="/static/react/terminal_emulator/assets/xterm.js">
-      <link rel="stylesheet" crossorigin href="/static/react/terminal_emulator/assets/xterm-kHJ-D0s7.css">
-      <link rel="stylesheet" crossorigin href="/static/react/terminal_emulator/assets/index-58MXwt-L.css">
+      <script type="module" crossorigin src="/static/react/smarter-terminal-emulator/assets/index.js"></script>
+      <link rel="modulepreload" crossorigin href="/static/react/smarter-terminal-emulator/assets/rolldown-runtime.js">
+      <link rel="modulepreload" crossorigin href="/static/react/smarter-terminal-emulator/assets/xterm.js">
+      <link rel="stylesheet" crossorigin href="/static/react/smarter-terminal-emulator/assets/xterm-kHJ-D0s7.css">
+      <link rel="stylesheet" crossorigin href="/static/react/smarter-terminal-emulator/assets/index-58MXwt-L.css">
     </head>
     <body>
       <!-- only used for development via 'npm run dev' -->

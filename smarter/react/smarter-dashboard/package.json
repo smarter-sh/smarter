@@ -1,11 +1,11 @@
 {
-  "name": "terminal_emulator",
+  "name": "smarter-dashboard",
   "private": true,
   "version": "0.2.2",
   "type": "module",
   "config": {
     "cdnDeploy": false,
-    "s3BucketPath": "s3://smarter.sh/react/terminal_emulator/",
+    "s3BucketPath": "s3://smarter.sh/react/smarter-dashboard/",
     "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
   },
   "scripts": {
@@ -18,11 +18,10 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
-    "@xterm/addon-fit": "^0.10.0",
-    "@xterm/xterm": "^5.3.0",
     "process": "^0.11.10",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "react-youtube": "^10.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

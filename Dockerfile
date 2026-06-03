@@ -203,7 +203,7 @@ RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt
 # components.
 FROM venv AS react_build_args
 
-ENV REACT_COMPONENTS="smarter-plugin-list smarter-prompt-passthrough dashboard terminal_emulator prompt_list"
+ENV REACT_COMPONENTS="smarter-plugin-list smarter-prompt-passthrough smarter-dashboard smarter-terminal-emulator smarter-prompt-list"
 
 # from .env file, alternatively from docker-compose.yml.
 # This is used to control the base URL for downloading React
@@ -260,7 +260,7 @@ fi
 # to build React components locally if needed, but the default and recommended workflow
 # is to rely on the CDN downloads for all environments.
 #
-# example manifest.json file for reference: https://cdn.smarter.sh/react/terminal_emulator/manifest.json
+# example manifest.json file for reference: https://cdn.smarter.sh/react/smarter-terminal-emulator/manifest.json
 # {
 #   "_rolldown-runtime.js": {
 #     "file": "assets/rolldown-runtime.js",

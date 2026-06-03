@@ -336,7 +336,7 @@ generate the correct asset paths and filenames.
 
     {% terminal_emulator_react_assets as assets %}
     {% for css_file in assets.css %}
-      <link class="smarter" rel="stylesheet" href="{% static 'react/terminal_emulator/' %}{{ css_file }}">
+      <link class="smarter" rel="stylesheet" href="{% static 'react/smarter-terminal-emulator/' %}{{ css_file }}">
     {% endfor %}
   {% endblock %}
 
@@ -347,7 +347,7 @@ generate the correct asset paths and filenames.
 
     {% terminal_emulator_react_assets as assets %}
     {% for js_file in assets.js %}
-      <script class="smarter" type="module" src="{% static 'react/terminal_emulator/' %}{{ js_file }}"></script>
+      <script class="smarter" type="module" src="{% static 'react/smarter-terminal-emulator/' %}{{ js_file }}"></script>
     {% endfor %}
   {% endblock %}
 

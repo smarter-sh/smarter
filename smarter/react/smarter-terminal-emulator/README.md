@@ -1,17 +1,17 @@
-# Smarter Dashboard app. React + TypeScript + Vite
+# Smarter Terminal Emulator app. React + TypeScript + Vite
 
-This is the source code for the Dashboard app located
-at [http://localhost:9357/dashboard/](http://localhost:9357/dashboard/).
+This is the source code for the Terminal Emulator app located
+at [http://localhost:9357/workbench/smarter-terminal-emulator/](http://localhost:9357/workbench/smarter-terminal-emulator/).
 
 This component is served by Django in production. See:
 
-- builds are distributed from s3://smarter.sh/react/dashboard/ and gathered
-  by Dockerfile during builds into Django's static asset folder.
-- [smarter.apps.dashboard.views.views.dashboard.DashboardView](../../smarter/apps/dashboard/views/views/dashboard.py)
-- [smarter.apps.dashboard.templatetags.react_dashboard.dashboard_react_assets](../../smarter/apps/dashboard/templatetags/react_dashboard.py)
-- [templates/react/dashboard.html](../../smarter/templates/react/dashboard.html)
+- builds are distributed from s3://smarter.sh/react/smarter-terminal-emulator/ and gathered
+by Dockerfile during builds into Django's static asset folder.
+- [smarter.apps.prompt.views.listview.view.PromptListView](../../smarter/apps/prompt/views/listview/view.py)
+- [smarter.apps.prompt.templatetags.react_prompt_list.prompt_list_react_assets](../../smarter/apps/prompt/templatetags/react_prompt_list.py)
+- [templates/react/prompt-list.html](../../smarter/templates/react/prompt-list.html)
 
-## Developer Setup and Guide
+## Setup
 
 ### Running Locally
 
@@ -65,7 +65,7 @@ speed up the build process in the expected case where React source code has
 not changed.
 
 Note that the manifest.json file includes meta data that can be used for
-trouble shooting purposes. http://example.com/static/react/dashboard/manifest.json
+trouble shooting purposes. http://example.com/static/react/smarter-prompt-passthrough/manifest.json
 
 ```json
 {
@@ -81,7 +81,7 @@ trouble shooting purposes. http://example.com/static/react/dashboard/manifest.js
     "version": "0.2.2",
     "config": {
       "cdnDeploy": false,
-      "s3BucketPath": "s3://smarter.sh/react/dashboard/",
+      "s3BucketPath": "s3://smarter.sh/react/smarter-prompt-passthrough/",
       "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
     },
     "buildEnv": "production"
@@ -101,18 +101,7 @@ npm run storybook
 
 ## Screen Shot
 
-![Dashboard Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/dashboard-screenshot.png)
-
-## Developer Notes
-
-When running locally you should expect to see console error/warning messages
-from the YouTube video player of the form
-
-```console
-Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://www.youtube.com') does not match the recipient window's origin ('http://localhost:9357').
-```
-
-These messages are benign and should be ignored.
+![Server Logs Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/server-logs-screenshot.png)
 
 ## Vite Plugins
 
@@ -133,9 +122,9 @@ configuration to enable type-aware lint rules:
 
 ```js
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(['dist']),
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ['**/*.{ts,tsx}'],
     extends: [
       // Other configs...
 
@@ -150,40 +139,40 @@ export default defineConfig([
     ],
     languageOptions: {
       parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
     },
   },
-]);
+])
 ```
 
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js
 // eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(['dist']),
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ['**/*.{ts,tsx}'],
     extends: [
       // Other configs...
       // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
+      reactX.configs['recommended-typescript'],
       // Enable lint rules for React DOM
       reactDom.configs.recommended,
     ],
     languageOptions: {
       parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
     },
   },
-]);
+])
 ```
