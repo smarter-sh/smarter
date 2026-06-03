@@ -329,14 +329,12 @@ react-build-common:
 	npm config get omit && \
 	rm -f package-lock.json && \
 	rm -rf node_modules && \
-	rm smarter-common*.tgz && \
+	rm -f smarter-common*.tgz && \
 	npm install && \
 	npm ci --include=dev && \
 	npm run build && \
 	npm run pack:tgz && \
-	cd ../../../../ && \
-	mkdir -p smarter/smarter/static/react/lib/smarter-common/ && \
-	cp -r smarter/react/lib/smarter-common/dist smarter/smarter/static/react/lib/smarter-common/dist
+	cd ../../../../
 
 react-build:
 	@echo "==============================================================================="

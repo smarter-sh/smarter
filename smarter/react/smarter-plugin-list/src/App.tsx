@@ -5,20 +5,26 @@
  */
 import { TabbedListView } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
-import type { Plugin } from "@/lib/Types";
+import type { PluginTabbedViewContext, Plugin } from "@/lib/Types";
+import ListView from "@/components/ListView"
+import CardView from "@/components/CardView"
 
-//import TabbedListView from "@/components/TabbedListView";
-//import type { SessionContext } from "@/lib/Types";
+const pluginTabbedViewContext: PluginTabbedViewContext = {
+  objectType: {} as Plugin,
+  objectTypeName: "plugin",
+  ListView: ListView,
+  CardView: CardView,
+};
 
 interface AppProps {
-  sessionContext: SessionContext<Plugin>;
+  sessionContext: SessionContext;
 }
 
 function App({ sessionContext }: AppProps) {
   return (
     <>
       <section className="mt-5 mb-5 container" id="plugin-list">
-        <TabbedListView sessionContext={sessionContext} />
+        <TabbedListView sessionContext={sessionContext} tabbedViewContext={pluginTabbedViewContext} />
       </section>
     </>
   );

@@ -19,7 +19,8 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext as SessionContextBase } from "@smarter/common";
+import React from 'react';
+import type { SessionContext, TabbedViewContext } from "@smarter/common";
 
 export type TabKey = "user" | "shared";
 
@@ -117,13 +118,13 @@ export type ApiResponse = {
   };
 };
 
-export interface CardViewProps {
+export interface PluginCardViewProps {
   sessionContext: SessionContext;
   objects: Plugin[];
   onRequery: () => void;
 }
 
-export interface ListViewProps {
+export interface PluginListViewProps {
   isLoading: boolean;
   ghostRows: number;
   sessionContext: SessionContext;
@@ -131,14 +132,14 @@ export interface ListViewProps {
   onRequery: () => void;
 }
 
-// Set the SessionContextBase generic object type to Plugin,
+// Set the TabbedViewContext generic object type to Plugin,
 // then omit the two abstrasct attributes ListView and CardView
-// from SessionContextBase and replace these with
+// from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type SessionContext = Omit<
-  SessionContextBase<Plugin>,
+export type PluginTabbedViewContext = Omit<
+  TabbedViewContext<Plugin>,
   "ListView" | "CardView"
 > & {
-  ListView: React.ComponentType<ListViewProps>;
-  CardView: React.ComponentType<CardViewProps>;
+  ListView: React.ComponentType<PluginListViewProps>;
+  CardView: React.ComponentType<PluginCardViewProps>;
 };

@@ -58,3 +58,44 @@ occasional updates on major React releases:
     "react-dom": "^19"
   },
 ```
+
+## SessionContext
+
+This is a common container that includes both a.) the information needed to
+integration to Django, and b.) the
+
+```typescript
+import type { Plugin } from "@/lib/Types";
+import ListView from "@/components/ListView"
+import CardView from "@/components/CardView"
+import type { SessionContext } from "@smarter/common";
+
+const sessionContext: SessionContext = {
+  ApiUrl,
+  csrfCookieName,
+  djangoSessionCookieName,
+  cookieDomain,
+  objectType: {} as Plugin,
+  objectTypeName: "plugin",
+  ListView: ListView,
+  CardView: CardView,
+};
+```
+
+## TabbedListView
+
+```typescript
+import { TabbedListView } from "@smarter/common";
+import type { SessionContext } from "@smarter/common";
+import type { Plugin } from "@/lib/Types";
+
+function App({ sessionContext }: {sessionContext: SessionContext<Plugin>}) {
+  return (
+    <>
+      <section className="mt-5 mb-5 container" id="plugin-list">
+        <TabbedListView sessionContext={sessionContext} />
+      </section>
+    </>
+  );
+}
+```
