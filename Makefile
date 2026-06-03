@@ -320,19 +320,36 @@ python-requirements:
 # ---------------------------------------------------------
 # React
 # ---------------------------------------------------------
+react-build-common:
+	cd smarter/react/lib/smarter-common && \
+	unset NODE_ENV && \
+	npm config delete production && \
+	npm config delete omit && \
+	npm config get production && \
+	npm config get omit && \
+	rm -f package-lock.json && \
+	rm -rf node_modules && \
+	rm smarter-common*.tgz && \
+	npm install && \
+	npm ci --include=dev && \
+	npm run build && \
+	npm run pack:tgz && \
+	cd ../../../../ && \
+	mkdir -p smarter/smarter/static/react/lib/smarter-common/ && \
+	cp -r smarter/react/lib/smarter-common/dist smarter/smarter/static/react/lib/smarter-common/dist
+
 react-build:
 	@echo "==============================================================================="
 	@echo "Building and collecting static files on local filesystem ..."
 	@echo "==============================================================================="
-	export NODE_ENV=development && \
-	cd smarter/react/lib/smarter-common && rm -f package-lock.json && npm install && npm run build && cd ../../../../ && \
-	mkdir -p smarter/smarter/static/react/lib/smarter-common/ && \
-	cp -r smarter/react/lib/smarter-common/dist smarter/smarter/static/react/lib/smarter-common/dist && \
-	cd smarter/react/smarter-dashboard && rm -f package-lock.json && npm install && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-plugin-list && rm -f package-lock.json && npm install && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-prompt-list && rm -f package-lock.json && npm install && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-prompt-passthrough && rm -f package-lock.json && npm install && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-terminal-emulator && rm -f package-lock.json && npm install && npm run build && cd ../../../
+	make react-build-common && \
+	export NODE_ENV=production && \
+	cd smarter/react/smarter-dashboard && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-plugin-list && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-prompt-list && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-prompt-passthrough && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-terminal-emulator && rm -f package-lock.json && npm install --include=dev && npm run build && cd ../../../
+
 
 # -------------------------------------------------------------------------
 # Sphinx Documentation
@@ -403,6 +420,7 @@ help:
 	@echo 'python-requirements    - Compile and update Python dependency files'
 	@echo '<************************** React **************************>'
 	@echo 'react-build            - Build all React frontend apps and collect static files'
+	@echo 'react-build-common     - Build the smarter-common React library and collect static files'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'
 	@echo 'keen-build             - Build Keen app using gulp'

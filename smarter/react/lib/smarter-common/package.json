@@ -12,7 +12,7 @@
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc -p tsconfig.build.json && rsync -a --prune-empty-dirs --include='/' --include='.css' --exclude='*' src/ dist/",
     "build:dist-manifest": "node --input-type=module -e \"import fs from 'node:fs'; const pkg = JSON.parse(fs.readFileSync('package.json','utf8')); const out = { name: pkg.name, version: pkg.version, type: pkg.type, main: './index.js', types: './index.d.ts', peerDependencies: pkg.peerDependencies ?? {}, dependencies: pkg.dependencies ?? {} }; fs.writeFileSync('dist/package.json', JSON.stringify(out, null, 2) + '\\n');\"",
-    "prepack": "npm run build",
+    "pack:tgz": "npm pack --ignore-scripts",
     "lint": "eslint .",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
