@@ -1,11 +1,11 @@
 {
-  "name": "dashboard",
+  "name": "smarter-prompt-list",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.1",
   "type": "module",
   "config": {
     "cdnDeploy": false,
-    "s3BucketPath": "s3://smarter.sh/react/dashboard/",
+    "s3BucketPath": "s3://smarter.sh/react/smarter-prompt-list/",
     "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
   },
   "scripts": {
@@ -17,11 +17,9 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@monaco-editor/react": "^4.7.0",
-    "process": "^0.11.10",
+    "date-fns": "^4.2.1",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "react-youtube": "^10.1.0"
+    "react-dom": "^19.2.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

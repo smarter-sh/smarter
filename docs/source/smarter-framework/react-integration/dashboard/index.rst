@@ -34,8 +34,8 @@ Example index.html
       <!--
        These are ViteJS build assets
       -->
-      <script type="module" crossorigin src="/static/react/dashboard/assets/index.js"></script>
-      <link rel="stylesheet" crossorigin href="/static/react/dashboard/assets/index-B011HLqe.css">
+      <script type="module" crossorigin src="/static/react/smarter-dashboard/assets/index.js"></script>
+      <link rel="stylesheet" crossorigin href="/static/react/smarter-dashboard/assets/index-B011HLqe.css">
     </head>
     <body>
       <!--

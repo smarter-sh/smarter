@@ -16,7 +16,7 @@ templatetag_manager = SmarterReactTemplateTagManager(app_name="smarter-prompt-pa
 """
 Manages integration of Vite-built React assets into Django templates.
 Expects to find a Vite-generated manifest.json in the file path
-static/react/terminal_emulator/.
+static/react/smarter-terminal-emulator/.
 
 Example manifest.json structure:
 

@@ -1,5 +1,5 @@
 React Component
 -----------------------
 
-.. literalinclude:: ../../../../../smarter/react/dashboard/src/components/Dashboard/Component.tsx
+.. literalinclude:: ../../../../../smarter/react/smarter-dashboard/src/components/Dashboard/Component.tsx
    :language: tsx

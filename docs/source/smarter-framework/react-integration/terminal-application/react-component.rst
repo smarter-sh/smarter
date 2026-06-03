@@ -1,5 +1,5 @@
 React Component
 -----------------------
 
-.. literalinclude:: ../../../../../smarter/react/terminal_emulator/src/components/Terminal/Component.tsx
+.. literalinclude:: ../../../../../smarter/react/smarter-terminal-emulator/src/components/Terminal/Component.tsx
    :language: tsx

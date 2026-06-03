@@ -1,11 +1,11 @@
 {
-  "name": "prompt_list",
+  "name": "smarter-terminal-emulator",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.2.2",
   "type": "module",
   "config": {
     "cdnDeploy": false,
-    "s3BucketPath": "s3://smarter.sh/react/prompt_list/",
+    "s3BucketPath": "s3://smarter.sh/react/smarter-terminal-emulator/",
     "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
   },
   "scripts": {
@@ -17,7 +17,10 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "date-fns": "^4.2.1",
+    "@monaco-editor/react": "^4.7.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.3.0",
+    "process": "^0.11.10",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },

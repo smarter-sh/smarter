@@ -29,7 +29,7 @@ In a Django template, use the registered template tag for your app to get asset 
     {% load react_dashboard %}
     {% dashboard_react_assets as assets %}
     {% for css_file in assets.css %}
-        <link class="smarter" rel="stylesheet" href="{% static 'react/dashboard/' %}{{ css_file }}">
+        <link class="smarter" rel="stylesheet" href="{% static 'react/smarter-dashboard/' %}{{ css_file }}">
     {% endfor %}
 
 Example React manifest.json

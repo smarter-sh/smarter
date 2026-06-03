@@ -21,7 +21,7 @@ Example:
         from smarter.apps.dashboard.views.logs.reactapp import TerminalEmulatorLogView
 
         urlpatterns = [
-            path("terminal/", TerminalEmulatorLogView.as_view(), name="terminal_emulator"),
+            path("terminal/", TerminalEmulatorLogView.as_view(), name="smarter-terminal-emulator"),
         ]
 """
 

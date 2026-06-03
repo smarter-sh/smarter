@@ -12,7 +12,7 @@
   -->
   {% prompt_list_react_assets as assets %}
   {% for css_file in assets.css %}
-    <link class="smarter" rel="stylesheet" href="{% static 'react/prompt_list/' %}{{ css_file }}">
+    <link class="smarter" rel="stylesheet" href="{% static 'react/smarter-prompt-list/' %}{{ css_file }}">
   {% endfor %}
 {% endblock %}
 
@@ -40,7 +40,7 @@
   -->
   {% prompt_list_react_assets as assets %}
   {% for js_file in assets.js %}
-    <script class="smarter" type="module" src="{% static 'react/prompt_list/' %}{{ js_file }}"></script>
+    <script class="smarter" type="module" src="{% static 'react/smarter-prompt-list/' %}{{ js_file }}"></script>
   {% endfor %}
 
 {% endblock %}
