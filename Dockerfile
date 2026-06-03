@@ -370,6 +370,7 @@ FROM react_assets AS application
 WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
 COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
+RUN mkdir -p /home/smarter_user/smarter/staticfiles
 RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
 
 # copy the smarter-common npm package from the react build stage. This is needed because
@@ -399,11 +400,13 @@ FROM application AS permissions
 # .cache:                   rwx------ bc some python packages want to write to .cache, like tldextract
 
 USER root
+
 RUN if [ "$ENVIRONMENT" != "local" ] ; then chown -R smarter_user:smarter_user /home/smarter_user/ && \
   find /home/smarter_user/ -type f -exec chmod 400 {} + && \
   find /home/smarter_user/ -type d -exec chmod 500 {} + && \
   find /home/smarter_user/venv/bin/ -type f -exec chmod 500 {} + && \
   find /home/smarter_user/smarter/smarter/ -type d -name migrations -exec chmod 700 {} + && \
+  chmod 700 /home/smarter_user/smarter/staticfiles && \
   chmod -R 700 /home/smarter_user/data && \
   chmod -R 700 /home/smarter_user/.cache && \
   chmod 755 /home/smarter_user/smarter/manage.py ; fi
