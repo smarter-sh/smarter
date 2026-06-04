@@ -13,7 +13,6 @@
  *   - Plugin: Type for plugin objects.
  *   - User, UserProfile: Types for user and profile data.
  *   - Chatbot: Type for chatbot configuration and metadata.
- *   - ApiResponse: Type for API response structure.
  *   - SessionContext: Type for session and authentication context.
  *
  * Usage:
@@ -97,13 +96,6 @@ export type Chatbot = {
   tlsCertificateIssuanceStatus: string;
   subdomain: string | null;
   customDomain: string | null;
-};
-
-export type ApiResponse = {
-  chatbots: {
-    user: Chatbot[];
-    shared: Chatbot[];
-  };
 };
 
 export type SessionContext = {

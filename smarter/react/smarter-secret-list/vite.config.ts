@@ -21,9 +21,9 @@
  *
  * See README.md for more details on development and deployment workflows.
  */
-import { defineConfig, type ConfigEnv, type SecretOption } from "vite";
+import { defineConfig, type ConfigEnv, type PluginOption } from "vite";
 import { execSync } from "child_process";
-import react from "@vitejs/secret-react";
+import react from "@vitejs/plugin-react";
 import fs from "fs";
 import path from "path";
 import packageJson from "./package.json" with { type: "json" };
@@ -42,7 +42,7 @@ const packageName = "smarter-secret-list";
  *
  * This information is used by Django to display build details and for debugging purposes.
  */
-const addCustomManifestData: SecretOption = {
+const addCustomManifestData: PluginOption = {
   name: "add-custom-manifest-data",
   writeBundle() {
     const manifestPath = path.resolve(__dirname, `../../smarter/static/react/${packageName}/manifest.json`);
@@ -67,7 +67,7 @@ const addCustomManifestData: SecretOption = {
  * ensuring the latest files are served in production. This workflow is enabled by the `cdnDeploy` flag in package.json
  * and allows Docker images to skip React build tools while supporting CDN-based static file serving.
  */
-const postBuildSecret: SecretOption = {
+const postBuildSecret: PluginOption = {
   name: "post-build",
 
   closeBundle() {

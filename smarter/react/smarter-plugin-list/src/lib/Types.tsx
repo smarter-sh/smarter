@@ -11,7 +11,6 @@
  * Exports:
  *   - TabKey: Type for tab keys ("user" | "shared").
  *   - Plugin: Type for plugin objects.
- *   - ApiResponse: Type for API response structure.
  *   - SessionContext: Type for session and authentication context.
  *
  * Usage:
@@ -89,16 +88,6 @@ export type Plugin = {
   sqlData: SqlData | null;
   apiData: ApiData | null;
   ready: boolean;
-};
-
-// ----------------------------------------------------------------------------
-// API Response and Session Context Types
-// ----------------------------------------------------------------------------
-export type ApiResponse = {
-  plugins: {
-    user: Plugin[];
-    shared: Plugin[];
-  };
 };
 
 // ----------------------------------------------------------------------------

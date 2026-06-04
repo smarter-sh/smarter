@@ -211,7 +211,7 @@ jobs:
         id: react-cache-hash
         shell: bash
         run: |
-          REACT_COMPONENTS="smarter-plugin-list smarter-prompt-passthrough smarter-dashboard smarter-terminal-emulator smarter-prompt-list"
+          REACT_COMPONENTS="smarter-plugin-list smarter-prompt-passthrough smarter-dashboard smarter-secret-list smarter-terminal-emulator smarter-prompt-list"
           HASH_INPUT=""
           for comp in $REACT_COMPONENTS; do
             REACT_DIR="smarter/react/$comp/"

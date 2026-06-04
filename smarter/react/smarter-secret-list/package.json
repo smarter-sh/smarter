@@ -1,11 +1,11 @@
 {
-  "name": "smarter-plugin-list",
-  "description": "A React component library for displaying a list of Plugins on the Smarter web console.",
-  "version": "0.2.0",
+  "name": "smarter-secret-list",
+  "description": "A React component library for displaying a list of Secrets on the Smarter web console.",
+  "version": "0.1.0",
   "type": "module",
   "config": {
     "cdnDeploy": false,
-    "s3BucketPath": "s3://smarter.sh/react/smarter-plugin-list/",
+    "s3BucketPath": "s3://smarter.sh/react/smarter-secret-list/",
     "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
   },
   "scripts": {
