@@ -1,6 +1,6 @@
 # pylint: disable=W0613
 """
-This module contains views to implement the Secret
+This module contains views to implement the Provider
 card-style detail view in the Smarter Dashboard.
 """
 
@@ -15,7 +15,7 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
-from smarter.apps.secret.models import Secret
+from smarter.apps.provider.models import Provider
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
@@ -24,68 +24,68 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROVIDER_LOGGING])
 
 
-class SecretDetailView(DocsBaseView):
+class ProviderDetailView(DocsBaseView):
     """
-    Renders the detail view for a Smarter dashboard secret.
+    Renders the detail view for a Smarter dashboard provider.
 
-    This view renders a detailed manifest for a specific secret, including its configuration and metadata, in YAML format. It is intended for authenticated users and provides error handling for missing or unsupported secret kinds and names.
+    This view renders a detailed manifest for a specific provider, including its configuration and metadata, in YAML format. It is intended for authenticated users and provides error handling for missing or unsupported provider kinds and names.
 
     :param request: Django HTTP request object.
     :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
-    :param kwargs: Keyword arguments, must include 'name' (secret name) and 'kind' (secret type).
+    :param kwargs: Keyword arguments, must include 'name' (provider name) and 'kind' (provider type).
     :type kwargs: dict
 
-    :returns: Rendered HTML page with secret manifest details, or a 404 error page if the secret is not found or parameters are invalid.
+    :returns: Rendered HTML page with provider manifest details, or a 404 error page if the provider is not found or parameters are invalid.
     :rtype: HttpResponse
 
     .. note::
 
-        The secret name and kind must be provided and valid. Otherwise, a "not found" response is returned.
+        The provider name and kind must be provided and valid. Otherwise, a "not found" response is returned.
 
     .. seealso::
 
-        :class:`Secret` for secret metadata retrieval.
+        :class:`Provider` for provider metadata retrieval.
         :class:`ApiV1CliDescribeApiView` for API details.
 
     **Example usage**::
 
-        GET /secret/detail/?name=my_secret&kind=custom
+        GET /provider/detail/?name=my_provider&kind=custom
 
     """
 
     template_path = "common/manifest_detail.html"
-    secret: Optional[Secret] = None
+    provider: Optional[Provider] = None
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
         """
-        Handle GET requests to render the secret manifest detail view.
+        Handle GET requests to render the provider manifest detail view.
         This method processes the incoming request to retrieve the
-        specified secret's manifest details and renders them in a
-        user-friendly format. It performs validation on the provided secret
-        name and kind, retrieves the secret metadata, and handles any
+        specified provider's manifest details and renders them in a
+        user-friendly format. It performs validation on the provided provider
+        name and kind, retrieves the provider metadata, and handles any
         errors that may arise during this process.
 
         Process:
         1. Extract and validate 'name' and 'kind' from kwargs.
-        2. Retrieve the secret metadata using the provided name and user context.
-        3. If the secret is found, call the API view to get the secret details
+        2. Retrieve the provider metadata using the provided name and user context.
+        3. If the provider is found, call the API view to get the provider details
         4. Convert the JSON response to YAML format for better readability.
-        5. Render the secret manifest detail template with the retrieved data.
+        5. Render the provider manifest detail template with the retrieved data.
         6. Handle any errors that occur during the process and return appropriate error responses.
 
         :param request: Django HTTP request object.
         :type request: ASGIRequest
         :param args: Additional positional arguments.
         :type args: tuple
-        :param kwargs: Keyword arguments, must include 'name' (secret name) and 'kind' (secret type).
+        :param kwargs: Keyword arguments, must include 'name' (provider name) and 'kind' (provider type).
         :type kwargs: dict
 
-        :returns: Rendered HTML page with secret manifest details, or an error response if the secret is not found or parameters are invalid.
+        :returns: Rendered HTML page with provider manifest details, or an error response if the provider is not found or parameters are invalid.
         :rtype: HttpResponse
         """
 
@@ -93,33 +93,33 @@ class SecretDetailView(DocsBaseView):
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 
-        secret_id = kwargs.pop("secret_id")
+        provider_id = kwargs.pop("provider_id")
         try:
-            self.secret = Secret.objects.get(id=secret_id, user_profile=self.user_profile)
-        except Secret.DoesNotExist:
+            self.provider = Provider.objects.get(id=provider_id, user_profile=self.user_profile)
+        except Provider.DoesNotExist:
             try:
                 if self.user_profile:
 
                     admin_user = UserProfile.admin_for_account(self.user_profile.account)
                     admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
-                    self.secret = Secret.objects.get(id=secret_id, user_profile=admin_user_profile)
-            except Secret.DoesNotExist:
+                    self.provider = Provider.objects.get(id=provider_id, user_profile=admin_user_profile)
+            except Provider.DoesNotExist:
                 try:
-                    self.secret = Secret.objects.get(
-                        id=secret_id, user_profile=smarter_cached_objects.smarter_admin_user_profile
+                    self.provider = Provider.objects.get(
+                        id=provider_id, user_profile=smarter_cached_objects.smarter_admin_user_profile
                     )
-                except Secret.DoesNotExist:
+                except Provider.DoesNotExist:
                     pass
         self.kind = SAMKinds.SECRET
 
         logger.debug(
-            "%s.post() Rendering secret detail view for %s, kwargs=%s.",
+            "%s.post() Rendering provider detail view for %s, kwargs=%s.",
             self.formatted_class_name,
-            self.secret.name if self.secret else "unknown secret",
+            self.provider.name if self.provider else "unknown provider",
             kwargs,
         )
         kwargs.pop("name", None)
-        kwargs["name"] = self.secret.name if self.secret else "unknown secret"
+        kwargs["name"] = self.provider.name if self.provider else "unknown provider"
         kwargs["kind"] = self.kind.value
         view = ApiV1CliDescribeApiView.as_view()
         json_response = self.get_brokered_json_response(
@@ -143,7 +143,7 @@ class SecretDetailView(DocsBaseView):
 
         context = {
             "manifest": yaml_response,
-            "page_title": self.secret.name if self.secret else "unknown secret",
+            "page_title": self.provider.name if self.provider else "unknown provider",
         }
 
         if not self.template_path:
