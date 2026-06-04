@@ -16,7 +16,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, UserProfile, Annotations } from "@smarter/common";
+import type { SessionContext, UserProfile, Tags, Annotations } from "@smarter/common";
 
 export type TabKey = "user" | "shared";
 
@@ -81,7 +81,7 @@ export type Plugin = {
   pluginClass: PluginClass;
   version: string;
   annotations: Annotations;
-  tags: string[];
+  tags: Tags;
   selector: PluginSelector;
   prompt: PluginPrompt;
   staticData: StaticData | null;

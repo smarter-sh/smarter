@@ -6,7 +6,7 @@ how we got here:
 
 """
 
-from django.urls import path, re_path
+from django.urls import include, path, re_path
 
 from smarter.apps.provider.views.detailview import ProviderDetailView
 from smarter.apps.provider.views.listview.api import (
@@ -18,6 +18,7 @@ from smarter.apps.provider.views.listview.api import (
 from smarter.apps.provider.views.listview.view import ProviderListView
 from smarter.common.utils import to_snake_case
 
+from .api.const import namespace as api_namespace
 from .const import namespace
 
 app_name = namespace
@@ -44,29 +45,29 @@ class ProviderReverseNames:
 
 
 urlpatterns = [
-    path("providers/", ProviderListView.as_view(), name=ProviderReverseNames.listview),
+    path("api/", include("smarter.apps.provider.api.urls", namespace=api_namespace)),
+    path("providers/<int:provider_id>/", ProviderDetailView.as_view(), name=ProviderReverseNames.detailview),
     path("providers/<str:name>/", ProviderDetailView.as_view(), name="provider_by_name"),
     path("", ProviderListView.as_view(), name=ProviderReverseNames.listview),
-    path("api/listview/", ProviderListApiView.as_view(), name=ProviderReverseNames.listview_api_all),
+    path("react-integration/api/listview/", ProviderListApiView.as_view(), name=ProviderReverseNames.listview_api_all),
     re_path(
-        r"^api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
+        r"^react-integration/api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
         ProviderListApiView.as_view(),
         name=ProviderReverseNames.listview_api,
     ),
     path(
-        "api/clone/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:chatbot_id>/<str:new_name>/",
         ProviderListApiCloneView.as_view(),
         name=ProviderReverseNames.listview_api_clone,
     ),
     path(
-        "api/delete/<int:chatbot_id>/",
+        "react-integration/api/delete/<int:chatbot_id>/",
         ProviderListApiDeleteView.as_view(),
         name=ProviderReverseNames.listview_api_delete,
     ),
     path(
-        "api/rename/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:chatbot_id>/<str:new_name>/",
         ProviderListApiRenameView.as_view(),
         name=ProviderReverseNames.listview_api_rename,
     ),
-    path("<int:provider_id>/", ProviderDetailView.as_view(), name=ProviderReverseNames.detailview),
 ]

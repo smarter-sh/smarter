@@ -33,6 +33,7 @@ from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -228,6 +229,31 @@ class Provider(MetaDataWithOwnershipModel):
         related_name="tos_accepted_by",
         help_text="The user who accepted the terms of service.",
     )
+
+    @property
+    def manifest_url(self) -> Optional[str]:
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        # pylint: disable=C0415
+        from smarter.apps.provider.urls import ProviderReverseNames
+
+        return reverse(
+            f"{ProviderReverseNames.namespace}:{ProviderReverseNames.detailview}",
+            kwargs={"provider_id": self.id},  # type: ignore
+        )
 
     @property
     def is_official_provider(self) -> bool:

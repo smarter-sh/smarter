@@ -110,7 +110,7 @@ class ProviderDetailView(DocsBaseView):
                     )
                 except Provider.DoesNotExist:
                     pass
-        self.kind = SAMKinds.SECRET
+        self.kind = SAMKinds.PROVIDER
 
         logger.debug(
             "%s.post() Rendering provider detail view for %s, kwargs=%s.",
@@ -121,9 +121,16 @@ class ProviderDetailView(DocsBaseView):
         kwargs.pop("name", None)
         kwargs["name"] = self.provider.name if self.provider else "unknown provider"
         kwargs["kind"] = self.kind.value
+        reverse_name = ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe
+        logger.debug(
+            "%s.post() calling get_brokered_json_response() with reverse_name %s, kwargs: %s",
+            self.formatted_class_name,
+            reverse_name,
+            kwargs,
+        )
         view = ApiV1CliDescribeApiView.as_view()
         json_response = self.get_brokered_json_response(
-            reverse_name=ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe,
+            reverse_name=reverse_name,
             view=view,
             request=request,
             *args,

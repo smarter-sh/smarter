@@ -39,24 +39,24 @@ app_name = namespace
 
 urlpatterns = [
     path("", SecretListView.as_view(), name=SecretReverseNames.listview),
-    path("api/listview/", SecretListApiView.as_view(), name=SecretReverseNames.listview_api_all),
+    path("react-integration/api/listview/", SecretListApiView.as_view(), name=SecretReverseNames.listview_api_all),
     re_path(
-        r"^api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
+        r"^react-integration/api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
         SecretListApiView.as_view(),
         name=SecretReverseNames.listview_api,
     ),
     path(
-        "api/clone/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:chatbot_id>/<str:new_name>/",
         SecretListApiCloneView.as_view(),
         name=SecretReverseNames.listview_api_clone,
     ),
     path(
-        "api/delete/<int:chatbot_id>/",
+        "react-integration/api/delete/<int:chatbot_id>/",
         SecretListApiDeleteView.as_view(),
         name=SecretReverseNames.listview_api_delete,
     ),
     path(
-        "api/rename/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:chatbot_id>/<str:new_name>/",
         SecretListApiRenameView.as_view(),
         name=SecretReverseNames.listview_api_rename,
     ),

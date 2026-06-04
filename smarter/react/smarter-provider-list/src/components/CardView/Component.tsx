@@ -64,6 +64,20 @@ function CardView({ sessionContext, objects, onRequery }: ProviderCardViewProps)
                     {renderDetailRow("Description", provider.description)}
                     {renderDetailRow("Tags", provider.tags, "str[]")}
                     {renderDetailRow("Annotations", provider.annotations, "json")}
+                    {renderDetailRow("Ready", provider.ready, "bool")}
+                    {renderDetailRow("Expires At", provider.expiresAt, "dateTime")}
+                    {renderDetailRow("Last Accessed", provider.lastAccessed, "dateTime")}
+                    {renderDetailRow("API Key", provider.apiKey)}
+                    {renderDetailRow("Is Official Provider", provider.isOfficialProvider, "bool")}
+                    {renderDetailRow("TOS Accepted", provider.tosAccepted, "bool")}
+                    {renderDetailRow(
+                      "TOS Accepted By",
+                      provider.tosAcceptedBy ? provider.tosAcceptedBy.username : null
+                    )}
+                    {renderDetailRow(
+                      "RFC 1034 Compliant Name",
+                      provider.rfc1034CompliantName
+                    )}
                   </tbody>
                 </table>
               </div>

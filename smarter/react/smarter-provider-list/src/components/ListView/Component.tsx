@@ -61,6 +61,7 @@ const TableHeader = () => {
         <th className="d-none d-lg-table-cell width-100">Created</th>
         <th className="d-none d-lg-table-cell width-100">Updated</th>
         <th className="">Description</th>
+        <th className="">API Key</th>
         <th className="d-none d-md-table-cell">Status</th>
         <th className="">Operations</th>
       </tr>
@@ -110,6 +111,8 @@ const ProviderRow = React.memo(function ProviderRow({
       </td>
       {/* Description */}
       <td className="">{provider.description}</td>
+      {/* API Key */}
+      <td className=""><a href={provider.apiKey.manifestUrl}>{provider.apiKey.name}</a></td>
       {/* Status */}
       <td className="d-none d-md-table-cell ">
         <StatusBar provider={provider} />
@@ -235,6 +238,8 @@ export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequ
   console.debug(
     `${loggerPrefix} Rendering ListView - {isLoading: ${isLoading}, ghostRows: ${ghostRows}, objects length: ${Array.isArray(objects) ? objects.length : "N/A"}}`,
   );
+  console.debug(`${loggerPrefix} SessionContext:`, sessionContext);
+  console.debug(`${loggerPrefix} Objects:`, objects);
   return (
     <div className="table-responsive provider-list-table-wrap ps-3 pe-3">
       <table className="table table-striped table-hover align-middle border">

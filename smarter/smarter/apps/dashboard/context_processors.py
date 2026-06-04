@@ -162,7 +162,7 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
                 "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
                 "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
                 "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
-                "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.SECRETS),
+                "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
                 "vectorstores": reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.list_view),
                 "api_keys": reverse(AccountReverseNames.namespace, AccountReverseNames.API_KEYS_LIST),
                 "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME

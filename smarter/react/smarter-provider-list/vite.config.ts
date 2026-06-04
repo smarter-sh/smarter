@@ -171,6 +171,7 @@ export default defineConfig(({ command }: ConfigEnv) => ({
   server: {
     proxy: {
       "/api": "http://localhost:9357",
+      "/secret": "http://localhost:9357",
       "/assets": {
         target: "http://localhost:9357", // Django dev server
         changeOrigin: true,

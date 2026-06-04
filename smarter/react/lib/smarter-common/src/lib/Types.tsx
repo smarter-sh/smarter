@@ -25,7 +25,8 @@ export type Tabs = {
 
 
 type AnnotationValue = string | number | boolean | null;
-export type Annotations = Array<Record<string, AnnotationValue>>;
+export type Annotations = Array<Record<string, AnnotationValue>> | null;
+export type Tags = string[] | null;
 
 export type User = {
   username: string;

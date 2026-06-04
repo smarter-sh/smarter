@@ -59,7 +59,7 @@ Example manifest.json structure:
 
 
 @register.simple_tag
-def secret_list_react_assets() -> AssetDict:
+def provider_list_react_assets() -> AssetDict:
     """
     Load CSS and JS files for a React app entry point
     based on its manifest.json.

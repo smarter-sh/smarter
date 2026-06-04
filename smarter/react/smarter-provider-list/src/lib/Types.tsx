@@ -13,11 +13,17 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext, Annotations, UserProfile } from "@smarter/common";
+import type { SessionContext, Annotations, Tags, User, UserProfile } from "@smarter/common";
 
 // ----------------------------------------------------------------------------
 // Provider Definition
 // ----------------------------------------------------------------------------
+export type ApiKey = {
+  id: number;
+  name: string;
+  manifestUrl: string;
+  ready: boolean;
+};
 export type Provider = {
   id: number;
   hashedId: string;
@@ -26,13 +32,18 @@ export type Provider = {
   name: string;
   description: string;
   version: string;
-  tags: string[];
-  annotations: Annotations[];
+  tags: Tags;
+  annotations: Annotations;
   userProfile: UserProfile;
   lastAccessed: string | null;
   expiresAt: string | null;
   manifestUrl: string;
   ready: boolean;
+  apiKey: ApiKey;
+  isOfficialProvider: boolean;
+  tosAccepted: boolean;
+  tosAcceptedBy: User | null;
+  rfc1034CompliantName: string | null;
 };
 
 // ----------------------------------------------------------------------------
