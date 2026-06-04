@@ -27,8 +27,10 @@
  * Intended for views where plugins are presented in a list/table format.
  */
 import React, { useState, useEffect } from "react";
+
 import { Loading } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
+
 import type { Plugin, PluginListViewProps } from "@/lib/Types";
 import { formatDateTime } from "@smarter/common";
 import { Toolbar } from "@/components/Toolbar";
@@ -222,7 +224,6 @@ function ChunkedRows({
     </>
   );
 }
-
 
 /**
  * ListView
