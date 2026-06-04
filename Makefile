@@ -348,9 +348,11 @@ react-build:
 	cd smarter/react/smarter-plugin-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
 	cd smarter/react/smarter-prompt-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
 	cd smarter/react/smarter-prompt-passthrough && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
+	cd smarter/react/smarter-provider-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
 	cd smarter/react/smarter-secret-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
 	cd smarter/react/smarter-terminal-emulator && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
 	export NODE_ENV=$$NODE_ENV_BACKUP
+	make collectstatic
 
 
 # -------------------------------------------------------------------------

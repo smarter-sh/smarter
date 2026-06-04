@@ -17,6 +17,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@smarter/common": "file:../lib/smarter-common/smarter-common-0.1.0.tgz",
     "date-fns": "^4.2.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"

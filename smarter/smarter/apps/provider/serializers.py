@@ -9,6 +9,7 @@ from smarter.apps.account.serializers import (
     AccountMiniSerializer,
     MetaDataWithOwnershipModelSerializer,
     UserMiniSerializer,
+    UserProfileSerializer,
 )
 from smarter.apps.secret.serializers import SecretMiniSerializer
 from smarter.common.exceptions import SmarterException
@@ -29,8 +30,7 @@ from .models import (
 class ProviderSerializer(MetaDataWithOwnershipModelSerializer):
     """PluginMeta model serializer."""
 
-    owner = UserMiniSerializer(read_only=True)
-    account = AccountMiniSerializer(read_only=True)
+    user_profile = UserProfileSerializer()
     api_key = SecretMiniSerializer(read_only=True)
     is_official_provider = serializers.BooleanField(read_only=True)
     tos_accepted = serializers.BooleanField(read_only=True)
@@ -39,8 +39,25 @@ class ProviderSerializer(MetaDataWithOwnershipModelSerializer):
 
     class Meta:
         model = Provider
-        fields = "__all__"
-        read_only_fields = ["created_at", "updated_at", "owner", "account"]
+        fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "name",
+            "user_profile",
+            "description",
+            "version",
+            "annotations",
+            "tags",
+            "manifest_url",
+            "ready",
+            "api_key",
+            "is_official_provider",
+            "tos_accepted",
+            "tos_accepted_by",
+            "rfc1034_compliant_name",
+        ]
+        read_only_fields = ["created_at", "updated_at", "manifest_url", "ready"]
 
     def get_queryset(self):
         name = self.request.GET.get("name")  # type: ignore

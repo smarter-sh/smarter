@@ -18,7 +18,7 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-
+import type { Annotations, Tags } from "@smarter/common";
 export type TabKey = "user" | "shared";
 
 export type Plugin = {
@@ -54,8 +54,8 @@ export type Chatbot = {
   name: string;
   description: string;
   version: string;
-  tags: string[];
-  annotations: Array<Record<string, string | boolean>>;
+  tags: Tags;
+  annotations: Annotations;
   userProfile: UserProfile;
   functions: Function[];
   plugins: Array<Plugin>;

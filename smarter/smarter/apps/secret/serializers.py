@@ -90,8 +90,10 @@ class SecretMiniSerializer(MetaDataWithOwnershipModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataWithOwnershipModelSerializer.Meta):
         model = Secret
-        fields = ["id", "name"]
+        fields = ["id", "name", "manifest_url", "ready"]
         read_only_fields = getattr(MetaDataWithOwnershipModelSerializer.Meta, "read_only_fields", []) + [
             "id",
             "name",
+            "manifest_url",
+            "ready",
         ]

@@ -89,12 +89,12 @@ class SAMProviderSpecProvider(SmarterBasePydanticModel):
         v = str(v).strip()
         if not v:
             raise SAMValidationError("Provider name must not be empty.")
-        if not re.match(SmarterValidator.VALID_ALPHNUMERIC_NO_SPACES_PATTERN, v):
+        if not re.match(SmarterValidator.VALID_SNAKE_CASE, v):
             raise SAMValidationError(f"""
-                Provider name {v} must contain only letters and numbers, with no
-                special characters or spaces.
-                examples: 'OpenAI', 'GoogleAI', 'MetaAI', 'DeepSeek',
-                'Anthropic', 'HuggingFace'
+                Provider name {v} must contain only letters, numbers and underscores, with no
+                other special characters or spaces.
+                examples: 'open_ai', 'google_ai', 'meta_ai', 'deep_seek',
+                'anthropic', 'hugging_face'
                 """)
         return v
 

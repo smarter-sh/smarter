@@ -36,24 +36,24 @@ class PluginReverseNames:
 
 urlpatterns = [
     path("", PluginListView.as_view(), name=PluginReverseNames.listview),
-    path("api/listview/", PluginListApiView.as_view(), name=PluginReverseNames.listview_api_all),
+    path("react-integration/api/listview/", PluginListApiView.as_view(), name=PluginReverseNames.listview_api_all),
     re_path(
-        r"^api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
+        r"^react-integration/api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
         PluginListApiView.as_view(),
         name=PluginReverseNames.listview_api,
     ),
     path(
-        "api/clone/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:chatbot_id>/<str:new_name>/",
         PluginListApiCloneView.as_view(),
         name=PluginReverseNames.listview_api_clone,
     ),
     path(
-        "api/delete/<int:chatbot_id>/",
+        "react-integration/api/delete/<int:chatbot_id>/",
         PluginListApiDeleteView.as_view(),
         name=PluginReverseNames.listview_api_delete,
     ),
     path(
-        "api/rename/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:chatbot_id>/<str:new_name>/",
         PluginListApiRenameView.as_view(),
         name=PluginReverseNames.listview_api_rename,
     ),

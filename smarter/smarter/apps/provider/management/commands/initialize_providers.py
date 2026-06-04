@@ -25,15 +25,15 @@ logger = logging.getLogger(__name__)
 
 HERE = Path(__file__).resolve().parent
 
-OPENAI_API = "OpenAI"
+OPENAI_API = "open_ai"
 OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
 OPENAI_API_KEY_NAME = "openai_api_key"
 
-GOOGLE_API = "GoogleAI"
+GOOGLE_API = "google_ai"
 GOOGLE_DEFAULT_MODEL = "gemini-flash-latest"
 GOOGLE_API_KEY_NAME = "google_ai_api_key"
 
-META_API = "MetaAI"
+META_API = "meta_ai"
 META_DEFAULT_MODEL = "llama3.2-3b"
 META_API_KEY_NAME = "meta_ai_api_key"
 
