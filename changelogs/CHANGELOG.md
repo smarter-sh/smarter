@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.49](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.48...v0.14.0-alpha.49) (2026-06-04)
+
+### Bug Fixes
+
+* scaffold secret react list view ([ac0aa13](https://github.com/smarter-sh/smarter/commit/ac0aa13196b3ee471bb3aae8d89d60b7082919e3))
+
 ## [0.14.0-alpha.48](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.47...v0.14.0-alpha.48) (2026-06-04)
 
 ### Bug Fixes
