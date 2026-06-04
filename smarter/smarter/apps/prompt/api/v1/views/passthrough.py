@@ -98,7 +98,9 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
 
             - :class:`OpenAICompatiblePassthroughProtocol`
         """
-        self.provider_name = kwargs.pop("provider_name")
+        provider_name = kwargs.pop("provider_name")
+        provider_name = self.to_snake_case(provider_name)
+        self.provider_name = provider_name
         super().setup(request, *args, **kwargs)
         try:
             self.handler = openai_compatible_client.get_passthrough_handler(request, self.provider_name)
@@ -109,31 +111,6 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
             )
         logger.debug(
             "%s.setup() provider_name: %s and handler: %s", self.formatted_class_name, self.provider_name, self.handler
-        )
-
-    def get(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
-        return SmarterHttpResponseBadRequest(
-            request=request, error_message="GET method not supported for passthrough endpoint"
-        )
-
-    def put(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
-        return SmarterHttpResponseBadRequest(
-            request=request, error_message="PUT method not supported for passthrough endpoint"
-        )
-
-    def delete(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
-        return SmarterHttpResponseBadRequest(
-            request=request, error_message="DELETE method not supported for passthrough endpoint"
-        )
-
-    def patch(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
-        return SmarterHttpResponseBadRequest(
-            request=request, error_message="PATCH method not supported for passthrough endpoint"
-        )
-
-    def options(self, request: ASGIRequest, *args, **kwargs) -> SmarterHttpResponseBadRequest:
-        return SmarterHttpResponseBadRequest(
-            request=request, error_message="OPTIONS method not supported for passthrough endpoint"
         )
 
     def post(
