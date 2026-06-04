@@ -1,27 +1,27 @@
 # pylint: disable=W0613
 """
 This module contains views to implement the React
-Plugin list view in the Smarter Dashboard.
+Secret list view in the Smarter Dashboard.
 """
 
 from django.conf import settings
 from django.core.handlers.asgi import ASGIRequest
 from django.shortcuts import render
 
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.secret.models import Secret
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING])
 
 
-class PluginListView(SmarterAuthenticatedNeverCachedWebView):
+class SecretListView(SmarterAuthenticatedNeverCachedWebView):
     """
-    Render the plugin list view for the Smarter Workbench web console.
+    Render the secret list view for the Smarter Workbench web console.
 
-    This view displays all plugins available to the authenticated user as cards, providing a quick overview and access to plugin details.
+    This view displays all secrets available to the authenticated user as cards, providing a quick overview and access to secret details.
 
     :param request: Django HTTP request object.
     :type request: ASGIRequest
@@ -30,24 +30,24 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
     :param kwargs: Additional keyword arguments.
     :type kwargs: dict
 
-    :returns: Rendered HTML page with a card for each plugin, or a 404 error page if the user is not authenticated.
+    :returns: Rendered HTML page with a card for each secret, or a 404 error page if the user is not authenticated.
     :rtype: HttpResponse
     """
 
-    template_path = "react/plugin-list.html"
-    plugins: list[PluginMeta]
+    template_path = "react/secret-list.html"
+    secrets: list[Secret]
 
     def get(self, request: ASGIRequest, *args, **kwargs):
         # pylint: disable=C0415
         from smarter.apps.plugin.urls import PluginReverseNames
 
         context = {
-            "plugin_list": {
-                "root_id": "smarter-plugin-list-root",
+            "secret_list": {
+                "root_id": "smarter-secret-list-root",
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "plugin_list_api_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview_api_all),
+                "secret_list_api_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview_api_all),
             }
         }
 
