@@ -11,37 +11,19 @@
  * Exports:
  *   - TabKey: Type for tab keys ("user" | "shared").
  *   - Plugin: Type for plugin objects.
- *   - User, UserProfile: Types for user and profile data.
- *   - Plugin: Type for plugin configuration and metadata.
  *   - ApiResponse: Type for API response structure.
  *   - SessionContext: Type for session and authentication context.
  *
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { SessionContext } from "@smarter/common";
+import type { SessionContext, UserProfile, Annotations } from "@smarter/common";
 
 export type TabKey = "user" | "shared";
 
-export type User = {
-  username: string;
-  email: string;
-};
-export type UserProfile = {
-  user: User;
-  account?: {
-    accountNumber: string;
-  };
-};
-
-export type Function = {
-  plugin: number;
-  createdAt: string;
-  id: number;
-  name: string;
-  updatedAt: string;
-};
-
+// ----------------------------------------------------------------------------
+// Plugin Definition
+// ----------------------------------------------------------------------------
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 type SqlParameterProperty = {
@@ -74,7 +56,6 @@ export type SqlData = {
 };
 
 type PluginClass = "static" | "sql" | "api";
-type AnnotationValue = string | number | boolean | null;
 
 type PluginSelector = {
   directive: "always" | "search_terms";
@@ -100,7 +81,7 @@ export type Plugin = {
   description: string;
   pluginClass: PluginClass;
   version: string;
-  annotations: Array<Record<string, AnnotationValue>>;
+  annotations: Annotations;
   tags: string[];
   selector: PluginSelector;
   prompt: PluginPrompt;
@@ -110,6 +91,9 @@ export type Plugin = {
   ready: boolean;
 };
 
+// ----------------------------------------------------------------------------
+// API Response and Session Context Types
+// ----------------------------------------------------------------------------
 export type ApiResponse = {
   plugins: {
     user: Plugin[];
@@ -117,6 +101,9 @@ export type ApiResponse = {
   };
 };
 
+// ----------------------------------------------------------------------------
+// Component Props Interfaces
+// ----------------------------------------------------------------------------
 export interface PluginCardViewProps {
   sessionContext: SessionContext;
   objects: Plugin[];

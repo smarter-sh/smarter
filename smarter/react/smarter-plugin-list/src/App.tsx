@@ -1,5 +1,6 @@
 /**
- * Plugin List
+ *
+ * Smarter Plugin List React App.
  * Used to display a list of available plugins.
  *
  */

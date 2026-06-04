@@ -1,3 +1,14 @@
+/**
+ * Main entry point for the Smarter Plugin List React application.
+ * This module joins the DOM to the React component tree and provides
+ * the necessary session context for API interactions.
+ *
+ * Steps:
+ * 1. Retrieves necessary configuration from the root DOM element's attributes.
+ * 2. Initializes a Django SessionContext.
+ * 3. Renders the React App component into the root element.
+ *
+ */
 import { createRoot } from "react-dom/client";
 import { loggerPrefix } from "./lib/const";
 import App from "@/App";
