@@ -54,22 +54,44 @@ function CardView({ sessionContext, objects, onRequery }: ProviderCardViewProps)
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
                     {renderDetailRow("ID", provider.id, "number")}
+                    {renderDetailRow("Status", provider.status)}
                     {renderDetailRow("Manifest URL", provider.manifestUrl, "url")}
+                    {renderDetailRow("Base URL", provider.baseUrl, "url")}
                     {renderDetailRow("Owner", provider.userProfile?.user?.username)}
                     {renderDetailRow("Owner Email", provider.userProfile?.user?.email)}
                     {renderDetailRow("Account Number", provider.userProfile?.account?.accountNumber)}
                     {renderDetailRow("Created", provider.createdAt, "dateTime")}
                     {renderDetailRow("Last Updated", provider.updatedAt, "dateTime")}
                     {renderDetailRow("Version", provider.version)}
+                    {renderDetailRow("Default Model", provider.defaultModel)}
+                    {renderDetailRow("Connectivity Test Path", provider.connectivityTestPath)}
                     {renderDetailRow("Description", provider.description)}
                     {renderDetailRow("Tags", provider.tags, "str[]")}
                     {renderDetailRow("Annotations", provider.annotations, "json")}
                     {renderDetailRow("Ready", provider.ready, "bool")}
+                    {renderDetailRow("Is Default", provider.isDefault, "bool")}
+                    {renderDetailRow("Is Active", provider.isActive, "bool")}
+                    {renderDetailRow("Is Verified", provider.isVerified, "bool")}
+                    {renderDetailRow("Is Featured", provider.isFeatured, "bool")}
+                    {renderDetailRow("Is Deprecated", provider.isDeprecated, "bool")}
+                    {renderDetailRow("Is Flagged", provider.isFlagged, "bool")}
+                    {renderDetailRow("Is Suspended", provider.isSuspended, "bool")}
+                    {renderDetailRow("Logo", provider.logo, "url")}
+                    {renderDetailRow("Website", provider.websiteUrl, "url")}
+                    {renderDetailRow("Docs URL", provider.docsUrl, "url")}
+                    {renderDetailRow("Terms Of Service URL", provider.termsOfServiceUrl, "url")}
+                    {renderDetailRow("Privacy Policy URL", provider.privacyPolicyUrl, "url")}
+                    {renderDetailRow("Contact Email", provider.contactEmail)}
+                    {renderDetailRow("Contact Email Verified", provider.contactEmailVerified, "dateTime")}
+                    {renderDetailRow("Support Email", provider.supportEmail)}
+                    {renderDetailRow("Support Email Verified", provider.supportEmailVerified, "dateTime")}
+                    {renderDetailRow("Ownership Requested", provider.ownershipRequested, "json")}
                     {renderDetailRow("Expires At", provider.expiresAt, "dateTime")}
                     {renderDetailRow("Last Accessed", provider.lastAccessed, "dateTime")}
-                    {renderDetailRow("API Key", provider.apiKey)}
+                    {renderDetailRow("API Key", provider.apiKey, "json")}
                     {renderDetailRow("Is Official Provider", provider.isOfficialProvider, "bool")}
                     {renderDetailRow("TOS Accepted", provider.tosAccepted, "bool")}
+                    {renderDetailRow("TOS Accepted At", provider.tosAcceptedAt, "dateTime")}
                     {renderDetailRow(
                       "TOS Accepted By",
                       provider.tosAcceptedBy ? provider.tosAcceptedBy.username : null

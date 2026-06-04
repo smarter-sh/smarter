@@ -24,7 +24,7 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING])
 
 
 class SecretDetailView(DocsBaseView):
