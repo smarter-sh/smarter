@@ -7,6 +7,7 @@ from typing import Optional
 from cryptography.fernet import Fernet
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
 # smarter stuff
@@ -92,7 +93,28 @@ class Secret(MetaDataWithOwnershipModel):
 
     @property
     def manifest_url(self) -> Optional[str]:
-        return ""
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        # pylint: disable=C0415
+        from smarter.apps.secret.urls import SecretReverseNames
+
+        return reverse(
+            f"{SecretReverseNames.namespace}:{SecretReverseNames.detailview}",
+            kwargs={"secret_id": self.id},  # type: ignore
+        )
 
     @property
     def ready(self) -> bool:
