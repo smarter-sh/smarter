@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.53](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.52...v0.14.0-alpha.53) (2026-06-04)
+
+### Bug Fixes
+
+* apply npm [@smarter](https://github.com/smarter) namespace in django template tags ([904b510](https://github.com/smarter-sh/smarter/commit/904b5109e19f1d368efb76e968dc205c72bf75a8))
+
 ## [0.14.0-alpha.52](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.51...v0.14.0-alpha.52) (2026-06-04)
 
 ### Bug Fixes
