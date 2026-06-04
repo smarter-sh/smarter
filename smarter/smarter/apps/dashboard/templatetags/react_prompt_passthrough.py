@@ -60,4 +60,4 @@ def prompt_passthrough_react_assets() -> AssetDict:
             }
 
     """
-    return templatetag_manager.reactapp_build_assets()
+    return templatetag_manager.reactapp_build_assets

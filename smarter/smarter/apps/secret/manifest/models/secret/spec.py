@@ -4,9 +4,10 @@ import os
 from datetime import datetime, timezone
 from typing import ClassVar, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_serializer, field_validator
 
 from smarter.apps.secret.manifest.models.secret.const import MANIFEST_KIND
+from smarter.common.utils import mask_string
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
@@ -36,6 +37,12 @@ class SAMSecretSpecConfig(AbstractSAMSpecBase):
                 return v.replace(tzinfo=timezone.utc)
             return v
         raise ValueError("expiration_date must be a datetime object")
+
+    @field_serializer("value")
+    def mask_value(self, v: str) -> str:
+        if not v:
+            return v
+        return mask_string(v)
 
 
 class SAMSecretSpec(AbstractSAMSpecBase):

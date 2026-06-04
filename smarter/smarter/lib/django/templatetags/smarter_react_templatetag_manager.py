@@ -73,7 +73,7 @@ A typical React manifest.json looks like this::
 
 import os
 from functools import cached_property
-from typing import Any, List, Optional, TypedDict
+from typing import Any, List, TypedDict
 
 from django import template
 from django.conf import settings
@@ -81,13 +81,11 @@ from django.conf import settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import json, logging
-from smarter.lib.cache import cache_results
 
 logger = logging.getLogger(__name__)
 
 register = template.Library()
 
-CACHE_TIMEOUT = 60 * 60 * 24 * 365  # 1 year in seconds. basically 'forever' for static assets.
 ManifestValues = dict[str, Any]
 ManifestType = dict[str, ManifestValues]
 
@@ -299,6 +297,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
                 return key
         raise SmarterValueError(f"No entry with '{REACT_ENTRY_KEY}' found in manifest.json for app '{self.app_name}'")
 
+    @cached_property
     def reactapp_build_assets(self) -> AssetDict:
         """
         Load CSS and JS files for a Vite-generated React manifest.json entry
@@ -336,25 +335,20 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
             )
             return {"js": [], "css": []}
 
-        # pylint: disable=W0613
-        @cache_results(timeout=CACHE_TIMEOUT)
-        def _collect_reactapp_assets(cache_key: int) -> AssetDict:
-            css_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="css")  # type: ignore[assignment]
-            js_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="file")  # type: ignore[assignment]
+        css_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="css")  # type: ignore[assignment]
+        js_files = self.collect_assets(manifest=self.manifest, key=self.entry_key, asset_type="file")  # type: ignore[assignment]
 
-            assets: AssetDict = {
-                "js": js_files,
-                "css": css_files,
-            }
-            serialized_assets = json.dumps(assets)
+        assets: AssetDict = {
+            "js": js_files,
+            "css": css_files,
+        }
+        serialized_assets = json.dumps(assets)
 
-            logger.debug(
-                "%s[%s].reactapp_build_assets() caching build assets for React app %s: %s",
-                self.formatted_class_name,
-                id(self),
-                self.app_name,
-                logging.formatted_json(json.loads(serialized_assets)),
-            )
-            return assets
-
-        return _collect_reactapp_assets(cache_key=id(self))
+        logger.debug(
+            "%s[%s].reactapp_build_assets() caching build assets for React app %s: %s",
+            self.formatted_class_name,
+            id(self),
+            self.app_name,
+            logging.formatted_json(json.loads(serialized_assets)),
+        )
+        return assets

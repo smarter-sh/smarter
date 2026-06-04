@@ -64,4 +64,4 @@ def plugin_list_react_assets() -> AssetDict:
     Load CSS and JS files for a React app entry point
     based on its manifest.json.
     """
-    return templatetag_manager.reactapp_build_assets()
+    return templatetag_manager.reactapp_build_assets
