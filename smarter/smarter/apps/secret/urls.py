@@ -2,7 +2,7 @@
 
 from django.urls import path, re_path
 
-from smarter.apps.secret.views.dashboard.secrets import SecretView
+from smarter.apps.secret.views.detailview import SecretDetailView
 from smarter.apps.secret.views.listview.api import (
     SecretListApiCloneView,
     SecretListApiDeleteView,
@@ -25,7 +25,7 @@ class SecretReverseNames:
     namespace = namespace
 
     listview = to_snake_case(SecretListApiView)
-    detailview = to_snake_case(SecretView)
+    detailview = to_snake_case(SecretDetailView)
 
     listview = to_snake_case(SecretListView)
     listview_api = to_snake_case(SecretListApiView)
@@ -60,6 +60,5 @@ urlpatterns = [
         SecretListApiRenameView.as_view(),
         name=SecretReverseNames.listview_api_rename,
     ),
-    path("new/", SecretView.as_view(), name=SecretReverseNames.detailview),
-    path("<int:secret_id>/", SecretView.as_view(), name=SecretReverseNames.detailview),
+    path("<int:secret_id>/", SecretDetailView.as_view(), name=SecretReverseNames.detailview),
 ]

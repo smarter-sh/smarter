@@ -42,7 +42,21 @@ class SecretSerializer(MetaDataWithOwnershipModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataWithOwnershipModelSerializer.Meta):
         model = Secret
-        fields = "__all__"
+        fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "name",
+            "user_profile",
+            "description",
+            "version",
+            "annotations",
+            "tags",
+            "manifest_url",
+            "ready",
+            "expires_at",
+            "last_accessed",
+        ]
         read_only_fields = getattr(MetaDataWithOwnershipModelSerializer.Meta, "read_only_fields", []) + [
             "last_accessed",
             "expires_at",

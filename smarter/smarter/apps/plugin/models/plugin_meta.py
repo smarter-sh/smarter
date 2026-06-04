@@ -76,27 +76,6 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     The classes of plugins supported by Smarter.
     """
 
-    @property
-    def rfc1034_compliant_name(self) -> Optional[str]:
-        """
-        Returns a URL-friendly name for the chatbot.
-
-        This property returns an RFC 1034-compliant name for the chatbot, suitable for use in URLs and DNS labels.
-
-        **Example:**
-
-        .. code-block:: python
-
-            self.name = 'Example ChatBot 1'
-            self.rfc1034_compliant_name  # 'example-chatbot-1'
-
-        :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
-        :rtype: Optional[str]
-        """
-        if self.name:
-            return rfc1034_compliant_str(self.name)
-        return None
-
     plugin_class = models.CharField(
         choices=PLUGIN_CLASSES, help_text="The class name of the plugin", max_length=255, default="PluginMeta"
     )

@@ -11,6 +11,7 @@ from taggit.managers import TaggableManager
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib.cache import cache_results
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
@@ -130,6 +131,27 @@ class MetaDataModel(TimestampedModel):
         self.full_clean()  # Validate the updated instance
         self.save()  # Save the changes to the database
         return self
+
+    @cached_property
+    def rfc1034_compliant_name(self) -> Optional[str]:
+        """
+        Returns a URL-friendly name for the chatbot.
+
+        This property returns an RFC 1034-compliant name for the chatbot, suitable for use in URLs and DNS labels.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.name = 'Example ChatBot 1'
+            self.rfc1034_compliant_name  # 'example-chatbot-1'
+
+        :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
+        :rtype: Optional[str]
+        """
+        if self.name:
+            return rfc1034_compliant_str(self.name)
+        return None
 
     @cached_property
     def tags_list(self) -> list[str]:
