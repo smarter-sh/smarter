@@ -12,11 +12,11 @@ from smarter.lib.django.templatetags.smarter_react_templatetag_manager import (
 register = template.Library()
 
 
-templatetag_manager = SmarterReactTemplateTagManager(app_name="smarter-dashboard", templatetag_name=__name__)
+templatetag_manager = SmarterReactTemplateTagManager(app_name="@smarter/dashboard", templatetag_name=__name__)
 """
 Manages integration of Vite-built React assets into Django templates.
 Expects to find a Vite-generated manifest.json in the file path
-static/react/smarter-dashboard/.
+static/react/@smarter/dashboard/.
 
 Example manifest.json structure:
 

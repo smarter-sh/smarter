@@ -28,7 +28,7 @@ import fs from "fs";
 import path from "path";
 import packageJson from "./package.json" with { type: "json" };
 
-const packageName = "smarter-provider-list";
+const packageName = packageJson.name;
 
 /**
  * Vite Provider: addCustomManifestData
