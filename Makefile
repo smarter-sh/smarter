@@ -344,6 +344,7 @@ react-build:
 	NODE_ENV_BACKUP=$$NODE_ENV && \
 	make react-build-common && \
 	export NODE_ENV=production && \
+	cd smarter/react/smarter-connection-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
 	cd smarter/react/smarter-dashboard && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
 	cd smarter/react/smarter-plugin-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
 	cd smarter/react/smarter-prompt-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
