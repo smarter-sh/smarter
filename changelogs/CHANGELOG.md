@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.50](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.49...v0.14.0-alpha.50) (2026-06-04)
+
+### Bug Fixes
+
+* scaffold provider react list ([32210bf](https://github.com/smarter-sh/smarter/commit/32210bfbf43e8714554fe9022bfc1c67c0f4528a))
+
 ## [0.14.0-alpha.49](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.48...v0.14.0-alpha.49) (2026-06-04)
 
 ### Bug Fixes
