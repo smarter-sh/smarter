@@ -17,7 +17,6 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.secret.models import Secret
 from smarter.common.helpers.console_helpers import formatted_json
-from smarter.common.utils import is_authenticated_request, rfc1034_compliant_to_snake
 from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
