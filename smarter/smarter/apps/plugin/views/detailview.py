@@ -1,10 +1,9 @@
 # pylint: disable=W0613
 """
-This module contains views to implement the card-style list view
-in the Smarter Dashboard.
+This module contains views to implement the Plugin
+card-style detail view in the Smarter Dashboard.
 """
 
-import logging
 from typing import Optional
 
 import yaml
@@ -19,22 +18,14 @@ from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.utils import is_authenticated_request, rfc1034_compliant_to_snake
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 
 
 class PluginDetailView(DocsBaseView):
@@ -190,7 +181,6 @@ class PluginDetailView(DocsBaseView):
                 self.formatted_class_name,
                 str(e),
                 formatted_json(context),
-                exec_info=True,
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
         return response

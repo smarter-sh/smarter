@@ -1,4 +1,8 @@
-"""Views for the account settings."""
+"""
+Deprecated.
+
+Views for the account settings.
+"""
 
 # python stuff
 import logging
