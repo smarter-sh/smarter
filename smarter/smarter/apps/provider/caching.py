@@ -42,7 +42,7 @@ from .models import Provider
 from .serializers import ProviderSerializer
 
 logger = logging.getSmarterLogger(
-    __name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
+    __name__, any_switches=[SmarterWaffleSwitches.PROVIDER_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
 )
 logger_prefix = logging.formatted_text(__name__)
 

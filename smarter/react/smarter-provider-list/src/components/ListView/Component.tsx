@@ -62,6 +62,7 @@ const TableHeader = () => {
         <th className="d-none d-lg-table-cell width-100">Updated</th>
         <th className="">Description</th>
         <th className="">API Key</th>
+        <th className="d-none d-lg-table-cell width-100">Last Accessed</th>
         <th className="d-none d-md-table-cell">Status</th>
         <th className="">Operations</th>
       </tr>
@@ -91,7 +92,7 @@ const ProviderRow = React.memo(function ProviderRow({
     return <span>{formatDateTime(date, "date")}</span>;
   };
 
-  const UpdatedDate = ({ date, createdAt }: { date: string; createdAt: string }) => {
+  const UpdatedDate = ({ date, createdAt }: { date: string | null; createdAt: string }) => {
     return <span>{formatDateTime(date, "relative", createdAt)}</span>;
   };
 
@@ -113,6 +114,10 @@ const ProviderRow = React.memo(function ProviderRow({
       <td className="">{provider.description}</td>
       {/* API Key */}
       <td className=""><a href={provider.apiKey.manifestUrl}>{provider.apiKey.name}</a></td>
+      {/* Last Accessed */}
+      <td className="d-none d-lg-table-cell width-100">
+        <UpdatedDate date={provider.lastAccessed} createdAt={provider.createdAt} />
+      </td>
       {/* Status */}
       <td className="d-none d-md-table-cell ">
         <StatusBar provider={provider} />

@@ -42,7 +42,7 @@ from .models import Secret
 from .serializers import SecretSerializer
 
 logger = logging.getSmarterLogger(
-    __name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
+    __name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
 )
 logger_prefix = logging.formatted_text(__name__)
 

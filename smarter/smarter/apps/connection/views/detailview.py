@@ -1,8 +1,7 @@
 # pylint: disable=W0613
 """
-smarter.apps.connection.views.connection
-This module contains views to implement the card-style list view
-in the Smarter Dashboard.
+This module contains views to implement the Connection
+card-style detail view in the Smarter Dashboard.
 """
 
 from typing import Optional
@@ -28,7 +27,6 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
-from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
@@ -56,7 +54,7 @@ class ConnectionDetailView(DocsBaseView):
 
     .. seealso::
 
-        :class:`ConnectionBase` for connection metadata retrieval.
+        :class:`Connection` for connection metadata retrieval.
         :class:`ApiV1CliDescribeApiView` for API details.
 
     **Example usage**::
@@ -169,43 +167,3 @@ class ConnectionDetailView(DocsBaseView):
             )
             return SmarterHttpResponseServerError(request=request, error_message="Error rendering manifest page")
         return response
-
-
-class ConnectionListView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Render the connection list view for the Smarter Workbench web console.
-
-    This view displays all connections available to the authenticated user as cards, providing a summary and quick access to connection details.
-
-    :param request: Django HTTP request object.
-    :type request: ASGIRequest
-    :param args: Additional positional arguments.
-    :type args: tuple
-    :param kwargs: Additional keyword arguments.
-    :type kwargs: dict
-
-    :returns: Rendered HTML page with a card for each connection, or a 404 error page if the user is not authenticated.
-    :rtype: HttpResponse
-
-    .. seealso::
-
-        :class:`ConnectionBase` for connection metadata and retrieval.
-
-    **Example usage**::
-
-        GET /connection/list/
-
-    """
-
-    template_path = "connection/connection_list.html"
-    connections: list[ConnectionBase]
-
-    def get(self, request: ASGIRequest, *args, **kwargs):
-        if request.user is None:
-            logger.error("%s.get() Request user is None. This should not happen.", self.formatted_class_name)
-            return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.connections = ConnectionBase.get_cached_connections_for_user(request.user)
-        context = {
-            "connections": self.connections,
-        }
-        return self.clean_http_response(request=request, template_path=self.template_path, context=context)

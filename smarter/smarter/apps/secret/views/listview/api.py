@@ -52,9 +52,6 @@ class SecretListApiView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: HttpResponse
     """
 
-    def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
-        return self.post(request, *args, **kwargs)
-
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         qs: models.QuerySet[Secret]
         ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
@@ -120,43 +117,43 @@ class SecretListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         :param args: Additional positional arguments (not used).
         :param kwargs: Additional keyword arguments, including:
 
-            - chatbot_id (str): The ID of the Secret to be cloned.
+            - secret_id (str): The ID of the Secret to be cloned.
             - new_name (str): The new name for the cloned Secret.
 
         :returns: A JsonResponse containing the serialized data of the newly cloned Secret if successful, or an error message if the cloning fails.
         :rtype: JsonResponse
         """
-        chatbot_id = kwargs.get("chatbot_id")
+        secret_id = kwargs.get("secret_id")
         new_name = kwargs.get("new_name")
-        chatbot: Secret
+        secret: Secret
 
-        if not chatbot_id or not new_name:
+        if not secret_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. chatbot_id: %s, new_name: %s",
+                "%s.post() Missing required parameters. secret_id: %s, new_name: %s",
                 self.formatted_class_name,
-                chatbot_id,
+                secret_id,
                 new_name,
             )
-            return JsonResponse({"error": "chatbot_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse({"error": "secret_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            chatbot = Secret.objects.with_read_permission_for(self.user_profile.user).get(id=chatbot_id)  # type: ignore
+            secret = Secret.objects.with_read_permission_for(self.user_profile.user).get(id=secret_id)  # type: ignore
         except Secret.DoesNotExist:
-            logger.warning("%s.post() Secret with id %s not found for cloning.", self.formatted_class_name, chatbot_id)
-            return JsonResponse({"error": f"Secret with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
+            logger.warning("%s.post() Secret with id %s not found for cloning.", self.formatted_class_name, secret_id)
+            return JsonResponse({"error": f"Secret with id {secret_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
             new_name = self.to_snake_case(new_name.strip())
-            cloned_chatbot = chatbot.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
+            cloned_secret = secret.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_secrets_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = SecretSerializer(cloned_chatbot).data
+            data = SecretSerializer(cloned_secret).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
                 "%s.post() Error cloning Secret with id %s: %s",
                 self.formatted_class_name,
-                chatbot_id,
+                secret_id,
                 str(e),
                 exc_info=True,
             )
@@ -182,32 +179,32 @@ class SecretListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         :param args: Additional positional arguments (not used).
         :param kwargs: Additional keyword arguments, including:
 
-            - chatbot_id (str): The ID of the Secret to be deleted.
+            - secret_id (str): The ID of the Secret to be deleted.
 
         :returns: A JsonResponse indicating the success or failure of the deletion.
         :rtype: JsonResponse
         """
-        chatbot_id = kwargs.get("chatbot_id")
-        if not chatbot_id:
-            logger.warning("%s.post() Missing required parameter chatbot_id for deletion.", self.formatted_class_name)
-            return JsonResponse({"error": "chatbot_id is required."}, status=HTTPStatus.BAD_REQUEST)
+        secret_id = kwargs.get("secret_id")
+        if not secret_id:
+            logger.warning("%s.post() Missing required parameter secret_id for deletion.", self.formatted_class_name)
+            return JsonResponse({"error": "secret_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            chatbot = Secret.objects.with_ownership_permission_for(self.user_profile.user).get(id=chatbot_id)  # type: ignore
+            secret = Secret.objects.with_ownership_permission_for(self.user_profile.user).get(id=secret_id)  # type: ignore
         except Secret.DoesNotExist:
-            logger.warning("%s.post() Secret with id %s not found for deletion.", self.formatted_class_name, chatbot_id)
-            return JsonResponse({"error": f"Secret with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
+            logger.warning("%s.post() Secret with id %s not found for deletion.", self.formatted_class_name, secret_id)
+            return JsonResponse({"error": f"Secret with id {secret_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
-            chatbot.delete()
+            secret.delete()
             invalidate_all_cached_secrets_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            return JsonResponse({"message": f"Secret with id {chatbot_id} deleted successfully."}, status=HTTPStatus.OK)
+            return JsonResponse({"message": f"Secret with id {secret_id} deleted successfully."}, status=HTTPStatus.OK)
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
                 "%s.post() Error deleting Secret with id %s: %s",
                 self.formatted_class_name,
-                chatbot_id,
+                secret_id,
                 str(e),
                 exc_info=True,
             )
@@ -233,41 +230,41 @@ class SecretListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         :param args: Additional positional arguments (not used).
         :param kwargs: Additional keyword arguments, including:
 
-            - chatbot_id (str): The ID of the Secret to be renamed.
+            - secret_id (str): The ID of the Secret to be renamed.
             - new_name (str): The new name for the Secret.
 
         :returns: A JsonResponse indicating the success or failure of the renaming.
         :rtype: JsonResponse
         """
-        chatbot_id = kwargs.get("chatbot_id")
+        secret_id = kwargs.get("secret_id")
         new_name = kwargs.get("new_name")
-        if not chatbot_id or not new_name:
+        if not secret_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. chatbot_id: %s, new_name: %s",
+                "%s.post() Missing required parameters for renaming. secret_id: %s, new_name: %s",
                 self.formatted_class_name,
-                chatbot_id,
+                secret_id,
                 new_name,
             )
-            return JsonResponse({"error": "chatbot_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse({"error": "secret_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            chatbot = Secret.objects.with_ownership_permission_for(self.user_profile.user).get(id=chatbot_id)  # type: ignore
+            secret = Secret.objects.with_ownership_permission_for(self.user_profile.user).get(id=secret_id)  # type: ignore
         except Secret.DoesNotExist:
-            logger.warning("%s.post() Secret with id %s not found for renaming.", self.formatted_class_name, chatbot_id)
-            return JsonResponse({"error": f"Secret with id {chatbot_id} not found."}, status=HTTPStatus.NOT_FOUND)
+            logger.warning("%s.post() Secret with id %s not found for renaming.", self.formatted_class_name, secret_id)
+            return JsonResponse({"error": f"Secret with id {secret_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
             new_name = self.to_snake_case(new_name.strip())
-            chatbot.rename(new_name=new_name)
+            secret.rename(new_name=new_name)
             invalidate_all_cached_secrets_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = SecretSerializer(chatbot).data
+            data = SecretSerializer(secret).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
                 "%s.post() Error renaming Secret with id %s: %s",
                 self.formatted_class_name,
-                chatbot_id,
+                secret_id,
                 str(e),
                 exc_info=True,
             )
