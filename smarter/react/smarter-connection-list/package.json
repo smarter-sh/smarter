@@ -1,5 +1,5 @@
 {
-  "name": "smarter-connection-list",
+  "name": "@smarter/connection-list",
   "description": "A React component library for displaying a list of Connections on the Smarter web console.",
   "version": "0.1.0",
   "type": "module",

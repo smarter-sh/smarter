@@ -1,5 +1,5 @@
 {
-  "name": "smarter-dashboard",
+  "name": "@smarter/dashboard",
   "description": "React-based dashboard for the Smarter web console.",
   "version": "0.2.2",
   "type": "module",

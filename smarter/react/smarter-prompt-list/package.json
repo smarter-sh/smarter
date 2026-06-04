@@ -1,5 +1,5 @@
 {
-  "name": "smarter-prompt-list",
+  "name": "@smarter/prompt-list",
   "description": "A React component library for displaying a list of Prompts (Chatbots) on the Smarter web console.",
   "version": "0.3.1",
   "type": "module",

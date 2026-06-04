@@ -1,5 +1,5 @@
 {
-  "name": "smarter-terminal-emulator",
+  "name": "@smarter/terminal-emulator",
   "description": "A React component library for interacting with live Linux server-side activities in the Smarter web console.",
   "version": "0.2.2",
   "type": "module",

@@ -36,9 +36,9 @@ class ConnectionReverseNames:
 
 
 urlpatterns = [
-    path("connections/", ConnectionListView.as_view(), name=ConnectionReverseNames.listview),
-    path("connections/<str:kind>/<str:name>/", ConnectionDetailView.as_view(), name=ConnectionReverseNames.detailview),
     path("", ConnectionListView.as_view(), name=ConnectionReverseNames.listview),
+    path("connections/<str:kind>/<str:name>/", ConnectionDetailView.as_view(), name=ConnectionReverseNames.detailview),
+    path("connections/<int:connection_id>/", ConnectionDetailView.as_view(), name=ConnectionReverseNames.detailview),
     path(
         "react-integration/api/listview/", ConnectionListApiView.as_view(), name=ConnectionReverseNames.listview_api_all
     ),
@@ -62,5 +62,4 @@ urlpatterns = [
         ConnectionListApiRenameView.as_view(),
         name=ConnectionReverseNames.listview_api_rename,
     ),
-    path("connections/<int:connection_id>/", ConnectionDetailView.as_view(), name=ConnectionReverseNames.detailview),
 ]

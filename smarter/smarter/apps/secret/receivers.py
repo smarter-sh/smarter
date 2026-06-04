@@ -18,7 +18,6 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import get_cached_default_account
-from smarter.apps.dashboard.context_processors import cache_invalidations
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -78,6 +77,8 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     default behavior is to update the last_login field on
     each login, which triggers a save.
     """
+    from smarter.apps.dashboard.context_processors import cache_invalidations
+
     logger.info(
         "%s User post_save: %s, created: %s",
         formatted_text(f"{module_prefix}.user_post_save()"),

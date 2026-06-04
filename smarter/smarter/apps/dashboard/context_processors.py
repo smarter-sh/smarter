@@ -107,7 +107,7 @@ logger = logging.getLogger(__name__)
 logger_prefix = logging.formatted_text(__name__)
 logger_prefix_cache_invalidations = logging.formatted_text_blue(f"{__name__}.cache_invalidations()")
 
-FOREVER = 60 * 60 * 24 * 365  # one year, in seconds
+SHORT_LIVED = 600
 
 
 def static_version(request):
@@ -115,6 +115,40 @@ def static_version(request):
     return {
         "STATIC_VERSION": smarter_settings.version,
     }
+
+
+SIDEBAR_CONTEXT = {
+    "sidebar": {
+        "dashboard": reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
+        "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+        "apply_manifest": reverse(
+            DashboardReverseNames.namespace,
+            ApplyManifestReverseNames.namespace,
+            ApplyManifestReverseNames.manifest_drop_zone,
+        ),
+        "prompt_passthrough": reverse(
+            DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
+        ),
+        "server_logs": reverse(
+            DashboardReverseNames.namespace,
+            DashboardLogsReverseNames.namespace,
+            DashboardLogsReverseNames.terminal_emulator_view,
+        ),
+        "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
+        "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
+        "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+        "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
+        "vectorstores": reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.list_view),
+        "api_keys": reverse(AccountReverseNames.namespace, AccountReverseNames.API_KEYS_LIST),
+        "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
+        "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
+        "swagger_docs": reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
+        "redoc": reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),
+        "json_schemas": reverse(DocsReverseNames.namespace, DocsReverseNames.json_schemas),
+        "account": "/dashboard/account/dashboard/overview/",  # FIX ME
+        "admin": "/admin/",  # FIX ME
+    }
+}
 
 
 def sidebar(request: "HttpRequest") -> dict[str, Any]:
@@ -138,46 +172,7 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
         to their resolved URL strings.
     :rtype: dict[str, Any]
     """
-
-    @cache_results(timeout=FOREVER)
-    @snake_case()
-    def cached_sidebar_context() -> dict[str, Any]:
-        retval = {
-            "sidebar": {
-                "dashboard": reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
-                "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
-                "apply_manifest": reverse(
-                    DashboardReverseNames.namespace,
-                    ApplyManifestReverseNames.namespace,
-                    ApplyManifestReverseNames.manifest_drop_zone,
-                ),
-                "prompt_passthrough": reverse(
-                    DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
-                ),
-                "server_logs": reverse(
-                    DashboardReverseNames.namespace,
-                    DashboardLogsReverseNames.namespace,
-                    DashboardLogsReverseNames.terminal_emulator_view,
-                ),
-                "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
-                "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
-                "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
-                "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
-                "vectorstores": reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.list_view),
-                "api_keys": reverse(AccountReverseNames.namespace, AccountReverseNames.API_KEYS_LIST),
-                "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
-                "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
-                "swagger_docs": reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
-                "redoc": reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),
-                "json_schemas": reverse(DocsReverseNames.namespace, DocsReverseNames.json_schemas),
-                "account": "/dashboard/account/dashboard/overview/",  # FIX ME
-                "admin": "/admin/",  # FIX ME
-            }
-        }
-        logger.debug("%s.sidebar() cached sidebar context: %s", logger_prefix, logging.formatted_json(retval))
-        return retval
-
-    return cached_sidebar_context()
+    return SIDEBAR_CONTEXT
 
 
 def base(request: "HttpRequest") -> dict[str, Any]:
@@ -212,7 +207,6 @@ def base(request: "HttpRequest") -> dict[str, Any]:
         else:
             user = None
 
-    @cache_results(timeout=FOREVER)
     @snake_case()
     def get_cached_context(username: Optional[str]) -> dict[str, Any]:
         """
@@ -308,7 +302,7 @@ def branding(request: "HttpRequest") -> dict[str, Any]:
     This processor is intended to be added to the ``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings, making the ``branding`` context variable available in all templates rendered by Django that inherit from ``base.html``.
     """
 
-    @cache_results(timeout=FOREVER)
+    @cache_results(timeout=SHORT_LIVED)
     @snake_case()
     def get_cached_context() -> dict[str, Any]:
         current_year = datetime.now().year
