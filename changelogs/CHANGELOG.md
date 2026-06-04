@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.51](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.50...v0.14.0-alpha.51) (2026-06-04)
+
+### Bug Fixes
+
+* provider names should be snake_case ([aac468a](https://github.com/smarter-sh/smarter/commit/aac468aed426854d7120f8f6d2e8248d79e303fb))
+
 ## [0.14.0-alpha.50](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.49...v0.14.0-alpha.50) (2026-06-04)
 
 ### Bug Fixes
