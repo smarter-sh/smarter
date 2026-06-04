@@ -82,6 +82,7 @@ function Prompt({
         // set the provider list, and identify the default provider based on
         // the "isDefault" flag (or fallback to first provider if none
         // marked as default).
+        console.debug(loggerPrefix, "Fetched LLM providers from API:", providers);
         setProviders(providers);
         const default_provider = providers.filter((p) => Boolean(p.isDefault) === true)[0] || providers[0];
         setSelectedProviderJson(default_provider);
