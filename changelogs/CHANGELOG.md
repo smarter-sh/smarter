@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.48](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.47...v0.14.0-alpha.48) (2026-06-04)
+
+### Bug Fixes
+
+* finalize react list prototype ([07bf901](https://github.com/smarter-sh/smarter/commit/07bf90149065a5be78c371f9c2b50cf68565bbe3))
+
 ## [0.14.0-alpha.47](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.46...v0.14.0-alpha.47) (2026-06-03)
 
 ### Bug Fixes
