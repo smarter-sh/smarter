@@ -60,9 +60,7 @@ const TableHeader = () => {
         <th className=" p-1">Name</th>
         <th className="d-none d-lg-table-cell width-100">Created</th>
         <th className="d-none d-lg-table-cell width-100">Updated</th>
-        <th className="">Kind</th>
         <th className="">Description</th>
-        <th className="min-width-150">Selector</th>
         <th className="d-none d-md-table-cell">Status</th>
         <th className="">Operations</th>
       </tr>
@@ -110,12 +108,8 @@ const SecretRow = React.memo(function SecretRow({
       <td className="d-none d-lg-table-cell width-100">
         <UpdatedDate date={secret.updatedAt} createdAt={secret.createdAt} />
       </td>
-      {/* Kind */}
-      <td className="">{secret.kind}</td>
       {/* Description */}
       <td className="">{secret.description}</td>
-      {/* Selector */}
-      <td className="min-width-150">{secret.selector.directive}</td>
       {/* Status */}
       <td className="d-none d-md-table-cell ">
         <StatusBar secret={secret} />

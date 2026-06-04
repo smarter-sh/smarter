@@ -39,7 +39,7 @@ class SecretListView(SmarterAuthenticatedNeverCachedWebView):
 
     def get(self, request: ASGIRequest, *args, **kwargs):
         # pylint: disable=C0415
-        from smarter.apps.plugin.urls import PluginReverseNames
+        from smarter.apps.secret.urls import SecretReverseNames
 
         context = {
             "secret_list": {
@@ -47,7 +47,7 @@ class SecretListView(SmarterAuthenticatedNeverCachedWebView):
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "secret_list_api_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview_api_all),
+                "secret_list_api_url": reverse(SecretReverseNames.namespace, SecretReverseNames.listview_api_all),
             }
         }
 

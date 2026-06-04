@@ -90,6 +90,14 @@ class Secret(MetaDataWithOwnershipModel):
     )
     encrypted_value = models.BinaryField(help_text="Read-only encrypted representation of the secret's value.")
 
+    @property
+    def manifest_url(self) -> Optional[str]:
+        return ""
+
+    @property
+    def ready(self) -> bool:
+        return super().ready and self.encrypted_value is not None
+
     def save(self, *args, **kwargs):
         """
         Encrypt and persist the secret value for this instance.

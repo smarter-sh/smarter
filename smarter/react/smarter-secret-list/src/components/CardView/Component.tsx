@@ -62,22 +62,8 @@ function CardView({ sessionContext, objects, onRequery }: SecretCardViewProps) {
                     {renderDetailRow("Last Updated", secret.updatedAt, "dateTime")}
                     {renderDetailRow("Version", secret.version)}
                     {renderDetailRow("Description", secret.description)}
-                    {renderDetailRow("Secret Class", secret.secretClass)}
                     {renderDetailRow("Tags", secret.tags, "str[]")}
                     {renderDetailRow("Annotations", secret.annotations, "json")}
-
-                    {renderDetailRow("Selector Directive", secret.selector.directive)}
-                    {renderDetailRow("Selector Search Terms", secret.selector.searchTerms ?? [], "str[]")}
-
-                    {renderDetailRow("Prompt Provider", secret.prompt.provider)}
-                    {renderDetailRow("Prompt System Role", secret.prompt.systemRole)}
-                    {renderDetailRow("Prompt Model", secret.prompt.model)}
-                    {renderDetailRow("Prompt Temperature", secret.prompt.temperature, "number")}
-                    {renderDetailRow("Prompt Max Tokens", secret.prompt.maxTokens, "number")}
-
-                    {renderDetailRow("Static Data", secret.staticData, "json")}
-                    {renderDetailRow("SQL Data", secret.sqlData, "json")}
-                    {renderDetailRow("API Data", secret.apiData, "json")}
                   </tbody>
                 </table>
               </div>
