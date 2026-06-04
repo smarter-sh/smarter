@@ -6,7 +6,6 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
-from smarter.apps.dashboard.context_processors import cache_invalidations
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.broker import AbstractBroker
@@ -51,6 +50,8 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     default behavior is to update the last_login field on
     each login, which triggers a save.
     """
+    from smarter.apps.dashboard.context_processors import cache_invalidations
+
     logger.info(
         "%s User post_save: %s, created: %s",
         logging.formatted_text(f"{module_prefix}.user_post_save()"),
