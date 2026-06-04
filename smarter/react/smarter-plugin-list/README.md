@@ -1,23 +1,26 @@
-# Smarter Plugins List app. React + TypeScript + Vite
+# Smarter Plugins List React App
 
-This is the source code for the Terminal Emulator app located
-at [http://localhost:9357/workbench/](http://localhost:9357/workbench/smarter-plugin-list/).
+This is the source code for the Plugins List app located
+at [http://localhost:9357/plugin/](http://localhost:9357/plugin/).
 
-This component is served by Django in production. See:
+This component is served by Django. See also:
 
-- builds are distributed from s3://smarter.sh/react/smarter-plugin-list/ and gathered
-  by Dockerfile during builds into Django's static asset folder.
 - [smarter.apps.plugin.views.listview.view.PluginListView](../../smarter/apps/plugin/views/listview/view.py)
 - [smarter.apps.plugin.templatetags.react_plugin_list.plugin_list_react_assets](../../smarter/apps/plugin/templatetags/react_plugin_list.py)
 - [templates/react/plugin-list.html](../../smarter/templates/react/plugin-list.html)
+
+## Screen Shot
+
+![Plugin List Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/plugin-list-screenshot.png)
 
 ## Setup
 
 ### Running Locally
 
 This configures Vite to serve the app locally, with console.debug() output enabled.
-Run the app from from http://localhost:5173/. Note that Django also should be running
-locally and be available at http://localhost:9357 in order for the React app to
+Run the app from from [http://localhost:5173/](http://localhost:5173/). Note
+that Django also should be running locally and be available at
+[http://localhost:9357](http://localhost:9357) in order for the React app to
 be able to fetch from the Django API endpoints.
 
 ```console
@@ -31,7 +34,7 @@ npm run dev
 
 This configures Vite to generate a production React build, with the final build
 bundle collected into Django's static asset folder. Run the Django web console
-from http://localhost:9357/
+from [http://localhost:9357](http://localhost:9357)
 
 ```console
 cd to/the/root/of/this/repo/
@@ -65,7 +68,9 @@ speed up the build process in the expected case where React source code has
 not changed.
 
 Note that the manifest.json file includes meta data that can be used for
-trouble shooting purposes. http://example.com/static/react/smarter-plugin-list/manifest.json
+trouble shooting purposes.
+
+Example: `http://example.com/static/react/smarter-plugin-list/manifest.json`
 
 ```json
 {
@@ -87,92 +92,4 @@ trouble shooting purposes. http://example.com/static/react/smarter-plugin-list/m
     "buildEnv": "production"
   }
 }
-```
-
-### Generate Storybook
-
-To generate Storybooks:
-
-```console
-npx storybook@latest init
-npm run build-storybook
-npm run storybook
-```
-
-## Screen Shot
-
-![Plugin List Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/plugin-list-screenshot.png)
-
-## Vite Plugins
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on
-dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the
-configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
-
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
 ```
