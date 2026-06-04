@@ -3,6 +3,7 @@
 from abc import abstractmethod
 
 from django.db import models
+from django.urls import reverse
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
@@ -71,6 +72,31 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         """
 
         return formatted_text(self.__class__.__module__ + "." + self.__class__.__name__)
+
+    @property
+    def manifest_url(self) -> str:
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        # pylint: disable=C0415
+        from smarter.apps.plugin.urls import PluginReverseNames
+
+        return reverse(
+            f"{PluginReverseNames.namespace}:{PluginReverseNames.detailview}",
+            kwargs={"name": self.rfc1034_compliant_name},
+        )
 
     @property
     @abstractmethod
