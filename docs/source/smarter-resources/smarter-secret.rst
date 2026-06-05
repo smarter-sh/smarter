@@ -25,12 +25,16 @@ Technical Reference
    :maxdepth: 1
 
    secret/api
+   secret/admin
+   secret/caching
    secret/const
+   secret/manifest
    secret/models
    secret/receivers
    secret/resources
-   secret/sam
    secret/serializers
    secret/signals
+   secret/templatetags
    secret/tasks
+   secret/urls
    secret/views
