@@ -1,5 +1,5 @@
-Template Tags
-=============
+Custom Filters
+===============
 
 .. automodule:: smarter.lib.drf.templatetags.custom_filters
     :members:

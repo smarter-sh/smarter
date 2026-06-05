@@ -18,9 +18,16 @@ For more information about DRF, see the `official Django REST framework document
     :maxdepth: 2
     :caption: Smarter Django REST Framework Extensions
 
-    drf/smarter-token-authentication
+    drf/caching
+    drf/manifest
+    drf/middleware
+    drf/models
     drf/parsers
     drf/serializers
     drf/signals
-    drf/template-tags
+    drf/tasks
+    drf/templatetags
+    drf/token-authentication
+    drf/urls
     drf/view-helpers
+    drf/views
