@@ -211,13 +211,7 @@ jobs:
         id: react-cache-hash
         shell: bash
         run: |
-          REACT_COMPONENTS="smarter-connection-list smarter-dashboard smarter-plugin-list smarter-prompt-list smarter-prompt-passthrough smarter-provider-list smarter-secret-list smarter-terminal-emulator"
-          HASH_INPUT=""
-          for comp in $REACT_COMPONENTS; do
-            REACT_DIR="smarter/react/$comp/"
-            find "$REACT_DIR" -type f -exec sha256sum {} \; | sort | sha256sum | awk '{print $1}' >> react-builds-cache-key
-          done
-          # Combine all component hashes into a single hash for the folder
+          find "smarter/react/packages/" -type f -exec sha256sum {} \; | sort | sha256sum | awk '{print $1}' >> react-builds-cache-key
           REACT_FOLDER_HASH=$(sha256sum react-builds-cache-key | awk '{print $1}')
           echo "REACT_FOLDER_HASH=$REACT_FOLDER_HASH" >> $GITHUB_ENV
 
