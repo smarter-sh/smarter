@@ -1,11 +1,11 @@
 {
-  "name": "@smarter/provider-list",
-  "description": "A React component library for displaying a list of Providers on the Smarter web console.",
+  "name": "@smarter/secret-list",
+  "description": "A React component library for displaying a list of Secrets on the Smarter web console.",
   "version": "0.1.0",
   "type": "module",
   "config": {
     "cdnDeploy": false,
-    "s3BucketPath": "s3://smarter.sh/react/smarter-provider-list/",
+    "s3BucketPath": "s3://smarter.sh/react/smarter-secret-list/",
     "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
   },
   "scripts": {
@@ -17,7 +17,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@smarter/common": "file:../lib/smarter-common/smarter-common-0.1.0.tgz",
+    "@smarter/common": "^0.1.0",
     "date-fns": "^4.2.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"

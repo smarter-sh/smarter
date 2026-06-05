@@ -73,7 +73,7 @@ const postBuildPlugin: PluginOption = {
   closeBundle() {
     if (packageJson.config.cdnDeploy === true) {
       execSync(
-        `aws s3 sync ../../smarter/static/react/${packageName} ${packageJson.config.s3BucketPath} --acl public-read --delete`,
+        `aws s3 sync ../../../smarter/static/react/${packageName} ${packageJson.config.s3BucketPath} --acl public-read --delete`,
         { stdio: "inherit" },
       );
       execSync(
@@ -136,7 +136,7 @@ export default defineConfig(({ command }: ConfigEnv) => ({
     // In development, we rely on Vite's dev server to serve these files, so we
     // set the outDir to a directory that is not used by the Django dev server.
     // ------------------------------------------------------------------------
-    outDir: `../../smarter/static/react/${packageName}`,
+    outDir: `../../../smarter/static/react/${packageName}`,
     emptyOutDir: true,
     // ------------------------------------------------------------------------
     // We want to bundle xterm.js and its addons separately from the rest of the
@@ -163,11 +163,11 @@ export default defineConfig(({ command }: ConfigEnv) => ({
   // so that these requests are served from the Django dev server instead
   // of the React dev server.
   //
-  // Most of these cases stem from <link> elements added to this index.html
+  // Most of these cases stem from <link> elements added to index.html
   // containing platform-wide stylesheets and scripts that originate from
   // and are served by the Django dev server. These are added to index.html
-  // in order to keep this React dev environment as close to the runtime
-  // environment as possible.
+  // in order to keep this React dev environment consistent with the Django
+  // runtime environment.
   server: {
     proxy: {
       "/api": "http://localhost:9357",
@@ -192,6 +192,7 @@ export default defineConfig(({ command }: ConfigEnv) => ({
         changeOrigin: true,
       },
       "/workbench/": "http://localhost:9357",
+      "/plugin/": "http://localhost:9357",
     },
   },
 }));

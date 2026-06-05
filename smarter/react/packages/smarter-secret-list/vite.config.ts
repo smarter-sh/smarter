@@ -31,9 +31,9 @@ import packageJson from "./package.json" with { type: "json" };
 const packageName = packageJson.name;
 
 /**
- * Vite Plugin: addCustomManifestData
+ * Vite Secret: addCustomManifestData
  *
- * This plugin injects custom metadata into the generated manifest.json file after each build.
+ * This secret injects custom metadata into the generated manifest.json file after each build.
  * The metadata includes:
  *   - buildTime: ISO timestamp of the build
  *   - version: The version from package.json
@@ -61,19 +61,19 @@ const addCustomManifestData: PluginOption = {
 
 
 /**
- * Vite Plugin: postBuildPlugin
+ * Vite Secret: postBuildSecret
  *
- * After each build, this plugin optionally uploads the built assets to S3 and triggers a CloudFront invalidation,
+ * After each build, this secret optionally uploads the built assets to S3 and triggers a CloudFront invalidation,
  * ensuring the latest files are served in production. This workflow is enabled by the `cdnDeploy` flag in package.json
  * and allows Docker images to skip React build tools while supporting CDN-based static file serving.
  */
-const postBuildPlugin: PluginOption = {
+const postBuildSecret: PluginOption = {
   name: "post-build",
 
   closeBundle() {
     if (packageJson.config.cdnDeploy === true) {
       execSync(
-        `aws s3 sync ../../smarter/static/react/${packageName} ${packageJson.config.s3BucketPath} --acl public-read --delete`,
+        `aws s3 sync ../../../smarter/static/react/${packageName} ${packageJson.config.s3BucketPath} --acl public-read --delete`,
         { stdio: "inherit" },
       );
       execSync(
@@ -88,17 +88,17 @@ const postBuildPlugin: PluginOption = {
  * Main Vite Configuration Export
  *
  * This function exports the Vite configuration for the React app, dynamically adjusting
- * settings based on the build command (development or production). It sets up plugins, build output,
+ * settings based on the build command (development or production). It sets up secrets, build output,
  * asset handling, and development server proxying to integrate seamlessly with the Django backend.
  *
  * Key features:
- * - Uses custom plugins for manifest metadata and optional CDN deployment
+ * - Uses custom secrets for manifest metadata and optional CDN deployment
  * - Removes console.debug in production builds
  * - Outputs assets to Django's static directory for collectstatic
  * - Proxies API and static requests to Django during development
  */
 export default defineConfig(({ command }: ConfigEnv) => ({
-  plugins: [react(), postBuildPlugin, addCustomManifestData],
+  secrets: [react(), postBuildSecret, addCustomManifestData],
   // We use esbuild to remove console.debug statements in production builds
   // in order to avoid leaking potentially sensitive information in
   // production environments.
@@ -136,7 +136,7 @@ export default defineConfig(({ command }: ConfigEnv) => ({
     // In development, we rely on Vite's dev server to serve these files, so we
     // set the outDir to a directory that is not used by the Django dev server.
     // ------------------------------------------------------------------------
-    outDir: `../../smarter/static/react/${packageName}`,
+    outDir: `../../../smarter/static/react/${packageName}`,
     emptyOutDir: true,
     // ------------------------------------------------------------------------
     // We want to bundle xterm.js and its addons separately from the rest of the
@@ -192,6 +192,7 @@ export default defineConfig(({ command }: ConfigEnv) => ({
         changeOrigin: true,
       },
       "/workbench/": "http://localhost:9357",
+      "/secret/": "http://localhost:9357",
     },
   },
 }));
