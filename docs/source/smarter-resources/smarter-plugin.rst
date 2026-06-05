@@ -99,17 +99,20 @@ Technical Reference
 .. toctree::
    :maxdepth: 1
 
-   plugins/resource-types
+   plugins/api
+   plugins/caching
+   plugins/const
    plugins/how-it-works
    plugins/how-tools-work
-   plugins/api
+   plugins/resource-types
+   plugins/management
    plugins/models
    plugins/manifests
    plugins/serializers
-   plugins/const
    plugins/nlp
    plugins/signals
    plugins/receivers
    plugins/tasks
+   plugins/templatetags
    plugins/utils
    plugins/views
