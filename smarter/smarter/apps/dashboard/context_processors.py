@@ -97,6 +97,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.utils import snake_case
 from smarter.lib import logging
+from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
 
 if TYPE_CHECKING:
@@ -119,6 +120,9 @@ def static_version(request):
     return {
         "STATIC_VERSION": smarter_settings.version,
     }
+
+
+cache_results()
 
 
 def sidebar_context() -> dict[str, Any]:
@@ -230,7 +234,6 @@ def base(request: "HttpRequest") -> dict[str, Any]:
         :return: A dictionary containing the dashboard context variables for the user.
         :rtype: dict
         """
-        logger.debug("%s.base() called.", logger_prefix)
         current_year = datetime.now().year
         user_email = "anonymous@mail.edu"
         username = "anonymous"
@@ -307,6 +310,7 @@ def branding(request: "HttpRequest") -> dict[str, Any]:
     This processor is intended to be added to the ``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings, making the ``branding`` context variable available in all templates rendered by Django that inherit from ``base.html``.
     """
 
+    @cache_results()
     @snake_case()
     def get_cached_context() -> dict[str, Any]:
         current_year = datetime.now().year

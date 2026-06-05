@@ -40,5 +40,4 @@ Technical Reference
    account/serializers
    account/signals
    account/tasks
-   account/views
    account/utils
