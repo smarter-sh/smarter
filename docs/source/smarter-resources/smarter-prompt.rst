@@ -73,10 +73,11 @@ Technical Reference
    prompt/example-request
    prompt/example-response
    prompt/api
-   prompt/models
-   prompt/sam
    prompt/const
+   prompt/manifest
+   prompt/models
    prompt/functions
+   prompt/management
    prompt/signals
    prompt/tasks
    prompt/templatetags
