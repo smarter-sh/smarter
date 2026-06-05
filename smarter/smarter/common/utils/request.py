@@ -87,12 +87,15 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
 
     from smarter.lib.cache import cache_results
 
-    smarter_process_id = getattr(request, "smarter_process_id", None)
-    logger.debug("%s.is_authenticated_request() smarter_process_id: %s", logger_prefix, smarter_process_id or "Not set")
-    if not smarter_process_id:
-        smarter_process_id = str(random.randint(100000, 999999))
+    if isinstance(request, (HttpRequest, Request, ASGIRequest)):
+        path = request.path if hasattr(request, "path") else "unknown_path"
+        method = request.method if hasattr(request, "method") else "unknown_method"
+        username = getattr(getattr(request, "user", None), "username", "unknown_user")
+        cache_key = f"{logger_prefix}.is_authenticated_request.{method}_{path}_{username}"
+    else:
+        cache_key = f"{logger_prefix}.is_authenticated_request.invalid_request_{random.randint(1, 1000000)}"
 
-    @cache_results(cache_key=smarter_process_id)
+    @cache_results(cache_key=cache_key)
     def cached_is_authenticated_request() -> bool:
         try:
             if not isinstance(request, (HttpRequest, Request, ASGIRequest)):
