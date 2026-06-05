@@ -1,0 +1,52 @@
+{
+  "name": "@smarter/authtoken-list",
+  "description": "A React component library for displaying a list of AuthTokens on the Smarter web console.",
+  "version": "0.1.0",
+  "type": "module",
+  "config": {
+    "cdnDeploy": false,
+    "s3BucketPath": "s3://smarter.sh/react/smarter-authtoken-list/",
+    "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "@smarter/common": "^0.1.0",
+    "date-fns": "^4.2.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^5.2.1",
+    "@eslint/js": "^10.0.1",
+    "@storybook/addon-a11y": "^10.4.0",
+    "@storybook/addon-docs": "^10.4.0",
+    "@storybook/addon-onboarding": "^10.4.0",
+    "@storybook/addon-vitest": "^10.4.0",
+    "@storybook/react": "^10.3.6",
+    "@storybook/react-vite": "^10.4.0",
+    "@types/node": "^24.12.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/browser-playwright": "^4.1.6",
+    "@vitest/coverage-v8": "^4.1.6",
+    "eslint": "^10.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "eslint-plugin-storybook": "^10.4.0",
+    "globals": "^17.5.0",
+    "playwright": "^1.60.0",
+    "storybook": "^10.4.0",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.58.2",
+    "vite": "^8.0.13",
+    "vitest": "^4.1.6"
+  }
+}

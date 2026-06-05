@@ -66,6 +66,8 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.lib.django.waffle import SmarterSwitchAdmin
+from smarter.lib.drf import urls as drf_urls
+from smarter.lib.drf.const import namespace as drf_namespace
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +161,7 @@ urlpatterns = [
     path("admin/docs/", include(admindocs_urls)),
     path("admin/", admin.site.urls, name="django_admin"),
     path("api/", include(urls, namespace=api_namespace)),
+    path("authtoken/", include(drf_urls, namespace=drf_namespace)),
     path("connection/", include(connection_urls, namespace=connection_namespace)),
     path("dashboard/", include(dashboard_urls, namespace=dashboard_namespace)),
     path("docs/", include(docs_urls, namespace=docs_namespace)),

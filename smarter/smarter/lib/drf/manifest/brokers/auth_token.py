@@ -52,8 +52,10 @@ class SAMSmarterAuthTokenBrokerError(SAMBrokerError):
         return "Smarter API SmarterAuthToken Manifest Broker Error"
 
 
-class SmarterAuthTokenSerializer(ModelSerializer):
-    """API key serializer for smarter api."""
+class SmarterAuthTokenMiniSerializer(ModelSerializer):
+    """
+    API key serializer for smarter api that excludes SAM ownership information.
+    """
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -327,7 +329,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         This is used to serialize and deserialize the SmarterAuthToken
         model for API responses and requests.
         """
-        return SmarterAuthTokenSerializer
+        return SmarterAuthTokenMiniSerializer
 
     @property
     def ORMMetaModelClass(self) -> Type[SmarterAuthToken]:
@@ -494,7 +496,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for smarter_auth_token in smarter_auth_tokens:
             try:
-                model_dump = SmarterAuthTokenSerializer(smarter_auth_token).data
+                model_dump = SmarterAuthTokenMiniSerializer(smarter_auth_token).data
                 if not model_dump:
                     raise SAMSmarterAuthTokenBrokerError(
                         f"Model dump failed for {self.kind} {smarter_auth_token.name}", thing=self.kind, command=command
@@ -511,7 +513,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=SmarterAuthTokenSerializer()),
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=SmarterAuthTokenMiniSerializer()),
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }

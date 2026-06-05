@@ -6,12 +6,11 @@ from logging import getLogger
 from typing import Optional
 
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from knox import crypto
 from knox.models import AuthToken
 from knox.settings import CONSTANTS
-from taggit.managers import TaggableManager
-from taggit.models import TaggedItemBase
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
@@ -144,7 +143,32 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
 
     @property
     def identifier(self):
-        return "******" + str(self.digest)[-4:]
+        self.mask_string(self.digest)
+
+    @property
+    def manifest_url(self) -> Optional[str]:
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        # pylint: disable=C0415
+        from smarter.lib.drf.urls import AuthTokenReverseNames
+
+        return reverse(
+            f"{AuthTokenReverseNames.namespace}:{AuthTokenReverseNames.detailview}",
+            kwargs={"authtoken_id": self.id},  # type: ignore
+        )
 
     def save(self, *args, **kwargs):
         if not self.user.is_staff:

@@ -99,6 +99,7 @@ from smarter.common.utils import snake_case
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.shortcuts import reverse
+from smarter.lib.drf.urls import AuthTokenReverseNames
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -148,7 +149,7 @@ def sidebar_context() -> dict[str, Any]:
             "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
             "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
             "vectorstores": reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.list_view),
-            "api_keys": reverse(AccountReverseNames.namespace, AccountReverseNames.API_KEYS_LIST),
+            "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
             "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
             "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
             "swagger_docs": reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
@@ -216,6 +217,7 @@ def base(request: "HttpRequest") -> dict[str, Any]:
         else:
             user = None
 
+    @cache_results()
     @snake_case()
     def get_cached_context(username: Optional[str]) -> dict[str, Any]:
         """
