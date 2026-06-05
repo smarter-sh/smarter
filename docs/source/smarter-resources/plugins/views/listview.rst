@@ -1,8 +1,7 @@
 Plugin Views
 ================
 
-.. automodule:: smarter.apps.plugin.views.detailview
+.. automodule:: smarter.apps.plugin.views.listview.view
     :members:
     :undoc-members:
     :show-inheritance:
-    :no-index:

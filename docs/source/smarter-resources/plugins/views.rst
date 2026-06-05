@@ -4,5 +4,6 @@ Views
 .. toctree::
    :maxdepth: 1
 
-   views/plugin
-   views/connection
+   views/api
+   views/listview
+   views/detailview
