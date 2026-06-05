@@ -250,6 +250,7 @@ jobs:
         if: steps.react-build-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
+          make react-install
           make react-build
 
       # -----------------------------------------------------------------------
