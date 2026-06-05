@@ -376,8 +376,6 @@ RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
 # copy the smarter-common npm package from the react build stage. This is needed because
 # the smarter-common package includes shared code used by several of the React components.
 COPY --chown=smarter_user:smarter_user --from=react_assets /tmp/react_assets/ /home/smarter_user/smarter/smarter/static/react/
-RUN mkdir -p /home/smarter_user/smarter/smarter/static/react/lib/
-COPY --chown=smarter_user:smarter_user ./smarter/react/lib/ /home/smarter_user/smarter/static/react/lib/
 
 ################################# permissions #######################################
 # This stage is for setting file permissions for the smarter_user. We want to approach

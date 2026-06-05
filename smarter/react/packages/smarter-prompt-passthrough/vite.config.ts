@@ -31,9 +31,9 @@ import packageJson from "./package.json" with { type: "json" };
 const packageName = packageJson.name;
 
 /**
- * Vite Provider: addCustomManifestData
+ * Vite Plugin: addCustomManifestData
  *
- * This provider injects custom metadata into the generated manifest.json file after each build.
+ * This plugin injects custom metadata into the generated manifest.json file after each build.
  * The metadata includes:
  *   - buildTime: ISO timestamp of the build
  *   - version: The version from package.json
@@ -61,19 +61,19 @@ const addCustomManifestData: PluginOption = {
 
 
 /**
- * Vite Provider: postBuildProvider
+ * Vite Plugin: postBuildPlugin
  *
- * After each build, this provider optionally uploads the built assets to S3 and triggers a CloudFront invalidation,
+ * After each build, this plugin optionally uploads the built assets to S3 and triggers a CloudFront invalidation,
  * ensuring the latest files are served in production. This workflow is enabled by the `cdnDeploy` flag in package.json
  * and allows Docker images to skip React build tools while supporting CDN-based static file serving.
  */
-const postBuildProvider: PluginOption = {
+const postBuildPlugin: PluginOption = {
   name: "post-build",
 
   closeBundle() {
     if (packageJson.config.cdnDeploy === true) {
       execSync(
-        `aws s3 sync ../../smarter/static/react/${packageName} ${packageJson.config.s3BucketPath} --acl public-read --delete`,
+        `aws s3 sync ../../../smarter/static/react/${packageName} ${packageJson.config.s3BucketPath} --acl public-read --delete`,
         { stdio: "inherit" },
       );
       execSync(
@@ -88,17 +88,17 @@ const postBuildProvider: PluginOption = {
  * Main Vite Configuration Export
  *
  * This function exports the Vite configuration for the React app, dynamically adjusting
- * settings based on the build command (development or production). It sets up providers, build output,
+ * settings based on the build command (development or production). It sets up plugins, build output,
  * asset handling, and development server proxying to integrate seamlessly with the Django backend.
  *
  * Key features:
- * - Uses custom providers for manifest metadata and optional CDN deployment
+ * - Uses custom plugins for manifest metadata and optional CDN deployment
  * - Removes console.debug in production builds
  * - Outputs assets to Django's static directory for collectstatic
  * - Proxies API and static requests to Django during development
  */
 export default defineConfig(({ command }: ConfigEnv) => ({
-  providers: [react(), postBuildProvider, addCustomManifestData],
+  plugins: [react(), postBuildPlugin, addCustomManifestData],
   // We use esbuild to remove console.debug statements in production builds
   // in order to avoid leaking potentially sensitive information in
   // production environments.
@@ -136,7 +136,7 @@ export default defineConfig(({ command }: ConfigEnv) => ({
     // In development, we rely on Vite's dev server to serve these files, so we
     // set the outDir to a directory that is not used by the Django dev server.
     // ------------------------------------------------------------------------
-    outDir: `../../smarter/static/react/${packageName}`,
+    outDir: `../../../smarter/static/react/${packageName}`,
     emptyOutDir: true,
     // ------------------------------------------------------------------------
     // We want to bundle xterm.js and its addons separately from the rest of the
@@ -163,15 +163,14 @@ export default defineConfig(({ command }: ConfigEnv) => ({
   // so that these requests are served from the Django dev server instead
   // of the React dev server.
   //
-  // Most of these cases stem from <link> elements added to index.html
+  // Most of these cases stem from <link> elements added to this index.html
   // containing platform-wide stylesheets and scripts that originate from
   // and are served by the Django dev server. These are added to index.html
-  // in order to keep this React dev environment consistent with the Django
-  // runtime environment.
+  // in order to keep this React dev environment as close to the runtime
+  // environment as possible.
   server: {
     proxy: {
       "/api": "http://localhost:9357",
-      "/secret": "http://localhost:9357",
       "/assets": {
         target: "http://localhost:9357", // Django dev server
         changeOrigin: true,
@@ -193,7 +192,6 @@ export default defineConfig(({ command }: ConfigEnv) => ({
         changeOrigin: true,
       },
       "/workbench/": "http://localhost:9357",
-      "/provider/": "http://localhost:9357",
     },
   },
 }));

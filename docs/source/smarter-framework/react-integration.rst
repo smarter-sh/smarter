@@ -191,7 +191,7 @@ Application component.
     closeBundle() {
       if (packageJson.config.cdnDeploy === true) {
         execSync(
-          `aws s3 sync ../../smarter/static/react/${packageName} ${packageJson.config.s3BucketPath} --acl public-read --delete`,
+          `aws s3 sync ../../../smarter/static/react/${packageName} ${packageJson.config.s3BucketPath} --acl public-read --delete`,
           { stdio: "inherit" },
         );
         execSync(
@@ -244,7 +244,7 @@ Application component.
       // In development, we rely on Vite's dev server to serve these files, so we
       // set the outDir to a directory that is not used by the Django dev server.
       // ------------------------------------------------------------------------
-      outDir: `../../smarter/static/react/${packageName}`,
+      outDir: `../../../smarter/static/react/${packageName}`,
       emptyOutDir: true,
       // ------------------------------------------------------------------------
       // We want to bundle xterm.js and its addons separately from the rest of the
@@ -476,7 +476,7 @@ deployment, and CI/CD lifecycle of React applications within the Smarter platfor
     This ensures that all compiled React bundles and manifest metadata are available
     inside the container image at runtime.
 * Convenience Tooling
-    Smarter provides helper commands such as `make react-build` and `make docker-build-for-react`
+    Smarter provides helper commands such as `make react-build` and `make react-build-ci`
     to simplify common frontend integration workflows and to keep Django’s
     static directories aligned with current React build outputs.
 

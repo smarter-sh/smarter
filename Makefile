@@ -16,11 +16,13 @@ ifeq ("$(wildcard .env)","")
 endif
 include .env
 
-.PHONY: init activate build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+
+.PHONY: all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
+	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
 	keen-init keen-build keen-server \
-	react-build \
+	react-install react-build react-build-ci \
 	helm-update \
 	sphinx-init sphinx-docs sphinx-linkcheck \
 	help
@@ -320,40 +322,19 @@ python-requirements:
 # ---------------------------------------------------------
 # React
 # ---------------------------------------------------------
-react-build-common:
-	cd smarter/react/lib/smarter-common && \
-	unset NODE_ENV && \
-	npm config delete production && \
-	npm config delete omit && \
-	npm config get production && \
-	npm config get omit && \
-    rm -rf dist && \
-	rm -f package-lock.json && \
-	rm -rf node_modules && \
-	rm -f smarter-common*.tgz && \
-	npm install && \
-	npm ci --include=dev && \
-	npm run build && \
-	npm run pack:tgz && \
-	cd ../../../../
+react-install:
+	cd smarter/react && npm install --include=dev
 
 react-build:
 	@echo "==============================================================================="
-	@echo "Building and collecting static files on local filesystem ..."
+	@echo "Building and collecting React files on local filesystem ..."
 	@echo "==============================================================================="
-	NODE_ENV_BACKUP=$$NODE_ENV && \
-	make react-build-common && \
-	export NODE_ENV=production && \
-	cd smarter/react/smarter-connection-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-dashboard && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-plugin-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-prompt-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-prompt-passthrough && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-provider-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-secret-list && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
-	cd smarter/react/smarter-terminal-emulator && rm -f package-lock.json && rm -rf node_modules && npm install --include=dev && npm run build && cd ../../../ && \
-	export NODE_ENV=$$NODE_ENV_BACKUP
+	cd smarter/react && NODE_ENV=production npm run build
 
+react-build-ci:
+	cd smarter/react && \
+	NODE_ENV=production npm ci --include=dev && \
+	NODE_ENV=production npm run build
 
 # -------------------------------------------------------------------------
 # Sphinx Documentation
@@ -423,8 +404,9 @@ help:
 	@echo 'python-clean           - Destroy the Python virtual environment and remove __pycache__ directories'
 	@echo 'python-requirements    - Compile and update Python dependency files'
 	@echo '<************************** React **************************>'
+	@echo 'react-install          - Install npm dependencies for React frontend apps'
 	@echo 'react-build            - Build all React frontend apps and collect static files'
-	@echo 'react-build-common     - Build the smarter-common React library and collect static files'
+	@echo 'react-build-ci         - Build all React frontend apps using CI settings'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'
 	@echo 'keen-build             - Build Keen app using gulp'

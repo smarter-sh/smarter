@@ -17,7 +17,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@smarter/common": "file:../lib/smarter-common/smarter-common-0.1.0.tgz",
+    "@smarter/common": "^0.1.0",
     "@monaco-editor/react": "^4.7.0",
     "process": "^0.11.10",
     "react": "^19.2.5",
