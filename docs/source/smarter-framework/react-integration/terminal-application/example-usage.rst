@@ -1,5 +1,5 @@
 Example Usage
 ------------------------
 
-.. literalinclude:: ../../../../../smarter/react/smarter-terminal-emulator/src/components/Terminal/Component.stories.tsx
+.. literalinclude:: ../../../../../smarter/react/packages/smarter-terminal-emulator/src/components/Terminal/Component.stories.tsx
    :language: tsx

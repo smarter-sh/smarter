@@ -1,5 +1,5 @@
 Example Usage
 ------------------------
 
-.. literalinclude:: ../../../../../smarter/react/smarter-dashboard/src/components/Dashboard/Component.stories.tsx
+.. literalinclude:: ../../../../../smarter/react/packages/smarter-dashboard/src/components/Dashboard/Component.stories.tsx
    :language: tsx
