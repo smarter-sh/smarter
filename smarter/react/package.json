@@ -4,8 +4,6 @@
     "packages/*"
   ],
   "scripts": {
-
-    "build": "npm run build --workspaces"
-
+    "build": "npm run build --workspace=@smarter/common && npm run build --workspaces"
   }
 }
