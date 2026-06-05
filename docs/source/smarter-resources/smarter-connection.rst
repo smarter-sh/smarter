@@ -33,12 +33,14 @@ Technical Reference
    :maxdepth: 1
 
    connection/api
-   connection/models
-   connection/serializers
    connection/const
+   connection/manifest
+   connection/models
    connection/receivers
    connection/resources
+   connection/serializers
    connection/signals
-   connection/sam
    connection/tasks
+   connection/templatetags
+   connection/urls
    connection/views
