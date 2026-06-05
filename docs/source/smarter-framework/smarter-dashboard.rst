@@ -18,7 +18,7 @@ experience for your users.
    :maxdepth: 1
    :caption: Dashboard Technical Reference
 
-
+   dashboard/admin
    dashboard/const
    dashboard/context_processors
    dashboard/models
