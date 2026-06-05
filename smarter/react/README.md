@@ -86,19 +86,18 @@ A typical app package:
   - `storybook`
   - `build-storybook`
 
-Example package manifest reference:
-`smarter/react/packages/smarter-authtoken-list/package.json`
+Example package manifest reference: [packages/smarter-authtoken-list/package.json](./packages/smarter-authtoken-list/package.json)
 
 ## Vite and Django Integration
 
 Each app uses a standardized Vite configuration to support Django integration
 and deployment workflows.
 
-Example vite config: [smarter/react/packages/smarter-authtoken-list/vite.config.ts](./packages/smarter-authtoken-list/vite.config.ts)
+Example vite config: [packages/smarter-authtoken-list/vite.config.ts](./packages/smarter-authtoken-list/vite.config.ts)
 
 Common behavior includes:
 
-- Output directory points to Django static React folder: [../../../smarter/static/react/<package-name>](../smarter/static/react/)
+- Output directory points to Django static React folder: [smarter/smarter/static/react/@smarter](../smarter/static/react/@smarter/)
 - Build manifest is generated and used by Django template tags for hashed asset
   resolution.
 - Custom metadata is injected into `manifest.json` after build.
