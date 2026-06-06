@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.dashboard.views.logs.api import streams
+from smarter.apps.dashboard.views.terminal_emulator.api import streams
 from smarter.lib.logging.redis_log_handler import (
     build_channel,
     get_user_context,

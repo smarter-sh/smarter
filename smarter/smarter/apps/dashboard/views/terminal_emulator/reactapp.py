@@ -87,7 +87,7 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
             with the terminal context dictionary.
         :rtype: django.http.HttpResponse
         """
-        from smarter.apps.dashboard.views.logs.api.urls import (
+        from smarter.apps.dashboard.views.terminal_emulator.api.urls import (
             DashboardLogsApiReverseNames,
         )
         from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
@@ -97,7 +97,8 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
         context = {
             "terminal": {
                 "root_id": "smarter-terminal-emulator-root",
-                "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
+                "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the
+                # header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "api_url": reverse(

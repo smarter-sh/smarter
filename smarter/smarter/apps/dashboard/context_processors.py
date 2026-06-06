@@ -77,12 +77,13 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
-from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.views.apply_manifest.urls import ApplyManifestReverseNames
-from smarter.apps.dashboard.views.logs.names import DashboardLogsReverseNames
 from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
+from smarter.apps.dashboard.views.terminal_emulator.names import (
+    DashboardLogsReverseNames,
+)
 from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.apps.docs.urls import DocsReverseNames
 from smarter.apps.plugin.models import (

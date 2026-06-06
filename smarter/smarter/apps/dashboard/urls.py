@@ -23,9 +23,9 @@ from django.urls import include, path
 
 from smarter.apps.dashboard.const import namespace
 from smarter.apps.dashboard.views.apply_manifest import urls as apply_manifest_urls
-from smarter.apps.dashboard.views.logs import urls as logs_urls
 from smarter.apps.dashboard.views.passthrough import urls as passthrough_urls
 from smarter.apps.dashboard.views.profile import urls as profile_urls
+from smarter.apps.dashboard.views.terminal_emulator import urls as logs_urls
 from smarter.apps.dashboard.views.views import urls as dashboard_urls
 from smarter.lib import logging
 
