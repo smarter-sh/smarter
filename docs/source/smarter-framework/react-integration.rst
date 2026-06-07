@@ -461,47 +461,6 @@ and <link> elements for the React component's JavaScript and CSS assets.
   :width: 100%
 
 
-Django View
--------------
-
-The Django view is responsible for mapping the URL endpoint to the Django HTML template and
-for generating the server-side context consumed by that template. In this architecture, the
-view layer is intentionally kept thin and focused primarily on request orchestration, template
-selection, authentication, and serialization of runtime configuration values required by the
-React frontend.
-
-The view assembles a context dictionary containing configuration and integration metadata,
-including cookie names, CSRF settings, API endpoints, and DOM identifiers. These values are
-subsequently rendered into custom HTML attributes by the Django template, where they become
-available to the React application as initialization props during the client-side bootstrap
-process.
-
-A live example of a Django view that serves the dashboard template:
-
-.. code-block:: python
-
-  class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
-
-      def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-
-          context = {
-              "terminal": {
-                  "root_id": "smarter-terminal-emulator-root",
-                  "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
-                  "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
-                  "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                  "api_url": "/path/to/log/stream/",  # the WebSocket endpoint with the log data stream.
-              }
-          }
-          self.template_path = "react/terminal-emulator.html"
-
-          return render(request, self.template_path, context=context)
-
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/view-template-integration1.png
-  :alt: View, Template, and React Component Integration
-  :width: 100%
-
-
 Build-Deploy and CI-CD Considerations
 ---------------------------------------
 
