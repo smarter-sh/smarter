@@ -40,6 +40,7 @@ tools, SDKs, and supporting technologies.
    smarter-framework/getting-started
    smarter-framework/guides
    smarter-framework/smarter-manifests
+   smarter-framework/smarter-broker-model
    smarter-framework/smarter-api
    smarter-framework/smarter-cli
    smarter-framework/vs-code-extension

@@ -1,5 +1,5 @@
-Utils - File Handlers
-=====================
+File Handler Utilities
+=======================
 
 .. automodule:: smarter.common.utils.file_handlers
    :members:

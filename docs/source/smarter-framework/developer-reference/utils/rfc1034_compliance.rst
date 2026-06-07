@@ -1,5 +1,5 @@
-Utils - RFC1034 Compliance
-===========================
+RFC1034 Compliance Utilities
+=============================
 
 .. automodule:: smarter.common.utils.rfc1034_compliance
    :members:

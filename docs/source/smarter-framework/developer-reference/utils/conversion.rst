@@ -1,4 +1,4 @@
-Utils - Conversion
+Conversion Utilities
 ====================
 
 .. automodule:: smarter.common.utils.conversion

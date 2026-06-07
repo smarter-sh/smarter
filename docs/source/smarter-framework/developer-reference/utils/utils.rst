@@ -1,4 +1,4 @@
-Utils
+Misc Utilities
 ====================
 
 .. automodule:: smarter.common.utils.utils

@@ -1,4 +1,4 @@
-Utils - Version
+Version Utilities
 ====================
 
 .. automodule:: smarter.common.utils.version

@@ -1,4 +1,4 @@
-Utils - Request
+Request Utilities
 ====================
 
 .. automodule:: smarter.common.utils.request

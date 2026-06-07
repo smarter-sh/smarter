@@ -1,4 +1,4 @@
-Utils - URI
+URI Utilities
 ====================
 
 .. automodule:: smarter.common.utils.uri
