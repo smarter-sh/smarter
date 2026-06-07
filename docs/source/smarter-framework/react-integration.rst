@@ -5,12 +5,8 @@ Smarter integrates React applications directly into Django's server-rendered
 architecture rather than treating React as a separate single-page
 application. This approach preserves Django's strengths in authentication,
 session management, template rendering, routing, and deployment while
-enabling modern, highly interactive user interfaces.
-
-.. note::
-
-  The core design principle: React build artifacts are treated as
-  ordinary Django static assets.
+enabling modern, highly interactive user interfaces. The core design principle
+is that React build artifacts are treated as ordinary Django static assets.
 
 React applications are compiled by Vite into versioned JavaScript and CSS
 bundles and emitted directly into Django's static file hierarchy. At runtime,
