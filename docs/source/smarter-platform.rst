@@ -5,8 +5,8 @@ The Smarter platform is a batteries-included solution
 that is designed to provide large organizations with a robust and scalable foundation
 for deploying and managing :doc:`AI applications <smarter-resources>` in production environments.
 
-Smarter runs natively on :doc:`Kubernetes <smarter-framework/kubernetes>` in
-the cloud at :doc:`Amazon Web Services (AWS) <smarter-framework/aws>`.
+Smarter runs natively on :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` in
+the cloud at :doc:`Amazon Web Services (AWS) <smarter-framework/technologies/aws>`.
 It provides the necessary :doc:`infrastructure <smarter-platform/cloud-infrastructure>` and services to host and manage
 :doc:`AI-driven workflows, agents and chatbots <smarter-resources/smarter-chatbot>` that
 are :doc:`securely integrated <smarter-resources/smarter-plugin>` to
@@ -25,6 +25,7 @@ The Smarter platform's fundamental building blocks to this extent are:
    :caption: Platform Administration Guide
 
    smarter-platform/installation
+   smarter-platform/smarter-web-console
    smarter-platform/django-admin
    smarter-platform/prerequisites
    smarter-platform/trouble-shooting
