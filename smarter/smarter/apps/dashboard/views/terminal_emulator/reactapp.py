@@ -18,7 +18,7 @@ Classes:
 Example:
     Wire up the view in your URL configuration::
 
-        from smarter.apps.dashboard.views.logs.reactapp import TerminalEmulatorLogView
+        from smarter.apps.dashboard.views.terminal_emulator.reactapp import TerminalEmulatorLogView
 
         urlpatterns = [
             path("terminal/", TerminalEmulatorLogView.as_view(), name="smarter-terminal-emulator"),
