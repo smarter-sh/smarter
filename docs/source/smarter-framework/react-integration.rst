@@ -10,6 +10,10 @@ strengths in authentication, session management, template rendering, routing, an
 industrial-grade server-side orchestration while simultaneously enabling the development of
 rich, highly interactive React applications.
 
+.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.002.png
+  :alt: View, Template, and React Component Integration
+  :width: 100%
+
 A central design goal of Smarter’s integration model is the complete separation of frontend
 component development from backend deployment concerns. React developers are free to build
 components using standard modern tooling, while Django transparently assumes responsibility
@@ -68,11 +72,7 @@ interactive React component that involves live streaming data, complex state man
 and tight integration with Django's authentication and server-side context management.
 Functionality of this nature could only be implemented in a frontend framework like React.
 
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/terminal-emulator-react-component.png
-  :alt: View, Template, and React Component Integration
-  :width: 100%
-
-.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.002.png
+.. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/react-integration.001.png
   :alt: View, Template, and React Component Integration
   :width: 100%
 
