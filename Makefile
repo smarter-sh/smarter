@@ -422,4 +422,5 @@ help:
 	@echo 'sphinx-init            - Initialize Sphinx documentation environment'
 	@echo 'sphinx-docs            - Build Sphinx documentation'
 	@echo 'sphinx-linkcheck       - Check documentation links'
+	@echo 'sphinx-publish         - Publish documentation to AWS S3 and invalidate CloudFront cache'
 	@echo '===================================================================='

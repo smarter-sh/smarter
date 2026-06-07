@@ -31,15 +31,15 @@ Smarter |project_version| Documentation
    :alt: AGPL-3 License
 
 
-A :doc:`declarative <smarter-framework/lib/manifests>` AI :doc:`resource management <smarter-resources>` :doc:`platform <smarter-platform>` and :doc:`developer framework <smarter-framework>`.
+A :doc:`declarative <smarter-framework/smarter-manifests>` AI :doc:`resource management <smarter-resources>` :doc:`platform <smarter-platform>` and :doc:`developer framework <smarter-framework>`.
 
 - **From scratch** | :doc:`smarter-platform/installation/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://platform.smarter.sh/docs/learn/>`__
 - **Platform**
 
-  - Helps you manage all your :doc:`AI resources <smarter-resources>` using easy :doc:`YAML files <smarter-framework/lib/manifests>` (like how `Kubernetes <https://kubernetes.io/>`_ works).
+  - Helps you manage all your :doc:`AI resources <smarter-resources>` using easy :doc:`YAML files <smarter-framework/smarter-manifests>` (like how `Kubernetes <https://kubernetes.io/>`_ works).
   - Simple `Docker <https://hub.docker.com/r/mcdaniel0073/smarter>`_ installation. Run on Kubernetes with the `Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`_.
-  - Manage AI resources with the :doc:`web dashboard <smarter-framework/react-integration/smarter-chat>`, the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`command-line interface <smarter-platform/cli>`.
-  - Keeps track of :doc:`logs <smarter-framework/smarter-journal>`, safety checks, :doc:`costs <smarter-platform/cost-accounting>`, and :doc:`security <smarter-platform/security>` so nothing gets lost or misused.
+  - Manage AI resources with the :doc:`web dashboard <smarter-framework/developer-reference/react-integration/smarter-chat>`, the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`command-line interface <smarter-platform/cli>`.
+  - Keeps track of :doc:`logs <smarter-framework/developer-reference/smarter-journal>`, safety checks, :doc:`costs <smarter-platform/cost-accounting>`, and :doc:`security <smarter-platform/security>` so nothing gets lost or misused.
 
 - **AI Resource Management**
 
@@ -50,11 +50,11 @@ A :doc:`declarative <smarter-framework/lib/manifests>` AI :doc:`resource managem
 
 - **Cloud-Native Application Framework**
 
-  - Built on :doc:`Django <smarter-framework/lib/django>`, :doc:`Django REST Framework <smarter-framework/lib/drf>`, :doc:`Pydantic <smarter-framework/pydantic>`.
-  - Automated :doc:`AWS cloud infrastructure <smarter-framework/aws>` and :doc:`Kubernetes <smarter-framework/kubernetes>` management.
-  - ReactJS component-based :doc:`UI integration solution <smarter-framework/react-integration/smarter-chat>` that works for any web page.
+  - Built on :doc:`Django <smarter-framework/developer-reference/lib/django>`, :doc:`Django REST Framework <smarter-framework/developer-reference/lib/drf>`, :doc:`Pydantic <smarter-framework/technologies/pydantic>`.
+  - Automated :doc:`AWS cloud infrastructure <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` management.
+  - ReactJS component-based :doc:`UI integration solution <smarter-framework/developer-reference/react-integration/smarter-chat>` that works for any web page.
   - Build AI tools that connect to enterprise resources like :doc:`Sql databases <smarter-resources/plugins/plugin/sql>` and :doc:`REST APIs <smarter-resources/plugins/plugin/api>`.
-  - :doc:`Prompt engineer workbench <smarter-framework/react-integration/smarter-chat>` for testing prompts and workflows before you deploy.
+  - :doc:`Prompt engineer workbench <smarter-framework/developer-reference/react-integration/smarter-chat>` for testing prompts and workflows before you deploy.
   - Vibrant developer community: `PyPI <https://pypi.org/project/smarter-api/>`_, `NPM <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, `VS Code extensions <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_, and more.
 
 

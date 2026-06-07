@@ -25,8 +25,8 @@ Usage
 
   - :doc:`Example Prompt Config <./example-config>`
   - :doc:`Example Prompt Response <./example-response>`
-  - :doc:`Django Hosts <../../smarter-framework/lib/django/hosts>`
-  - :doc:`Smarter Chat <../../smarter-framework/react-integration/smarter-chat>`
+  - :doc:`Django Hosts <../../smarter-framework/developer-reference/lib/django/hosts>`
+  - :doc:`Smarter Chat <../../smarter-framework/develop-reference/react-integration/smarter-chat>`
   - class reference :py:class:`smarter.apps.prompt.views.ChatAppWorkbenchView`
 
 
