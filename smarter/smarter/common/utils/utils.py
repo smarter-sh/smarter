@@ -1,5 +1,5 @@
 """
-smarter.common.utils.utils
+Smarter.common.utils.utils
 ==========================
 
 Utility functions for the Smarter framework.
@@ -20,7 +20,6 @@ environment variable parsing, encryption key generation, and string masking.
 
     token = hash_factory(length=16)
     debug_mode = bool_environment_variable('DEBUG', default=False)
-
 """
 
 import asyncio
@@ -84,7 +83,6 @@ def hash_factory(length: int = 16) -> str:
         # Generate a 32-character random hash
         long_token = hash_factory(length=32)
         print(long_token)  # e.g., 'a3f9c1e2b4d5f6a7c8e9d0b1a2c3d4e5'
-
     """
     return hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:length]
 
@@ -120,7 +118,6 @@ def mask_string(string: Union[str, bytes], mask_char: str = "*", mask_length: in
         - If the input string is shorter than ``mask_length``, the original string is returned.
         - If ``mask_length`` is greater than ``string_length``, it is reduced to ``string_length``.
 
-
     **Example usage:**
 
     .. code-block:: python
@@ -138,7 +135,6 @@ def mask_string(string: Union[str, bytes], mask_char: str = "*", mask_length: in
         # Mask a short string
         masked = mask_string("abc", mask_length=4)
         print(masked)  # Output: abc
-
     """
     logger.debug("%s.mask_string()", logger_prefix)
     warnings.warn(
@@ -191,7 +187,6 @@ def generate_fernet_encryption_key() -> str:
 
         key = generate_fernet_encryption_key()
         print(key)  # e.g., 'gAAAAABh...'
-
     """
     logger.debug("%s.generate_fernet_encryption_key() Generating new Fernet encryption key.", logger_prefix)
     return Fernet.generate_key().decode("utf-8")
@@ -203,7 +198,7 @@ def bool_environment_variable(var_name: str, default: bool) -> bool:
     Retrieve a boolean value from an environment variable.
 
     This function checks for the presence of an environment variable with the given name,
-    or with the prefix "SMARTER_" added to the name. If the variable is not set, the provided
+    or with the prefix ``SMARTER_`` added to the name. If the variable is not set, the provided
     default value is returned. The value is interpreted as True if it matches any of the following
     (case-insensitive): "true", "1", "t", "y", or "yes".
 
@@ -222,7 +217,6 @@ def bool_environment_variable(var_name: str, default: bool) -> bool:
 
         # Returns True if the environment variable 'DEBUG' is set to a truthy value
         debug_mode = bool_environment_variable('DEBUG', default=False)
-
     """
     logger.debug("%s.bool_environment_variable()", logger_prefix)
     value = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")

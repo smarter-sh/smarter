@@ -1,4 +1,4 @@
-Utils - Dict
+Dict Utilities
 ====================
 
 .. automodule:: smarter.common.utils.dict

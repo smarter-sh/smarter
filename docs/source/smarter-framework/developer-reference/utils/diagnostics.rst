@@ -1,5 +1,5 @@
-Utils - Diagnostics
-====================
+Diagnostics Utilities
+======================
 
 .. automodule:: smarter.common.utils.diagnostics
    :members:
