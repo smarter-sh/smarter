@@ -3,7 +3,7 @@ Logs Terminal Emulator Streams API
 
 Server-side Event (SSE) Streams API for the Terminal Emulator React App.
 
-.. automodule:: smarter.apps.dashboard.views.logs.api.streams
+.. automodule:: smarter.apps.dashboard.views.terminal_emulator.api.streams
     :members:
     :undoc-members:
     :show-inheritance:
