@@ -26,7 +26,7 @@ Example:
         from django.urls import include, path
 
         urlpatterns = [
-            path("logs/", include("smarter.apps.dashboard.views.logs.urls")),
+            path("logs/", include("smarter.apps.dashboard.views.terminal_emulator.urls")),
         ]
 """
 
