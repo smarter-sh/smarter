@@ -1,0 +1,21 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage: Sphinx remote build requirements for
+#        https://app.readthedocs.org/projects/smarter/builds
+#
+#       pip-compile smarter/requirements/in/docs.in --upgrade -o smarter/requirements/docs.txt
+# -----------------------------------------------------------------------------
+
+-r constraints.in
+-r base.in
+
+# Documentation
+sphinx                              # for Readthedocs
+sphinx-rtd-theme                    # Sphinx theme for Readthedocs
+autodoc_pydantic                    # Sphinx extension for Pydantic models
+sphinxcontrib-django                # Sphinx for django settings
+sphinx-copybutton                   # Sphinx code copy button extension
+sphinx-autodoc-typehints            # Sphinx type hint annotation improvements
+sphinx-design                       # Adds drop downs and other fancy styling
