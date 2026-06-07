@@ -74,7 +74,7 @@ except Exception:
     commit = None
 
 
-last_updated = datetime.now().strftime("%Y-%m-%d")
+last_updated = datetime.now().strftime("%B-%Y")
 
 # custom context variables to be used in Sphinx templates, presumably in
 # the ./_templates/footer.html template override.
