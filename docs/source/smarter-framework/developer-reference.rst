@@ -1,5 +1,5 @@
-Smarter Developer Reference
-=============================
+Developer Technical Reference
+===============================
 
 
 .. toctree::
