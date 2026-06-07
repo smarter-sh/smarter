@@ -368,6 +368,11 @@ sphinx-docs:
 sphinx-linkcheck:
 	cd docs && make linkcheck
 
+sphinx-publish:
+	cd docs/build/html && \
+	aws s3 sync . s3://docs.smarter.sh/ --delete && \
+	aws cloudfront create-invalidation --distribution-id E3J3PFZATCQOFX --paths "/*"
+
 ######################
 # HELP
 ######################
