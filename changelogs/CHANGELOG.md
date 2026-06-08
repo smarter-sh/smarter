@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.55](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.54...v0.14.0-alpha.55) (2026-06-08)
+
+### Bug Fixes
+
+* to_snake_case should convert LLMClient to llm_client ([fbd7f08](https://github.com/smarter-sh/smarter/commit/fbd7f08f83fded957045fe6c414c0fe57fdf5646))
+
 ## [0.14.0-alpha.54](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.53...v0.14.0-alpha.54) (2026-06-05)
 
 ### Bug Fixes
