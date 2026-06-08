@@ -53,7 +53,7 @@ class Migration(migrations.Migration):
                             ("ChatHistory", "ChatHistory"),
                             ("ChatPluginUsage", "ChatPluginUsage"),
                             ("ChatToolCall", "ChatToolCall"),
-                            ("Chatbot", "Chatbot"),
+                            ("LLMClient", "LLMClient"),
                             ("Provider", "Provider"),
                             ("Secret", "Secret"),
                             ("Vectorstore", "Vectorstore"),

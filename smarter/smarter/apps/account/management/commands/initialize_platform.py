@@ -34,16 +34,18 @@ class Command(SmarterCommand):
 
     def handle(self, *args, **options):
         """
-        Initialize the Smarter platform. Creates the minimal resources necessary to start using Smarter.
+        Initialize the Smarter platform.
+
+        Creates the minimal resources necessary to start using Smarter.
 
         1. Create an admin user with the provided username, email, and password.
         2. Create example accounts and users.
         4. Verify DNS configuration.
         5. Load example projects from GitHub.
         6. Add plugin examples.
-        7. Deploy example chatbots.
+        7. Deploy example llm_clients.
         8. Initialize providers.
-        9. Create StackAcademy SQL and API chatbots.
+        9. Create StackAcademy SQL and API llm_clients.
         10. Apply manifests and update secrets for database connections.
         """
         self.handle_begin()

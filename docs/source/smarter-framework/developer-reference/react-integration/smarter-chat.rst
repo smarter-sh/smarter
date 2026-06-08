@@ -167,7 +167,7 @@ during the normal page load.
       id="smarter-sh-v1-ui-chat-root"
       class="smarter-chat"
       django-session-cookie-name="sessionid"
-      smarter-chatbot-api-url="https://platform.smarter.sh/api/v1/chatbots/38/"
+      smarter-chatbot-api-url="https://platform.smarter.sh/api/v1/llm-clients/38/"
       smarter-cookie-domain="platform.smarter.sh"
       smarter-csrf-cookie-name="csrftoken"
       smarter-debug-mode="True"

@@ -36,22 +36,22 @@ Smarter Plugin technology provides two means of declaratively defining tools tha
 by LLM's for tool calling: via a defined list of built-in functions, and via SAM Plugins that
 are based on any of a.) :doc:`static data <plugin/static>`, b.) :doc:`SQL queries <plugin/sql>`, or c.) :doc:`external APIs <plugin/api>`.
 
-Here is an example Smarter Chatbot, configured to use both a function, ``get_current_weather`` and a
+Here is an example Smarter LLMClient, configured to use both a function, ``get_current_weather`` and a
 Smarter Plugin, ``example_configuration``. The ``example_configuration`` Plugin is defined separately in the yaml file that follows.
 
 .. code-block:: yaml
     :caption: Example Smarter Plugin Configuration
 
     apiVersion: smarter.sh/v1
-    kind: Chatbot
+    kind: LLMClient
     metadata:
-      description: "An example chatbot with tool calling and Smarter Plugins."
+      description: "An example llm_client with tool calling and Smarter Plugins."
       name: example
       version: 0.1.0
     spec:
       config:
         defaultModel: gpt-4o-mini
-        defaultSystemRole: You are a helpful chatbot.
+        defaultSystemRole: You are a helpful llm_client.
         provider: openai
       functions:
       - get_current_weather

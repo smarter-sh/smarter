@@ -19,9 +19,9 @@ Basic Usage
 
   @app.task(
       autoretry_for=(Exception,),
-      retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-      max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-      queue=smarter_settings.chatbot_tasks_celery_task_queue,
+      retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
+      max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
+      queue=smarter_settings.llm_client_tasks_celery_task_queue,
   )
   def long_running_task(*args, **kwargs):
         # Your long-running task logic here

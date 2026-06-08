@@ -1,7 +1,5 @@
 # pylint: disable=unused-argument
-"""
-Celery tasks for the plugin app.
-"""
+"""Celery tasks for the plugin app."""
 
 from typing import Optional
 
@@ -30,9 +28,9 @@ module_prefix = "smarter.apps.plugin.tasks."
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
+    queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
 def create_plugin_selector_history(*args, **kwargs):
     """
@@ -83,7 +81,6 @@ def create_plugin_selector_history(*args, **kwargs):
                 "session_key": "abc123"
             }
         )
-
     """
 
     @cache_results()

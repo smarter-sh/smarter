@@ -23,7 +23,7 @@ Usage
 
 .. seealso::
 
-  - :doc:`Example Manifests <secret/sam/example-manifests>`: An example manifest for creating a Smarter Secret using SAM.
+  - :doc:`Example Manifests <secret/manifest/example-manifests/secret>`: An example manifest for creating a Smarter Secret using SAM.
 
 Technical Reference
 -------------------

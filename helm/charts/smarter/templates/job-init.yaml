@@ -64,8 +64,8 @@ spec:
               python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/QueriumCorp/smarter-demo
               python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/examples --repo_version 2
               python manage.py add_plugin_examples
-              python manage.py deploy_example_chatbot
-              python manage.py deploy_builtin_chatbots --account_number 3141-5926-5359
+              python manage.py deploy_example_llm_client
+              python manage.py deploy_builtin_llm_clients --account_number 3141-5926-5359
               python manage.py create_stackademy
 
           command:

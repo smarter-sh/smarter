@@ -18,9 +18,9 @@ metadata:
     - smarter.sh/tests/host: sql.lawrencemcdaniel.com
     - smarter.sh/tests/purpose: Provide information about Stackademy University courses using SQL queries.
     - smarter.sh/tests/last-updated: 2025-12-31
-    - smarter.sh/tests/documentation: https://docs.tests.edu/sql-chatbot
+    - smarter.sh/tests/documentation: https://docs.tests.edu/sql-llm_client
     - smarter.sh/tests/connection-info: >
-        This chatbot connects to the Stackademy SQL database hosted at sql.lawrencemcdaniel.com
+        This llm_client connects to the Stackademy SQL database hosted at sql.lawrencemcdaniel.com
         using the Stackademy SQL plugin to retrieve course information.
 spec:
   # ------------------------------------------------------------
@@ -31,7 +31,7 @@ spec:
   selector:
     directive: search_terms
     #------------------------------------------------------------
-    # search terms that will trigger the chatbot to use this customized configuration.
+    # search terms that will trigger the llm_client to use this customized configuration.
     #------------------------------------------------------------
     searchTerms:
       - Cli Test

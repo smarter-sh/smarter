@@ -1,0 +1,45 @@
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  name: stackademy_sql
+  description: Stackademy University course catalogue inquiries using the Stackademy SQL plugin.
+  version: 1.0.0
+  tags:
+    - education
+    - courses
+    - sql
+    - agent
+    - tool-calling
+  annotations:
+    - smarter.sh/stackademy/owner: example-user
+    - smarter.sh/stackademy/host: sql.lawrencemcdaniel.com
+    - smarter.sh/stackademy/purpose: Provide information about Stackademy University courses using SQL queries.
+    - smarter.sh/stackademy/last-updated: 2025-12-31
+    - smarter.sh/stackademy/documentation: https://docs.stackademy.edu/sql-llm_client
+    - smarter.sh/stackademy/connection-info: >
+        This llm_client connects to the Stackademy SQL database hosted at sql.lawrencemcdaniel.com
+        using the Stackademy SQL plugin to retrieve course information.
+spec:
+  config:
+    deployed: false
+    provider: openai
+    defaultModel: gpt-4o-mini
+    defaultSystemRole: >
+      You are a helpful assistant. When given the opportunity to utilize
+      function calling, you should always do so. This will allow you to
+      provide the best possible responses to the user.
+    defaultTemperature: 0.5
+    defaultMaxTokens: 1024
+    appName: Stackademy SQL LLMClient
+    appAssistant: Stanley
+    appWelcomeMessage: Welcome to Stackademy SQL LLMClient! How can I help you today?
+    appExamplePrompts:
+      - "Do you offer any courses on AI?"
+      - "My budget is $1,000. What courses can I take?"
+      - "I want to study programming. What do you suggest?"
+    appPlaceholder: "Ask me anything about Stackademy courses..."
+    appInfoUrl: https://stackademy.edu/online-courses
+  plugins:
+    - stackademy_sql
+  functions:
+    - weather

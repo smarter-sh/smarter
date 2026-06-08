@@ -18,9 +18,7 @@ app_name = namespace
 
 
 class ConnectionReverseNames:
-    """
-    Reverse view names for the connection app.
-    """
+    """Reverse view names for the connection app."""
 
     namespace = namespace
 
@@ -48,17 +46,17 @@ urlpatterns = [
         name=ConnectionReverseNames.listview_api,
     ),
     path(
-        "react-integration/api/clone/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:llm_client_id>/<str:new_name>/",
         ConnectionListApiCloneView.as_view(),
         name=ConnectionReverseNames.listview_api_clone,
     ),
     path(
-        "react-integration/api/delete/<int:chatbot_id>/",
+        "react-integration/api/delete/<int:llm_client_id>/",
         ConnectionListApiDeleteView.as_view(),
         name=ConnectionReverseNames.listview_api_delete,
     ),
     path(
-        "react-integration/api/rename/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:llm_client_id>/<str:new_name>/",
         ConnectionListApiRenameView.as_view(),
         name=ConnectionReverseNames.listview_api_rename,
     ),

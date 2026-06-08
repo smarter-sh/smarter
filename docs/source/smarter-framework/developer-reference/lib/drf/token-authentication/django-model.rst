@@ -6,3 +6,4 @@ SmarterAuthToken Django ORM
     :undoc-members:
     :inherited-members:
     :show-inheritance:
+    :noindex:

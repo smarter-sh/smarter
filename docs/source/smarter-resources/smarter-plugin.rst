@@ -63,7 +63,7 @@ the tool should be presented to the LLM.
 .. seealso::
 
     - :doc:`Smarter API Manifest (SAM) <../smarter-framework/smarter-api>`
-    - :doc:`Smarter Chatbot <../smarter-resources/smarter-chatbot>`
+    - :doc:`Smarter LLMClient <../smarter-resources/smarter-llm_client>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
     - :doc:`Smarter Chat <../smarter-framework/develop-reference/react-integration/smarter-chat>`
 
@@ -73,7 +73,7 @@ Usage
 .. code-block:: yaml
 
   apiVersion: smarter.sh/v1
-  kind: Chatbot
+  kind: LLMClient
   metadata:
     name: stackademy_sql
     description: Stackademy University course catalogue inquiries using the Stackademy SQL plugin.
@@ -89,7 +89,7 @@ Usage
 Example Manifest
 -----------------------
 
-.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml
+.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llm_client-sql.yaml
     :language: yaml
     :caption: Example SQL Plugin Manifest
 

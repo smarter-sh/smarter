@@ -8,9 +8,9 @@ semantic checking, and auto-completion for reserved keywords. A Smarter manifest
 .. code-block:: yaml
 
   apiVersion: smarter.sh/v1
-  kind: Chatbot
+  kind: LLMClient
 
-Valid manifest 'kind' values: Chatbot, Plugin, Account, SmarterAuthToken, User, Chat, ChatConfig, ChatHistory, ChatPluginUsage, ChatToolCall, SqlConnection, ApiConnection
+Valid manifest 'kind' values: LLMClient, Plugin, Account, SmarterAuthToken, User, Chat, ChatConfig, ChatHistory, ChatPluginUsage, ChatToolCall, SqlConnection, ApiConnection
 
 Features
 ----------
@@ -61,7 +61,7 @@ The following schemas are available:
 - /api/v1/cli/schema/ApiConnection/
 - /api/v1/cli/schema/ApiPlugin/
 - /api/v1/cli/schema/Chat/
-- /api/v1/cli/schema/Chatbot/
+- /api/v1/cli/schema/LLMClient/
 - /api/v1/cli/schema/ChatHistory/
 - /api/v1/cli/schema/ChatPluginUsage/
 - /api/v1/cli/schema/ChatToolCall/

@@ -186,21 +186,22 @@ def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False) -> An
     if isinstance(data, str):
         return _convert_camel_to_snake(data)
     elif isinstance(data, list):
-        if convert_values:
-            return [to_snake_case(item, convert_values=convert_values) for item in data]
-        return data
+        logger.debug("%s.to_snake_case() - converting list: %s", logger_prefix, data)
+        return [
+            to_snake_case(item, convert_values=convert_values) if isinstance(item, (dict, list)) else item
+            for item in data
+        ]
     elif isinstance(data, dict):
-        if convert_values:
-            retval = {}
-            for key, value in data.items():
-                key = _convert_camel_to_snake(key)
-                if isinstance(value, dict) and convert_values:
-                    value = to_snake_case(data=value, convert_values=convert_values)
-                elif isinstance(value, list) and convert_values:
-                    value = [to_snake_case(item, convert_values=convert_values) for item in value]
-                retval[key] = value
-            return retval
-        return data
+        logger.debug("%s.to_snake_case() - converting dict: %s", logger_prefix, data)
+        retval = {}
+        for key, value in data.items():
+            key = _convert_camel_to_snake(key)
+            if isinstance(value, dict) and convert_values:
+                value = to_snake_case(data=value, convert_values=convert_values)
+            elif isinstance(value, list) and convert_values:
+                value = [to_snake_case(item, convert_values=convert_values) for item in value]
+            retval[key] = value
+        return retval
     else:
         try:
             data_str = data.__name__ if hasattr(data, "__name__") else str(data)  # type: ignore

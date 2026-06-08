@@ -29,7 +29,7 @@ capabilities of the various team member roles, and provides usable tools and abs
 - Business Process Analysts work with Smarter's MySQL database and reporting tools.
 - Application developers work with Python and the :doc:`Smarter Application Framework <../smarter-framework>`, and it's built-in :doc:`REST APIs <../smarter-framework/smarter-api>`.
 - Data scientists work with Python
-- DevOps engineers work with :doc:`Smarter CLI <../smarter-platform/cli>`, :doc:`GitHub Actions <../smarter-framework/devops/ci-cd>`, and `Kubernetes <https://artifacthub.io/packages/helm/project-smarter/smarter>`_.
+- DevOps engineers work with :doc:`Smarter CLI <../smarter-platform/cli>`, :doc:`GitHub Actions <../smarter-framework/developer-reference/devops/ci-cd>`, and `Kubernetes <https://artifacthub.io/packages/helm/project-smarter/smarter>`_.
 - Cloud engineers work with Smarter's :doc:`AWS <../smarter-framework/technologies/aws>` and :doc:`Kubernetes <../smarter-framework/technologies/kubernetes>` Helpers classes.
 
 
@@ -38,7 +38,7 @@ capabilities of the various team member roles, and provides usable tools and abs
    :caption: Technical Reference
 
    smarter-resources/smarter-account
-   smarter-resources/smarter-chatbot
+   smarter-resources/smarter-llm_client
    smarter-resources/smarter-connection
    smarter-resources/smarter-plugin
    smarter-resources/smarter-prompt

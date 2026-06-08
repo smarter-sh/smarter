@@ -14,7 +14,7 @@ Key Features
 - Fully compatible with ASGI and WSGI
 - Dynamic request-scoped CSRF trusted origins
 - Stateless request processing
-- Chatbot-aware CSRF bypass support
+- LLMClient-aware CSRF bypass support
 - Internal network bypass support
 - Local development environment bypass
 - Compatibility with Django admin and authentication middleware
@@ -53,7 +53,7 @@ For each request, the middleware:
 #. Evaluates feature-flag enablement via Django Waffle
 #. Applies environment-specific bypass rules
 #. Applies internal network bypass rules
-#. Applies chatbot-specific CSRF bypass logic
+#. Applies llm_client-specific CSRF bypass logic
 #. Dynamically computes trusted origins
 #. Delegates CSRF validation to Django's built-in middleware
 
@@ -65,7 +65,7 @@ Dynamic Trusted Origins
 
 Dynamic origins are derived from the active request and may include:
 
-- chatbot-specific origins
+- llm_client-specific origins
 - configuration endpoints
 - environment-specific origins
 
@@ -211,7 +211,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         origins = list(settings.CSRF_TRUSTED_ORIGINS)
 
         try:
-            if self.is_chatbot or self.is_config:
+            if self.is_llm_client or self.is_config:
                 origin = request.build_absolute_uri("/").rstrip("/")
 
                 if origin not in origins:
@@ -305,11 +305,11 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             return None
 
         #
-        # Chatbot bypass
+        # LLMClient bypass
         #
-        if self.is_chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS):
+        if self.is_llm_client and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_LLM_CLIENTS):
             logger.info(
-                "%s chatbot CSRF bypass: %s",
+                "%s llm_client CSRF bypass: %s",
                 self.formatted_class_name,
                 request.path,
             )

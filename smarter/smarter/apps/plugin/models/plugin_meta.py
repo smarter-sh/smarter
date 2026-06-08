@@ -1,7 +1,5 @@
 # pylint: disable=W0613
-"""
-PluginMeta model for defining the selection strategy and search terms for Smarter plugins.
-"""
+"""PluginMeta model for defining the selection strategy and search terms for Smarter plugins."""
 
 from typing import Optional
 
@@ -72,9 +70,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         (SAMPluginCommonMetadataClassValues.SQL.value, SAMPluginCommonMetadataClassValues.SQL.value),
         (SAMPluginCommonMetadataClassValues.API.value, SAMPluginCommonMetadataClassValues.API.value),
     ]
-    """
-    The classes of plugins supported by Smarter.
-    """
+    """The classes of plugins supported by Smarter."""
 
     plugin_class = models.CharField(
         choices=PLUGIN_CLASSES, help_text="The class name of the plugin", max_length=255, default="PluginMeta"
@@ -141,9 +137,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     @property
     def rfc1034_compliant_kind(self) -> Optional[str]:
         """
-        Returns a URL-friendly kind for the chatbot.
+        Returns a URL-friendly kind for the llm_client.
 
-        This is a convenience property that returns an RFC 1034-compliant kind for the chatbot,
+        This is a convenience property that returns an RFC 1034-compliant kind for the llm_client,
         suitable for use in URLs and DNS labels.
 
         **Example:**
@@ -342,6 +338,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     ) -> QuerySet["PluginMeta"]:
         """
         Return a QuerySet of all PluginMeta instances for the given user profile.
+
         This method caches the results to improve performance.
 
         :param invalidate: If True, invalidate the cache for this query.
@@ -440,6 +437,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 def _combined_plugins_list(use_profile_id: int, class_name: str = PluginMeta.__name__) -> QuerySet:
                     """
                     Short-lived cache for combined plugins list.
+
                     Combines user, admin, and smarter plugins into a single queryset
                     and caches the result for 15 seconds to improve performance.
                     """

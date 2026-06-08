@@ -3,7 +3,7 @@ Middleware
 
 Smarter provides several custom middleware classes that extend Django's
 middleware framework to add additional security features and specialized
-support for ChatBot/Agent http requests.
+support for LLMClient/Agent http requests.
 
 .. toctree::
    :maxdepth: 1

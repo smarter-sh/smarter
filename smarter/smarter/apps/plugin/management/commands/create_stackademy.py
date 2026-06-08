@@ -1,6 +1,4 @@
-"""
-Command to create the Stackademy AI resources.
-"""
+"""Command to create the Stackademy AI resources."""
 
 import logging
 
@@ -22,22 +20,23 @@ logger_prefix = formatted_text(f"{__name__}")
 class Command(SmarterCommand):
     """
     Django manage.py create_stackademy command.
+
     This command is used to create the Stackademy AI resources
     used for training and testing. It creates the following:
 
-    Sql-based chatbot
-    -----------------
+    Sql-based llm_client
+    --------------------
     - Secret for SqlConnection
     - SqlConnection
     - Stackademy SqlPlugin
-    - Chatbot using the Stackademy SqlPlugin
+    - LLMClient using the Stackademy SqlPlugin
 
-    Api-based chatbot
-    -----------------
+    Api-based llm_client
+    --------------------
     - Secret for ApiConnection
     - ApiConnection
     - Stackademy ApiPlugin
-    - Chatbot using the Stackademy ApiPlugin
+    - LLMClient using the Stackademy ApiPlugin
     """
 
     def add_arguments(self, parser):
@@ -86,29 +85,29 @@ class Command(SmarterCommand):
                 raise CommandError(f"Failed to apply manifest {file_path}: {str(e)}") from e
 
         try:
-            logger.debug("%s - Creating Stackademy Sql Chatbot...", logger_prefix)
+            logger.debug("%s - Creating Stackademy Sql LLMClient...", logger_prefix)
             sql_file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml",
                 "smarter/apps/connection/data/sample-connections/smarter-test-db.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml",
-                "smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml",
+                "smarter/apps/plugin/data/stackademy/stackademy-llm_client-sql.yaml",
             ]
             for file_path in sql_file_paths:
                 apply(file_path)
 
-            logger.debug("%s - Successfully created Stackademy Sql Chatbot.", logger_prefix)
+            logger.debug("%s - Successfully created Stackademy Sql LLMClient.", logger_prefix)
 
-            logger.debug("%s - Creating Stackademy Api Chatbot...", logger_prefix)
+            logger.debug("%s - Creating Stackademy Api LLMClient...", logger_prefix)
             api_file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-api.yaml",
                 "smarter/apps/connection/data/sample-connections/smarter-test-api.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-plugin-api.yaml",
-                "smarter/apps/plugin/data/stackademy/stackademy-chatbot-api.yaml",
+                "smarter/apps/plugin/data/stackademy/stackademy-llm_client-api.yaml",
             ]
             for file_path in api_file_paths:
                 apply(file_path)
 
-            logger.debug("%s - Successfully created Stackademy Api Chatbot.", logger_prefix)
+            logger.debug("%s - Successfully created Stackademy Api LLMClient.", logger_prefix)
 
         # pylint: disable=W0718
         except Exception as e:

@@ -1,7 +1,5 @@
 # pylint: disable=wrong-import-position
-"""
-Test configuration Settings class.
-"""
+"""Test configuration Settings class."""
 
 import logging
 import re
@@ -135,29 +133,29 @@ class TestSettings(SmarterTestBase):
     def test_chat_cache_expiration(self):
         self.assertIsNotNone(smarter_settings.chat_cache_expiration)
 
-    def test_chatbot_cache_expiration(self):
-        self.assertIsNotNone(smarter_settings.chatbot_cache_expiration)
+    def test_llm_client_cache_expiration(self):
+        self.assertIsNotNone(smarter_settings.llm_client_cache_expiration)
 
-    def test_chatbot_max_returned_history(self):
-        self.assertIsNotNone(smarter_settings.chatbot_max_returned_history)
+    def test_llm_client_max_returned_history(self):
+        self.assertIsNotNone(smarter_settings.llm_client_max_returned_history)
 
-    def test_chatbot_tasks_create_dns_record(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_create_dns_record)
+    def test_llm_client_tasks_create_dns_record(self):
+        self.assertIsNotNone(smarter_settings.llm_client_tasks_create_dns_record)
 
-    def test_chatbot_tasks_create_ingress_manifest(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_create_ingress_manifest)
+    def test_llm_client_tasks_create_ingress_manifest(self):
+        self.assertIsNotNone(smarter_settings.llm_client_tasks_create_ingress_manifest)
 
-    def test_chatbot_tasks_default_ttl(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_default_ttl)
+    def test_llm_client_tasks_default_ttl(self):
+        self.assertIsNotNone(smarter_settings.llm_client_tasks_default_ttl)
 
-    def test_chatbot_tasks_celery_max_retries(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_celery_max_retries)
+    def test_llm_client_tasks_celery_max_retries(self):
+        self.assertIsNotNone(smarter_settings.llm_client_tasks_celery_max_retries)
 
-    def test_chatbot_tasks_celery_retry_backoff(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_celery_retry_backoff)
+    def test_llm_client_tasks_celery_retry_backoff(self):
+        self.assertIsNotNone(smarter_settings.llm_client_tasks_celery_retry_backoff)
 
-    def test_chatbot_tasks_celery_task_queue(self):
-        self.assertIsNotNone(smarter_settings.chatbot_tasks_celery_task_queue)
+    def test_llm_client_tasks_celery_task_queue(self):
+        self.assertIsNotNone(smarter_settings.llm_client_tasks_celery_task_queue)
 
     def test_plugin_max_data_results(self):
         self.assertIsNotNone(smarter_settings.plugin_max_data_results)

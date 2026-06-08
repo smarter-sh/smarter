@@ -1,4 +1,4 @@
-"""Django ORM base model"""
+"""Django ORM base model."""
 
 from functools import cached_property
 from logging import getLogger
@@ -34,7 +34,8 @@ verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
 
 class MetaDataModel(TimestampedModel):
     """
-    Abstract base model that adds SAM metadata fields to a
+    Abstract base model that adds SAM metadata fields to a.
+
     TimestampedModel Django ORM model. These are the
     the common fields that makeup the Pydantic SAM metadata model,
     along with timestamp fields for create/modify tracking.
@@ -48,7 +49,6 @@ class MetaDataModel(TimestampedModel):
 
         class MyModel(MetaDataModel):
             name = models.CharField(max_length=100)
-
     """
 
     # pylint: disable=missing-class-docstring
@@ -86,9 +86,7 @@ class MetaDataModel(TimestampedModel):
     )
 
     def validate(self):
-        """
-        Validate the model.
-        """
+        """Validate the model."""
         super().validate()
         # version should be a semantic version: MAJOR.MINOR.PATCH
         if self.version and not SmarterValidator.is_valid_semantic_version(self.version):
@@ -135,16 +133,16 @@ class MetaDataModel(TimestampedModel):
     @cached_property
     def rfc1034_compliant_name(self) -> Optional[str]:
         """
-        Returns a URL-friendly name for the chatbot.
+        Returns a URL-friendly name for the llm_client.
 
-        This property returns an RFC 1034-compliant name for the chatbot, suitable for use in URLs and DNS labels.
+        This property returns an RFC 1034-compliant name for the llm_client, suitable for use in URLs and DNS labels.
 
         **Example:**
 
         .. code-block:: python
 
-            self.name = 'Example ChatBot 1'
-            self.rfc1034_compliant_name  # 'example-chatbot-1'
+            self.name = 'Example LLMClient 1'
+            self.rfc1034_compliant_name  # 'example-llm_client-1'
 
         :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
         :rtype: Optional[str]
@@ -156,7 +154,9 @@ class MetaDataModel(TimestampedModel):
     @cached_property
     def tags_list(self) -> list[str]:
         """
-        Return the tags as a list of strings. We assume that @cached_property
+        Return the tags as a list of strings.
+
+        We assume that @cached_property
         is more efficient at fetch than @cache_results, all things considered
         equal, which provides a marginal boost to instances. Meanwhile, the
         @cache_results is persisted to the Django cache, and thus outlives
@@ -169,9 +169,7 @@ class MetaDataModel(TimestampedModel):
         # pylint: disable=W0613
         @cache_results(timeout=self.cache_expiration)
         def _get_tags_by_class_and_pk(cls_name: str, pk: int) -> list[str]:
-            """
-            Helper to cache tags retrieval.
-            """
+            """Helper to cache tags retrieval."""
             retval = [tag.name for tag in self.tags.all()]
             verbose_logger.debug(
                 "%s.tags_list - fetched and cached tags for %s with pk=%d from database",
@@ -188,7 +186,8 @@ class MetaDataModel(TimestampedModel):
         cls, *args, invalidate: Optional[bool] = False, pk: Optional[int] = None, name: Optional[str] = None, **kwargs
     ) -> "MetaDataModel":
         """
-        Retrieve a model instance by primary key or name, using caching to
+        Retrieve a model instance by primary key or name, using caching to.
+
         optimize performance. This method is selectively overridden in
         models that inherit from MetaDataModel to provide class-specific
         function parameters.
@@ -269,6 +268,7 @@ class MetaDataModel(TimestampedModel):
     def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["MetaDataModel"]:
         """
         Retrieve model instances using caching to optimize performance.
+
         This method is selectively overridden in models that inherit from
         MetaDataModel to provide class-specific function parameters.
 

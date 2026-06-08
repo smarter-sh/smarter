@@ -51,7 +51,7 @@ Step 2: Confirm Your CLI is Authenticated
 .. code-block:: bash
 
    smarter status
-   smarter get chatbots
+   smarter get llm_clients
 
 Both commands should respond without an authentication error. If you see
 ``Not authenticated``, run ``smarter configure`` and re-enter your API key.
@@ -74,17 +74,17 @@ Concept Overview
 This assistant is built from two Smarter resources working together:
 
 **Plugin**
-   A Plugin connects a Smarter chatbot to an external data source. In this
+   A Plugin connects a Smarter llm_client to an external data source. In this
    case, the plugin wraps the NAPL Equipment API so that Claude can call it
    as a tool. When a technician asks *"What's the maintenance history on
    transformer T-447?"*, Claude decides to invoke the plugin, passes the
    equipment ID as a parameter, and receives the API response — which it
    then summarises in plain English.
 
-**Chatbot**
-   A Chatbot bundles together a provider (Anthropic), a model
+**LLMClient**
+   A LLMClient bundles together a provider (Anthropic), a model
    (``claude-sonnet-4-6``), a system prompt that shapes Claude's behaviour
-   for the field technician context, and one or more plugins. The chatbot
+   for the field technician context, and one or more plugins. The llm_client
    is the resource your technicians interact with directly.
 
 **Function Calling**
@@ -110,7 +110,7 @@ Use the CLI to print starter templates for both resource types:
 
 .. code-block:: bash
 
-   smarter manifest chatbot
+   smarter manifest llm_client
    smarter manifest plugin
 
 Keep these open as a reference while writing your own manifests below.
@@ -207,15 +207,15 @@ Confirm it registered:
 
 Look for ``active: true`` in the output.
 
-Step 7: Write the Chatbot Manifest
+Step 7: Write the LLMClient Manifest
 ------------------------------------
 
-Create a file named ``napl-grid-assistant-chatbot.yaml``:
+Create a file named ``napl-grid-assistant-llm_client.yaml``:
 
 .. code-block:: yaml
 
    apiVersion: smarter.sh/v1
-   kind: Chatbot
+   kind: LLMClient
    metadata:
      name: napl_grid_assistant
      description: NAPL Grid Maintenance Assistant — natural language access to equipment history and work order support.
@@ -255,24 +255,24 @@ Create a file named ``napl-grid-assistant-chatbot.yaml``:
        - napl_equipment_history
      functions: []
 
-Step 8: Apply the Chatbot
---------------------------
+Step 8: Apply the LLMClient
+----------------------------
 
 .. code-block:: bash
 
-   smarter apply -f napl-grid-assistant-chatbot.yaml
+   smarter apply -f napl-grid-assistant-llm_client.yaml
 
 Confirm it registered:
 
 .. code-block:: bash
 
-   smarter describe chatbot napl_grid_assistant
+   smarter describe llm_client napl_grid_assistant
 
 Step 9: Test in the Workbench
 ------------------------------
 
 1. Navigate to **Workbench** in the Smarter web console sidebar.
-2. Select **napl_grid_assistant** from the chatbot list.
+2. Select **napl_grid_assistant** from the llm_client list.
 3. Type a test query and press Enter.
 
 Use the Workbench to tune the system prompt and temperature before deploying
@@ -347,7 +347,7 @@ Troubleshooting
    ``status`` block. If ``verified: false``, contact your administrator.
 
 **Responses are too verbose or too terse**
-   Adjust ``defaultMaxTokens`` and ``defaultTemperature`` in the chatbot
+   Adjust ``defaultMaxTokens`` and ``defaultTemperature`` in the llm_client
    manifest, then re-apply. Lower temperature (``0.1``–``0.3``) produces
    more focused, factual responses — appropriate for maintenance data.
 
@@ -355,7 +355,7 @@ Troubleshooting
 
    - :doc:`claude-code-getting-started-guide`
    - :doc:`/smarter-platform/adding-an-llm-provider`
-   - :doc:`/smarter-resources/smarter-chatbot`
+   - :doc:`/smarter-resources/smarter-llm_client`
    - :doc:`/smarter-resources/smarter-plugin`
    - :doc:`/smarter-framework/smarter-cli`
    - `Anthropic Claude Documentation <https://docs.anthropic.com/>`_

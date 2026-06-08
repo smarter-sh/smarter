@@ -44,7 +44,7 @@ init:
 	make python-init							# create/replace Python virtual environment and install dependencies
 	make react-build							# build React frontend apps and collect static files
 	make collectstatic							# collect static files for the Django admin interface and other components
-	make docker-build-for-react			        # build the Smarter containers, including building the React frontend components
+	make docker-build 			                # build the Smarter containers, including building the React frontend components
 	make docker-init							# initialize MySQL and create the smarter database
 	make pre-commit-init						# install and configure pre-commit
 	@echo ""
@@ -172,9 +172,9 @@ docker-init:
 		python manage.py initialize_platform && \
 		python manage.py add_plugin_examples && \
 		python manage.py create_stackademy && \
-		python manage.py deploy_builtin_chatbots && \
-		python manage.py deploy_example_chatbot" && \
-	docker exec smarter-mysql mysql -u smarter -psmarter -e 'UPDATE smarter.chatbot_chatbot SET deployed = 0;'
+		python manage.py deploy_builtin_llm_clients && \
+		python manage.py deploy_example_llm_client" && \
+	docker exec smarter-mysql mysql -u smarter -psmarter -e 'UPDATE smarter.llm_client_llmclient SET deployed = 0;'
 	@echo "Docker and Smarter are initialized."
 	docker ps
 

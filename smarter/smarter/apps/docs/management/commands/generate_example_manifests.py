@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""This module is used to create a new plugin using manage.py"""
+"""This module is used to create a new plugin using manage.py."""
 
 import logging
 import os
@@ -11,11 +11,11 @@ from smarter.apps.docs.views.manifest import (
     DocsExampleManifestApiKeyView,
     DocsExampleManifestApiView,
     DocsExampleManifestBaseView,
-    DocsExampleManifestChatBotView,
     DocsExampleManifestChatHistoryView,
     DocsExampleManifestChatPluginUsageView,
     DocsExampleManifestChatToolCallView,
     DocsExampleManifestChatView,
+    DocsExampleManifestLLMClientView,
     DocsExampleManifestPluginView,
     DocsExampleManifestSecretView,
     DocsExampleManifestSqlConnectionView,
@@ -31,11 +31,14 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """Django manage.py create_plugin command. This command is used to create a plugin from a yaml import file."""
+    """Django manage.py create_plugin command.
+
+    This command is used to create a plugin from a yaml import file.
+    """
 
     def handle(self, *args, **options):
         """
-        create example manifest files for every AI resource type
+        Create example manifest files for every AI resource type.
 
         $ pwd
         /home/smarter_user/smarter
@@ -49,7 +52,6 @@ class Command(SmarterCommand):
         $ pwd
         /home/smarter_user/data/manifests/example_manifests
         $
-
         """
         self.handle_begin()
 
@@ -58,9 +60,7 @@ class Command(SmarterCommand):
         output_folder = "/home/smarter_user/data/manifests/example_manifests"
 
         def write_manifest(view_class: Type[DocsExampleManifestBaseView]):
-            """
-            Generate example manifest YAML file.
-            """
+            """Generate example manifest YAML file."""
             instance = view_class()
             try:
                 response = instance.post(request=None)
@@ -85,7 +85,7 @@ class Command(SmarterCommand):
             DocsExampleManifestChatHistoryView,
             DocsExampleManifestChatPluginUsageView,
             DocsExampleManifestChatToolCallView,
-            DocsExampleManifestChatBotView,
+            DocsExampleManifestLLMClientView,
             DocsExampleManifestPluginView,
             DocsExampleManifestSqlConnectionView,
             DocsExampleManifestSqlView,

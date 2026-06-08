@@ -35,7 +35,7 @@ The Smarter Project is a cloud-native :doc:`platform <smarter-platform>` and
 building, deploying, and managing AI applications. Using declarative
 :doc:`Smarter Manifests <smarter-framework/smarter-manifests>`, developers can
 define :doc:`AI resources <smarter-resources>`, :doc:`prompts <smarter-resources/smarter-prompt>`,
-workflows, :doc:`agents <smarter-resources/smarter-chatbot>`, :doc:`APIs <smarter-framework/smarter-api>`,
+workflows, :doc:`agents <smarter-resources/smarter-llm_client>`, :doc:`APIs <smarter-framework/smarter-api>`,
 and :doc:`integrations <smarter-resources/smarter-connection>` as version-controlled infrastructure, enabling repeatable
 deployments, governance, and lifecycle management across environments.
 
@@ -52,7 +52,7 @@ The project combines three complementary capabilities. The
 :doc:`Smarter Platform <smarter-platform>` provides :doc:`authoring & administration <smarter-platform/smarter-web-console>`,
 deployment, operations, and governance. :doc:`Smarter Resources <smarter-resources>`
 define the building blocks of AI applications, including :doc:`LLM providers <smarter-resources/smarter-provider>`,
-:doc:`prompts <smarter-resources/smarter-prompt>`, :doc:`agents <smarter-resources/smarter-chatbot>`,
+:doc:`prompts <smarter-resources/smarter-prompt>`, :doc:`agents <smarter-resources/smarter-llm_client>`,
 :doc:`plugins <smarter-resources/smarter-plugin>`, :doc:`connections <smarter-resources/smarter-connection>`,
 :doc:`secrets <smarter-resources/smarter-secret>`, workflows, vectorstores,
 and :doc:`integrations <smarter-resources/smarter-connection>`. The
@@ -78,7 +78,7 @@ lifecycle.
 - **AI Resource Management**
 
   - Works with many :doc:`AI model providers <smarter-resources/smarter-provider>` — `OpenAI <https://developers.openai.com/api/reference/overview/>`_, `Google AI <https://ai.google.dev/api>`_, `Meta AI <https://developers.facebook.com/docs/>`_, `DeepSeek <https://api-docs.deepseek.com/>`_, and others.
-  - Lets you :doc:`organize <smarter-resources/smarter-chatbot>` and version your prompts, and see how they change over time.
+  - Lets you :doc:`organize <smarter-resources/smarter-llm_client>` and version your prompts, and see how they change over time.
   - Supports “:doc:`agents <smarter-resources/smarter-plugin>`” and multi-step AI workflows so you can build bigger, smarter tasks.
   - Secure integrations to :doc:`external data sources <smarter-resources/smarter-plugin>` like :doc:`databases <smarter-resources/plugins/plugin/sql>` and :doc:`APIs <smarter-resources/plugins/plugin/api>`.
 
@@ -97,7 +97,7 @@ Usage
 
 **1. Create a Smarter manifest**
 
-.. literalinclude:: ../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml
+.. literalinclude:: ../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llm_client-sql.yaml
    :language: yaml
    :caption: Example Smarter Manifest
 
@@ -106,9 +106,9 @@ Usage
 
 .. code-block:: console
 
-   smarter apply -f stackademy-chatbot-sql.yaml
+   smarter apply -f stackademy-llm_client-sql.yaml
 
-**3. Interact with the Chatbot**
+**3. Interact with the LLMClient**
 
 .. raw:: html
 

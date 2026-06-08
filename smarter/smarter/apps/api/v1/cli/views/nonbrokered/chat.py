@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'chat' view"""
+"""Smarter API command-line interface 'chat' view."""
 
 import traceback
 from http import HTTPStatus
@@ -12,8 +12,8 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
 
-from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
-from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.llm_client.api.v1.views.default import DefaultLLMClientApiView
+from smarter.apps.llm_client.models import LLMClient
 from smarter.apps.prompt.models import Chat, ChatHistory
 from smarter.apps.prompt.views.detailview import ChatConfigView
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
@@ -53,7 +53,7 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 
 class APIV1CLIChatViewError(APIV1CLIViewError):
-    """APIV1CLIChatViewError exception class"""
+    """APIV1CLIChatViewError exception class."""
 
     @property
     def get_formatted_err_message(self):
@@ -61,7 +61,7 @@ class APIV1CLIChatViewError(APIV1CLIViewError):
 
 
 class ApiV1CliChatBaseApiView(CliBaseApiView):
-    """Smarter API command-line interface 'chat' view"""
+    """Smarter API command-line interface 'chat' view."""
 
     _cache_key: Optional[str] = None
     _data: Optional[dict] = None
@@ -71,7 +71,8 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
@@ -80,9 +81,11 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
     @property
     def prompt(self) -> Optional[str]:
         """
-        The chat prompt from the request body. This is a single raw text input
+        The chat prompt from the request body.
+
+        This is a single raw text input
         from the user. This will need to be added to a message list and sent
-        to the chatbot.
+        to the llm_client.
         """
         if self.is_config:
             # config views are not expected to have a prompt
@@ -99,7 +102,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
     @property
     def new_session(self) -> bool:
         """
-        True if the new_session url parameter was passed and is set to 'true'
+        True if the new_session url parameter was passed and is set to 'true'.
 
         example: http://localhost:9357/api/v1/cli/chat/smarter/?new_session=false&uid=mcdaniel
         """
@@ -114,17 +117,24 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
 
     @property
     def name(self) -> Optional[str]:
-        """The name of the ChatBot. This is passed as a url slug."""
+        """The name of the LLMClient.
+
+        This is passed as a url slug.
+        """
         return self._name
 
     def validate(self):
         """
-        common validations for the chat views. This is called before dispatch() and is used to
+        Common validations for the chat views.
+
+        This is called before dispatch() and is used to
         """
 
     def initial(self, request: Request, *args, **kwargs):
         """
-        Initialize the view. This is called by DRF after setup() but before dispatch().
+        Initialize the view.
+
+        This is called by DRF after setup() but before dispatch().
 
         Base dispatch method for the Chat views. This method will attempt to
         extract the session_key from the request body. If the session_key is
@@ -139,9 +149,8 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
           the session_key for Chat.
 
         - prompt: the prompt is the raw text of the chat message that is sent to the
-            chatbot. The prompt is added to the payload of the request body and is
+            llm_client. The prompt is added to the payload of the request body and is
             distinguished from the manifest text based on the url path.
-
         """
         super().initial(request, *args, **kwargs)
         self._name = kwargs.get(SAMMetadataKeys.NAME.value)
@@ -205,7 +214,9 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
 
 class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
     """
-    Smarter API command-line interface 'chat' view. Constructs a chat message list
+    Smarter API command-line interface 'chat' view.
+
+    Constructs a chat message list
     and returns the Smarter chat response.
 
     This is a passthrough view that generates its response via ???????.
@@ -238,7 +249,8 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
@@ -250,14 +262,14 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         return self._chat_config
 
     @property
-    def chatbot_config(self) -> dict[str, Any]:
-        """The chatbot configuration dict."""
-        return self.chat_config.get("chatbot", {})
+    def llm_client_config(self) -> dict[str, Any]:
+        """The llm_client configuration dict."""
+        return self.chat_config.get("llm_client", {})
 
     @property
-    def url_chatbot(self) -> Optional[str]:
-        """The url of the chatbot."""
-        return self.chatbot_config.get("url_chatbot", None)
+    def url_llm_client(self) -> Optional[str]:
+        """The url of the llm_client."""
+        return self.llm_client_config.get("url_llm_client", None)
 
     @property
     def chat(self) -> Optional[Chat]:
@@ -308,7 +320,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         welcome_dict: Optional[dict] = None
         prompt_dict: Optional[dict] = None
 
-        system_role: str = self.chatbot_config.get(
+        system_role: str = self.llm_client_config.get(
             "default_system_role",
             self.chat_config.get("default_system_role", smarter_settings.llm_default_system_role),
         )
@@ -316,10 +328,10 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
             OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role,
         }
-        welcome_message: Optional[str] = self.chatbot_config.get("app_welcome_message")
-        example_prompts: Optional[list[str]] = self.chatbot_config.get("app_example_prompts")
+        welcome_message: Optional[str] = self.llm_client_config.get("app_welcome_message")
+        example_prompts: Optional[list[str]] = self.llm_client_config.get("app_example_prompts")
         if example_prompts and welcome_message:
-            app_assistant: str = self.chatbot_config.get("app_assistant", "a chatbot")
+            app_assistant: str = self.llm_client_config.get("app_assistant", "a llm_client")
             bullet_points = "\n".join(f"    - {prompt}" for prompt in example_prompts) if example_prompts else ""
             bullet_points = "Following are some example prompts:\n\n" + bullet_points + "\n\n"
             intro = f"I'm {app_assistant}, how can I assist you today?"
@@ -347,7 +359,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         return retval
 
     def chat_request_factory(self, request_body: dict) -> HttpRequest:
-        """Create a new request for the chatbot API."""
+        """Create a new request for the llm_client API."""
         if self.parsed_url is None:
             raise SmarterConfigurationError(
                 f"Internal error. The parsed_url is None. This should never happen. url: {self.url}"
@@ -368,7 +380,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         return new_request
 
     def handler(self, request, name, *args, **kwargs):
-        # get the chat configuration for the ChatBot (name)
+        # get the chat configuration for the LLMClient (name)
         logger.debug(
             "%s.handler() 1. name: %s url: %s data: %s session_key: %s, new session: %s",
             self.formatted_class_name,
@@ -386,7 +398,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             )
         if chat_config.status_code != 200:  # type: ignore[union-attr]
             raise APIV1CLIChatViewError(
-                f"Internal error. Failed to get chat config for chatbot: {name} {chat_config.get('content')}"
+                f"Internal error. Failed to get chat config for llm_client: {name} {chat_config.get('content')}"
             )
         logger.debug("%s.handler() 2. chat_config: %s %s", self.formatted_class_name, chat_config, type(chat_config))
 
@@ -428,12 +440,12 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             json.dumps(self.chat_config),
         )
 
-        # create a Smarter chatbot request body
+        # create a Smarter llm_client request body
         request_body = self.chat_request_body_factory()
 
-        # create a Smarter chatbot request and prompt the chatbot
+        # create a Smarter llm_client request and prompt the llm_client
         chat_request = self.chat_request_factory(request_body=request_body)
-        chat_response = DefaultChatbotApiView.as_view()(request=chat_request, name=name)
+        chat_response = DefaultLLMClientApiView.as_view()(request=chat_request, name=name)
         if not isinstance(chat_response, JsonResponse):
             raise APIV1CLIChatViewError(
                 f"Internal error. Chat response is not a JsonResponse. chat_response: {chat_response}"
@@ -483,8 +495,10 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
     def validate(self):
         """
-        Validate the request body and url parameters. Note that we are not necessarily expecting a complete
-        set of messages. The message list + the prompt will be sent to the chatbot, which is responsible
+        Validate the request body and url parameters.
+
+        Note that we are not necessarily expecting a complete
+        set of messages. The message list + the prompt will be sent to the llm_client, which is responsible
         for ensuring that the system prompt is included in the request.
 
         example request body:
@@ -519,8 +533,8 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
     @swagger_auto_schema(
         operation_description="""
 Smarter API command-line interface 'chat' view. This is a non-brokered view
-that sends chat sessions to a ChatBot by creating a http post request
-to the ChatBot's published url. The chatbot is expected to be a Smarter chatbot
+that sends chat sessions to a LLMClient by creating a http post request
+to the LLMClient's published url. The llm_client is expected to be a Smarter llm_client
 that is capable of receiving a list of messages and returning a response in the
 smarter.sh/v1 protocol.
 
@@ -529,11 +543,11 @@ generated ....
 
 Args:
 - request: an authenticated Django HttpRequest object
-- name: str. the name of a ChatBot associated with the Account to which the authenticated user belongs.
+- name: str. the name of a LLMClient associated with the Account to which the authenticated user belongs.
 
 request body:
 - session_key: str. optional. the session_key for the chat session. if not provided then a new session_key will be generated.
-- prompt: str. the raw text of the prompt to send to the chatbot. This will be appended to the message list, if this is not a new session.
+- prompt: str. the raw text of the prompt to send to the llm_client. This will be appended to the message list, if this is not a new session.
 
 url params:
 - new_session: str. optional flag. if present then the cache_key and session_key will be deleted.
@@ -573,11 +587,11 @@ This is a Non-brokered operation.
     @csrf_exempt
     def post(self, request, name, *args, **kwargs):
 
-        # validate the chatbot name, as this is the most likely point of failure
+        # validate the llm_client name, as this is the most likely point of failure
         try:
-            if not ChatBot.objects.filter(name=name).with_read_permission_for(self.request.user).exists():  # type: ignore
-                raise ChatBot.DoesNotExist()
-        except ChatBot.DoesNotExist as e:
+            if not LLMClient.objects.filter(name=name).with_read_permission_for(self.request.user).exists():  # type: ignore
+                raise LLMClient.DoesNotExist()
+        except LLMClient.DoesNotExist as e:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 e=e,
@@ -585,7 +599,7 @@ This is a Non-brokered operation.
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
                 status=HTTPStatus.NOT_FOUND,
                 stack_trace=traceback.format_exc(),
-                description=f"{self.formatted_class_name}.post() ChatBot {name} not found for account {self.account}",
+                description=f"{self.formatted_class_name}.post() LLMClient {name} not found for account {self.account}",
             )
 
         # pylint: disable=W0718

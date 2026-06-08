@@ -28,7 +28,7 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
 
     @patch("smarter.lib.django.middleware.csrf.settings")
     @patch("smarter.lib.django.middleware.csrf.waffle")
-    def test_CSRF_TRUSTED_ORIGINS_without_chatbot(self, mock_waffle, mock_settings):
+    def test_CSRF_TRUSTED_ORIGINS_without_llm_client(self, mock_waffle, mock_settings):
         mock_settings.CSRF_TRUSTED_ORIGINS = ["http://example.3141-5926-5359.api.localhost:9357/"]
         mock_waffle.switch_is_active.return_value = False
         setattr(self.middleware, "request", self.request)  # type: ignore
@@ -62,7 +62,7 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
     @override_settings(ALLOWED_HOSTS=["example.com"])
     @patch("smarter.lib.django.middleware.csrf.settings")
     @patch("smarter.lib.django.middleware.csrf.waffle")
-    def test_process_request_with_chatbot(self, mock_waffle, mock_settings):
+    def test_process_request_with_llm_client(self, mock_waffle, mock_settings):
         self.request.build_absolute_uri = MagicMock(return_value="https://example.com/")
         self.request.META["SERVER_NAME"] = "example.com"
         self.request.META["SERVER_PORT"] = "443"
@@ -82,13 +82,13 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
 
     @patch("smarter.lib.django.middleware.csrf.smarter_settings")
     @patch("smarter.lib.django.middleware.csrf.waffle")
-    def test_process_view_csrf_suppress_for_chatbots(self, mock_waffle, mock_smarter_settings):
+    def test_process_view_csrf_suppress_for_llm_clients(self, mock_waffle, mock_smarter_settings):
         mock_smarter_settings.environment = "prod"
-        # First call for CSRF_SUPPRESS_FOR_CHATBOTS, second for MIDDLEWARE_LOGGING
+        # First call for CSRF_SUPPRESS_FOR_LLM_CLIENTS, second for MIDDLEWARE_LOGGING
         mock_waffle.switch_is_active.side_effect = [True, False]
-        # Set up smarter_request with is_chatbot = True
+        # Set up smarter_request with is_llm_client = True
         smarter_request_mock = MagicMock()
-        smarter_request_mock.is_chatbot = True
+        smarter_request_mock.is_llm_client = True
         self.middleware.smarter_request = smarter_request_mock
         setattr(self.middleware, "request", self.request)  # type: ignore
         result = self.middleware.process_view(self.request, MagicMock(), (), {})

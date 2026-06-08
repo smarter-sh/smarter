@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """
-This module contains views to implement the React
+This module contains views to implement the React.
+
 Provider list view in the Smarter Dashboard.
 """
 
@@ -101,13 +102,13 @@ class ProviderListApiView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class ProviderListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Clone a provider for the authenticated user.
-    """
+    """Clone a provider for the authenticated user."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
-        Handle POST requests to clone an existing Provider. Validates input
+        Handle POST requests to clone an existing Provider.
+
+        Validates input
         parameters, checks for the existence of the Provider to be cloned, and
         creates a new Provider with the specified name. Invalidates the cache
         for the user's Providers after cloning.
@@ -165,16 +166,16 @@ class ProviderListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class ProviderListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Delete a provider for the authenticated user.
-    """
+    """Delete a provider for the authenticated user."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
-        Handle POST requests to delete an existing Provider. Validates input
+        Handle POST requests to delete an existing Provider.
+
+        Validates input
         parameters, checks for the existence of the Provider to be deleted, and
         deletes the Provider if it exists. Invalidates the cache for the user's
-        ChatBots after deletion.
+        LLMClients after deletion.
 
         :param request: The HTTP request object containing the parameters for deletion.
         :type request: HttpRequest
@@ -220,16 +221,16 @@ class ProviderListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class ProviderListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Rename a provider for the authenticated user.
-    """
+    """Rename a provider for the authenticated user."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
-        Handle POST requests to rename an existing Provider. Validates input
+        Handle POST requests to rename an existing Provider.
+
+        Validates input
         parameters, checks for the existence of the Provider to be renamed, and
         renames the Provider if it exists. Invalidates the cache for the user's
-        ChatBots after renaming.
+        LLMClients after renaming.
 
         :param request: The HTTP request object containing the parameters for renaming.
         :type request: HttpRequest

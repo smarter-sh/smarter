@@ -26,10 +26,10 @@ Example Usage
 
 .. code-block:: python
 
-   chatbots_i_can_see = ChatBot.objects.with_read_permission_for(user=request.user)
-   chatbots_i_can_edit = ChatBot.objects.with_ownership_permission_for(user=request.user)
-   chatbots_shared_with_me = ChatBot.objects.shared_with(user=request.user)
-   chatbots_i_own = ChatBot.objects.owned_by(user=request.user)
+   llm_clients_i_can_see = LLMClient.objects.with_read_permission_for(user=request.user)
+   llm_clients_i_can_edit = LLMClient.objects.with_ownership_permission_for(user=request.user)
+   llm_clients_shared_with_me = LLMClient.objects.shared_with(user=request.user)
+   llm_clients_i_own = LLMClient.objects.owned_by(user=request.user)
 
 
 .. automodule:: smarter.apps.account.models.metadata_with_ownership

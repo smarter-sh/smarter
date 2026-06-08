@@ -1,77 +1,77 @@
-import type { Chatbot } from "@/lib/Types";
+import type { LLMClient } from "@/lib/Types";
 /**
  * @file Component.tsx
  * @module StatusBar/Component
  *
- * StatusBar React component for displaying the status of a Chatbot instance.
+ * StatusBar React component for displaying the status of a LLMClient instance.
  * Shows readiness, deployment, authentication, DNS, TLS, subdomain, and custom domain status using icons and tooltips.
  *
  * Exports:
- *   - StatusBar: Functional component that takes a Chatbot and renders its status indicators.
+ *   - StatusBar: Functional component that takes a LLMClient and renders its status indicators.
  *
  * Usage:
- *   <StatusBar chatbot={chatbot} />
+ *   <StatusBar llm_client={llm_client} />
  */
 interface StatusbarProps {
-  chatbot: Chatbot;
+  llm_client: LLMClient;
 }
 
-export const StatusBar = ({ chatbot }: StatusbarProps) => {
+export const StatusBar = ({ llm_client }: StatusbarProps) => {
   return (
     <div className="statusbar d-flex align-items-center gap-2">
       {/* Ready */}
       <span
         className="status-icon"
-        title={chatbot.ready ? "Ready: Chatbot is ready to serve requests" : "Not ready: Chatbot is initializing"}
+        title={llm_client.ready ? "Ready: LLMClient is ready to serve requests" : "Not ready: LLMClient is initializing"}
       >
-        <i className={chatbot.ready ? "bi bi-check-circle text-success" : "bi bi-x-circle text-secondary"} />
+        <i className={llm_client.ready ? "bi bi-check-circle text-success" : "bi bi-x-circle text-secondary"} />
       </span>
       {/* Deployed */}
-      <span className="status-icon" title={chatbot.deployed ? "Deployed: Chatbot is deployed" : "Not deployed"}>
-        <i className={chatbot.deployed ? "bi bi-cloud-check" : "bi bi-cloud-slash"} />
+      <span className="status-icon" title={llm_client.deployed ? "Deployed: LLMClient is deployed" : "Not deployed"}>
+        <i className={llm_client.deployed ? "bi bi-cloud-check" : "bi bi-cloud-slash"} />
       </span>
       {/* Authentication Required */}
       <span
         className="status-icon"
         title={
-          chatbot.isAuthenticationRequired
-            ? "Authentication required to access this chatbot"
+          llm_client.isAuthenticationRequired
+            ? "Authentication required to access this llm_client"
             : "No authentication required"
         }
       >
-        <i className={chatbot.isAuthenticationRequired ? "bi bi-lock" : "bi bi-unlock"} />
+        <i className={llm_client.isAuthenticationRequired ? "bi bi-lock" : "bi bi-unlock"} />
       </span>
       {/* DNS Verification */}
       <span
         className="status-icon"
-        title={chatbot.dnsVerificationStatus === "verified" ? "DNS verified" : "DNS verification pending or failed"}
+        title={llm_client.dnsVerificationStatus === "verified" ? "DNS verified" : "DNS verification pending or failed"}
       >
-        <i className={chatbot.dnsVerificationStatus === "verified" ? "bi bi-globe" : "bi bi-exclamation-circle"} />
+        <i className={llm_client.dnsVerificationStatus === "verified" ? "bi bi-globe" : "bi bi-exclamation-circle"} />
       </span>
       {/* TLS Certificate */}
       <span
         className="status-icon"
         title={
-          chatbot.tlsCertificateIssuanceStatus === "issued"
+          llm_client.tlsCertificateIssuanceStatus === "issued"
             ? "TLS certificate issued"
             : "TLS certificate pending or failed"
         }
       >
         <i
           className={
-            chatbot.tlsCertificateIssuanceStatus === "issued" ? "bi bi-shield-lock" : "bi bi-shield-exclamation"
+            llm_client.tlsCertificateIssuanceStatus === "issued" ? "bi bi-shield-lock" : "bi bi-shield-exclamation"
           }
         />
       </span>
       {/* Subdomain */}
-      {chatbot.subdomain && (
-        <span className="status-icon" title={`Subdomain: ${chatbot.subdomain}`}>
+      {llm_client.subdomain && (
+        <span className="status-icon" title={`Subdomain: ${llm_client.subdomain}`}>
           <i className="bi bi-link-45deg text-info" />
         </span>
       )}
       {/* Custom Domain */}
-      {chatbot.customDomain && (
-        <span className="status-icon" title={`Custom domain: ${chatbot.customDomain}`}>
+      {llm_client.customDomain && (
+        <span className="status-icon" title={`Custom domain: ${llm_client.customDomain}`}>
           <i className="bi bi-link text-info" />
         </span>
       )}

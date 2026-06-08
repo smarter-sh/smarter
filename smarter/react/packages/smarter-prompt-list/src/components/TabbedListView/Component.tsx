@@ -1,19 +1,19 @@
 /**
  * TabbedListView React Component
  *
- * Displays a tabbed interface for viewing chatbots owned by the current user
- * and chatbots shared with the user.
+ * Displays a tabbed interface for viewing llm_clients owned by the current user
+ * and llm_clients shared with the user.
  *
  * Tabs:
- * - Your Chatbots
- * - Shared Chatbots
+ * - Your LLMClients
+ * - Shared LLMClients
  *
  * View Modes:
  * - List
  * - Thumbnail card
  *
  * Features:
- * - Loads owned and shared chatbot lists from the backend using session context.
+ * - Loads owned and shared llm_client lists from the backend using session context.
  * - Hydrates the UI from cached results before the initial fetch resolves.
  * - Shows loading and error states during fetches.
  * - Allows switching between list and card views.
@@ -25,25 +25,25 @@
  * - sessionContext (SessionContext): Authentication and API context used for requests.
  *
  * State:
- * - isLoadingOwned: Loading state for owned chatbots.
- * - isLoadingShared: Loading state for shared chatbots.
+ * - isLoadingOwned: Loading state for owned llm_clients.
+ * - isLoadingShared: Loading state for shared llm_clients.
  * - errorMessage: Error text for failed requests.
- * - userListObjects: Owned chatbot list.
- * - sharedListObjects: Shared chatbot list.
+ * - userListObjects: Owned llm_client list.
+ * - sharedListObjects: Shared llm_client list.
  * - invalidateCacheFlag: Indicates whether backend cache should be invalidated on load.
  * - viewMode: Current display mode ("list" or "thumbnail").
  * - activeTab: Current tab ("user" or "shared").
  *
  * Internal Helpers:
  * - getCookie: Reads cookie values used for skeleton sizing.
- * - load (from ./load): Fetches chatbot data and updates state via setters.
+ * - load (from ./load): Fetches llm_client data and updates state via setters.
  *
  * Page Rendering Performance and Caching behavior:
  * - Improves the perceived load time by rendering cached results immediately when
  *   available while a fresh backend fetch is still in flight. It is not uncommon
  *   for the backend response to take up to 1-2 seconds, so this is important from
  *   a UX perspective.
- * - Reads the most recent owned/shared chatbot results from sessionStorage on mount,
+ * - Reads the most recent owned/shared llm_client results from sessionStorage on mount,
  *   keyed by API URL and tab.
  * - Writes successful fetch results back to the cache so the next initial page load
  *   can show recent data without waiting on the network.
@@ -57,7 +57,7 @@ import CardView from "@/components/CardView";
 import ToggleButton from "@/components/ToggleButton";
 import type { ViewMode } from "@/components/ToggleButton";
 
-import type { Chatbot, SessionContext, TabKey } from "@/lib/Types";
+import type { LLMClient, SessionContext, TabKey } from "@/lib/Types";
 import { getCookie } from "./cookie";
 import { TabNav } from "./TabNavigation";
 import { load } from "./load";
@@ -71,8 +71,8 @@ export default function TabbedListView({ sessionContext }: { sessionContext: Ses
   // list state management for owned/shared object lists.
   const [isLoadingOwned, setIsLoadingOwned] = useState<boolean>(true);
   const [isLoadingShared, setIsLoadingShared] = useState<boolean>(true);
-  const [userListObjects, setUserListObjects] = useState<Chatbot[]>([]);
-  const [sharedListObjects, setSharedListObjects] = useState<Chatbot[]>([]);
+  const [userListObjects, setUserListObjects] = useState<LLMClient[]>([]);
+  const [sharedListObjects, setSharedListObjects] = useState<LLMClient[]>([]);
 
   // cache keys for session-based local caching of owned/shared lists
   // to improve perceived load times on repeat visits
@@ -85,8 +85,8 @@ export default function TabbedListView({ sessionContext }: { sessionContext: Ses
 
   // define 2-tab layout with cookie-based persistent active tab state
   const tabs: { key: TabKey; label: string }[] = [
-    { key: "user", label: "Your Chatbots" },
-    { key: "shared", label: "Shared Chatbots" },
+    { key: "user", label: "Your LLMClients" },
+    { key: "shared", label: "Shared LLMClients" },
   ];
   const [activeTab, setActiveTab] = useState<"user" | "shared">("user");
   const [viewMode, _setViewMode] = useState<ViewMode>(() => {
@@ -105,10 +105,10 @@ export default function TabbedListView({ sessionContext }: { sessionContext: Ses
   // for sizing the skeleton loaders that are rendered while data is loading
   const maxGhostRows = 25;
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
-  const userGhostCount = clamp(getCookie("owned", "chatbot_count") || 6, 0, maxGhostRows);
-  const sharedGhostCount = clamp(getCookie("shared", "chatbot_count") || 6, 0, maxGhostRows);
+  const userGhostCount = clamp(getCookie("owned", "llm_client_count") || 6, 0, maxGhostRows);
+  const sharedGhostCount = clamp(getCookie("shared", "llm_client_count") || 6, 0, maxGhostRows);
 
-  // initiate load of both owned and shared chatbot lists on component mount and whenever session context changes
+  // initiate load of both owned and shared llm_client lists on component mount and whenever session context changes
   const handleLoad = async () => {
     const ownedObjects = await load(sessionContext, invalidateCacheFlag, setIsLoadingOwned, "owned", setErrorMessage);
     setUserListObjects(ownedObjects);

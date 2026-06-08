@@ -163,9 +163,9 @@ class TestDocsUrls(SmarterTestBase):
         url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_TOOL_CALL.value)}")
         self.process_url(url)
 
-    def test_url_json_schema_chatbot(self) -> None:
-        """Test url for chatbot JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHATBOT.value)}")
+    def test_url_json_schema_llm_client(self) -> None:
+        """Test url for llm_client JSON schema."""
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.LLM_CLIENT.value)}")
         self.process_url(url)
 
     def test_url_json_schema_static_plugin(self) -> None:
@@ -236,9 +236,9 @@ class TestDocsUrls(SmarterTestBase):
         url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_TOOL_CALL.value)}")
         self.process_url(url)
 
-    def test_url_manifest_chatbot(self) -> None:
-        """Test url for chatbot manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHATBOT.value)}")
+    def test_url_manifest_llm_client(self) -> None:
+        """Test url for llm_client manifest."""
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.LLM_CLIENT.value)}")
         self.process_url(url)
 
     def test_url_manifest_static_plugin(self) -> None:

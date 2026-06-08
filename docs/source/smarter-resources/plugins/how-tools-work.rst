@@ -3,7 +3,7 @@ How LLM Tool Calling Works
 
 This page explains the technology on which Smarter Plugins are built. This is
 what happens "under the hood" when your create a Smarter Plugin and add this
-to any ChatBot (aka Agent or Workflow unit).
+to any LLMClient (aka Agent or Workflow unit).
 
 From the official OpenAI documentation on `Tool Calling <https://platform.openai.com/docs/guides/function-calling>`__,
 we should start off by defining a few key terms about tool calling. After we have a shared vocabulary for tool calling,

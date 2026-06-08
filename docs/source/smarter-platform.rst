@@ -8,7 +8,7 @@ for deploying and managing :doc:`AI applications <smarter-resources>` in product
 Smarter runs natively on :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` in
 the cloud at :doc:`Amazon Web Services (AWS) <smarter-framework/technologies/aws>`.
 It provides the necessary :doc:`infrastructure <smarter-platform/cloud-infrastructure>` and services to host and manage
-:doc:`AI-driven workflows, agents and chatbots <smarter-resources/smarter-chatbot>` that
+:doc:`AI-driven workflows, agents and llm_clients <smarter-resources/smarter-llm_client>` that
 are :doc:`securely integrated <smarter-resources/smarter-plugin>` to
 enterprise data sources and systems.
 

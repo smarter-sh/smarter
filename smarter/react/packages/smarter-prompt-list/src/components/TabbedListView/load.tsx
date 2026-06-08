@@ -1,20 +1,20 @@
 import { loggerPrefix } from "@/const";
-import type { Chatbot, SessionContext, UserProfile } from "@/lib/Types";
+import type { LLMClient, SessionContext, UserProfile } from "@/lib/Types";
 import fetchDjangoUrl from "@/lib/django";
 import { setCookie } from "./cookie";
 
 interface ApiResponse {
   user: UserProfile;
   admin: UserProfile;
-  objects: Chatbot[];
+  objects: LLMClient[];
 }
 
 /**
- * Loads chatbot data from the backend API and updates state.
+ * Loads llm_client data from the backend API and updates state.
  *
- * @param setterCallback - State setter for updating the chatbot list.
+ * @param setterCallback - State setter for updating the llm_client list.
  * @param setLoading - State setter for loading state.
- * @param urlSlug - The API slug for the chatbot group (e.g., "owned" or "shared").
+ * @param urlSlug - The API slug for the llm_client group (e.g., "owned" or "shared").
  * @param invalidateCache - If true, forces the backend to invalidate its cache (default: false).
  */
 export const load = async (
@@ -23,7 +23,7 @@ export const load = async (
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   urlSlug: string,
   onError: (error: string | null) => void,
-): Promise<Chatbot[]> => {
+): Promise<LLMClient[]> => {
   setLoading(true);
   onError(null);
 
@@ -56,7 +56,7 @@ export const load = async (
     }
 
     const payload = (await response.json()) as ApiResponse;
-    setCookie(urlSlug, "chatbot_count", payload.objects.length, 7);
+    setCookie(urlSlug, "llm_client_count", payload.objects.length, 7);
     return payload.objects;
   } catch (error) {
     console.error(loggerPrefix, "load(): Error loading objects:", error);

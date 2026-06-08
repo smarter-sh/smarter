@@ -3,17 +3,17 @@
         "session_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc",
         "sandbox_mode": false,
         "debug_mode": true,
-        "chatbot": {
+        "llm_client": {
             "id": 1,
-            "url_chatbot": "http://localhost:9357/api/v1/chatbots/1/chat/",
+            "url_llm_client": "http://localhost:9357/api/v1/llm-clients/1/chat/",
             "account": {
                 "accountNumber": "3141-5926-5359"
             },
-            "default_system_role": "The current date/time is Tuesday, 2025-10-14T12:48:51+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+            "default_system_role": "The current date/time is Tuesday, 2025-10-14T12:48:51+0000\nYou are a helpful llm_client. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
             "created_at": "2025-09-19T19:01:34.105463Z",
             "updated_at": "2025-09-28T15:47:09.836020Z",
             "name": "example",
-            "description": "An example chatbot with tool calling and Smarter Plugins.",
+            "description": "An example llm_client with tool calling and Smarter Plugins.",
             "version": "0.1.0",
             "deployed": true,
             "provider": "openai",
@@ -48,12 +48,12 @@
                 "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
                 "url": "http://example.3141-5926-5359.api.localhost:9357/config/",
                 "account": 1,
-                "chatbot": 1
+                "llm_client": 1
             },
             "chat_history": [
                 {
                     "role": "system",
-                    "content": "The current date/time is Tuesday, 2025-10-14T12:48:44+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+                    "content": "The current date/time is Tuesday, 2025-10-14T12:48:44+0000\nYou are a helpful llm_client. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
                     "smarter_is_new": false
                 },
                 {
@@ -99,7 +99,7 @@
             ],
             "chat_tool_call_history": [],
             "chat_plugin_usage_history": [],
-            "chatbot_request_history": [
+            "llm_client_request_history": [
                 {
                     "id": 59,
                     "created_at": "2025-10-14T12:48:49.679727Z",
@@ -108,7 +108,7 @@
                         "messages": [
                             {
                                 "role": "system",
-                                "content": "The current date/time is Tuesday, 2025-10-14T12:48:44+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time."
+                                "content": "The current date/time is Tuesday, 2025-10-14T12:48:44+0000\nYou are a helpful llm_client. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time."
                             },
                             {
                                 "role": "assistant",
@@ -134,16 +134,16 @@
             "ready": true,
             "name": "example",
             "api_host": "api.localhost:9357",
-            "chatbot_id": null,
-            "chatbot_name": null,
-            "chatbot_custom_domain": null,
+            "llm_client_id": null,
+            "llm_client_name": null,
+            "llm_client_custom_domain": null,
             "environment_api_domain": "api.localhost:9357",
-            "err": "ChatBotHelper.__init__() not a chatbot. Quitting. http://localhost:9357/api/v1/chatbots/1/chat/config/",
+            "err": "LLMClientHelper.__init__() not a llm_client. Quitting. http://localhost:9357/api/v1/llm-clients/1/chat/config/",
             "is_custom_domain": false,
             "is_deployed": true,
             "is_valid": true,
             "is_authentication_required": false,
-            "chatbot": {
+            "llm_client": {
                 "id": 1,
                 "created_at": "2025-09-19T19:01:34.105463Z",
                 "updated_at": "2025-09-28T15:47:09.836020Z",
@@ -151,14 +151,14 @@
                     "accountNumber": "3141-5926-5359"
                 },
                 "name": "example",
-                "description": "An example chatbot with tool calling and Smarter Plugins.",
+                "description": "An example llm_client with tool calling and Smarter Plugins.",
                 "version": "0.1.0",
                 "subdomain": null,
                 "custom_domain": null,
                 "deployed": true,
                 "provider": "openai",
                 "default_model": "gpt-4-turbo",
-                "default_system_role": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+                "default_system_role": "You are a helpful llm_client. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
                 "default_temperature": 0.5,
                 "default_max_tokens": 2048,
                 "app_name": "Smarter Demo",
@@ -176,9 +176,9 @@
                 "app_file_attachment": false,
                 "dns_verification_status": "Verified",
                 "tls_certificate_issuance_status": "No Certificate",
-                "url_chatbot": "http://localhost:9357/api/v1/chatbots/1/chat/"
+                "url_llm_client": "http://localhost:9357/api/v1/llm-clients/1/chat/"
             },
-            "url": "http://localhost:9357/api/v1/chatbots/1/chat/config/",
+            "url": "http://localhost:9357/api/v1/llm-clients/1/chat/config/",
             "session_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc",
             "auth_header": "Bearer****",
             "api_token": null,
@@ -186,29 +186,29 @@
                 "session_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc"
             },
             "is_smarter_api": true,
-            "is_chatbot": false,
-            "is_chatbot_smarter_api_url": false,
-            "is_chatbot_named_url": false,
-            "is_chatbot_sandbox_url": false,
-            "is_chatbot_cli_api_url": false,
+            "is_llm_client": false,
+            "is_llm_client_smarter_api_url": false,
+            "is_llm_client_named_url": false,
+            "is_llm_client_sandbox_url": false,
+            "is_llm_client_cli_api_url": false,
             "is_default_domain": false,
-            "path": "/api/v1/chatbots/1/chat/config/",
+            "path": "/api/v1/llm-clients/1/chat/config/",
             "root_domain": "localhost",
             "subdomain": "",
             "api_subdomain": null,
             "domain": "localhost:9357",
             "timestamp": "2025-10-14T12:48:51.879796",
-            "unique_client_string": "3141-5926-5359.http://localhost:9357/api/v1/chatbots/1/chat/config/.Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36.162.159.140.245.2025-10-14T12:48:51.879796",
+            "unique_client_string": "3141-5926-5359.http://localhost:9357/api/v1/llm-clients/1/chat/config/.Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36.162.159.140.245.2025-10-14T12:48:51.879796",
             "client_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc",
             "ip_address": "162.159.140.245",
             "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
-            "parsed_url": "ParseResult(scheme='http', netloc='localhost:9357', path='/api/v1/chatbots/1/chat/config/', params='', query='session_key=3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc', fragment='')",
+            "parsed_url": "ParseResult(scheme='http', netloc='localhost:9357', path='/api/v1/llm-clients/1/chat/config/', params='', query='session_key=3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc', fragment='')",
             "request": true,
             "qualified_request": true,
             "url_path_parts": [
                 "api",
                 "v1",
-                "chatbots",
+                "llm_clients",
                 "1",
                 "chat",
                 "config"
@@ -238,7 +238,7 @@
                     "accountNumber": "3141-5926-5359"
                 }
             },
-            "class_name": "ChatBotHelper"
+            "class_name": "LLMClientHelper"
         },
         "plugins": {
             "meta_data": {
@@ -269,7 +269,7 @@
                     },
                     "createdAt": "2025-09-19T19:02:46.656422Z",
                     "updatedAt": "2025-09-19T19:02:46.656434Z",
-                    "chatbot": 1
+                    "llm_client": 1
                 },
                 {
                     "id": 10,
@@ -294,7 +294,7 @@
                     },
                     "createdAt": "2025-09-19T19:02:46.654492Z",
                     "updatedAt": "2025-09-19T19:02:46.654520Z",
-                    "chatbot": 1
+                    "llm_client": 1
                 }
             ]
         }

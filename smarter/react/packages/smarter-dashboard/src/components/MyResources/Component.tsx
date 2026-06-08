@@ -3,7 +3,7 @@
  * MyResources dashboard widget.
  *
  * This component fetches and displays user resource metrics from a backend API,
- * including pending deployments, chatbots, plugins, connections, and
+ * including pending deployments, llm_clients, plugins, connections, and
  * providers, then renders them in a dashboard card layout.
  *
  * :param apiUrl: Endpoint used to request My Resources data.
@@ -29,8 +29,8 @@ interface MyResourcesProps {
 
 interface MyResourcesData {
   pending_deployments: number;
-  chatbots_qty: number;
-  chatbots_url: string;
+  llm_clients_qty: number;
+  llm_clients_url: string;
   plugins_qty: number;
   plugins_url: string;
   connections_qty: number;
@@ -80,7 +80,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
   }, [apiUrl]);
 
   const my_resources_pending_deployments = data?.pending_deployments ?? 0;
-  const my_resources_chatbots = data?.chatbots_qty ?? 0;
+  const my_resources_llm_clients = data?.llm_clients_qty ?? 0;
   const my_resources_plugins = data?.plugins_qty ?? 0;
   const my_resources_connections = data?.connections_qty ?? 0;
   const my_resources_providers = data?.providers_qty ?? 0;
@@ -120,7 +120,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                         {loading ?
                           <Loading /> :
                           <a
-                            href={data?.chatbots_url}
+                            href={data?.llm_clients_url}
                             className="link-white opacity-75-hover fw-bold d-block mb-1"
                           >
                             {my_resources_pending_deployments} pending
@@ -149,7 +149,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                   {/* begin::Col */}
                   <div className="col-6">
                     {/* begin::Items */}
-                    <a href={data?.chatbots_url}>
+                    <a href={data?.llm_clients_url}>
                       <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
                         {/* begin::Symbol */}
                         <div className="symbol symbol-30px me-5 mb-8">
@@ -167,7 +167,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                           {loading ?
                             <Loading /> :
                             <span className="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">
-                              {my_resources_chatbots}
+                              {my_resources_llm_clients}
                             </span>
                           }
                           {/* end::Number */}

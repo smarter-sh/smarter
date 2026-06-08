@@ -3,9 +3,9 @@
         "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
         "sandbox_mode": false,
         "debug_mode": true,
-        "chatbot": {
+        "llm_client": {
             "id": 9,
-            "url_chatbot": "http://localhost:9357/api/v1/chatbots/9/chat/",
+            "url_llm_client": "http://localhost:9357/api/v1/llm-clients/9/chat/",
             "account": {
                 "accountNumber": "3141-5926-5359"
             },
@@ -20,9 +20,9 @@
             "default_model": "gpt-4o-mini",
             "default_temperature": 0.5,
             "default_max_tokens": 1024,
-            "app_name": "Stackademy SQL Chatbot",
+            "app_name": "Stackademy SQL LLMClient",
             "app_assistant": "Stanley",
-            "app_welcome_message": "Welcome to Stackademy SQL Chatbot! How can I help you today?",
+            "app_welcome_message": "Welcome to Stackademy SQL LLMClient! How can I help you today?",
             "app_example_prompts": [
                 "Do you offer any courses on AI?",
                 "My budget is $1,000. What courses can I take?",
@@ -46,9 +46,9 @@
                 "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
                 "ip_address": "172.66.0.243",
                 "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
-                "url": "http://localhost:9357/api/v1/chatbots/9/config/",
+                "url": "http://localhost:9357/api/v1/llm-clients/9/config/",
                 "account": 1,
-                "chatbot": 9
+                "llm_client": 9
             },
             "chat_history": [
                 {
@@ -58,7 +58,7 @@
                 },
                 {
                     "role": "assistant",
-                    "content": "Welcome to Stackademy SQL Chatbot! How can I help you today?",
+                    "content": "Welcome to Stackademy SQL LLMClient! How can I help you today?",
                     "smarter_is_new": false
                 },
                 {
@@ -154,9 +154,9 @@
                         "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
                         "ip_address": "172.66.0.243",
                         "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
-                        "url": "http://localhost:9357/api/v1/chatbots/9/config/",
+                        "url": "http://localhost:9357/api/v1/llm-clients/9/config/",
                         "account": 1,
-                        "chatbot": 9
+                        "llm_client": 9
                     },
                     "created_at": "2025-12-08T13:37:37.279189Z",
                     "updated_at": "2025-12-08T13:37:37.279217Z",
@@ -164,7 +164,7 @@
                     "plugin": 11
                 }
             ],
-            "chatbot_request_history": [
+            "llm_client_request_history": [
                 {
                     "id": 4,
                     "created_at": "2025-12-08T13:37:33.303852Z",
@@ -177,7 +177,7 @@
                             },
                             {
                                 "role": "assistant",
-                                "content": "Welcome to Stackademy SQL Chatbot! How can I help you today?"
+                                "content": "Welcome to Stackademy SQL LLMClient! How can I help you today?"
                             },
                             {
                                 "role": "assistant",
@@ -199,16 +199,16 @@
             "ready": true,
             "name": "stackademy_sql",
             "api_host": "api.localhost:9357",
-            "chatbot_id": null,
-            "chatbot_name": null,
-            "chatbot_custom_domain": null,
+            "llm_client_id": null,
+            "llm_client_name": null,
+            "llm_client_custom_domain": null,
             "environment_api_domain": "api.localhost:9357",
-            "err": "ChatBotHelper.__init__() not a chatbot. Quitting. http://localhost:9357/api/v1/chatbots/9/chat/config/",
+            "err": "LLMClientHelper.__init__() not a llm_client. Quitting. http://localhost:9357/api/v1/llm-clients/9/chat/config/",
             "is_custom_domain": false,
             "is_deployed": false,
             "is_valid": true,
             "is_authentication_required": false,
-            "chatbot": {
+            "llm_client": {
                 "id": 9,
                 "created_at": "2025-11-21T03:20:13.143128Z",
                 "updated_at": "2025-11-21T03:20:13.176363Z",
@@ -226,9 +226,9 @@
                 "default_system_role": "You are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n",
                 "default_temperature": 0.5,
                 "default_max_tokens": 1024,
-                "app_name": "Stackademy SQL Chatbot",
+                "app_name": "Stackademy SQL LLMClient",
                 "app_assistant": "Stanley",
-                "app_welcome_message": "Welcome to Stackademy SQL Chatbot! How can I help you today?",
+                "app_welcome_message": "Welcome to Stackademy SQL LLMClient! How can I help you today?",
                 "app_example_prompts": [
                     "Do you offer any courses on AI?",
                     "My budget is $1,000. What courses can I take?",
@@ -241,9 +241,9 @@
                 "app_file_attachment": null,
                 "dns_verification_status": "Not Verified",
                 "tls_certificate_issuance_status": "No Certificate",
-                "url_chatbot": "http://localhost:9357/api/v1/chatbots/9/chat/"
+                "url_llm_client": "http://localhost:9357/api/v1/llm-clients/9/chat/"
             },
-            "url": "http://localhost:9357/api/v1/chatbots/9/chat/config/",
+            "url": "http://localhost:9357/api/v1/llm-clients/9/chat/config/",
             "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
             "auth_header": "Bearer****",
             "api_token": null,
@@ -251,29 +251,29 @@
                 "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7"
             },
             "is_smarter_api": true,
-            "is_chatbot": false,
-            "is_chatbot_smarter_api_url": false,
-            "is_chatbot_named_url": false,
-            "is_chatbot_sandbox_url": false,
-            "is_chatbot_cli_api_url": false,
+            "is_llm_client": false,
+            "is_llm_client_smarter_api_url": false,
+            "is_llm_client_named_url": false,
+            "is_llm_client_sandbox_url": false,
+            "is_llm_client_cli_api_url": false,
             "is_default_domain": false,
-            "path": "/api/v1/chatbots/9/chat/config/",
+            "path": "/api/v1/llm-clients/9/chat/config/",
             "root_domain": "localhost",
             "subdomain": "",
             "api_subdomain": null,
             "domain": "localhost:9357",
             "timestamp": "2025-12-08T13:37:43.051436",
-            "unique_client_string": "3141-5926-5359.http://localhost:9357/api/v1/chatbots/9/chat/config/.Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36.172.66.0.243.2025-12-08T13:37:43.051436",
+            "unique_client_string": "3141-5926-5359.http://localhost:9357/api/v1/llm-clients/9/chat/config/.Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36.172.66.0.243.2025-12-08T13:37:43.051436",
             "client_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
             "ip_address": "172.66.0.243",
             "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
-            "parsed_url": "ParseResult(scheme='http', netloc='localhost:9357', path='/api/v1/chatbots/9/chat/config/', params='', query='session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7', fragment='')",
+            "parsed_url": "ParseResult(scheme='http', netloc='localhost:9357', path='/api/v1/llm-clients/9/chat/config/', params='', query='session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7', fragment='')",
             "request": true,
             "qualified_request": true,
             "url_path_parts": [
                 "api",
                 "v1",
-                "chatbots",
+                "llm_clients",
                 "9",
                 "chat",
                 "config"
@@ -303,7 +303,7 @@
                     "accountNumber": "3141-5926-5359"
                 }
             },
-            "class_name": "ChatBotHelper"
+            "class_name": "LLMClientHelper"
         },
         "plugins": {
             "meta_data": {
@@ -334,7 +334,7 @@
                     },
                     "createdAt": "2025-11-21T03:20:13.178700Z",
                     "updatedAt": "2025-11-21T03:20:13.178708Z",
-                    "chatbot": 9
+                    "llm_client": 9
                 }
             ]
         }

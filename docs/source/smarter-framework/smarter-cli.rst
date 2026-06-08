@@ -24,7 +24,7 @@ interact with Smarter resources. The general format is:
 
   Available Commands:
     apply       Apply a Smarter manifest
-    chat        Chat with a deployed ChatBot
+    chat        Chat with a deployed LLMClient
     completion  Generate the autocompletion script for the specified shell
     configure   Configure the smarter command-line interface
     delete      Permanently delete a Smarter resource
@@ -61,7 +61,7 @@ The cli implements a set of verbs for working with Smarter resources
   permanently, unrecoverably destroys a Smarter resource.
 - `deploy <../smarter/smarter/apps/api/v0/cli/views/delete.py>`__:
   manages the deploy state of a deployable Smarter resource (Plugin and
-  ChatBot).
+  LLMClient).
 - `describe <../smarter/smarter/apps/api/v0/cli/views/describe.py>`__:
   returns a report in yaml or json format that is a superset of a
   manifest describing the present state of a Smarter resource.
@@ -100,7 +100,7 @@ Kind
 - `ChatHistory <../smarter/smarter/apps/chat/api/v1/manifests/>`__
 - `ChatPluginUsage <../smarter/smarter/apps/chat/api/v1/manifests/>`__
 - `ChatToolCall <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `ChatBot <../smarter/smarter/apps/chatbot/api/v1/manifests/>`__
+- `LLMClient <../smarter/smarter/apps/llm_client/api/v1/manifests/>`__
 - `Plugin <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
 - `SqlConnection <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
 - `ApiConnection <../smarter/smarter/apps/plugin/api/v1/manifests/>`__

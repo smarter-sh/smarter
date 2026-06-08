@@ -17,7 +17,7 @@ Smarter Prompt is chiefly responsible for:
  - Orchestrating the Smarter resources for the session
    (
    :doc:`Account <smarter-account>`,
-   :doc:`Chatbot <smarter-chatbot>`,
+   :doc:`LLMClient <smarter-llm_client>`,
    :doc:`Plugin <smarter-plugin>`)
 
 Smarter sessions do not expire unless deleted by an administrator as part of MySQL database disk space maintenance operations.
@@ -25,9 +25,9 @@ Smarter sessions do not expire unless deleted by an administrator as part of MyS
 
 .. note::
 
-  Smarter sessions are distinct from Smarter Chatbots. A Smarter Chatbot is a resource that defines
-  the configuration of a chatbot, including its system prompt, plugins, and other settings. A Smarter session,
-  on the other hand, is an instance of a conversation with a chatbot, which includes the
+  Smarter sessions are distinct from Smarter LLMClients. A Smarter LLMClient is a resource that defines
+  the configuration of a llm_client, including its system prompt, plugins, and other settings. A Smarter session,
+  on the other hand, is an instance of a conversation with a llm_client, which includes the
   complete history of messages exchanged during that conversation.
 
   Smarter sessions originate in Smarter Prompt, are passed to the ReactJS component as part of the
@@ -43,12 +43,12 @@ Usage
 .. code-block:: bash
 
   # Smarter Prompt Engineer Workbench
-  curl -X POST http://localhost:9357/api/v1/chatbots/9/chat/?session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7
+  curl -X POST http://localhost:9357/api/v1/llm-clients/9/chat/?session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7
 
-  # Deployed Smarter Chatbot - Alpha
+  # Deployed Smarter LLMClient - Alpha
   curl -X GET https://stackademy.3141-5926-5359.alpha.api.example.com/chat/?session_key=<SESSION-KEY>
 
-  # Deployed Smarter Chatbot - Production
+  # Deployed Smarter LLMClient - Production
   curl -X GET https://stackademy.3141-5926-5359.api.example.com/chat/?session_key=<SESSION-KEY>
 
 .. seealso::
@@ -58,7 +58,7 @@ Usage
     - :doc:`Smarter API <../smarter-framework/smarter-api>`
     - :doc:`Smarter Journal <../smarter-framework/smarter-journal>`
     - :doc:`Smarter Account <../smarter-resources/smarter-account>`
-    - :doc:`Smarter Chatbots <../smarter-resources/smarter-chatbot>`
+    - :doc:`Smarter LLMClients <../smarter-resources/smarter-llm_client>`
     - :doc:`Smarter Plugins <../smarter-resources/smarter-plugin>`
 
 

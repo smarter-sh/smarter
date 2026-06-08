@@ -1,6 +1,6 @@
 # pylint: disable=W0613
 """
-smarter.apps.dashboard.views.dashboard.api.my_resources
+Smarter.apps.dashboard.views.dashboard.api.my_resources
 =========================================================
 
 This module provides custom Django context processors for the Smarter dashboard
@@ -11,12 +11,11 @@ rendering of dashboard and branding information throughout the application.
 Overview
 --------
 
-
 The context processors in this module serve the following purposes:
 
 - **Dashboard Context**: Supplies user-specific and application-wide metadata,
     such as the current user's email, username, role flags, product version, and
-    resource counts (e.g., chatbots, plugins, API keys, custom domains, connections,
+    resource counts (e.g., llm_clients, plugins, API keys, custom domains, connections,
     and secrets). This enables the dashboard to display personalized and up-to-date
     information for each authenticated user.
 
@@ -28,7 +27,6 @@ The context processors in this module serve the following purposes:
 - **Cache Busting**: Adds a cache-busting query parameter to static asset URLs
     during local development, preventing browsers from serving outdated static
     files.
-
 
 Caching
 -------
@@ -67,9 +65,13 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
-from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.connection.models import ConnectionBase
 from smarter.apps.connection.urls import ConnectionReverseNames
+from smarter.apps.llm_client.models import (
+    LLMClient,
+    LLMClientAPIKey,
+    LLMClientCustomDomain,
+)
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
@@ -92,9 +94,9 @@ logger_prefix = logging.formatted_text(__name__)
 
 def get_pending_deployments(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
-    Returns the number of chatbot deployments that are pending for the specified user.
+    Returns the number of llm_client deployments that are pending for the specified user.
 
-    This function queries the database for all chatbot instances associated with the
+    This function queries the database for all llm_client instances associated with the
     user's account that have not yet been deployed. The result is used to inform users
     of outstanding deployment actions required on their dashboard.
 
@@ -104,7 +106,7 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
     :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :param user_profile: UserProfile instance. The user profile whose pending deployments are to be counted.
     :type user_profile: UserProfile
-    :return: The number of pending chatbot deployments for the user.
+    :return: The number of pending llm_client deployments for the user.
     :rtype: int
     """
 
@@ -116,7 +118,7 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
             invalidate,
             user_profile,
         )
-        retval = ChatBot.objects.filter(deployed=False).with_ownership_permission_for(user=user_profile.user).count() or 0  # type: ignore
+        retval = LLMClient.objects.filter(deployed=False).with_ownership_permission_for(user=user_profile.user).count() or 0  # type: ignore
         logger.debug(
             "%s.get_pending_deployments() retrieved and cached pending deployments count: %s", logger_prefix, retval
         )
@@ -131,30 +133,30 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
     return _get_pending_deployments(user_profile.id)  # type: ignore
 
 
-def get_chatbots(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
+def get_llm_clients(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
     """
-    Returns the total number of chatbots associated with the specified user.
+    Returns the total number of llm_clients associated with the specified user.
 
-    This function queries the database for all chatbot instances linked to
+    This function queries the database for all llm_client instances linked to
     the user's account, regardless of deployment status. The resulting count
-    is used to display the user's available chatbots on the dashboard.
+    is used to display the user's available llm_clients on the dashboard.
 
     The result is cached for a short duration to reduce database queries and
     improve dashboard performance.
 
-    :param user_profile: UserProfile instance. The user profile whose chatbots are to be counted.
+    :param user_profile: UserProfile instance. The user profile whose llm_clients are to be counted.
     :type user_profile: UserProfile
     :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
 
-    :return: The number of chatbots belonging to the user.
+    :return: The number of llm_clients belonging to the user.
     :rtype: int
     """
     if not user_profile:
-        logger.warning("%s.get_chatbots() called without user_profile. Returning None.", logger_prefix)
+        logger.warning("%s.get_llm_clients() called without user_profile. Returning None.", logger_prefix)
         return 0
 
-    chatbots = ChatBot.get_cached_objects(invalidate=invalidate, user_profile=user_profile)
-    return len(chatbots)
+    llm_clients = LLMClient.get_cached_objects(invalidate=invalidate, user_profile=user_profile)
+    return len(llm_clients)
 
 
 def get_plugins(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
@@ -186,7 +188,7 @@ def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] =
     Returns the total number of API keys associated with the specified user.
 
     This function queries the database for all API key records linked to
-    chatbots owned by the user's account. The resulting count is used to
+    llm_clients owned by the user's account. The resulting count is used to
     display the user's available API keys on the dashboard.
 
     The result is cached for a short duration to reduce database queries and
@@ -207,7 +209,7 @@ def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] =
             invalidate,
             user_profile,
         )
-        retval = ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+        retval = LLMClientAPIKey.objects.filter(llm_client__user_profile__id=user_profile_id).count() or 0
         logger.debug("%s.get_api_keys() retrieved and cached API keys count: %s", logger_prefix, retval)
         return retval
 
@@ -226,7 +228,7 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
     Returns the total number of custom domains associated with the specified user.
 
     This function queries the database for all custom domain records linked
-    to chatbots owned by the user's account. The resulting count is used to
+    to llm_clients owned by the user's account. The resulting count is used to
     display the user's available custom domains on the dashboard.
 
     The result is cached for a short duration to reduce database queries and
@@ -247,7 +249,7 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
             invalidate,
             user_profile,
         )
-        retval = ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+        retval = LLMClientCustomDomain.objects.filter(llm_client__user_profile__id=user_profile_id).count() or 0
         logger.debug("%s.get_custom_domains() retrieved and cached custom domains count: %s", logger_prefix, retval)
         return retval
 
@@ -331,10 +333,7 @@ def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] 
 
 # pylint: disable=W0613
 class MyResourcesView(SmarterAuthenticatedWebView):
-    """
-    API view for the "My Resources" React component on the dashboard.
-
-    """
+    """API view for the "My Resources" React component on the dashboard."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
 
@@ -345,8 +344,8 @@ class MyResourcesView(SmarterAuthenticatedWebView):
         def _get_resources() -> dict[str, object]:
             return {
                 "pending_deployments": get_pending_deployments(user_profile=user_profile),
-                "chatbots_qty": get_chatbots(user_profile=user_profile),
-                "chatbots_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+                "llm_clients_qty": get_llm_clients(user_profile=user_profile),
+                "llm_clients_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
                 "plugins_qty": get_plugins(user_profile=user_profile),
                 "plugins_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
                 "connections_qty": get_connections(user_profile=user_profile),

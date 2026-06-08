@@ -27,13 +27,13 @@ export const makeCacheKey = (apiUrl: string, slug: string) => {
 };
 
 /**
- * Reads and validates cached chatbot objects.
+ * Reads and validates cached llm_client objects.
  *
  * Returns null for missing, invalid, or expired entries and removes expired
  * data to keep storage clean.
  *
  * @param key Fully qualified sessionStorage cache key.
- * @returns The cached chatbot array when present and valid; otherwise `null`.
+ * @returns The cached llm_client array when present and valid; otherwise `null`.
  * @throws No exceptions are propagated. JSON parse errors, sessionStorage access
  * failures, and other runtime errors are caught and treated as a cache miss.
  */
@@ -57,10 +57,10 @@ export const readCache = (key: string): any[] | null => {
 };
 
 /**
- * Persists chatbot objects to sessionStorage with a write timestamp.
+ * Persists llm_client objects to sessionStorage with a write timestamp.
  *
  * @param key Fully qualified sessionStorage cache key.
- * @param objects Chatbot objects to cache for subsequent reads.
+ * @param objects LLMClient objects to cache for subsequent reads.
  * @returns `void`.
  * @throws No exceptions are propagated. sessionStorage write failures (for
  * example quota exceeded or private mode restrictions) are caught and ignored.

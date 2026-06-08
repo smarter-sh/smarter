@@ -20,7 +20,7 @@ on the low-level implementation details of how to get there.
 The basic stsructure of a Smarter API Manifest (SAM) YAML document includes the following key sections:
 
 - **apiVersion**: Specifies the version of the API schema that the manifest adheres to.
-- **kind**: Indicates the type of resource being defined (e.g., Account, Plugin, Chatbot).
+- **kind**: Indicates the type of resource being defined (e.g., Account, Plugin, LLMClient).
 - **metadata**: Contains metadata about the resource, such as its name, labels, and annotations. Metadata varies by resource kind, but always includes a name, description and version.
 - **spec**: Defines the desired state and configuration of the resource. The spec section varies considerably by resource kind.
 - **status**: (Optional) Provides information about the current state of the resource. This section is read-only and managed by the system.

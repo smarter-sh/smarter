@@ -19,7 +19,7 @@ The Smarter Framework supports multiple hosting naming schemes for the Smarter A
      - ``api.example.com``
    * - Session-Based Hosting
      - ``example.com/v1/api/``
-   * - Named Chatbots
+   * - Named LLMClients
      - ``stackademy.1234-5678-9012.example.com``
    * - Custom Domains
      - ``chat.yourdomain.com``

@@ -5,7 +5,7 @@ This module extends :class:`corsheaders.middleware.CorsMiddleware`
 to support dynamically generated, request-scoped CORS origins while
 remaining fully compatible with concurrent ASGI execution.
 
-The middleware is specifically designed to safely support chatbot-origin
+The middleware is specifically designed to safely support llm_client-origin
 resolution without introducing cross-request state leakage or unsafe
 async behavior.
 
@@ -14,7 +14,7 @@ Key Features
 
 - Fully compatible with ASGI concurrency
 - Stateless request processing
-- Dynamic chatbot-specific origin allowlisting
+- Dynamic llm_client-specific origin allowlisting
 - Local development origin support
 - Compatibility with ``django-cors-headers``
 - Optional feature-flag enablement via Django Waffle
@@ -43,7 +43,7 @@ Behavior
 For each request, the middleware:
 
 #. Starts with the configured static CORS allowlist
-#. Dynamically resolves chatbot-specific origins
+#. Dynamically resolves llm_client-specific origins
 #. Adds localhost development origins when appropriate
 #. Applies regex-based origin matching
 #. Defers to ``django-cors-headers`` for core CORS behavior
@@ -85,8 +85,8 @@ framework.
 Notes
 =====
 
-This middleware relies on request-scoped chatbot resolution using
-:func:`smarter.apps.chatbot.models.get_cached_chatbot_by_request`.
+This middleware relies on request-scoped llm_client resolution using
+:func:`smarter.apps.llm_client.models.get_cached_llm_client_by_request`.
 
 Because ``django-cors-headers`` internally expects synchronous
 middleware semantics, this implementation preserves compatibility
@@ -133,8 +133,8 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
 
     Middleware for handling Cross-Origin Resource Sharing (CORS) headers in the application.
 
-    This middleware extends the default CORS handling to dynamically add chatbot URLs to the
-    allowed origins at runtime. It ensures that requests from valid chatbot origins are permitted
+    This middleware extends the default CORS handling to dynamically add llm_client URLs to the
+    allowed origins at runtime. It ensures that requests from valid llm_client origins are permitted
     by updating the CORS allowed origins list based on the current request context.
 
     The middleware also provides additional logic to handle internal IP addresses, health check
@@ -142,20 +142,20 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
 
     :cvar _url: The parsed URL (as a :class:`urllib.parse.SplitResult`) for the current request, or None.
     :vartype _url: Optional[SplitResult]
-    :cvar _chatbot: The chatbot instance associated with the current request, or None.
-    :vartype _chatbot: Optional[ChatBot]
+    :cvar _llm_client: The llm_client instance associated with the current request, or None.
+    :vartype _llm_client: Optional[LLMClient]
     :cvar request: The current Django HTTP request object, or None.
     :vartype request: Optional[HttpRequest]
 
     **Key Features**
 
-    - Dynamically adds chatbot URLs to the CORS allowed origins list.
+    - Dynamically adds llm_client URLs to the CORS allowed origins list.
     - Handles requests from internal IP addresses and health check endpoints.
     - Provides detailed logging for CORS-related events and decisions.
     - Integrates with Django and the `django-cors-headers` package.
 
     .. note::
-        - The chatbot URL is only added to the allowed origins if a chatbot is associated with the request.
+        - The llm_client URL is only added to the allowed origins if a llm_client is associated with the request.
         - Internal requests and health checks are short-circuited for efficiency.
         - Logging is controlled via a waffle switch and the application's log level.
 

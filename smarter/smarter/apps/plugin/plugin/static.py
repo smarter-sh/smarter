@@ -6,7 +6,7 @@ A PLugin that returns a static json object stored in the Plugin itself.
     This is a complex AI resource that exists within the following class hierarchy
 
     - Smarter SQL Plugin: The plugin that defines the SQL query and it's parameters to run against the remote SQL database server.
-    - Smarter Chatbot: The prompting resource (Chatbot, Agent, Workflow unit, etcetera) that includes the SQL Plugin:
+    - Smarter LLMClient: The prompting resource (LLMClient, Agent, Workflow unit, etcetera) that includes the SQL Plugin:
 
 .. sphinx note: these are relative to the rst doc that calls automodule on this file.
 
@@ -14,11 +14,9 @@ A PLugin that returns a static json object stored in the Plugin itself.
     :language: yaml
     :caption: 1.) Example Static Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/chatbot/data/chatbots/chatbot-example.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/llm_client/data/llm-clients/llm_client-example.yaml
     :language: yaml
-    :caption: 2.) Example Chatbot Manifest
-
-
+    :caption: 2.) Example LLMClient Manifest
 """
 
 import logging
@@ -105,10 +103,9 @@ class StaticPlugin(PluginBase):
 
     **Example Use Cases:**
 
-        - Providing static product information for a chatbot.
+        - Providing static product information for a llm_client.
         - Supplying company contact details or promotional codes.
         - Returning biographical information about a company founder.
-
     """
 
     SAMPluginType = SAMStaticPlugin
@@ -401,7 +398,7 @@ class StaticPlugin(PluginBase):
     @classmethod
     def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
         """
-        use Pydantic models to generate an example manifest for a StaticPlugin.
+        Use Pydantic models to generate an example manifest for a StaticPlugin.
 
         :param kwargs: Optional keyword arguments to customize the example manifest.
         :type kwargs: Optional[dict[str, Any]]
@@ -424,7 +421,6 @@ class StaticPlugin(PluginBase):
         - :class:`SAMPluginCommonSpecSelectorKeyDirectiveValues`
         - :class:`SAMPluginCommonSpecPromptKeys`
         - :class:`SAMStaticPluginSpecDataKeys`
-
         """
         metadata = SAMPluginCommonMetadata(
             name="everlasting_gobstopper",

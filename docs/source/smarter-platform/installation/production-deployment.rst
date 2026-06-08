@@ -245,7 +245,7 @@ The rendered div will look something like the following.
     id="smarter-sh-v1-ui-chat-root"
     class="smarter-chat"
     django-session-cookie-name="sessionid"
-    smarter-chatbot-api-url="https://platform.example.com/api/v1/chatbots/4/"
+    smarter-chatbot-api-url="https://platform.example.com/api/v1/llm-clients/4/"
     smarter-cookie-domain="platform.example.com"
     smarter-csrf-cookie-name="csrftoken"
     smarter-debug-mode="True"

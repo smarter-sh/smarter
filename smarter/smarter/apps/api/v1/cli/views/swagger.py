@@ -1,6 +1,4 @@
-"""
-Common Swagger definitions for CLI API views.
-"""
+"""Common Swagger definitions for CLI API views."""
 
 import os
 from http import HTTPStatus
@@ -29,9 +27,9 @@ with open(
     EXAMPLE_MANIFEST_PLUGIN = json.load(f)
 
 with open(
-    os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "apply", "chatbot.yaml"), encoding="utf-8"
+    os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "apply", "llm_client.yaml"), encoding="utf-8"
 ) as f:
-    EXAMPLE_MANIFEST_CHATBOT = f.read()
+    EXAMPLE_MANIFEST_LLM_CLIENT = f.read()
 
 with open(os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "chat", "prompt.json"), encoding="utf-8") as f:
     EXAMPLE_CHAT_PROMPT = json.load(f)
@@ -48,7 +46,7 @@ class ManifestSerializer(serializers.Serializer):
 
     manifest = serializers.CharField(
         help_text="YAML manifest in smarter.sh/v1 format",
-        default=EXAMPLE_MANIFEST_CHATBOT,
+        default=EXAMPLE_MANIFEST_LLM_CLIENT,
     )
 
 

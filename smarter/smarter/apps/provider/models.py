@@ -301,16 +301,16 @@ class Provider(MetaDataWithOwnershipModel):
     @property
     def rfc1034_compliant_name(self) -> Optional[str]:
         """
-        Returns a URL-friendly name for the chatbot.
+        Returns a URL-friendly name for the llm_client.
 
-        This property returns an RFC 1034-compliant name for the chatbot, suitable for use in URLs and DNS labels.
+        This property returns an RFC 1034-compliant name for the llm_client, suitable for use in URLs and DNS labels.
 
         **Example:**
 
         .. code-block:: python
 
-            self.name = 'Example ChatBot 1'
-            self.rfc1034_compliant_name  # 'example-chatbot-1'
+            self.name = 'Example LLMClient 1'
+            self.rfc1034_compliant_name  # 'example-llm_client-1'
 
         :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
         :rtype: Optional[str]
@@ -322,6 +322,7 @@ class Provider(MetaDataWithOwnershipModel):
     def test_connectivity(self) -> bool:
         """
         Test connectivity to the provider's API.
+
         This method should be overridden by subclasses to implement specific connectivity tests.
         """
         if not self.base_url:
@@ -363,6 +364,7 @@ class Provider(MetaDataWithOwnershipModel):
     def verify(self):
         """
         Request a batch of acceptance tests.
+
         Set the status but don't change the is_verified flag.
         This is used to indicate that the provider is being verified but has not yet been activated.
         """
@@ -561,6 +563,7 @@ class Provider(MetaDataWithOwnershipModel):
     ) -> Optional["Provider"]:
         """
         Return a single instance of Provider by name for the given user.
+
         This method caches the results to improve performance.
 
         :param user: The user whose provider should be retrieved.
@@ -711,7 +714,9 @@ class ProviderModelVerification(TimestampedModel):
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_provider(provider_name: str) -> Provider:
     """
-    Get the provider by name and account number. This is the primary way to
+    Get the provider by name and account number.
+
+    This is the primary way to
     retrieve a provider. Raises a Smarter error if anything goes wrong.
     """
 
@@ -737,7 +742,9 @@ def get_provider(provider_name: str) -> Provider:
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_providers() -> list[Provider]:
     """
-    Get all active providers. This is the primary way to retrieve all providers.
+    Get all active providers.
+
+    This is the primary way to retrieve all providers.
     Raises a Smarter error if anything goes wrong.
     """
     try:
@@ -754,7 +761,9 @@ def get_providers() -> list[Provider]:
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_model_for_provider(provider_name: str, model_name: Optional[str] = None) -> ProviderModelTypedDict:
     """
-    Get the model for a provider by name and account number. This is the
+    Get the model for a provider by name and account number.
+
+    This is the
     primary way to retrieve a model for a provider. Raises a Smarter error if
     anything goes wrong.
     """
@@ -813,7 +822,9 @@ def get_model_for_provider(provider_name: str, model_name: Optional[str] = None)
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_models_for_provider(provider_name: str) -> list[ProviderModelTypedDict]:
     """
-    Get all models for a provider by name and account number. This is the
+    Get all models for a provider by name and account number.
+
+    This is the
     primary way to retrieve all models for a provider. Raises a Smarter error if
     anything goes wrong.
     """

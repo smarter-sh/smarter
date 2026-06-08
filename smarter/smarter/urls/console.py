@@ -1,6 +1,4 @@
-"""
-URLs for Smarter web console.
-"""
+"""URLs for Smarter web console."""
 
 import logging
 import sys
@@ -33,7 +31,6 @@ from smarter.apps.account.views.password_management import (
 )
 from smarter.apps.api import urls
 from smarter.apps.api.const import namespace as api_namespace
-from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.connection import urls as connection_urls
 from smarter.apps.connection.const import namespace as connection_namespace
 from smarter.apps.dashboard import urls as dashboard_urls
@@ -51,6 +48,7 @@ from smarter.apps.docs.views.webserver import (
     RobotsTxtView,
     SitemapXmlView,
 )
+from smarter.apps.llm_client.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.plugin import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt import urls as prompt_urls
@@ -73,9 +71,7 @@ logger = logging.getLogger(__name__)
 
 
 def session_test_view(request):
-    """
-    Deprecated?
-    """
+    """Deprecated?"""
     request.session["test_key"] = "test_value"
     request.session.modified = True  # Ensure session is saved
     return JsonResponse({"session_key": request.session.session_key, "test_key": request.session.get("test_key")})
@@ -89,7 +85,8 @@ admin.autodiscover()
 
 Switch = get_waffle_switch_model()
 """
-Add a custom admin site that is accessible to staff users, but excludes
+Add a custom admin site that is accessible to staff users, but excludes.
+
 superuser-only models.
 """
 smarter_restricted_admin_site.register(Switch, SmarterSwitchAdmin)
@@ -101,21 +98,23 @@ EXCLUDED_MODELS = [
     "waffle.Flag",
 ]
 """
-superuser-only models to exclude from registration with
+Superuser-only models to exclude from registration with.
+
 smarter_restricted_admin_site, which is accessible to staff users.
 """
 
 SMARTER_APP_LABELS = [
     "account",
     "api",
-    "chatbot",
+    "llm_client",
     "plugin",
     "prompt",
     "provider",
     "vectorstore",
 ]
 """
-app labels that are independently registered at the app level
+App labels that are independently registered at the app level.
+
 using the admin module. These are granuarly registered with the
 appropriate permission configuration at the app level, so we can skip them here
 when we loop through all models for registration with smarter_restricted_admin_site.
@@ -175,10 +174,10 @@ urlpatterns = [
     path("secret/", include(secret_urls, namespace=secret_namespace)),
     path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
     # -----------------------------------
-    # Chatbots.
+    # LLMClients.
     # mcdaniel: 2026-01-31: are these even reachable anymore?
     # -----------------------------------
-    path("chat/", DefaultChatbotApiView.as_view(), name=f"{name_prefix}_chat"),
+    path("chat/", DefaultLLMClientApiView.as_view(), name=f"{name_prefix}_chat"),
     path("config/", ChatConfigView.as_view(), name=f"{name_prefix}_config"),
     # -----------------------------------
     # password management

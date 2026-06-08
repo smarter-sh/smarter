@@ -1,8 +1,9 @@
 # pylint: disable=W0613,C0302
 """
-PromptListView is a Django class-based view that serves the list of ChatBots
+PromptListView is a Django class-based view that serves the list of LLMClients.
+
 for the Smarter workbench web console. It is responsible for fetching the
-ChatBots associated with the authenticated user, as well as any shared ChatBots,
+LLMClients associated with the authenticated user, as well as any shared LLMClients,
 and rendering them in a template. The view is protected and requires the user
 to be authenticated. It also includes caching to keep the workbench snappy while
 avoiding appearing stale.
@@ -27,15 +28,16 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 class PromptListView(SmarterAuthenticatedWebView):
     """
-    list view for smarter workbench web console. This sets up
-    the React component that will render the list of ChatBots. The React
+    List view for smarter workbench web console.
+
+    This sets up
+    the React component that will render the list of LLMClients. The React
     component uses the views located in ./api for its data.
 
       id="smarter-prompt-list-root"
       django-csrf-cookie-name="csrftoken"
       django-session-cookie-name="sessionid"
-      smarter-prompt-list-api-url="/prompt/api/chatbots/"
-
+      smarter-prompt-list-api-url="/prompt/api/llm-clients/"
     """
 
     template_path = "react/prompt-list.html"

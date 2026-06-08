@@ -12,7 +12,7 @@ Goal
 ====
 
 Register an LLM provider with Smarter so its models are available for use
-in chatbots and the Workbench.
+in llm_clients and the Workbench.
 
 Supported Providers
 ===================
@@ -120,7 +120,7 @@ Restart the application to load the new credential:
 Concept Overview
 ================
 
-Smarter manages every resource — providers, chatbots, plugins — the same way:
+Smarter manages every resource — providers, llm_clients, plugins — the same way:
 a YAML manifest you write and apply via the CLI. This pattern is deliberately
 modeled on Kubernetes. These files are called **SAM** (Smarter API Manifests).
 
@@ -224,7 +224,7 @@ should list both ``anthropic-opus`` and ``anthropic-sonnet`` with active status.
 
 .. tip::
 
-   With both providers registered, you can create two chatbots — one backed
+   With both providers registered, you can create two llm_clients — one backed
    by each model — and compare their responses to the same prompt in the
    Workbench. This is a practical way to evaluate cost vs. quality trade-offs
    before committing to a model for production.

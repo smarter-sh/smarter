@@ -175,7 +175,7 @@ class AWSRoute53(AWSBase):
 
     def get_hosted_zone_by_id(self, hosted_zone_id) -> Optional[dict]:
         """
-        (NOT IMPLEMENTED) Return the AWS Route53 Hosted zone for the zone id
+        (NOT IMPLEMENTED) Return the AWS Route53 Hosted zone for the zone id.
 
         :param hosted_zone_id: The hosted zone ID.
         :type hosted_zone_id: str
@@ -415,7 +415,6 @@ class AWSRoute53(AWSBase):
         :type record_value: Union[str, List[dict], None]
         :return: A tuple containing the DNS record dictionary and a boolean indicating whether the record was created (True) or already existed (False).
         :rtype: Tuple[dict, bool]
-
         """
         action: Optional[str] = None
         fn_name = self.formatted_class_name + ".get_or_create_dns_record()"
@@ -441,8 +440,8 @@ class AWSRoute53(AWSBase):
             return False
 
         def match_alias(record_alias_target, record) -> bool:
-            """
-            Match the alias target
+            """Match the alias target.
+
             'AliasTarget': {'HostedZoneId': 'Z3AADJGX6KTTL2', 'DNSName': 'a1db5dfcf202b4a63bdcd0f3c03e769f-769707598.us-east-2.elb.amazonaws.com.', 'EvaluateTargetHealth': True}}
             """
             record_alias = record.get("AliasTarget", None)
@@ -709,7 +708,7 @@ class AWSRoute53(AWSBase):
                 record_type="A",
                 record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
                 record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
-                record_ttl=smarter_settings.chatbot_tasks_default_ttl,
+                record_ttl=smarter_settings.llm_client_tasks_default_ttl,
             )
             verb = "Created" if created else "Verified"
             logger.debug(

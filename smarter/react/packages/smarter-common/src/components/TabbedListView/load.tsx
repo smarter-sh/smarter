@@ -53,11 +53,11 @@ const getErrorMessage = (status: number, responseBody: unknown): string => {
 };
 
 /**
- * Loads chatbot data from the backend API and updates state.
+ * Loads llm_client data from the backend API and updates state.
  *
- * @param setterCallback - State setter for updating the chatbot list.
+ * @param setterCallback - State setter for updating the llm_client list.
  * @param setLoading - State setter for loading state.
- * @param urlSlug - The API slug for the chatbot group (e.g., "owned" or "shared").
+ * @param urlSlug - The API slug for the llm_client group (e.g., "owned" or "shared").
  * @param invalidateCache - If true, forces the backend to invalidate its cache (default: false).
  */
 export const load = async <TObject,>(

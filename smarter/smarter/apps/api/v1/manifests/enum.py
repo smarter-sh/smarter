@@ -6,14 +6,14 @@ from smarter.apps.account.manifest.models.account.const import (
 from smarter.apps.account.manifest.models.user.const import (
     MANIFEST_KIND as USER_MANIFEST_KIND,
 )
-from smarter.apps.chatbot.manifest.models.chatbot.const import (
-    MANIFEST_KIND as CHATBOT_MANIFEST_KIND,
-)
 from smarter.apps.connection.manifest.models.api_connection.const import (
     MANIFEST_KIND as APICONNECTION_MANIFEST_KIND,
 )
 from smarter.apps.connection.manifest.models.sql_connection.const import (
     MANIFEST_KIND as SQLCONNECTION_MANIFEST_KIND,
+)
+from smarter.apps.llm_client.manifest.models.llm_client.const import (
+    MANIFEST_KIND as LLM_CLIENT_MANIFEST_KIND,
 )
 from smarter.apps.plugin.manifest.models.api_plugin.const import (
     MANIFEST_KIND as APIPLUGIN_MANIFEST_KIND,
@@ -58,7 +58,9 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 class SAMKinds(SmarterEnumAbstract):
     """
-    Smarter manifest kinds enumeration. This is the comprehensive list of all
+    Smarter manifest kinds enumeration.
+
+    This is the comprehensive list of all
     manifest kinds supported by the Smarter platform.
 
     Each manifest kind corresponds to a specific resource type within the
@@ -79,7 +81,7 @@ class SAMKinds(SmarterEnumAbstract):
         CHAT_HISTORY: Represents a chat history manifest kind.
         CHAT_PLUGIN_USAGE: Represents a chat plugin usage manifest kind.
         CHAT_TOOL_CALL: Represents a chat tool call manifest kind.
-        CHATBOT: Represents a chatbot manifest kind.
+        LLM_CLIENT: Represents a llm_client manifest kind.
         PROVIDER: Represents a provider manifest kind.
 
     Methods:
@@ -119,7 +121,7 @@ class SAMKinds(SmarterEnumAbstract):
     CHAT_HISTORY = CHAT_HISTORY_MANIFEST_KIND
     CHAT_PLUGIN_USAGE = CHAT_PLUGIN_USAGE_MANIFEST_KIND
     CHAT_TOOL_CALL = CHAT_TOOL_CALL_MANIFEST_KIND
-    CHATBOT = CHATBOT_MANIFEST_KIND
+    LLM_CLIENT = LLM_CLIENT_MANIFEST_KIND
 
     # provider resources
     PROVIDER = PROVIDER_MANIFEST_KIND
@@ -129,9 +131,7 @@ class SAMKinds(SmarterEnumAbstract):
 
     @classmethod
     def str_to_kind(cls, kind_str: str) -> "SAMKinds":
-        """
-        Convert a string to a SAMKinds enumeration value.
-        """
+        """Convert a string to a SAMKinds enumeration value."""
         if isinstance(kind_str, bytes):
             kind_str = kind_str.decode("utf-8")
         if not isinstance(kind_str, str):

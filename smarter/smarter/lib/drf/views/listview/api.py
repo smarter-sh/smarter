@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """
-This module contains views to implement the React
+This module contains views to implement the React.
+
 AuthToken list view in the Smarter Dashboard.
 """
 
@@ -103,16 +104,16 @@ class AuthTokenListApiView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Clone a authtoken for the authenticated user.
-    """
+    """Clone a authtoken for the authenticated user."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
-        Handle POST requests to clone an existing AuthToken. Validates input
+        Handle POST requests to clone an existing AuthToken.
+
+        Validates input
         parameters, checks for the existence of the AuthToken to be cloned, and
         creates a new AuthToken with the specified name. Invalidates the cache
-        for the user's ChatBots after cloning.
+        for the user's LLMClients after cloning.
 
         :param request: The HTTP request object containing the parameters for cloning.
         :type request: HttpRequest
@@ -167,16 +168,16 @@ class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Delete a authtoken for the authenticated user.
-    """
+    """Delete a authtoken for the authenticated user."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
-        Handle POST requests to delete an existing AuthToken. Validates input
+        Handle POST requests to delete an existing AuthToken.
+
+        Validates input
         parameters, checks for the existence of the AuthToken to be deleted, and
         deletes the AuthToken if it exists. Invalidates the cache for the user's
-        ChatBots after deletion.
+        LLMClients after deletion.
 
         :param request: The HTTP request object containing the parameters for deletion.
         :type request: HttpRequest
@@ -222,16 +223,16 @@ class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class AuthTokenListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Rename a authtoken for the authenticated user.
-    """
+    """Rename a authtoken for the authenticated user."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
-        Handle POST requests to rename an existing AuthToken. Validates input
+        Handle POST requests to rename an existing AuthToken.
+
+        Validates input
         parameters, checks for the existence of the AuthToken to be renamed, and
         renames the AuthToken if it exists. Invalidates the cache for the user's
-        ChatBots after renaming.
+        LLMClients after renaming.
 
         :param request: The HTTP request object containing the parameters for renaming.
         :type request: HttpRequest

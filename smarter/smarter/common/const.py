@@ -19,7 +19,7 @@ SMARTER_PLATFORM_DEFAULT_SUBDOMAIN = "platform"
 SMARTER_PRODUCT_NAME = "The Smarter Project"
 SMARTER_APP_NAME = "Smarter"
 SMARTER_PRODUCT_DESCRIPTION = "An open source, no-code AI authoring platform designed for instructional use."
-SMARTER_EXAMPLE_CHATBOT_NAME = "example"
+SMARTER_EXAMPLE_LLM_CLIENT_NAME = "example"
 SMARTER_CUSTOMER_SUPPORT_EMAIL = "lpm0073@gmail.com"
 SMARTER_CONTACT_EMAIL = "lpm0073@gmail.com"
 SMARTER_CUSTOMER_SUPPORT_PHONE = "+1 (617) 834-6172"
@@ -33,7 +33,7 @@ SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
 SMARTER_DEFAULT_REACTJS_APP_LOADER_URL = "https://cdn.smarter.sh/ui-chat/app-loader.js"
 
 # The following are used in the React app
-# to store the chatbot chat session key and debug mode settings
+# to store the llm_client chat session key and debug mode settings
 # as browser cookies. The React app has constants
 # for these values as well which should be kept in sync.
 SMARTER_CHAT_SESSION_KEY_NAME = "session_key"

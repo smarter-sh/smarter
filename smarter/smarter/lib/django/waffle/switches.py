@@ -1,6 +1,4 @@
-"""
-SmarterWaffleSwitches - Predefined, centrally managed Waffle switches for the Smarter Platform.
-"""
+"""SmarterWaffleSwitches - Predefined, centrally managed Waffle switches for the Smarter Platform."""
 
 from dataclasses import dataclass
 
@@ -42,7 +40,6 @@ class SmarterWaffleSwitches:
 
             if switch_is_active(SmarterWaffleSwitches.API_LOGGING):
                 print("API logging is enabled.")
-
     """
 
     _all: list[str] = []  # Internal list to track all switch names
@@ -69,13 +66,16 @@ class SmarterWaffleSwitches:
     """Enables logging throughout the smarter.app.prompt namespace."""
 
     CHATAPP_LOGGING = "log_chatapp"
-    """For the React Chat UI component. Enables debug-level javascript console logging inside the browser"""
+    """For the React Chat UI component.
 
-    CHATBOT_LOGGING = "log_chatbot"
-    """Enables logging throughout the smarter.app.chatbot namespace."""
+    Enables debug-level javascript console logging inside the browser
+    """
 
-    CHATBOT_HELPER_LOGGING = "log_chatbothelper"
-    """Enables logging within the smarter.apps.chatbot.model.ChatBotHelper class."""
+    LLM_CLIENT_LOGGING = "log_llm_client"
+    """Enables logging throughout the smarter.app.llm_client namespace."""
+
+    LLM_CLIENT_HELPER_LOGGING = "log_llm_clienthelper"
+    """Enables logging within the smarter.apps.llm_client.model.LLMClientHelper class."""
 
     SECRET_LOGGING = "log_secret"
     """Enables logging throughout the smarter.app.secret namespace."""
@@ -83,7 +83,7 @@ class SmarterWaffleSwitches:
     VECTORSTORE_LOGGING = "log_vectorstore"
     """Enables logging throughout the smarter.app.vectorstore namespace."""
 
-    CSRF_SUPPRESS_FOR_CHATBOTS = "disable_csrf_middleware_for_chatbots"
+    CSRF_SUPPRESS_FOR_LLM_CLIENTS = "disable_csrf_middleware_for_llm_clients"
     """Disables CSRF middleware checks for chat completion endpoints."""
 
     ENABLE_DEBUG_MODE = "enable_debug_mode"
@@ -105,13 +105,13 @@ class SmarterWaffleSwitches:
     """Enables multi-tenant authentication support for hosted Smarter platforms."""
 
     ENABLE_MIDDLEWARE_SENSITIVE_FILES = "enable_middleware_block_sensitive_files"
-    """Enables SmarterBlockSensitiveFilesMiddleware"""
+    """Enables SmarterBlockSensitiveFilesMiddleware."""
 
     ENABLE_MIDDLEWARE_EXCESSIVE_404 = "enable_middleware_block_excessive_404"
-    """Enables SmarterBlockExcessive404Middleware"""
+    """Enables SmarterBlockExcessive404Middleware."""
 
     ENABLE_MIDDLEWARE_CORS = "enable_middleware_cors"
-    """Enables SmarterCorsMiddleware"""
+    """Enables SmarterCorsMiddleware."""
 
     ENABLE_MIDDLEWARE_CSRF = "enable_middleware_csrf"
     """Enables Django's built-in CSRF middleware for enhanced security against cross-site request forgery attacks."""
@@ -129,7 +129,7 @@ class SmarterWaffleSwitches:
     """Enables SmarterTokenAuthenticationMiddleware, which provides token-based authentication for API endpoints."""
 
     ENABLE_MIDDLEWARE_SECURITY = "enable_middleware_security"
-    """Enables SmarterSecurityMiddleware"""
+    """Enables SmarterSecurityMiddleware."""
 
     ENABLE_REACTAPP_DEBUG_MODE = "enable_reactapp_debug_mode"
     """Enables React app debug mode within the Smarter React Chat component."""
@@ -203,9 +203,9 @@ class SmarterWaffleSwitches:
             comment="For the React Chat UI component. Enables debug-level javascript console logging inside the browser",
             default=True,
         ),
-        CHATBOT_LOGGING: SmarterWaffleSwitch(
-            name=CHATBOT_LOGGING,
-            comment="Enables logging throughout the smarter.app.chatbot namespace.",
+        LLM_CLIENT_LOGGING: SmarterWaffleSwitch(
+            name=LLM_CLIENT_LOGGING,
+            comment="Enables logging throughout the smarter.app.llm_client namespace.",
             default=True,
         ),
         CONNECTION_LOGGING: SmarterWaffleSwitch(
@@ -223,13 +223,13 @@ class SmarterWaffleSwitches:
             comment="Enables logging throughout the smarter.app.vectorstore namespace.",
             default=True,
         ),
-        CHATBOT_HELPER_LOGGING: SmarterWaffleSwitch(
-            name=CHATBOT_HELPER_LOGGING,
-            comment="Enables logging within the smarter.apps.chatbot.model.ChatBotHelper class.",
+        LLM_CLIENT_HELPER_LOGGING: SmarterWaffleSwitch(
+            name=LLM_CLIENT_HELPER_LOGGING,
+            comment="Enables logging within the smarter.apps.llm_client.model.LLMClientHelper class.",
             default=True,
         ),
-        CSRF_SUPPRESS_FOR_CHATBOTS: SmarterWaffleSwitch(
-            name=CSRF_SUPPRESS_FOR_CHATBOTS,
+        CSRF_SUPPRESS_FOR_LLM_CLIENTS: SmarterWaffleSwitch(
+            name=CSRF_SUPPRESS_FOR_LLM_CLIENTS,
             comment="Disables CSRF middleware checks for chat completion endpoints.",
             default=False,
         ),
@@ -381,8 +381,6 @@ class SmarterWaffleSwitches:
 
 
 smarter_waffle_switches = SmarterWaffleSwitches()
-"""
-Singleton instance of SmarterWaffleSwitches to be used throughout the codebase.
-"""
+"""Singleton instance of SmarterWaffleSwitches to be used throughout the codebase."""
 
 __all__ = ["SmarterWaffleSwitches", "smarter_waffle_switches"]

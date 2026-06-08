@@ -14,14 +14,14 @@ This tutorial helps you quickly onboard by configuring **Claude Code** as an LLM
 Goal
 -----------------------------------------
 
-We will use the Smarter platform / CLI to register Claude Code as an LLM provider, wire it to a new ChatBot, deploy the ChatBot, and verify end-to-end operation by sending prompts through smarter platform. We will also validate Claude Code API responses via ``curl`` (terminal command) and/or postman (GUI client).
+We will use the Smarter platform / CLI to register Claude Code as an LLM provider, wire it to a new LLMClient, deploy the LLMClient, and verify end-to-end operation by sending prompts through smarter platform. We will also validate Claude Code API responses via ``curl`` (terminal command) and/or postman (GUI client).
 
 By the end of this tutorial you will have:
 
 - A ``Secret`` manifest storing your Anthropic API key securely in Smarter.
-- A ``ChatBot`` manifest backed by ``claude-code-1-0``.
+- A ``LLMClient`` manifest backed by ``claude-code-1-0``.
 - A local development environment configured to use the Claude provider for prompt generation and testing.
-- A live, publicly accessible ChatBot framework through Smarter platform returning Claude Code responses.
+- A live, publicly accessible LLMClient framework through Smarter platform returning Claude Code responses.
 
 
 Prerequisites
@@ -308,13 +308,13 @@ When Claude Code is configured to use Smarter, three environment variables contr
 Manifests
 ~~~~~~~~~~
 
-A **manifest** is a YAML file that declaratively describes a Smarter resource — such as a ``Secret``, a ``Provider``, or a ``ChatBot``. You apply manifests with the Smarter CLI (``smarter apply -f <file>.yml``), and Smarter reconciles the platform state to match the file's specification.
+A **manifest** is a YAML file that declaratively describes a Smarter resource — such as a ``Secret``, a ``Provider``, or a ``LLMClient``. You apply manifests with the Smarter CLI (``smarter apply -f <file>.yml``), and Smarter reconciles the platform state to match the file's specification.
 
 There are three manifest types relevant to this tutorial:
 
 - **Secret manifest** — Stores your Anthropic API key securely. Smarter encrypts the value and exposes it to providers by reference, so the raw key never appears in your code or manifests.
 - **Provider manifest** — Registers Claude as a named LLM provider, specifying the model (e.g., ``claude-code-1-0``), the base URL, and the linked secret.
-- **ChatBot manifest** — Defines a deployable ChatBot resource that references the Claude provider, exposes an HTTP endpoint, and optionally configures system prompts and plugins.
+- **LLMClient manifest** — Defines a deployable LLMClient resource that references the Claude provider, exposes an HTTP endpoint, and optionally configures system prompts and plugins.
 
 .. _concept-provider-class:
 
@@ -330,7 +330,7 @@ The Claude provider class (``ClaudeChatProvider``) declares:
 - The API key, sourced from ``smarter_settings`` so it is never hard-coded.
 - ``add_built_in_tools = False``, which disables tool injection that is not compatible with Claude models.
 
-Once the class is registered in ``ChatProviders``, calling ``chat_providers.get_handler(provider="claude")`` resolves to ``ClaudeChatProvider.chat()``, which is the path taken every time a ChatBot backed by Claude processes a prompt.
+Once the class is registered in ``ChatProviders``, calling ``chat_providers.get_handler(provider="claude")`` resolves to ``ClaudeChatProvider.chat()``, which is the path taken every time a LLMClient backed by Claude processes a prompt.
 
 .. _concept-secrets:
 
@@ -346,21 +346,21 @@ For Claude integration, you will create one secret that holds your Anthropic API
    Never commit API keys to version control. Always use Smarter Secrets or environment variables,
    and add ``.env`` and ``config.yaml`` files to ``.gitignore``.
 
-.. _concept-chatbot:
+.. _concept-llm_client:
 
-ChatBots
-~~~~~~~~~
+LLMClients
+~~~~~~~~~~~
 
-A **ChatBot** in Smarter is a deployable resource that wraps an LLM provider behind an HTTP endpoint. Once applied and deployed, a ChatBot exposes a public or authenticated URL that your application (or the Smarter Sandbox) can send prompts to.
+A **LLMClient** in Smarter is a deployable resource that wraps an LLM provider behind an HTTP endpoint. Once applied and deployed, a LLMClient exposes a public or authenticated URL that your application (or the Smarter Sandbox) can send prompts to.
 
-Each ChatBot manifest specifies:
+Each LLMClient manifest specifies:
 
 - **defaultProvider** — The registered provider name (``"claude"`` in this tutorial).
 - **defaultModel** — The specific model version (e.g., ``claude-code-1-0``).
 - **System prompt** — Optional instructions prepended to every conversation.
-- **Plugins** — Optional extensions that augment the ChatBot's capabilities.
+- **Plugins** — Optional extensions that augment the LLMClient's capabilities.
 
-The ChatBot is the end-to-end unit of deployment: it is what you test against in the Sandbox, embed in a web page, and call from ``curl`` or Postman to validate Claude responses.
+The LLMClient is the end-to-end unit of deployment: it is what you test against in the Sandbox, embed in a web page, and call from ``curl`` or Postman to validate Claude responses.
 
 .. _concept-cli:
 
@@ -383,10 +383,10 @@ The **Smarter CLI** (``smarter``) is a statically compiled Go binary that provid
      - Creates or updates the resource described in a manifest
    * - ``smarter get providers``
      - Lists all registered LLM providers
-   * - ``smarter get chatbots``
-     - Lists all deployed ChatBots
-   * - ``smarter describe chatbot <name>``
-     - Shows detailed status and configuration for a ChatBot
+   * - ``smarter get llm_clients``
+     - Lists all deployed LLMClients
+   * - ``smarter describe llm_client <name>``
+     - Shows detailed status and configuration for a LLMClient
 
 The CLI communicates with the Smarter platform API using the credentials stored in ``$HOME/.smarter/config.yaml``. All manifest operations are idempotent — running ``smarter apply`` on an existing resource updates it rather than creating a duplicate.
 
@@ -508,7 +508,7 @@ Edit ``smarter/apps/prompt/providers/providers.py``:
 .. note::
 
    This enables ``chat_providers.get_handler(provider="claude")`` to resolve correctly,
-   which is required when a ``ChatBot`` is configured with ``provider="claude"``.
+   which is required when a ``LLMClient`` is configured with ``provider="claude"``.
 
 Step 3: Add Seed Provider Registration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -565,13 +565,13 @@ Call the method inside ``handle()``:
 Step 4: Validate Provider Name Support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``ChatBot.provider`` is validated via ``validate_provider()``, which checks membership
+``LLMClient.provider`` is validated via ``validate_provider()``, which checks membership
 in ``chat_providers.all``. Registering the handler in Step 2 is sufficient for ``claude``
 to pass validation automatically.
 
 Additionally confirm:
 
-- ``smarter/apps/chatbot/models.py`` — ``validate_provider()`` permits ``"claude"``
+- ``smarter/apps/llm_client/models.py`` — ``validate_provider()`` permits ``"claude"``
   (no manual changes required if ``all`` is updated correctly).
 - Any manifest docs or examples that enumerate provider names include ``"claude"``.
 
@@ -647,7 +647,7 @@ Documentation
 Update platform docs (e.g. ``docs/providers.rst`` or ``README.md``) with:
 
 - Claude provider registration instructions.
-- Example ``ChatBot`` manifest entries using ``provider: "claude"``.
+- Example ``LLMClient`` manifest entries using ``provider: "claude"``.
 
 Step 7 (Optional): Add a Provider Manifest Entry
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -723,7 +723,7 @@ Then confirm the new ``Anthropic`` provider record is created in the database.
 Test the chat endpoint
 """""""""""""""""""""""""""""""
 
-Deploy or call the chat endpoint with a ``ChatBot`` configured for ``provider="claude"``.
+Deploy or call the chat endpoint with a ``LLMClient`` configured for ``provider="claude"``.
 
 Run the test suite
 """""""""""""""""""""""""""""""
@@ -737,7 +737,7 @@ Run the test suite
 Proof of Concept: Claude Code on Smarter
 -----------------------------------------
 
-Deploy a publicly accessible **Claude-backed ChatBot** on **Smarter** and confirm it returns a real completion response to a ``curl`` request.
+Deploy a publicly accessible **Claude-backed LLMClient** on **Smarter** and confirm it returns a real completion response to a ``curl`` request.
 
 .. _poc-expected-result:
 
@@ -746,7 +746,7 @@ Expected Result
 
 This is what success looks like.
 
-**Your deployed ChatBot URL:**
+**Your deployed LLMClient URL:**
 
 .. code-block:: text
 
@@ -789,7 +789,7 @@ This is what success looks like.
        }
      },
      "api": "smarter.sh/v1",
-     "thing": "Chatbot",
+     "thing": "LLMClient",
      "metadata": { "command": "chat" }
    }
 
@@ -803,19 +803,19 @@ This is what success looks like.
 Verification
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Once your ChatBot is deployed (see the Step-by-Step section of this tutorial), run the following to confirm everything is working end-to-end.
+Once your LLMClient is deployed (see the Step-by-Step section of this tutorial), run the following to confirm everything is working end-to-end.
 
-Retrieve your exact ChatBot URL:
+Retrieve your exact LLMClient URL:
 
 .. code-block:: bash
 
-   smarter describe chatbot napl-claude-poc   # look for: url_chatbot
+   smarter describe llm_client napl-claude-poc   # look for: url_llm_client
 
 Or inspect the live config directly:
 
 .. code-block:: text
 
-   https://platform.smarter.sh/chatbots/napl-claude-poc/config/
+   https://platform.smarter.sh/llm-clients/napl-claude-poc/config/
 
 Then run the ``curl`` command from the :ref:`Expected Result <poc-expected-result>`
 section above, substituting your account number.
@@ -852,19 +852,19 @@ Steps
 
    Never commit API keys to version control.
 
-**3 — Create the ChatBot manifest**
+**3 — Create the LLMClient manifest**
 
 .. code-block:: bash
 
    mkdir smarter-poc && cd smarter-poc
-   smarter manifest chatbot -o yaml > napl-claude-poc.yml
+   smarter manifest llm_client -o yaml > napl-claude-poc.yml
 
 Edit ``napl-claude-poc.yml`` with the following key fields:
 
 .. code-block:: yaml
 
    apiVersion: smarter.sh/v1
-   kind: ChatBot
+   kind: LLMClient
    metadata:
      name: napl-claude-poc
      namespace: default
@@ -872,7 +872,7 @@ Edit ``napl-claude-poc.yml`` with the following key fields:
      defaultModel: claude-sonnet-4-6
      defaultProvider: anthropic
      appName: "NAPL Claude PoC"
-     appDescription: "Proof-of-concept ChatBot backed by Claude on Smarter."
+     appDescription: "Proof-of-concept LLMClient backed by Claude on Smarter."
      appExamplePrompts:
        - "Explain recursion in one sentence."
        - "What is a transformer model?"
@@ -884,17 +884,17 @@ Edit ``napl-claude-poc.yml`` with the following key fields:
 .. code-block:: bash
 
    smarter apply -f napl-claude-poc.yml
-   smarter describe chatbot napl-claude-poc   # confirm status: deployed
+   smarter describe llm_client napl-claude-poc   # confirm status: deployed
 
 **5 — Run the** ``curl`` **test**
 
 Replace ``<YOUR_ACCOUNT_NUMBER>`` with your account number, then run the
 command from the :ref:`Expected Result <poc-expected-result>` section above.
-Retrieve your exact ChatBot URL at any time with:
+Retrieve your exact LLMClient URL at any time with:
 
 .. code-block:: bash
 
-   smarter describe chatbot napl-claude-poc   # look for: url_chatbot
+   smarter describe llm_client napl-claude-poc   # look for: url_llm_client
 
 **6 — Confirm in the Smarter Sandbox**
 
@@ -913,7 +913,7 @@ The PoC is complete when all four criteria are met:
 
    <table style="width:100%">
      <tbody>
-       <tr><td style="vertical-align:middle; width:3%"><input type="checkbox"></td><td><code>smarter describe chatbot napl-claude-poc</code> returns <code>status: deployed</code></td></tr>
+       <tr><td style="vertical-align:middle; width:3%"><input type="checkbox"></td><td><code>smarter describe llm_client napl-claude-poc</code> returns <code>status: deployed</code></td></tr>
        <tr><td style="vertical-align:middle"><input type="checkbox"></td><td>The <code>curl</code> POST to <code>/chat/</code> returns <code>statusCode: 200</code></td></tr>
        <tr><td style="vertical-align:middle"><input type="checkbox"></td><td>The response body contains a non-empty <code>choices[0].message.content</code></td></tr>
        <tr><td style="vertical-align:middle"><input type="checkbox"></td><td>The Smarter Sandbox shows a complete 5-stage processing run</td></tr>
@@ -966,7 +966,7 @@ Quick Diagnosis Reference
    * - Sandbox shows stale behaviour
      - Cached config or manifest not re-applied
      - :ref:`ts-05-sandbox-config`
-   * - Chatbot widget missing on web page
+   * - LLMClient widget missing on web page
      - Wrong API URL or missing CDN script
      - :ref:`ts-06-web-integration`
 
@@ -1068,14 +1068,14 @@ with unexpected settings.
 
 .. code-block:: bash
 
-   python3 -c "import yaml; yaml.safe_load(open('my-chatbot.yml'))" \
+   python3 -c "import yaml; yaml.safe_load(open('my-llm_client.yml'))" \
            && echo "YAML is valid"
 
 **Generate a reference template to compare against your file:**
 
 .. code-block:: bash
 
-   smarter manifest chatbot -o yaml > reference-chatbot.yml
+   smarter manifest llm_client -o yaml > reference-llm_client.yml
 
 **List valid provider names** — ``defaultProvider`` must match exactly:
 
@@ -1083,13 +1083,13 @@ with unexpected settings.
 
    smarter get providers
 
-**Reset a misconfigured chatbot** — ``apply`` does not remove fields
+**Reset a misconfigured llm_client** — ``apply`` does not remove fields
 absent from your manifest. Delete and re-create for a clean state:
 
 .. code-block:: bash
 
-   smarter delete chatbot <name>
-   smarter apply -f my-chatbot.yml
+   smarter delete llm_client <name>
+   smarter apply -f my-llm_client.yml
 
 .. important::
 
@@ -1097,8 +1097,8 @@ absent from your manifest. Delete and re-create for a clean state:
 
    .. code-block:: bash
 
-      smarter get chatbots
-      smarter describe chatbot <your-chatbot-name>
+      smarter get llm_clients
+      smarter describe llm_client <your-llm_client-name>
 
 .. _ts-04-context-performance:
 
@@ -1148,13 +1148,13 @@ TS-05 — Sandbox Reflects Stale Configuration
 in the Smarter Sandbox.
 
 - **Force a browser cache clear:** ``Cmd+Shift+R`` (macOS) or ``Ctrl+Shift+R`` (Windows/Linux)
-- **Re-apply the manifest** after any local file change: ``smarter apply -f my-chatbot.yml``
+- **Re-apply the manifest** after any local file change: ``smarter apply -f my-llm_client.yml``
 - **Remove unconfigured plugins** — an empty ``plugins:`` block causes silent failures; comment it out during initial testing
 - **Inspect the live config** directly:
 
 .. code-block:: text
 
-   https://platform.smarter.sh/chatbots/<your-chatbot-name>/config/
+   https://platform.smarter.sh/llm-clients/<your-llm_client-name>/config/
 
 .. _ts-06-web-integration:
 
@@ -1162,18 +1162,18 @@ TS-06 — Web Integration and Embedding Issues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-**Symptoms:** Chatbot widget missing, blank, or broken on the web page.
+**Symptoms:** LLMClient widget missing, blank, or broken on the web page.
 
 .. list-table::
    :widths: 30 70
    :header-rows: 1
 
-   * - Chatbot Type
+   * - LLMClient Type
      - URL Pattern
    * - Public (deployed)
-     - ``https://<chatbot-name>.<account-id>.api.smarter.sh/``
+     - ``https://<llm_client-name>.<account-id>.api.smarter.sh/``
    * - Authenticated
-     - ``https://platform.smarter.sh/chatbots/<chatbot-name>/``
+     - ``https://platform.smarter.sh/llm-clients/<llm_client-name>/``
 
 **CDN loader script** — must be present in ``<head>``:
 
@@ -1186,14 +1186,14 @@ TS-06 — Web Integration and Embedding Issues
 .. code-block:: html
 
    <div id="root"
-        smarter-chatbot-api-url="https://<chatbot-name>.<account-id>.api.smarter.sh/">
+        smarter-chatbot-api-url="https://<llm_client-name>.<account-id>.api.smarter.sh/">
    </div>
 
-**Chatbot not yet deployed** — verify status before embedding a public URL:
+**LLMClient not yet deployed** — verify status before embedding a public URL:
 
 .. code-block:: bash
 
-   smarter describe chatbot <name>   # confirm status: deployed
+   smarter describe llm_client <name>   # confirm status: deployed
 
 .. _escalation-path:
 

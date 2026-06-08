@@ -13,7 +13,7 @@ from time import sleep
 from django.test import Client
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
+from smarter.apps.llm_client.models import LLMClient, LLMClientPlugin
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
@@ -108,7 +108,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         self.plugin = plugin_controller.plugin
         self.plugins = [self.plugin]
 
-        self.chatbot = self.chatbot_factory()
+        self.llm_client = self.llm_client_factory()
 
         self.client = Client()
         self.client.force_login(self.admin_user)
@@ -116,7 +116,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         self.chat = Chat.objects.create(
             session_key=secrets.token_hex(32),
             user_profile=self.user_profile,
-            chatbot=self.chatbot,
+            llm_client=self.llm_client,
             ip_address="192.1.1.1",
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
             url="https://www.test.com",
@@ -125,14 +125,14 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
     def tearDown(self):
         """Tear down test fixtures."""
         self.chat.delete()
-        self.chatbot.delete()
+        self.llm_client.delete()
         super().tearDown()
 
-    def chatbot_factory(self):
-        chatbot = ChatBot.objects.create(
-            name="TestChatBot",
+    def llm_client_factory(self):
+        llm_client = LLMClient.objects.create(
+            name="TestLLMClient",
             user_profile=self.user_profile,
-            description="Test ChatBot",
+            description="Test LLMClient",
             version="1.0.0",
             subdomain=None,
             custom_domain=None,
@@ -141,14 +141,14 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
             app_assistant="Smarty Pants",
             app_welcome_message="Welcome to Smarter!",
         )
-        ChatBotPlugin.objects.create(
-            chatbot=chatbot,
+        LLMClientPlugin.objects.create(
+            llm_client=llm_client,
             plugin_meta=self.plugin.plugin_meta,
         )
-        return chatbot
+        return llm_client
 
     def check_response(self, response):
-        """Check response structure from api.v1.views.chat handler()"""
+        """Check response structure from api.v1.views.chat handler()."""
         if response["statusCode"] != 200:
             print(f"response: {response}")
 
@@ -194,7 +194,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
             return [
                 {
                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "You are a helpful chatbot.",
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "You are a helpful llm_client.",
                 },
                 {
                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
