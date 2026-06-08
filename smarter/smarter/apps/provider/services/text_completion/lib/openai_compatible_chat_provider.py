@@ -1,7 +1,5 @@
 # pylint: disable=W0602,C0302
-"""
-Base class for chat providers.
-"""
+"""Base class for chat providers."""
 
 import ast
 import logging
@@ -211,6 +209,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
     def new_messages(self) -> list[dict[str, Any]]:
         """
         Return a list of messages that are marked as new.
+
         This property filters the internal message list to return only those messages
         that have the 'smarter_is_new' flag set to True.
 
@@ -231,7 +230,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def prep_first_request(self):
         """
-        Prepare the first request for the chat completion. This is called
+        Prepare the first request for the chat completion.
+
+        This is called
         at the beginning of the chat completion process.
 
         :raises SmarterValueError: If the messages are not a list, or if tool definitions are invalid.
@@ -320,7 +321,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def prep_second_request(self):
         """
-        Prepare the second request for the chat completion. This is called
+        Prepare the second request for the chat completion.
+
+        This is called
         in response to a tool call that requires a second request to the LLM.
 
         :returns: None
@@ -347,6 +350,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
     def append_openai_response(self, response: ChatCompletion) -> None:
         """
         Append the OpenAI-compatible response message to the internal message list.
+
         2025-06-20: updated to use model_dump_json() to ensure compatibility with Pydantic v2.
         2025-10-02: updated to validate that the response message is indeed a ChatCompletionMessage.
 
@@ -378,7 +382,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         def extract_json_objects(text) -> Optional[dict[str, Any]]:
             """
-            Evaluate the text to attempt to extract any JSON objects that
+            Evaluate the text to attempt to extract any JSON objects that.
+
             may be present. This is useful for extracting json error
             information that might exist inside of the error messages.
 
@@ -436,7 +441,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def handle_response(self) -> None:
         """
-        handle internal billing, and append messages to the response for prompt completion and the billing summary
+        Handle internal billing, and append messages to the response for prompt completion and the billing summary.
 
         :returns: None
         :rtype: None
@@ -502,7 +507,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def handle_tool_called(self, function_name: str, function_args: str) -> None:
         """
-        handle a built-in tool call. example: get_current_weather()
+        Handle a built-in tool call.
+
+        example: get_current_weather()
 
         :param function_name: The name of the tool function called.
         :type function_name: str
@@ -531,7 +538,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def handle_plugin_called(self, plugin: PluginBase) -> None:
         """
-        handle a plugin tool call. example: SqlPlugin, ApiPlugin, StaticPlugin etc.
+        Handle a plugin tool call.
+
+        example: SqlPlugin, ApiPlugin, StaticPlugin etc.
 
         :param plugin: The plugin instance that was called.
         :type plugin: PluginBase
@@ -551,7 +560,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def process_tool_call(self, tool_call: ChatCompletionMessageToolCallUnion):
         """
-        Process a tool call from the LLM. This method handles both built-in tool calls
+        Process a tool call from the LLM.
+
+        This method handles both built-in tool calls
         and plugin tool calls.
 
         :param tool_call: The tool call data from the LLM.
@@ -720,7 +731,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def handle_completion(self) -> dict:
         """
-        Handle chat completion response. This method
+        Handle chat completion response.
+
+        This method
         formats the final response to be returned to the client.
 
         :returns: A dictionary representing the final chat completion response.
@@ -752,7 +765,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def request_meta_data_factory(self):
         """
-        Return a dictionary of request meta data. This includes
+        Return a dictionary of request meta data.
+
+        This includes
         the model, temperature, max_completion_tokens, and input_text.
 
         :returns: A dictionary of request meta data.
@@ -878,9 +893,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         try:
             self.validate()
-            self.model = self.chat.chatbot.default_model or self.default_model
-            self.temperature = self.chat.chatbot.default_temperature or self.default_temperature
-            self.max_completion_tokens = self.chat.chatbot.default_max_tokens or self.default_max_tokens
+            self.model = self.chat.llm_client.default_model or self.default_model
+            self.temperature = self.chat.llm_client.default_temperature or self.default_temperature
+            self.max_completion_tokens = self.chat.llm_client.default_max_tokens or self.default_max_tokens
             if not self.data:
                 raise SmarterValueError(f"{self.formatted_class_name}: data is required")
             self.input_text = self.get_input_text_prompt(data=self.data)
@@ -910,7 +925,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                     if plugin.selected(user=self.user_profile.user, input_text=self.input_text, messages=self.messages):
                         self.handle_plugin_selected(plugin=plugin)
 
-            # add all functions that are included in the chatbot definition
+            # add all functions that are included in the llm_client definition
             if self.functions:
                 for function in self.functions:
                     self.handle_function_provided(function)

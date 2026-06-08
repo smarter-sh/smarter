@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API Chat Manifest handler"""
+"""Smarter API Chat Manifest handler."""
 
 import logging
 import typing
@@ -56,7 +56,7 @@ class SAMChatBrokerError(SAMBrokerError):
 
 
 class ChatSerializer(ModelSerializer):
-    """Django REST Framework serializer for get()"""
+    """Django REST Framework serializer for get()."""
 
     # pylint: disable=C0115
     class Meta:
@@ -71,7 +71,9 @@ class ChatSerializer(ModelSerializer):
 
 class SAMChatBroker(AbstractBroker):
     """
-    Smarter API Chat Manifest Broker. This class is responsible for
+    Smarter API Chat Manifest Broker.
+
+    This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Chat manifests
     - using the manifest to initialize the corresponding Pydantic model
 
@@ -103,9 +105,7 @@ class SAMChatBroker(AbstractBroker):
         return self._chat
 
     def manifest_to_django_orm(self) -> typing.Optional[dict]:
-        """
-        Transform the Smarter API SAMChat manifest into a Django ORM model.
-        """
+        """Transform the Smarter API SAMChat manifest into a Django ORM model."""
         if not self.manifest:
             return None
         metadata = super().manifest_to_django_orm()
@@ -121,7 +121,8 @@ class SAMChatBroker(AbstractBroker):
     @camel_case()
     def django_orm_to_manifest_dict(self) -> typing.Optional[dict]:
         """
-        Transform the Django ORM model into a Pydantic readable
+        Transform the Django ORM model into a Pydantic readable.
+
         Smarter API SAMChat manifest dict.
         """
         if not self.chat_object:
@@ -167,6 +168,7 @@ class SAMChatBroker(AbstractBroker):
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
+
         This is used to provide a more readable class name in logs.
         """
         parent_class = super().formatted_class_name
@@ -193,7 +195,8 @@ class SAMChatBroker(AbstractBroker):
     @property
     def manifest(self) -> typing.Optional[SAMChat]:
         """
-        SAMChat() is a Pydantic model
+        SAMChat() is a Pydantic model.
+
         that is used to represent the Smarter API SAMChat manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -283,9 +286,7 @@ class SAMChatBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=data)
 
     def apply(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        Chat is a read-only django table, populated by the LLM handlers
-        """
+        """Chat is a read-only django table, populated by the LLM handlers."""
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError(message="Chat is a read-only resource", thing=self.kind, command=command)
@@ -294,7 +295,7 @@ class SAMChatBroker(AbstractBroker):
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         prompt: typing.Optional[str] = kwargs.get("prompt", None)
-        data = {"response": "Hello, I am a chatbot!", "prompt": prompt, "chat_id": "1234567890"}
+        data = {"response": "Hello, I am a llm_client!", "prompt": prompt, "chat_id": "1234567890"}
         return self.json_response_ok(command=command, data=data)
 
     def describe(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

@@ -33,25 +33,21 @@ module_prefix = "smarter.apps.provider.tasks."
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
+    queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
 def verify_provider_model(provider_model_id):
-    """
-    Run test bank on provider model.
-    """
+    """Run test bank on provider model."""
     verification_verify_provider_model(provider_model_id=provider_model_id)
 
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
+    queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
 def verify_provider(provider_id):
-    """
-    Run test bank on provider.
-    """
+    """Run test bank on provider."""
     verification_verify_provider(provider_id=provider_id)

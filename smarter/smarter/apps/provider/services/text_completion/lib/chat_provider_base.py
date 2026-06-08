@@ -1,6 +1,4 @@
-"""
-Base class for chat providers.
-"""
+"""Base class for chat providers."""
 
 import logging
 from functools import cached_property
@@ -65,8 +63,8 @@ class SmarterChatProviderBase(ChatDbMixin):
     Base class for all Smarter chat providers.
 
     This class defines the core interface and shared logic for chat providers
-    that interact with ChatBots via the Smarter API, including both the
-    Reactapp and deployed ChatBots accessible through named URLs. It is
+    that interact with LLMClients via the Smarter API, including both the
+    Reactapp and deployed LLMClients accessible through named URLs. It is
     designed to be subclassed by specific provider_name implementations.
 
     The API is largely a superset of the OpenAI chat completion API, with
@@ -92,7 +90,6 @@ class SmarterChatProviderBase(ChatDbMixin):
                 def my_custom_method(self):
                     # Custom logic here
                     pass
-
     """
 
     __slots__ = (
@@ -202,10 +199,6 @@ class SmarterChatProviderBase(ChatDbMixin):
         :type valid_chat_completion_models: list[str]
         :param add_built_in_tools: Whether to add built-in tools (weather and date calculator) to the provider_name.
         :type add_built_in_tools: bool
-
-
-
-
         """
         super().__init__(
             provider=provider,
@@ -284,7 +277,9 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     def prune_empty_values(self, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """
-        Remove empty values from a dictionary. Some
+        Remove empty values from a dictionary.
+
+        Some
         LLM providers, including MetaAI and GoogleAI
         will break if empty values are present in the
         completion request body.
@@ -304,7 +299,9 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     def validate(self):
         """
-        Validate that all required properties are set. Raise
+        Validate that all required properties are set.
+
+        Raise
         SmarterValueError if any required property is missing.
 
         :raises SmarterValueError: If any required property is missing.
@@ -348,7 +345,9 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def messages(self) -> Optional[List[Dict[str, str]]]:
         """
-        Get the list of messages in the chat. This property
+        Get the list of messages in the chat.
+
+        This property
         returns the internal _messages attribute.
 
         :returns: The list of messages.
@@ -359,7 +358,9 @@ class SmarterChatProviderBase(ChatDbMixin):
     @messages.setter
     def messages(self, value: List[Dict[str, str]]) -> None:
         """
-        Set the list of messages in the chat. This property
+        Set the list of messages in the chat.
+
+        This property
         sets the internal _messages attribute.
 
         :param value: The list of messages to set.
@@ -373,7 +374,8 @@ class SmarterChatProviderBase(ChatDbMixin):
     @cached_property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
 
         :returns: The formatted class name.
@@ -384,7 +386,9 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def base_url(self) -> Optional[str]:
         """
-        Get the base URL of the chat provider_name. This property
+        Get the base URL of the chat provider_name.
+
+        This property
         returns the internal _base_url attribute.
 
         :returns: The base URL of the chat provider_name.
@@ -395,7 +399,9 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def url(self) -> Optional[str]:
         """
-        Get the full URL for chat completions. This property
+        Get the full URL for chat completions.
+
+        This property
         constructs the URL by appending the chat completions
         endpoint to the base URL.
 
@@ -412,7 +418,9 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def api_key(self) -> Optional[str]:
         """
-        Get the API key of the chat provider_name. This property
+        Get the API key of the chat provider_name.
+
+        This property
         returns the unmasked internal _api_key attribute.
 
         :returns: The unmasked API key of the chat provider_name.
@@ -423,7 +431,9 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_model(self) -> Optional[str]:
         """
-        Get the default model of the chat provider_name. This property
+        Get the default model of the chat provider_name.
+
+        This property
         returns the internal _default_model attribute.
 
         :returns: The default model of the chat provider_name.
@@ -438,7 +448,9 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_system_role(self) -> Optional[str]:
         """
-        Get the default system role of the chat provider_name. This property
+        Get the default system role of the chat provider_name.
+
+        This property
         returns the internal _default_system_role attribute.
 
         :returns: The default system role of the chat provider_name.
@@ -449,7 +461,9 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_temperature(self) -> Optional[float]:
         """
-        Get the default temperature of the chat provider_name. This property
+        Get the default temperature of the chat provider_name.
+
+        This property
         returns the internal _default_temperature attribute.
 
         :returns: The default temperature of the chat provider_name.
@@ -460,7 +474,9 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_max_tokens(self) -> Optional[int]:
         """
-        Get the default max completion tokens of the chat provider_name. This property
+        Get the default max completion tokens of the chat provider_name.
+
+        This property
         returns the internal _default_max_completion_tokens attribute.
 
         :returns: The default max completion tokens of the chat provider_name.
@@ -471,7 +487,9 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def valid_chat_completion_models(self) -> Optional[list[str]]:
         """
-        Get the list of valid chat completion models for the chat provider_name. This property
+        Get the list of valid chat completion models for the chat provider_name.
+
+        This property
         returns the internal _valid_chat_completion_models attribute.
 
         A valid chat completion model is one that is supported by the chat provider_name's
@@ -484,7 +502,9 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     def messages_set_is_new(self, messages: list[dict[str, Any]], is_new: bool = False) -> list[dict[str, Any]]:
         """
-        Set the is_new flag for all messages in the message thread. This is used to
+        Set the is_new flag for all messages in the message thread.
+
+        This is used to
         track which messages are new and which have already been processed.
 
         This affects the treatment of messages in the Reactapp component, where new messages
@@ -502,7 +522,8 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     def get_message_thread(self, data: dict[str, Any]) -> List[Dict[str, str]]:
         """
-        Initialize a new message thread with a system prompt
+        Initialize a new message thread with a system prompt.
+
         and the incoming data. This method ensures that the system
         role is present in the message thread.
 
@@ -514,8 +535,8 @@ class SmarterChatProviderBase(ChatDbMixin):
         :rtype: List[Dict[str, str]]
         """
         default_system_role = get_date_time_string()
-        if self.chat and self.chat.chatbot and self.chat.chatbot.default_system_role_enhanced:
-            default_system_role += self.chat.chatbot.default_system_role_enhanced
+        if self.chat and self.chat.llm_client and self.chat.llm_client.default_system_role_enhanced:
+            default_system_role += self.chat.llm_client.default_system_role_enhanced
         request_body = get_request_body(data=data)
         client_message_thread, _ = parse_request(request_body)
         if not isinstance(client_message_thread, list):
@@ -530,7 +551,9 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     def get_input_text_prompt(self, data: dict[str, Any]) -> str:
         """
-        Extract the input text prompt from the incoming data. This method
+        Extract the input text prompt from the incoming data.
+
+        This method
         validates that the input text is present and is a string.
 
         :raises SmarterValueError: If the input text is missing or invalid.
@@ -552,7 +575,9 @@ class SmarterChatProviderBase(ChatDbMixin):
         self, role: str, content: Optional[Union[dict[str, Any], list, str]], message: Optional[dict[str, Any]] = None
     ) -> None:
         """
-        Append a message to the internal message list. This method
+        Append a message to the internal message list.
+
+        This method
         validates the role and content before appending the message.
 
         :param role: The role of the message (e.g., "user", "assistant", "system").
@@ -568,7 +593,6 @@ class SmarterChatProviderBase(ChatDbMixin):
 
         :returns: None
         :rtype: None
-
         """
         if role not in OpenAIMessageKeys.all_roles:
             raise SmarterValueError(
@@ -628,7 +652,9 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     def _insert_charge_by_type(self, charge_type: str) -> None:
         """
-        Insert a charge record based on the charge type. This method
+        Insert a charge record based on the charge type.
+
+        This method
         uses the internal db_insert_charge method to create a charge
         record in the database.
 

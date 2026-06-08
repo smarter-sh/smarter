@@ -1,34 +1,34 @@
 /**
  * ListView
  *
- * Renders a responsive, table-based list of chatbot resources with key details and actions.
+ * Renders a responsive, table-based list of llm_client resources with key details and actions.
  * Features:
- * - Displays chatbot information in a styled table with columns for name, dates, provider, model, plugins, status, and actions.
- * - Integrates Toolbar for per-chatbot actions (open, edit, clone, rename, delete).
+ * - Displays llm_client information in a styled table with columns for name, dates, provider, model, plugins, status, and actions.
+ * - Integrates Toolbar for per-llm_client actions (open, edit, clone, rename, delete).
  * - Formats dates and status using shared utilities.
  * - Shows skeleton (ghost) rows while loading, and supports incremental rendering for large lists.
  *
  * Props:
- * @param isLoading - Whether the chatbot data is loading (shows skeleton rows if true).
+ * @param isLoading - Whether the llm_client data is loading (shows skeleton rows if true).
  * @param ghostRows - Number of skeleton rows to display while loading.
  * @param sessionContext - Authentication and API context for actions.
- * @param chatbots - Array of chatbot objects to display.
- * @param onRequery - Callback to refresh chatbot data.
+ * @param llm_clients - Array of llm_client objects to display.
+ * @param onRequery - Callback to refresh llm_client data.
  *
  * Usage:
  * <ListView
  *   sessionContext={sessionContext}
- *   chatbots={chatbots}
+ *   llm_clients={llm_clients}
  *   isLoading={isLoading}
  *   ghostRows={ghostRows}
  *   onRequery={onRequery}
  * />
  *
- * Intended for views where chatbots are presented in a list/table format.
+ * Intended for views where llm_clients are presented in a list/table format.
  */
 import React, { useState, useEffect } from "react";
 
-import type { Chatbot, SessionContext } from "@/lib/Types";
+import type { LLMClient, SessionContext } from "@/lib/Types";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
@@ -50,7 +50,7 @@ const LoadingText = () => {
 /**
  * TableHeader
  *
- * Renders the table header row for the chatbot list, including column titles for all displayed fields.
+ * Renders the table header row for the llm_client list, including column titles for all displayed fields.
  */
 const TableHeader = () => {
   return (
@@ -71,20 +71,20 @@ const TableHeader = () => {
 };
 
 /**
- * ChatbotRow
+ * LLMClientRow
  *
- * Renders a single chatbot as a table row, displaying its details and action toolbar.
+ * Renders a single llm_client as a table row, displaying its details and action toolbar.
  *
- * @param chatbot - The chatbot object to display.
+ * @param llm_client - The llm_client object to display.
  * @param sessionContext - Session context for actions.
- * @param onRequery - Callback to refresh chatbot data after an action.
+ * @param onRequery - Callback to refresh llm_client data after an action.
  */
-const ChatbotRow = React.memo(function ChatbotRow({
-  chatbot,
+const LLMClientRow = React.memo(function LLMClientRow({
+  llm_client,
   sessionContext,
   onRequery,
 }: {
-  chatbot: Chatbot;
+  llm_client: LLMClient;
   sessionContext: SessionContext;
   onRequery: () => void;
 }) {
@@ -96,14 +96,14 @@ const ChatbotRow = React.memo(function ChatbotRow({
     return <span>{formatDateTime(date, "relative", createdAt)}</span>;
   };
 
-  // A helper component to display combined plugins and functions for a chatbot
+  // A helper component to display combined plugins and functions for a llm_client
   // as a comma-separated list.
-  const Plugins = ({ chatbot }: { chatbot: Chatbot }) => {
-    const plugins = chatbot.plugins
+  const Plugins = ({ llm_client }: { llm_client: LLMClient }) => {
+    const plugins = llm_client.plugins
       ?.map((p) => p?.name || "")
       .filter(Boolean)
       .join(", ");
-    const functions = chatbot.functions
+    const functions = llm_client.functions
       ?.map((f) => f?.name || "")
       .filter(Boolean)
       .join(", ");
@@ -113,49 +113,49 @@ const ChatbotRow = React.memo(function ChatbotRow({
   };
 
   return (
-    <tr className="" key={chatbot.id}>
+    <tr className="" key={llm_client.id}>
       {/* Name */}
       <td className="p-1 m-0">
-        <a href={chatbot.urlChatapp}>{chatbot.name}</a>
+        <a href={llm_client.urlChatapp}>{llm_client.name}</a>
       </td>
       {/* Created Date */}
       <td className="d-none d-lg-table-cell width-100">
-        <CreatedDate date={chatbot.createdAt} />
+        <CreatedDate date={llm_client.createdAt} />
       </td>
       {/* Updated Date */}
       <td className="d-none d-lg-table-cell width-100">
-        <UpdatedDate date={chatbot.updatedAt} createdAt={chatbot.createdAt} />
+        <UpdatedDate date={llm_client.updatedAt} createdAt={llm_client.createdAt} />
       </td>
       {/* Description */}
-      <td className="">{chatbot.description}</td>
+      <td className="">{llm_client.description}</td>
       {/* Provider */}
-      <td className="">{chatbot.provider}</td>
+      <td className="">{llm_client.provider}</td>
       {/* Model */}
-      <td className="min-width-150">{chatbot.defaultModel || "default"}</td>
+      <td className="min-width-150">{llm_client.defaultModel || "default"}</td>
       {/* Plugins */}
       <td className="d-none d-xl-table-cell">
-        <Plugins chatbot={chatbot} />
+        <Plugins llm_client={llm_client} />
       </td>
       {/* Status */}
       <td className="d-none d-md-table-cell ">
-        <StatusBar chatbot={chatbot} />
+        <StatusBar llm_client={llm_client} />
       </td>
       {/* Actions */}
       <td className="text-end ">
-        <Toolbar sessionContext={sessionContext} chatbot={chatbot} onRequery={onRequery} />
+        <Toolbar sessionContext={sessionContext} llm_client={llm_client} onRequery={onRequery} />
       </td>
     </tr>
   );
 });
 
 /**
- * ChatbotRowGhost
+ * LLMClientRowGhost
  *
- * A skeleton row component to display while chatbot data is loading.
- * It mimics the structure of a regular ChatbotRow but with placeholder content.
+ * A skeleton row component to display while llm_client data is loading.
+ * It mimics the structure of a regular LLMClientRow but with placeholder content.
  */
-const ChatbotRowGhost = React.memo(function ChatbotRowGhost() {
-  console.debug(`${loggerPrefix} Rendering ChatbotRowGhost`);
+const LLMClientRowGhost = React.memo(function LLMClientRowGhost() {
+  console.debug(`${loggerPrefix} Rendering LLMClientRowGhost`);
   return (
     <tr className="ghost">
       {/* Name */}
@@ -185,18 +185,18 @@ const ChatbotRowGhost = React.memo(function ChatbotRowGhost() {
 });
 
 /**
- * ChatbotRowGhosts
+ * LLMClientRowGhosts
  *
- * Renders a specified number of skeleton (ghost) rows to indicate loading state in the chatbot list.
+ * Renders a specified number of skeleton (ghost) rows to indicate loading state in the llm_client list.
  *
  * @param count - Number of skeleton rows to render.
  */
-const ChatbotRowGhosts = React.memo(function ChatbotRowGhosts({ count }: { count: number }) {
-  console.debug(`${loggerPrefix} Rendering ChatbotRowGhosts with count: ${count}`);
+const LLMClientRowGhosts = React.memo(function LLMClientRowGhosts({ count }: { count: number }) {
+  console.debug(`${loggerPrefix} Rendering LLMClientRowGhosts with count: ${count}`);
   return (
     <>
       {Array.from({ length: count }).map((_, idx) => (
-        <ChatbotRowGhost key={idx} />
+        <LLMClientRowGhost key={idx} />
       ))}
     </>
   );
@@ -205,21 +205,21 @@ const ChatbotRowGhosts = React.memo(function ChatbotRowGhosts({ count }: { count
 /**
  * ChunkedRows
  *
- * Incrementally renders chatbot rows in chunks to avoid UI blocking.
+ * Incrementally renders llm_client rows in chunks to avoid UI blocking.
  * Uses requestIdleCallback (if available) or setTimeout as a fallback to schedule rendering.
  *
- * @param chatbots - Array of chatbot objects to render.
+ * @param llm_clients - Array of llm_client objects to render.
  * @param sessionContext - Session context for actions.
- * @param onRequery - Callback to refresh chatbot data.
+ * @param onRequery - Callback to refresh llm_client data.
  * @param chunkSize - Number of rows to render per chunk (default: 5).
  */
 function ChunkedRows({
-  chatbots,
+  llm_clients,
   sessionContext,
   onRequery,
   chunkSize = 5,
 }: {
-  chatbots: Chatbot[];
+  llm_clients: LLMClient[];
   sessionContext: SessionContext;
   onRequery: () => void;
   chunkSize?: number;
@@ -231,17 +231,17 @@ function ChunkedRows({
 
   useEffect(() => {
     let idleId: any = null;
-    if (visibleCount < chatbots.length) {
+    if (visibleCount < llm_clients.length) {
       idleId = schedule(() => {
-        setVisibleCount((c) => Math.min(c + chunkSize, chatbots.length));
+        setVisibleCount((c) => Math.min(c + chunkSize, llm_clients.length));
       });
       return () => cancel(idleId);
     }
-  }, [visibleCount, chatbots.length, chunkSize]);
+  }, [visibleCount, llm_clients.length, chunkSize]);
   return (
     <>
-      {chatbots.slice(0, visibleCount).map((chatbot) => (
-        <ChatbotRow key={chatbot.id} chatbot={chatbot} sessionContext={sessionContext} onRequery={onRequery} />
+      {llm_clients.slice(0, visibleCount).map((llm_client) => (
+        <LLMClientRow key={llm_client.id} llm_client={llm_client} sessionContext={sessionContext} onRequery={onRequery} />
       ))}
     </>
   );
@@ -251,7 +251,7 @@ interface ListViewProps {
   isLoading: boolean;
   ghostRows: number;
   sessionContext: SessionContext;
-  objects: Chatbot[];
+  objects: LLMClient[];
   onRequery: () => void;
 }
 
@@ -259,14 +259,14 @@ interface ListViewProps {
 /**
  * ListView
  *
- * Main component for displaying a responsive, table-based list of chatbot resources.
+ * Main component for displaying a responsive, table-based list of llm_client resources.
  * Handles loading state with skeleton rows and incremental rendering for large lists.
  *
- * @param isLoading - Whether the chatbot data is loading (shows skeleton rows if true).
+ * @param isLoading - Whether the llm_client data is loading (shows skeleton rows if true).
  * @param ghostRows - Number of skeleton rows to display while loading.
  * @param sessionContext - Authentication and API context for actions.
- * @param chatbots - Array of chatbot objects to display.
- * @param onRequery - Callback to refresh chatbot data.
+ * @param llm_clients - Array of llm_client objects to display.
+ * @param onRequery - Callback to refresh llm_client data.
  */
 export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequery }: ListViewProps) {
   console.debug(
@@ -278,9 +278,9 @@ export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequ
         <TableHeader />
         <tbody>
           {isLoading && (!objects || objects.length === 0) ? (
-            <ChatbotRowGhosts count={ghostRows} />
+            <LLMClientRowGhosts count={ghostRows} />
           ) : (
-            <ChunkedRows chatbots={objects} sessionContext={sessionContext} onRequery={onRequery} />
+            <ChunkedRows llm_clients={objects} sessionContext={sessionContext} onRequery={onRequery} />
           )}
         </tbody>
       </table>

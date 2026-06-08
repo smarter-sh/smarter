@@ -3,7 +3,7 @@ Prompt (Chat) URLS
 
 
 
-.. automodule:: smarter.urls.chatbots
+.. automodule:: smarter.urls.llm_clients
    :members:
    :undoc-members:
    :show-inheritance:
@@ -11,7 +11,7 @@ Prompt (Chat) URLS
 URL Patterns
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. literalinclude:: ../../../../smarter/smarter/urls/chatbots.py
+.. literalinclude:: ../../../../smarter/smarter/urls/llm_clients.py
    :language: python
    :linenos:
    :lines: 25-
@@ -26,9 +26,9 @@ ChatConfigView Class Reference
     :show-inheritance:
     :no-index:
 
-DefaultChatbotApiView Class Reference
+DefaultLLMClientApiView Class Reference
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. automodule:: smarter.apps.chatbot.api.v1.views.default
+.. automodule:: smarter.apps.llm_client.api.v1.views.default
     :members:
     :undoc-members:
     :show-inheritance:

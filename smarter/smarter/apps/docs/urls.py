@@ -23,11 +23,11 @@ from .views.json_schema import (
     DocsJsonSchemaApiConnectionView,
     DocsJsonSchemaApiKeyView,
     DocsJsonSchemaApiView,
-    DocsJsonSchemaChatBotView,
     DocsJsonSchemaChatHistoryView,
     DocsJsonSchemaChatPluginUsageView,
     DocsJsonSchemaChatToolCallView,
     DocsJsonSchemaChatView,
+    DocsJsonSchemaLLMClientView,
     DocsJsonSchemaPluginView,
     DocsJsonSchemaProviderView,
     DocsJsonSchemaSecretView,
@@ -41,11 +41,11 @@ from .views.manifest import (
     DocsExampleManifestApiConnectionView,
     DocsExampleManifestApiKeyView,
     DocsExampleManifestApiView,
-    DocsExampleManifestChatBotView,
     DocsExampleManifestChatHistoryView,
     DocsExampleManifestChatPluginUsageView,
     DocsExampleManifestChatToolCallView,
     DocsExampleManifestChatView,
+    DocsExampleManifestLLMClientView,
     DocsExampleManifestPluginView,
     DocsExampleManifestProviderView,
     DocsExampleManifestSecretView,
@@ -58,9 +58,7 @@ from .views.views import JsonSchemasView, ManifestsView
 
 
 class DocsReverseNames:
-    """
-    Centralized reverse view names for the docs app.
-    """
+    """Centralized reverse view names for the docs app."""
 
     namespace = namespace
     example_manifests = "example_manifests"
@@ -123,9 +121,9 @@ urlpatterns = [
         name=json_schema_name(SAMKinds.CHAT_TOOL_CALL.value),
     ),
     path(
-        json_schema_path(SAMKinds.CHATBOT.value),
-        DocsJsonSchemaChatBotView.as_view(),
-        name=json_schema_name(SAMKinds.CHATBOT.value),
+        json_schema_path(SAMKinds.LLM_CLIENT.value),
+        DocsJsonSchemaLLMClientView.as_view(),
+        name=json_schema_name(SAMKinds.LLM_CLIENT.value),
     ),
     path(
         json_schema_path(SAMKinds.STATIC_PLUGIN.value),
@@ -206,9 +204,9 @@ urlpatterns = [
         name=manifest_name(SAMKinds.CHAT_TOOL_CALL.value),
     ),
     path(
-        manifest_path(SAMKinds.CHATBOT.value),
-        DocsExampleManifestChatBotView.as_view(),
-        name=manifest_name(SAMKinds.CHATBOT.value),
+        manifest_path(SAMKinds.LLM_CLIENT.value),
+        DocsExampleManifestLLMClientView.as_view(),
+        name=manifest_name(SAMKinds.LLM_CLIENT.value),
     ),
     path(
         manifest_path(SAMKinds.STATIC_PLUGIN.value),

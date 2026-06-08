@@ -1,6 +1,4 @@
-"""
-Default configuration values for Smarter platform settings.
-"""
+"""Default configuration values for Smarter platform settings."""
 
 import base64  # library for base64 encoding and decoding
 import logging  # library for logging messages
@@ -47,7 +45,7 @@ logger_prefix = formatted_text(__name__ + ".SettingsDefaults()")
 
 
 class DjangoPermittedStorages:
-    """Django permitted storage backends"""
+    """Django permitted storage backends."""
 
     AWS_S3 = "storages.backends.s3boto3.S3Boto3Storage"
     FILE_SYSTEM = "django.core.files.storage.FileSystemStorage"
@@ -56,7 +54,7 @@ class DjangoPermittedStorages:
 # pylint: disable=too-few-public-methods
 class SettingsDefaults:
     """
-    .. deprecated:: 2025.12
+    .. deprecated:: 2025.12.
 
         This class is deprecated and will be removed in a future release. Use the Settings class
         built-in default value handling instead.
@@ -123,17 +121,19 @@ class SettingsDefaults:
     CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
     CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
     CONFIGURE_UBC_ACCOUNT: bool = bool_environment_variable("CONFIGURE_UBC_ACCOUNT", False)
-    CHATBOT_CACHE_EXPIRATION: int = int(get_env("CHATBOT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
-    CHATBOT_MAX_RETURNED_HISTORY: int = int(get_env("CHATBOT_MAX_RETURNED_HISTORY", 25))
-    CHATBOT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable("CHATBOT_TASKS_CREATE_DNS_RECORD", True)
-    CHATBOT_TASKS_CREATE_INGRESS_MANIFEST: bool = bool_environment_variable(
-        "CHATBOT_TASKS_CREATE_INGRESS_MANIFEST", True
+    LLM_CLIENT_CACHE_EXPIRATION: int = int(get_env("LLM_CLIENT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
+    LLM_CLIENT_MAX_RETURNED_HISTORY: int = int(get_env("LLM_CLIENT_MAX_RETURNED_HISTORY", 25))
+    LLM_CLIENT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable("LLM_CLIENT_TASKS_CREATE_DNS_RECORD", True)
+    LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: bool = bool_environment_variable(
+        "LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST", True
     )
-    CHATBOT_TASKS_DEFAULT_TTL: int = get_env("CHATBOT_TASKS_DEFAULT_TTL", 600)
+    LLM_CLIENT_TASKS_DEFAULT_TTL: int = get_env("LLM_CLIENT_TASKS_DEFAULT_TTL", 600)
 
-    CHATBOT_TASKS_CELERY_MAX_RETRIES: int = int(get_env("CHATBOT_TASKS_CELERY_MAX_RETRIES", 3))
-    CHATBOT_TASKS_CELERY_RETRY_BACKOFF: bool = bool_environment_variable("CHATBOT_TASKS_CELERY_RETRY_BACKOFF", True)
-    CHATBOT_TASKS_CELERY_TASK_QUEUE: str = get_env("CHATBOT_TASKS_CELERY_TASK_QUEUE", "default_celery_task_queue")
+    LLM_CLIENT_TASKS_CELERY_MAX_RETRIES: int = int(get_env("LLM_CLIENT_TASKS_CELERY_MAX_RETRIES", 3))
+    LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF: bool = bool_environment_variable(
+        "LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF", True
+    )
+    LLM_CLIENT_TASKS_CELERY_TASK_QUEUE: str = get_env("LLM_CLIENT_TASKS_CELERY_TASK_QUEUE", "default_celery_task_queue")
     PLUGIN_MAX_DATA_RESULTS: int = int(get_env("PLUGIN_MAX_DATA_RESULTS", 50))
 
     SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
@@ -207,7 +207,7 @@ class SettingsDefaults:
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-4o-mini"
     LLM_DEFAULT_SYSTEM_ROLE = (
-        "You are a helpful chatbot. When given the opportunity to utilize "
+        "You are a helpful llm_client. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "
         "provide the best possible responses to the user. If you are unable to "
         "provide a response, you should prompt the user for more information. If "
@@ -304,7 +304,7 @@ class SettingsDefaults:
 
     @classmethod
     def to_dict(cls):
-        """Convert SettingsDefaults to dict"""
+        """Convert SettingsDefaults to dict."""
         return {
             key: value
             for key, value in SettingsDefaults.__dict__.items()

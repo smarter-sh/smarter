@@ -8,7 +8,7 @@ AI Resource Authors
 --------------------
 
 Authors can prototype, test, and manage AI resources such as :doc:`prompts <../smarter-resources/smarter-prompt>`,
-:doc:`chatbots <../smarter-resources/smarter-chatbot>`, and :doc:`plugins <../smarter-resources/smarter-plugin>`
+:doc:`llm_clients <../smarter-resources/smarter-llm_client>`, and :doc:`plugins <../smarter-resources/smarter-plugin>`
 through the console's intuitive interface. The dashboard provides a comprehensive view of all AI resources,
 including their relationships, dependencies and real-time state, enabling authors to efficiently
 create and manage any Smarter AI resource from React-based UI pages.

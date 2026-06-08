@@ -35,7 +35,7 @@ Cache utilities
 ---------------
 
 :func:`cache_invalidations`
-    Invalidates all per-user caches (account, profile, plugins, chatbots, and
+    Invalidates all per-user caches (account, profile, plugins, llm_clients, and
     page-level caches for the dashboard and workbench) after user data changes.
     Called by signal handlers in the account app.
 
@@ -77,7 +77,6 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
-from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.apps.dashboard.views.apply_manifest.urls import ApplyManifestReverseNames
 from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
@@ -86,6 +85,7 @@ from smarter.apps.dashboard.views.terminal_emulator.names import (
 )
 from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.apps.docs.urls import DocsReverseNames
+from smarter.apps.llm_client.models import LLMClient
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
@@ -188,13 +188,14 @@ def sidebar(request: "HttpRequest") -> dict[str, Any]:
 
 def base(request: "HttpRequest") -> dict[str, Any]:
     """
-    Provides the base context for all templates inheriting from ``base.html``
+    Provides the base context for all templates inheriting from ``base.html``.
+
     in the Smarter dashboard.
 
     This context processor injects a comprehensive set of user-specific and
     application-wide variables into the template context. These variables
     include user identity, role flags, product metadata, and resource counts
-    (such as chatbots, plugins, API keys, custom domains, connections, and
+    (such as llm_clients, plugins, API keys, custom domains, connections, and
     secrets). The context is used to render the dashboard layout and
     personalize the user experience.
 
@@ -435,7 +436,9 @@ def cache_buster(request) -> dict[str, Any]:
 
 def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     """
-    Invalidates caches for all resource-counting context processors. This function is
+    Invalidates caches for all resource-counting context processors.
+
+    This function is
     intended to be called after any operation that modifies the underlying user data.
 
     .. note::
@@ -463,4 +466,4 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
         Account.get_cached_object(invalidate=True, pk=user_profile.account.id)
         UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)  # type: ignore
         PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=True, user_profile_id=user_profile.id)  # type: ignore
-        ChatBot.get_cached_objects(invalidate=True, user_profile=user_profile)  # type: ignore
+        LLMClient.get_cached_objects(invalidate=True, user_profile=user_profile)  # type: ignore

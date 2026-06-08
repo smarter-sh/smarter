@@ -6,7 +6,7 @@ of the React apps used in the Smarter web console.
 
 Contains the following:
 
-- React Tabbed ListView that works with any Smarter resource (Plugin, Chatbot, etcetera)
+- React Tabbed ListView that works with any Smarter resource (Plugin, LLMClient, etcetera)
 - Django REST API integration functions
 
 Downstream React apps install this package as

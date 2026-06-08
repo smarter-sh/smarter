@@ -12,7 +12,7 @@ Goal
 ====
 
 Register Anthropic as an LLM provider on your organization's Smarter platform
-so that Claude models are available to chatbots, the Prompt Engineer Workbench,
+so that Claude models are available to llm_clients, the Prompt Engineer Workbench,
 and developer tooling such as Claude Code.
 
 By the end of this tutorial you will have two verified Claude models —
@@ -93,7 +93,7 @@ This tutorial walks through adding **Anthropic** as an additional provider.
 Concept Overview
 ================
 
-Smarter manages every resource — providers, chatbots, plugins — through
+Smarter manages every resource — providers, llm_clients, plugins — through
 declarative YAML files called **SAM** (Smarter API Manifests). This pattern
 is modeled on Kubernetes: you describe the desired state in a file and
 ``smarter apply`` makes it happen.
@@ -251,11 +251,11 @@ Expected output for each provider (abbreviated):
 
 Both providers showing ``verified: true`` and ``active: true`` confirms that
 Smarter has established a live connection to the Anthropic API and the models
-are ready for use in chatbots and the Workbench.
+are ready for use in llm_clients and the Workbench.
 
 .. tip::
 
-   With both providers active, you can create two chatbots — one backed by
+   With both providers active, you can create two llm_clients — one backed by
    Opus and one by Sonnet — and compare their responses to the same prompt
    in the Workbench. This is a practical way to evaluate which model best
    fits each use case before rolling it out to the programming team.

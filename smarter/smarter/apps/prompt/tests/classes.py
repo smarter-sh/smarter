@@ -1,6 +1,4 @@
-"""
-Base class for creating units tests of chat providers.
-"""
+"""Base class for creating units tests of chat providers."""
 
 import logging
 import os
@@ -17,7 +15,7 @@ from django.db.utils import IntegrityError
 from django.test import Client
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
+from smarter.apps.llm_client.models import LLMClient, LLMClientPlugin
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginDataValueError
 from smarter.apps.plugin.nlp import does_refer_to
@@ -68,7 +66,7 @@ class ProviderBaseClass(TestAccountMixin):
     handler: Optional[Callable]
     plugin: Optional[PluginBase]
     plugins: Optional[list[PluginBase]]
-    chatbot: Optional[ChatBot]
+    llm_client: Optional[LLMClient]
     client: Optional[Client]
     chat: Optional[Chat]
 
@@ -90,7 +88,7 @@ class ProviderBaseClass(TestAccountMixin):
         self.handler = None
         self.plugin = None
         self.plugins = None
-        self.chatbot = None
+        self.llm_client = None
         self.client = None
         self.chat = None
 
@@ -147,7 +145,7 @@ class ProviderBaseClass(TestAccountMixin):
         }
 
     def setUp(self):
-        """Internal test fixture setup, called from child class setUp()"""
+        """Internal test fixture setup, called from child class setUp()."""
         super().setUp()
         self.init()
 
@@ -171,9 +169,9 @@ class ProviderBaseClass(TestAccountMixin):
             self.plugins = [self.plugin]
         print(f"plugin: {self.plugin}")
 
-        # create a chatbot that uses the provider
+        # create a llm_client that uses the provider
         print(f"Setting up provider {self.provider}")
-        self.chatbot = self.chatbot_factory(provider=self.provider)  # type: ignore[assignment]
+        self.llm_client = self.llm_client_factory(provider=self.provider)  # type: ignore[assignment]
 
         self.client = Client()
         self.client.force_login(self.admin_user)  # type: ignore[call-arg]
@@ -192,7 +190,7 @@ class ProviderBaseClass(TestAccountMixin):
 
         self.chat = Chat.objects.create(
             session_key=secrets.token_hex(32),
-            chatbot=self.chatbot,
+            llm_client=self.llm_client,
             user_profile=self.user_profile,
             ip_address="192.1.1.1",
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
@@ -216,19 +214,19 @@ class ProviderBaseClass(TestAccountMixin):
             except IntegrityError as e:
                 logger.debug("IntegrityError details: %s", e)
 
-        if self.chatbot:
-            self.chatbot.delete()
+        if self.llm_client:
+            self.llm_client.delete()
         if self.plugin:
             self.plugin.delete()
         self.plugins = None
         self.handler = None
         super().tearDown()
 
-    def chatbot_factory(self, provider: str = "openai"):
-        chatbot, _ = ChatBot.objects.get_or_create(
-            name="TestChatBot",
+    def llm_client_factory(self, provider: str = "openai"):
+        llm_client, _ = LLMClient.objects.get_or_create(
+            name="TestLLMClient",
             user_profile=self.user_profile,
-            description="Test ChatBot",
+            description="Test LLMClient",
             version="1.0.0",
             subdomain=None,
             custom_domain=None,
@@ -238,14 +236,14 @@ class ProviderBaseClass(TestAccountMixin):
             app_welcome_message="Welcome to Smarter!",
             provider=provider,
         )
-        ChatBotPlugin.objects.get_or_create(
-            chatbot=chatbot,
+        LLMClientPlugin.objects.get_or_create(
+            llm_client=llm_client,
             plugin_meta=self.plugin.plugin_meta,  # type: ignore[attr-defined]
         )
-        return chatbot
+        return llm_client
 
     def check_response(self, response):
-        """Check response structure from api.v1.views.chat handler()"""
+        """Check response structure from api.v1.views.chat handler()."""
         if response["statusCode"] != 200:
             print(f"response: {response}")
 
@@ -291,7 +289,7 @@ class ProviderBaseClass(TestAccountMixin):
             return [
                 {
                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "You are a helpful chatbot.",
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "You are a helpful llm_client.",
                 },
                 {
                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,

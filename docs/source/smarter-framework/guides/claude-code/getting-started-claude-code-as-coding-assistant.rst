@@ -186,7 +186,7 @@ Step 7: Installation Verification checklist
 
 Concept Overview
 ----------------
-Smarter as the orchestration layer and Anthropic Claude as the computation engine. Smarter sends standardized requests, then routes results into chatbots, Workbench sessions, and downstream pipelines.
+Smarter as the orchestration layer and Anthropic Claude as the computation engine. Smarter sends standardized requests, then routes results into llm_clients, Workbench sessions, and downstream pipelines.
 
 Smarter decomposes AI integration into two key concepts:
 

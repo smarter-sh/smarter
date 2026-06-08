@@ -57,7 +57,7 @@ class TestApiV1CliPlugin(ApiV1CliTestBase):
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
 
     def test_valid_manifest(self):
-        """Test that we get OK response when passing a valid manifest"""
+        """Test that we get OK response when passing a valid manifest."""
 
         # create a Plugin from a valid manifest
         path = reverse(self.namespace + ApiV1CliReverseViews.apply, kwargs=None)
@@ -92,9 +92,9 @@ class TestApiV1CliPlugin(ApiV1CliTestBase):
                             "smarter.sh/tests/purpose": "Provide information about Stackademy University courses using SQL queries."
                         },
                         {"smarter.sh/tests/last-updated": "2025-12-31"},
-                        {"smarter.sh/tests/documentation": "https://docs.tests.edu/sql-chatbot"},
+                        {"smarter.sh/tests/documentation": "https://docs.tests.edu/sql-llm_client"},
                         {
-                            "smarter.sh/tests/connection-info": "This chatbot connects to the Stackademy SQL database hosted at sql.lawrencemcdaniel.com using the Stackademy SQL plugin to retrieve course information.\n"
+                            "smarter.sh/tests/connection-info": "This llm_client connects to the Stackademy SQL database hosted at sql.lawrencemcdaniel.com using the Stackademy SQL plugin to retrieve course information.\n"
                         },
                     ],
                     "pluginClass": "static",

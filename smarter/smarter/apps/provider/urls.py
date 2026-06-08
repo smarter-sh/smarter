@@ -1,9 +1,8 @@
 """
-Django URL patterns for the chatapp
+Django URL patterns for the chatapp.
 
 how we got here:
  - /providers/api/v1/
-
 """
 
 from django.urls import include, path, re_path
@@ -27,8 +26,8 @@ app_name = namespace
 class ProviderReverseNames:
     """
     Holds named URL patterns for the account dashboard.
-    This class provides constants for all named URL patterns used in the account dashboard views.
 
+    This class provides constants for all named URL patterns used in the account dashboard views.
     """
 
     namespace = namespace
@@ -56,17 +55,17 @@ urlpatterns = [
         name=ProviderReverseNames.listview_api,
     ),
     path(
-        "react-integration/api/clone/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:llm_client_id>/<str:new_name>/",
         ProviderListApiCloneView.as_view(),
         name=ProviderReverseNames.listview_api_clone,
     ),
     path(
-        "react-integration/api/delete/<int:chatbot_id>/",
+        "react-integration/api/delete/<int:llm_client_id>/",
         ProviderListApiDeleteView.as_view(),
         name=ProviderReverseNames.listview_api_delete,
     ),
     path(
-        "react-integration/api/rename/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:llm_client_id>/<str:new_name>/",
         ProviderListApiRenameView.as_view(),
         name=ProviderReverseNames.listview_api_rename,
     ),

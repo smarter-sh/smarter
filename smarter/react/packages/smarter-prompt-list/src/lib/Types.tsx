@@ -5,14 +5,14 @@
  * Central type definitions for the Prompt List React application.
  *
  * This module exports TypeScript types and interfaces used throughout the CardView,
- * chatbot, and API response layers. It provides strong typing for user, plugin,
- * chatbot, API response, and session context data structures.
+ * llm_client, and API response layers. It provides strong typing for user, plugin,
+ * llm_client, API response, and session context data structures.
  *
  * Exports:
  *   - TabKey: Type for tab keys ("user" | "shared").
  *   - Plugin: Type for plugin objects.
  *   - User, UserProfile: Types for user and profile data.
- *   - Chatbot: Type for chatbot configuration and metadata.
+ *   - LLMClient: Type for llm_client configuration and metadata.
  *   - SessionContext: Type for session and authentication context.
  *
  * Usage:
@@ -38,14 +38,14 @@ export type UserProfile = {
 };
 
 export type Function = {
-  chatbot: number;
+  llm_client: number;
   createdAt: string;
   id: number;
   name: string;
   updatedAt: string;
 };
 
-export type Chatbot = {
+export type LLMClient = {
   id: number;
   isAuthenticationRequired: boolean; // ADD ME PLEASE
   hashedId: string;
@@ -73,7 +73,7 @@ export type Chatbot = {
   sandboxUrl: string;
   hostname: string;
   url: string;
-  urlChatbot: string;
+  urlLLMClient: string;
   urlChatConfig: string;
   urlChatapp: string;
   urlManifest: string; // ADD ME PLEASE

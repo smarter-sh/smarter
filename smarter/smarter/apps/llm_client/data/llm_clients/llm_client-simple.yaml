@@ -1,0 +1,38 @@
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  description: "A minimally functional llm_client with with no additional features."
+  name: simple
+  version: 0.1.0
+  tags:
+    - simple-llm_client
+  annotations:
+    - smarter.sh/tests/focus-level: low
+    - smarter.sh/tests/owner: Lawrence McDaniel
+spec:
+  apiKey: null
+  config:
+    appAssistant: Simba The Simple LLMClient
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - What is the weather in New York City today?
+    - Evaluate 2 * (3 + 4) - Sqrt(49) + Tan(pi / 4).
+    - I was born December 31, 1966. How many days old am I?
+    - What AI classes does Stackademy offer?
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+    appName: Simple LLMClient
+    appPlaceholder: Ask me anything...
+    appWelcomeMessage: Welcome to the Simple LLMClient! How can I help you today?
+    customDomain: null
+    defaultMaxTokens: 2048
+    defaultModel: gpt-5-nano
+    defaultSystemRole: You are a helpful assistant.
+    defaultTemperature: 1.0
+    deployed: false
+    dnsVerificationStatus: Verified
+    provider: openai
+    subdomain: null
+  functions: []
+  plugins: []

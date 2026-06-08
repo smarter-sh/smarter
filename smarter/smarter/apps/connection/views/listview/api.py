@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """
-This module contains views to implement the React
+This module contains views to implement the React.
+
 ConnectionBase list view in the Smarter Dashboard.
 """
 
@@ -109,16 +110,16 @@ class ConnectionListApiView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Clone a connection for the authenticated user.
-    """
+    """Clone a connection for the authenticated user."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
-        Handle POST requests to clone an existing ConnectionBase. Validates input
+        Handle POST requests to clone an existing ConnectionBase.
+
+        Validates input
         parameters, checks for the existence of the ConnectionBase to be cloned, and
         creates a new ConnectionBase with the specified name. Invalidates the cache
-        for the user's ChatBots after cloning.
+        for the user's LLMClients after cloning.
 
         :param request: The HTTP request object containing the parameters for cloning.
         :type request: HttpRequest
@@ -205,16 +206,16 @@ class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class ConnectionListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Delete a connection for the authenticated user.
-    """
+    """Delete a connection for the authenticated user."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
-        Handle POST requests to delete an existing ConnectionBase. Validates input
+        Handle POST requests to delete an existing ConnectionBase.
+
+        Validates input
         parameters, checks for the existence of the ConnectionBase to be deleted, and
         deletes the ConnectionBase if it exists. Invalidates the cache for the user's
-        ChatBots after deletion.
+        LLMClients after deletion.
 
         :param request: The HTTP request object containing the parameters for deletion.
         :type request: HttpRequest
@@ -265,16 +266,16 @@ class ConnectionListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class ConnectionListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Rename a connection for the authenticated user.
-    """
+    """Rename a connection for the authenticated user."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
-        Handle POST requests to rename an existing ConnectionBase. Validates input
+        Handle POST requests to rename an existing ConnectionBase.
+
+        Validates input
         parameters, checks for the existence of the ConnectionBase to be renamed, and
         renames the ConnectionBase if it exists. Invalidates the cache for the user's
-        ChatBots after renaming.
+        LLMClients after renaming.
 
         :param request: The HTTP request object containing the parameters for renaming.
         :type request: HttpRequest

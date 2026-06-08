@@ -56,7 +56,7 @@ Setup
 Concept Overview
 ----------------
 
-Smarter is built around **declarative manifests**—plain YAML files that describe AI resources (Chatbots, Agents, Tools, etc.). Key concepts you need for Claude Code:
+Smarter is built around **declarative manifests**—plain YAML files that describe AI resources (LLMClients, Agents, Tools, etc.). Key concepts you need for Claude Code:
 
 * **Provider** — The upstream LLM service (``anthropic`` in our case).
 * **Model** — The specific Claude variant that powers Claude Code (``claude-3-5-sonnet-20241022`` or newer).

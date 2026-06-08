@@ -3,7 +3,7 @@
   "messages": [
     {
       "role": "system",
-      "content": "The current date/time is Tuesday, 2025-10-14T12:48:44+0000nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time."
+      "content": "The current date/time is Tuesday, 2025-10-14T12:48:44+0000nYou are a helpful llm_client. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time."
     },
     {
       "role": "assistant",

@@ -18,9 +18,7 @@ app_name = namespace
 
 
 class PluginReverseNames:
-    """
-    Reverse view names for the plugin app.
-    """
+    """Reverse view names for the plugin app."""
 
     namespace = namespace
     listview = to_snake_case(PluginListView)
@@ -43,17 +41,17 @@ urlpatterns = [
         name=PluginReverseNames.listview_api,
     ),
     path(
-        "react-integration/api/clone/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:llm_client_id>/<str:new_name>/",
         PluginListApiCloneView.as_view(),
         name=PluginReverseNames.listview_api_clone,
     ),
     path(
-        "react-integration/api/delete/<int:chatbot_id>/",
+        "react-integration/api/delete/<int:llm_client_id>/",
         PluginListApiDeleteView.as_view(),
         name=PluginReverseNames.listview_api_delete,
     ),
     path(
-        "react-integration/api/rename/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:llm_client_id>/<str:new_name>/",
         PluginListApiRenameView.as_view(),
         name=PluginReverseNames.listview_api_rename,
     ),

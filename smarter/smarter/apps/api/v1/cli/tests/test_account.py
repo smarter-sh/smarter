@@ -1,4 +1,4 @@
-"""Test Api v1 CLI commands for account"""
+"""Test Api v1 CLI commands for account."""
 
 from http import HTTPStatus
 from urllib.parse import urlencode
@@ -25,7 +25,7 @@ logger_prefix = logging.formatted_text(f"{__name__}.TestApiCliV1Account")
 
 class TestApiCliV1Account(ApiV1CliTestBase):
     """
-    Test Api v1 CLI commands for account
+    Test Api v1 CLI commands for account.
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
@@ -85,7 +85,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
             assert field in config.keys(), f"{field} not found in config keys"
 
     def test_example_manifest(self) -> None:
-        """Test example-manifest command"""
+        """Test example-manifest command."""
 
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
@@ -100,7 +100,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         self.validate_spec(data)
 
     def test_describe(self) -> None:
-        """Test describe command"""
+        """Test describe command."""
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
@@ -113,6 +113,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
     def test_apply(self) -> None:
         """
         Test apply command as follows:
+
         - call describe() and store the result
         - edit the result and call apply() and verify the results against our control set
         - call describe to verify that the changes were persisted.
@@ -208,8 +209,8 @@ class TestApiCliV1Account(ApiV1CliTestBase):
                 "api_token": "****6774",
                 "auth_header": "Token 1ca4****",
                 "cache_key": "6989b75d084613e55b779d27fcca7834ec4fb30ab53ff17ea3b701db39beb571",
-                "chatbot_id": None,
-                "chatbot_name": None,
+                "llm_client_id": None,
+                "llm_client_name": None,
                 "class_name": "SAMAccountBroker",
                 "data": {
                     "apiVersion": "smarter.sh/v1",
@@ -244,11 +245,11 @@ class TestApiCliV1Account(ApiV1CliTestBase):
                 },
                 "domain": "testserver",
                 "ip_address": "127.0.0.1",
-                "is_chatbot": False,
-                "is_chatbot_cli_api_url": False,
-                "is_chatbot_named_url": False,
-                "is_chatbot_sandbox_url": False,
-                "is_chatbot_smarter_api_url": False,
+                "is_llm_client": False,
+                "is_llm_client_cli_api_url": False,
+                "is_llm_client_named_url": False,
+                "is_llm_client_sandbox_url": False,
+                "is_llm_client_smarter_api_url": False,
                 "is_config": False,
                 "is_dashboard": False,
                 "is_default_domain": False,
@@ -381,7 +382,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         self.assertEqual(config["currency"], "MXN", f"currency did not persist correctly in apply: {config}")
 
     def test_get(self) -> None:
-        """Test get command"""
+        """Test get command."""
 
         def validate_titles(data):
             if "titles" not in data:
@@ -473,7 +474,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
             self.fail(f"Items are not valid: {data}")
 
     def test_deploy(self) -> None:
-        """Test deploy command"""
+        """Test deploy command."""
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
@@ -488,7 +489,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         self.assertIn("not implemented", error["description"])
 
     def test_undeploy(self) -> None:
-        """Test undeploy command"""
+        """Test undeploy command."""
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
@@ -503,7 +504,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         self.assertIn("not implemented", error["description"])
 
     def test_logs(self) -> None:
-        """Test logs command"""
+        """Test logs command."""
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
@@ -512,7 +513,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         self.assertIsInstance(response, dict)
 
     def test_delete(self) -> None:
-        """Test delete command"""
+        """Test delete command."""
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 

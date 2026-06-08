@@ -35,9 +35,9 @@ module_prefix = "smarter.apps.account.tasks."
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
+    queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
 def create_charge(*args, **kwargs):
     """
@@ -57,12 +57,10 @@ def create_charge(*args, **kwargs):
 
            - This task is automatically retried on failure, with backoff and maximum retries configured via Celery settings.
 
-
     **Example usage**::
 
         # Create a charge for a user profile
         create_charge.delay(user_profile_id=123, charge_type="usage", prompt_tokens=100, completion_tokens=50)
-
     """
 
     user_profile_id = kwargs.get("user_profile_id")
@@ -110,9 +108,9 @@ def create_charge(*args, **kwargs):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
+    queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
 def aggregate_charges():
     """
@@ -120,7 +118,6 @@ def aggregate_charges():
 
     This task triggers the aggregation of daily billing records by calling
     :func:`aggregate_daily_billing_records`. It is typically scheduled via Celery Beat.
-
 
     **Example usage**::
 
@@ -138,9 +135,9 @@ def aggregate_charges():
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
-    queue=smarter_settings.chatbot_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
+    queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
 def aggregate_daily_billing_records():
     """
@@ -153,7 +150,6 @@ def aggregate_daily_billing_records():
 
            - This task aggregates all charges for each user/account/date/charge_type combination,
            - updates or creates a corresponding DailyBillingRecord, and deletes the original Charge records.
-
 
     **Example usage**::
 

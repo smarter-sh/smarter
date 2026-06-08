@@ -2,7 +2,7 @@
   "messages": [
     {
       "role": "bad_role",
-      "content": "You are a helpful chatbot"
+      "content": "You are a helpful llm_client"
     },
     {
       "role": "user",

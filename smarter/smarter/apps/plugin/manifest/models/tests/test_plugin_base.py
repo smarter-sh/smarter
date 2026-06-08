@@ -607,7 +607,7 @@ class TestPluginBase(TestAccountMixin):
         messages = [
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llm_client.",
             },
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
@@ -625,7 +625,7 @@ class TestPluginBase(TestAccountMixin):
         messages = [
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful llm_client.",
             },
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,

@@ -1,6 +1,5 @@
 """
-A PLugin that uses a remote REST API server to retrieve its return data
-
+A PLugin that uses a remote REST API server to retrieve its return data.
 
 .. note::
 
@@ -9,7 +8,7 @@ A PLugin that uses a remote REST API server to retrieve its return data
     1. Smarter Secret: The authentication credential for the remote API connection.
     2. Smarter API Connection: The complete connection configuration to the remote API database server (host, port, secret, ssh key, username, etc.).
     3. Smarter API Plugin: The plugin that defines the API query and it's parameters to run against the remote API database server.
-    4. Smarter Chatbot: The prompting resource (Chatbot, Agent, Workflow unit, etcetera) that includes the API Plugin:
+    4. Smarter LLMClient: The prompting resource (LLMClient, Agent, Workflow unit, etcetera) that includes the API Plugin:
 
 .. sphinx note: these are relative to the rst doc that calls automodule on this file.
 
@@ -25,10 +24,9 @@ A PLugin that uses a remote REST API server to retrieve its return data
     :language: yaml
     :caption: 3.) Example Stackademy API Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-api.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llm_client-api.yaml
     :language: yaml
-    :caption: 4.) Example Stackademy Chatbot Manifest
-
+    :caption: 4.) Example Stackademy LLMClient Manifest
 """
 
 import logging
@@ -443,7 +441,6 @@ class ApiPlugin(PluginBase):
                     - name: unit
                         value: Celsius
                     limit: 10
-
         """
         if not self._manifest:
             return None

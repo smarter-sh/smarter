@@ -44,7 +44,8 @@ logger = logging.getLogger(__name__)
 
 class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
     """
-    Renders a passthrough template for the prompt app that accepts a raw JSON
+    Renders a passthrough template for the prompt app that accepts a raw JSON.
+
     dict for an LLM provider, passes this directly to the LLM provider API,
     and renders the API response in the template.
 
@@ -52,17 +53,15 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
     :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
-    :param kwargs: Keyword arguments, must include 'name' (chatbot name) and 'kind' (chatbot type).
+    :param kwargs: Keyword arguments, must include 'name' (llm_client name) and 'kind' (llm_client type).
     :type kwargs: dict
 
-    :returns: Rendered HTML page with chatbot manifest details, or a 404 error page if the chatbot is not found or parameters are invalid.
+    :returns: Rendered HTML page with llm_client manifest details, or a 404 error page if the llm_client is not found or parameters are invalid.
     :rtype: HttpResponse
-
 
     **Example usage**::
 
         GET /dashboard/passthrough/
-
     """
 
     template_path = "prompt/passthrough.html"

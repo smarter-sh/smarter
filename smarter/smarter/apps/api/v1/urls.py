@@ -7,7 +7,7 @@ delegates route handling to app-specific URL modules.
 **Routes**
 
 - ``accounts/``: User account management endpoints.
-- ``chatbots/``: Chatbot CRUD and related operations.
+- ``llm_clients/``: LLMClient CRUD and related operations.
 - ``cli/``: Brokered services for CLI workflows.
 - ``connections/``: External connection integration endpoints.
 - ``plugins/``: Plugin management endpoints.
@@ -32,9 +32,9 @@ from smarter.apps.account.api.v1 import urls as account_urls
 from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.api.v1.cli import urls as cli_urls
 from smarter.apps.api.v1.tests import urls as tests_urls
-from smarter.apps.chatbot.api.v1 import urls as chatbot_urls
-from smarter.apps.chatbot.const import namespace as chatbot_namespace
 from smarter.apps.connection.api.v1 import urls as connection_urls
+from smarter.apps.llm_client.api.v1 import urls as llm_client_urls
+from smarter.apps.llm_client.const import namespace as llm_client_namespace
 from smarter.apps.plugin.api.v1 import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.api.v1 import urls as prompt_urls
@@ -57,13 +57,13 @@ app_name = namespace
 
 # /api/v1/ is the main entry point for the API
 urlpatterns = [
-    # for Chatbots of the form https://example.3141-5926-5359.alpha.api.example.com
-    # path("", include(chatbot_urls)),
+    # for LLMClients of the form https://example.3141-5926-5359.alpha.api.example.com
+    # path("", include(llm_client_urls)),
     # -------------------------------------------
     # the main API
     # -------------------------------------------
     path("accounts/", include(account_urls, namespace=account_namespace)),
-    path("chatbots/", include(chatbot_urls, namespace=chatbot_namespace)),
+    path("llm-clients/", include(llm_client_urls, namespace=llm_client_namespace)),
     path("cli/", include(cli_urls, namespace=cli_namespace)),
     path("connections/", include(connection_urls, namespace="connection")),
     path("plugins/", include(plugin_urls, namespace=plugin_namespace)),

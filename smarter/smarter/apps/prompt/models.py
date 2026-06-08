@@ -13,7 +13,7 @@ from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
     MetaDataWithOwnershipModelManager,
 )
-from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
+from smarter.apps.llm_client.models import LLMClient, get_cached_llm_client_by_request
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
@@ -46,7 +46,7 @@ class Chat(MetaDataWithOwnershipModel):
     objects: MetaDataWithOwnershipModelManager["Chat"] = MetaDataWithOwnershipModelManager()
 
     session_key = models.CharField(max_length=255, blank=False, null=False, unique=True)
-    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE, blank=False, null=False)
+    llm_client = models.ForeignKey(LLMClient, on_delete=models.CASCADE, blank=False, null=False)
     ip_address = models.GenericIPAddressField(blank=False, null=False)
     user_agent = models.CharField(max_length=255, blank=False, null=False)
     url = models.URLField(blank=False, null=False)
@@ -89,9 +89,7 @@ class ChatHistory(TimestampedModel):
 
     @property
     def chat_history(self) -> list[dict]:
-        """
-        Used by the Reactapp (via ChatConfigView) to display the chat history.
-        """
+        """Used by the Reactapp (via ChatConfigView) to display the chat history."""
         history = self.messages if self.messages else self.request.get("messages", []) if self.request else []
         # response = self.response.get("choices", []) if self.response else []
         # response = response[0] if response else {}
@@ -200,7 +198,7 @@ class ChatHelper(SmarterRequestMixin):
     This class provides methods for creating and retrieving :class:`Chat` objects,
     as well as managing the cache for chat sessions. It is designed to simplify
     the process of interacting with chat-related data and to ensure consistent
-    handling of chat sessions, chatbots, and associated metadata.
+    handling of chat sessions, llm_clients, and associated metadata.
 
     **Features**
 
@@ -208,12 +206,12 @@ class ChatHelper(SmarterRequestMixin):
     - Manages caching of chat objects to improve performance and reduce database queries.
     - Provides access to related chat history, tool calls, and plugin usage.
     - Integrates with Django's request and session handling.
-    - Ensures that chat sessions are always associated with a valid :class:`ChatBot` and :class:`Account`.
+    - Ensures that chat sessions are always associated with a valid :class:`LLMClient` and :class:`Account`.
 
     **Usage**
 
     Typically, this class is instantiated with a Django :class:`HttpRequest` object and a session key.
-    Optionally, a :class:`ChatBot` instance can be provided to associate the chat session with a specific chatbot.
+    Optionally, a :class:`LLMClient` instance can be provided to associate the chat session with a specific llm_client.
 
     Example
     -------
@@ -222,19 +220,19 @@ class ChatHelper(SmarterRequestMixin):
         helper = ChatHelper(request, session_key)
         if helper.ready:
             chat = helper.chat
-            chatbot = helper.chatbot
+            llm_client = helper.llm_client
             history = helper.history
 
     :param request: The Django HttpRequest object for the current session.
     :type request: django.http.HttpRequest
     :param session_key: The session key identifying the chat session.
     :type session_key: Optional[str]
-    :param chatbot: An optional ChatBot instance to associate with the chat session.
-    :type chatbot: Optional[ChatBot]
+    :param llm_client: An optional LLMClient instance to associate with the chat session.
+    :type llm_client: Optional[LLMClient]
     :param args: Additional positional arguments.
     :param kwargs: Additional keyword arguments.
 
-    :raises SmarterValueError: If neither a session key nor a ChatBot instance is provided.
+    :raises SmarterValueError: If neither a session key nor a LLMClient instance is provided.
     :raises SmarterConfigurationError: If there is an error creating a new Chat object.
 
     .. note::
@@ -242,23 +240,23 @@ class ChatHelper(SmarterRequestMixin):
         should not be used directly in user-facing code without proper validation.
 
     .. todo::
-        - Remove the session_key parameter and rely solely on the ChatBot instance for chat session management.
+        - Remove the session_key parameter and rely solely on the LLMClient instance for chat session management.
 
     .. seealso::
-        - :class:`smarter.apps.chatbot.models.ChatBot`
+        - :class:`smarter.apps.llm_client.models.LLMClient`
         - :class:`smarter.apps.account.models.Account`
         - :class:`smarter.apps.chat.models.Chat`
         - :class:`smarter.lib.django.request.SmarterRequestMixin`
     """
 
     _chat: Optional[Chat] = None
-    _chatbot: Optional[ChatBot] = None
+    _llm_client: Optional[LLMClient] = None
     _chat_tool_call: Optional[Union[models.QuerySet, list]] = None
     _chat_plugin_usage: Optional[Union[models.QuerySet, list]] = None
     _history: Optional[dict] = None
 
     def __init__(
-        self, request: HttpRequest, session_key: Optional[str], *args, chatbot: Optional[ChatBot] = None, **kwargs
+        self, request: HttpRequest, session_key: Optional[str], *args, llm_client: Optional[LLMClient] = None, **kwargs
     ) -> None:
         """
         Initialize the ChatHelper instance.
@@ -267,45 +265,45 @@ class ChatHelper(SmarterRequestMixin):
         :type request: django.http.HttpRequest
         :param session_key: The session key identifying the chat session.
         :type session_key: Optional[str]
-        :param chatbot: An optional ChatBot instance to associate with the chat session.
-        :type chatbot: Optional[ChatBot]
+        :param llm_client: An optional LLMClient instance to associate with the chat session.
+        :type llm_client: Optional[LLMClient]
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
-        :raises SmarterValueError: If neither a session key nor a ChatBot instance is provided.
+        :raises SmarterValueError: If neither a session key nor a LLMClient instance is provided.
         :raises SmarterConfigurationError: If there is an error creating a new Chat object.
         """
         logger_verbose.debug(
-            "%s.__init__() - received request: %s session_key: %s, chatbot: %s",
+            "%s.__init__() - received request: %s session_key: %s, llm_client: %s",
             self.formatted_class_name,
             self.smarter_build_absolute_uri(request),
             session_key,
-            chatbot,
+            llm_client,
         )
         if not request:
             raise SmarterValueError(f"{self.formatted_class_name} request object is required.")
         super().__init__(request, session_key=session_key, **kwargs)
         self._chat = None
-        self._chatbot = chatbot
+        self._llm_client = llm_client
         self._chat_tool_call = None
         self._chat_plugin_usage = None
         self._history = None
 
-        if not session_key and not chatbot:
+        if not session_key and not llm_client:
             raise SmarterValueError(
-                f"{self.formatted_class_name} either a session_key or a ChatBot instance is required"
+                f"{self.formatted_class_name} either a session_key or a LLMClient instance is required"
             )
 
-        if chatbot and chatbot.user_profile:
-            logger_verbose.debug("%s.__init__() received ChatBot instance: %s", self.formatted_class_name, chatbot)
+        if llm_client and llm_client.user_profile:
+            logger_verbose.debug("%s.__init__() received LLMClient instance: %s", self.formatted_class_name, llm_client)
             logger_verbose.debug(
-                "%s.__init__() - reinitializing AccountMixin from chatbot.user_profile: %s",
+                "%s.__init__() - reinitializing AccountMixin from llm_client.user_profile: %s",
                 self.formatted_class_name,
-                chatbot.user_profile,
+                llm_client.user_profile,
             )
-            self._user_profile = chatbot.user_profile
-            self._account = chatbot.user_profile.account
-            self._user = chatbot.user_profile.user
+            self._user_profile = llm_client.user_profile
+            self._account = llm_client.user_profile.account
+            self._user = llm_client.user_profile.user
 
         if session_key:
             self._session_key = session_key
@@ -341,14 +339,14 @@ class ChatHelper(SmarterRequestMixin):
         :returns: ``True`` if the ChatHelper is ready to use, otherwise ``False``.
         :rtype: bool
         """
-        return bool(super().ready) and bool(self._session_key) and bool(self._chat) and bool(self._chatbot)
+        return bool(super().ready) and bool(self._session_key) and bool(self._chat) and bool(self._llm_client)
 
     def to_json(self) -> dict[str, Any]:
         """
         Convert the ChatHelper instance to a JSON serializable dictionary.
 
         This method returns a dictionary representation of the ChatHelper instance,
-        including key metadata and related objects such as the chat, chatbot, chat history,
+        including key metadata and related objects such as the chat, llm_client, chat history,
         and a unique client string.
 
         :returns: A dictionary containing the serialized state of the ChatHelper.
@@ -360,7 +358,7 @@ class ChatHelper(SmarterRequestMixin):
                 "ready": self.ready,
                 "session_key": self.session_key,
                 "chat": self.chat.id if self.chat else None,  # type: ignore[return]
-                "chatbot": self.chatbot.id if self.chatbot else None,  # type: ignore[return]
+                "llm_client": self.llm_client.id if self.llm_client else None,  # type: ignore[return]
                 "history": self.history,
                 "unique_client_string": self.unique_client_string,
             }
@@ -402,21 +400,21 @@ class ChatHelper(SmarterRequestMixin):
         return self._chat
 
     @property
-    def chatbot(self):
+    def llm_client(self):
         """
-        Returns a lazy instance of the ChatBot.
+        Returns a lazy instance of the LLMClient.
 
         Examples
         --------
-        - ``https://hr.3141-5926-5359.alpha.api.example.com/chatbot/``
-          returns ``ChatBot(name='hr', account=Account(...))``
+        - ``https://hr.3141-5926-5359.alpha.api.example.com/llm_client/``
+          returns ``LLMClient(name='hr', account=Account(...))``
 
-        :returns: The ChatBot instance.
-        :rtype: ChatBot
+        :returns: The LLMClient instance.
+        :rtype: LLMClient
         """
-        if self._chatbot:
-            return self._chatbot
-        self._chatbot = get_cached_chatbot_by_request(request=self.smarter_request)
+        if self._llm_client:
+            return self._llm_client
+        self._llm_client = get_cached_llm_client_by_request(request=self.smarter_request)
 
     @property
     def chat_history(self) -> Union[models.QuerySet, list]:
@@ -474,7 +472,7 @@ class ChatHelper(SmarterRequestMixin):
             "chat_tool_call_history": chat_tool_call_serializer.data,
             "chat_plugin_usage_history": chat_plugin_usage_serializer.data,
             # these two will be added upstream.
-            "chatbot_request_history": None,  # ChatBotRequests
+            "llm_client_request_history": None,  # LLMClientRequests
         }
         return self._history
 
@@ -485,7 +483,7 @@ class ChatHelper(SmarterRequestMixin):
         This method retrieves the Chat instance associated with the current session key
         from the cache. If the Chat instance is not found in the cache, it attempts to
         retrieve it from the database. If it still cannot be found, a new Chat instance
-        is created using the provided ChatBot and request metadata.
+        is created using the provided LLMClient and request metadata.
 
         :returns: The Chat instance associated with the current session, or ``None`` if not found.
         :rtype: Optional[Chat]
@@ -514,9 +512,9 @@ class ChatHelper(SmarterRequestMixin):
                 pass
 
         if not chat:
-            if not self.chatbot:
+            if not self.llm_client:
                 raise SmarterValueError(
-                    f"{self.formatted_class_name} ChatBot instance is required for creating a Chat object."
+                    f"{self.formatted_class_name} LLMClient instance is required for creating a Chat object."
                 )
 
             try:
@@ -527,7 +525,7 @@ class ChatHelper(SmarterRequestMixin):
                 chat = Chat.objects.create(
                     session_key=self.session_key,
                     user_profile=self.user_profile,
-                    chatbot=self.chatbot,
+                    llm_client=self.llm_client,
                     ip_address=self.ip_address,
                     user_agent=self.user_agent,
                     url=django_friendly_url,
@@ -541,7 +539,7 @@ class ChatHelper(SmarterRequestMixin):
                 "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
             )
 
-        if not chat.chatbot:
-            raise ValueError(f"{self.formatted_class_name} ChatBot instance is required for Chat object.")
+        if not chat.llm_client:
+            raise ValueError(f"{self.formatted_class_name} LLMClient instance is required for Chat object.")
 
         return chat

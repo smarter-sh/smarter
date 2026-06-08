@@ -18,7 +18,7 @@ from .base import DocsBaseView
 # Public Access Views
 # ------------------------------------------------------------------------------
 class DocsJsonSchemaBaseView(DocsBaseView):
-    """JSON Schema base view"""
+    """JSON Schema base view."""
 
     template_path = "docs/json-schema.html"
     kind: Optional[SAMKinds] = None
@@ -37,96 +37,96 @@ class DocsJsonSchemaBaseView(DocsBaseView):
 
 
 class DocsJsonSchemaAccountView(DocsJsonSchemaBaseView):
-    """Account JSON Schema view"""
+    """Account JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.ACCOUNT)
 
 
 class DocsJsonSchemaApiConnectionView(DocsJsonSchemaBaseView):
-    """ApiConnection JSON Schema view"""
+    """ApiConnection JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.API_CONNECTION)
 
 
 class DocsJsonSchemaApiView(DocsJsonSchemaBaseView):
-    """Plugin Api JSON Schema view"""
+    """Plugin Api JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.API_PLUGIN)
 
 
 class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
-    """ApiKey JSON Schema view"""
+    """ApiKey JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.AUTH_TOKEN)
 
 
 class DocsJsonSchemaChatView(DocsJsonSchemaBaseView):
-    """Chat JSON Schema view"""
+    """Chat JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.CHAT)
 
 
 class DocsJsonSchemaChatHistoryView(DocsJsonSchemaBaseView):
-    """ChatHistory JSON Schema view"""
+    """ChatHistory JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.CHAT_HISTORY)
 
 
 class DocsJsonSchemaChatPluginUsageView(DocsJsonSchemaBaseView):
-    """ChatPluginUsage JSON Schema view"""
+    """ChatPluginUsage JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.CHAT_PLUGIN_USAGE)
 
 
 class DocsJsonSchemaChatToolCallView(DocsJsonSchemaBaseView):
-    """ChatToolCall JSON Schema view"""
+    """ChatToolCall JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.CHAT_TOOL_CALL)
 
 
-class DocsJsonSchemaChatBotView(DocsJsonSchemaBaseView):
-    """ChatBot JSON Schema view"""
+class DocsJsonSchemaLLMClientView(DocsJsonSchemaBaseView):
+    """LLMClient JSON Schema view."""
 
-    kind = SAMKinds(SAMKinds.CHATBOT)
+    kind = SAMKinds(SAMKinds.LLM_CLIENT)
 
 
 class DocsJsonSchemaPluginView(DocsJsonSchemaBaseView):
-    """Plugin JSON Schema view"""
+    """Plugin JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.STATIC_PLUGIN)
 
 
 class DocsJsonSchemaSqlConnectionView(DocsJsonSchemaBaseView):
-    """SqlConnection JSON Schema view"""
+    """SqlConnection JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SQL_CONNECTION)
 
 
 class DocsJsonSchemaSqlView(DocsJsonSchemaBaseView):
-    """Plugin Sql JSON Schema view"""
+    """Plugin Sql JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SQL_PLUGIN)
 
 
 class DocsJsonSchemaUserView(DocsJsonSchemaBaseView):
-    """User JSON Schema view"""
+    """User JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SECRET)
 
 
 class DocsJsonSchemaSecretView(DocsJsonSchemaBaseView):
-    """Secret JSON Schema view"""
+    """Secret JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.SECRET)
 
 
 class DocsJsonSchemaProviderView(DocsJsonSchemaBaseView):
-    """Provider JSON Schema view"""
+    """Provider JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.PROVIDER)
 
 
 class DocsJsonSchemaVectorstoreView(DocsJsonSchemaBaseView):
-    """Vectorstore JSON Schema view"""
+    """Vectorstore JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.VECTORSTORE)

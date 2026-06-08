@@ -18,8 +18,8 @@ from .const import namespace
 class SecretReverseNames:
     """
     Holds named URL patterns for the account dashboard.
-    This class provides constants for all named URL patterns used in the account dashboard views.
 
+    This class provides constants for all named URL patterns used in the account dashboard views.
     """
 
     namespace = namespace
@@ -46,17 +46,17 @@ urlpatterns = [
         name=SecretReverseNames.listview_api,
     ),
     path(
-        "react-integration/api/clone/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:llm_client_id>/<str:new_name>/",
         SecretListApiCloneView.as_view(),
         name=SecretReverseNames.listview_api_clone,
     ),
     path(
-        "react-integration/api/delete/<int:chatbot_id>/",
+        "react-integration/api/delete/<int:llm_client_id>/",
         SecretListApiDeleteView.as_view(),
         name=SecretReverseNames.listview_api_delete,
     ),
     path(
-        "react-integration/api/rename/<int:chatbot_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:llm_client_id>/<str:new_name>/",
         SecretListApiRenameView.as_view(),
         name=SecretReverseNames.listview_api_rename,
     ),

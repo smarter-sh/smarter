@@ -1,4 +1,4 @@
-"""Django ORM base model"""
+"""Django ORM base model."""
 
 import base64
 import datetime
@@ -37,7 +37,8 @@ verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)  # type
 
 class TimestampedModel(models.Model, SmarterHelperMixin):
     """
-    Abstract base model for all Django ORM models in the Smarter project, providing automatic
+    Abstract base model for all Django ORM models in the Smarter project, providing automatic.
+
     timestamp fields and utility methods.
 
     This class should be used as the base class for all models in the project to ensure
@@ -79,7 +80,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         - Passing a non-datetime object to ``elapsed_updated`` will raise a ``TypeError``.
         - The hashed ID methods provide a way to encode and decode object IDs for use in URLs
           in cases where you want to avoid exposing raw database IDs.
-
     """
 
     HASH_PREFIX = "r"
@@ -95,12 +95,14 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     created_at = models.DateTimeField(auto_now_add=True, null=True, editable=False, db_index=True)
     """
     Timestamp indicating when the model instance was created.
+
     This field is automatically set to the current date and time when the instance is first created.
     It is indexed in the database for efficient querying.
     """
     updated_at = models.DateTimeField(auto_now=True, null=True, editable=False, db_index=True)
     """
     Timestamp indicating when the model instance was last updated.
+
     This field is automatically updated to the current date and time whenever the instance is saved.
     It is indexed in the database for efficient querying.
     """
@@ -128,7 +130,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     @cached_property
     def hashed_id(self) -> str:
         """
-        Returns a URL-friendly hashed version of the object's ID for use in URLs and other
+        Returns a URL-friendly hashed version of the object's ID for use in URLs and other.
+
         contexts where an obscured, non-identifying, non-sequential identifier is preferred.
 
         Encoding scheme:
@@ -231,7 +234,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     @classmethod
     def find_hash(cls, value: str) -> Optional[str]:
         """
-        Finds and returns the first substring in the given value that matches
+        Finds and returns the first substring in the given value that matches.
+
         the hashed ID format.
 
         :param value: The string to search for a hashed ID.
@@ -271,7 +275,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         .. attention::
 
             Intended to be overridden in subclasses to provide custom validation logic.
-
         """
 
     def save(self, *args, **kwargs):
@@ -307,7 +310,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             - If you override this method in a subclass, always call ``super().save(*args, **kwargs)`` to retain validation and timestamp functionality.
             - If validation fails, no data will be saved to the database.
-
         """
         try:
             self.validate()
@@ -332,8 +334,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             obj = MyModel.objects.create(name="Example")
             print(obj.id)  # e.g., 123
-            print(obj.record_locator)  # e.g., "chatbot-rc2x"
-
+            print(obj.record_locator)  # e.g., "llm_client-rc2x"
 
         :returns: Record locator string (URL-safe, no padding)
         :rtype: str
@@ -458,7 +459,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             - If ``dt`` is provided and is not a ``datetime.datetime`` instance, a ``TypeError`` will be raised.
             - Always ensure that ``updated_at`` is set before relying on this property for calculations.
-
         """
         utc = datetime.timezone.utc
         if not self.updated_at:
@@ -508,7 +508,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, **kwargs
     ) -> Optional[models.Model]:
         """
-        Retrieve a model instance by primary key, using caching to
+        Retrieve a model instance by primary key, using caching to.
+
         optimize performance. This method is selectively overridden in
         models that inherit from TimestampedModel to provide class-specific
         function parameters.
@@ -572,6 +573,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["TimestampedModel"]:
         """
         Retrieve model instances using caching to optimize performance.
+
         This method is selectively overridden in models that inherit from
         TimestampedModel to provide class-specific function parameters.
 

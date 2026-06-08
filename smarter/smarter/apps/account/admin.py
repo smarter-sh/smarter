@@ -37,7 +37,8 @@ def smarter_filter_queryset_for_user_profile(
     user_profile_filter: Optional[str] = "user_profile",
 ) -> QuerySet:
     """
-    Helper method to filter a queryset based on the user's role and ownership
+    Helper method to filter a queryset based on the user's role and ownership.
+
     of the objects in the queryset. Queryset is assumed to have a user_profile
     field that is a foreign key to the UserProfile model.
 
@@ -63,12 +64,12 @@ def smarter_filter_queryset_for_user_profile(
         )
         return qs.none()
 
-    # 2.) if the user is a superuser, return all chatbots.
+    # 2.) if the user is a superuser, return all llm_clients.
     if user_profile.user.is_superuser:
         logger.debug("%s: User %s is superuser, returning unfiltered queryset", logger_prefix, user_profile.user)
         return qs
 
-    # 3.) if user is staff then select all chatbots for the account of the user.
+    # 3.) if user is staff then select all llm_clients for the account of the user.
     if user_profile.user.is_staff:
         logger.debug(
             "%s: User %s is staff, filtering queryset for account %s",
@@ -86,8 +87,8 @@ def smarter_filter_queryset_for_user_profile(
             logger.error("Error filtering queryset for staff user %s: %s", user_profile.user, e)
             return qs.none()
 
-    # 4.) if the user is a Customer then select all chatbots owned by the
-    # user + all chatbots shared with the user which are chatbots owned
+    # 4.) if the user is a Customer then select all llm_clients owned by the
+    # user + all llm_clients shared with the user which are llm_clients owned
     # by an admin user of the account (could be more than one).
     logger.debug(
         "%s: User %s is customer, filtering queryset for owned and shared objects", logger_prefix, user_profile.user
@@ -267,15 +268,14 @@ class RestrictedUserAdmin(UserAdmin):
 
     def has_add_permission(self, request) -> bool:
         """
-        force all adds to the manage.py command, because
+        Force all adds to the manage.py command, because.
+
         this adds UserProfile and sends the welcome email.
         """
         return False
 
     def has_delete_permission(self, request, obj=None) -> bool:
-        """
-        Prevent deletion for non-superusers.
-        """
+        """Prevent deletion for non-superusers."""
         if not hasattr(request, "user") or not request.user.is_authenticated:
             return False
         if not isinstance(request.user, User):
@@ -287,7 +287,8 @@ class RestrictedUserAdmin(UserAdmin):
 
     def has_change_permission(self, request, obj=None) -> bool:
         """
-        Allow change permissions for superusers and to
+        Allow change permissions for superusers and to.
+
         staff users if they are changing a user within their own account.
         """
         if not hasattr(request, "user"):
@@ -329,9 +330,7 @@ class RestrictedUserAdmin(UserAdmin):
     profile_account.short_description = "Account"
 
     def get_queryset(self, request):
-        """
-        Customize the queryset based on whether the user is_staff or is_superuser.
-        """
+        """Customize the queryset based on whether the user is_staff or is_superuser."""
         qs = super().get_queryset(request)
         user = get_resolved_user(request.user)
         if not smarter_is_staff(request):

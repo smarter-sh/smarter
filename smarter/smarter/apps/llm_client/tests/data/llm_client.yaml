@@ -1,0 +1,46 @@
+---
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  name: test_llm_client
+  description: llm_client for running unit test
+  version: 1.0.0
+  tags:
+    - test
+    - llm_client
+    - unittests
+  annotations:
+    - smarter.sh/llm_client/test-llm_client/creator: QA Team
+    - smarter.sh/llm_client/test-llm_client/purpose: unit testing
+    - smarter.sh/llm_client/test-llm_client/release-date: 2024-06-15
+    - smarter.sh/llm_client/test-llm_client/backward-compatibility: true
+spec:
+  config:
+    deployed: false
+    provider: openai
+    defaultModel: gpt-4o-mini
+    defaultTemperature: 0.5
+    defaultMaxTokens: 512
+    defaultSystemRole: >
+      You are a helpful assistant. When given the opportunity to utilize
+      function calling, you should always do so. This will allow you to
+      provide the best possible responses to the user.
+    appName: Test LLMClient
+    appAssistant: Tatiana
+    appWelcomeMessage: Welcome to Test LLMClient! How can I help you today?
+    appExamplePrompts:
+      - "What is the weather in New York?"
+      - "Tell me a joke"
+      - "What is the capital of France?"
+    appPlaceholder: "Ask me anything..."
+    appInfoUrl: https://smarter.sh
+    appBackgroundImageUrl: https://smarter.sh/assets/img/bg.jpg
+    appLogoUrl: https://smarter.sh/assets/img/logo.png
+    appFileAttachment: false
+    subdomain: null
+    customDomain: null
+  plugins:
+    - example_configuration
+    - everlasting_gobstopper
+  functions:
+    - get_current_weather

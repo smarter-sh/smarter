@@ -1,6 +1,8 @@
 # pylint: disable=W0613
 """
-Smarter API command-line interface Brokers. These are the broker classes
+Smarter API command-line interface Brokers.
+
+These are the broker classes
 that implement the broker service pattern for an underlying object. Brokers
 receive a Yaml manifest representation of a model, convert this to a Pydantic
 model, and then instantiate the appropriate Python class that performs
@@ -21,13 +23,13 @@ from urllib.parse import urlparse
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.connection.manifest.brokers.api_connection import (
     SAMApiConnectionBroker,
 )
 from smarter.apps.connection.manifest.brokers.sql_connection import (
     SAMSqlConnectionBroker,
 )
+from smarter.apps.llm_client.manifest.brokers.llm_client import SAMLLMClientBroker
 from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
@@ -94,7 +96,6 @@ class Brokers:
     >>> broker_cls = Brokers.get_broker("Account")
     >>> broker = broker_cls()
     >>> broker.describe(...)
-
     """
 
     _brokers: Dict[str, Type[AbstractBroker]] = {
@@ -104,7 +105,7 @@ class Brokers:
         SAMKinds.CHAT_HISTORY.value: SAMChatHistoryBroker,
         SAMKinds.CHAT_PLUGIN_USAGE.value: SAMChatPluginUsageBroker,
         SAMKinds.CHAT_TOOL_CALL.value: SAMChatToolCallBroker,
-        SAMKinds.CHATBOT.value: SAMChatbotBroker,
+        SAMKinds.LLM_CLIENT.value: SAMLLMClientBroker,
         SAMKinds.STATIC_PLUGIN.value: SAMStaticPluginBroker,
         SAMKinds.API_PLUGIN.value: SAMApiPluginBroker,
         SAMKinds.SQL_PLUGIN.value: SAMSqlPluginBroker,
@@ -133,7 +134,9 @@ class Brokers:
     @classmethod
     def get_broker_kind(cls, kind: str) -> Optional[str]:
         """
-        Case insensitive broker kind getter. Returns the original SAMKinds
+        Case insensitive broker kind getter.
+
+        Returns the original SAMKinds
         key string from cls._brokers for the given kind.
         """
         if not kind:
@@ -161,7 +164,9 @@ class Brokers:
     @classmethod
     def from_url(cls, url) -> Optional[str]:
         """
-        Returns the kind of broker from the given URL. This is used to
+        Returns the kind of broker from the given URL.
+
+        This is used to
         determine the broker to use when the kind is not provided in the
         request.
 

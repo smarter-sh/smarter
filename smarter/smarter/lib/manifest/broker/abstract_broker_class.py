@@ -238,11 +238,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         logger.debug("%s.__init__() is complete.", self.abstract_broker_logger_prefix)
 
     def __str__(self):
-        """
-        Returns the string representation of the broker, expresssed as
+        """Returns the string representation of the broker, expresssed as.
+
         "{apiVersion} {kind} Broker".
 
-        example: "smarter.sh/v1 ChatBot Broker"
+        example: "smarter.sh/v1 LLMClient Broker"
 
         :return: The string representation of the broker.
         :rtype: str
@@ -532,7 +532,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @property
     def params(self) -> Optional[QueryDict]:
         """
-        Return the query parameters from the url of the request. there are two
+        Return the query parameters from the url of the request.
+
+        there are two
         scenarios to consider:
         1. the request is a Django HttpRequest object (the expected case)
         2. the request is a Python PreparedRequest object (the edge case)
@@ -611,7 +613,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     def kind_setter(self, value: str):
         """
-        Set the kind of manifest. Validates that the kind is a
+        Set the kind of manifest.
+
+        Validates that the kind is a
         valid SmarterJournalThings value.
 
         :raises SmarterValueError: If the kind is not valid.
@@ -638,17 +642,17 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @property
     def name(self) -> Optional[str]:
         """
-        Retrieve the unique name identifier for the ChatBot instance managed by this broker.
+        Retrieve the unique name identifier for the LLMClient instance managed by this broker.
 
-        This property accesses the name used to distinguish the ChatBot within the database and across
+        This property accesses the name used to distinguish the LLMClient within the database and across
         the Smarter platform. The name is first returned from an internal cache if available. If not cached,
         and if a manifest is present, the name is extracted from the manifest's metadata and stored for
         subsequent access.
 
         The name is essential for database queries, model lookups, and for associating related resources
-        such as API keys, plugins, and functions with the correct ChatBot instance.
+        such as API keys, plugins, and functions with the correct LLMClient instance.
 
-        :returns: The name of the ChatBot as a string, or ``None`` if the name is not set or cannot be determined.
+        :returns: The name of the LLMClient as a string, or ``None`` if the name is not set or cannot be determined.
         :rtype: Optional[str]
 
         .. note::
@@ -702,23 +706,23 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @snake_case()
     def manifest_to_django_orm(self) -> dict[str, Any]:
         """
-        Convert the Smarter API manifest metadata into a dictionary suitable for creating or updating a Django ORM ChatBot model.
+        Convert the Smarter API manifest metadata into a dictionary suitable for creating or updating a Django ORM LLMClient model.
 
         This method extracts all relevant metadata from the loaded manifest
         and transforms it into a dictionary format compatible with Django ORM operations. The manifest's configuration
         is first dumped and converted from camelCase to snake_case to match Django's field naming conventions.
 
         The resulting dictionary includes the account, name, description, and version fields from the manifest metadata.
-        This dictionary is intended to be used to supplement the model spec when instantiating or updating a ChatBot ORM model instance in the database.
+        This dictionary is intended to be used to supplement the model spec when instantiating or updating a LLMClient ORM model instance in the database.
 
         If the manifest is not loaded or is invalid, an exception is raised to indicate that the broker is not ready
         to perform the transformation.
 
-        :returns: A dictionary containing all metadata fields required to create or update a Django ORM ChatBot model.
+        :returns: A dictionary containing all metadata fields required to create or update a Django ORM LLMClient model.
         :rtype: dict
 
         :raises SAMBrokerErrorNotReady: If the manifest is not loaded or cannot be found.
-        :raises SAMChatbotBrokerError: If the manifest metadata cannot be converted to a dictionary.
+        :raises SAMLLMClientBrokerError: If the manifest metadata cannot be converted to a dictionary.
         """
         if not isinstance(self.manifest, AbstractSAMBase):
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind)
@@ -750,7 +754,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     def name_cached_property_setter(self, value: str):
         """
-        A workaround to the limitation that you cannot use both @cached_property and
+        A workaround to the limitation that you cannot use both @cached_property and.
+
         a setter for the same attribute name (name). In Python, you cannot have a
         property (or cached_property) and a setter with the same name unless you use the
         @property decorator (not @cached_property).
@@ -884,7 +889,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @property
     def orm_meta_instance(self) -> Optional[MetaDataWithOwnershipModel]:
         """
-        Return the Django ORM meta model instance for the broker. This is a cached
+        Return the Django ORM meta model instance for the broker.
+
+        This is a cached
         property that retrieves the ORM meta instance based on the user_profile
         and kind. For simple relational models, the ORM meta class is the same
         as the ORM class, and the meta instance is the same as the ORM instance.
@@ -1060,7 +1067,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @property
     def orm_instance(self) -> Optional[MetaDataWithOwnershipModel]:
         """
-        Return the Django ORM model instance for the broker. There are
+        Return the Django ORM model instance for the broker.
+
+        There are
         multiple strategies to retrieve the ORM instance:
 
         1. If the instance is already cached in self._orm_instance, return it.
@@ -1069,7 +1078,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
            If not found, attempt to retrieve using the admin user_profile for the account.
            If still not found, attempt to retrieve using the Smarter platform admin user_profile.
         4. Cache the retrieved instance for future access.
-
 
         :return: The Django ORM model instance for the broker.
         :rtype: Optional[MetaDataWithOwnershipModel]
@@ -1275,7 +1283,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @abstractmethod
     def manifest(self) -> Optional[Union[AbstractSAMBase, dict]]:
         """
-        The Pydantic model representing the manifest. If the manifest
+        The Pydantic model representing the manifest.
+
+        If the manifest
         has not been initialized yet, this property will attempt to
         initialize it using the SAMLoader.
 
@@ -1286,7 +1296,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     def manifest_setter(self, value: Optional[Union[AbstractSAMBase, dict[str, Any]]]):
         """
-        Set the manifest for the broker and override all AbstractBroker
+        Set the manifest for the broker and override all AbstractBroker.
+
         model properties based on the manifest data.
 
         :param value: The manifest to set, either as a Pydantic model or a dictionary.
@@ -1374,9 +1385,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # Abstract Methods
     ###########################################################################
     def cache_invalidations(self) -> None:
-        """
-        Handle broker specific cache invalidation logic.
-        """
+        """Handle broker specific cache invalidation logic."""
         logger.debug(
             "%s.cache_invalidations() called for %s",
             self.abstract_broker_logger_cache_invalidation_prefix,
@@ -1393,7 +1402,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
-        Apply a manifest, which works like an upsert operation. Designed
+        Apply a manifest, which works like an upsert operation.
+
+        Designed
         around the Kubernetes ``kubectl apply`` command.
 
         This method processes a Smarter YAML manifest and either creates or updates
@@ -1446,7 +1457,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """describe a resource.
+        """Describe a resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1461,7 +1472,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """delete a resource.
+        """Delete a resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1476,7 +1487,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """deploy a resource.
+        """Deploy a resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1508,7 +1519,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """get information about specified resources.
+        """Get information about specified resources.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1523,7 +1534,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """get logs for a resource.
+        """Get logs for a resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1538,7 +1549,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """undeploy a resource.
+        """Undeploy a resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
@@ -1581,7 +1592,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         expiration: Optional[datetime] = None,
     ) -> Secret:
         """
-        Get or create a Smarter Secret in the database. This is used to store
+        Get or create a Smarter Secret in the database.
+
+        This is used to store
         secrets that are passed in the manifest.
 
         :param user_profile: The UserProfile to associate the secret with.
@@ -1863,7 +1876,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     def json_response_err(self, command: SmarterJournalCliCommands, e: Exception) -> SmarterJournaledJsonResponse:
         """
-        Return a structured error response that can be unpacked and rendered
+        Return a structured error response that can be unpacked and rendered.
+
         by the cli in a variety of formats.
 
         :param command: The command that was executed.
@@ -1901,7 +1915,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     ###########################################################################
     def set_and_verify_name_param(self, *args, command: Optional[SmarterJournalCliCommands] = None, **kwargs):
         """
-        Set self.name from the 'name' query string param and then verify that it
+        Set self.name from the 'name' query string param and then verify that it.
+
         was actually passed.
 
         :param command: The command being executed, for error reporting purposes.
@@ -1916,7 +1931,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # pylint: disable=W0212
     def get_model_titles(self, serializer: ModelSerializer) -> Optional[list[dict[str, str]]]:
         """
-        For tabular output from get() implementations. Returns a list of field names and types
+        For tabular output from get() implementations.
+
+        Returns a list of field names and types
         from the Django model serializer.
 
         :param serializer: The Django model serializer instance.
@@ -1941,6 +1958,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     def clean_cli_param(self, param, param_name: str = "unknown", url: Optional[str] = None) -> Optional[str]:
         """
         - Remove any leading or trailing whitespace from the param.
+
         - Ensure that the param is a string.
         - Return the cleaned param.
 

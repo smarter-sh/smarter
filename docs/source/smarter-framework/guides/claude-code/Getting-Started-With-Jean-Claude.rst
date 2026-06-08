@@ -10,7 +10,7 @@ Goal
 
 Use the Smarter CLI to register Anthropic as an LLM provider, apply a
 provider manifest, verify connectivity, and send your first prompt to a
-Claude-backed chatbot — all in under fifteen minutes.
+Claude-backed llm_client — all in under fifteen minutes.
 
 Prerequisites
 -------------
@@ -111,7 +111,7 @@ Restart the application so the new credential is loaded:
 Concept Overview
 ----------------
 
-Smarter manages every resource — providers, chatbots, plugins — through
+Smarter manages every resource — providers, llm_clients, plugins — through
 declarative YAML manifests applied via the CLI. This pattern is deliberately
 modeled on Kubernetes. These files are called **SAM** (Smarter API Manifests).
 
@@ -143,11 +143,11 @@ and marks the provider active.
    Anthropic is an **additional provider** and requires both the environment
    variable *and* a manifest.
 
-Chatbot
+LLMClient
 ~~~~~~~
 
-A **Chatbot** is a named resource that bundles a provider, a model, a system
-prompt, and optional data plugins. End users interact with chatbots, not
+A **LLMClient** is a named resource that bundles a provider, a model, a system
+prompt, and optional data plugins. End users interact with llm_clients, not
 providers directly.
 
 Provider vs. Model Identifiers
@@ -260,17 +260,17 @@ status.
 Step 10: Send Your First Prompt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-List available chatbots to find one configured with an Anthropic provider:
+List available llm_clients to find one configured with an Anthropic provider:
 
 .. code-block:: bash
 
-   smarter get chatbots
+   smarter get llm_clients
 
 Start an interactive session:
 
 .. code-block:: bash
 
-   smarter chat <chatbot-name>
+   smarter chat <llm_client-name>
 
 Type a prompt and press Enter. For example:
 
@@ -315,7 +315,7 @@ Run the following sequence end to end to verify your setup is complete:
    smarter get providers                       # anthropic-opus and anthropic-sonnet listed
    smarter describe provider anthropic-opus    # verified: true, active: true
    smarter describe provider anthropic-sonnet  # verified: true, active: true
-   smarter chat <chatbot-name>
+   smarter chat <llm_client-name>
 
 Expected ``describe`` output for each provider:
 
@@ -338,11 +338,11 @@ Expected ``describe`` output for each provider:
 
 Both providers showing ``verified: true`` and ``active: true`` confirms that
 Smarter has a live connection to the Anthropic API and both models are ready
-for use in chatbots and the Workbench.
+for use in llm_clients and the Workbench.
 
 .. tip::
 
-   With both providers registered, create two chatbots — one backed by Opus,
+   With both providers registered, create two llm_clients — one backed by Opus,
    one by Sonnet — and compare their responses to the same prompt in the
    Workbench. This is a practical way to evaluate cost vs. quality trade-offs
    before committing to a model for production.

@@ -3,5 +3,5 @@ Authentication
 
 The Smarter platform uses an API key-based proprietary authentication strategy
 based on Django Rest Framework's knox token authentication. API keys are used
-for the command-line interface as well as for deployed ChatBots/Agents that
+for the command-line interface as well as for deployed LLMClients/Agents that
 are configured to use authentication. See :doc:`../lib/drf/smarter-token-authentication` for details.

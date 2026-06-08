@@ -2,32 +2,32 @@
 import { loggerPrefix } from "@/const";
 
 /**
- * Sets a cookie to store the chatbot count for a given URL slug.
+ * Sets a cookie to store the llm_client count for a given URL slug.
  *
- * @param urlSlug - The unique identifier for the chatbot group.
- * @param chatbotCount - The number of chatbots to store.
+ * @param urlSlug - The unique identifier for the llm_client group.
+ * @param llm_clientCount - The number of llm_clients to store.
  * @param days - Number of days until the cookie expires.
  */
-export const setCookie = (urlSlug: string, concept: string, chatbotCount: number, days: number) => {
+export const setCookie = (urlSlug: string, concept: string, llm_clientCount: number, days: number) => {
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
   const expires = new Date(Date.now() + days * MS_PER_DAY).toUTCString();
-  const cookieValue = `${urlSlug}_${concept}_chatbot_count=${chatbotCount}; path=/; expires=${expires};`;
+  const cookieValue = `${urlSlug}_${concept}_llm_client_count=${llm_clientCount}; path=/; expires=${expires};`;
   try {
     document.cookie = cookieValue;
     console.debug(loggerPrefix, `setCookie(): ${cookieValue}`);
   } catch (e) {
-    console.warn(loggerPrefix, "setCookie(): Unable to set chatbot count cookie", e);
+    console.warn(loggerPrefix, "setCookie(): Unable to set llm_client count cookie", e);
   }
 };
 
 /**
- * Retrieves the chatbot count stored in a cookie for a given URL slug.
+ * Retrieves the llm_client count stored in a cookie for a given URL slug.
  *
- * @param urlSlug - The unique identifier for the chatbot group.
- * @returns The number of chatbots stored in the cookie, or undefined if not found or invalid.
+ * @param urlSlug - The unique identifier for the llm_client group.
+ * @returns The number of llm_clients stored in the cookie, or undefined if not found or invalid.
  */
 export const getCookie = (urlSlug: string, concept: string): number | undefined => {
-  const cookieName = `${urlSlug}_${concept}_chatbot_count`;
+  const cookieName = `${urlSlug}_${concept}_llm_client_count`;
   const cookies = document.cookie.split(";").map((c) => c.trim());
   for (const cookie of cookies) {
     if (cookie.startsWith(cookieName + "=")) {

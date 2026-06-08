@@ -98,7 +98,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 
 FROM system_packages AS kubectl
 
-# Install kubectl, required for smarter/common/helpers/k8s_helpers.py used for ChatBot/Agent
+# Install kubectl, required for smarter/common/helpers/k8s_helpers.py used for LLMClient/Agent
 # deployments in which dedicated Kubernetes ingress and TLS certificates are created. There
 # are Kubernetes builds for both amd64 and arm64 architectures (we build both for DockerHub
 # multi-arch support).
@@ -245,7 +245,7 @@ fi
 
 ############################ build remote react ###############################
 # The Smarter web console UI includes several React components, such as the
-# main dashboard, prompt (Chatbots) list, terminal emulator, and prompt passthrough.
+# main dashboard, prompt (LLMClients) list, terminal emulator, and prompt passthrough.
 # Vite pushes builds of these React components to a CDN which is used as a general
 # purpose distribution mechanism for the latest production-ready builds of these components.
 #
@@ -369,7 +369,7 @@ FROM react_assets AS application
 # do this last so that we can take advantage of Docker's caching mechanism.
 WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
-COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
+COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/llm_client/data/ ./data/manifests/
 RUN mkdir -p /home/smarter_user/smarter/staticfiles
 RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
 

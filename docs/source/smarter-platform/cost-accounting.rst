@@ -45,7 +45,7 @@ tracks the following cost metrics:
      - External provider billing reference. eg fp_b547601dbd
 
 An example of a custom SQL query to aggregate token usage by session for a given month is shown below. Other
-Django models associated with cost accounting include: `ChatBotRequests`, `PluginSelectorHistory`, and `Chat`.
+Django models associated with cost accounting include: `LLMClientRequests`, `PluginSelectorHistory`, and `Chat`.
 
 .. code-block:: sql
 

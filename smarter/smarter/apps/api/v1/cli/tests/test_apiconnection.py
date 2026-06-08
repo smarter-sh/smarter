@@ -1,4 +1,4 @@
-"""Test Api v1 CLI commands for ApiConnection"""
+"""Test Api v1 CLI commands for ApiConnection."""
 
 from http import HTTPStatus
 from typing import Optional
@@ -34,7 +34,7 @@ logger = logging.getSmarterLogger(
 
 class TestApiCliV1ApiConnection(ApiV1CliTestBase):
     """
-    Test Api v1 CLI commands for ApiConnection
+    Test Api v1 CLI commands for ApiConnection.
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
@@ -125,7 +125,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
             assert field in connection.keys(), f"{field} not found in config keys: {connection.keys()}"
 
     def test_example_manifest(self) -> None:
-        """Test example-manifest command"""
+        """Test example-manifest command."""
 
         path = reverse(self.namespace + ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
@@ -135,7 +135,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         self.validate_spec(data)
 
     def test_describe(self) -> None:
-        """Test describe command"""
+        """Test describe command."""
         self.apiconnection = self.apiconnection_factory()
 
         path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
@@ -156,7 +156,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.VERSION.value], self.apiconnection.version)
 
     def test_apply(self) -> None:
-        """Test apply command"""
+        """Test apply command."""
 
         self.apiconnection = self.apiconnection_factory()
 
@@ -170,7 +170,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         self.assertIsInstance(response, dict)
 
         # muck up the manifest with some test data
-        new_url = "http://localhost:9357/api/v1/cli/example_manifest/chatbot/"
+        new_url = "http://localhost:9357/api/v1/cli/example_manifest/llm_client/"
         new_description = "new description"
         data = response[SmarterJournalApiResponseKeys.DATA]
         data[SAMKeys.SPEC.value][SAMApiConnectionSpecKeys.CONNECTION.value][
@@ -203,7 +203,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["baseUrl"], new_url)
 
     def test_get(self) -> None:
-        """Test get command"""
+        """Test get command."""
 
         # create a apiconnection so that we have something to get.
         self.apiconnection = self.apiconnection_factory()
@@ -319,7 +319,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
             self.fail(f"Items are not valid: {data}")
 
     def test_deploy(self) -> None:
-        """Test deploy command"""
+        """Test deploy command."""
         # create a apiconnection so that we have something to deploy
         self.apiconnection = self.apiconnection_factory()
 
@@ -331,7 +331,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
 
     def test_undeploy(self) -> None:
-        """Test undeploy command"""
+        """Test undeploy command."""
 
         # create a apiconnection so that we have something to undeploy
         self.apiconnection = self.apiconnection_factory()
@@ -344,7 +344,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
 
     def test_logs(self) -> None:
-        """Test logs command"""
+        """Test logs command."""
         path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         _, status = self.get_response(path=url_with_query_params)
@@ -353,7 +353,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
 
     def test_delete(self) -> None:
-        """Test delete command"""
+        """Test delete command."""
         # create a apiconnection so that we have something to delete
         self.apiconnection = self.apiconnection_factory()
 
