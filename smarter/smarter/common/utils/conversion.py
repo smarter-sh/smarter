@@ -1,5 +1,5 @@
 """
-smarter.common.utils.conversion
+Smarter.common.utils.conversion
 ===============================
 
 Case conversion utility functions for the Smarter framework.
@@ -39,7 +39,8 @@ SNAKE_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 
 ConvertibleCaseType = Union[str, dict[str, object], list[object], object]
 """
-A type alias representing data that can be converted between different case
+A type alias representing data that can be converted between different case.
+
 formats. This includes strings, dictionaries with string keys, lists of such
 elements, or any object.
 """
@@ -126,21 +127,12 @@ def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
 
 @lru_cache(maxsize=LRU_MAXSIZE)
 def _convert_camel_to_snake(name: str):
-    # convert PascalCase to pascalCase to ensure proper snake_case conversion
-    name = name[0].lower() + name[1:] if len(name) > 1 and name[0].isupper() else name.lower()
+    name = name.replace(" ", "_").replace("-", "_")
 
-    # replace spaces with underscores
-    name = name.replace(" ", "_")
-
-    # convert camelCase to snake_case using regex
-    name = name[0].lower() + name[1:] if name and len(name) > 1 and name[0].isupper() else name
-
-    # handle acronyms and consecutive uppercase letters
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
-    result = re.sub("_+", "_", result)
-    result = re.sub("-+", "_", result)
-    return result
+    # Split acronym boundaries such as `LLMClient` -> `LLM_Client` before the general camelCase split.
+    name = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", "_", name)
+    name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", name).lower()
+    return re.sub(r"_+", "_", name)
 
 
 def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False) -> Any:

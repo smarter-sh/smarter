@@ -17,6 +17,7 @@ class TestConversionUtils(SmarterTestBase):
         self.assertEqual(to_snake_case("camelCase"), "camel_case")
         self.assertEqual(to_snake_case("CamelCase"), "camel_case")
         self.assertEqual(to_snake_case("Camel Case"), "camel_case")
+        self.assertEqual(to_snake_case("LLMClient"), "llm_client")
         self.assertEqual(to_snake_case("MyEverlastingSUPERDUPERGobstopper"), "my_everlasting_superduper_gobstopper")
         self.assertEqual(to_snake_case("already_snake_case"), "already_snake_case")
         self.assertEqual(to_snake_case(""), "")
