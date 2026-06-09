@@ -9,7 +9,7 @@ Configuration
 --------------
 
 Set the following environment variables to configure SMTP email sending. These will
-be consumed by :doc:`smarter-settings`.
+be consumed by :doc:`../developer-reference/smarter-settings`.
 
 .. code-block:: bash
 
@@ -20,7 +20,7 @@ be consumed by :doc:`smarter-settings`.
   SMTP_PORT=587
   SMTP_USE_TLS=True
 
-Also see :doc:`Cloud infrastructure <../smarter-platform/cloud-infrastructure>` for configuring
+Also see :doc:`Cloud infrastructure <../../smarter-platform/cloud-infrastructure>` for configuring
 AWS Simple Email Service (SES) as your SMTP provider.
 
 Basic Usage

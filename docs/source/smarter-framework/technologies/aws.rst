@@ -12,7 +12,7 @@ EKS, Route 53, S3, RDS, and IAM to create a scalable and secure environment for 
 Terraform
 -----------------------------------------
 
-See :doc:`../smarter-platform/cloud-infrastructure` for details on using Terraform scripts
+See :doc:`../../smarter-platform/cloud-infrastructure` for details on using Terraform scripts
 to deploy and manage Smarter infrastructure on AWS.
 
 

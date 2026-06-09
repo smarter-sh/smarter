@@ -193,7 +193,7 @@ Create a second file named ``anthropic-sonnet.yaml``:
 
    Model identifiers are **case-sensitive** and must match the names
    published by Anthropic exactly. For the complete manifest field reference,
-   see :doc:`/smarter-resources/provider/sam`.
+   see :doc:`/smarter-resources/provider/manifest`.
 
 Step 5: Apply the Manifests
 -----------------------------
@@ -300,7 +300,7 @@ Troubleshooting
 .. seealso::
 
    - :doc:`/smarter-resources/smarter-provider` — Provider technical reference
-   - :doc:`/smarter-resources/provider/sam` — SAM manifest field reference
+   - :doc:`/smarter-resources/provider/manifest` — SAM manifest field reference
    - :doc:`/smarter-resources/provider/api` — Provider REST API
    - `Anthropic API Documentation <https://docs.anthropic.com/>`_
    - `Anthropic Model List <https://docs.anthropic.com/en/docs/about-claude/models>`_

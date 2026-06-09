@@ -1,5 +1,5 @@
 LLMClientCustomDomainDNS Model
-=============================
+===============================
 
 .. autoclass:: smarter.apps.llm_client.models.LLMClientCustomDomainDNS
    :members:

@@ -229,7 +229,7 @@ Workbench.
 
    Model identifiers are case-sensitive and must match the provider's published
    names exactly. For the full ``spec`` field reference, see
-   :doc:`/smarter-resources/provider/sam`.
+   :doc:`/smarter-resources/provider/manifest`.
 
 Step 8: Apply the Manifests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -401,7 +401,7 @@ Anthropic's side — wait a minute and retry. For persistent issues, check the
    - :doc:`/smarter-framework/smarter-cli`
    - :doc:`/smarter-platform/api-keys`
    - :doc:`/smarter-resources/smarter-provider`
-   - :doc:`/smarter-resources/provider/sam`
+   - :doc:`/smarter-resources/provider/manifest`
    - :doc:`/smarter-resources/provider/api`
    - :doc:`/external-links/swagger`
    - `Claude API Documentation <https://platform.claude.com/docs/en/home>`_

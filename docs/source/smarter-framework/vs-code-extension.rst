@@ -71,4 +71,4 @@ The following schemas are available:
 - /api/v1/cli/schema/SmarterAuthToken/
 - /api/v1/cli/schema/User/
 
-See :doc:`Pydantic <pydantic>` for more details on these schemas and their properties.
+See :doc:`Pydantic <technologies/pydantic>` for more details on these schemas and their properties.

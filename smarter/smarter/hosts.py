@@ -44,7 +44,7 @@ API Subdomain Hosts
      - Next environment for the API.
 
 Named LLMClient Hosts
--------------------
+---------------------
 .. list-table:: Named LLMClient Hosts
    :header-rows: 1
 
