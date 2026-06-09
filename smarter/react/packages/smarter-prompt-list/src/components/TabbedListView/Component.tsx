@@ -52,12 +52,14 @@
  * <TabbedListView sessionContext={sessionContext} />
  */
 import { useEffect, useRef, useState } from "react";
+import type { SessionContext } from "@smarter/common";
+
 import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 import ToggleButton from "@/components/ToggleButton";
 import type { ViewMode } from "@/components/ToggleButton";
 
-import type { LLMClient, SessionContext, TabKey } from "@/lib/Types";
+import type { LLMClient, TabKey } from "@/lib/Types";
 import { getCookie } from "./cookie";
 import { TabNav } from "./TabNavigation";
 import { load } from "./load";

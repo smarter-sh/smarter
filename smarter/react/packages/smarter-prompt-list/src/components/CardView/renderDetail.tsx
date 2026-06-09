@@ -20,7 +20,7 @@
 import type { ReactNode } from "react";
 import { loggerPrefix } from "@/const";
 
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDateTime } from "@smarter/common";
 
 export type DetailRowRenderer = (
   label: string,

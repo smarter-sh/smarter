@@ -21,8 +21,9 @@
  * This component is intended to be embedded in each llm_client row or card in ListView and CardView.
  */
 import { useState } from "react";
+import type { SessionContext } from "@smarter/common";
 import { loggerPrefix } from "@/const";
-import type { LLMClient, SessionContext } from "@/lib/Types";
+import type { LLMClient } from "@/lib/Types";
 import { Modal } from "@/lib/modalDialogue";
 import fetchDjangoUrl from "@/lib/django";
 

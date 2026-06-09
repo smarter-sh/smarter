@@ -4,7 +4,7 @@
  *
  */
 import TabbedListView from "@/components/TabbedListView";
-import type { SessionContext } from "@/lib/Types";
+import type { SessionContext } from "@smarter/common";
 
 interface AppProps {
   sessionContext: SessionContext;

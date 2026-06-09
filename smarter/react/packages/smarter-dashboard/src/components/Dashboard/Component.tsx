@@ -92,7 +92,7 @@ function Dashboard({ appContext }: { appContext: AppContextInterface }) {
 
           <div className="row g-5 g-xl-10">
             <YTVideo videoId="YtVxkjHzZrE" />
-            <YTVideo videoId="G2RSCzxxupE" />
+            <YTVideo videoId="bfePkGzKAvw" />
           </div>
         </div>
       </section>

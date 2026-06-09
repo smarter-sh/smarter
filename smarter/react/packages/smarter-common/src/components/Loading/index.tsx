@@ -1,4 +1,4 @@
 
-import Loading from "./Component";
+import { Loading, LoadingText } from "./Component";
 
-export default Loading;
+export { Loading, LoadingText };

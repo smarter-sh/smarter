@@ -28,24 +28,15 @@
  */
 import React, { useState, useEffect } from "react";
 
-import type { LLMClient, SessionContext } from "@/lib/Types";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { Loading, LoadingText, formatDateTime } from "@smarter/common";
+import type { SessionContext } from "@smarter/common";
+
+import type { LLMClient } from "@/lib/Types";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { loggerPrefix } from "@/const";
-import Loading from "@/components/Loading";
 
 import "./styles.css";
-
-/**
- * LoadingText
- *
- * Displays a muted "Loading..." text, typically used in skeleton or ghost rows to indicate loading state.
- */
-const LoadingText = () => {
-  return <span className="text-muted fw-semibold">Loading...</span>;
-};
-
 
 /**
  * TableHeader
@@ -247,7 +238,7 @@ function ChunkedRows({
   );
 }
 
-interface ListViewProps {
+export interface ListViewProps {
   isLoading: boolean;
   ghostRows: number;
   sessionContext: SessionContext;

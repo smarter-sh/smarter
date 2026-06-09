@@ -1,6 +1,6 @@
 
 
-export default function Loading() {
+export function Loading() {
   return (
     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 40 }}>
       <div
@@ -14,3 +14,12 @@ export default function Loading() {
     </div>
   );
 }
+
+/**
+ * LoadingText
+ *
+ * Displays a muted "Loading..." text, typically used in skeleton or ghost rows to indicate loading state.
+ */
+export const LoadingText = () => {
+  return <span className="text-muted fw-semibold">Loading...</span>;
+};

@@ -1,5 +1,5 @@
-import Loading from "./Loading";
+import {Loading, LoadingText} from "./Loading";
 import TabbedListView from "./TabbedListView";
 import ToggleButton from "./ToggleButton";
 
-export { Loading, TabbedListView, ToggleButton };
+export { Loading, LoadingText, TabbedListView, ToggleButton };

@@ -22,7 +22,8 @@
  *
  * This component is intended for use in views where objects are presented in a card/grid format.
  */
-import type { LLMClient, SessionContext } from "@/lib/Types";
+import type { SessionContext } from "@smarter/common";
+import type { LLMClient } from "@/lib/Types";
 import { loggerPrefix } from "@/const";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
