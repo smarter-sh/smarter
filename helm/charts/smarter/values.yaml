@@ -345,6 +345,7 @@ redis:
     password: "smarter"
   architecture: standalone
   master:
+    disableCommands: []
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     containerSecurityContext:
@@ -366,6 +367,7 @@ redis:
       headless:
         sessionAffinity: None
   replica:
+    disableCommands: []
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 
