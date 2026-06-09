@@ -195,7 +195,7 @@ Workbench.
 
    Model identifiers are case-sensitive and must match the provider's published
    names exactly. For the full ``spec`` field reference, see
-   :doc:`/smarter-resources/provider/sam`.
+   :doc:`/smarter-resources/provider/manifest`.
 
 Step 5: Apply Both Manifests
 ------------------------------
@@ -285,5 +285,5 @@ Troubleshooting
 
    - :doc:`/smarter-resources/smarter-provider`
    - :doc:`/smarter-resources/provider/api`
-   - :doc:`/smarter-resources/provider/sam`
+   - :doc:`/smarter-resources/provider/manifest`
    - `Anthropic API Documentation <https://docs.anthropic.com/>`_
