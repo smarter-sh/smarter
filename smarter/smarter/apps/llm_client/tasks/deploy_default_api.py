@@ -242,7 +242,7 @@ def deploy_default_api(llm_client_id: int, with_domain_verification: bool = True
         }
 
         # create and apply the ingress manifest
-        template_path = os.path.join(HERE, "./k8s/ingress.yaml.tpl")
+        template_path = os.path.join(HERE, "../k8s/ingress.yaml.tpl")
         with open(template_path, encoding="utf-8") as ingress_template:
             template = Template(ingress_template.read())
             manifest = template.substitute(ingress_values)
