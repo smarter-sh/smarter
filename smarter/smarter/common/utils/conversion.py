@@ -104,7 +104,7 @@ def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
     """
     if isinstance(data, str):
         return _convert_snake_to_camel(data)
-    elif isinstance(data, list) and convert_values:
+    elif isinstance(data, list):
         return [to_camel_case(item, convert_values=convert_values, is_recursive=True) for item in data]
     elif isinstance(data, dict):
         # For dictionaries, convert keys and optionally the values as well

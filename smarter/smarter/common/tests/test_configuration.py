@@ -21,10 +21,10 @@ PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__
 sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 from smarter.common.conf import (  # noqa: E402
-    Services,
     Settings,
     settings_defaults,
 )
+from smarter.common.conf.services import Services
 
 # our stuff
 from smarter.common.utils import get_semantic_version
@@ -130,7 +130,7 @@ class TestConfiguration(SmarterTestBase):
         self.assertEqual(mock_settings.openai_endpoint_image_size, "TEST_image_size")
 
     def test_configure_with_class_constructor(self):
-        """test that we can set values with the class constructor"""
+        """Test that we can set values with the class constructor."""
 
         mock_settings = Settings(
             aws_region="eu-west-1", debug_mode=True, init_info="test_configure_with_class_constructor()"
@@ -140,7 +140,7 @@ class TestConfiguration(SmarterTestBase):
         self.assertEqual(mock_settings.debug_mode, True)
 
     def test_configure_neg_int_with_class_constructor(self):
-        """test that we cannot set negative int values with the class constructor"""
+        """Test that we cannot set negative int values with the class constructor."""
 
         with self.assertRaises(PydanticValidationError):
             Settings(face_detect_max_faces_count=-1)
@@ -149,7 +149,7 @@ class TestConfiguration(SmarterTestBase):
             Settings(face_detect_threshold=-1)
 
     def test_readonly_settings(self):
-        """test that we can't set readonly values with the class constructor"""
+        """Test that we can't set readonly values with the class constructor."""
 
         mock_settings = Settings(aws_region="eu-west-1")
         with self.assertRaises(PydanticValidationError):
@@ -177,7 +177,7 @@ class TestConfiguration(SmarterTestBase):
             mock_settings.face_detect_threshold = 25
 
     def test_initialize_with_values(self):
-        """test that we can set values with the class constructor"""
+        """Test that we can set values with the class constructor."""
         mock_settings = Settings(
             debug_mode=False,
             dump_defaults=False,

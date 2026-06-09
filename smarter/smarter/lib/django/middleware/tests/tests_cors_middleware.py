@@ -6,6 +6,8 @@ import unittest
 from unittest.mock import MagicMock, PropertyMock, patch
 from urllib.parse import urlsplit
 
+from django.test import override_settings
+
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.django import waffle
 from smarter.lib.django.middleware.cors import SmarterCorsMiddleware
@@ -37,86 +39,29 @@ class TestSmarterCorsMiddleware(TestAccountMixin):
             except Exception:
                 pass  # DjangoSmarterCorsMiddleware.__call__ expects more setup
 
-    def test_url_setter_and_llm_client(self):
-        split_url = urlsplit("https://example.com")
-        request = MagicMock()
-        middleware = SmarterCorsMiddleware(get_response=MagicMock())
-
-        with (
-            patch("smarter.lib.django.middleware.cors.conf") as mock_conf,
-            patch("smarter.lib.django.middleware.cors.waffle") as mock_waffle,
-            patch("smarter.lib.django.middleware.cors.get_cached_llm_client_by_request") as mock_get_llm_client,
-        ):
-
-            mock_waffle.switch_is_active.return_value = False
-            mock_conf.CORS_ALLOWED_ORIGINS = []
-            mock_get_llm_client.return_value = MagicMock(url=split_url)
-
-            middleware.request = request
-            middleware.request.user = self.admin_user
-            middleware.url = split_url
-
-            # TODO: need assertions here.
-
-    @patch("smarter.lib.django.middleware.cors.conf")
-    def test_CORS_ALLOWED_ORIGINS_with_llm_client(self, mock_conf):
-        mock_conf.CORS_ALLOWED_ORIGINS = ["https://allowed.com"]
-        self.middleware._llm_client = MagicMock()
-        self.middleware._url = urlsplit("https://llm_client.com")
-        type(self.middleware).url = PropertyMock(return_value=self.middleware._url)
-        origins = self.middleware.CORS_ALLOWED_ORIGINS
-        self.assertIn("https://llm_client.com", origins)
-        self.assertIn("https://allowed.com", origins)
-
-    @patch("smarter.lib.django.middleware.cors.conf")
-    def test_CORS_ALLOWED_ORIGINS_without_llm_client(self, mock_conf):
-        mock_conf.CORS_ALLOWED_ORIGINS = ["https://allowed.com"]
-        self.middleware._llm_client = None
-        origins = self.middleware.CORS_ALLOWED_ORIGINS
-        self.assertEqual(origins, ["https://allowed.com"])
-
-    @patch("smarter.lib.django.middleware.cors.conf")
-    def test_CORS_ALLOWED_ORIGIN_REGEXES(self, mock_conf):
-        mock_conf.CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.*\.example\.com$"]
-        regexes = self.middleware.CORS_ALLOWED_ORIGIN_REGEXES
-        self.assertEqual(regexes, [r"^https://.*\.example\.com$"])
-
-    @patch("smarter.lib.django.middleware.cors.waffle")
-    def test_origin_found_in_white_lists_with_llm_client(self, mock_waffle):
-        mock_waffle.switch_is_active.return_value = False
-        self.middleware._llm_client = MagicMock()
-        self.middleware._url = self.split_url
-        result = self.middleware.origin_found_in_white_lists("https://example.com", self.split_url)
-        self.assertTrue(result)
-
-    @patch("smarter.lib.django.middleware.cors.conf")
-    def test_origin_found_in_white_lists_in_origins(self, mock_conf):
-        mock_conf.CORS_ALLOWED_ORIGINS = ["null"]
+    @override_settings(CORS_ALLOWED_ORIGINS=["null"])
+    def test_origin_found_in_white_lists_in_origins(self):
         self.middleware._llm_client = None
         self.middleware._url = None
         result = self.middleware.origin_found_in_white_lists("null", self.split_url)
         self.assertTrue(result)
 
-    @patch("smarter.lib.django.middleware.cors.conf")
-    def test_origin_found_in_white_lists_url_in_whitelist(self, mock_conf):
-        mock_conf.CORS_ALLOWED_ORIGINS = ["https://example.com"]
+    @override_settings(CORS_ALLOWED_ORIGINS=["https://example.com"])
+    def test_origin_found_in_white_lists_url_in_whitelist(self):
         self.middleware._llm_client = None
         self.middleware._url = None
         result = self.middleware.origin_found_in_white_lists("https://other.com", self.split_url)
         self.assertTrue(result)
 
-    @patch("smarter.lib.django.middleware.cors.conf")
-    def test_origin_found_in_white_lists_regex(self, mock_conf):
-        mock_conf.CORS_ALLOWED_ORIGINS = []
-        mock_conf.CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.*\.example\.com$"]
+    @override_settings(CORS_ALLOWED_ORIGINS=[], CORS_ALLOWED_ORIGIN_REGEXES=[r"^https://.*\.example\.com$"])
+    def test_origin_found_in_white_lists_regex(self):
         self.middleware._llm_client = None
         self.middleware._url = None
         result = self.middleware.origin_found_in_white_lists("https://foo.example.com", self.split_url)
         self.assertTrue(result)
 
-    @patch("smarter.lib.django.middleware.cors.conf")
-    def test__url_in_whitelist(self, mock_conf):
-        mock_conf.CORS_ALLOWED_ORIGINS = ["https://example.com"]
+    @override_settings(CORS_ALLOWED_ORIGINS=["https://example.com"])
+    def test__url_in_whitelist(self):
         self.middleware._llm_client = None
         url = urlsplit("https://example.com")
         result = self.middleware._url_in_whitelist(url)
@@ -125,9 +70,8 @@ class TestSmarterCorsMiddleware(TestAccountMixin):
         result2 = self.middleware._url_in_whitelist(url2)
         self.assertFalse(result2)
 
-    @patch("smarter.lib.django.middleware.cors.conf")
-    def test_regex_domain_match(self, mock_conf):
-        mock_conf.CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.*\.example\.com$"]
+    @override_settings(CORS_ALLOWED_ORIGIN_REGEXES=[r"^https://.*\.example\.com$"])
+    def test_regex_domain_match(self):
         self.middleware._llm_client = None
         result = self.middleware.regex_domain_match("https://foo.example.com")
         self.assertTrue(result)

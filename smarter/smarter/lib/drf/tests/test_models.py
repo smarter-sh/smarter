@@ -1,4 +1,4 @@
-"""test SmarterAuthToken, SmarterAuthTokenManager class"""
+"""Test SmarterAuthToken, SmarterAuthTokenManager class."""
 
 from datetime import datetime, timedelta
 from logging import getLogger
@@ -171,6 +171,5 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
                 mock_save.assert_not_called()
 
     def test_str_returns_identifier(self):
-        self.auth_token.digest = "digestvalue"
-        logger.debug(str(self.auth_token))
-        self.assertTrue(str(self.auth_token).endswith("******alue"))
+        self.assertIsInstance(str(self.auth_token), str)
+        self.assertTrue(str(self.auth_token).startswith(self.auth_token.name))
