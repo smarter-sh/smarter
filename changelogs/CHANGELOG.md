@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.58](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.57...v0.14.0-alpha.58) (2026-06-09)
+
+### Bug Fixes
+
+* all manifest_url() should use hashed_id ([ae01bd8](https://github.com/smarter-sh/smarter/commit/ae01bd8f67a48ae536cbc48b91395aa81bef7b7a))
+
 ## [0.14.0-alpha.57](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.56...v0.14.0-alpha.57) (2026-06-09)
 
 ### Bug Fixes
