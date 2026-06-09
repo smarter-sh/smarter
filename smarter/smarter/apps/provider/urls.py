@@ -45,8 +45,7 @@ class ProviderReverseNames:
 
 urlpatterns = [
     path("api/", include("smarter.apps.provider.api.urls", namespace=api_namespace)),
-    path("providers/<int:provider_id>/", ProviderDetailView.as_view(), name=ProviderReverseNames.detailview),
-    path("providers/<str:name>/", ProviderDetailView.as_view(), name="provider_by_name"),
+    path("providers/<str:hashed_id>/", ProviderDetailView.as_view(), name=ProviderReverseNames.detailview),
     path("", ProviderListView.as_view(), name=ProviderReverseNames.listview),
     path("react-integration/api/listview/", ProviderListApiView.as_view(), name=ProviderReverseNames.listview_api_all),
     re_path(

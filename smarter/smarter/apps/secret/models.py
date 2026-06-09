@@ -1,4 +1,4 @@
-"""Secret models"""
+"""Secret models."""
 
 import logging
 from typing import Optional
@@ -113,7 +113,7 @@ class Secret(MetaDataWithOwnershipModel):
 
         return reverse(
             f"{SecretReverseNames.namespace}:{SecretReverseNames.detailview}",
-            kwargs={"secret_id": self.id},  # type: ignore
+            kwargs={"hashed_id": self.hashed_id},  # type: ignore
         )
 
     @property
@@ -136,7 +136,6 @@ class Secret(MetaDataWithOwnershipModel):
 
             Only the encrypted value is stored in the database; the plaintext value is never persisted.
 
-
         .. note::
 
             Emits a signal on creation or edit for audit and notification purposes.
@@ -149,7 +148,6 @@ class Secret(MetaDataWithOwnershipModel):
                 encrypted_value=Secret.encrypt("my-api-key")
             )
             secret.save()
-
         """
         is_new = self.pk is None
         if not self.name or not self.encrypted_value:
@@ -182,7 +180,6 @@ class Secret(MetaDataWithOwnershipModel):
         **Example usage**::
 
             secret_value = secret.get_secret(update_last_accessed=True)
-
         """
         try:
             if update_last_accessed:
@@ -211,7 +208,6 @@ class Secret(MetaDataWithOwnershipModel):
 
             if secret.is_expired():
                 print("This secret is no longer valid.")
-
         """
         if not self.expires_at:
             return False
@@ -251,7 +247,6 @@ class Secret(MetaDataWithOwnershipModel):
         .. seealso::
 
             :meth:`get_fernet` -- Returns the Fernet encryption object.
-
         """
         if not value or not isinstance(value, str):
             raise SmarterValueError("Value must be a non-empty string")
@@ -285,7 +280,6 @@ class Secret(MetaDataWithOwnershipModel):
         .. seealso::
 
             :meth:`encrypt` -- Uses the Fernet object to encrypt values.
-
         """
         encryption_key = smarter_settings.fernet_encryption_key.get_secret_value()
         if not encryption_key:

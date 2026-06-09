@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """
-This module contains views to implement the Plugin
+This module contains views to implement the Plugin.
+
 card-style detail view in the Smarter Dashboard.
 """
 
@@ -38,7 +39,7 @@ class PluginDetailView(DocsBaseView):
     :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
-    :param kwargs: Keyword arguments, must include 'name' (plugin name) and 'kind' (plugin type).
+    :param kwargs: Keyword arguments, must include 'hashed_id' (plugin hashed ID) and 'kind' (plugin type).
     :type kwargs: dict
 
     :returns: Rendered HTML page with plugin manifest details, or a 404 error page if the plugin is not found or parameters are invalid.
@@ -56,15 +57,19 @@ class PluginDetailView(DocsBaseView):
     **Example usage**::
 
         GET /plugin/detail/?name=my_plugin&kind=custom
-
     """
 
     template_path = "common/manifest_detail.html"
     plugin: Optional[PluginMeta] = None
 
+    @property
+    def formatted_class_name(self):
+        return logging.formatted_text(f"{__name__}.{PluginDetailView.__name__}")
+
     def get(self, request, *args, **kwargs) -> HttpResponse:
         """
         Handle GET requests to render the plugin manifest detail view.
+
         This method processes the incoming request to retrieve the
         specified plugin's manifest details and renders them in a
         user-friendly format. It performs validation on the provided plugin
@@ -89,39 +94,68 @@ class PluginDetailView(DocsBaseView):
         :returns: Rendered HTML page with plugin manifest details, or an error response if the plugin is not found or parameters are invalid.
         :rtype: HttpResponse
         """
+        logger.debug(
+            "%s.get() called with args=%s, kwargs=%s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
 
         # to avoid potential circular import issues.
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 
-        name = kwargs.pop("name", None)
-        self.name = rfc1034_compliant_to_snake(name) if name else None
-        self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
-        if self.kind and self.kind not in SAMKinds.all_plugins():
-            logger.error("%s.setup() Plugin kind %s is not supported.", self.formatted_class_name, self.kind)
-            return SmarterHttpResponseNotFound(
-                request=request, error_message=f"Plugin kind {self.kind} is not supported"
-            )
-        if not self.name:
-            logger.error("%s.setup() Plugin name is required but not provided.", self.formatted_class_name)
-            return SmarterHttpResponseNotFound(request=request, error_message="Plugin name is required")
+        hashed_id = kwargs.pop("hashed_id", None)
+        pk_id = PluginMeta.id_from_hashed_id(hashed_id) if hashed_id else None
+        if not pk_id:
+            logger.error("%s.get() Invalid or missing hashed_id: %s", self.formatted_class_name, hashed_id)
+            return SmarterHttpResponseNotFound(request=request, error_message="Invalid plugin identifier")
+
         try:
-            self.plugin = PluginMeta.objects.get(name=self.name, user_profile=self.user_profile)
+            self.plugin = PluginMeta.objects.get(id=pk_id, user_profile=self.user_profile)
+            logger.debug(
+                "%s.get() Found plugin with name %s and kind %s for user %s.",
+                self.formatted_class_name,
+                self.plugin.name,
+                self.plugin.kind,
+                self.user_profile if self.user_profile else "unknown user",
+            )
         except PluginMeta.DoesNotExist:
             try:
                 if self.user_profile:
 
                     admin_user = UserProfile.admin_for_account(self.user_profile.account)
                     admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
-                    self.plugin = PluginMeta.objects.get(name=self.name, user_profile=admin_user_profile)
+                    self.plugin = PluginMeta.objects.get(id=pk_id, user_profile=admin_user_profile)
+                    logger.debug(
+                        "%s.get() Found plugin with name %s and kind %s for admin user %s.",
+                        self.formatted_class_name,
+                        self.plugin.name,
+                        self.plugin.kind,
+                        admin_user if admin_user else "unknown admin user",
+                    )
             except PluginMeta.DoesNotExist:
                 try:
                     self.plugin = PluginMeta.objects.get(
-                        name=self.name, user_profile=smarter_cached_objects.smarter_admin_user_profile
+                        id=pk_id, user_profile=smarter_cached_objects.smarter_admin_user_profile
+                    )
+                    logger.debug(
+                        "%s.get() Found plugin with name %s and kind %s for smarter admin user.",
+                        self.formatted_class_name,
+                        self.plugin.name,
+                        self.plugin.kind,
                     )
                 except PluginMeta.DoesNotExist:
                     pass
-        self.kind = self.plugin.kind if self.plugin else self.kind
+        if not self.plugin:
+            logger.error(
+                "%s.get() Plugin with hashed_id %s not found for user %s or admin users.",
+                self.formatted_class_name,
+                hashed_id,
+                self.user_profile if self.user_profile else "unknown user",
+            )
+            return SmarterHttpResponseNotFound(request=request, error_message="Plugin not found")
+
         if not self.plugin:
             logger.error(
                 "%s.setup() Plugin with name %s and kind %s not found for user %s.",
@@ -139,11 +173,19 @@ class PluginDetailView(DocsBaseView):
             self.kind,
             kwargs,
         )
-        kwargs.pop("name", None)
-        kwargs.pop("kind", None)
+        self.name = self.plugin.name
+        self.kind = self.plugin.kind
         kwargs["name"] = self.name
         kwargs["kind"] = self.kind.value if self.kind else None
         view = ApiV1CliDescribeApiView.as_view()
+        logger.debug(
+            "%s.get() Calling API view to get plugin details for %s of kind %s, args=%s, kwargs=%s.",
+            self.formatted_class_name,
+            self.name,
+            self.kind,
+            args,
+            kwargs,
+        )
         json_response = self.get_brokered_json_response(
             reverse_name=ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe,
             view=view,

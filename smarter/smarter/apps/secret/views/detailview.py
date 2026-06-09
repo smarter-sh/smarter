@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """
-This module contains views to implement the Secret
+This module contains views to implement the Secret.
+
 card-style detail view in the Smarter Dashboard.
 """
 
@@ -55,7 +56,6 @@ class SecretDetailView(DocsBaseView):
     **Example usage**::
 
         GET /secret/detail/?name=my_secret&kind=custom
-
     """
 
     template_path = "common/manifest_detail.html"
@@ -64,6 +64,7 @@ class SecretDetailView(DocsBaseView):
     def get(self, request, *args, **kwargs) -> HttpResponse:
         """
         Handle GET requests to render the secret manifest detail view.
+
         This method processes the incoming request to retrieve the
         specified secret's manifest details and renders them in a
         user-friendly format. It performs validation on the provided secret
@@ -93,23 +94,55 @@ class SecretDetailView(DocsBaseView):
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 
-        secret_id = kwargs.pop("secret_id")
+        hashed_id = kwargs.pop("hashed_id")
+        pk_id = Secret.id_from_hashed_id(hashed_id) if hashed_id else None
+        if not pk_id:
+            logger.error("%s.get() - Invalid or missing hashed_id: %s", self.formatted_class_name, hashed_id)
+            return SmarterHttpResponseNotFound(request=request, error_message="Secret not found")
+
         try:
-            self.secret = Secret.objects.get(id=secret_id, user_profile=self.user_profile)
+            self.secret = Secret.objects.get(id=pk_id, user_profile=self.user_profile)
+            logger.debug(
+                "%s.get() Found secret with id %s for user %s.",
+                self.formatted_class_name,
+                pk_id,
+                self.user_profile.user.username if self.user_profile else "unknown user",
+            )
         except Secret.DoesNotExist:
             try:
                 if self.user_profile:
 
                     admin_user = UserProfile.admin_for_account(self.user_profile.account)
                     admin_user_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
-                    self.secret = Secret.objects.get(id=secret_id, user_profile=admin_user_profile)
+                    self.secret = Secret.objects.get(id=pk_id, user_profile=admin_user_profile)
+                    logger.debug(
+                        "%s.get() Found secret with id %s for admin user %s.",
+                        self.formatted_class_name,
+                        pk_id,
+                        admin_user if admin_user else "unknown admin user",
+                    )
             except Secret.DoesNotExist:
                 try:
                     self.secret = Secret.objects.get(
-                        id=secret_id, user_profile=smarter_cached_objects.smarter_admin_user_profile
+                        id=pk_id, user_profile=smarter_cached_objects.smarter_admin_user_profile
+                    )
+                    logger.debug(
+                        "%s.get() Found secret with id %s for smarter admin user %s.",
+                        self.formatted_class_name,
+                        pk_id,
+                        smarter_cached_objects.smarter_admin_user_profile.user,
                     )
                 except Secret.DoesNotExist:
                     pass
+        if not self.secret:
+            logger.error(
+                "%s.get() - Secret with id %s not found for user %s or admin users.",
+                self.formatted_class_name,
+                pk_id,
+                self.user_profile.user.username if self.user_profile else "unknown user",
+            )
+            return SmarterHttpResponseNotFound(request=request, error_message="Secret not found")
+
         self.kind = SAMKinds.SECRET
 
         logger.debug(
