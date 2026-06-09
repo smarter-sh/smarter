@@ -4,16 +4,178 @@ import secrets
 import string
 from urllib.parse import urljoin
 
+from django.db import transaction
+
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django import waffle
 from smarter.lib.django.management.base import SmarterCommand
+from smarter.lib.django.validators import SmarterValidator
 
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
     """Django manage.py create_user command. This command is used to create a new user for an account."""
+
+    def create_user(
+        self, account_number, username, email, first_name, last_name, password=None, is_admin=False
+    ) -> bool:
+        """
+        Create a new user for the specified account. If the user already exists,
+        update the user's information. The basic workflow is as follows:
+
+          1. Get the account based on the provided account number. If the account does
+              not exist, log a failure and return False.
+          2. Attempt to get or create the user based on the provided username. If there
+              is an error during user creation, log a failure and return False.
+          3. If the user already exists, log a notice that the existing user will be
+              updated. Set the user's staff status based on the is_admin flag. Validate
+              the provided email address and if it is invalid, log a failure and return
+              False. Update the user's email, first name, last name, and active status.
+              If a password is provided, set the user's password to the provided
+              password. If no password is provided and the user was created, generate a
+              random password, set it for the user, and log the generated password.
+              Attempt to save the user and if there is an error during saving, log a
+              failure and return False. Log a success message that the user has been
+              created or updated.
+          4. If the user was created and the Waffle switch
+              ENABLE_NEW_USER_PASSWORD_EMAIL is active, attempt to send an email to the
+              user with their account credentials. If there is an error during email
+              sending, log a failure but do not return False since the user account has
+              been created successfully.
+          5. Attempt to get or create a UserProfile for the user and account. If there
+              is an error during this process, log a failure and return False. If the
+              UserProfile was created, log a success message.
+          6. Attempt to get an AccountContact for the account and email. If it exists,
+              update the first name and last name and save it. If it does not exist,
+              create a new AccountContact. If there is an error during this process,
+              log a failure and return False.
+          7. If all steps are successful, log a success message that the create_user
+              command completed successfully and return True.
+
+
+        :param str account_number: The account number of the account to which the user belongs.
+        :param str username: The username for the new user.
+        :param str email: The email address for the new user.
+        :param str first_name: The first name of the new user.
+        :param str last_name: The last name of the new user.
+        :param str password: The password for the new user. If not provided, a random password will be generated. Defaults to None.
+        :param bool is_admin: Whether the new user should be an admin. Defaults to False.
+        :returns: True if the user was created or updated successfully, False otherwise.
+        :rtype: bool
+        """
+        account: Account
+        user: User
+        created: bool
+
+        try:
+            account = Account.objects.get(account_number=account_number)
+        except Account.DoesNotExist:
+            self.handle_completed_failure(msg=f"Account with account number {account_number} does not exist.")
+            return False
+
+        try:
+            user, created = User.objects.get_or_create(username=username)
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.handle_completed_failure(msg=f"Error creating user {username}: {str(e)}")
+            return False
+
+        if not created:
+            self.stdout.write(self.style.NOTICE(f"User {username} already exists, updating the existing user."))
+        if is_admin:
+            user.is_staff = True
+        else:
+            user.is_staff = False
+
+        if not SmarterValidator.is_valid_email(email):
+            self.handle_completed_failure(msg=f"Invalid email address: {email}")
+            return False
+
+        user.email = email
+        user.first_name = first_name
+        user.last_name = last_name
+        user.is_active = True
+        if password:
+            user.set_password(password)
+        elif created:
+            # Generate a random password
+            alphabet = string.ascii_letters + string.digits + string.punctuation
+            generated_password = "".join(secrets.choice(alphabet) for _ in range(12))
+            user.set_password(generated_password)
+            password = generated_password  # Set password to generated password for email
+            self.stdout.write(self.style.SUCCESS(f"Password for user {username} has been set to {password}"))
+        try:
+            user.save()
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.handle_completed_failure(msg=f"Error saving user {username}: {str(e)}")
+            return False
+
+        self.handle_completed_success(msg=f"User {username} {email} has been created.")
+
+        if created and waffle.switch_is_active(waffle.SmarterWaffleSwitches.ENABLE_NEW_USER_PASSWORD_EMAIL):
+            # Send email to user
+            login_url = urljoin(smarter_settings.environment_url, "login")
+            body = f"""Your Smarter user account has been created. Do not share your account credentials with anyone.
+
+            Url: {login_url}
+            Username: {username}
+            Email: {email}
+            Password: {password}
+            """
+            try:
+                email_helper.send_email(
+                    subject="Your Smarter user account has been created", to=email, body=body, html=False, quiet=False
+                )
+            # pylint: disable=broad-except
+            except Exception as e:
+                self.handle_completed_failure(
+                    msg=f"Error sending password email to user {username} at {email}: {str(e)}. The user account has been created, but the user may not have received an email with their password."
+                )
+        else:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Skipping sending password email to user {username} as the Waffle switch ENABLE_NEW_USER_PASSWORD_EMAIL is not active."
+                )
+            )
+
+        try:
+            user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.handle_completed_failure(msg=f"Error creating user profile for user {username}: {str(e)}")
+            return False
+
+        if created:
+            self.handle_completed_success(
+                msg=f"User profile created for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}."
+            )
+
+        try:
+            account_contact = AccountContact.objects.get(account=account, email=email)
+            account_contact.first_name = first_name
+            account_contact.last_name = last_name
+            account_contact.save()
+            self.handle_completed_success(msg="smarter.apps.account.management.commands.create_user completed.")
+        except AccountContact.DoesNotExist:
+            try:
+                AccountContact.objects.create(account=account, first_name=first_name, last_name=last_name, email=email)
+                self.handle_completed_success(
+                    msg=f"Account contact created for {first_name} {last_name}, account {account.account_number} {account.company_name}."
+                )
+            # pylint: disable=broad-except
+            except Exception as e:
+                self.handle_completed_failure(msg=f"Error creating account contact for user {username}: {str(e)}")
+                return False
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.handle_completed_failure(msg=f"Error creating account contact for user {username}: {str(e)}")
+            return False
+
+        self.handle_completed_success(msg="create_user command completed successfully.")
+        return True
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -30,7 +192,7 @@ class Command(SmarterCommand):
         )
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """create the user."""
         self.handle_begin()
 
         account_number = options["account_number"]
@@ -40,66 +202,18 @@ class Command(SmarterCommand):
         last_name = options["last_name"]
         password = options["password"]
         is_admin = options["admin"]
+        retval = False
 
-        account = Account.objects.get(account_number=account_number)
-
-        user, created = User.objects.get_or_create(username=username)
-        if not created:
-            self.stdout.write(self.style.NOTICE(f"User {username} already exists, updating the existing user."))
-        if is_admin:
-            user.is_staff = True
-        else:
-            user.is_staff = False
-        user.email = email
-        user.first_name = first_name
-        user.last_name = last_name
-        user.is_active = True
-        if password:
-            user.set_password(password)
-        elif created:
-            # Generate a random password
-            alphabet = string.ascii_letters + string.digits + string.punctuation
-            generated_password = "".join(secrets.choice(alphabet) for _ in range(12))
-            user.set_password(generated_password)
-            password = generated_password  # Set password to generated password for email
-            self.stdout.write(self.style.SUCCESS(f"Password for user {username} has been set to {password}"))
-        user.save()
-        self.handle_completed_success(msg=f"User {username} {email} has been created.")
-
-        if created and waffle.switch_is_active(waffle.SmarterWaffleSwitches.ENABLE_NEW_USER_PASSWORD_EMAIL):
-            # Send email to user
-            login_url = urljoin(smarter_settings.environment_url, "login")
-            body = f"""Your Smarter user account has been created. Do not share your account credentials with anyone.
-
-            Url: {login_url}
-            Username: {username}
-            Email: {email}
-            Password: {password}
-            """
-            email_helper.send_email(
-                subject="Your Smarter user account has been created", to=email, body=body, html=False, quiet=False
-            )
-        else:
-            self.stdout.write(
-                self.style.WARNING(
-                    f"Skipping sending password email to user {username} as the Waffle switch ENABLE_NEW_USER_PASSWORD_EMAIL is not active."
-                )
+        with transaction.atomic():
+            retval = self.create_user(
+                account_number=account_number,
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                password=password,
+                is_admin=is_admin,
             )
 
-        user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
-        if created:
-            self.handle_completed_success(
-                msg=f"User profile created for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}."
-            )
-
-        try:
-            account_contact = AccountContact.objects.get(account=account, email=email)
-            account_contact.first_name = first_name
-            account_contact.last_name = last_name
-            account_contact.save()
-            self.handle_completed_success(msg="smarter.apps.account.management.commands.create_user completed.")
-        except AccountContact.DoesNotExist:
-            AccountContact.objects.create(account=account, first_name=first_name, last_name=last_name, email=email)
-            self.handle_completed_success(
-                msg=f"Account contact created for {first_name} {last_name}, account {account.account_number} {account.company_name}."
-            )
+        if not retval:
+            self.handle_completed_failure(msg="create_user command failed.")

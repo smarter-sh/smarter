@@ -1,8 +1,7 @@
 """Django template and view helper functions."""
 
-import logging
 import re
-from functools import wraps
+from functools import cached_property, wraps
 from http import HTTPStatus
 
 from bs4 import BeautifulSoup
@@ -18,28 +17,22 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
+from smarter.lib import logging
 from smarter.lib.cache import lazy_cache
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
-
-
-# pylint: disable=W0613
 def should_log_verbose(level):
     """Check if logging should be done based on the waffle switch."""
-    return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
+    return smarter_settings.verbose_logging
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VIEW_LOGGING])
+verbose_logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.VIEW_LOGGING], condition_func=should_log_verbose
+)
 logger_prefix = formatted_text(__name__)
 logger_prefix_invalidations = formatted_text_blue(f"{__name__}.smarter_cache_page_by_user.invalidate()")
 
@@ -85,8 +78,8 @@ def smarter_cache_page_by_user(timeout):
             if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SMARTER_PAGE_CACHING):
                 return view_func(request, *args, **kwargs)
             path = str(request.path).replace("/", ".").strip(".")
-            if hasattr(request, "user") and request.user.is_authenticated:
-                key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"
+            if hasattr(request, "user") and isinstance(request.user, User) and request.user.is_authenticated:
+                key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"  # type: ignore[union-attr]
             else:
                 key_prefix = f"{cache_prefix}.user_anon.{path}"
             verbose_logger.debug(
@@ -102,7 +95,7 @@ def smarter_cache_page_by_user(timeout):
             )
             if request:
                 path = str(request.path).replace("/", ".").strip(".")
-                if hasattr(request, "user") and request.user.is_authenticated:
+                if hasattr(request, "user") and isinstance(request.user, User) and request.user.is_authenticated:
                     key_prefix = f"{cache_prefix}.user_{request.user.id}.{path}"  # type: ignore[union-attr]
                 else:
                     key_prefix = f"{cache_prefix}.user_anon.{path}"
@@ -167,9 +160,9 @@ class SmarterView(View, SmarterRequestMixin):
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
 
-    @property
+    @cached_property
     def logger_prefix(self):
-        return formatted_text(f"{__name__}.{SmarterView.__name__}")
+        return formatted_text(f"{__name__}.{self.__class__.__name__}")
 
     @register.filter
     def remove_comments(self, html):
@@ -244,19 +237,11 @@ class SmarterView(View, SmarterRequestMixin):
         :return: The result of the superclass setup method.
         :rtype: Any
         """
-        verbose_logger.debug(
-            "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
-        )
         if not self.smarter_request:
             self.smarter_request = (
                 request or kwargs["request"] or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
             )
-            if self.smarter_request:
-                verbose_logger.debug(
-                    "%s.setup() - SmarterRequestMixin.smarter_request initialized successfully.",
-                    self.logger_prefix,
-                )
-            else:
+            if not self.smarter_request:
                 logger.warning(
                     "%s.setup() - SmarterRequestMixin.smarter_request could not be initialized.",
                     self.logger_prefix,
@@ -269,22 +254,14 @@ class SmarterWebXmlView(SmarterView):
     Base view for smarter xml web views.
     """
 
-    @property
-    def logger_prefix(self):
-        return formatted_text(f"{__name__}.{SmarterWebXmlView.__name__}")
-
     def get(self, request):
         return render(request=request, template_name=self.template_path, context=self.context)
 
 
 class SmarterWebTxtView(SmarterView):
     """
-    Base view for smarter xml web views.
+    Base view for smarter text web views.
     """
-
-    @property
-    def logger_prefix(self):
-        return formatted_text(f"{__name__}.{SmarterWebTxtView.__name__}")
 
     def get(self, request):
         minified_html = self.render_clean_html(request, template_path=self.template_path, context=self.context)
@@ -298,10 +275,6 @@ class SmarterWebHtmlView(SmarterView):
 
 
     """
-
-    @property
-    def logger_prefix(self):
-        return formatted_text(f"{__name__}.{SmarterWebHtmlView.__name__}")
 
     # pylint: disable=W0613
     def clean_http_response(self, request: HttpRequest, template_path, *args, context=None, **kwargs):
@@ -358,10 +331,6 @@ class SmarterNeverCachedWebView(SmarterWebHtmlView):
     This makes it ideal for pages displaying private, frequently changing, or security-sensitive data.
     """
 
-    @property
-    def logger_prefix(self):
-        return formatted_text(f"{__name__}.{SmarterNeverCachedWebView.__name__}")
-
 
 @method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedWebView(SmarterWebHtmlView):
@@ -395,10 +364,6 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
 
     .. versionadded:: v0.13.39
     """
-
-    @property
-    def logger_prefix(self):
-        return formatted_text(f"{__name__}.{SmarterAuthenticatedWebView.__name__}")
 
     def setup(self, request: HttpRequest, *args, **kwargs):
         """
@@ -480,10 +445,6 @@ class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
     on cookies, further protecting user data.
     """
 
-    @property
-    def logger_prefix(self):
-        return formatted_text(f"{__name__}.{SmarterAuthenticatedCachedWebView.__name__}")
-
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch the request and patch vary headers for successful responses.
@@ -518,10 +479,6 @@ class SmarterAuthenticatedNeverCachedWebView(SmarterAuthenticatedWebView):
     This makes it ideal for pages displaying private, frequently changing, or security-sensitive data, where both authentication and cache prevention are essential.
     """
 
-    @property
-    def logger_prefix(self):
-        return formatted_text(f"{__name__}.{SmarterAuthenticatedNeverCachedWebView.__name__}")
-
 
 class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
     """
@@ -545,10 +502,6 @@ class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
         users instead of redirecting them to the login page. Replaced the decorators
         with explicit checks in the `dispatch` method.
     """
-
-    @property
-    def logger_prefix(self):
-        return formatted_text(f"{__name__}.{SmarterAdminWebView.__name__}")
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         # Enforce login_required

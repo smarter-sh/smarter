@@ -37,9 +37,9 @@ Concept Overview
 ----------------
 Smarter is a declarative, no-code platform for managing AI resources. Key concepts used in this tutorial:
 
-- **Provider**: Defines an LLM provider to be used by the Chatbot to access Anthropic Claude models.
-- **Chatbot**: The main conversational agent containing the system prompt, model settings, and temperature. This is what you interact with in the Workbench and what IDE extensions would call.
-- **Prompt Engineer Workbench**: The web interface inside Smarter where you can chat with your Chatbot to generate code, iterate, and prototype rapidly.
+- **Provider**: Defines an LLM provider to be used by the LLMClient to access Anthropic Claude models.
+- **LLMClient**: The main conversational agent containing the system prompt, model settings, and temperature. This is what you interact with in the Workbench and what IDE extensions would call.
+- **Prompt Engineer Workbench**: The web interface inside Smarter where you can chat with your LLMClient to generate code, iterate, and prototype rapidly.
 - **Single-file HTML**: A self-contained web app (HTML + Tailwind CSS + embedded JS) that requires no build step or server.
 
 Step-by-Step
@@ -99,14 +99,14 @@ Verify it works:
 
    smarter describe provider claude
 
-**Step 3: Create the Coding Assistant Chatbot**
+**Step 3: Create the Coding Assistant LLMClient**
 
 Create ``web-coding-assistant.yaml``:
 
 .. code-block:: yaml
 
    apiVersion: smarter.sh/v1
-   kind: Chatbot
+   kind: LLMClient
    metadata:
      name: web-coding-assistant
      description: Coding assistant for generating modern web apps
@@ -124,7 +124,7 @@ Create ``web-coding-assistant.yaml``:
        maxTokens: 16384
      plugins: []
 
-Apply the chatbot:
+Apply the llm_client:
 
 .. code-block:: bash
 
@@ -133,7 +133,7 @@ Apply the chatbot:
 **Step 4: Generate the Todo App in the Prompt Engineer Workbench**
 
 1. Open Smarter Web Dashboard -> Prompt Engineer Workbench.
-2. Select the chatbot **web-coding-assistant**.
+2. Select the llm_client **web-coding-assistant**.
 3. Paste the following prompt:
 
 ::
@@ -169,7 +169,7 @@ Solutions to common pitfalls:
 
 - Generated HTML is truncated
 
-  - Increase ``maxTokens`` in the Chatbot config and re-apply, or use a more powerful model like Claude 3.5 Sonnet.
+  - Increase ``maxTokens`` in the LLMClient config and re-apply, or use a more powerful model like Claude 3.5 Sonnet.
 
 - Output contains explanations instead of pure HTML
 
@@ -177,7 +177,7 @@ Solutions to common pitfalls:
 
 Next Steps
 ----------
-- Build a VS Code extension that calls your Chatbot API for inline assistance.
+- Build a VS Code extension that calls your LLMClient API for inline assistance.
 - Experiment with additional prompts to add features to the Todo App in the Workbench.
 
 You have now successfully used Smarter as a self-hosted coding assistant to generate a complete web application.

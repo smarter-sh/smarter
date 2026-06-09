@@ -1,0 +1,42 @@
+/* This desaturates the command button colors in the button group */
+.btn-group .btn {
+  filter: saturate(0.8);
+}
+
+.card-view {
+  display: block;
+}
+
+.provider-card > .card-header {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.smarter-provider-card {
+}
+
+.user-provider-card {
+}
+
+.card-body > p {
+  margin-bottom: 2px !important;
+}
+
+.provider-list-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.provider-list-card-header {
+  position: relative;
+}
+
+.provider-list-card-title {
+  border-bottom: 1px solid red;
+  padding-bottom: 6px;
+}
+
+.provider-list-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}

@@ -32,7 +32,7 @@ spec:
   selector:
     directive: search_terms
     #------------------------------------------------------------
-    # search terms that will trigger the chatbot to use this customized configuration.
+    # search terms that will trigger the llm_client to use this customized configuration.
     #------------------------------------------------------------
     searchTerms:
       - example function calling configuration

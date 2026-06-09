@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_prompt_passthrough %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the prompt passthrough
+  see: smarter.apps.dashboard.templatetags.react_prompt_passthrough.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% prompt_passthrough_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/prompt-passthrough/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ passthrough.root_id }}"
+    smarter-csrf-cookie-name="{{ passthrough.csrf_cookie_name }}"
+    smarter-django-session-cookie-name="{{ passthrough.django_session_cookie_name }}"
+    smarter-cookie-domain="{{ passthrough.cookie_domain }}"
+    smarter-api-path="{{ passthrough.api_url }}"
+    smarter-llm-provider-id="{{ passthrough.llm_provider_id }}"
+    smarter-template-id="{{ passthrough.template_id }}"
+    smarter-provider-api-url="{{ passthrough.provider_api_url }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the prompt passthrough
+  see: smarter.apps.dashboard.templatetags.react_prompt_passthrough.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% prompt_passthrough_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/prompt-passthrough/' %}{{ js_file }}"></script>
+  {% endfor %}
+{% endblock %}

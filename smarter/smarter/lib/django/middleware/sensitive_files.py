@@ -1,36 +1,254 @@
-"""This module is used to suppress DisallowedHost exception and return HttpResponseForbidden instead."""
+"""
+Middleware that blocks requests targeting sensitive files, configuration
+artifacts, and common attack-probe endpoints.
+
+This middleware detects suspicious path access attempts commonly associated
+with automated scanners, vulnerability enumeration tools, credential
+harvesting, and reconnaissance activity.
+
+Key Features
+============
+
+- Blocks requests for sensitive files and directories
+- Normalizes paths to reduce encoding bypasses
+- Supports async and sync Django execution
+- IP-based throttling for repeated suspicious requests
+- Amnesty allowlist support
+- Cached sensitive-path inspection
+- Unicode normalization and traversal protection
+- Feature-flag enablement via Django Waffle
+
+Threat Mitigation
+=================
+
+This middleware helps mitigate several classes of reconnaissance and
+probing attacks, including:
+
+- exposed environment file discovery
+- source-control directory probing
+- credential and key harvesting attempts
+- database backup discovery
+- framework fingerprinting
+- phpMyAdmin and admin-panel scanning
+- path traversal and encoding bypass attempts
+- automated vulnerability scanners
+
+Behavior
+========
+
+For each request, the middleware:
+
+#. Verifies middleware feature-flag enablement
+#. Normalizes and decodes the request path
+#. Applies amnesty allowlist checks
+#. Resolves the client IP address
+#. Applies IP-based throttling checks
+#. Detects sensitive path patterns
+#. Blocks suspicious requests with ``HTTP 403 Forbidden``
+
+Repeated suspicious requests from the same client IP result in temporary
+throttling.
+
+Path Normalization
+==================
+
+Request paths undergo several normalization steps before inspection:
+
+- repeated URL decoding
+- Unicode normalization using ``NFKC``
+- slash normalization
+- null-byte removal
+- duplicate slash collapsing
+- traversal sequence normalization
+- lowercase normalization
+
+These transformations help mitigate common evasion techniques such as:
+
+- double URL encoding
+- mixed slash traversal
+- Unicode homoglyph tricks
+- null-byte injection
+
+Sensitive Path Detection
+========================
+
+Sensitive resource detection supports:
+
+- exact path matching
+- glob-style wildcard matching
+- segment-level inspection
+- full-path inspection
+
+Examples of protected resources include:
+
+- ``.env``
+- ``wp-config.php``
+- ``settings.py``
+- ``.git/``
+- ``id_rsa``
+- ``credentials.json``
+- ``requirements.txt``
+- ``composer.json``
+
+Amnesty Support
+================
+
+Certain paths may bypass inspection through:
+
+- configured amnesty URL lists
+- regex-based allowlist patterns
+
+Amnesty checks are applied before sensitive-file detection.
+
+Caching
+=======
+
+Sensitive path inspection uses cached detection results to reduce
+repeated pattern evaluation overhead.
+
+Cached inspection results use a default timeout of 24 hours.
+
+Throttle Configuration
+======================
+
+The middleware uses the following default limits:
+
+- ``THROTTLE_LIMIT`` = 5 requests
+- ``THROTTLE_TIMEOUT`` = 600 seconds
+
+Throttle state is maintained per-client IP using the application cache
+backend.
+
+Cache keys use the format:
+
+.. code-block:: text
+
+   sensitive_files_throttle:<client_ip>
+
+Async Compatibility
+===================
+
+The middleware supports both synchronous and asynchronous Django
+execution models.
+
+Coroutine-based request handlers are detected automatically during
+middleware initialization.
+
+Async request execution delegates synchronous request processing through
+``sync_to_async()``.
+
+Feature Flags
+=============
+
+Middleware activation is controlled using Django Waffle:
+
+- ``ENABLE_MIDDLEWARE_SENSITIVE_FILES``
+
+When disabled, the middleware behaves as a transparent pass-through.
+
+Logging
+=======
+
+The middleware emits structured logs for:
+
+- middleware initialization
+- amnesty grants
+- sensitive request blocking
+- throttling events
+- path normalization checks
+- client IP resolution failures
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: generated/
+
+   SmarterBlockSensitiveFilesMiddleware
+
+Dependencies
+============
+
+- Django
+- asgiref
+- Django Waffle
+- application cache backend
+
+Warnings
+========
+
+IP-based throttling may affect multiple users sharing the same public IP
+address.
+
+Care should be taken when deploying behind proxies or load balancers to
+ensure correct client IP extraction.
+
+Overly broad amnesty patterns may unintentionally weaken protection.
+
+Notes
+=====
+
+This middleware depends on helper functionality provided by
+:class:`smarter.common.mixins.SmarterMiddlewareMixin`.
+
+Sensitive file inspection intentionally favors defensive matching and
+may block requests resembling common attack patterns even if the target
+resource does not exist.
+"""
+
+from __future__ import annotations
 
 import fnmatch
-import logging
+import posixpath
 import re
+import unicodedata
 import urllib.parse
+from collections.abc import Awaitable, Callable, Iterable
+from typing import cast
 
-from django.http import HttpResponseForbidden
+from asgiref.sync import sync_to_async
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponseBase,
+    HttpResponseForbidden,
+)
 
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.mixins import SmarterMiddlewareMixin
+from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+
+GetResponseCallable = Callable[[HttpRequest], HttpResponse]
+AsyncGetResponseCallable = Callable[[HttpRequest], Awaitable[HttpResponse]]
+
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
+
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
+    logger.debug(
+        "%s is %s",
+        formatted_text(__name__ + ".SmarterBlockSensitiveFilesMiddleware"),
+        SmarterHelperMixin().formatted_state_ready,
+    )
+else:
+    logger.debug(
+        "%s is %s. Enable with Django waffle in the admin console.",
+        formatted_text(__name__ + ".SmarterBlockSensitiveFilesMiddleware"),
+        SmarterHelperMixin().formatted_state_not_ready,
+    )
 
 
-# pylint: disable=unused-argument
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)
+ALLOWED_PATTERNS = tuple(
+    pattern if isinstance(pattern, re.Pattern) else re.compile(pattern, re.IGNORECASE)
+    for pattern in smarter_settings.sensitive_files_amnesty_patterns
+)
 
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-
-logger.debug("Loading %s", formatted_text(__name__ + ".SmarterBlockSensitiveFilesMiddleware"))
-
-ALLOWED_PATTERNS = [re.compile(pattern) for pattern in smarter_settings.sensitive_files_amnesty_patterns]
-SENSITIVE_FILES = list(
+SENSITIVE_FILES = frozenset(
     {
         ".env",
         "config.php",
@@ -42,11 +260,11 @@ SENSITIVE_FILES = list(
         ".swp",
         ".git",
         ".svn",
+        ".vscode",
+        ".ds_store",
         "id_rsa",
         "id_dsa",
-        ".DS_Store",
         "login.action",
-        ".vscode",
         "info.php",
         "phpinfo.php",
         "php.ini",
@@ -76,13 +294,18 @@ SENSITIVE_FILES = list(
         "package.json",
         "package-lock.json",
         "yarn.lock",
-        "Gemfile",
-        "Gemfile.lock",
-        "Pipfile",
-        "Pipfile.lock",
+        "gemfile",
+        "gemfile.lock",
+        "pipfile",
+        "pipfile.lock",
         "requirements.txt",
         "credentials.json",
         "secrets.json",
+        ".aws",
+        ".ssh",
+        ".npmrc",
+        ".docker",
+        "kubeconfig",
         "*.pem",
         "*.key",
         "*.crt",
@@ -106,168 +329,233 @@ SENSITIVE_FILES = list(
         "*.sock",
         "*.pid.lock",
         "*.pidfile",
-        "ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application",
+        ".git/config",
+        ".aws/credentials",
+        ".docker/config.json",
+        "ecp/current/exporttool/microsoft.exchange.ediscovery.exporttool.application",
     }
 )
+
+EXACT_MATCHES = frozenset(pattern for pattern in SENSITIVE_FILES if "*" not in pattern)
+GLOB_MATCHES = frozenset(pattern for pattern in SENSITIVE_FILES if "*" in pattern)
 
 
 class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     """
-    Middleware to return HttpResponseForbidden for common sensitive files, regardless of whether these
-    do or do not exist. This is a countermeasure against simple, brute-force attacks
-    and automated 'bot' clients probing for sensitive files. This middleware works from a static list
-    of common sensitive files and patterns, returning a 403 Forbidden response for requests matching these files.
+    Middleware that blocks requests probing for sensitive files.
 
-    This middleware inspects incoming HTTP requests and blocks access to files and paths that are commonly
-    targeted by attackers or bots, such as configuration files, environment files, backup files, and private keys.
-    If a client attempts to access these files more than a configurable threshold within a time window, their
-    requests are throttled and further attempts are blocked with a 403 Forbidden response.
-
-    The middleware also supports an "amnesty" mechanism, allowing certain patterns to bypass blocking, and
-    provides detailed logging for all blocking and throttling events.
-
-    :cvar int THROTTLE_LIMIT: The maximum number of blocked sensitive file requests allowed from a single client IP within the timeout period before blocking is triggered. Default is 5.
-    :cvar int THROTTLE_TIMEOUT: The duration of the timeout window in seconds during which blocked requests are counted and blocking is enforced. Default is 600 seconds (10 minutes).
-    :cvar allowed_patterns: Patterns for which requests are granted amnesty and not blocked, even if they match sensitive files.
-    :vartype allowed_patterns: tuple
-    :cvar sensitive_files: Set of filenames and patterns considered sensitive and subject to blocking.
-    :vartype sensitive_files: set
-
-    **Key Features**
-
-    - Blocks requests for a comprehensive list of sensitive files and file patterns.
-    - Throttles repeated attempts from the same client IP and blocks further requests after a threshold.
-    - Supports amnesty patterns to allow exceptions for specific paths.
-    - Provides detailed logging for all blocking, throttling, and amnesty events.
-    - Integrates with Django's cache for tracking request counts and with application logging.
-
-    .. note::
-        - Amnesty patterns can be configured via the ``smarter_settings.sensitive_files_amnesty_patterns`` Django setting.
-        - Logging is controlled via a waffle switch and the application's log level.
-        - The client IP is determined using the :meth:`get_client_ip` method.
-
-    **Example**
-
-    To enable this middleware, add it to your Django project's middleware settings::
-
-        MIDDLEWARE = [
-            ...
-            'smarter.lib.django.middleware.sensitive_files.SmarterBlockSensitiveFilesMiddleware',
-            ...
-        ]
-
-    :param get_response: The next middleware or view in the Django request/response chain.
-    :type get_response: callable
-
-    :returns: The HTTP response object, or a 403 Forbidden response if the request is blocked.
-    :rtype: django.http.HttpResponse or django.http.HttpResponseForbidden
+    Features:
+    - ASGI and WSGI compatible
+    - Path normalization
+    - Amnesty support
+    - Request throttling
+    - Cached inspection
     """
 
     THROTTLE_LIMIT = 5
-    THROTTLE_TIMEOUT = 600  # seconds (10 minutes)
+    THROTTLE_TIMEOUT = 600
+
+    def __init__(self, get_response: GetResponseCallable | AsyncGetResponseCallable) -> None:
+        super().__init__(get_response)
+
+        self.allowed_patterns = ALLOWED_PATTERNS
+
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+
+        if self.async_mode:
+            return self.__acall__(request)
+
+        if self.deserves_amnesty(request.path):
+            return super().__call__(request)
+
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
+            return super().__call__(request)
+
+        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        response = self._inspect_request(request)
+
+        if response is not None:
+            return response
+
+        return super().__call__(request)
+
+    async def __acall__(self, request: HttpRequest) -> HttpResponse:
+
+        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
+            return await sync_to_async(super().__call__)(request)  # type: ignore
+
+        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        response = await sync_to_async(self._inspect_request)(request)
+
+        if response is not None:
+            return response
+
+        get_response = cast(AsyncGetResponseCallable, self.get_response)
+        return await get_response(request)
 
     @property
     def formatted_class_name(self) -> str:
-        """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{SmarterBlockSensitiveFilesMiddleware.__name__}")
+        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
 
-    def __init__(self, get_response):
-        super().__init__(get_response)
-        self.get_response = get_response
+    def _inspect_request(
+        self,
+        request: HttpRequest,
+    ) -> HttpResponse | None:
 
-        # grant amnesty for specific patterns
-        self.allowed_patterns = ALLOWED_PATTERNS
-        self.sensitive_files = SENSITIVE_FILES
+        normalized_path = self.normalize_path(request.path)
 
-    def __call__(self, request):
-        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SENSITIVE_FILES):
-            return self.get_response(request)
-
-        request_path = request.path.lower()
-        if request_path.replace("/", "") in self.amnesty_urls:
-            logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
-            return self.get_response(request)
-
-        for pattern in self.allowed_patterns:
-            if pattern.match(request_path):
-                logger.info(
-                    "%s amnesty granted to: %s because it matches an allowed pattern in settings.smarter_settings.sensitive_files_amnesty_patterns",
-                    self.formatted_class_name,
-                    request.path,
-                )
-                return self.get_response(request)
+        if self.is_amnesty_path(normalized_path):
+            logger.debug(
+                "%s amnesty granted to: %s",
+                self.formatted_class_name,
+                normalized_path,
+            )
+            return None
 
         client_ip = self.get_client_ip(request)
+
         if not client_ip:
             logger.warning(
-                "%s Could not determine client IP for request: %s. Allowing request to proceed without blocking.",
+                "%s could not determine client IP for request: %s",
                 self.formatted_class_name,
-                request.path,
+                normalized_path,
             )
-            return self.get_response(request)
+            return None
 
-        # Throttle check
-        throttle_key = f"sensitive_files_throttle:{client_ip}"
-        blocked_count = cache.get(throttle_key, 0)
-        if blocked_count >= self.THROTTLE_LIMIT:
+        if self.is_throttled(client_ip):
             logger.warning(
-                "%s Throttled client %s after %d blocked requests", self.formatted_class_name, client_ip, blocked_count
+                "%s throttled client: %s",
+                self.formatted_class_name,
+                client_ip,
             )
+
             return HttpResponseForbidden(
-                f"You have been blocked due to too many suspicious requests from your IP. Try again later or contact {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
+                "Too many suspicious requests detected. " f"Contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} for assistance."
             )
 
-        @cache_results(
-            timeout=60 * 60 * 24
-        )  # Cache results for 24 hours to optimize performance for repeated requests to the same paths
-        def cached_security_check_by_url(path) -> bool:
-            parsed_url = urllib.parse.urlparse(path)
-            path = parsed_url.path.lower()
-            # Split path into segments, ignore empty strings
-            path_parts = [part for part in path.split("/") if part]
+        if self.is_sensitive_request(normalized_path):
 
-            logger.debug("%s Performing cached security check for path: %s", self.formatted_class_name, path)
-            logger.debug("%s Path parts for checking: %s", self.formatted_class_name, path_parts)
+            logger.warning(
+                "%s blocked sensitive request: %s",
+                self.formatted_class_name,
+                normalized_path,
+            )
 
-            # Check amnesty patterns on each part of the path
-            for part in path_parts:
-                for pattern in self.allowed_patterns:
-                    if pattern.match(part):
-                        logger.info(
-                            "%s amnesty granted to: %s because part '%s' matches an allowed pattern in settings.smarter_settings.sensitive_files_amnesty_patterns",
-                            self.formatted_class_name,
-                            request.path,
-                            part,
-                        )
-                        return True
+            self.increment_throttle(client_ip)
 
-            # Check sensitive files on each part of the path
-            for part in path_parts:
-                for sensitive_file in self.sensitive_files:
-                    sensitive_file = sensitive_file.lower()
-                    if fnmatch.fnmatch(part, sensitive_file):
-                        logger.warning(
-                            "%s Detected sensitive file match: %s in path: %s",
-                            self.formatted_class_name,
-                            sensitive_file,
-                            request.path,
-                        )
-                        return False
+            return HttpResponseForbidden(
+                "Your request has been blocked by Smarter. " f"Contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} for assistance."
+            )
 
+        return None
+
+    @staticmethod
+    def normalize_path(path: str) -> str:
+        """
+        Normalize paths to reduce traversal and encoding bypasses.
+        """
+
+        for _ in range(2):
+            path = urllib.parse.unquote(path)
+
+        path = unicodedata.normalize("NFKC", path)
+
+        path = path.replace("\\", "/")
+        path = path.replace("\x00", "")
+
+        path = re.sub(r"/+", "/", path)
+
+        path = posixpath.normpath(path)
+
+        if not path.startswith("/"):
+            path = f"/{path}"
+
+        return path.lower()
+
+    def is_amnesty_path(self, path: str) -> bool:
+
+        if path.replace("/", "") in self.amnesty_urls:
             return True
 
-        if cached_security_check_by_url(request_path):
-            return self.get_response(request)
+        for pattern in self.allowed_patterns:
+            if pattern.match(path):
+                return True
 
-        logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
+        for segment in self.iter_path_segments(path):
+            for pattern in self.allowed_patterns:
+                if pattern.match(segment):
+                    return True
+
+        return False
+
+    def is_throttled(self, client_ip: str) -> bool:
+
+        throttle_key = self.get_throttle_key(client_ip)
+
+        blocked_count = cache.get(throttle_key, 0)
+
+        return blocked_count >= self.THROTTLE_LIMIT
+
+    def increment_throttle(self, client_ip: str) -> None:
+
+        throttle_key = self.get_throttle_key(client_ip)
 
         try:
             blocked_count = cache.incr(throttle_key)
+
         except ValueError:
-            cache.set(throttle_key, 1, timeout=self.THROTTLE_TIMEOUT)
-            blocked_count = 1
+            cache.set(
+                throttle_key,
+                1,
+                timeout=self.THROTTLE_TIMEOUT,
+            )
+
         else:
-            cache.set(throttle_key, blocked_count, timeout=self.THROTTLE_TIMEOUT)
-        return HttpResponseForbidden(
-            f"Your request has been blocked by Smarter. Contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} for assistance."
+            cache.set(
+                throttle_key,
+                blocked_count,
+                timeout=self.THROTTLE_TIMEOUT,
+            )
+
+    @staticmethod
+    def get_throttle_key(client_ip: str) -> str:
+        return f"sensitive_files_throttle:{client_ip}"
+
+    @staticmethod
+    def iter_path_segments(path: str) -> Iterable[str]:
+        return (segment for segment in path.split("/") if segment)
+
+    @classmethod
+    @cache_results(timeout=60 * 60 * 24)
+    def is_sensitive_request(cls, path: str) -> bool:
+        """
+        Cached sensitive file detection.
+        """
+
+        path_segments = tuple(cls.iter_path_segments(path))
+
+        logger.debug(
+            "%s checking normalized path: %s",
+            cls.__name__,
+            path,
         )
+
+        normalized_full_path = path.lstrip("/")
+
+        if normalized_full_path in EXACT_MATCHES:
+            return True
+
+        for pattern in GLOB_MATCHES:
+            if fnmatch.fnmatch(normalized_full_path, pattern):
+                return True
+
+        for segment in path_segments:
+            if segment in EXACT_MATCHES:
+                return True
+
+        for segment in path_segments:
+            for pattern in GLOB_MATCHES:
+                if fnmatch.fnmatch(segment, pattern):
+                    return True
+
+        return False

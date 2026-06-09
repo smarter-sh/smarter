@@ -1,13 +1,12 @@
-"""Test Api v1 CLI non-brokered chat command"""
+"""Test Api v1 CLI non-brokered chat command."""
 
 from http import HTTPStatus
 from urllib.parse import urlencode
 
-from django.urls import reverse
-
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.llm_client.models import LLMClient
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.journal.enum import (
     SCLIResponseMetadata,
     SmarterJournalApiResponseKeys,
@@ -20,7 +19,7 @@ from .base_class import ApiV1CliTestBase
 
 class TestApiCliV1Chat(ApiV1CliTestBase):
     """
-    Test Api v1 CLI non-brokered chat command
+    Test Api v1 CLI non-brokered chat command.
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
@@ -36,18 +35,18 @@ class TestApiCliV1Chat(ApiV1CliTestBase):
 
         self.query_params = urlencode({"uid": self.uid})
 
-        self.chatbot = self.chatbot_factory()
+        self.llm_client = self.llm_client_factory()
 
     def tearDown(self):
-        if self.chatbot:
-            self.chatbot.delete()
+        if self.llm_client:
+            self.llm_client.delete()
         super().tearDown()
 
-    def chatbot_factory(self):
-        chatbot = ChatBot.objects.create(
+    def llm_client_factory(self):
+        llm_client = LLMClient.objects.create(
             name=self.name,
             user_profile=self.user_profile,
-            description="Test ChatBot",
+            description="Test LLMClient",
             version="1.0.0",
             subdomain=None,
             custom_domain=None,
@@ -56,7 +55,7 @@ class TestApiCliV1Chat(ApiV1CliTestBase):
             app_assistant="Smarty Pants",
             app_welcome_message="Welcome to Smarter!",
         )
-        return chatbot
+        return llm_client
 
     def validate_response(self, response: dict) -> None:
         self.assertIsInstance(response, dict)
@@ -74,7 +73,7 @@ class TestApiCliV1Chat(ApiV1CliTestBase):
             assert field in data.keys(), f"{field} not found in data keys: {data.keys()}"
 
     def test_chat(self) -> None:
-        """Test chat command"""
+        """Test chat command."""
 
         data = {"prompt": "Hello, World!"}
         path = reverse(self.namespace + ApiV1CliReverseViews.chat, kwargs=self.kwargs)

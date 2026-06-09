@@ -1,10 +1,9 @@
 # pylint: disable=W0212
 """Django admin configuration for the chat app."""
 
-from smarter.apps.account.models import get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
-    smarter_filter_queryset_for_user,
     smarter_restricted_admin_site,
 )
 
@@ -29,8 +28,9 @@ class ChatAdmin(SmarterCustomerModelAdmin):
     def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-
-        return smarter_filter_queryset_for_user(user=user, qs=qs)
+        if not isinstance(user, User):
+            return qs.none()
+        return Chat.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
 
 
 class ChatHistoryAdmin(SmarterCustomerModelAdmin):
@@ -51,9 +51,10 @@ class ChatHistoryAdmin(SmarterCustomerModelAdmin):
     def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user, qs=qs, account_filter="chat__user_profile__account", user_profile_filter="chat__user_profile"
-        )
+        if not isinstance(user, User):
+            return qs.none()
+        chats = Chat.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return ChatHistory.objects.filter(chat__in=chats)
 
 
 class ChatPluginUsageAdmin(SmarterCustomerModelAdmin):
@@ -70,12 +71,10 @@ class ChatPluginUsageAdmin(SmarterCustomerModelAdmin):
     def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user,
-            qs=qs,
-            account_filter="chat__user_profile__account",
-            user_profile_filter="chat__user_profile",
-        )
+        if not isinstance(user, User):
+            return qs.none()
+        chats = Chat.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return ChatPluginUsage.objects.filter(chat__in=chats)
 
 
 class ChatToolCallHistoryAdmin(SmarterCustomerModelAdmin):
@@ -92,12 +91,10 @@ class ChatToolCallHistoryAdmin(SmarterCustomerModelAdmin):
     def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user,
-            qs=qs,
-            account_filter="chat__user_profile__account",
-            user_profile_filter="chat__user_profile",
-        )
+        if not isinstance(user, User):
+            return qs.none()
+        chats = Chat.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return ChatToolCall.objects.filter(chat__in=chats)
 
 
 smarter_restricted_admin_site.register(Chat, ChatAdmin)

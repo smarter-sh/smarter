@@ -1,7 +1,7 @@
 PluginPrompt Model
 ======================
 
-.. autoclass:: smarter.apps.plugin.models.PluginPrompt
+.. automodule:: smarter.apps.plugin.models.plugin_prompt
     :members:
     :undoc-members:
     :inherited-members:

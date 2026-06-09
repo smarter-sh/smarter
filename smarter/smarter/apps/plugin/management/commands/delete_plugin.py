@@ -72,7 +72,7 @@ class Command(SmarterCommand):
             self.stdout.write(f"manage.py delete_plugin: Did not find a plugin named {name} for {user_profile}")
             return
 
-        controller = PluginController(account=account, user=user, user_profile=user_profile, plugin_meta=plugin_meta)  # type: ignore
+        controller = PluginController(user_profile=user_profile, plugin_meta=plugin_meta)  # type: ignore
         plugin = controller.obj
         if not plugin:
             self.handle_completed_failure(

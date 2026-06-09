@@ -6,13 +6,15 @@ from logging import getLogger
 from typing import Optional
 
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from knox import crypto
-from knox.models import AuthToken, AuthTokenManager
+from knox.models import AuthToken
 from knox.settings import CONSTANTS
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
+    MetaDataWithOwnershipModelManager,
     User,
     UserProfile,
 )
@@ -22,12 +24,18 @@ from smarter.lib.cache import cache_results
 
 logger = getLogger(__name__)
 
-
 ###############################################################################
 # API Key Management
 ###############################################################################
-class SmarterAuthTokenManager(AuthTokenManager, models.Manager):
-    """API Key manager."""
+
+
+class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
+    """
+    API Key manager. This is a custom manager derived from a combination of
+    Knox's AuthTokenManager and and Smarter's SmarterQuerySetWithPermissions
+    Queryset to provide both knox token management functionality as well as
+    Smarter's permission-based querying behavior.
+    """
 
     def create(
         self,
@@ -112,7 +120,6 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     .. warning::
 
         - Ensure that API keys are managed securely. Deactivated keys cannot be used for authentication.
-        - The `has_permissions` method checks if a user is staff or superuser before allowing management actions.
 
     Related Models
     --------------
@@ -132,10 +139,36 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     key_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     last_used_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    tags = models.JSONField(default=list, blank=True)
 
     @property
     def identifier(self):
-        return "******" + str(self.digest)[-4:]
+        self.mask_string(self.digest)
+
+    @property
+    def manifest_url(self) -> Optional[str]:
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        # pylint: disable=C0415
+        from smarter.lib.drf.urls import AuthTokenReverseNames
+
+        return reverse(
+            f"{AuthTokenReverseNames.namespace}:{AuthTokenReverseNames.detailview}",
+            kwargs={"authtoken_id": self.id},  # type: ignore
+        )
 
     def save(self, *args, **kwargs):
         if not self.user.is_staff:
@@ -143,14 +176,6 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         if self.created is None:
             self.created = timezone.now()
         super().save(*args, **kwargs)
-
-    def has_permissions(self, user) -> bool:
-        """Determine if the authenticated user has permissions to manage this key."""
-        if not hasattr(user, "is_authenticated") or not user.is_authenticated:
-            return False
-        if not hasattr(user, "is_staff") or not hasattr(user, "is_superuser"):
-            return False
-        return user.is_staff or user.is_superuser
 
     def activate(self):
         """Activate the API key."""
@@ -180,6 +205,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         user_profile: Optional[UserProfile] = None,
         user: Optional[User] = None,
         name: Optional[str] = None,
+        **kwargs,
     ) -> models.QuerySet["SmarterAuthToken"]:
         """
         Retrieve API keys with caching based on user profile and optional name
@@ -218,6 +244,11 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
                 queryset = cls.objects.select_related(
                     "user_profile", "user_profile__account", "user_profile__user"
                 ).filter(user=user_profile.cached_user)
+                logger.debug(
+                    "%s._get_cached_objects_for_user_profile() fetched and cached objects for user_profile_id: %s",
+                    logger_prefix,
+                    user_profile_id,
+                )
                 return queryset
             # pylint: disable=broad-except
             except Exception as e:
@@ -265,6 +296,12 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
                 except Exception as e2:
                     logger.error("Error retrieving objects without cache: %s", e2)
                     queryset = cls.objects.filter(user=user_profile.cached_user, name=name)
+            logger.debug(
+                "%s._get_cached_objects_for_user_profile_and_name() fetched and cached objects for user_profile_id: %s, name: %s",
+                logger_prefix,
+                user_profile_id,
+                name,
+            )
             return queryset
 
         if invalidate:
@@ -282,7 +319,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         elif user_profile:
             return _get_cached_objects_for_user_profile(user_profile.id)  # type: ignore
         else:
-            return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate)  # type: ignore
+            return super().get_cached_objects(user_profile=user_profile, invalidate=invalidate, taggit=False)  # type: ignore
 
     def __str__(self):
         return str(self.name) + " (" + str(self.user) + ") " + str(self.identifier)

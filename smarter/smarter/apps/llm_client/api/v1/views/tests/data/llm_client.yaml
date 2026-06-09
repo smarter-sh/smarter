@@ -1,0 +1,47 @@
+---
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  name: test_llm_client
+  description: llm_client for running unit test
+  version: 1.0.0
+  tags:
+    - red
+    - green
+    - blue
+  annotations:
+    - smarter.sh/tests/owner: test bank
+    - smarter.sh/tests/host: none
+    - smarter.sh/tests/purpose: Provide an example configuration for OpenAI API Function Calling.
+    - smarter.sh/tests/last-updated: 2025-12-31
+    - smarter.sh/tests/documentation: https://docs.tests.edu/example-function-calling
+spec:
+  config:
+    deployed: false
+    provider: openai
+    defaultModel: gpt-4o-mini
+    defaultSystemRole: >
+      You are a helpful assistant. When given the opportunity to utilize
+      function calling, you should always do so. This will allow you to
+      provide the best possible responses to the user.
+    defaultTemperature: 0.5
+    defaultMaxTokens: 512
+    appName: Test LLMClient
+    appAssistant: Tatiana
+    appWelcomeMessage: Welcome to Test LLMClient! How can I help you today?
+    appExamplePrompts:
+      - "What is the weather in New York?"
+      - "Tell me a joke"
+      - "What is the capital of France?"
+    appPlaceholder: "Ask me anything..."
+    appInfoUrl: https://smarter.sh
+    appBackgroundImageUrl: https://smarter.sh/assets/img/bg.jpg
+    appLogoUrl: https://smarter.sh/assets/img/logo.png
+    appFileAttachment: false
+    subdomain: null
+    customDomain: null
+  plugins:
+    - example_configuration
+    - everlasting_gobstopper
+  functions:
+    - weather

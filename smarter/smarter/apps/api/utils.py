@@ -1,24 +1,19 @@
 # pylint: disable=W0613
 """Api utils"""
 
-import logging
 import os
 from typing import Optional
 from urllib.parse import urljoin
 
 import httpx
 from django.test import RequestFactory
-from django.urls import reverse
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-    formatted_text_green,
-)
-from smarter.lib import json
+from smarter.lib import json, logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.loader import SAMLoader
@@ -93,7 +88,7 @@ def apply_manifest(
 
     user: Optional[User] = None
     data: Optional[str] = None
-    logger_prefix = formatted_text("smarter.apps.api.utils.apply_manifest()")
+    logger_prefix = logging.formatted_text("smarter.apps.api.utils.apply_manifest()")
 
     logger.debug(
         "%s apply_manifest() called with filespec=%s, manifest=%s, username=%s, verbose=%s",
@@ -190,7 +185,7 @@ def apply_manifest(
     response = json.dumps(response_json) + "\n"
     if verbose:
         if httpx_response.status_code == httpx.codes.OK:
-            logger.debug("%s %s", logger_prefix, formatted_text_green(response))
+            logger.debug("%s %s", logger_prefix, logging.formatted_text_green(response))
             return True
 
         msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {data}\nresponse: {response}"
@@ -214,7 +209,7 @@ def apply_manifest_v2(
 
     user: Optional[User] = None
     data: Optional[str] = None
-    logger_prefix = formatted_text("smarter.apps.api.utils.apply_manifest()")
+    logger_prefix = logging.formatted_text("smarter.apps.api.utils.apply_manifest()")
 
     logger.debug(
         "%s apply_manifest() called with filespec=%s, manifest=%s, username=%s, verbose=%s",
@@ -298,7 +293,7 @@ def apply_manifest_v2(
     response = json.dumps(response_json) + "\n"
     if verbose:
         if response_content.status_code == 200:
-            logger.debug("%s %s", logger_prefix, formatted_text_green(response))
+            logger.debug("%s %s", logger_prefix, logging.formatted_text_green(response))
             return True
 
         msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {data}\nresponse: {response}"

@@ -15,7 +15,7 @@ metadata:
 spec:
   selector:
     directive: search_terms
-    # Complete search terms that will trigger the chatbot to use your customized system prompt.
+    # Complete search terms that will trigger the llm_client to use your customized system prompt.
     searchTerms:
       - Gobstopper
       - Gobstoppers

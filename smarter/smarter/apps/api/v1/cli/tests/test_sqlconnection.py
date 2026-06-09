@@ -1,29 +1,26 @@
 """Test Api v1 CLI commands for SqlConnection"""
 
-import logging
 from http import HTTPStatus
 from typing import Optional
 from urllib.parse import urlencode
 
-from django.urls import reverse
-
-from smarter.apps.account.models import Secret
-from smarter.apps.account.tests.factories import secret_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.plugin.manifest.models.sql_connection.enum import (
+from smarter.apps.connection.manifest.models.sql_connection.enum import (
     DbEngines,
     DBMSAuthenticationMethods,
 )
-from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
-from smarter.apps.plugin.models import SqlConnection
+from smarter.apps.connection.manifest.models.sql_connection.model import (
+    SAMSqlConnection,
+)
+from smarter.apps.connection.models import SqlConnection
+from smarter.apps.secret.models import Secret
+from smarter.apps.secret.tests.factories import secret_factory
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import smarter_settings
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -32,15 +29,9 @@ from .base_class import ApiV1CliTestBase
 KIND = SAMKinds.SQL_CONNECTION.value
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and waffle.switch_is_active(
-        SmarterWaffleSwitches.PLUGIN_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.API_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
+)
 
 
 class TestApiCliV1SqlConnection(ApiV1CliTestBase):

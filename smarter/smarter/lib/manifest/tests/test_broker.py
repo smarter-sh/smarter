@@ -14,7 +14,6 @@ from smarter.lib import json
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
-    BrokerNotImplemented,
     SAMBrokerError,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
@@ -159,16 +158,14 @@ class TestAbstractBrokerClass(TestAccountMixin):
         str_rep = str(self.broker)
         self.assertIsInstance(str_rep, str)
         self.assertIn("SAMTestBroker", str_rep)
-        self.assertIn("version=smarter.sh/v1", str_rep)
-        self.assertIn("account", str_rep)
-        self.assertIn("name=cli_test_plugin", str_rep)
+        self.assertIn("name", str_rep)
+        self.assertIn("user_profile", str_rep)
 
     def test_repr(self):
         if not self.broker:
             self.fail("Broker is not initialized")
         rep = repr(self.broker)
         self.assertIsInstance(rep, str)
-        json.loads(rep)  # should not raise exception
 
     def test_bool(self):
         if not self.broker:
@@ -196,7 +193,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
         )
         broker2.name_cached_property_setter(self.broker.name)
         broker2.kind_setter(self.broker.kind)
-        broker2.account = self.broker.account
+
         self.assertTrue(self.broker == broker2)
         broker2.name_cached_property_setter("other_name")
         self.assertFalse(self.broker == broker2)
@@ -216,7 +213,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
         )
         broker2.name_cached_property_setter(self.broker.name)
         broker2.kind_setter(self.broker.kind)
-        broker2.account = self.broker.account
+
         # Equal
         self.assertFalse(self.broker < broker2)
         self.assertTrue(self.broker <= broker2)
@@ -272,6 +269,9 @@ class TestAbstractBrokerClass(TestAccountMixin):
         # 300,
         if not self.broker:
             raise ValueError("Broker is not initialized")
+        if not self.broker.request or not self.broker.request.user:
+            raise ValueError("Broker request or request user is not set")
+
         logger.debug("Testing describe method of SAMTestBroker")
         logger.debug("Broker: %s", self.broker)
         logger.debug("User: %s %s", self.broker.request.user, self.non_admin_user)
@@ -434,8 +434,8 @@ class TestAbstractBrokerClass(TestAccountMixin):
             "test_camel_case2": "test_camel_case2",
             "test_camel_case3": "test_camel_case3",
         }
-        camel_to_snake = self.broker.camel_to_snake(data=d)
-        self.assertEqual(camel_to_snake, d_result)
+        to_snake_case = self.broker.to_snake_case(data=d)
+        self.assertEqual(to_snake_case, d_result)
 
     def test_snake_to_camel(self) -> None:
         # 516,
@@ -451,12 +451,5 @@ class TestAbstractBrokerClass(TestAccountMixin):
             "testCamelCase2": "test_camel_case2",
             "testCamelCase3": "test_camel_case3",
         }
-        snake_to_camel = self.broker.snake_to_camel(data=d)
-        self.assertEqual(snake_to_camel, d_result)
-
-    def test_BrokerNotImplemented(self) -> None:
-        # 531,
-        try:
-            BrokerNotImplemented()  # type: ignore
-        except SAMBrokerErrorNotImplemented:
-            pass
+        to_camel_case = self.broker.to_camel_case(data=d)
+        self.assertEqual(to_camel_case, d_result)

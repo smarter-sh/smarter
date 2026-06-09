@@ -2,10 +2,10 @@
 
 # python stuff
 import logging
-
-import botocore.exceptions
+from typing import Any
 
 from smarter.common.conf import smarter_settings
+from smarter.common.helpers.aws.exceptions import AWSNotReadyError
 
 from .aws import AWSBase
 
@@ -29,13 +29,16 @@ class AWSIdentifyAccessManagement(AWSBase):
     _client = None
     _client_type: str = "iam"
 
-    def get_iam_policies(self):
+    def get_iam_policies(self) -> dict[str, dict[str, Any]]:
         """
         Return a dict of the AWS IAM policies.
 
         :return: A dict of IAM policies.
-        :rtype: dict
+        :rtype: dict[str, dict[str, Any]]
         """
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS IAM.")
+
         policies = self.client.list_policies()["Policies"]
         retval = {}
         for policy in policies:
@@ -47,13 +50,15 @@ class AWSIdentifyAccessManagement(AWSBase):
                 retval[policy["PolicyName"]] = {"Arn": policy["Arn"], "Policy": policy_document}
         return retval
 
-    def get_iam_roles(self):
+    def get_iam_roles(self) -> dict[str, dict[str, Any]]:
         """
         Return a dict of the AWS IAM roles.
 
         :return: A dict of IAM roles.
-        :rtype: dict
+        :rtype: dict[str, dict[str, Any]]
         """
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS IAM.")
         roles = self.client.list_roles()["Roles"]
         retval = {}
         for role in roles:

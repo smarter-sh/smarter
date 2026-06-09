@@ -23,7 +23,6 @@ from smarter.apps.provider.utils import (
     get_model_verification_for_type,
     set_model_verification,
 )
-from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -32,7 +31,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) and waffle.switch_is_active(
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) or waffle.switch_is_active(
         SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 
@@ -407,7 +406,7 @@ def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
             messages=[{"role": "user", "content": "Translate this to Spanish: Hello"}],
             max_completion_tokens=10,
         )
-        content = response.choices[0].message.content.strip().lower()
+        content = response.choices[0].message.content.strip().lower()  # type: ignore
         success = "hola" in content
     except Exception:
         success = False
@@ -445,7 +444,7 @@ def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
             messages=[{"role": "user", "content": f"Summarize this into 10 words or less: {long_text}"}],
             max_completion_tokens=30,
         )
-        summary = response.choices[0].message.content.strip()
+        summary = response.choices[0].message.content.strip()  # type: ignore
         success = len(summary) <= 10
     except Exception:
         success = False

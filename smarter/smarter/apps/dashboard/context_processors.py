@@ -1,401 +1,201 @@
 # pylint: disable=W0613
 """
-smarter.apps.dashboard.context_processors
-=========================================
+Custom Django context processors for the Smarter dashboard application.
 
-This module provides custom Django context processors for the Smarter dashboard
-application. These context processors are designed to inject additional context
-variables into templates that inherit from ``base.html``, supporting the dynamic
-rendering of dashboard and branding information throughout the application.
+These processors inject template context variables into every view that renders
+a template inheriting from ``base.html``. Each processor is registered in
+``TEMPLATES['OPTIONS']['context_processors']`` in Django settings.
 
-Overview
---------
+Context processors
+------------------
 
+:func:`sidebar`
+    Resolves and caches the href targets for every sidebar navigation link.
+    Returns a ``sidebar`` dict keyed by destination name.
 
-The context processors in this module serve the following purposes:
+:func:`base`
+    Assembles the primary ``dashboard`` context dict: user identity, role
+    flags (``is_superuser``, ``is_staff``), feature toggles, resource counts,
+    and platform version metadata.  The inner result is cached per user.
 
-- **Dashboard Context**: Supplies user-specific and application-wide metadata,
-    such as the current user's email, username, role flags, product version, and
-    resource counts (e.g., chatbots, plugins, API keys, custom domains, connections,
-    and secrets). This enables the dashboard to display personalized and up-to-date
-    information for each authenticated user.
+:func:`branding`
+    Provides a ``branding`` dict containing corporate identity, support
+    contact details, social-media URLs, CDN paths, and a dynamic copyright
+    notice.  Values are sourced from ``smarter_settings``.
 
-- **Branding Context**: Provides organization-specific branding details, including
-    support contact information, corporate name, address, social media links, and
-    copyright notices. This ensures consistent branding and support information
-    across all dashboard templates.
+:func:`footer`
+    Provides a ``footer`` dict with links to legal, plans, support, and
+    contact pages.
 
-- **Cache Busting**: Adds a cache-busting query parameter to static asset URLs
-    during local development, preventing browsers from serving outdated static
-    files.
+:func:`cache_buster`
+    Injects a ``cache_buster`` string (``v=<timestamp>``) for appending to
+    static asset URLs in local development.
 
+Cache utilities
+---------------
 
-Caching
--------
+:func:`cache_invalidations`
+    Invalidates all per-user caches (account, profile, plugins, llm_clients, and
+    page-level caches for the dashboard and workbench) after user data changes.
+    Called by signal handlers in the account app.
 
-Many of the resource-counting functions in this module are decorated with a
-caching mechanism to reduce database load and improve performance. The cache
-timeout is configurable and set to 60 seconds by default.
+    .. seealso::
 
-cache_invalidations(user_profile) is a utility function provided to invalidate
-all relevant caches when user data changes, ensuring that the dashboard
-reflects the most current information.
+        - :class:`smarter.lib.manifest.broker.AbstractBroker`
+        - ``smarter.apps.account.signals.cache_invalidate``
 
 Usage
 -----
 
-To use these context processors, add their import paths to the
-``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings.
-This will make the provided context variables available in all templates
-rendered by Django that inherit from ``base.html``.
+Add the processors to your Django settings::
 
-Note
-----
-
-This module does not document individual function signatures or arguments, as
-these are automatically included by Sphinx's ``automodule`` directive. For
-detailed API documentation, refer to the generated documentation for each function.
+    TEMPLATES = [
+        {
+            "OPTIONS": {
+                "context_processors": [
+                    ...
+                    "smarter.apps.dashboard.context_processors.sidebar",
+                    "smarter.apps.dashboard.context_processors.base",
+                    "smarter.apps.dashboard.context_processors.branding",
+                    "smarter.apps.dashboard.context_processors.footer",
+                    "smarter.apps.dashboard.context_processors.cache_buster",
+                ],
+            },
+        }
+    ]
 """
 
-import logging
+import sys
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urljoin
-
-from django.test import RequestFactory
-from django.urls import reverse
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
     Account,
-    Secret,
-    User,
     UserProfile,
     get_resolved_user,
 )
-from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
-from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
+from smarter.apps.connection.urls import ConnectionReverseNames
+from smarter.apps.dashboard.views.apply_manifest.urls import ApplyManifestReverseNames
+from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
+from smarter.apps.dashboard.views.terminal_emulator.names import (
+    DashboardLogsReverseNames,
+)
+from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
+from smarter.apps.docs.urls import DocsReverseNames
+from smarter.apps.llm_client.models import LLMClient
 from smarter.apps.plugin.models import (
-    ConnectionBase,
     PluginMeta,
 )
-from smarter.apps.provider.models import Provider
+from smarter.apps.plugin.urls import PluginReverseNames
+from smarter.apps.prompt.urls import PromptReverseNames
+from smarter.apps.provider.urls import ProviderReverseNames
+from smarter.apps.secret.urls import SecretReverseNames
+from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
+from smarter.common.utils import snake_case
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
+from smarter.lib.django.shortcuts import reverse
+from smarter.lib.drf.urls import AuthTokenReverseNames
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
+def is_sphinx_build():
+    """Determine if the current execution context is a Sphinx documentation build."""
+
+    return "sphinx" in sys.modules
+
+
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__)
-logger_prefix_cache_invalidations = formatted_text_blue(f"{__name__}.cache_invalidations()")
+logger_prefix = logging.formatted_text(__name__)
+logger_prefix_cache_invalidations = logging.formatted_text_blue(f"{__name__}.cache_invalidations()")
 
 
-def get_pending_deployments(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
-    """
-    Returns the number of chatbot deployments that are pending for the specified user.
+def static_version(request):
 
-    This function queries the database for all chatbot instances associated with the
-    user's account that have not yet been deployed. The result is used to inform users
-    of outstanding deployment actions required on their dashboard.
-
-    The result is cached for a short duration to minimize database load and
-    improve dashboard responsiveness.
-
-    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
-    :param user_profile: UserProfile instance. The user profile whose pending deployments are to be counted.
-    :type user_profile: UserProfile
-    :return: The number of pending chatbot deployments for the user.
-    :rtype: int
-    """
-    logger.debug(
-        "%s.get_pending_deployments() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
-
-    @cache_results()
-    def _get_pending_deployments(user_profile_id: int) -> int:
-        return ChatBot.objects.filter(user_profile__id=user_profile_id, deployed=False).count() or 0
-
-    if not user_profile:
-        logger.warning("%s.get_pending_deployments() called without user_profile. Returning None.", logger_prefix)
-        return 0
-    if invalidate and user_profile:
-        _get_pending_deployments.invalidate(user_profile.id)  # type: ignore
-
-    return _get_pending_deployments(user_profile.id)
+    return {
+        "STATIC_VERSION": smarter_settings.version,
+    }
 
 
-def get_chatbots(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
-    """
-    Returns the total number of chatbots associated with the specified user.
-
-    This function queries the database for all chatbot instances linked to
-    the user's account, regardless of deployment status. The resulting count
-    is used to display the user's available chatbots on the dashboard.
-
-    The result is cached for a short duration to reduce database queries and
-    improve dashboard performance.
-
-    :param user_profile: UserProfile instance. The user profile whose chatbots are to be counted.
-    :type user_profile: UserProfile
-    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
-
-    :return: The number of chatbots belonging to the user.
-    :rtype: int
-    """
-    if not user_profile:
-        logger.warning("%s.get_chatbots() called without user_profile. Returning None.", logger_prefix)
-        return 0
-
-    logger.debug(
-        "%s.get_chatbots() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
-    chatbots = ChatBot.get_cached_objects(invalidate=invalidate, user_profile=user_profile)
-    return len(chatbots)
+cache_results()
 
 
-def get_plugins(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
-    """
-    Returns the total number of plugins associated with the specified user.
-
-    This function queries the database for all plugin metadata records linked
-    to the user's account. The resulting count is used to display the user's
-    available plugins on the dashboard.
-
-    The result is cached for a short duration to reduce database queries and
-    improve dashboard performance.
-
-    :param user_profile: UserProfile instance. The user profile whose plugins are to be counted.
-    :type user_profile: UserProfile
-    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
-    :return: The number of plugins belonging to the user.
-    :rtype: int
-    """
-    logger.debug(
-        "%s.get_plugins() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
-    if not user_profile:
-        logger.warning("%s.get_plugins() called without user_profile. Returning None.", logger_prefix)
-        return 0
-    retval = PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=invalidate, user_profile_id=user_profile.id)
-    return len(retval)
-
-
-def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
-    """
-    Returns the total number of API keys associated with the specified user.
-
-    This function queries the database for all API key records linked to
-    chatbots owned by the user's account. The resulting count is used to
-    display the user's available API keys on the dashboard.
-
-    The result is cached for a short duration to reduce database queries and
-    improve dashboard performance.
-
-    :param user_profile: UserProfile instance. The user profile whose API keys are to be counted.
-    :type user_profile: UserProfile
-    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
-    :return: The number of API keys belonging to the user.
-    :rtype: int
-    """
-    logger.debug(
-        "%s.get_api_keys() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
-
-    @cache_results()
-    def _get_api_keys(user_profile_id: int) -> int:
-        return ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
-
-    if not user_profile:
-        logger.warning("%s.get_api_keys() called without user_profile. Returning None.", logger_prefix)
-        return 0
-
-    if invalidate and user_profile:
-        _get_api_keys.invalidate(user_profile.id)  # type: ignore
-
-    return _get_api_keys(user_profile.id)
-
-
-def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
-    """
-    Returns the total number of custom domains associated with the specified user.
-
-    This function queries the database for all custom domain records linked
-    to chatbots owned by the user's account. The resulting count is used to
-    display the user's available custom domains on the dashboard.
-
-    The result is cached for a short duration to reduce database queries and
-    improve dashboard performance.
-
-    :param user_profile: UserProfile instance. The user profile whose custom domains are to be counted.
-    :type user_profile: UserProfile
-    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
-    :return: The number of custom domains belonging to the user.
-    :rtype: int
-    """
-    logger.debug(
-        "%s.get_custom_domains() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
-
-    @cache_results()
-    def _get_custom_domains(user_profile_id: int) -> int:
-        return ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
-
-    if not user_profile:
-        logger.warning("%s.get_custom_domains() called without user_profile. Returning None.", logger_prefix)
-        return 0
-
-    if invalidate and user_profile:
-        _get_custom_domains.invalidate(user_profile.id)  # type: ignore
-
-    return _get_custom_domains(user_profile.id)
-
-
-def get_connections(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
-    """
-    Returns the total number of API and SQL connections associated with the specified user.
-
-    This function queries the database for all API and SQL connection records linked to the user's account. The resulting count is used to display the user's available connections on the dashboard.
-
-    The result is cached for a short duration to reduce database queries and
-    improve dashboard performance.
-
-    :param user_profile: UserProfile instance. The user profile whose connections are to be counted.
-    :type user_profile: UserProfile
-    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
-    :return: The number of API and SQL connections belonging to the user.
-    :rtype: int
-    """
-    if not user_profile:
-        logger.warning("%s.get_connections() called without user_profile. Returning None.", logger_prefix)
-        return 0
-
-    logger.debug(
-        "%s.get_connections() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile,
-    )
-    retval = ConnectionBase.get_cached_connections_for_user(invalidate=invalidate, user=user_profile.cached_user) or []
-    return len(retval)
-
-
-@cache_results()
-def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
-    """
-    Returns the total number of secrets associated with the specified user's profile.
-
-    This function queries the database for all secret records linked to the user's profile.
-    The resulting count is used to display the user's available secrets on the dashboard.
-
-    The result is cached for a short duration to reduce database queries and
-    improve dashboard performance.
-
-    :param user_profile: The user profile whose secrets are to be counted.
-    :type user_profile: UserProfile
-    :return: The number of secrets belonging to the user profile.
-    :rtype: int
-    """
-    if not user_profile:
-        logger.warning("%s.get_secrets() called without user_profile. Returning None.", logger_prefix)
-        return 0
-
-    logger.debug(
-        "%s.get_secrets() called with invalidate=%s for user_profile_id=%s", logger_prefix, invalidate, user_profile.id
-    )
-    return Secret.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
-
-
-def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:
-    """
-    Returns the total number of providers associated with the specified user's account.
-
-    This function queries the database for all provider records linked to the user's account.
-    The resulting count is used to display the user's available providers on the dashboard.
-
-    The result is cached for a short duration to reduce database queries and improve dashboard performance.
-
-    :param user_profile: The user profile whose providers are to be counted.
-    :type user_profile: UserProfile
-    :return: The number of providers belonging to the user account + those belonging to the official smarter admin.
-    :rtype: int
-    """
-    if not user_profile:
-        logger.warning("%s.get_providers() called without user_profile. Returning 0.", logger_prefix)
-        return 0
-
-    logger.debug(
-        "%s.get_providers() called with invalidate=%s for user_profile_id=%s",
-        logger_prefix,
-        invalidate,
-        user_profile.id,
-    )
-    retval = Provider.get_cached_providers_for_user(invalidate=invalidate, user=user_profile.cached_user) or []
-    return len(retval)
-
-
-def file_drop_zone(request: "HttpRequest") -> dict:
-    """
-    Provides context for enabling file drop zone functionality in the dashboard.
-
-    This context processor injects a variable into the template context that can
-    be used to enable or disable file drop zone features in the dashboard interface.
-    This is useful for enhancing user experience by allowing drag-and-drop file uploads.
-
-    :param request: The HTTP request object.
-    :type request: "HttpRequest"
-    :return: A dictionary containing the file drop zone context variable.
-    :rtype: dict
-    """
-    logger.debug("%s.file_drop_zone() called.", logger_prefix)
-
-    @cache_results()
-    def get_cached_file_drop_zone_context() -> dict:
-        retval = {
-            "drop_zone": {
-                "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
-                "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
-                "workbench_list_path": reverse("prompt_workbench:listview"),
-                "plugin_list_path": reverse("plugin:plugin_listview"),
-                "connection_list_path": reverse("plugin:connection_listview"),
-                "provider_list_path": reverse("provider:provider_listview"),
-            }
+def sidebar_context() -> dict[str, Any]:
+    return {
+        "sidebar": {
+            "dashboard": reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
+            "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
+            "apply_manifest": reverse(
+                DashboardReverseNames.namespace,
+                ApplyManifestReverseNames.namespace,
+                ApplyManifestReverseNames.manifest_drop_zone,
+            ),
+            "prompt_passthrough": reverse(
+                DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
+            ),
+            "server_logs": reverse(
+                DashboardReverseNames.namespace,
+                DashboardLogsReverseNames.namespace,
+                DashboardLogsReverseNames.terminal_emulator_view,
+            ),
+            "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
+            "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
+            "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+            "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
+            "vectorstores": reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.list_view),
+            "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
+            "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
+            "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
+            "swagger_docs": reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
+            "redoc": reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),
+            "json_schemas": reverse(DocsReverseNames.namespace, DocsReverseNames.json_schemas),
+            "account": "/dashboard/account/dashboard/overview/",  # FIX ME
+            "admin": "/admin/",  # FIX ME
         }
-        return retval
-
-    return get_cached_file_drop_zone_context()
+    }
 
 
-def base(request: "HttpRequest") -> dict:
+def sidebar(request: "HttpRequest") -> dict[str, Any]:
     """
-    Provides the base context for all templates inheriting from ``base.html``
+    Resolve and cache the href targets for every dashboard sidebar navigation link.
+
+    The inner result is cached so that URL reversals are only performed once
+    per process lifetime (the URLs are static). The resolved URLs are returned
+    under a ``sidebar`` key whose sub-keys correspond to each navigation
+    destination:
+
+    ``dashboard``, ``workbench``, ``apply_manifest``, ``prompt_passthrough``,
+    ``server_logs``, ``providers``, ``plugins``, ``connections``, ``secrets``,
+    ``vectorstores``, ``api_keys``, ``custom_domains``, ``example_manifests``,
+    ``swagger_docs``, ``redoc``, ``json_schemas``, ``account``, ``admin``.
+
+    :param request: The incoming HTTP request (not used directly; required by
+        the Django context-processor protocol).
+    :type request: HttpRequest
+    :returns: A dict with a single ``"sidebar"`` key mapping destination names
+        to their resolved URL strings.
+    :rtype: dict[str, Any]
+    """
+    return sidebar_context()
+
+
+def base(request: "HttpRequest") -> dict[str, Any]:
+    """
+    Provides the base context for all templates inheriting from ``base.html``.
+
     in the Smarter dashboard.
 
     This context processor injects a comprehensive set of user-specific and
     application-wide variables into the template context. These variables
     include user identity, role flags, product metadata, and resource counts
-    (such as chatbots, plugins, API keys, custom domains, connections, and
+    (such as llm_clients, plugins, API keys, custom domains, connections, and
     secrets). The context is used to render the dashboard layout and
     personalize the user experience.
 
@@ -407,15 +207,21 @@ def base(request: "HttpRequest") -> dict:
     :return: A dictionary containing the dashboard context variables.
     :rtype: dict
     """
-    logger.debug("%s.base() called.", logger_prefix)
-    user = request.user
-    resolved_user = get_resolved_user(user)
-    user_profile: Optional[UserProfile] = None
-    if resolved_user and getattr(resolved_user, "is_authenticated", False):
-        user_profile = UserProfile.get_cached_object(user=resolved_user)  # type: ignore
+    user = None
+    user_profile = None
+    resolved_user = None
+    if hasattr(request, "user"):
+        user = request.user
+        resolved_user = get_resolved_user(user)
+        user_profile: Optional[UserProfile] = None
+        if resolved_user and getattr(resolved_user, "is_authenticated", False):
+            user_profile = UserProfile.get_cached_object(user=resolved_user)  # type: ignore
+        else:
+            user = None
 
     @cache_results()
-    def get_cached_context(user: Optional[User]) -> dict:
+    @snake_case()
+    def get_cached_context(username: Optional[str]) -> dict[str, Any]:
         """
         Constructs and returns the cached dashboard context for the specified user.
 
@@ -427,8 +233,8 @@ def base(request: "HttpRequest") -> dict:
         The context is tailored to the authenticated user and is used by the main
         ``base`` context processor to populate the dashboard template.
 
-        :param user: The user for whom the dashboard context is being constructed.
-        :type user: Optional[User]
+        :param username: The username for whom the dashboard context is being constructed.
+        :type username: Optional[str]
         :return: A dictionary containing the dashboard context variables for the user.
         :rtype: dict
         """
@@ -437,12 +243,12 @@ def base(request: "HttpRequest") -> dict:
         username = "anonymous"
         is_superuser = False
         is_staff = False
-        if user_profile and user_profile.cached_user.is_authenticated:
+        if user_profile and user_profile.user.is_authenticated:
             try:
-                user_email = user_profile.cached_user.email
-                username = user_profile.cached_user.username
-                is_superuser = user_profile.cached_user.is_superuser
-                is_staff = user_profile.cached_user.is_staff
+                user_email = user_profile.user.email
+                username = user_profile.user.username
+                is_superuser = user_profile.user.is_superuser
+                is_staff = user_profile.user.is_staff
             except AttributeError:
                 # technically, this is supposed to be impossible due to the is_authenticated check
                 pass
@@ -454,38 +260,35 @@ def base(request: "HttpRequest") -> dict:
                 "username": username,
                 "is_superuser": is_superuser,
                 "is_staff": is_staff,
+                "is_vectorstore_enabled": smarter_settings.enable_vectorstore,
+                "is_file_drop_zone_enabled": smarter_settings.enable_dashboard_apply,
+                "is_enabled_server_logs": smarter_settings.enable_dashboard_server_logs,
                 "profile_image_url": (
                     user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
                 ),
-                "first_name": (
-                    user_profile.cached_user.first_name if user_profile and user_profile.cached_user.first_name else ""
-                ),
-                "last_name": (
-                    user_profile.cached_user.last_name if user_profile and user_profile.cached_user.last_name else ""
-                ),
+                "first_name": (user_profile.user.first_name if user_profile and user_profile.user.first_name else ""),
+                "last_name": (user_profile.user.last_name if user_profile and user_profile.user.last_name else ""),
                 "product_name": SMARTER_PRODUCT_NAME,
                 "company_name": smarter_settings.root_domain,
                 "smarter_version": "v" + __version__,
+                "python_version": smarter_settings.python_version,
+                "django_version": smarter_settings.django_version,
                 "current_year": current_year,
-                "my_resources_pending_deployments": (
-                    get_pending_deployments(user_profile=user_profile) if user_profile else 0
-                ),
-                "my_resources_chatbots": get_chatbots(user_profile=user_profile) if user_profile else 0,
-                "my_resources_plugins": get_plugins(user_profile=user_profile) if user_profile else 0,
-                "my_resources_api_keys": get_api_keys(user_profile=user_profile) if user_profile else 0,
-                "my_resources_custom_domains": get_custom_domains(user_profile=user_profile) if user_profile else 0,
-                "my_resources_connections": get_connections(user_profile=user_profile) if user_profile else 0,
-                "my_resources_secrets": get_secrets(user_profile=user_profile) if user_profile else 0,
-                "my_resources_providers": get_providers(user_profile=user_profile) if user_profile else 0,
             }
         }
+        logger.debug(
+            "%s.base() cached dashboard context for user %s: %s",
+            logger_prefix,
+            username,
+            logging.formatted_json(cached_context),
+        )
         return cached_context
 
-    context = get_cached_context(user=resolved_user)  # type: ignore[assignment]
+    context = get_cached_context(username=resolved_user.username if resolved_user else "missing")  # type: ignore[assignment]
     return context
 
 
-def branding(request: "HttpRequest") -> dict:
+def branding(request: "HttpRequest") -> dict[str, Any]:
     """
     Provides organization-specific branding context for dashboard templates.
 
@@ -510,10 +313,10 @@ def branding(request: "HttpRequest") -> dict:
 
     This processor is intended to be added to the ``TEMPLATES['OPTIONS']['context_processors']`` list in your Django settings, making the ``branding`` context variable available in all templates rendered by Django that inherit from ``base.html``.
     """
-    logger.debug("%s.branding() called.", logger_prefix)
 
     @cache_results()
-    def get_cached_context() -> dict:
+    @snake_case()
+    def get_cached_context() -> dict[str, Any]:
         current_year = datetime.now().year
         root_url = request.build_absolute_uri("/").rstrip("/")
         context = {
@@ -562,11 +365,13 @@ def branding(request: "HttpRequest") -> dict:
                 "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
             }
         }
+        logger.debug("%s.branding() cached branding context: %s", logger_prefix, logging.formatted_json(context))
         return context
 
     return get_cached_context()
 
 
+@snake_case()
 def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
     """
     Provides organization-specific legal context for dashboard templates.
@@ -579,8 +384,7 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
     The context includes:
 
     - URLs for the terms of service, privacy policy, and cookie policy documents.
-    - A dynamically generated copyright notice that includes the current year
-    and corporate name.
+    - A dynamically generated copyright notice that includes the current year and corporate name.
 
     All values are sourced from Django settings, allowing for easy
     customization and environment-specific overrides.
@@ -591,7 +395,6 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
         {{ footer.plans_url }}
         {{ footer.contact_url }}
     """
-    logger.debug("%s.footer() called.", logger_prefix)
     context = {
         "footer": {
             "about_url": smarter_settings.marketing_site_url,
@@ -604,7 +407,8 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
     return context
 
 
-def cache_buster(request) -> dict:
+@snake_case()
+def cache_buster(request) -> dict[str, Any]:
     """
     Adds a cache-busting query parameter to static asset URLs during development.
 
@@ -630,28 +434,11 @@ def cache_buster(request) -> dict:
     return {"cache_buster": "v=" + str(time.time())}
 
 
-def prompt_list_context(request: "HttpRequest") -> dict:
-    """
-    Provides default placeholder context for prompt list views in the dashboard.
-    This mitigates Django template rendering errors presumably caused by Wagtail
-    admin interface interactions.
-
-    Example usage in a Django template::
-
-        {% for prompt in prompt_list.prompts %}
-            {{ prompt.title }}
-        {% endfor %}
-
-    DEPRECATED: This context processor is slated for removal in future releases as
-    the underlying issues with Wagtail integration are resolved.
-    """
-    logger.debug("%s.prompt_list_context() called.", logger_prefix)
-    return {"prompt_list": {"smarter_admin": smarter_cached_objects.smarter_admin, "chatbot_helpers": []}}
-
-
 def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     """
-    Invalidates caches for all resource-counting context processors. This function is
+    Invalidates caches for all resource-counting context processors.
+
+    This function is
     intended to be called after any operation that modifies the underlying user data.
 
     .. note::
@@ -677,47 +464,6 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     ###########################################################################
     if user_profile:
         Account.get_cached_object(invalidate=True, pk=user_profile.account.id)
-        UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)
-        PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=True, user_profile_id=user_profile.id)
-        get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id, invalidate=True)
-
-    ###########################################################################
-    # context invalidations
-    ###########################################################################
-    get_pending_deployments(invalidate=True, user_profile=user_profile)
-    get_chatbots(invalidate=True, user_profile=user_profile)
-    get_plugins(invalidate=True, user_profile=user_profile)
-    get_api_keys(invalidate=True, user_profile=user_profile)
-    get_custom_domains(invalidate=True, user_profile=user_profile)
-    get_connections(invalidate=True, user_profile=user_profile)
-    get_secrets(invalidate=True, user_profile=user_profile)
-    get_providers(invalidate=True, user_profile=user_profile)
-
-    ###########################################################################
-    # page cache invalidations
-    ###########################################################################
-    factory = RequestFactory()
-    url = reverse("dashboard:dashboard")
-    request = factory.get(url)
-
-    logger.debug(
-        "%s.cache_invalidations() Created invalidation request for URL %s: %s",
-        logger_prefix_cache_invalidations,
-        url,
-        request,
-    )
-    request.user = user_profile.user
-    # pylint: disable=C0415
-    from smarter.apps.dashboard.views.dashboard import DashboardView
-
-    DashboardView.dispatch.invalidate(request)
-
-    url = reverse("prompt_workbench:listview")
-    request = factory.get(url)
-    logger.debug(
-        "%s.cache_invalidations() Created invalidation request for URL %s: %s",
-        logger_prefix_cache_invalidations,
-        url,
-        request,
-    )
-    request.user = user_profile.user
+        UserProfile.get_cached_object(invalidate=True, pk=user_profile.id)  # type: ignore
+        PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=True, user_profile_id=user_profile.id)  # type: ignore
+        LLMClient.get_cached_objects(invalidate=True, user_profile=user_profile)  # type: ignore

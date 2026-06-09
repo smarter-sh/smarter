@@ -3,7 +3,7 @@
 import logging
 from typing import Optional
 
-import botocore.exceptions
+from smarter.common.helpers.aws.exceptions import AWSNotReadyError
 
 from .aws import AWSBase
 
@@ -29,6 +29,8 @@ class AWSRekognition(AWSBase):
 
     def get_rekognition_collection_by_id(self, collection_id) -> Optional[str]:
         """Return the Rekognition collection."""
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS Rekognition.")
         response = self.client.list_collections()
         for collection in response["CollectionIds"]:
             if collection == collection_id:

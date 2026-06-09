@@ -13,7 +13,6 @@ from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.console_helpers import (
     formatted_text,
-    formatted_text_green,
     formatted_text_red,
 )
 from smarter.common.mixins import Singleton, SmarterHelperMixin

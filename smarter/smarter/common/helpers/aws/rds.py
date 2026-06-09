@@ -3,6 +3,7 @@
 import logging
 
 from smarter.common.conf import smarter_settings
+from smarter.common.helpers.aws.exceptions import AWSNotReadyError
 
 from .aws import AWSBase
 
@@ -27,13 +28,15 @@ class AWSRds(AWSBase):
     _client = None
     _client_type: str = "rds"
 
-    def get_mysql_info(self):
+    def get_mysql_info(self) -> dict[str, str]:
         """
         Return the version of the MySQL server
 
         :return: MySQL server information
-        :rtype: dict
+        :rtype: dict[str, str]
         """
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS RDS.")
         logger.debug("%s.get_mysql_info() called", self.formatted_class_name)
         response = self.client.describe_db_instances(DBInstanceIdentifier=smarter_settings.aws_db_instance_identifier)
         response = response["DBInstances"][0]

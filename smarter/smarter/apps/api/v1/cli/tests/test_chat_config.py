@@ -1,17 +1,14 @@
-"""Test Api v1 CLI non-brokered chat_config command"""
+"""Test Api v1 CLI non-brokered chat_config command."""
 
-import logging
 from http import HTTPStatus
 from urllib.parse import urlencode
 
-from django.urls import reverse
-
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.llm_client.models import LLMClient
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
-from smarter.lib.django import waffle
+from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
     SCLIResponseMetadata,
@@ -19,25 +16,17 @@ from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
     SmarterJournalThings,
 )
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base_class import ApiV1CliTestBase
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and waffle.switch_is_active(
-        SmarterWaffleSwitches.PLUGIN_LOGGING
-    )
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.API_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
+)
 
 
 class TestApiCliV1ChatConfig(ApiV1CliTestBase):
     """
-    Test Api v1 CLI non-brokered chat_config command
+    Test Api v1 CLI non-brokered chat_config command.
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
@@ -53,18 +42,18 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
 
         self.query_params = urlencode({"uid": self.uid})
 
-        self.chatbot = self.chatbot_factory()
+        self.llm_client = self.llm_client_factory()
 
     def tearDown(self):
-        if self.chatbot:
-            self.chatbot.delete()
+        if self.llm_client:
+            self.llm_client.delete()
         super().tearDown()
 
-    def chatbot_factory(self):
-        chatbot = ChatBot.objects.create(
+    def llm_client_factory(self):
+        llm_client = LLMClient.objects.create(
             name=self.name,
             user_profile=self.user_profile,
-            description="Test ChatBot",
+            description="Test LLMClient",
             version="1.0.0",
             subdomain=None,
             custom_domain=None,
@@ -73,7 +62,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
             app_assistant="Smarty Pants",
             app_welcome_message="Welcome to Smarter!",
         )
-        return chatbot
+        return llm_client
 
     def validate_response(self, response: dict) -> None:
         self.assertIsInstance(response, dict)
@@ -87,7 +76,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
             SMARTER_CHAT_SESSION_KEY_NAME,
             "sandbox_mode",
             "debug_mode",
-            "chatbot",
+            "llm_client",
             "meta_data",
             "history",
             "meta_data",
@@ -97,7 +86,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
             assert field in data.keys(), f"{field} not found in data keys: {data.keys()}"
 
     def test_chat_config(self) -> None:
-        """Test chat_config command"""
+        """Test chat_config command."""
 
         path = reverse(self.namespace + ApiV1CliReverseViews.chat_config, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -113,15 +102,15 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                 "session_key": "a506bd92f58682c8280d756066f18ce2d2a3381b7fb7bb13fbe54dd5d114d24f",
                 "sandbox_mode": False,
                 "debug_mode": True,
-                "chatbot": {
+                "llm_client": {
                     "id": 372,
-                    "url_chatbot": "http://localhost:9357/api/v1/chatbots/372/chat/",
+                    "url_llm_client": "http://localhost:9357/api/v1/llm-clients/372/chat/",
                     "account": {"accountNumber": "7154-0706-7820"},
-                    "default_system_role": "The current date/time is Wednesday, 2026-01-07T23:25:02+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+                    "default_system_role": "The current date/time is Wednesday, 2026-01-07T23:25:02+0000\nYou are a helpful llm_client. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
                     "created_at": "2026-01-07T23:25:02.548999Z",
                     "updated_at": "2026-01-07T23:25:02.549006Z",
                     "name": "smarter_test_base_364beb79380074c9",
-                    "description": "Test ChatBot",
+                    "description": "Test LLMClient",
                     "version": "1.0.0",
                     "annotations": [],
                     "deployed": False,
@@ -154,12 +143,12 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                         "user_agent": "",
                         "url": "",
                         "account": None,
-                        "chatbot": None,
+                        "llm_client": None,
                     },
                     "chat_history": [],
                     "chat_tool_call_history": [],
                     "chat_plugin_usage_history": [],
-                    "chatbot_request_history": [],
+                    "llm_client_request_history": [],
                     "plugin_selector_history": [],
                 },
                 "meta_data": {
@@ -169,12 +158,12 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                     "api_token": "****c10e",
                     "auth_header": "Token 5d65****",
                     "cache_key": "887e673f7be35b7190caf0934bcdc09c2286f9f941799310444fcd70d5e3971a",
-                    "chatbot": {
+                    "llm_client": {
                         "id": 372,
                         "created_at": "2026-01-07T23:25:02.548999Z",
                         "updated_at": "2026-01-07T23:25:02.549006Z",
                         "name": "smarter_test_base_364beb79380074c9",
-                        "description": "Test ChatBot",
+                        "description": "Test LLMClient",
                         "version": "1.0.0",
                         "annotations": [],
                         "account": {"accountNumber": "7154-0706-7820"},
@@ -183,7 +172,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                         "deployed": False,
                         "provider": "openai",
                         "default_model": None,
-                        "default_system_role": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+                        "default_system_role": "You are a helpful llm_client. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
                         "default_temperature": 0.5,
                         "default_max_tokens": 2048,
                         "app_name": "Smarter",
@@ -199,23 +188,23 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                         "tls_certificate_issuance_status": "No Certificate",
                         "tags": [],
                         "tagged_items": [],
-                        "url_chatbot": "http://localhost:9357/api/v1/chatbots/372/chat/",
+                        "url_llm_client": "http://localhost:9357/api/v1/llm-clients/372/chat/",
                     },
-                    "chatbot_custom_domain": None,
-                    "chatbot_id": None,
-                    "chatbot_name": "smarter_test_base_364beb79380074c9",
-                    "class_name": "ChatBotHelper",
+                    "llm_client_custom_domain": None,
+                    "llm_client_id": None,
+                    "llm_client_name": "smarter_test_base_364beb79380074c9",
+                    "class_name": "LLMClientHelper",
                     "data": {},
                     "domain": "testserver",
                     "environment_api_domain": "api.localhost:9357",
                     "ip_address": "127.0.0.1",
                     "is_authentication_required": False,
-                    "is_chatbot": True,
-                    "is_chatbot_cli_api_url": True,
-                    "is_chatbot_named_url": False,
-                    "is_chatbot_sandbox_url": False,
-                    "is_chatbot_smarter_api_url": False,
-                    "is_chatbothelper_ready": True,
+                    "is_llm_client": True,
+                    "is_llm_client_cli_api_url": True,
+                    "is_llm_client_named_url": False,
+                    "is_llm_client_sandbox_url": False,
+                    "is_llm_client_smarter_api_url": False,
+                    "is_llm_clienthelper_ready": True,
                     "is_config": True,
                     "is_custom_domain": False,
                     "is_dashboard": False,

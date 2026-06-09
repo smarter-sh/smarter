@@ -28,13 +28,13 @@ Smarter implements the following application security measures:
 Proprietary Security Features
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **No DNS Wildcards**. Prevents wildcard DNS entries to avoid subdomain takeover attacks. Smarter maintains strict DNS records for each deployed ChatBot/Agent using AWS Route53 Hosted Zones. Kubernetes Ingress resources are configured to only respond to specific domain names associated with each ChatBot/Agent, and Kubernetes cert-manager manages dedicated TLS certificates for these domains. This ensures that requests to undefined subdomains are not inadvertently routed to the application, thereby mitigating the risk of subdomain takeover attacks.
+- **No DNS Wildcards**. Prevents wildcard DNS entries to avoid subdomain takeover attacks. Smarter maintains strict DNS records for each deployed LLMClient/Agent using AWS Route53 Hosted Zones. Kubernetes Ingress resources are configured to only respond to specific domain names associated with each LLMClient/Agent, and Kubernetes cert-manager manages dedicated TLS certificates for these domains. This ensures that requests to undefined subdomains are not inadvertently routed to the application, thereby mitigating the risk of subdomain takeover attacks.
 
 .. raw:: html
 
    <img src="https://cdn.smarter.sh/images/aws-route53-api-hosted-zone.png"
         style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
-        alt="Smarter AWS Route53 Hosted Zone for Deployed ChatBots/Agents"/>
+        alt="Smarter AWS Route53 Hosted Zone for Deployed LLMClients/Agents"/>
 
 - **Sensitive File Blocking**. Custom middleware blocks access to sensitive files access attempts such as .env, .git, and others. See `smarter/lib/django/middleware/sensitive_files.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/sensitive_files.py>`_
 
@@ -45,8 +45,8 @@ Proprietary Security Features
         alt="Smarter Sensitive File Blocking"/>
 
 - **Excessive 404 Protection**. Custom middleware (above DRF's rate-limiting) to protect against blind/random file access attempts. See `smarter/lib/django/middleware/excessive_404.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/excessive_404.py>`_
-- **Enhanced CSRF Protection**. Custom middleware to enhance CSRF protection for Smarter ChatBot/Agent API endpoints. See `smarter/lib/django/middleware/csrf.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/csrf.py>`_
-- **Enhanced CORS Protection**. Custom middleware to enhance CORS protection for Smarter ChatBot/Agent API endpoints. See `smarter/lib/django/middleware/cors.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/cors.py>`_
+- **Enhanced CSRF Protection**. Custom middleware to enhance CSRF protection for Smarter LLMClient/Agent API endpoints. See `smarter/lib/django/middleware/csrf.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/csrf.py>`_
+- **Enhanced CORS Protection**. Custom middleware to enhance CORS protection for Smarter LLMClient/Agent API endpoints. See `smarter/lib/django/middleware/cors.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/cors.py>`_
 - **Enhanced Json HTTP Response Protection**. Custom middleware to ensure that REST API responses exclusively return Json in the http response body. See `smarter/lib/django/middleware/json.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/json.py>`_
 - **Audit Logging**. See `Smarter Journal <smarter-journal.html>`_ for details on logging security-related events.
 - **Configurable Application Logs**. See `Configuration Management <configuration.html>`_ for details on logging configuration changes.
@@ -115,7 +115,7 @@ Django Security Features
             "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
             "smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware",
             "django.contrib.auth.middleware.AuthenticationMiddleware",
-            "smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware",
+            "smarter.apps.llm_client.middleware.security.SmarterSecurityMiddleware",
             "smarter.lib.django.middleware.json.SmarterJsonErrorMiddleware",
             "django.middleware.clickjacking.XFrameOptionsMiddleware",
             "django_hosts.middleware.HostsResponseMiddleware",

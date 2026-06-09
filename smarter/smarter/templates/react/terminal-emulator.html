@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_terminal_emulator %}
+
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the terminal emulator
+  see: smarter.apps.dashboard.templatetags.react_terminal_emulator.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% terminal_emulator_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/terminal-emulator/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ terminal.root_id }}"
+    smarter-csrf-cookie-name="{{ terminal.csrf_cookie_name }}"
+    smarter-django-session-cookie-name="{{ terminal.django_session_cookie_name }}"
+    smarter-cookie-domain="{{ terminal.cookie_domain }}"
+    smarter-api-path="{{ terminal.api_url }}"
+  >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the terminal emulator
+  see: smarter.apps.dashboard.templatetags.react_terminal_emulator.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% terminal_emulator_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/terminal-emulator/' %}{{ js_file }}"></script>
+  {% endfor %}
+{% endblock %}

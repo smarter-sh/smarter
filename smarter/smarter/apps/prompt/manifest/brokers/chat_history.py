@@ -4,14 +4,21 @@
 import logging
 from typing import Optional, Type
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.forms.models import model_to_dict
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.prompt.manifest.models.chat_history.const import MANIFEST_KIND
+from smarter.apps.prompt.manifest.models.chat_history.metadata import (
+    SAMChatHistoryMetadata,
+)
 from smarter.apps.prompt.manifest.models.chat_history.model import SAMChatHistory
+from smarter.apps.prompt.manifest.models.chat_history.spec import (
+    SAMChatHistorySpecConfig,
+)
 from smarter.apps.prompt.models import Chat, ChatHistory
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.common.utils.decorators import camel_case
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -34,7 +41,7 @@ from smarter.lib.manifest.enum import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and waffle.switch_is_active(
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) or waffle.switch_is_active(
         SmarterWaffleSwitches.MANIFEST_LOGGING
     )
 
@@ -109,30 +116,39 @@ class SAMChatHistoryBroker(AbstractBroker):
         Transform the Smarter API SAMChatHistory manifest into a Django ORM model.
         """
         metadata = super().manifest_to_django_orm()
-        config_dump = self.manifest.spec.config.model_dump()
-        config_dump = self.camel_to_snake(config_dump)
+        config_dump = self.manifest.spec.model_dump()
+        config_dump = self.to_snake_case(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMChatHistoryBrokerError(
                 f"Failed to convert {self.kind} {self.manifest.metadata.name} config to dict", thing=self.kind
             )
         return {**metadata, **config_dump}
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Transform the Django ORM model into a Pydantic readable
         Smarter API SAMChatHistory manifest dict.
         """
+        if not self.chat_history:
+            raise SAMChatHistoryBrokerError(
+                f"ChatHistory not found for session key {self.session_key}", thing=self.kind
+            )
         chat_dict = model_to_dict(self.chat_history)
-        chat_dict = self.snake_to_camel(chat_dict)
+        chat_dict = self.to_camel_case(chat_dict)
+        if not isinstance(chat_dict, dict):
+            raise SAMChatHistoryBrokerError(
+                f"Failed to convert {self.kind} {self.chat_history.id} to dict", thing=self.kind  # type: ignore
+            )
         chat_dict.pop("id")
 
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: self.chat_history.name,
-                SAMMetadataKeys.DESCRIPTION.value: self.chat_history.description,
-                SAMMetadataKeys.VERSION.value: self.chat_history.version,
+                SAMMetadataKeys.NAME.value: self.chat_history.chat.name,
+                SAMMetadataKeys.DESCRIPTION.value: self.chat_history.chat.description,
+                SAMMetadataKeys.VERSION.value: self.chat_history.chat.version,
             },
             SAMKeys.SPEC.value: None,
             SAMKeys.STATUS.value: {
@@ -201,19 +217,22 @@ class SAMChatHistoryBroker(AbstractBroker):
                 )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
+            metadata = SAMChatHistoryMetadata(**self.loader.manifest_metadata)
+            spec = SAMChatHistorySpecConfig(**self.loader.manifest_spec)
             self._manifest = SAMChatHistory(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=self.loader.manifest_metadata,
-                spec=self.loader.manifest_spec,
-                status=self.loader.manifest_status,
+                metadata=metadata,
+                spec=spec,
             )
+        if not isinstance(self._manifest, SAMChatHistory):
+            raise SAMChatHistoryBrokerError(f"Failed to initialize manifest for {self.kind} broker", thing=self.kind)
         return self._manifest
 
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: ASGIRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = {
@@ -228,20 +247,20 @@ class SAMChatHistoryBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def get(self, request: ASGIRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
 
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        self._session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
+        self._session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)  # type: ignore
         self._session_key = self.clean_cli_param(
             param=self._session_key,
             param_name=SMARTER_CHAT_SESSION_KEY_NAME,
-            url=self.smarter_build_absolute_uri(self.request),
+            url=self.smarter_build_absolute_uri(self.request),  # type: ignore
         )
         data = []
         chat_history = []
         if self.session_key:
-            chat: Chat = None
+            chat: Chat
             try:
                 chat = Chat.objects.get(session_key=self.session_key)
             except Chat.DoesNotExist:
@@ -255,18 +274,18 @@ class SAMChatHistoryBroker(AbstractBroker):
             )
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each ChatHistory
-        for chat in chat_history:
+        for chat in chat_history:  # type: ignore
             try:
                 model_dump = ChatHistorySerializer(chat).data
                 if not model_dump:
                     raise SAMChatHistoryBrokerError(
-                        f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command
+                        f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command  # type: ignore
                     )
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                camel_cased_model_dump = self.to_camel_case(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMChatHistoryBrokerError(
-                    f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command
+                    f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command  # type: ignore
                 ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -280,7 +299,7 @@ class SAMChatHistoryBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def apply(self, request: ASGIRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         Chat is a read-only django table, populated by the LLM handlers
         """
@@ -288,15 +307,15 @@ class SAMChatHistoryBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError(f"Read-only {self.kind} {self.name}", thing=self.kind, command=command)
 
-    def chat(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: ASGIRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def describe(self, request: ASGIRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
-        self._session_key = kwargs.get("session_id", None)
+        self._session_key = kwargs.get("session_id", None)  # type: ignore
         if self.chat_history:
             try:
                 data = self.django_orm_to_manifest_dict()
@@ -307,29 +326,29 @@ class SAMChatHistoryBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"ChatHistory {self.name} not ready", thing=self.kind, command=command)
 
-    def delete(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def delete(self, request: ASGIRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError(f"Read-only {self.kind} {self.name}", thing=self.kind, command=command)
 
-    def deploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: ASGIRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(
             f"Deploy not implemented for {self.kind} {self.name}", thing=self.kind, command=command
         )
 
-    def undeploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: ASGIRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(
             f"Undeploy not implemented for {self.kind} {self.name}", thing=self.kind, command=command
         )
 
-    def logs(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+    def logs(self, request: ASGIRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
-        self._session_key = kwargs.get("session_id", None)
+        self._session_key = kwargs.get("session_id", None)  # type: ignore
         if self.chat_history:
             data = {}
             return self.json_response_ok(command=command, data=data)

@@ -1,23 +1,21 @@
 """Unit test class."""
 
-import logging
-
 from django.test import RequestFactory
 
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .factories import admin_user_factory, factory_account_teardown, mortal_user_factory
 
 logger = logging.getLogger(__name__)
 HERE = __name__
-logger_prefix = formatted_text(f"{HERE}.TestAccountMixin()")
+logger_prefix = logging.formatted_text(f"{HERE}.TestAccountMixin()")
 
 
 class TestAccountMixin(SmarterTestBase):
     """A mixin that adds class-level account and user creation/destruction."""
 
-    test_account_mixin_logger_prefix = formatted_text(f"{HERE}.TestAccountMixin()")
+    test_account_mixin_logger_prefix = logging.formatted_text(f"{HERE}.TestAccountMixin()")
 
     @classmethod
     def setUpClass(cls):
@@ -52,6 +50,12 @@ class TestAccountMixin(SmarterTestBase):
     def setUp(self):
         """We use different manifest test data depending on the test case."""
         super().setUp()
+        # Assign class-level user/account attributes to instance for reliable access
+        self.admin_user = self.__class__.admin_user
+        self.account = self.__class__.account
+        self.user_profile = self.__class__.user_profile
+        self.non_admin_user = self.__class__.non_admin_user
+        self.non_admin_user_profile = self.__class__.non_admin_user_profile
         self._manifest = None
         self._manifest_path = None
         self._loader = None

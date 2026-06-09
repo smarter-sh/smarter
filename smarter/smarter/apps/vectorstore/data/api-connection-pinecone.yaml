@@ -1,0 +1,12 @@
+apiVersion: smarter.sh/v1
+kind: ApiConnection
+metadata:
+  annotations: []
+  description: Pinecone API connection
+  name: pinecone
+  version: 1.0.0
+spec:
+  connection:
+    apiKey: pinecone
+    authMethod: token
+    baseUrl: http://localhost:9357/

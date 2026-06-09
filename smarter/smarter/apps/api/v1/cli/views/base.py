@@ -1,12 +1,11 @@
-"""Smarter API command-line interface Base class API view"""
+"""Smarter API command-line interface Base class API view."""
 
-import logging
 import re
 import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
@@ -22,10 +21,12 @@ from smarter.apps.api.signals import (
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
-from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.docs.views.base import DocsError
+from smarter.apps.llm_client.exceptions import SmarterLLMClientException
 from smarter.apps.plugin.plugin.base import SmarterPluginError
-from smarter.apps.prompt.views import SmarterChatappViewError
+from smarter.apps.prompt.views.detailview.chatapp_workbench_view import (
+    SmarterChatappViewError,
+)
 from smarter.common.const import (
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
 )
@@ -38,15 +39,13 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.common.helpers.aws.exceptions import SmarterAWSError
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.k8s_helpers import KubernetesHelperException
 from smarter.common.utils import (
     is_authenticated_request,
     mask_string,
     smarter_build_absolute_uri,
 )
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -57,7 +56,6 @@ from smarter.lib.journal.enum import (
     SmarterJournalEnumException,
 )
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
@@ -71,14 +69,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from .swagger import BUG_REPORT
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
 
 class APIV1CLIViewError(SmarterException):
@@ -100,6 +91,7 @@ class SmarterAPIV1CLIViewErrorNotAuthenticated(APIV1CLIViewError):
 class CliBaseApiView(APIView, SmarterRequestMixin):
     """
     Base class for all Smarter API v1 command-line interface (CLI) views.
+
     This class provides common functionality for all `/api/v1/cli` endpoints, including:
 
     - Authentication using either Knox TokenAuthentication or Django SessionAuthentication.
@@ -110,7 +102,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     The base class is responsible for as much request "housekeeping" as possible, so that
     child views can focus on business logic. The following attributes are set up and managed:
 
-
     Notes
     -----
     - The base class is designed to minimize boilerplate in child views.
@@ -120,7 +111,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     Examples
     --------
     Example URL with a manifest name:
-        ``/api/v1/cli/describe/chatbot/<str:name>/``
+        ``/api/v1/cli/describe/llm-client/<str:name>/``
 
     Example command extraction:
         If the URL path is ``/api/v1/cli/apply/``, then the command will be
@@ -155,7 +146,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             (arg for arg in args if isinstance(arg, UserProfile)), None
         )
         request = kwargs.pop("request", None) or next(
-            (arg for arg in args if isinstance(arg, (Request, HttpRequest, WSGIRequest))), None
+            (arg for arg in args if isinstance(arg, (Request, HttpRequest, ASGIRequest))), None
         )
         SmarterRequestMixin.__init__(
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
@@ -169,12 +160,13 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: Logger prefix string
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{CliBaseApiView.__name__}[{id(self)}]")
+        return logging.formatted_text(f"{__name__}.{CliBaseApiView.__name__}[{id(self)}]")
 
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
 
         :return: Formatted class name string
@@ -186,7 +178,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def loader(self) -> Optional[SAMLoader]:
         """
-        Get the SAMLoader instance. a SAMLoader instance is used to load
+        Get the SAMLoader instance.
+
+        a SAMLoader instance is used to load
         raw manifest text into a Pydantic model. It performs cursory validations
         such as validating the file format, and identifying required dict key values
         such as the api version, the manifest kind and its name.
@@ -217,7 +211,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def BrokerClass(self) -> Type[AbstractBroker]:
         """
-        Get the broker class for the manifest kind. This is used to
+        Get the broker class for the manifest kind.
+
+        This is used to
         instantiate a broker for the manifest kind.
 
         :return: Broker class for the manifest kind
@@ -240,7 +236,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def broker(self) -> Optional[AbstractBroker]:
         """
-        Use a loader to try to instantiate a broker. A broker is a class that
+        Use a loader to try to instantiate a broker.
+
+        A broker is a class that
         implements the broker service pattern. It provides a service interface
         that 'brokers' the http request for the underlying object that provides
         the object-specific service (create, update, get, delete, etc).
@@ -300,7 +298,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def manifest_data(self) -> Optional[dict]:
         """
-        The raw manifest data from the request body. The manifest data is a json object
+        The raw manifest data from the request body.
+
+        The manifest data is a json object
         which needs to be rendered into a Pydantic model. The Pydantic model is then
         used to instantiate a broker for the manifest kind.
 
@@ -316,13 +316,15 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def manifest_name(self) -> Optional[str]:
         """
-        The name of the manifest. The manifest name is used to identify the resource
-        within a Kind. For example, the manifest name for a ChatBot resource is the
-        name of the chatbot. The manifest name is used to identify the resource
+        The name of the manifest.
+
+        The manifest name is used to identify the resource
+        within a Kind. For example, the manifest name for a LLMClient resource is the
+        name of the llm_client. The manifest name is used to identify the resource
         within a Kind. The name can be passed from inside the raw manifest data, or
         it can be passed as part of a url path.
 
-        Example url path with a name: /api/v1/cli/describe/chatbot/<str:name>/
+        Example url path with a name: /api/v1/cli/describe/llm-client/<str:name>/
 
         :return: The name of the manifest
         :rtype: Optional[str]
@@ -336,7 +338,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def manifest_kind(self) -> Optional[str]:
         """
-        The kind of the manifest. The manifest kind is used to identify the type
+        The kind of the manifest.
+
+        The manifest kind is used to identify the type
         of resource that the manifest is describing. The kind is used to identify
         the broker that will be used to broker the http request for the resource.
 
@@ -351,8 +355,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # if we still don't have a manifest kind, then we should
         # analyze the url path to determine the manifest kind.
         # urls:
-        # - http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
-        # - http://testserver/api/v1/cli/chat/config/TestChatBot/
+        # - http://testserver/api/v1/cli/logs/LLMClient/?name=TestLLMClient
+        # - http://testserver/api/v1/cli/chat/config/TestLLMClient/
         if not self._manifest_kind:
             self._manifest_kind = SAMKinds.from_url(self.url)
             if self._manifest_kind:
@@ -372,12 +376,13 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     @property
     def command(self) -> SmarterJournalCliCommands:
         """
-        Translate the request route into a SmarterJournalCliCommands enum
+        Translate the request route into a SmarterJournalCliCommands enum.
+
         instance. For example, if the route is '/api/v1/cli/apply/', then
         the corresponding command will be SmarterJournalCliCommands.APPLY.
 
         url:
-         - http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
+         - http://testserver/api/v1/cli/logs/LLMClient/?name=TestLLMClient
          - http://testserver/api/v1/cli/apply
 
         :return: SmarterJournalCliCommands enum instance
@@ -429,7 +434,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
     def setup(self, request: Request, *args, **kwargs):
         """
-        Setup the view. This is called by Django before dispatch() and is used to
+        Setup the view.
+
+        This is called by Django before dispatch() and is used to
         set up the view for the request. the request is not yet authenticated.
 
         :param request: The HTTP request object
@@ -517,7 +524,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             request.headers.get("Authorization"),
             self.is_internal_api_request(request),
         )
-        # there are cases where the requests lifecycle begins with a WSGIRequest that is
+        # there are cases where the requests lifecycle begins with a ASGIRequest that is
         # eventually wrapped into a DRF Request object. So we need to ensure that
         # the smarter_request is always set to the DRF Request object.
         if isinstance(request, Request) and not isinstance(self.smarter_request, Request):
@@ -539,7 +546,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 exc_info=True,
             )
             raise SmarterConfigurationError(
-                f"{self.formatted_class_name} error during initialization: could not set request object."
+                "%s error during initialization: could not set request object." % self.formatted_class_name
             ) from e
 
         logger.debug("hi mom")
@@ -624,7 +631,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             )
         if not self.ready:
             logger.warning(
-                f"{self.logger_prefix}.initial() is not in a ready state. This might affect some operations."
+                "%s.initial() is not in a ready state. This might affect some operations.", self.logger_prefix
             )
 
         # Manifest parsing and broker instantiation are lazy implementations.
@@ -711,15 +718,13 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         https://www.django-rest-framework.org/api-guide/views/#view-methods
             DRF documentation on view methods and the dispatch process.
         """
-        logger.debug("%s.dispatch() called with args %s and kwargs %s", self.logger_prefix, args, kwargs)
-
         if self.is_internal_api_request(request):
             logger.debug(
                 "%s.dispatch() - internal api request. Disabling CSRF checks: %s",
                 self.logger_prefix,
                 request,
             )
-            request._dont_enforce_csrf_checks = True
+            setattr(request, "_dont_enforce_csrf_checks", True)
 
         self.smarter_request = request
         response = None
@@ -776,7 +781,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 status = HTTPStatus.BAD_REQUEST.value
             elif type(e) in (
                 SmarterChatappViewError,
-                SmarterChatBotException,
+                SmarterLLMClientException,
                 DocsError,
                 SmarterPluginError,
                 SmarterConfigurationError,

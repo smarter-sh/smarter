@@ -5,11 +5,11 @@ import logging
 import re
 
 from django.contrib import admin
+from django.core.handlers.asgi import ASGIRequest
 
-from smarter.apps.account.models import get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
-    smarter_filter_queryset_for_user,
     smarter_restricted_admin_site,
 )
 
@@ -17,7 +17,6 @@ from .manifest.enum import (
     SAMPluginCommonMetadataClassValues,
 )
 from .models import (
-    ApiConnection,
     PluginDataApi,
     PluginDataSql,
     PluginDataStatic,
@@ -25,7 +24,6 @@ from .models import (
     PluginPrompt,
     PluginSelector,
     PluginSelectorHistory,
-    SqlConnection,
 )
 
 logger = logging.getLogger(__name__)
@@ -39,7 +37,7 @@ class PluginSelectorInline(admin.StackedInline):
     extra = 0  # This will not show extra empty forms
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
@@ -50,7 +48,7 @@ class PluginPromptInline(admin.StackedInline):
     extra = 0  # This will not show extra empty forms
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
@@ -65,7 +63,7 @@ class PluginDataInline(admin.StackedInline):
         verbose_name_plural = "Plugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
@@ -80,7 +78,7 @@ class PluginDataApiInline(admin.StackedInline):
         verbose_name_plural = "ApiPlugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
@@ -95,7 +93,7 @@ class PluginDataSqlInline(admin.StackedInline):
         verbose_name_plural = "SqlPlugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
 
@@ -116,7 +114,7 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
@@ -127,10 +125,13 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        qs = smarter_filter_queryset_for_user(user=user, qs=qs)
-        if qs.count() > 0:
-            qs = qs.filter(plugin_class=SAMPluginCommonMetadataClassValues.STATIC.value)
-        return qs
+        if not isinstance(user, User):
+            return qs.none()
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(requests__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.STATIC.value)
+        )
 
 
 class PluginApiAdmin(SmarterCustomerModelAdmin):
@@ -150,7 +151,7 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataApiInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
@@ -161,10 +162,14 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        qs = smarter_filter_queryset_for_user(user=user, qs=qs)
-        if qs.count() > 0:
-            qs = qs.filter(plugin_class=SAMPluginCommonMetadataClassValues.API.value)
-        return qs
+        if not isinstance(user, User):
+            return qs.none()
+
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(requests__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.API.value)
+        )
 
 
 class PluginSqlAdmin(SmarterCustomerModelAdmin):
@@ -184,7 +189,7 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataSqlInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request, obj=None):
+    def get_readonly_fields(self, request: ASGIRequest, obj=None):
         return [f.name for f in self.model._meta.fields]
 
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
@@ -195,10 +200,13 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        qs = smarter_filter_queryset_for_user(user=user, qs=qs)
-        if qs.count() > 0:
-            qs = qs.filter(plugin_class=SAMPluginCommonMetadataClassValues.SQL.value)
-        return qs
+        if not isinstance(user, User):
+            return qs.none()
+        return (
+            PluginMeta.objects.with_ownership_permission_for(user=user)
+            .filter(requests__in=qs)
+            .filter(plugin_class=SAMPluginCommonMetadataClassValues.SQL.value)
+        )
 
 
 class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
@@ -229,80 +237,10 @@ class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
         """
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user(
-            user=user,
-            qs=qs,
-            account_filter="plugin_selector__plugin__user_profile__account",
-            user_profile_filter="plugin_selector__plugin__user_profile",
-        )
-
-
-class SqlConnectionAdmin(SmarterCustomerModelAdmin):
-    """
-    PluginDataSql Connection model admin. This is a primary Smarter resource,
-    that descends directly from MetaDataWithOwnershipModel. Visibility
-    is determined by ownership and role.
-    """
-
-    model = SqlConnection
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
-
-    list_display = (
-        "created_at",
-        "user_profile",
-        "name",
-        "db_engine",
-        "hostname",
-        "database",
-        "username",
-        "updated_at",
-    )
-
-    def get_queryset(self, request):
-        """
-        Visibility is determined by ownership and role.
-        """
-        user = get_resolved_user(request.user)  # type: ignore
-        qs = super().get_queryset(request)
-
-        return smarter_filter_queryset_for_user(user=user, qs=qs)
-
-
-class ApiConnectionAdmin(SmarterCustomerModelAdmin):
-    """
-    PluginDataApi Connection model admin. This is a primary Smarter resource,
-    that descends directly from MetaDataWithOwnershipModel. Visibility
-    is determined by ownership and role.
-    """
-
-    model = ApiConnection
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
-
-    list_display = (
-        "created_at",
-        "user_profile",
-        "name",
-        "base_url",
-        "api_key",
-        "updated_at",
-    )
-
-    def get_queryset(self, request):
-        """
-        Visibility is determined by ownership and role.
-        """
-        user = get_resolved_user(request.user)  # type: ignore
-        qs = super().get_queryset(request)
-
-        return smarter_filter_queryset_for_user(user=user, qs=qs)
+        if not isinstance(user, User):
+            return qs.none()
+        plugins = PluginMeta.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return PluginSelectorHistory.objects.filter(plugin_selector__plugin__in=plugins)
 
 
 # Plugin Models
@@ -330,6 +268,4 @@ class PluginMetaSql(PluginMeta):
 smarter_restricted_admin_site.register(PluginMetaStatic, PluginStaticAdmin)
 smarter_restricted_admin_site.register(PluginMetaApi, PluginApiAdmin)
 smarter_restricted_admin_site.register(PluginMetaSql, PluginSqlAdmin)
-smarter_restricted_admin_site.register(SqlConnection, SqlConnectionAdmin)
 smarter_restricted_admin_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)
-smarter_restricted_admin_site.register(ApiConnection, ApiConnectionAdmin)

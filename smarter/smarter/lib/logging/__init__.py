@@ -1,71 +1,133 @@
 """
-A logger that can be controlled with a condition function.
-This allows for more flexible logging behavior based on runtime conditions.
+Enhanced logging features for Smarter, including Waffle switch-controlled
+loggers and custom Redis and Streaming file handlers.
 """
 
-import logging
-from typing import Any, Callable, Optional
+from logging import (
+    BASIC_FORMAT,
+    CRITICAL,
+    DEBUG,
+    ERROR,
+    FATAL,
+    INFO,
+    NOTSET,
+    WARN,
+    WARNING,
+    BufferingFormatter,
+    FileHandler,
+    Filter,
+    Formatter,
+    Handler,
+    Logger,
+    LoggerAdapter,
+    LogRecord,
+    NullHandler,
+    StreamHandler,
+    addLevelName,
+    basicConfig,
+    captureWarnings,
+    critical,
+    debug,
+    disable,
+    error,
+    exception,
+    fatal,
+    getHandlerByName,
+    getHandlerNames,
+    getLevelName,
+    getLevelNamesMapping,
+    getLogger,
+    getLoggerClass,
+    getLogRecordFactory,
+    info,
+    lastResort,
+    log,
+    makeLogRecord,
+    raiseExceptions,
+    setLoggerClass,
+    setLogRecordFactory,
+    shutdown,
+    warn,
+    warning,
+)
 
+from smarter.common.helpers.console_helpers import (
+    formatted_json,
+    formatted_text,
+    formatted_text_blue,
+    formatted_text_green,
+    formatted_text_red,
+)
 
-class WaffleSwitchedLoggerWrapper:
-    """
-    A wrapper around a standard logger that adds conditional logic.
+from .get_smarter_logger import getSmarterLogger
+from .redis_log_handler import (
+    GLOBAL_LOG_CHANNEL,
+    RedisLogHandler,
+    build_channel,
+    get_user_context,
+    job_id_factory,
+    user_id_context,
+)
+from .streaming_file_handler import StreamingFileHandler
+from .waffle_switched_logger import WaffleSwitchedLoggerWrapper
 
-    Usage:
-        .. code-block:: python
-
-            import logging
-
-            from smarter.lib.django import waffle
-            from smarter.lib.django.waffle import SmarterWaffleSwitches
-            from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-
-            def should_log_detailed(level):
-                return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
-
-            base_logger = logging.getLogger(__name__)
-            logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_detailed)
-
-            logger.debug("This is a debug message.")
-    """
-
-    # log entries will be forced at this level and above
-    REQUIRED_LOG_LEVEL = logging.WARNING
-
-    def __init__(self, logger: logging.Logger, condition_func: Optional[Callable] = None):
-        self._logger = logger
-        self._condition_func = condition_func
-
-    def _should_log(self, level: int = logging.DEBUG) -> bool:
-        """Check if we should log based on custom conditions."""
-        if not self._logger.isEnabledFor(level):
-            return False
-
-        if self._condition_func:
-            return self._condition_func(level)
-
-        return True
-
-    def debug(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.DEBUG) or logging.DEBUG >= self.REQUIRED_LOG_LEVEL:
-            self._logger.debug(msg, *args, **kwargs)
-
-    def info(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.INFO) or logging.INFO >= self.REQUIRED_LOG_LEVEL:
-            self._logger.info(msg, *args, **kwargs)
-
-    def warning(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.WARNING) or logging.WARNING >= self.REQUIRED_LOG_LEVEL:
-            self._logger.warning(msg, *args, **kwargs)
-
-    def error(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.ERROR) or logging.ERROR >= self.REQUIRED_LOG_LEVEL:
-            self._logger.error(msg, *args, **kwargs)
-
-    def critical(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.CRITICAL) or logging.CRITICAL >= self.REQUIRED_LOG_LEVEL:
-            self._logger.critical(msg, *args, **kwargs)
-
-    def set_condition(self, condition_func: Callable):
-        """Update the condition function."""
-        self._condition_func = condition_func
+__all__ = [
+    "get_user_context",
+    "WaffleSwitchedLoggerWrapper",
+    "build_channel",
+    "user_id_context",
+    "job_id_factory",
+    "StreamingFileHandler",
+    "RedisLogHandler",
+    "GLOBAL_LOG_CHANNEL",
+    "BASIC_FORMAT",
+    "BufferingFormatter",
+    "CRITICAL",
+    "DEBUG",
+    "ERROR",
+    "FATAL",
+    "FileHandler",
+    "Filter",
+    "Formatter",
+    "Handler",
+    "INFO",
+    "LogRecord",
+    "Logger",
+    "LoggerAdapter",
+    "NOTSET",
+    "NullHandler",
+    "StreamHandler",
+    "WARN",
+    "WARNING",
+    "addLevelName",
+    "basicConfig",
+    "captureWarnings",
+    "critical",
+    "debug",
+    "disable",
+    "error",
+    "formatted_text",
+    "formatted_json",
+    "formatted_text_blue",
+    "formatted_text_green",
+    "formatted_text_red",
+    "exception",
+    "fatal",
+    "getLevelName",
+    "getLogger",
+    "getLoggerClass",
+    "info",
+    "log",
+    "makeLogRecord",
+    "setLoggerClass",
+    "shutdown",
+    "warn",
+    "warning",
+    "getLogRecordFactory",
+    "setLogRecordFactory",
+    "lastResort",
+    "raiseExceptions",
+    "getLevelNamesMapping",
+    "getHandlerByName",
+    "getHandlerNames",
+]

@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_plugin_list %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the plugin list
+  see: smarter.apps.plugin.templatetags.react_plugin_list.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% plugin_list_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/plugin-list/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ plugin_list.root_id }}"
+    django-csrf-cookie-name="{{ plugin_list.django_csrf_cookie_name }}"
+    django-session-cookie-name="{{ plugin_list.django_session_cookie_name }}"
+    django-cookie-domain="{{ plugin_list.cookie_domain }}"
+    smarter-plugin-list-api-url="{{ plugin_list.plugin_list_api_url }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the plugin list
+  see: smarter.apps.plugin_list.templatetags.react_plugin_list.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% plugin_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/plugin-list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

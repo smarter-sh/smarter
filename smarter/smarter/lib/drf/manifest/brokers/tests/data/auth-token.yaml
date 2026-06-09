@@ -1,5 +1,5 @@
 apiVersion: smarter.sh/v1
-kind: AuthToken
+kind: SmarterAuthToken
 metadata:
   name: test_auth_token
   description: An example Smarter API manifest for a AuthToken

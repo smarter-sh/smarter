@@ -3,6 +3,7 @@
 from django.urls import path
 from django.views.generic.base import RedirectView
 
+from smarter.apps.account.const import namespace
 from smarter.apps.account.views.dashboard.api_keys import APIKeysView, APIKeyView
 from smarter.apps.account.views.dashboard.billing.billing import BillingView
 from smarter.apps.account.views.dashboard.billing.billing_addresses import (
@@ -20,7 +21,6 @@ from smarter.apps.account.views.dashboard.dashboard import (
     OverviewView,
     StatementsView,
 )
-from smarter.apps.account.views.dashboard.secrets import SecretsView, SecretView
 from smarter.apps.account.views.dashboard.settings import SettingsView
 from smarter.apps.account.views.dashboard.users import UsersView, UserView
 
@@ -40,6 +40,8 @@ class DashboardNamedUrls:
 
     """
 
+    namespace = namespace
+
     ACCOUNT_ACTIVITY = "dashboard_account_activity"
     ACCOUNT_API_KEYS = "dashboard_account_api_keys"
     ACCOUNT_API_KEY = "dashboard_account_api_key"
@@ -55,9 +57,6 @@ class DashboardNamedUrls:
     ACCOUNT_BILLING_ADDRESS = "dashboard_account_billing_address"
     ACCOUNT_BILLING_ADDRESS_NEW = "dashboard_account_billing_address_new"
     ACCOUNT_SETTINGS = "dashboard_account_settings"
-    ACCOUNT_SECRETS = "dashboard_account_secrets"
-    ACCOUNT_SECRET = "dashboard_account_secret"
-    ACCOUNT_SECRET_NEW = "dashboard_account_secret_new"
     ACCOUNT_STATEMENTS = "dashboard_account_statements"
     ACCOUNT_USERS = "dashboard_account_users"
     ACCOUNT_USER = "dashboard_account_user"
@@ -117,9 +116,4 @@ urlpatterns = [
     path("api-keys/new/", APIKeyView.as_view(), name=DashboardNamedUrls.ACCOUNT_API_KEY_NEW),
     path("api-keys/<str:key_id>/", APIKeyView.as_view(), name=DashboardNamedUrls.ACCOUNT_API_KEY),
     path("api-keys/<str:key_id>/<str:new_api_key>/", APIKeyView.as_view(), name=DashboardNamedUrls.ACCOUNT_API_KEY_NEW),
-    # secrets
-    # -------------------------------------------
-    path("secrets/", SecretsView.as_view(), name=DashboardNamedUrls.ACCOUNT_SECRETS),
-    path("secrets/new/", SecretView.as_view(), name=DashboardNamedUrls.ACCOUNT_SECRET_NEW),
-    path("secrets/<int:secret_id>/", SecretView.as_view(), name=DashboardNamedUrls.ACCOUNT_SECRET),
 ]

@@ -5,7 +5,7 @@ from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-from smarter.apps.api import urls as api_urls
+from smarter.apps.api import urls
 from smarter.common.conf import smarter_settings
 
 api_info = openapi.Info(
@@ -46,6 +46,6 @@ schema_view = get_schema_view(
     url=smarter_settings.environment_api_url,
     public=True,
     permission_classes=(permissions.AllowAny,),
-    patterns=api_urls.urlpatterns,
+    patterns=urls.urlpatterns,
     generator_class=ApiKeySchemaGenerator,
 )

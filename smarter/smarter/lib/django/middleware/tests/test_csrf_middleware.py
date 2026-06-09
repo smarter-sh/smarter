@@ -27,18 +27,9 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
         self.request.user = self.admin_user
 
     @patch("smarter.lib.django.middleware.csrf.settings")
-    @patch("smarter.lib.django.middleware.csrf.waffle")
-    def test_CSRF_TRUSTED_ORIGINS_without_chatbot(self, mock_waffle, mock_settings):
-        mock_settings.CSRF_TRUSTED_ORIGINS = ["http://example.3141-5926-5359.api.localhost:9357/"]
-        mock_waffle.switch_is_active.return_value = False
-        self.middleware.request = self.request
-        origins = self.middleware.CSRF_TRUSTED_ORIGINS
-        self.assertEqual(origins, ["http://example.3141-5926-5359.api.localhost:9357/"])
-
-    @patch("smarter.lib.django.middleware.csrf.settings")
     def test_csrf_trusted_origins_hosts(self, mock_settings):
         mock_settings.CSRF_TRUSTED_ORIGINS = ["https://foo.com", "https://*.bar.com"]
-        self.middleware.request = self.request
+        setattr(self.middleware, "request", self.request)  # type: ignore
         hosts = self.middleware.csrf_trusted_origins_hosts
         self.assertIn("foo.com", hosts)
         self.assertIn(".bar.com", hosts)
@@ -46,7 +37,7 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
     @patch("smarter.lib.django.middleware.csrf.settings")
     def test_allowed_origins_exact(self, mock_settings):
         mock_settings.CSRF_TRUSTED_ORIGINS = ["https://foo.com", "https://*.bar.com"]
-        self.middleware.request = self.request
+        setattr(self.middleware, "request", self.request)  # type: ignore
         allowed = self.middleware.allowed_origins_exact
         self.assertIn("https://foo.com", allowed)
         self.assertNotIn("https://*.bar.com", allowed)
@@ -54,7 +45,7 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
     @patch("smarter.lib.django.middleware.csrf.settings")
     def test_allowed_origin_subdomains(self, mock_settings):
         mock_settings.CSRF_TRUSTED_ORIGINS = ["https://foo.com", "https://*.bar.com"]
-        self.middleware.request = self.request
+        setattr(self.middleware, "request", self.request)  # type: ignore
         allowed = self.middleware.allowed_origin_subdomains
         self.assertIn("https", allowed)
         self.assertIn(".bar.com", allowed["https"])
@@ -62,12 +53,12 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
     @override_settings(ALLOWED_HOSTS=["example.com"])
     @patch("smarter.lib.django.middleware.csrf.settings")
     @patch("smarter.lib.django.middleware.csrf.waffle")
-    def test_process_request_with_chatbot(self, mock_waffle, mock_settings):
+    def test_process_request_with_llm_client(self, mock_waffle, mock_settings):
         self.request.build_absolute_uri = MagicMock(return_value="https://example.com/")
         self.request.META["SERVER_NAME"] = "example.com"
         self.request.META["SERVER_PORT"] = "443"
         self.request.META["HTTP_HOST"] = "example.com:443"
-        self.middleware.request = self.request
+        setattr(self.middleware, "request", self.request)  # type: ignore
         result = self.middleware.process_request(self.request)
         self.assertIsNone(result)
 
@@ -76,20 +67,20 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
     def test_process_view_local_env(self, mock_waffle, mock_smarter_settings):
         mock_smarter_settings.environment = "local"
         mock_waffle.switch_is_active.return_value = False
-        self.middleware.request = self.request
+        setattr(self.middleware, "request", self.request)  # type: ignore
         result = self.middleware.process_view(self.request, MagicMock(), (), {})
         self.assertIsNone(result)
 
     @patch("smarter.lib.django.middleware.csrf.smarter_settings")
     @patch("smarter.lib.django.middleware.csrf.waffle")
-    def test_process_view_csrf_suppress_for_chatbots(self, mock_waffle, mock_smarter_settings):
+    def test_process_view_csrf_suppress_for_llm_clients(self, mock_waffle, mock_smarter_settings):
         mock_smarter_settings.environment = "prod"
-        # First call for CSRF_SUPPRESS_FOR_CHATBOTS, second for MIDDLEWARE_LOGGING
+        # First call for CSRF_SUPPRESS_FOR_LLM_CLIENTS, second for MIDDLEWARE_LOGGING
         mock_waffle.switch_is_active.side_effect = [True, False]
-        # Set up smarter_request with is_chatbot = True
+        # Set up smarter_request with is_llm_client = True
         smarter_request_mock = MagicMock()
-        smarter_request_mock.is_chatbot = True
+        smarter_request_mock.is_llm_client = True
         self.middleware.smarter_request = smarter_request_mock
-        self.middleware.request = self.request
+        setattr(self.middleware, "request", self.request)  # type: ignore
         result = self.middleware.process_view(self.request, MagicMock(), (), {})
         self.assertIsNone(result)

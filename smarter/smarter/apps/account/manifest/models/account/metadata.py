@@ -1,7 +1,7 @@
 """Smarter API Manifest - Account.metadata"""
 
 import os
-from typing import ClassVar
+from typing import ClassVar, Optional
 
 from pydantic import Field
 
@@ -17,8 +17,8 @@ class SAMAccountMetadata(AbstractSAMMetadataBase):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    accountNumber: str = Field(
-        ...,
+    accountNumber: Optional[str] = Field(
+        None,
         description=(
             f"{class_identifier}.accountNumber[str]. Your preassigned 12-digit account number for your Smarter {MANIFEST_KIND} in the format '####-####-####'. Read only."
         ),

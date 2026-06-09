@@ -5,8 +5,8 @@ import logging
 import os
 
 from smarter.apps.account.const import DATA_PATH as ACCOUNT_DATA_PATH
-from smarter.apps.account.models import Secret
 from smarter.apps.api.utils import apply_manifest
+from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.manifest.loader import SAMLoader

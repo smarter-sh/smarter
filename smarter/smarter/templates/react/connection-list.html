@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_connection_list %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the connection list
+  see: smarter.apps.connection.templatetags.react_connection_list.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% connection_list_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/connection-list/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ connection_list.root_id }}"
+    django-csrf-cookie-name="{{ connection_list.django_csrf_cookie_name }}"
+    django-session-cookie-name="{{ connection_list.django_session_cookie_name }}"
+    django-cookie-domain="{{ connection_list.cookie_domain }}"
+    smarter-connection-list-api-url="{{ connection_list.connection_list_api_url }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the connection list
+  see: smarter.apps.connection_list.templatetags.react_connection_list.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% connection_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/connection-list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

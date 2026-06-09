@@ -1,7 +1,7 @@
 PluginDataSql Model
 =======================
 
-.. autoclass:: smarter.apps.plugin.models.PluginDataSql
+.. automodule:: smarter.apps.plugin.models.plugin_data_sql
     :members:
     :undoc-members:
     :show-inheritance:

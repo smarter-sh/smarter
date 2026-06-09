@@ -36,7 +36,7 @@
 env:
   AUTHENTICATION_BACKENDS: "social_core.backends.google.GoogleOAuth2,social_core.backends.github.GithubOAuth2,django.contrib.auth.backends.ModelBackend"
   AWS_ACCESS_KEY_ID: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  AWS_REGION: "us-east-2"
+  AWS_REGION: "us-east-1"
   AWS_SECRET_ACCESS_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   CACHES_LOCATION: "SET-ME-IN-helm/charts/smarter/values.yaml"
   CELERY_BROKER_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -71,14 +71,14 @@ env:
   SMARTER_CACHE_EXPIRATION: "60"
   SMARTER_CHAT_CACHE_EXPIRATION: "5"
   SMARTER_COHERE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_CHATBOT_CACHE_EXPIRATION: "300"
-  SMARTER_CHATBOT_MAX_RETURNED_HISTORY: "25"
-  SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES: "3"
-  SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF: "True"
-  SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE: "default_celery_task_queue"
-  SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD: "True"
-  SMARTER_CHATBOT_TASKS_CREATE_INGRESS_MANIFEST: "True"
-  SMARTER_CHATBOT_TASKS_DEFAULT_TTL: "600"
+  SMARTER_LLM_CLIENT_CACHE_EXPIRATION: "300"
+  SMARTER_LLM_CLIENT_MAX_RETURNED_HISTORY: "25"
+  SMARTER_LLM_CLIENT_TASKS_CELERY_MAX_RETRIES: "3"
+  SMARTER_LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF: "True"
+  SMARTER_LLM_CLIENT_TASKS_CELERY_TASK_QUEUE: "default_celery_task_queue"
+  SMARTER_LLM_CLIENT_TASKS_CREATE_DNS_RECORD: "True"
+  SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: "True"
+  SMARTER_LLM_CLIENT_TASKS_DEFAULT_TTL: "600"
   SMARTER_COHERE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_EMAIL_ADMIN: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_FERNET_ENCRYPTION_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -137,9 +137,9 @@ env:
 global:
   appName: smarter
   image:
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     repository: lpm0073/smarter
-    tag: v0.13.223
+    tag: v0.14.0-alpha.59-alpha.58-alpha.57-alpha.56-alpha.55-alpha.54-alpha.53-alpha.52-alpha.51-alpha.50-alpha.49-alpha.48-alpha.47-alpha.46-alpha.45-alpha.44-alpha.43-alpha.42-alpha.41-alpha.40-alpha.39-alpha.38-alpha.37-alpha.36-alpha.35-alpha.34-alpha.33-alpha.32-alpha.31-alpha.30-alpha.29-alpha.28-alpha.27-alpha.26-alpha.25-alpha.24-alpha.23-alpha.22-alpha.21-alpha.20-alpha.19-alpha.18-alpha.17-alpha.16-alpha.15-alpha.14-alpha.13-alpha.12-alpha.11-alpha.10-alpha.9-alpha.8-alpha.7-alpha.6-alpha.5-alpha.4-alpha.3-alpha.2-alpha.1
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -259,7 +259,7 @@ mysql:
     runAsGroup: 1001
     fsGroup: 1001
   image:
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   initdbScripts: {}
   livenessProbe:
     enabled: true
@@ -306,7 +306,7 @@ mariadb:
         cpu: 2
         memory: 4Gi
     image:
-      pullPolicy: IfNotPresent
+      pullPolicy: Always
     livenessProbe:
       enabled: true
       initialDelaySeconds: 30
@@ -345,27 +345,29 @@ redis:
     password: "smarter"
   architecture: standalone
   master:
+    disableCommands: []
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
     containerSecurityContext:
       enabled: true
     persistence:
       enabled: true
-      size: 1Gi
+      size: 10Gi
       storageClass: gp3
     podSecurityContext:
       enabled: true
     resources:
       requests:
-        memory: "512Mi"
-        cpu: "100m"
+        cpu: "250m"
+        memory: "2Gi"
       limits:
-        memory: "1Gi"
-        cpu: "512m"
+        cpu: "1"
+        memory: "4Gi"
     service:
       headless:
         sessionAffinity: None
   replica:
+    disableCommands: []
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 

@@ -1,0 +1,16 @@
+{
+    "model": "llama3.1-8b",
+    "temperature": 0.50,
+    "max_tokens": 1024,
+    "messages": [
+        {
+            "role": "system",
+            "content": "You are a helpful assistant."
+        },
+        {
+            "role": "user",
+            "content": "Hello world"
+        }
+    ]
+
+}

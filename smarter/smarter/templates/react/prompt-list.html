@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_prompt_list %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the prompt list
+  see: smarter.apps.prompt_list.templatetags.react_prompt_list.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% prompt_list_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/prompt-list/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ prompt_list.root_id }}"
+    django-csrf-cookie-name="{{ prompt_list.django_csrf_cookie_name }}"
+    django-session-cookie-name="{{ prompt_list.django_session_cookie_name }}"
+    django-cookie-domain="{{ prompt_list.cookie_domain }}"
+    smarter-prompt-list-api-url="{{ prompt_list.prompt_list_api_url }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the prompt list
+  see: smarter.apps.prompt_list.templatetags.react_prompt_list.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% prompt_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/prompt-list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

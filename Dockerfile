@@ -29,7 +29,7 @@ LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
   license="GNU AGPL v3" \
   vcs-url="https://github.com/smarter-sh/smarter" \
   org.opencontainers.image.title="Smarter API" \
-  org.opencontainers.image.version="0.13.223" \
+  org.opencontainers.image.version="0.14.0-alpha.59" \
   org.opencontainers.image.authors="Lawrence McDaniel <lpm0073@gmail.com>" \
   org.opencontainers.image.url="https://smarter.sh/" \
   org.opencontainers.image.source="https://github.com/smarter-sh/smarter" \
@@ -39,25 +39,34 @@ LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
 # Environment: local, alpha, beta, next, or production
 ARG TARGETPLATFORM
 ARG TARGETARCH
+ARG SCHEMA=APP
+
+# from .env file. This is used to control which environment we're building the image for, and therefore
+# which dependencies we install and which settings are used.
 ARG ENVIRONMENT=local
 ENV ENVIRONMENT=$ENVIRONMENT
 
+
 ############################## install system packages #################################
-# build-essential           needed to build some python packages, but not included in 3.13-slim-trixie
-# libssl-dev                ... ditto ...
-# libffi-dev                ... ditto ...
-# python3-dev               ... ditto ...
-# pkg-config                ... ditto ...
+# build-essential           needed to compile Python packages with native extensions
+# libssl-dev                needed by Python packages that link against OpenSSL
+# libffi-dev                needed by Python packages that link against libffi
+# python3-dev               provides Python headers for building native extensions
+# pkg-config                helps build scripts locate system libraries
 # ------
-# ca-certificates           needed for SSL/TLS support in http requests but not included in 3.13-slim-trixie
-# python-dev-is-python3     helper package to ensure that the 'python' command points to python3
-# default-mysql-client      needed for Django mysql backend support
-# libmariadb-dev            needed for default-mysql-client python package
-# git                       used in manage.py commands
-# ------
-# curl                      used below in this Dockerfile to download files
-# unzip                     used below in this Dockerfile to install aws cli
-# procps                    provides the 'ps' command, used for liveness/readiness probes of the beat pod in kubernetes
+# ca-certificates           enables SSL/TLS certificate validation in HTTP clients
+# python-dev-is-python3     ensures the 'python' command resolves to python3
+# wget                      used to download build artifacts in later stages
+# git                       used by manage.py commands and dependency installs
+# curl                      used below in this Dockerfile to download kubectl and AWS CLI
+# jq                        used below in this Dockerfile to parse React manifest.json
+#                           files to determine which static assets download.
+# unzip                     used below in this Dockerfile to install AWS CLI
+# procps                    provides the 'ps' command for container health checks
+# redis-tools               provides Redis CLI utilities for diagnostics and admin tasks
+# libncurses6               runtime library required by terminal-oriented utilities
+# groff                     enables formatted 'aws help' output
+# less                      pager used by AWS CLI help and other terminal tools
 FROM linux_base AS system_packages
 
 # Install system packages
@@ -77,16 +86,19 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     wget \
     git \
     curl \
+    jq \
     unzip \
     procps \
     redis-tools \
-    libmariadb-dev \
-    mariadb-client \
-    libncurses6 && \
+    libncurses6 \
+    groff \
+    less && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Install kubectl, required for smarter/common/helpers/k8s_helpers.py used for ChatBot/Agent
+FROM system_packages AS kubectl
+
+# Install kubectl, required for smarter/common/helpers/k8s_helpers.py used for LLMClient/Agent
 # deployments in which dedicated Kubernetes ingress and TLS certificates are created. There
 # are Kubernetes builds for both amd64 and arm64 architectures (we build both for DockerHub
 # multi-arch support).
@@ -98,6 +110,30 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
     curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/${KUBECTL_ARCH}/kubectl" && \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
+
+FROM kubectl AS mariadb_connector
+
+# Install MariaDB.
+# installs libmariadb-dev libmariadb-dev-compat mariadb-client, Connector/C and mariadb_config.
+# See
+# - https://mariadb.com/docs/connectors/mariadb-connector-c/install-mariadb-connector-c
+# - https://mariadb.com/downloads/
+
+ARG MARIADB_VERSION=12.2
+ENV MARIADB_CONFIG=/usr/bin/mariadb_config
+ENV MARIADB_CONFIG_ALTERNATIVE=/usr/local/bin/mariadb_config
+RUN curl -LsS -o mariadb_repo_setup https://downloads.mariadb.com/MariaDB/mariadb_repo_setup && \
+    chmod +x mariadb_repo_setup && \
+    ./mariadb_repo_setup --mariadb-server-version="${MARIADB_VERSION}" && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends libmariadb-dev libmariadb-dev-compat mariadb-client && \
+    test -x "$MARIADB_CONFIG" || (echo "mariadb_config not found at $MARIADB_CONFIG" && exit 1) && \
+    ln -sf "$MARIADB_CONFIG" "$MARIADB_CONFIG_ALTERNATIVE" && \
+    rm -f mariadb_repo_setup && \
+    rm -rf /var/lib/apt/lists/*
+
+
+FROM mariadb_connector AS aws_cli
 
 # install aws cli, required for smarter/common/helpers/aws/
 # We rely extensively on AWS support, for Route53, S3, Simple Email Service,
@@ -112,8 +148,10 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
     ./aws/install && \
     rm -rf awscliv2.zip aws
 
+
 ############################## create app user #################################
-FROM system_packages AS user_setup
+FROM aws_cli AS user_setup
+
 
 # Create a non-root user to run the application
 RUN adduser --disabled-password --gecos '' smarter_user
@@ -153,22 +191,196 @@ ENV PATH="/home/smarter_user/venv/bin:$PATH"
 # https://github.com/smarter-sh/smarter-deploy repo that is used to deploy
 # smarter locally for non-developers.
 COPY ./smarter/requirements requirements
-RUN pip install --upgrade pip && \
+RUN pip install pip==25.3 setuptools wheel pip-tools && \
   pip install --no-cache-dir -r requirements/docker.txt
 
 # Install Python dependencies for the local environment for cases where
 # we're going to run python unit tests in the Docker container.
 RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
+############################# react build args ################################
+# Serves as a form of cache busting for any arg changes related to React
+# components.
+FROM venv AS react_build_args
+
+ENV REACT_COMPONENTS="smarter-connection-list smarter-dashboard smarter-plugin-list smarter-prompt-list smarter-prompt-passthrough smarter-provider-list smarter-secret-list smarter-terminal-emulator"
+
+# from .env file, alternatively from docker-compose.yml.
+# This is used to control the base URL for downloading React
+# component assets from the CDN.
+ARG DOCKER_REACT_REMOTE_CDN_URL=
+
+# for cache busting when downloading React component assets from the CDN.
+# When used, a timestamp or hash of the latest React component builds can be
+# generated and passed in as a build argument to ensure that Docker does not
+# use a cached layer with old React assets.
+ARG DOCKER_REACT_REMOTE_CACHE_BUSTER=
+
+##################### install react components from CDN #######################
+# Optional: for downloading React component assets from the CDN.
+#
+# The Smarter web console UI is built as a set of React components that are
+# optionally published to a CDN using Vite. If enabled, this stage of
+# the Docker build process will download the latest production-ready builds of
+# these components from the CDN into the smarter/smarter/static/react/ directory.
+FROM react_build_args AS react_cdn_distribution
+
+ENV DOCKER_REACT_REMOTE_CACHE_BUSTER=${DOCKER_REACT_REMOTE_CACHE_BUSTER}
+ENV DOCKER_REACT_REMOTE_CDN_URL=${DOCKER_REACT_REMOTE_CDN_URL}
+
+# Download all manifests from remote CDN and compute a combined hash for cache busting
+RUN if [ -n "$DOCKER_REACT_REMOTE_CDN_URL" ]; then \
+  for app in $REACT_COMPONENTS; do \
+    url="${DOCKER_REACT_REMOTE_CDN_URL}/${app}/manifest.json"; \
+    echo "Downloading manifest for ${app} from ${url}"; \
+    echo "Last-Modified for $url: $(curl -sI "$url" | grep -i '^Last-Modified:')"; \
+    curl -fsSL "$url" -o "/tmp/${app}_manifest.json"; \
+    sha256sum "/tmp/${app}_manifest.json" | awk '{print $1}' > "/tmp/${app}_manifest.hash"; \
+  done && \
+  cat /tmp/*_manifest.hash | sha256sum | awk '{print $1}' > /tmp/react_manifests.hash; \
+else \
+  echo "Skipping manifest download and hash: DOCKER_REACT_REMOTE_CDN_URL is empty"; \
+fi
+
+
+############################ build remote react ###############################
+# The Smarter web console UI includes several React components, such as the
+# main dashboard, prompt (LLMClients) list, terminal emulator, and prompt passthrough.
+# Vite pushes builds of these React components to a CDN which is used as a general
+# purpose distribution mechanism for the latest production-ready builds of these components.
+#
+# The downloaded assets are placed in smarter/smarter/static/react/,
+# from which Django collects its static files. This directory is ignored by git
+# because it contains build assets rather than source code, so, these assets
+# are always fetched as part of the Docker build process rather than being
+# committed to the repository.
+#
+# Developers: Note that Vite also saves locally to this same directory for local development.
+# Thus, you can still use the Makefile command `make collectstatic`
+# to build React components locally if needed, but the default and recommended workflow
+# is to rely on the CDN downloads for all environments.
+#
+# example manifest.json file for reference: https://cdn.smarter.sh/react/smarter-terminal-emulator/manifest.json
+# {
+#   "_rolldown-runtime.js": {
+#     "file": "assets/rolldown-runtime.js",
+#     "name": "rolldown-runtime"
+#   },
+#   "_xterm-kHJ-D0s7.css": {
+#     "file": "assets/xterm-kHJ-D0s7.css",
+#     "src": "_xterm-kHJ-D0s7.css"
+#   },
+#   "_xterm.js": {
+#     "file": "assets/xterm.js",
+#     "name": "xterm",
+#     "imports": [
+#       "_rolldown-runtime.js"
+#     ],
+#     "css": [
+#       "assets/xterm-kHJ-D0s7.css"
+#     ]
+#   },
+#   "index.html": {
+#     "file": "assets/index.js",
+#     "name": "index",
+#     "src": "index.html",
+#     "isEntry": true,
+#     "imports": [
+#       "_rolldown-runtime.js",
+#       "_xterm.js"
+#     ],
+#     "css": [
+#       "assets/index-58MXwt-L.css"
+#     ]
+#   }
+# }
+FROM react_cdn_distribution AS react_assets
+
+ENV REACT_STAGING_FOLDER=/tmp/react_assets
+RUN mkdir -p ${REACT_STAGING_FOLDER}
+
+WORKDIR ${REACT_STAGING_FOLDER}
+
+
+# set -e : fail immediately on error.
+# set --u : fail on undefined variables
+#
+# Notes:
+# - build FAILS if manifest.json cannot be downloaded
+# - downloads EVERY unique asset referenced anywhere in manifest.json
+# - preserves nested paths like assets/foo.js
+# - safely handles:
+#     - imports
+#     - css
+#     - entrypoints
+#     - runtime chunks
+#     - arbitrary manifest complexity
+RUN if [ -n "${DOCKER_REACT_REMOTE_CDN_URL:-}" ]; then \
+    set -eu; \
+    for app in ${REACT_COMPONENTS}; do \
+        echo "Collecting assets for React component: ${app}"; \
+        APP_ROOT="${REACT_STAGING_FOLDER}/${app}"; \
+        MANIFEST="${APP_ROOT}/manifest.json"; \
+        \
+        mkdir -p "${APP_ROOT}"; \
+        \
+        url="${DOCKER_REACT_REMOTE_CDN_URL}/${app}/manifest.json"; \
+        echo "Downloading manifest for ${app} from ${url}"; \
+        curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
+            "${url}" \
+            -o "${MANIFEST}"; \
+        \
+        echo "Downloaded manifest for ${app}:"; \
+        cat "${MANIFEST}"; \
+        \
+        url="${DOCKER_REACT_REMOTE_CDN_URL}/${app}/index.html"; \
+        echo "Downloading index.html for ${app} from ${url}"; \
+        curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
+            "${url}" \
+            -o "${APP_ROOT}/index.html"; \
+        \
+        jq -r ' \
+            [ \
+              .[] | \
+              (.file), \
+              (.css[]?) \
+            ] \
+            | unique[] \
+        ' "${MANIFEST}" \
+        | while read -r ASSET_FILE; do \
+            [ -n "${ASSET_FILE}" ] || continue; \
+            \
+            DEST_PATH="${APP_ROOT}/${ASSET_FILE}"; \
+            DEST_DIR="$(dirname "${DEST_PATH}")"; \
+            \
+            mkdir -p "${DEST_DIR}"; \
+            \
+            url="${DOCKER_REACT_REMOTE_CDN_URL}/${app}/${ASSET_FILE}"; \
+            echo "Downloading asset: ${url}"; \
+            curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL \
+                "${url}" \
+                -o "${DEST_PATH}"; \
+        done; \
+    done; \
+fi
+
 ############################## application ##################################
-FROM venv AS application
+FROM react_assets AS application
 # do this last so that we can take advantage of Docker's caching mechanism.
 WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
-COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
+COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/llm_client/data/ ./data/manifests/
+RUN mkdir -p /home/smarter_user/smarter/staticfiles
 RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
 
-################################# permissuions #######################################
+# copy the smarter-common npm package from the react build stage. This is needed because
+# the smarter-common package includes shared code used by several of the React components.
+COPY --chown=smarter_user:smarter_user --from=react_assets /tmp/react_assets/ /home/smarter_user/smarter/smarter/static/react/
+
+################################# permissions #######################################
+# This stage is for setting file permissions for the smarter_user. We want to approach
+# a no-trust permissions model in which smarter_user only has only the bare minimum
+# permissions needed to run the application.
 FROM application AS permissions
 
 # ensure that smarter_user owns everything and has the minimum
@@ -181,16 +393,18 @@ FROM application AS permissions
 # files:                    r-------- so that smarter_user can read them
 # directories:              r-x------ so that smarter_user can cd into them
 # venv/bin/*:               r-x------ so that smarter_user can execute them
-# smarter/**/migrations:    rwx------ so that smarter_user can write django migration files.
+# smarter/**/migrations:    rwx------ so that smarter_user can write django migration files (which is not supposed to happen, actually).
 # data:                     rwx------ so that smarter_user can manage the data directory.
 # .cache:                   rwx------ bc some python packages want to write to .cache, like tldextract
 
 USER root
+
 RUN if [ "$ENVIRONMENT" != "local" ] ; then chown -R smarter_user:smarter_user /home/smarter_user/ && \
   find /home/smarter_user/ -type f -exec chmod 400 {} + && \
   find /home/smarter_user/ -type d -exec chmod 500 {} + && \
   find /home/smarter_user/venv/bin/ -type f -exec chmod 500 {} + && \
   find /home/smarter_user/smarter/smarter/ -type d -name migrations -exec chmod 700 {} + && \
+  chmod 700 /home/smarter_user/smarter/staticfiles && \
   chmod -R 700 /home/smarter_user/data && \
   chmod -R 700 /home/smarter_user/.cache && \
   chmod 755 /home/smarter_user/smarter/manage.py ; fi
@@ -211,26 +425,50 @@ COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
 COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
 
 
+
 ############################## collect_assets ##################################
 # This is a Django application, so we need to collect static assets.
 # We do this in a separate stage so that if the application code changes
 # but the static assets do not change, we can take advantage of Docker's
 # caching mechanism.
+#
+# Separately, we also need to verify that the React component assets have been
+# added to the smarter/static/react directory. This can happen in either of two ways:
+# - locally built outside of this Dockerfile, and then copied into the directory (this is the default)
+# - downloaded from the CDN in the steps above
 FROM data AS collect_assets
-ARG COLLECT_STATIC_FILES=true
-ENV COLLECT_STATIC_FILES=${COLLECT_STATIC_FILES}
-WORKDIR /home/smarter_user/smarter
-RUN if [ "$COLLECT_STATIC_FILES" = "true" ]; then python manage.py collectstatic --noinput; else echo "Skipping collectstatic"; fi
 
+USER smarter_user
+
+# from .env file. This is used to control whether we collect static files during the build process.
+ARG DOCKER_COLLECT_STATIC_FILES=true
+
+WORKDIR /home/smarter_user/smarter
+ENV DOCKER_COLLECT_STATIC_FILES=${DOCKER_COLLECT_STATIC_FILES}
+
+RUN if [ "$DOCKER_COLLECT_STATIC_FILES" = "true" ]; then \
+      if [ ! -d "smarter/static/react" ] || [ -z "$(ls -A smarter/static/react)" ]; then \
+        echo "Error: smarter/static/react is missing or empty" >&2; exit 1; \
+      fi; \
+      python manage.py collectstatic --noinput; \
+    else \
+      echo "Skipping collectstatic"; \
+    fi
+
+RUN echo "Inspecting /home/smarter_user/smarter/staticfiles" && \
+    ls -lha /home/smarter_user/smarter/staticfiles/react/ || true && \
+    if [ ! -d "/home/smarter_user/smarter/staticfiles" ] || [ -z "$(ls -A /home/smarter_user/smarter/staticfiles 2>/dev/null)" ]; then \
+      echo "Error: /home/smarter_user/smarter/staticfiles is missing or empty" >&2; exit 1; \
+    fi
 ################################# final #######################################
 # This is the final stage that will be used to run the application.
-# Gunicorn is used as the application server.
-# "smarter.wsgi:application" is the WSGI application callable and corresponds
-# to the "application" variable in smarter/wsgi.py.
+# Uvicorn is used as the application server.
+# "smarter.asgi:application" is the ASGI application callable and corresponds
+# to the "application" variable in smarter/asgi.py.
 # The application will listen on all interfaces (0.0.0.0).
 FROM collect_assets AS serve_application
 
 WORKDIR /home/smarter_user/smarter
 USER smarter_user
-CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:9357"]
+CMD ["uvicorn", "smarter.asgi:application", "--host", "0.0.0.0", "--port", "9357", "--workers", "2"]
 EXPOSE 8000

@@ -1,7 +1,6 @@
 """WSGI config for smarter project."""
 
 # wsgi.py
-import logging
 import os
 
 from django.conf import settings
@@ -9,6 +8,7 @@ from django.core.wsgi import get_wsgi_application
 from whitenoise import WhiteNoise
 
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
 
@@ -17,7 +17,7 @@ application = WhiteNoise(application, root=settings.STATIC_ROOT)
 
 logging.basicConfig(level=smarter_settings.log_level)
 logger = logging.getLogger(__name__)
-logger.debug("WSGI config for smarter.")
+logger.debug("smarter is using django.core.wsgi with WhiteNoise for static files.")
 logger.debug("WSGI application: %s", application)
 logger.debug("DJANGO_SETTINGS_MODULE: %s", os.getenv("DJANGO_SETTINGS_MODULE"))
 logger.debug("static_root: %s", settings.STATIC_ROOT)

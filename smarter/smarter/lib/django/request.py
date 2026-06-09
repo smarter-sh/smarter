@@ -3,9 +3,9 @@
 Smarter request mixin.
 
 This is a helper class for the Django request object that resolves
-known url patterns for Smarter chatbots. key features include:
+known url patterns for Smarter llm_clients. key features include:
 - lazy loading of the user, account, user profile and session_key.
-- meta data for describing chatbot characteristics.
+- meta data for describing llm_client characteristics.
 - session_key generation.
 - url parsing and validation.
 - url pattern recognition.
@@ -24,7 +24,7 @@ from urllib.parse import ParseResult, urlparse
 
 import tldextract
 import yaml
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest, QueryDict
 from django.http.request import RawPostDataException
 from rest_framework.request import Request as RestFrameworkRequest
@@ -60,9 +60,9 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-# Match netloc: chatbot_name.account_number.api.environment_api_domain
+# Match netloc: llm_client_name.account_number.api.environment_api_domain
 netloc_pattern_named_url = re.compile(
-    rf"^(?P<chatbot_name>[a-zA-Z0-9\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.api\.{re.escape(smarter_settings.environment_platform_domain)}(:\d+)?$"
+    rf"^(?P<llm_client_name>[a-zA-Z0-9\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.api\.{re.escape(smarter_settings.environment_platform_domain)}(:\d+)?$"
 )
 
 
@@ -82,17 +82,18 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
 
-SmarterRequestType = Optional[Union[RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock]]
+SmarterRequestType = Optional[Union[RestFrameworkRequest, HttpRequest, ASGIRequest, MagicMock]]
 """Type alias for all Smarter request types."""
 
 
 class SmarterRequestMixin(AccountMixin):
     """
-    Helper class for the Django request object that enforces authentication and
+    Helper class for the Django request object that enforces authentication and.
+
     provides lazy loading of the user, account, user profile, and session_key.
 
     This mixin works with any Django request object and any valid URL, but is designed
-    as a helper class for Smarter ChatBot URLs.
+    as a helper class for Smarter LLMClient URLs.
 
     .. note::
         The request object is an optional positional argument due to Django view lifecycles,
@@ -102,28 +103,28 @@ class SmarterRequestMixin(AccountMixin):
     **Valid endpoints:**
 
     1. Root endpoints for named URLs (public or authenticated chats)
-       (``self.is_chatbot_named_url == True``)
+       (``self.is_llm_client_named_url == True``)
 
-       - ``http://example.3141-5926-5359.api.localhost:9357/`` → ``smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView``
+       - ``http://example.3141-5926-5359.api.localhost:9357/`` → ``smarter.apps.llm_client.api.v1.views.default.DefaultLLMClientApiView``
        - ``http://example.3141-5926-5359.api.localhost:9357/config`` → ``smarter.apps.prompt.views.ChatConfigView``
 
     2. Authenticated sandbox endpoints (authenticated chats)
-       (``self.is_chatbot_sandbox_url == True``)
+       (``self.is_llm_client_sandbox_url == True``)
 
        - ``http://localhost:9357/workbench/<str:name>/`` → ``smarter.apps.prompt.views.ChatAppWorkbenchView``
        - ``http://localhost:9357/workbench/<str:name>/config/`` → ``smarter.apps.prompt.views.ChatConfigView``
 
     3. smarter.sh/v1 endpoints (public or authenticated chats)
-       (``self.is_chatbot_smarter_api_url == True``)
+       (``self.is_llm_client_smarter_api_url == True``)
 
-       - ``http://localhost:9357/api/v1/workbench/<int:chatbot_id>/chat/`` → ``smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView``
-       - ``http://localhost:9357/api/v1/workbench/<int:chatbot_id>/chat/config/`` → ``smarter.apps.prompt.views.ChatConfigView``
+       - ``http://localhost:9357/api/v1/workbench/<int:llm_client_id>/chat/`` → ``smarter.apps.llm_client.api.v1.views.default.DefaultLLMClientApiView``
+       - ``http://localhost:9357/api/v1/workbench/<int:llm_client_id>/chat/config/`` → ``smarter.apps.prompt.views.ChatConfigView``
 
     4. Command-line interface API endpoints (authenticated chats)
-       (``self.is_chatbot_cli_api_url == True``)
+       (``self.is_llm_client_cli_api_url == True``)
 
-       - ``http://localhost:9357/api/v1/cli/chat/<str:name>/`` → ``smarter.apps.chatbot.api.v1.cli.views.nonbrokered.chat.ApiV1CliChatApiView``
-       - ``http://localhost:9357/api/v1/cli/chat/config/<str:name>/`` → ``smarter.apps.chatbot.api.v1.cli.views.nonbrokered.chat_config.ApiV1CliChatConfigApiView``
+       - ``http://localhost:9357/api/v1/cli/chat/<str:name>/`` → ``smarter.apps.llm_client.api.v1.cli.views.nonbrokered.chat.ApiV1CliChatApiView``
+       - ``http://localhost:9357/api/v1/cli/chat/config/<str:name>/`` → ``smarter.apps.llm_client.api.v1.cli.views.nonbrokered.chat_config.ApiV1CliChatConfigApiView``
 
     5. Other endpoints (possibly deprecated or unused)
        - ``http://localhost:9357/api/v1/chat/``
@@ -134,7 +135,7 @@ class SmarterRequestMixin(AccountMixin):
     - ``http://localhost:9357/``
     - ``http://localhost:9357/docs/``
     - ``http://localhost:9357/dashboard/``
-    - ``https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/``
+    - ``https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/``
     - ``http://example.com/contact/``
     - ``http://localhost:9357/workbench/example/config/?session_key=...``
     - ``https://hr.3141-5926-5359.alpha.api.example.com/``
@@ -190,7 +191,7 @@ class SmarterRequestMixin(AccountMixin):
             kwargs,
         )
         request = request or next(
-            (req for req in args if isinstance(req, (RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock))), None
+            (req for req in args if isinstance(req, (RestFrameworkRequest, HttpRequest, ASGIRequest, MagicMock))), None
         )
         # ---------------------------------------------------------------------
         # the following reassignments are not necessarily technically required,
@@ -249,7 +250,7 @@ class SmarterRequestMixin(AccountMixin):
                 f"{self.request_mixin_logger_prefix}.__init__() - did not find a request object. SmarterRequestMixin cannot be initialized."
             )
 
-        if self.parsed_url and self.is_chatbot_named_url:
+        if self.parsed_url and self.is_llm_client_named_url:
             account_number = self.url_account_number
             if account_number:
                 self._url_account_number = account_number
@@ -258,7 +259,7 @@ class SmarterRequestMixin(AccountMixin):
                         f"account number from url ({account_number}) does not match existing account ({self.account.account_number})."
                     )
 
-        self.eval_chatbot_url()
+        self.eval_llm_client_url()
 
         logger.debug(
             "%s.__init__() - finished %s",
@@ -407,9 +408,7 @@ class SmarterRequestMixin(AccountMixin):
 
     @cached_property
     def request_mixin_logger_prefix(self) -> str:
-        """
-        Returns the logger prefix for the class.
-        """
+        """Returns the logger prefix for the class."""
         return formatted_text(f"{__name__}.{SmarterRequestMixin.__name__}[{id(self)}]")
 
     @property
@@ -455,8 +454,7 @@ class SmarterRequestMixin(AccountMixin):
                 self.request_mixin_logger_prefix,
                 self._url,
             )
-            if self.is_authenticated:
-                verbose_logger.debug("hi dad")
+            if self.is_authenticated and not self.user:
                 self._smarter_request_user = request.user  # type: ignore
                 verbose_logger.debug(
                     "%s.smarter_request setter - smarter_request_user set to: %s is_authenticated=%s",
@@ -489,7 +487,7 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def smarter_request_user(self) -> Optional[UserType]:
         """
-        Returns the user associated with the request
+        Returns the user associated with the request.
 
         This property is named to avoid potential name collisions in child classes.
         It retrieves the user from the request object if available.
@@ -555,7 +553,8 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def qualified_request(self) -> bool:
         """
-        A cursory screening of the WSGI request object to look for
+        A cursory screening of the WSGI request object to look for.
+
         any disqualifying conditions that confirm this is not a
         request that we are interested in.
 
@@ -573,16 +572,15 @@ class SmarterRequestMixin(AccountMixin):
 
         Example::
 
-            # True case: a valid chatbot request
+            # True case: a valid llm_client request
             request_mixin = SmarterRequestMixin(request)
             if request_mixin.qualified_request:
-                print("This is a qualified chatbot request.")
+                print("This is a qualified llm_client request.")
 
             # False case: a static asset or admin/docs request
             static_request = SmarterRequestMixin(static_asset_request)
             if not static_request.qualified_request:
                 print("This request is not of interest.")
-
         """
         if not self._smarter_request:
             verbose_logger.debug(
@@ -606,7 +604,7 @@ class SmarterRequestMixin(AccountMixin):
                 self.url,
             )
             # internal processes running in a AWS kubernetes internal subnet.
-            # definitely not a chatbot request.
+            # definitely not an llm_client request.
             return False
 
         if path in self.amnesty_urls:
@@ -615,7 +613,7 @@ class SmarterRequestMixin(AccountMixin):
                 self.request_mixin_logger_prefix,
                 self.url,
             )
-            # amnesty urls are not chatbot requests.
+            # amnesty urls are not llm_client requests.
             return False
 
         if self.url_path_parts and self.url_path_parts[0] == "admin":
@@ -647,7 +645,7 @@ class SmarterRequestMixin(AccountMixin):
             verbose_logger.debug(
                 f"{self.request_mixin_logger_prefix}.qualified_request() - request path ends with a static file extension. Not a qualified request: {self.url}"
             )
-            # static asset requests are not chatbot requests.
+            # static asset requests are not llm_client requests.
             return False
 
         verbose_logger.debug(
@@ -669,7 +667,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             url_str = request_mixin.url
             print(url_str)  # e.g., 'https://example.com/path/'
-
         """
         if not self.smarter_request:
             return None
@@ -710,7 +707,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             parsed = request_mixin.parsed_url
             print(parsed.netloc)  # e.g., 'example.com'
-
         """
         if self._parsed_url is None and self.url is not None:
             verbose_logger.debug(
@@ -739,7 +735,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             parts = request_mixin.url_path_parts
             print(parts)  # e.g., ['api', 'v1', 'workbench', '1', 'chat']
-
         """
         if not self.parsed_url:
             return []
@@ -763,7 +758,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             params = request_mixin.params
             print(params)  # e.g., {'session_key': 'abc123', 'uid': 'xyz'}
-
         """
         if not self.smarter_request:
             logger.warning(
@@ -813,7 +807,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             uid = request_mixin.uid
             print(uid)  # e.g., '00:1A:2B:3C:4D:5E-myhost'
-
         """
         return self.params.get("uid") if isinstance(self.params, QueryDict) else None
 
@@ -839,7 +832,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             key = request_mixin.cache_key
             print(key)  # e.g., 'a1b2c3d4e5f6...'
-
         """
         if self._cache_key:
             verbose_logger.debug(
@@ -889,7 +881,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             session_key = request_mixin.session_key
             print(session_key)  # e.g., '38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc'
-
         """
         if not self._session_key:
             self._session_key = self.find_session_key() or self.generate_session_key()
@@ -900,41 +891,42 @@ class SmarterRequestMixin(AccountMixin):
         return self._session_key
 
     @property
-    def smarter_request_chatbot_id(self) -> Optional[int]:
+    def smarter_request_llm_client_id(self) -> Optional[int]:
         """
-        Extract the chatbot id from the URL.
+        Extract the llm_client id from the URL.
 
         Example:
 
-            http://localhost:9357/workbench/chatbots/rMTAwMDAyNwx/chat/
+            http://localhost:9357/workbench/llm-clients/rMTAwMDAyNwx/chat/
 
             returns the pk id that when decoded from the hashed ID format
-            corresponds to the chatbot id.
+            corresponds to the llm_client id.
 
-        :return: The chatbot id as an integer, or None if not found.
+        :return: The llm_client id as an integer, or None if not found.
         """
-        if not self.is_chatbot:
+        if not self.is_llm_client:
             return None
 
         hashed_id = TimestampedModel.find_hash(self.url) if self.url else None
         if hashed_id:
             return TimestampedModel.id_from_hashed_id(hashed_id)
 
-        if self.is_chatbot_smarter_api_url:
+        if self.is_llm_client_smarter_api_url:
             path_parts = self.url_path_parts
             return int(path_parts[3]) if isinstance(path_parts, list) and len(path_parts) > 3 else None
 
-        if self.is_chatbot_named_url:
-            # can't get from ChatBot bc of circular import
+        if self.is_llm_client_named_url:
+            # can't get from LLMClient bc of circular import
             return None
 
-        if self.is_chatbot_sandbox_url:
+        if self.is_llm_client_sandbox_url:
             return None
 
     @property
     def url_account_number(self) -> Optional[str]:
         """
-        Extract the account number from the URL using the pattern defined in
+        Extract the account number from the URL using the pattern defined in.
+
         SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN.
 
         Example:
@@ -955,27 +947,27 @@ class SmarterRequestMixin(AccountMixin):
         return self._url_account_number
 
     @cached_property
-    def smarter_request_chatbot_name(self) -> Optional[str]:
+    def smarter_request_llm_client_name(self) -> Optional[str]:
         """
-        Extract the chatbot name from the URL.
+        Extract the llm_client name from the URL.
 
         Example:
             http://example.3141-5926-5359.api.localhost:9357/config
 
             returns "example"
 
-        :return: The chatbot name as a string, or None if not found.
+        :return: The llm_client name as a string, or None if not found.
         """
-        if not self.is_chatbot:
+        if not self.is_llm_client:
             verbose_logger.debug(
-                "%s.smarter_request_chatbot_name() - request is not a chatbot url: %s",
+                "%s.smarter_request_llm_client_name() - request is not an llm_client url: %s",
                 self.request_mixin_logger_prefix,
                 self.url,
             )
             return None
 
         # 1.) http://example-username.api.localhost:9357/config
-        if self.is_chatbot_named_url and self.parsed_url is not None:
+        if self.is_llm_client_named_url and self.parsed_url is not None:
             netloc_parts = self.parsed_url.netloc.split(".") if self.parsed_url and self.parsed_url.netloc else None
             retval = netloc_parts[0] if netloc_parts else None
 
@@ -985,14 +977,14 @@ class SmarterRequestMixin(AccountMixin):
 
             retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
             verbose_logger.debug(
-                "%s.smarter_request_chatbot_name() - extracted chatbot name from named url: %s",
+                "%s.smarter_request_llm_client_name() - extracted llm_client name from named url: %s",
                 self.request_mixin_logger_prefix,
                 retval,
             )
             return retval
 
         # 2.) example: http://localhost:9357/workbench/<str:name>/config/
-        if self.is_chatbot_sandbox_url:
+        if self.is_llm_client_sandbox_url:
             try:
                 retval = self.url_path_parts[1]
 
@@ -1002,7 +994,7 @@ class SmarterRequestMixin(AccountMixin):
 
                 retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
                 verbose_logger.debug(
-                    "%s.smarter_request_chatbot_name() - extracted chatbot name from sandbox url: %s",
+                    "%s.smarter_request_llm_client_name() - extracted llm_client name from sandbox url: %s",
                     self.request_mixin_logger_prefix,
                     retval,
                 )
@@ -1010,16 +1002,16 @@ class SmarterRequestMixin(AccountMixin):
             # pylint: disable=broad-except
             except Exception:
                 logger.error(
-                    "%s.smarter_request_chatbot_name() - failed to extract chatbot name from sandbox url: %s",
+                    "%s.smarter_request_llm_client_name() - failed to extract llm_client name from sandbox url: %s",
                     self.request_mixin_logger_prefix,
                     self.url,
                 )
 
-        # 3.) http://localhost:9357/api/v1/workbench/<int:chatbot_id>
+        # 3.) http://localhost:9357/api/v1/workbench/<int:llm_client_id>
         # no name. nothing to do in this case.
-        if self.is_chatbot_smarter_api_url:
+        if self.is_llm_client_smarter_api_url:
             verbose_logger.debug(
-                "%s.smarter_request_chatbot_name() - smarter api url has no chatbot name: %s",
+                "%s.smarter_request_llm_client_name() - smarter api url has no llm_client name: %s",
                 self.request_mixin_logger_prefix,
                 self.url,
             )
@@ -1027,7 +1019,7 @@ class SmarterRequestMixin(AccountMixin):
 
         # 4.) http://localhost:9357/api/v1/cli/chat/config/<str:name>/
         #     http://localhost:9357/api/v1/cli/chat/<str:name>/
-        if self.is_chatbot_cli_api_url:
+        if self.is_llm_client_cli_api_url:
             try:
                 retval = self.url_path_parts[-1]
 
@@ -1037,7 +1029,7 @@ class SmarterRequestMixin(AccountMixin):
 
                 retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
                 verbose_logger.debug(
-                    "%s.smarter_request_chatbot_name() - extracted chatbot name from cli api url: %s",
+                    "%s.smarter_request_llm_client_name() - extracted llm_client name from cli api url: %s",
                     self.request_mixin_logger_prefix,
                     retval,
                 )
@@ -1045,13 +1037,13 @@ class SmarterRequestMixin(AccountMixin):
             # pylint: disable=broad-except
             except Exception:
                 logger.error(
-                    "%s.smarter_request_chatbot_name() - failed to extract chatbot name from cli url: %s",
+                    "%s.smarter_request_llm_client_name() - failed to extract llm_client name from cli url: %s",
                     self.request_mixin_logger_prefix,
                     self.url,
                 )
 
         verbose_logger.debug(
-            "%s.smarter_request_chatbot_name() - could not extract chatbot name from url: %s",
+            "%s.smarter_request_llm_client_name() - could not extract llm_client name from url: %s",
             self.request_mixin_logger_prefix,
             self.url,
         )
@@ -1069,7 +1061,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             ts = request_mixin.timestamp
             print(ts)  # e.g., 2025-12-01 12:34:56.789012
-
         """
         return self._timestamp
 
@@ -1087,7 +1078,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             data = request_mixin.data
             print(data)  # e.g., {'session_key': 'abc123', ...}
-
         """
         if self._data:
             return self._data
@@ -1224,7 +1214,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             unique_str = request_mixin.unique_client_string
             print(unique_str)
-
         """
         if not self.account:
             return f"{self.url}{self.user_agent}{self.ip_address}"
@@ -1246,7 +1235,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             ip = request_mixin.ip_address
             print(ip)  # e.g., '192.168.1.100'
-
         """
         if (
             self.smarter_request is not None
@@ -1256,7 +1244,7 @@ class SmarterRequestMixin(AccountMixin):
             return self.smarter_request.META.get("REMOTE_ADDR", "") or "ip_address"
         return None
 
-    @cached_property
+    @property
     def user_agent(self) -> Optional[str]:
         """
         Get the client's user agent string from the request object.
@@ -1272,7 +1260,6 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             ua = request_mixin.user_agent
             print(ua)  # e.g., 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...'
-
         """
         if (
             self.smarter_request is not None
@@ -1295,14 +1282,16 @@ class SmarterRequestMixin(AccountMixin):
         Examples:
             http://testserver/api/v1/cli/chat/config/testc7098865f39202d5/
             http://localhost:9357/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-            http://localhost:9357/api/v1/workbench/<int:chatbot_id>/chat/config/
+            http://localhost:9357/api/v1/workbench/<int:llm_client_id>/chat/config/
             http://example.api.localhost:9357/config
 
         Returns:
             bool: True if the URL is a config endpoint, otherwise False.
         """
-        if not self.is_chatbot:
-            verbose_logger.debug("%s.is_config() - not a chatbot url: %s", self.request_mixin_logger_prefix, self.url)
+        if not self.is_llm_client:
+            verbose_logger.debug(
+                "%s.is_config() - not an llm_client url: %s", self.request_mixin_logger_prefix, self.url
+            )
             return False
         if not isinstance(self.url_path_parts, list):
             verbose_logger.debug(
@@ -1434,9 +1423,9 @@ class SmarterRequestMixin(AccountMixin):
         return netloc_match and path_match
 
     @cached_property
-    def is_chatbot(self) -> bool:
+    def is_llm_client(self) -> bool:
         """
-        Returns True if the URL resolves to a chatbot endpoint.
+        Returns True if the URL resolves to an llm_client endpoint.
 
         Conditions are checked in a lazy sequence to avoid unnecessary processing.
 
@@ -1444,23 +1433,23 @@ class SmarterRequestMixin(AccountMixin):
             - http://localhost:9357/api/v1/prompt/1/chat/
             - http://localhost:9357/api/v1/cli/chat/example/
             - http://example.3141-5926-5359.api.localhost:9357/
-            - http://localhost:9357/api/v1/chatbots/1556/chat/
-            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/chat/
-            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/config/
-            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/manifest/
+            - http://localhost:9357/api/v1/llm-clients/1556/chat/
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/chat/
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/config/
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/manifest/
 
         Returns:
-            bool: True if the URL is a chatbot endpoint, otherwise False.
+            bool: True if the URL is an llm_client endpoint, otherwise False.
         """
 
         retval = self.qualified_request and (
-            self.is_chatbot_named_url
-            or self.is_chatbot_sandbox_url
-            or self.is_chatbot_smarter_api_url
-            or self.is_chatbot_cli_api_url
+            self.is_llm_client_named_url
+            or self.is_llm_client_sandbox_url
+            or self.is_llm_client_smarter_api_url
+            or self.is_llm_client_cli_api_url
         )
         verbose_logger.debug(
-            "%s.is_chatbot() - is url a chatbot: %s -> %s", self.request_mixin_logger_prefix, self.url, retval
+            "%s.is_llm_client() - is url an llm_client: %s -> %s", self.request_mixin_logger_prefix, self.url, retval
         )
         return retval
 
@@ -1470,7 +1459,7 @@ class SmarterRequestMixin(AccountMixin):
         Returns True if the URL is of the form http://localhost:9357/api/v1/.
 
         Examples:
-            - path_parts: ['api', 'v1', 'chatbots', '1', 'chat']
+            - path_parts: ['api', 'v1', 'llm-clients', '1', 'chat']
             - http://api.localhost:9357/
 
         Returns:
@@ -1498,68 +1487,72 @@ class SmarterRequestMixin(AccountMixin):
         return False
 
     @cached_property
-    def is_chatbot_smarter_api_url(self) -> bool:
+    def is_llm_client_smarter_api_url(self) -> bool:
         """
         Returns True if the URL is of the form:
-            - http://localhost:9357/api/v1/chatbots/32/config/
+
+            - http://localhost:9357/api/v1/llm-clients/32/config/
 
             - http://localhost:9357/api/v1/workbench/1/chat/
               path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
 
-            - http://localhost:9357/api/v1/chatbots/1556/chat/
-              path_parts: ['api', 'v1', 'chatbots', '<int:pk>', 'chat']
+            - http://localhost:9357/api/v1/llm-clients/1556/chat/
+              path_parts: ['api', 'v1', 'llm-clients', '<int:pk>', 'chat']
+
+            - http://localhost:9357/api/v1/llm-clients/rMTAwMDAwNwx/chat/
+              path_parts: ['api', 'v1', 'llm-clients', '<str:hashed_id>', 'chat']
 
         Returns:
-            bool: True if the URL matches a smarter API chatbot endpoint, otherwise False.
+            bool: True if the URL matches a smarter API llm_client endpoint, otherwise False.
         """
         if not self.qualified_request:
             verbose_logger.debug(
-                "%s.is_chatbot_smarter_api_url() - request is not qualified", self.request_mixin_logger_prefix
+                "%s.is_llm_client_smarter_api_url() - request is not qualified", self.request_mixin_logger_prefix
             )
             return False
         if not self.parsed_url:
             verbose_logger.debug(
-                "%s.is_chatbot_smarter_api_url() - url is None or empty", self.request_mixin_logger_prefix
+                "%s.is_llm_client_smarter_api_url() - url is None or empty", self.request_mixin_logger_prefix
             )
             return False
 
         if not isinstance(self.url_path_parts, list):
             verbose_logger.debug(
-                "%s.is_chatbot_smarter_api_url() - url_path_parts is not a list", self.request_mixin_logger_prefix
+                "%s.is_llm_client_smarter_api_url() - url_path_parts is not a list", self.request_mixin_logger_prefix
             )
             return False
         if len(self.url_path_parts) != 5:
             verbose_logger.debug(
-                "%s.is_chatbot_smarter_api_url() - url_path_parts does not have 5 parts: %s",
+                "%s.is_llm_client_smarter_api_url() - url_path_parts does not have 5 parts: %s",
                 self.request_mixin_logger_prefix,
                 self.url_path_parts,
             )
             return False
         if self.url_path_parts[0] != "api":
             verbose_logger.debug(
-                "%s.is_chatbot_smarter_api_url() - first part is not 'api': %s",
+                "%s.is_llm_client_smarter_api_url() - first part is not 'api': %s",
                 self.request_mixin_logger_prefix,
                 self.url_path_parts,
             )
             return False
         if self.url_path_parts[1] != "v1":
             verbose_logger.debug(
-                "%s.is_chatbot_smarter_api_url() - second part is not 'v1': %s",
+                "%s.is_llm_client_smarter_api_url() - second part is not 'v1': %s",
                 self.request_mixin_logger_prefix,
                 self.url_path_parts,
             )
             return False
-        if self.url_path_parts[2] not in ["workbench", "chatbots"]:
+        if self.url_path_parts[2] not in ["workbench", "llm-clients"]:
             verbose_logger.debug(
-                "%s.is_chatbot_smarter_api_url() - third part is not 'workbench' or 'chatbots': %s",
+                "%s.is_llm_client_smarter_api_url() - third part is not 'workbench' or 'llm-clients': %s",
                 self.request_mixin_logger_prefix,
                 self.url_path_parts,
             )
             return False
-        if not self.url_path_parts[3].isnumeric():
+        if not self.url_path_parts[3].isnumeric() or isinstance(self.url_path_parts[3], str):
             # expecting <int:pk> to be numeric: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
             verbose_logger.debug(
-                "%s.is_chatbot_smarter_api_url() - fourth part is not numeric: %s",
+                "%s.is_llm_client_smarter_api_url() - fourth part is not numeric: %s",
                 self.request_mixin_logger_prefix,
                 self.url_path_parts,
             )
@@ -1567,21 +1560,21 @@ class SmarterRequestMixin(AccountMixin):
         if self.url_path_parts[4] not in ["chat", "config"]:
             # expecting 'chat' or 'config' at the end of the path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
             verbose_logger.debug(
-                "%s.is_chatbot_smarter_api_url() - fifth part is not 'chat' or 'config': %s",
+                "%s.is_llm_client_smarter_api_url() - fifth part is not 'chat' or 'config': %s",
                 self.request_mixin_logger_prefix,
                 self.url_path_parts,
             )
             return False
 
         verbose_logger.debug(
-            "%s.is_chatbot_smarter_api_url() - url is a smarter api chatbot url: %s",
+            "%s.is_llm_client_smarter_api_url() - url is a smarter api llm_client url: %s",
             self.request_mixin_logger_prefix,
             self.url,
         )
         return True
 
     @cached_property
-    def is_chatbot_cli_api_url(self) -> bool:
+    def is_llm_client_cli_api_url(self) -> bool:
         """
         Returns True if the URL is of the form http://localhost:9357/api/v1/cli/chat/example/.
 
@@ -1589,14 +1582,14 @@ class SmarterRequestMixin(AccountMixin):
             ['api', 'v1', 'cli', 'chat', 'example']
 
         Returns:
-            bool: True if the URL matches the CLI chatbot API pattern, otherwise False.
+            bool: True if the URL matches the CLI llm_client API pattern, otherwise False.
         """
         if not self.smarter_request:
-            verbose_logger.debug("%s.is_chatbot_cli_api_url() - request is None", self.request_mixin_logger_prefix)
+            verbose_logger.debug("%s.is_llm_client_cli_api_url() - request is None", self.request_mixin_logger_prefix)
             return False
         if not self.is_smarter_api:
             verbose_logger.debug(
-                "%s.is_chatbot_cli_api_url() - request is not smarter api", self.request_mixin_logger_prefix
+                "%s.is_llm_client_cli_api_url() - request is not smarter api", self.request_mixin_logger_prefix
             )
             return False
 
@@ -1604,33 +1597,35 @@ class SmarterRequestMixin(AccountMixin):
         try:
             if path_parts[2] != "cli":
                 verbose_logger.debug(
-                    "%s.is_chatbot_cli_api_url() - third part is not 'cli': %s",
+                    "%s.is_llm_client_cli_api_url() - third part is not 'cli': %s",
                     self.request_mixin_logger_prefix,
                     path_parts,
                 )
                 return False
             if path_parts[3] != "chat":
                 verbose_logger.debug(
-                    "%s.is_chatbot_cli_api_url() - fourth part is not 'chat': %s",
+                    "%s.is_llm_client_cli_api_url() - fourth part is not 'chat': %s",
                     self.request_mixin_logger_prefix,
                     path_parts,
                 )
                 return False
         except IndexError:
             verbose_logger.debug(
-                "%s.is_chatbot_cli_api_url() - url_path_parts index out of range: %s",
+                "%s.is_llm_client_cli_api_url() - url_path_parts index out of range: %s",
                 self.request_mixin_logger_prefix,
                 path_parts,
             )
             return False
 
         verbose_logger.debug(
-            "%s.is_chatbot_cli_api_url() - url is a cli chatbot api url: %s", self.request_mixin_logger_prefix, self.url
+            "%s.is_llm_client_cli_api_url() - url is a cli llm_client api url: %s",
+            self.request_mixin_logger_prefix,
+            self.url,
         )
         return True
 
     @cached_property
-    def is_chatbot_named_url(self) -> bool:
+    def is_llm_client_named_url(self) -> bool:
         """
         Returns True if the url is of the form:
 
@@ -1639,20 +1634,22 @@ class SmarterRequestMixin(AccountMixin):
             - http://example-username.3141-5926-5359.api.localhost:9357/config/
 
         Returns:
-            bool: True if the URL matches the named chatbot pattern, otherwise False.
+            bool: True if the URL matches the named llm_client pattern, otherwise False.
         """
 
         if not self.qualified_request:
             verbose_logger.debug(
-                "%s.is_chatbot_named_url() - request is not qualified", self.request_mixin_logger_prefix
+                "%s.is_llm_client_named_url() - request is not qualified", self.request_mixin_logger_prefix
             )
             return False
         if not self.url:
-            verbose_logger.debug("%s.is_chatbot_named_url() - url is None or empty", self.request_mixin_logger_prefix)
+            verbose_logger.debug(
+                "%s.is_llm_client_named_url() - url is None or empty", self.request_mixin_logger_prefix
+            )
             return False
         if not smarter_settings.environment_api_domain in self.url:
             verbose_logger.debug(
-                "%s.is_chatbot_named_url() - url %s does not contain environment_api_domain: %s",
+                "%s.is_llm_client_named_url() - url %s does not contain environment_api_domain: %s",
                 self.request_mixin_logger_prefix,
                 self.url,
                 smarter_settings.environment_api_domain,
@@ -1661,7 +1658,7 @@ class SmarterRequestMixin(AccountMixin):
         account_number = self.url_account_number
         if account_number is not None:
             verbose_logger.debug(
-                "%s.is_chatbot_named_url() - url %s is a named url with account number: %s",
+                "%s.is_llm_client_named_url() - url %s is a named url with account number: %s",
                 self.request_mixin_logger_prefix,
                 self.url,
                 account_number,
@@ -1674,7 +1671,7 @@ class SmarterRequestMixin(AccountMixin):
         # Accept root path or root with trailing slash
         if isinstance(self.parsed_url, ParseResult) and self.parsed_url.path not in ("", "/"):
             verbose_logger.debug(
-                "%s.is_chatbot_named_url() - url %s path is not root or trailing slash: %s",
+                "%s.is_llm_client_named_url() - url %s path is not root or trailing slash: %s",
                 self.request_mixin_logger_prefix,
                 self.url,
                 self.parsed_url.path,
@@ -1683,49 +1680,49 @@ class SmarterRequestMixin(AccountMixin):
 
         if isinstance(self.parsed_url, ParseResult) and netloc_pattern_named_url.match(self.parsed_url.netloc):
             verbose_logger.debug(
-                "%s.is_chatbot_named_url() - url %s is a named url without account number.",
+                "%s.is_llm_client_named_url() - url %s is a named url without account number.",
                 self.request_mixin_logger_prefix,
                 self.url,
             )
             return True
 
         verbose_logger.debug(
-            "%s.is_chatbot_named_url() - url %s is not a named url.",
+            "%s.is_llm_client_named_url() - url %s is not a named url.",
             self.request_mixin_logger_prefix,
             self.url,
         )
         return False
 
     @cached_property
-    def is_chatbot_sandbox_url(self) -> bool:
+    def is_llm_client_sandbox_url(self) -> bool:
         """
-        Example URLs for chatbot sandbox endpoints.
+        Example URLs for llm_client sandbox endpoints.
 
         Examples:
             Web console urls:
-            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/chat/
-            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/config/
-            - http://localhost:9357/workbench/chatbots/<str:hashed_id>/manifest/
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/chat/
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/config/
+            - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/manifest/
 
             Api urls:
             - http://localhost:9357/api/v1/prompt/1/chat/
             - http://localhost:9357/api/v1/prompt/1/config/
 
             Manifest view urls:
-            https://alpha.platform.smarter.sh/workbench/chatbots/hashed_id/
-            https://<environment_domain>/workbench/chatbots/<str:hashed_id>/
-            path_parts: ['workbench', 'chatbots', 'rxy123hashedx']
+            https://alpha.platform.smarter.sh/workbench/llm-clients/hashed_id/
+            https://<environment_domain>/workbench/llm-clients/<str:hashed_id>/
+            path_parts: ['workbench', 'llm-clients', 'rxy123hashedx']
 
         Returns:
-            bool: True if the URL matches a chatbot sandbox endpoint, otherwise False.
+            bool: True if the URL matches an llm_client sandbox endpoint, otherwise False.
         """
         if not self.qualified_request:
             verbose_logger.debug(
-                "%s.is_chatbot_sandbox_url() - request is not qualified.", self.request_mixin_logger_prefix
+                "%s.is_llm_client_sandbox_url() - request is not qualified.", self.request_mixin_logger_prefix
             )
             return False
         if not self.parsed_url:
-            logger.warning("%s.is_chatbot_sandbox_url() - url is None or not set.", self.request_mixin_logger_prefix)
+            logger.warning("%s.is_llm_client_sandbox_url() - url is None or not set.", self.request_mixin_logger_prefix)
             return False
 
         # smarter api - http://localhost:9357/api/v1/prompt/1/chat/
@@ -1739,37 +1736,37 @@ class SmarterRequestMixin(AccountMixin):
             and path_parts[4] == "chat"
         ):
             verbose_logger.debug(
-                "%s.is_chatbot_sandbox_url() - url %s is a chatbot sandbox smarter api url.",
+                "%s.is_llm_client_sandbox_url() - url %s is an llm_client sandbox smarter api url.",
                 self.request_mixin_logger_prefix,
                 self.url,
             )
             return True
 
         # ---------------------------------------------------------------------
-        # workbench urls: http://localhost:9357/workbench/chatbots/<str:hashed_id>/chat/
+        # workbench urls: http://localhost:9357/workbench/llm-clients/<str:hashed_id>/chat/
         # ---------------------------------------------------------------------
         hashed_id = TimestampedModel.find_hash(self.url) if self.url else None
         if hashed_id is None:
             verbose_logger.debug(
-                "%s.is_chatbot_sandbox_url() - url %s does not contain a valid TimestampedModel hashed_id.",
+                "%s.is_llm_client_sandbox_url() - url %s does not contain a valid TimestampedModel hashed_id.",
                 self.request_mixin_logger_prefix,
                 self.url,
             )
             return False
 
         verbose_logger.debug(
-            "%s.is_chatbot_sandbox_url() - url %s contains hashed_id: %s",
+            "%s.is_llm_client_sandbox_url() - url %s contains hashed_id: %s",
             self.request_mixin_logger_prefix,
             self.url,
             hashed_id,
         )
 
         # valid path_parts:
-        #   ['workbench', 'chatbots', '<str:hashed_id>', 'chat']
-        #   ['workbench', 'chatbots', '<str:hashed_id>', 'config']
+        #   ['workbench', 'llm-clients', '<str:hashed_id>', 'chat']
+        #   ['workbench', 'llm-clients', '<str:hashed_id>', 'config']
         if self.parsed_url.netloc != smarter_settings.environment_platform_domain:
             verbose_logger.debug(
-                "%s.is_chatbot_sandbox_url() - url %s netloc does not match environment platform domain: %s",
+                "%s.is_llm_client_sandbox_url() - url %s netloc does not match environment platform domain: %s",
                 self.request_mixin_logger_prefix,
                 self.url,
                 smarter_settings.environment_platform_domain,
@@ -1777,7 +1774,7 @@ class SmarterRequestMixin(AccountMixin):
             return False
         if len(path_parts) != 4:
             verbose_logger.debug(
-                "%s.is_chatbot_sandbox_url() - url %s does not have exactly 4 path parts: %s",
+                "%s.is_llm_client_sandbox_url() - url %s does not have exactly 4 path parts: %s",
                 self.request_mixin_logger_prefix,
                 self.url,
                 path_parts,
@@ -1785,15 +1782,15 @@ class SmarterRequestMixin(AccountMixin):
             return False
         if path_parts[0] != "workbench":
             verbose_logger.debug(
-                "%s.is_chatbot_sandbox_url() - url %s first path part is not 'workbench': %s",
+                "%s.is_llm_client_sandbox_url() - url %s first path part is not 'workbench': %s",
                 self.request_mixin_logger_prefix,
                 self.url,
                 path_parts,
             )
             return False
-        if path_parts[1] != "chatbots":
+        if path_parts[1] != "llm-clients":
             verbose_logger.debug(
-                "%s.is_chatbot_sandbox_url() - url %s second path part is not 'chatbots': %s",
+                "%s.is_llm_client_sandbox_url() - url %s second path part is not 'llm-clients': %s",
                 self.request_mixin_logger_prefix,
                 self.url,
                 path_parts,
@@ -1804,14 +1801,14 @@ class SmarterRequestMixin(AccountMixin):
             #   ['workbench', '<slug>', 'chat']
             #   ['workbench', '<slug>', 'config']
             verbose_logger.debug(
-                "%s.is_chatbot_sandbox_url() - url %s is a chatbot sandbox url.",
+                "%s.is_llm_client_sandbox_url() - url %s is an llm_client sandbox url.",
                 self.request_mixin_logger_prefix,
                 self.url,
             )
             return True
 
         verbose_logger.debug(
-            "%s.is_chatbot_sandbox_url() - could not verify whether url is a chatbot sandbox url: %s",
+            "%s.is_llm_client_sandbox_url() - could not verify whether url is an llm_client sandbox url: %s",
             self.request_mixin_logger_prefix,
             path_parts,
         )
@@ -1857,8 +1854,8 @@ class SmarterRequestMixin(AccountMixin):
             Optional[str]: The path as a string, or None if not found.
 
         Examples:
-            - https://hr.3141-5926-5359.alpha.api.example.com/chatbot/
-              returns '/chatbot/'
+            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
+              returns '/llm-client/'
         """
         if not self.smarter_request:
             verbose_logger.debug("%s.path() - request is None. Cannot extract path.", self.request_mixin_logger_prefix)
@@ -1878,9 +1875,8 @@ class SmarterRequestMixin(AccountMixin):
 
             request_mixin = SmarterRequestMixin(request)
             print(request_mixin.root_domain)
-            # For 'https://hr.3141-5926-5359.alpha.api.example.com/chatbot/' → 'smarter.sh'
+            # For 'https://hr.3141-5926-5359.alpha.api.example.com/llm-client/' → 'smarter.sh'
             # For 'http://localhost:9357/' → 'localhost'
-
         """
         if not self.smarter_request:
             verbose_logger.debug(
@@ -1916,7 +1912,7 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             sub = request_mixin.subdomain
             print(sub)  # e.g., 'hr.3141-5926-5359.alpha' for
-                        # 'https://hr.3141-5926-5359.alpha.api.example.com/chatbot/'
+                        # 'https://hr.3141-5926-5359.alpha.api.example.com/llm-client/'
         """
         if not self.smarter_request:
             return None
@@ -1934,12 +1930,12 @@ class SmarterRequestMixin(AccountMixin):
 
         example::
 
-            - https://hr.3141-5926-5359.alpha.api.example.com/chatbot/
+            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
             returns 'hr'
         """
         if not self.smarter_request:
             return None
-        if not self.is_chatbot:
+        if not self.is_llm_client:
             return None
         try:
             result = urlparse(self.url)
@@ -1958,7 +1954,7 @@ class SmarterRequestMixin(AccountMixin):
 
         examples::
 
-            - https://hr.3141-5926-5359.alpha.api.example.com/chatbot/
+            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
               returns 'hr.3141-5926-5359.alpha.api.example.com'
         """
         if not self.smarter_request:
@@ -1970,7 +1966,8 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
 
         :return: Formatted class name string.
@@ -1982,6 +1979,7 @@ class SmarterRequestMixin(AccountMixin):
     def is_requestmixin_ready(self) -> bool:
         """
         Returns True if the request mixin is ready for processing.
+
         This is a convenience property to check if the request is ready.
 
         :return: True if the request mixin is ready, False otherwise.
@@ -1993,7 +1991,7 @@ class SmarterRequestMixin(AccountMixin):
                 self.request_mixin_logger_prefix,
             )
             return False
-        if not isinstance(self.smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
+        if not isinstance(self.smarter_request, Union[HttpRequest, RestFrameworkRequest, ASGIRequest, MagicMock]):
             verbose_logger.debug(
                 "%s.is_requestmixin_ready() - request is not a HttpRequest. Received %s. Cannot process request.",
                 self.request_mixin_logger_prefix,
@@ -2028,10 +2026,9 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def ready(self) -> bool:
         """
-        returns True if the request is ready for processing.
+        Returns True if the request is ready for processing.
 
         :return: True if the request is ready, False otherwise.
-
         """
         super_ready = super().ready
         if self.is_requestmixin_ready:
@@ -2088,7 +2085,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         Returns the unique chat session key value for this request.
 
-        The session_key is managed by the /config/ endpoint for the chatbot. The React app calls this endpoint at app initialization to get a JSON dict that includes, among other info, this session_key, which uniquely identifies the device and the individual chatbot session for the device.
+        The session_key is managed by the /config/ endpoint for the llm_client. The React app calls this endpoint at app initialization to get a JSON dict that includes, among other info, this session_key, which uniquely identifies the device and the individual llm_client session for the device.
 
         For subsequent chat prompt requests, the session_key is intended to be sent in the body of the request as a key-value pair, e.g. {"session_key": "1234567890"}.
 
@@ -2179,31 +2176,30 @@ class SmarterRequestMixin(AccountMixin):
         )
         return None
 
-    def eval_chatbot_url(self):
+    def eval_llm_client_url(self):
         """
-        If we are a chatbot, based on analysis of the URL format
+        If we are an llm_client, based on analysis of the URL format.
+
         then we need to make a follow up check of the user and account.
 
         Examples:
 
             - http://example.3141-5926-5359.api.localhost:9357/
-            - https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
+            - https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/
             - http://localhost:9357/api/v1/cli/chat/example/
 
         1.) For named urls, we extract the account number from the url,
             then we load the account and admin user for that account.
 
-        2.) For smarter api urls, we would extract the chatbot id from the url,
-            then we would load the chatbot, account, and admin user for that account.
+        2.) For smarter api urls, we would extract the llm_client id from the url,
+            then we would load the llm_client, account, and admin user for that account.
 
-        3.) For cli api urls, we would extract the chatbot name from the url,
-            then we would load the chatbot, account, and admin user for that account.
-
-
+        3.) For cli api urls, we would extract the llm_client name from the url,
+            then we would load the llm_client, account, and admin user for that account.
         """
-        if not self.is_chatbot:
+        if not self.is_llm_client:
             return
-        if self.is_chatbot_named_url:
+        if self.is_llm_client_named_url:
             # http://example.3141-5926-5359.api.localhost:9357/
             if not self.account:
                 account_number = self.url_account_number
@@ -2211,27 +2207,23 @@ class SmarterRequestMixin(AccountMixin):
                     self.account = Account.get_cached_object(account_number=account_number)  # type: ignore
             if self.account and not self.user:
                 self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
-        if self.is_chatbot_smarter_api_url:
-            # https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
+        if self.is_llm_client_smarter_api_url:
+            # https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/
             pass
-        if self.is_chatbot_cli_api_url:
+        if self.is_llm_client_cli_api_url:
             # http://localhost:9357/api/v1/cli/chat/example/
             pass
 
     # pylint: disable=W0221
     def authenticate(self) -> bool:
-        """
-        Authenticates the request using the provided API token.
-        """
+        """Authenticates the request using the provided API token."""
         if self.api_token:
             verbose_logger.debug("%s.authenticate() - authenticating with api_token.", self.request_mixin_logger_prefix)
             return super().authenticate(api_token=self.api_token)
         return False
 
     def clear_cached_properties(self):
-        """
-        Clears all cached properties in this mixin.
-        """
+        """Clears all cached properties in this mixin."""
         self._smarter_request = None
         self._url = None
         self._url_account_number = None
@@ -2249,9 +2241,7 @@ class SmarterRequestMixin(AccountMixin):
                     self.__dict__.pop(name, None)
 
     def log_request_mixin_ready_status(self):
-        """
-        Logs the ready status of the SmarterRequestMixin.
-        """
+        """Logs the ready status of the SmarterRequestMixin."""
         msg = f"{self.request_mixin_logger_prefix}.__init__() is {self.request_mixin_ready_state} - {self.url if self._url else 'URL not initialized'} - authenticated user: {self.user_profile if self.user_profile else 'Anonymous'}"
         if self.is_requestmixin_ready:
             logger.debug(msg)
@@ -2260,7 +2250,7 @@ class SmarterRequestMixin(AccountMixin):
 
     def to_json(self) -> dict[str, Any]:
         """
-        serializes the object.
+        Serializes the object.
 
         :return: A dictionary representation of the object.
         """
@@ -2271,14 +2261,14 @@ class SmarterRequestMixin(AccountMixin):
             "auth_header": self.auth_header[:10] + "****" if self.auth_header else None,
             "api_token": mask_string(self.api_token.decode()) if self.api_token else None,
             "data": self.data,
-            "chatbot_id": self.smarter_request_chatbot_id,
-            "chatbot_name": self.smarter_request_chatbot_name,
+            "llm_client_id": self.smarter_request_llm_client_id,
+            "llm_client_name": self.smarter_request_llm_client_name,
             "is_smarter_api": self.is_smarter_api,
-            "is_chatbot": self.is_chatbot,
-            "is_chatbot_smarter_api_url": self.is_chatbot_smarter_api_url,
-            "is_chatbot_named_url": self.is_chatbot_named_url,
-            "is_chatbot_sandbox_url": self.is_chatbot_sandbox_url,
-            "is_chatbot_cli_api_url": self.is_chatbot_cli_api_url,
+            "is_llm_client": self.is_llm_client,
+            "is_llm_client_smarter_api_url": self.is_llm_client_smarter_api_url,
+            "is_llm_client_named_url": self.is_llm_client_named_url,
+            "is_llm_client_sandbox_url": self.is_llm_client_sandbox_url,
+            "is_llm_client_cli_api_url": self.is_llm_client_cli_api_url,
             "is_default_domain": self.is_default_domain,
             "path": self.path,
             "root_domain": self.root_domain,
@@ -2355,9 +2345,7 @@ class SmarterRequestMixin(AccountMixin):
 
     @property
     def is_authenticated(self) -> bool:
-        """
-        Returns True if the request is authenticated, False otherwise.
-        """
+        """Returns True if the request is authenticated, False otherwise."""
 
         # Django Rest Framework's Request object
         # pylint: disable=W0212

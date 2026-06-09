@@ -1,113 +1,140 @@
 # pylint: disable=W0707,W0718
 """Account views for smarter api."""
 
-import logging
 from http import HTTPStatus
+from typing import Optional
 
 from django.core.exceptions import ValidationError
-from django.core.handlers.wsgi import WSGIRequest
 from django.db import transaction
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import (
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    HttpResponseNotFound,
+    HttpResponseRedirect,
+    HttpResponseServerError,
+)
 from django.shortcuts import get_object_or_404
-from dotenv import Optional
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.common.utils import to_snake_case
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base import AccountListViewBase, AccountViewBase
 
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
 
 
 class AccountView(AccountViewBase):
     """Account view for smarter api."""
 
-    def get(self, request: WSGIRequest, account_id: int):
-        if account_id and request.user.is_superuser:
-            self.account = get_object_or_404(Account, pk=account_id)
+    def get(self, request: Request, account_id: int):
+        logger.debug("%s.get() called with account_id: %s", self.formatted_class_name, account_id)
+        if account_id and request.user.is_superuser:  # type: ignore
+            account = get_object_or_404(Account, pk=account_id)
         else:
-            self.account = self.user_profile.account
-        serializer = self.serializer_class(self.account)
+            if not isinstance(self.user_profile, UserProfile):
+                return HttpResponseForbidden("User profile not found")
+            account = self.user_profile.account
+        serializer = self.serializer_class(account)
         return Response(serializer.data, status=HTTPStatus.OK)
 
-    def post(self, request: WSGIRequest):
-        try:
-            data = json.loads(request.body.decode("utf-8"))
-            name = data.get("name", data.get("account_number", "company_name")) or "Default_Account_Name"
-            data["name"] = name.replace(" ", "_").replace("-", "_").lower()
-            with transaction.atomic():
-                self.account = Account.objects.create(**data)
-                UserProfile.objects.create(name=request.user.username, user=request.user, account=self.account)
-        except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
-        return HttpResponseRedirect(request.path_info + str(self.account.id) + "/")
-
-    def patch(self, request: WSGIRequest, account_id: Optional[int] = None):
-        data: dict
-
-        try:
-            if account_id and self.is_superuser_or_unauthorized():
-                self.account = Account.get_cached_object(pk=account_id)
-        except UserProfile.DoesNotExist:
-            return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
-
+    # pylint: disable=W0613
+    def post(self, request: Request, account_id: Optional[int] = None):
+        logger.debug("%s.post() called with data: %s", self.formatted_class_name, request.data)
         try:
             data = request.data
             if not isinstance(data, dict):
-                return JsonResponse(
-                    {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
-                    status=HTTPStatus.BAD_REQUEST,
+                raise json.JSONDecodeError(
+                    f"Expected a JSON dict in request body but received {type(data)}", doc=str(data), pos=0
                 )
+            logger.debug("%s.post() parsed JSON data: %s", self.formatted_class_name, data)
+        except json.JSONDecodeError as e:
+            logger.error("%s.post() JSON decode error: %s", self.formatted_class_name, str(e))
+            return HttpResponseBadRequest(f"Invalid JSON data: {str(e)}")
+
+        try:
+            name = data.get("name", data.get("account_number", "company_name")) or "Default_Account_Name"
+            data["name"] = to_snake_case(name)
+            account = Account.objects.create(**data)
         except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+            logger.error("%s.post() error creating account: %s", self.formatted_class_name, str(e), exc_info=True)
+            return HttpResponseBadRequest(f"Invalid request data: {str(e)}")
+
+        return HttpResponseRedirect(request.path_info + str(account.id) + "/")  # type: ignore
+
+    def patch(self, request: Request, account_id: int):
+        logger.debug("%s.patch() called for account_id: %s", self.formatted_class_name, account_id)
+        account: Account
+
+        if not isinstance(request.data, dict):
+            return HttpResponseBadRequest(
+                f"Invalid request data. Expected a JSON dict in request body but received {type(request.data)}"
+            )
+
+        try:
+            account = Account.get_cached_object(pk=account_id)
+            if not isinstance(account, Account):
+                raise Account.DoesNotExist(f"Account with id {account_id} does not exist.")
+            logger.debug("%s.patch() retrieved account: %s", self.formatted_class_name, account)
+        except Account.DoesNotExist:
+            logger.debug("%s.patch() account with id %s not found", self.formatted_class_name, account_id)
+            return HttpResponseNotFound("Account not found")
+
+        try:
+            data: dict = request.data
+            if not isinstance(data, dict):
+                return HttpResponseBadRequest(
+                    f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"
+                )
+            logger.debug("%s.patch() received data: %s", self.formatted_class_name, data)
+        except Exception as e:
+            logger.error("%s.patch() error parsing request data: %s", self.formatted_class_name, str(e))
+            return HttpResponseBadRequest(f"Invalid request data: {str(e)}")
 
         try:
             for key, value in data.items():
-                if hasattr(self.account, key):
-                    setattr(self.account, key, value)
-            self.account.save()
+                if hasattr(account, key):
+                    setattr(account, key, value)
+            account.save()  # type: ignore
+            logger.debug("%s.patch() updated account: %s", self.formatted_class_name, account)
         except ValidationError as e:
-            return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
-        except Exception as e:
-            return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+            logger.error(
+                "%s.patch() validation error updating account: %s", self.formatted_class_name, str(e), exc_info=True
             )
+            return HttpResponseBadRequest(e.message)
+        except Exception as e:
+            logger.error(
+                "%s.patch() internal error updating account: %s", self.formatted_class_name, str(e), exc_info=True
+            )
+            return HttpResponseServerError(f"Internal error: {str(e)}")
 
         return HttpResponseRedirect(request.path_info)
 
     def delete(self, request, account_id: int):
-        if account_id and self.is_superuser_or_unauthorized():
-            self.account = get_object_or_404(Account, pk=account_id)
+        logger.debug("%s.delete() called with account_id: %s", self.formatted_class_name, account_id)
+        account: Account
+        account = get_object_or_404(Account, pk=account_id)
+        logger.debug("%s.delete() retrieved account: %s", self.formatted_class_name, account)
 
         try:
-            with transaction.atomic():
-                self.account.delete()
-                UserProfile.objects.get(user=request.user).delete()
+            account.delete()
         except Exception as e:
-            return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+            logger.error(
+                "%s.delete() internal error deleting account: %s", self.formatted_class_name, str(e), exc_info=True
             )
+            return HttpResponseServerError(f"Internal error: {str(e)}")
 
-        plugins_path = request.path_info.rsplit("/", 2)[0]
-        return HttpResponseRedirect(plugins_path)
+        return HttpResponseRedirect("/")
 
 
 class AccountListView(AccountListViewBase):
     """Account list view for smarter api."""
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
+        logger.debug("%s.get_queryset() called", self.formatted_class_name)
+        if self.is_superuser():
             return Account.objects.all()
-        return self.user_profile.cached_account
+        return Account.objects.none()

@@ -18,38 +18,31 @@ Two caching strategies are used:
 
 """
 
-import logging
 import re
-import uuid
 from typing import Optional
+
+from django.db.models import Q
+from typing_extensions import deprecated
 
 from smarter.apps.account.models import (
     Account,
     User,
     UserProfile,
 )
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
-from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-HERE = formatted_text(__name__)
-
-
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) or waffle.switch_is_active(
-        SmarterWaffleSwitches.CACHE_LOGGING
-    )
+HERE = logging.formatted_text(__name__)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
+)
 
 LRU_CACHE_MAX_SIZE = 128
 SMARTER_ACCOUNT_NUMBER_PATTERN = re.compile(SmarterValidator.SMARTER_ACCOUNT_NUMBER_REGEX)
@@ -57,6 +50,7 @@ SMARTER_ACCOUNT_NUMBER_PATTERN = re.compile(SmarterValidator.SMARTER_ACCOUNT_NUM
 
 # commonly fetched objects
 # ----------------------------
+# pylint: disable=W0613
 class SmarterCachedObjects:
     """
     Lazy instantiations of cached objects for the smarter account. This is a
@@ -73,6 +67,9 @@ class SmarterCachedObjects:
 
     _smarter_admin_user_profile: Optional[UserProfile] = None
     _admin_user: Optional[User] = None
+
+    def __init__(self):
+        self.base_cache_key = f"{__name__}.{SmarterCachedObjects.__name__}[{id(self)}]"
 
     @property
     def smarter_account(self) -> Account:
@@ -111,23 +108,29 @@ class SmarterCachedObjects:
         :raises SmarterConfigurationError: If the UserProfile cannot be found.
         """
 
-        @cache_results()
+        @cache_results(cache_key=self.base_cache_key + ".smarter_admin_user_profile")
         def _requery_smarter_admin_user_profile(class_name=SmarterCachedObjects.__name__) -> None:
-            if self._smarter_admin_user_profile:
+            if isinstance(self._smarter_admin_user_profile, UserProfile):
                 logger.debug(
                     "%s re-queried %s",
-                    formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()"),
+                    logging.formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()"),
                     self._smarter_admin_user_profile,
                 )
-                self._smarter_admin_user_profile.refresh_from_db()
+                try:
+                    self._smarter_admin_user_profile.refresh_from_db()
+                except UserProfile.DoesNotExist:
+                    self._smarter_admin_user_profile = None
+                    _requery_smarter_admin_user_profile.invalidate(class_name=SmarterCachedObjects.__name__)
 
         if not self._smarter_admin_user_profile:
             try:
-                user_profile = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first()
+                user_profile = (
+                    UserProfile.objects.filter(account=self.smarter_account).filter(user__is_superuser=True).first()
+                )
                 self._smarter_admin_user_profile = user_profile
                 logger.debug(
                     "%s initialized %s",
-                    formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()"),
+                    logging.formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()"),
                     user_profile,
                 )
                 return self._smarter_admin_user_profile  # type: ignore[return-value]
@@ -149,12 +152,13 @@ class SmarterCachedObjects:
         :raises SmarterConfigurationError: If the admin user cannot be found.
         """
 
-        @cache_results()
+        @cache_results(cache_key=self.base_cache_key + ".admin_user")
         def _requery_admin_user(class_name=SmarterCachedObjects.__name__) -> None:
-            self._admin_user.refresh_from_db()
+            if self._admin_user:
+                self._admin_user.refresh_from_db()
             logger.debug(
                 "%s re-queried %s",
-                formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.admin_user()"),
+                logging.formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.admin_user()"),
                 self._admin_user,
             )
 
@@ -163,7 +167,7 @@ class SmarterCachedObjects:
                 self._admin_user = User.objects.get(username=SMARTER_ADMIN_USERNAME, is_superuser=True)
                 logger.debug(
                     "%s initialized %s",
-                    formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.admin_user()"),
+                    logging.formatted_text(f"{__name__}.{SmarterCachedObjects.__name__}.admin_user()"),
                     self._admin_user,
                 )
                 return self._admin_user
@@ -182,7 +186,7 @@ Functions as a singleton for the project.
 """
 
 
-def get_cached_default_account(invalidate: bool = False) -> Optional[Account]:
+def get_cached_default_account(invalidate: bool = False) -> Account:
     """
     Retrieve the default account instance, using caching for performance.
 
@@ -206,30 +210,28 @@ def get_cached_default_account(invalidate: bool = False) -> Optional[Account]:
         default_account = get_cached_default_account(invalidate=True)
     """
 
-    @cache_results()
-    def _get_default_account(class_name=Account.__name__) -> Account:
-        accounts = Account.objects.filter(is_default_account=True)
-        if not accounts.exists():
+    @cache_results(cache_key="smarter.apps.account.utils.get_cached_default_account")
+    def _get_default_account() -> Account:
+        try:
+            return Account.objects.get(is_default_account=True)
+        except Account.DoesNotExist as e:
             raise SmarterConfigurationError(
                 "No default account found. Please ensure an account is marked as the default account."
-            )
-        if accounts.count() > 1:
-            logger.warning("%s.get_cached_default_account() multiple default accounts found", HERE)
-        account = accounts.first()
-        logger.debug("%s.get_cached_default_account() retrieving and caching default account %s", HERE, account)
-        if not account:
+            ) from e
+        except Account.MultipleObjectsReturned as e:
+            accounts = Account.objects.filter(is_default_account=True)
+            accounts_list = [str(account) for account in accounts]
             raise SmarterConfigurationError(
-                "No default account found. Please ensure an account is marked as the default account."
-            )
-        return account
+                f"Multiple default accounts found: {', '.join(accounts_list)}. Please ensure only one account is marked as the default account."
+            ) from e
 
     if invalidate:
-        _get_default_account.invalidate(class_name=Account.__name__)
+        _get_default_account.invalidate()
 
-    return _get_default_account(class_name=Account.__name__)
+    return _get_default_account()
 
 
-def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Optional[User] = None) -> Optional[Account]:
+def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Optional[User] = None) -> Account:
     """
     Locate the Account associated with a given user, using caching for performance.
 
@@ -252,7 +254,7 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
     """
     if not isinstance(user, User):
         logger.warning("%s.get_cached_account_for_user() invalid user type: %s", HERE, type(user))
-        return None
+        raise Account.DoesNotExist()
 
     username = getattr(user, "username")
     if username == SMARTER_ADMIN_USERNAME:
@@ -261,7 +263,7 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
     user_id = getattr(user, "id", None)
     if not user_id:
         logger.warning("%s.get_cached_account_for_user() user has no ID: %s", HERE, user)
-        return None
+        raise Account.DoesNotExist()
 
     @cache_results()
     def get_cached_account_for_user_by_id(user_id, class_name=UserProfile.__name__):
@@ -272,7 +274,7 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
         for user_profile in user_profiles:
             if not isinstance(user_profile, UserProfile):
                 raise SmarterConfigurationError(f"Expected UserProfile instance, got {type(user_profile)}")
-            if user_profile.account.is_default_account and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+            if user_profile.account.is_default_account:
                 logger.debug(
                     "%s.get_cached_account_for_user() retrieving and caching default account %s for user %s",
                     HERE,
@@ -284,7 +286,7 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
         user_profile = user_profiles.first()
         if not user_profile:
             logger.warning("%s.get_cached_account_for_user_by_id() no UserProfile found for user ID %s", HERE, user_id)
-            return None
+            raise Account.DoesNotExist()
         account = user_profile.cached_account
         logger.debug(
             "%s.get_cached_account_for_user_by_id() retrieving and caching default account %s for user ID %s",
@@ -300,7 +302,7 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
     return get_cached_account_for_user_by_id(user_id=user_id, class_name=UserProfile.__name__)
 
 
-def get_cached_user_for_user_id(invalidate: Optional[bool] = False, user_id: Optional[int] = None) -> Optional[User]:
+def get_cached_user_for_user_id(invalidate: Optional[bool] = False, user_id: Optional[int] = None) -> User:
     """
     Retrieve a User instance by its primary key, using caching for performance.
 
@@ -334,8 +336,9 @@ def get_cached_user_for_user_id(invalidate: Optional[bool] = False, user_id: Opt
             user = User.objects.get(id=user_id)
             logger.debug("%s.get_cached_user_for_user_id() retrieving and caching user %s", HERE, user)
             return user  # type: ignore[return-value]
-        except User.DoesNotExist:
+        except User.DoesNotExist as e:
             logger.error("%s.get_cached_user_for_user_id() user with ID %s does not exist", HERE, user_id)
+            raise e
 
     if invalidate:
         _get_user.invalidate(user_id, class_name=User.__name__)
@@ -343,7 +346,7 @@ def get_cached_user_for_user_id(invalidate: Optional[bool] = False, user_id: Opt
     return _get_user(user_id=user_id, class_name=User.__name__)
 
 
-def get_cached_user_for_username(invalidate: Optional[bool] = False, username: Optional[str] = None) -> Optional[User]:
+def get_cached_user_for_username(invalidate: Optional[bool] = False, username: Optional[str] = None) -> User:
     """
     Retrieve a User instance by its username, using caching for performance.
 
@@ -353,7 +356,7 @@ def get_cached_user_for_username(invalidate: Optional[bool] = False, username: O
 
     .. warning::
 
-           If no user exists for the given username, None is returned and an error is logged.
+           If no user exists for the given username, a User.DoesNotExist exception is raised and an error is logged.
 
     .. tip::
 
@@ -377,8 +380,9 @@ def get_cached_user_for_username(invalidate: Optional[bool] = False, username: O
             user = User.objects.get(username=username)
             logger.debug("%s.get_cached_user_for_username() retrieving and caching user %s", HERE, user)
             return user  # type: ignore[return-value]
-        except User.DoesNotExist:
+        except User.DoesNotExist as e:
             logger.debug("%s.get_cached_user_for_username() user with username %s does not exist", HERE, username)
+            raise e
 
     if invalidate:
         _in_memory_user_by_username.invalidate(username, class_name=User.__name__)
@@ -389,9 +393,7 @@ def get_cached_user_for_username(invalidate: Optional[bool] = False, username: O
     return _in_memory_user_by_username(username, class_name=User.__name__)
 
 
-def get_cached_admin_user_for_account(
-    invalidate: Optional[bool] = False, account: Optional[Account] = None
-) -> Optional[User]:
+def get_cached_admin_user_for_account(account: Account, invalidate: Optional[bool] = False) -> User:
     """
     Retrieve the admin user for a given account, creating one if necessary.
 
@@ -420,19 +422,24 @@ def get_cached_admin_user_for_account(
         admin_user = get_cached_admin_user_for_account(invalidate=True, account=account)
     """
     if not isinstance(account, Account):
-        raise SmarterValueError("Account is required")
+        raise User.DoesNotExist("Invalid account provided")
 
     @cache_results()
     def _admin_user_for_account_number(account_number: str, class_name=User.__name__) -> User:
         # reinstantiate the account
-        account = Account.get_cached_object(account_number=account_number)
-        if not account:
-            raise SmarterConfigurationError(
-                f"Failed to retrieve account with number {account_number}. Please ensure the account exists and is configured correctly."
+        try:
+            account = Account.objects.get(account_number=account_number)
+        except Account.DoesNotExist as e:
+            logger.error(
+                "%s.get_cached_admin_user_for_account() account with number %s does not exist",
+                HERE,
+                account_number,
             )
-        console_prefix = formatted_text(f"{__name__}.get_cached_admin_user_for_account()")
+            raise e
+        console_prefix = logging.formatted_text(f"{__name__}.get_cached_admin_user_for_account()")
         user_profile = (
-            UserProfile.objects.filter(account=account, user__is_staff=True)
+            UserProfile.objects.filter(account=account)
+            .filter(Q(user__is_staff=True) | Q(user__is_superuser=True))
             .select_related("user", "account")
             .order_by("pk")
             .first()
@@ -443,7 +450,17 @@ def get_cached_admin_user_for_account(
             )
             return user_profile.cached_user  # type: ignore[return-value]
         else:
-            raise SmarterConfigurationError(f"No admin user found for account {account}.")
+            logger.warning("%s no admin user found for account %s. Creating new admin user.", console_prefix, account)
+            username = f"{account.account_number}-admin"
+            new_user = User.objects.create(
+                username=username,
+                email=f"{username}@{smarter_settings.root_domain}",
+                is_staff=True,
+                is_superuser=True,
+                is_active=True,
+            )
+            user_profile = UserProfile.objects.create(name=username, user=new_user, account=account)
+            return user_profile.user  # type: ignore[return-value]
 
     if invalidate:
         _admin_user_for_account_number.invalidate(account_number=account.account_number, class_name=User.__name__)
@@ -451,24 +468,18 @@ def get_cached_admin_user_for_account(
     return _admin_user_for_account_number(account_number=account.account_number, class_name=User.__name__)
 
 
+@deprecated(
+    "This function is deprecated and may be removed in a future release. Please use smarter_cached_objects.smarter_admin_user_profile"
+)
 def get_cached_smarter_admin_user_profile() -> UserProfile:
     """
     Retrieve the admin UserProfile for the smarter account, using caching for performance.
 
-    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :returns: UserProfile instance for the smarter admin user.
 
     .. note::
 
            The smarter admin user is typically a superuser or staff user associated with the platform's main account.
-
-    .. warning::
-
-           If no suitable admin user exists, or the smarter account is misconfigured, an exception is raised.
-
-    .. tip::
-
-           Use ``invalidate=True`` after updating admin user or account data to ensure cache consistency.
 
     **Example usage**::
 
@@ -554,10 +565,10 @@ def get_users_for_account(account: Account) -> list[User]:
     if not account:
         raise SmarterValueError("Account is required")
     users = User.objects.filter(user_profile__account=account)
-    return list[users]  # type: ignore[list-item,return-value]
+    return [user for user in users]
 
 
-def get_user_profiles_for_account(account: Account) -> Optional[list[UserProfile]]:
+def get_user_profiles_for_account(account: Account) -> list[UserProfile]:
     """
     Retrieve a list of user profiles associated with a given account.
 
@@ -580,21 +591,24 @@ def get_user_profiles_for_account(account: Account) -> Optional[list[UserProfile
     if not account:
         raise SmarterValueError("Account is required")
 
-    user_profiles = UserProfile.objects.filter(account=account)
+    user_profiles = UserProfile.objects.filter(account=account) or []
     return list(user_profiles)
 
 
+@deprecated(
+    "This function is deprecated and may be removed in a future release. Please use with_ownership_permission_for() instead."
+)
 def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[UserProfile]:
     """
     Get a list of valid owners for the given user profile.
 
     This function retrieves all user profiles associated with the same account as the provided user profile.
-    These profiles are considered valid owners for plugins created by the user.
+    These profiles are considered valid owners for ORM resources created by the user.
 
     :param user_profile: The `UserProfile` instance representing the user.
     :type user_profile: UserProfile
 
-    :return: A list of `UserProfile` instances that are valid plugin owners.
+    :return: A list of `UserProfile` instances that are valid ORM resource owners.
     :rtype: list[UserProfile]
 
     .. seealso::
@@ -618,7 +632,7 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
     if not user_profile:
         return [smarter_cached_objects.smarter_admin_user_profile]
 
-    account_admin = get_cached_admin_user_for_account(invalidate=False, account=user_profile.cached_account)
+    account_admin = get_cached_admin_user_for_account(invalidate=False, account=user_profile.account)
 
     if not isinstance(account_admin, UserProfile):
         return [user_profile, smarter_cached_objects.smarter_admin_user_profile]

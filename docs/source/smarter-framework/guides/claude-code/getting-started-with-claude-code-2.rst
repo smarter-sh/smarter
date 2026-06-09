@@ -92,7 +92,7 @@ Run:
 Proof of Concept
 ----------------
 
-A successful result is a provider resource that is active and available for later chatbot or agent configuration.
+A successful result is a provider resource that is active and available for later llm_client or agent configuration.
 
 Troubleshooting
 ---------------
@@ -110,20 +110,20 @@ Check that the Anthropic API key is available to Smarter and that the base URL a
 Optional Next Step
 ------------------
 
-After the provider is active, the next logical step would be to create a chatbot that uses it.
+After the provider is active, the next logical step would be to create an llm_client that uses it.
 
-The following example shows the intended shape of an Anthropic chatbot manifest, based on the same style as the ``smarter-deploy`` OpenAI chatbot example. This is shown as a target-state example only.
+The following example shows the intended shape of an Anthropic llm_client manifest, based on the same style as the ``smarter-deploy`` OpenAI llm_client example. This is shown as a target-state example only.
 
 .. note::
 
-   In the current Smarter repo, chatbot providers appear to be limited to OpenAI, Google AI, and Meta AI. Additional implementation would likely be required before an Anthropic chatbot could work end-to-end.
+   In the current Smarter repo, llm_client providers appear to be limited to OpenAI, Google AI, and Meta AI. Additional implementation would likely be required before an Anthropic llm_client could work end-to-end.
 
 .. code-block:: yaml
 
    apiVersion: smarter.sh/v1
-   kind: Chatbot
+   kind: LLMClient
    metadata:
-     description: "An Anthropic Claude pass-through chatbot."
+     description: "An Anthropic Claude pass-through llm_client."
      name: anthropic_claude
      version: 0.1.0
    spec:
@@ -144,7 +144,7 @@ The following example shows the intended shape of an Anthropic chatbot manifest,
        customDomain: null
        defaultMaxTokens: 4096
        defaultModel: claude-3-5-sonnet
-       defaultSystemRole: You are a helpful chatbot.
+       defaultSystemRole: You are a helpful llm_client.
        defaultTemperature: 0.5
        deployed: true
        provider: anthropic

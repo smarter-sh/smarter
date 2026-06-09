@@ -12,32 +12,32 @@ from typing import Optional
 
 from pydantic_core import ValidationError as PydanticValidationError
 
-from smarter.apps.account.manifest.brokers.secret import SAMSecretBroker
-from smarter.apps.account.manifest.models.secret.model import SAMSecret
-from smarter.apps.account.models import Secret
+from smarter.apps.connection.manifest.brokers.sql_connection import (
+    SAMSqlConnectionBroker,
+)
+from smarter.apps.connection.manifest.models.sql_connection.model import (
+    SAMSqlConnection,
+)
+from smarter.apps.connection.tests.mixins import (
+    AuthenticatedRequestMixin,
+    SqlConnectionTestMixin,
+)
 from smarter.apps.plugin.const import DATA_PATH as PLUGIN_DATA_PATH
-from smarter.apps.plugin.manifest.brokers.sql_connection import SAMSqlConnectionBroker
-from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
 )
 from smarter.apps.plugin.manifest.models.common.plugin.status import (
     SAMPluginCommonStatus,
 )
-from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.manifest.models.sql_plugin.spec import SAMSqlPluginSpec
-from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
+from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.sql import SqlPlugin
 from smarter.apps.plugin.tests.base_classes import ManifestTestsMixin, TestPluginBase
-from smarter.apps.plugin.tests.mixins import (
-    AuthenticatedRequestMixin,
-    SqlConnectionTestMixin,
-)
+from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
+from smarter.apps.secret.manifest.models.secret.model import SAMSecret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.broker import SAMBrokerError
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass

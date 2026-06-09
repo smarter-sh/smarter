@@ -3,7 +3,7 @@
 # python stuff
 import logging
 import time
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import botocore
 import botocore.exceptions
@@ -71,16 +71,23 @@ class AWSRoute53(AWSBase):
     _client = None
     _client_type: str = "route53"
 
-    def get_hosted_zone(self, domain_name) -> Optional[str]:
+    def get_hosted_zone(self, domain_name) -> Optional[dict]:
         """
-        Return the hosted zone.
+        Retrieve the AWS Route53 hosted zone for a given domain name.
 
-        :return: Hosted zone dictionary or None if not found.
+        This method searches all hosted zones in the AWS account and returns the hosted zone dictionary
+        that matches the provided domain name. The comparison is performed with and without a trailing dot.
+        If no matching hosted zone is found, the method returns None.
+
+        :param domain_name: The domain name for which to retrieve the hosted zone. Can be with or without a trailing dot.
+        :type domain_name: str
+        :return: The hosted zone dictionary if found, otherwise None.
         :rtype: Optional[dict]
+        :raises botocore.exceptions.ClientError: If there is an error communicating with AWS Route53.
         """
         logger.debug("%s.get_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
-        response = self.client.list_hosted_zones()
+        response = self.client.list_hosted_zones()  # type: ignore
         for hosted_zone in response["HostedZones"]:
             if hosted_zone["Name"] == domain_name or hosted_zone["Name"] == f"{domain_name}.":
                 return hosted_zone
@@ -135,7 +142,7 @@ class AWSRoute53(AWSBase):
         if isinstance(hosted_zone, dict):
             return (hosted_zone, False)
 
-        self.client.create_hosted_zone(
+        self.client.create_hosted_zone(  # type: ignore
             Name=domain_name,
             CallerReference=str(time.time()),  # Unique string used to identify the request
             HostedZoneConfig={"Comment": "Managed by Smarter", "PrivateZone": False},
@@ -148,13 +155,17 @@ class AWSRoute53(AWSBase):
 
     def get_hosted_zone_id(self, hosted_zone) -> str:
         """
-        Return the hosted zone id.
+        Extract and return the Route53 hosted zone ID from a hosted zone dictionary.
 
-        :param hosted_zone: The hosted zone dictionary.
+        This method takes a hosted zone dictionary (as returned by AWS Route53 API or get_hosted_zone)
+        and parses out the unique hosted zone ID. The ID is typically found in the 'Id' key and may be
+        prefixed with '/hostedzone/'. Only the final segment (the actual ID) is returned.
+
+        :param hosted_zone: The hosted zone dictionary from which to extract the ID. Must contain an 'Id' key.
         :type hosted_zone: dict
-        :return: The hosted zone ID.
+        :return: The unique hosted zone ID string (e.g., 'Z148QEXAMPLE8V').
         :rtype: str
-        :raises AWSHostedZoneNotFound: If the hosted zone ID could not be found.
+        :raises AWSHostedZoneNotFound: If the input is not a dictionary or does not contain an 'Id' key.
         """
         logger.debug("%s.get_hosted_zone_id() hosted_zone: %s", self.formatted_class_name, hosted_zone)
         if isinstance(hosted_zone, dict) and "Id" in hosted_zone:
@@ -164,7 +175,7 @@ class AWSRoute53(AWSBase):
 
     def get_hosted_zone_by_id(self, hosted_zone_id) -> Optional[dict]:
         """
-        (NOT IMPLEMENTED) Return the AWS Route53 Hosted zone for the zone id
+        (NOT IMPLEMENTED) Return the AWS Route53 Hosted zone for the zone id.
 
         :param hosted_zone_id: The hosted zone ID.
         :type hosted_zone_id: str
@@ -173,15 +184,21 @@ class AWSRoute53(AWSBase):
 
         .. todo:: implement this method
         """
+        raise NotImplementedError("get_hosted_zone_by_id is not implemented yet")
 
     def get_hosted_zone_id_for_domain(self, domain_name) -> str:
         """
-        Return the hosted zone id for the domain.
+        Retrieve the AWS Route53 hosted zone ID for a given domain name.
 
-        :param domain_name: The domain name.
+        This method ensures that a hosted zone exists for the specified domain name (creating one if necessary),
+        and then extracts and returns the unique hosted zone ID. The domain name is normalized before lookup.
+        If the hosted zone cannot be found or created, an exception is raised.
+
+        :param domain_name: The domain name for which to retrieve the hosted zone ID.
         :type domain_name: str
-        :return: The hosted zone ID.
+        :return: The unique hosted zone ID string (e.g., 'Z148QEXAMPLE8V').
         :rtype: str
+        :raises AWSHostedZoneNotFound: If the hosted zone could not be found or created for the domain.
         """
         logger.debug("%s.get_hosted_zone_id_for_domain() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
@@ -234,14 +251,20 @@ class AWSRoute53(AWSBase):
             f"NS records not found for domain {domain}. Make sure the domain is registered and the hosted zone exists."
         )
 
-    def delete_hosted_zone(self, domain_name):
+    def delete_hosted_zone(self, domain_name: str) -> None:
         """
-        Delete the hosted zone and all its record sets.
+        Delete the AWS Route53 hosted zone and all its DNS record sets for a given domain.
+
+        This method locates the hosted zone associated with the specified domain name, deletes all DNS records
+        (except for NS and SOA records), and then deletes the hosted zone itself. This operation is irreversible
+        and will remove all DNS records managed by Route53 for the domain.
 
         :param domain_name: The domain name of the hosted zone to delete.
         :type domain_name: str
         :return: None
         :rtype: None
+        :raises AWSHostedZoneNotFound: If the hosted zone for the domain cannot be found.
+        :raises botocore.exceptions.ClientError: If there is an error communicating with AWS Route53 or deleting resources.
         """
         # Get the hosted zone id
         logger.debug("%s.delete_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
@@ -249,7 +272,7 @@ class AWSRoute53(AWSBase):
         hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name)
 
         # Get all record sets
-        paginator = self.client.get_paginator("list_resource_record_sets")
+        paginator = self.client.get_paginator("list_resource_record_sets")  # type: ignore
         record_sets = []
         for page in paginator.paginate(HostedZoneId=hosted_zone_id):
             for record_set in page["ResourceRecordSets"]:
@@ -258,13 +281,13 @@ class AWSRoute53(AWSBase):
 
         # Delete all record sets
         for record_set in record_sets:
-            self.client.change_resource_record_sets(
+            self.client.change_resource_record_sets(  # type: ignore
                 HostedZoneId=hosted_zone_id,
                 ChangeBatch={"Changes": [{"Action": "DELETE", "ResourceRecordSet": record_set}]},
             )
 
         # Delete the hosted zone
-        self.client.delete_hosted_zone(Id=hosted_zone_id)
+        self.client.delete_hosted_zone(Id=hosted_zone_id)  # type: ignore
 
     def get_dns_record(self, hosted_zone_id: str, record_name: str, record_type: str) -> Optional[dict]:
         """
@@ -309,7 +332,7 @@ class AWSRoute53(AWSBase):
         def name_match(record_name, record) -> bool:
             return record["Name"] == record_name or record["Name"] == f"{record_name}."
 
-        paginator = self.client.get_paginator("list_resource_record_sets")
+        paginator = self.client.get_paginator("list_resource_record_sets")  # type: ignore
         for page in paginator.paginate(HostedZoneId=hosted_zone_id):
             for record in page["ResourceRecordSets"]:
                 if (
@@ -321,7 +344,7 @@ class AWSRoute53(AWSBase):
         logger.warning("%s did not find record for %s %s", prefix, record_name, record_type)
         return None
 
-    def get_ns_records(self, hosted_zone_id: str):
+    def get_ns_records(self, hosted_zone_id: str) -> list[dict[str, Any]]:
         """
         Return the NS (Name Server) records from the hosted zone.
 
@@ -350,10 +373,10 @@ class AWSRoute53(AWSBase):
         :param hosted_zone_id: The ID of the hosted zone from which to retrieve NS records.
         :type hosted_zone_id: str
         :return: A list of dictionaries representing the NS record sets for the hosted zone.
-        :rtype: list
+        :rtype: list[dict[str, Any]]
         """
         logger.debug("%s.get_ns_records() hosted_zone_id: %s", self.formatted_class_name, hosted_zone_id)
-        response = self.client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
+        response = self.client.list_resource_record_sets(HostedZoneId=hosted_zone_id)  # type: ignore
         retval = []
         for record in response["ResourceRecordSets"]:
             if record["Type"] == "NS":
@@ -368,7 +391,7 @@ class AWSRoute53(AWSBase):
         record_type: str,
         record_ttl: int,
         record_alias_target: Optional[dict] = None,
-        record_value=None,  # can be a single text value of a list of dict
+        record_value: Optional[dict] = None,  # can be a single text value of a list of dict
     ) -> Tuple[dict, bool]:
         """
         Get or create the DNS record in the hosted zone.
@@ -392,7 +415,6 @@ class AWSRoute53(AWSBase):
         :type record_value: Union[str, List[dict], None]
         :return: A tuple containing the DNS record dictionary and a boolean indicating whether the record was created (True) or already existed (False).
         :rtype: Tuple[dict, bool]
-
         """
         action: Optional[str] = None
         fn_name = self.formatted_class_name + ".get_or_create_dns_record()"
@@ -418,8 +440,8 @@ class AWSRoute53(AWSBase):
             return False
 
         def match_alias(record_alias_target, record) -> bool:
-            """
-            Match the alias target
+            """Match the alias target.
+
             'AliasTarget': {'HostedZoneId': 'Z3AADJGX6KTTL2', 'DNSName': 'a1db5dfcf202b4a63bdcd0f3c03e769f-769707598.us-east-2.elb.amazonaws.com.', 'EvaluateTargetHealth': True}}
             """
             record_alias = record.get("AliasTarget", None)
@@ -465,7 +487,7 @@ class AWSRoute53(AWSBase):
             change_batch["Changes"][0]["ResourceRecordSet"]["TTL"] = record_ttl
 
         try:
-            self.client.change_resource_record_sets(
+            self.client.change_resource_record_sets(  # type: ignore
                 HostedZoneId=hosted_zone_id,
                 ChangeBatch=change_batch,
             )
@@ -510,11 +532,15 @@ class AWSRoute53(AWSBase):
         record_resource_records=None,  # can be a single text value of a list of dict
     ) -> None:
         """
-        Destroy the DNS record.
+        Delete a specific DNS record from an AWS Route53 hosted zone.
 
-        :param hosted_zone_id: The ID of the hosted zone.
+        This method constructs and submits a change batch to AWS Route53 to delete the specified DNS record
+        from the given hosted zone. The record can be identified by name, type, TTL, and optionally alias target
+        or resource records. If the record does not exist, AWS may raise an error. This operation is irreversible.
+
+        :param hosted_zone_id: The ID of the hosted zone containing the DNS record.
         :type hosted_zone_id: str
-        :param record_name: The DNS record name.
+        :param record_name: The DNS record name to delete.
         :type record_name: str
         :param record_type: The DNS record type (e.g., "A", "CNAME", "NS").
         :type record_type: str
@@ -526,6 +552,7 @@ class AWSRoute53(AWSBase):
         :type record_resource_records: Union[str, List[dict], None]
         :return: None
         :rtype: None
+        :raises botocore.exceptions.ClientError: If there is an error communicating with AWS Route53 or deleting the record.
         """
         logger.debug(
             "%s.destroy_dns_record() hosted_zone_id: %s record_name: %s record_type: %s",
@@ -560,7 +587,7 @@ class AWSRoute53(AWSBase):
                 ]
 
         print("change_batch", change_batch)
-        self.client.change_resource_record_sets(
+        self.client.change_resource_record_sets(  # type: ignore
             HostedZoneId=hosted_zone_id,
             ChangeBatch=change_batch,
         )
@@ -632,15 +659,21 @@ class AWSRoute53(AWSBase):
 
     def create_domain_a_record(self, hostname: str, api_host_domain: str) -> Tuple[dict, bool]:  # type: ignore[no-untyped-def]
         """
-        Creates an A record inside an AWS Route53 hosted zone.
+        Create an A record in an AWS Route53 hosted zone for a given hostname.
+
+        This method creates (or verifies the existence of) an A record for the specified hostname within the
+        Route53 hosted zone associated with the provided parent domain. The A record is created using the
+        values from the environment's A record, and supports both direct IP and alias target configurations.
+        If the record already exists with the correct values, it is not recreated.
 
         :param hostname: The full hostname for the A record to create (e.g., "api.example.com").
         :type hostname: str
         :param api_host_domain: The parent domain where the hosted zone exists (e.g., "example.com").
         :type api_host_domain: str
-        :return: The created DNS record dictionary and a boolean indicating if it was created.
+        :return: A tuple containing the created (or existing) DNS record dictionary and a boolean indicating if it was newly created (True) or already existed (False).
         :rtype: Tuple[dict, bool]
-        :raises AWSHostedZoneNotFound: If the hosted zone or deployment record cannot be found
+        :raises AWSHostedZoneNotFound: If the hosted zone or deployment record cannot be found for the given domain.
+        :raises botocore.exceptions.ClientError: If there is an error communicating with AWS Route53 or creating the record.
         """
         fn_name = formatted_text(module_prefix + "create_domain_a_record()")
         logger.debug("%s for hostname %s, api_host_domain %s", fn_name, hostname, api_host_domain)
@@ -675,7 +708,7 @@ class AWSRoute53(AWSBase):
                 record_type="A",
                 record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
                 record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
-                record_ttl=smarter_settings.chatbot_tasks_default_ttl,
+                record_ttl=smarter_settings.llm_client_tasks_default_ttl,
             )
             verb = "Created" if created else "Verified"
             logger.debug(

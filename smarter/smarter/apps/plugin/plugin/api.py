@@ -1,6 +1,5 @@
 """
-A PLugin that uses a remote REST API server to retrieve its return data
-
+A PLugin that uses a remote REST API server to retrieve its return data.
 
 .. note::
 
@@ -9,7 +8,7 @@ A PLugin that uses a remote REST API server to retrieve its return data
     1. Smarter Secret: The authentication credential for the remote API connection.
     2. Smarter API Connection: The complete connection configuration to the remote API database server (host, port, secret, ssh key, username, etc.).
     3. Smarter API Plugin: The plugin that defines the API query and it's parameters to run against the remote API database server.
-    4. Smarter Chatbot: The prompting resource (Chatbot, Agent, Workflow unit, etcetera) that includes the API Plugin:
+    4. Smarter LLMClient: The prompting resource (LLMClient, Agent, Workflow unit, etcetera) that includes the API Plugin:
 
 .. sphinx note: these are relative to the rst doc that calls automodule on this file.
 
@@ -17,7 +16,7 @@ A PLugin that uses a remote REST API server to retrieve its return data
     :language: yaml
     :caption: 1.) Example Smarter Secret Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/sample-connections/smarter-test-api.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-api.yaml
     :language: yaml
     :caption: 2.) Example Smarter API Connection Manifest
 
@@ -25,10 +24,9 @@ A PLugin that uses a remote REST API server to retrieve its return data
     :language: yaml
     :caption: 3.) Example Stackademy API Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-api.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llm_client-api.yaml
     :language: yaml
-    :caption: 4.) Example Stackademy Chatbot Manifest
-
+    :caption: 4.) Example Stackademy LLMClient Manifest
 """
 
 import logging
@@ -37,6 +35,7 @@ from typing import Any, Optional, Type, Union
 
 from django.core.exceptions import MultipleObjectsReturned
 
+from smarter.apps.connection.models import ApiConnection
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
@@ -65,13 +64,13 @@ from smarter.apps.plugin.manifest.models.common.plugin.spec import (
 from smarter.apps.plugin.manifest.models.common.plugin.status import (
     SAMPluginCommonStatus,
 )
-from smarter.apps.plugin.models import ApiConnection, PluginDataApi, PluginMeta
+from smarter.apps.plugin.models import PluginDataApi, PluginMeta
 from smarter.apps.plugin.serializers import PluginApiSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import to_snake_case
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -442,7 +441,6 @@ class ApiPlugin(PluginBase):
                     - name: unit
                         value: Celsius
                     limit: 10
-
         """
         if not self._manifest:
             return None
@@ -464,7 +462,7 @@ class ApiPlugin(PluginBase):
             raise SmarterApiPluginError(
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required API data."
             )
-        api_data = {camel_to_snake(key): value for key, value in api_data.items()}
+        api_data = {to_snake_case(key): value for key, value in api_data.items()}
 
         connection_name = self._manifest.spec.connection if self._manifest else None
         if connection_name:
@@ -723,7 +721,7 @@ class ApiPlugin(PluginBase):
         :raises SmarterConfigurationError: If the plugin is not ready.
         :raises NotImplementedError: If the method is not implemented in a subclass.
         """
-        if not self.user.is_staff:
+        if not self.user or not self.user.is_staff:
             raise SmarterApiPluginError("Only account admins can apply static plugins.")
 
         if not self.ready:

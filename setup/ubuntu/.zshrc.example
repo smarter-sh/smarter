@@ -1,0 +1,83 @@
+
+# --------------------------------------------
+# Ubuntu/Debian Environment Variables for Compilation/Linking
+#
+# IMPORTANT: use this .zshrc as a general template guide for MODIFYING YOUR EXISTING
+# .zshrc, not as a complete replacement. Your existing .zshrc very likely contains
+# settings that are unrelated to Smarter and which you currently need for other
+# projects.
+#
+# These variables help build Python scientific packages (numpy, scipy, lxml, etc.)
+# and other software that depends on native libraries installed via apt.
+#
+# - LDFLAGS: Linker search path for libraries (.so files)
+# - CPPFLAGS: Preprocessor search path for headers (.h files)
+# - PKG_CONFIG_PATH: Path for pkg-config .pc files
+#
+
+# 1. kubectl
+# -------------------------
+export KUBE_CONFIG_PATH="$HOME/.kube/config"
+
+# 2. Docker Buildx
+# -------------------------
+export COMPOSE_BAKE=true
+
+# 3. Python Configuration
+# -----------------------
+## Use Homebrew Python 3.13 as default (installed via Linuxbrew)
+# Ensure Homebrew Python 3.13 is first in PATH
+export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+export LDFLAGS="${LDFLAGS} -L/home/linuxbrew/.linuxbrew/opt/python@3.13/lib"
+export CPPFLAGS="${CPPFLAGS} -I/home/linuxbrew/.linuxbrew/opt/python@3.13/include"
+export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/home/linuxbrew/.linuxbrew/opt/python@3.13/lib/pkgconfig"
+
+# various ways to ensure that anything that wants python gets python3.13
+alias python3.13="/home/linuxbrew/.linuxbrew/opt/python@3.13/libexec/bin/python3.13"
+
+
+
+# 4. Node Version Manager (nvm)
+# -----------------------------
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+# 5. Go
+# -------------------------
+export PATH="$PATH:$(go env GOPATH)/bin"
+
+# 6. Scientific Python/Math Libraries
+# -----------------------------------
+export NPY_DISTUTILS_APPEND_FLAGS=1  # For SciPy pip installs
+# blis
+export LDFLAGS="$LDFLAGS -lblis"
+# zlib
+export LDFLAGS="$LDFLAGS -lz"
+export CPPFLAGS="$CPPFLAGS -I/usr/include"
+# zstd
+export LDFLAGS="$LDFLAGS -lzstd"
+# openblas
+export LDFLAGS="$LDFLAGS -lopenblas"
+export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/lib/x86_64-linux-gnu/pkgconfig"
+
+# 7. Database Client Libraries
+# ---------------------
+# MariaDB
+export LDFLAGS="$LDFLAGS -lmariadb"
+# MySQL
+export LDFLAGS="$LDFLAGS -lmysqlclient"
+
+# 8. Crypto/SSL Libraries
+# -----------------------
+export LDFLAGS="$LDFLAGS -lssl -lcrypto"
+export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/lib/x86_64-linux-gnu/pkgconfig"
+
+# 9. XML/XSLT/Security Libraries
+# ------------------------------
+export CPPFLAGS="$CPPFLAGS -I/usr/include/libxml2 -I/usr/include/libxslt"
+export LDFLAGS="$LDFLAGS -lxml2 -lxslt"
+
+# 10. geos (Geometry Engine)
+# -------------------------
+export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu/"

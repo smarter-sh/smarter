@@ -1,0 +1,26 @@
+{% load static %}
+
+<!--begin::Navbar-->
+<div class="app-navbar flex-shrink-0">
+  <!--begin::Theme mode-->
+  {% include 'dashboard/navbar/theme-mode-menu-item.html' %}
+  <!--end::Theme mode-->
+  <!--begin::User menu-->
+  {% include 'dashboard/navbar/user-menu-item.html' %}
+  <!--end::User menu-->
+
+  <!--begin::Header menu toggle-->
+  <div class="app-navbar-item d-lg-none ms-2 me-n2" title="Show header menu">
+    <div
+      class="btn btn-flex btn-icon btn-active-color-primary w-30px h-30px"
+      id="kt_app_header_menu_toggle"
+    >
+      <i class="ki-duotone ki-element-4 fs-1">
+        <span class="path1"></span>
+        <span class="path2"></span>
+      </i>
+    </div>
+  </div>
+  <!--end::Header menu toggle-->
+</div>
+<!--end::Navbar-->
