@@ -2,7 +2,10 @@
 
 from django.urls import path, re_path
 
-from smarter.apps.connection.views.detailview import ConnectionDetailView
+from smarter.apps.connection.views.detailview import (
+    ApiConnectionDetailView,
+    SqlConnectionDetailView,
+)
 from smarter.apps.connection.views.listview.api import (
     ConnectionListApiCloneView,
     ConnectionListApiDeleteView,
@@ -23,7 +26,8 @@ class ConnectionReverseNames:
     namespace = namespace
 
     listview = to_snake_case(ConnectionListApiView)
-    detailview = to_snake_case(ConnectionDetailView)
+    sql_detailview = to_snake_case(SqlConnectionDetailView)
+    api_detailview = to_snake_case(ApiConnectionDetailView)
 
     listview = to_snake_case(ConnectionListView)
     listview_api = to_snake_case(ConnectionListApiView)
@@ -35,8 +39,16 @@ class ConnectionReverseNames:
 
 urlpatterns = [
     path("", ConnectionListView.as_view(), name=ConnectionReverseNames.listview),
-    path("connections/<str:kind>/<str:name>/", ConnectionDetailView.as_view(), name=ConnectionReverseNames.detailview),
-    path("connections/<int:connection_id>/", ConnectionDetailView.as_view(), name=ConnectionReverseNames.detailview),
+    path(
+        "connections/sql-connection/<str:hashed_id>/",
+        SqlConnectionDetailView.as_view(),
+        name=ConnectionReverseNames.sql_detailview,
+    ),
+    path(
+        "connections/api-connection/<str:hashed_id>/",
+        ApiConnectionDetailView.as_view(),
+        name=ConnectionReverseNames.api_detailview,
+    ),
     path(
         "react-integration/api/listview/", ConnectionListApiView.as_view(), name=ConnectionReverseNames.listview_api_all
     ),

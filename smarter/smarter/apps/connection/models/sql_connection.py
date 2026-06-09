@@ -1,4 +1,4 @@
-"""SqlConnection model"""
+"""SqlConnection model."""
 
 import io
 import tempfile
@@ -13,6 +13,7 @@ from django.core.validators import MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.utils import ConnectionHandler
+from django.urls import reverse
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModelManager,
@@ -92,6 +93,7 @@ class SqlConnection(ConnectionBase):
     class ParamikoUpdateKnownHostsPolicy(paramiko.MissingHostKeyPolicy):
         """
         Custom Paramiko policy to automatically add missing SSH host keys to the known_hosts field.
+
         This policy extends Paramiko's MissingHostKeyPolicy to handle unknown host keys by appending
         them to the ``ssh_known_hosts`` field of the associated :class:`SqlConnection`
         model instance. When an unknown host key is encountered during an SSH connection attempt,
@@ -119,6 +121,7 @@ class SqlConnection(ConnectionBase):
     DBMS_DEFAULT_TIMEOUT = 30
     """
     The default timeout for database connections in seconds.
+
     30 seconds is a reasonable default that balances responsiveness with network latency.
     """
     DBMS_CHOICES = [
@@ -129,18 +132,14 @@ class SqlConnection(ConnectionBase):
         (DbEngines.MSSQL.value, DbEngines.MSSQL.value),
         (DbEngines.SYBASE.value, DbEngines.SYBASE.value),
     ]
-    """
-    The supported database management systems (DBMS) for SQL connections.
-    """
+    """The supported database management systems (DBMS) for SQL connections."""
     DBMS_AUTHENITCATION_METHODS = [
         (DBMSAuthenticationMethods.NONE.value, "None"),
         (DBMSAuthenticationMethods.TCPIP.value, "Standard TCP/IP"),
         (DBMSAuthenticationMethods.TCPIP_SSH.value, "Standard TCP/IP over SSH"),
         (DBMSAuthenticationMethods.LDAP_USER_PWD.value, "LDAP User/Password"),
     ]
-    """
-    The supported authentication methods for SQL connections.
-    """
+    """The supported authentication methods for SQL connections."""
     db_engine = models.CharField(
         help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
         default=DbEngines.MYSQL.value,
@@ -150,7 +149,9 @@ class SqlConnection(ConnectionBase):
         null=True,
     )
     """
-    The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.
+    The type of database management system.
+
+    Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.
     """
     authentication_method = models.CharField(
         help_text="The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.",
@@ -159,7 +160,9 @@ class SqlConnection(ConnectionBase):
         default=DBMSAuthenticationMethods.TCPIP.value,
     )
     """
-    The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.
+    The authentication method to use for the connection.
+
+    Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.
     """
     timeout = models.IntegerField(
         help_text="The timeout for the database connection in seconds. Default is 30 seconds.",
@@ -168,16 +171,16 @@ class SqlConnection(ConnectionBase):
         blank=True,
     )
     """
-    The timeout for the database connection in seconds. Default is 30 seconds.
+    The timeout for the database connection in seconds.
+
+    Default is 30 seconds.
     """
 
     # SSL/TLS fields
     use_ssl = models.BooleanField(
         default=False, help_text="Whether to use SSL/TLS for the connection.", blank=True, null=True
     )
-    """
-    Whether to use SSL/TLS for the connection.
-    """
+    """Whether to use SSL/TLS for the connection."""
     ssl_cert = models.TextField(blank=True, null=True, help_text="The SSL certificate for the connection, if required.")
     ssl_key = models.TextField(blank=True, null=True, help_text="The SSL key for the connection, if required.")
     ssl_ca = models.TextField(
@@ -185,6 +188,7 @@ class SqlConnection(ConnectionBase):
     )
     """
     The SSL certificate for the connection, if required.
+
     The SSL key for the connection, if required.
     The Certificate Authority (CA) certificate for verifying the server.
     """
@@ -194,13 +198,17 @@ class SqlConnection(ConnectionBase):
         max_length=255, help_text="The remote host of the SQL connection. Should be a valid internet domain name."
     )
     """
-    The remote host of the SQL connection. Should be a valid internet domain name.
+    The remote host of the SQL connection.
+
+    Should be a valid internet domain name.
     """
     port = models.IntegerField(
         default=3306, help_text="The port of the SQL connection. example: 3306 for MySQL.", blank=True, null=True
     )
     """
-    The port of the SQL connection. example: 3306 for MySQL.
+    The port of the SQL connection.
+
+    example: 3306 for MySQL.
     5432 for PostgreSQL, 1521 for Oracle, 1433 for MS SQL Server.
     5000 for Sybase.
     1234 for SQLite (not commonly used).
@@ -208,13 +216,9 @@ class SqlConnection(ConnectionBase):
     5432 could also be a reasonable default as PostgreSQL is also widely used.
     """
     database = models.CharField(max_length=255, help_text="The name of the database to connect to.")
-    """
-    The name of the database to connect to.
-    """
+    """The name of the database to connect to."""
     username = models.CharField(max_length=255, blank=True, null=True, help_text="The database username.")
-    """
-    The database username.
-    """
+    """The database username."""
     password = models.ForeignKey(
         Secret,
         on_delete=models.CASCADE,
@@ -229,9 +233,7 @@ class SqlConnection(ConnectionBase):
     See: :class:`smarter.apps.account.models.Secret`
     """
     pool_size = models.IntegerField(default=5, help_text="The size of the connection pool.", blank=True, null=True)
-    """
-    The size of the connection pool.
-    """
+    """The size of the connection pool."""
     max_overflow = models.IntegerField(
         default=10,
         help_text="The maximum number of connections to allow beyond the pool size.",
@@ -239,9 +241,7 @@ class SqlConnection(ConnectionBase):
         blank=True,
         null=True,
     )
-    """
-    The maximum number of connections to allow beyond the pool size.
-    """
+    """The maximum number of connections to allow beyond the pool size."""
 
     # Proxy fields
     proxy_protocol = models.CharField(
@@ -252,9 +252,7 @@ class SqlConnection(ConnectionBase):
         blank=True,
         null=True,
     )
-    """
-    The protocol to use for the proxy connection.
-    """
+    """The protocol to use for the proxy connection."""
     proxy_host = models.CharField(
         max_length=255,
         blank=True,
@@ -262,11 +260,14 @@ class SqlConnection(ConnectionBase):
         help_text="The remote host of the SQL proxy connection. Should be a valid internet domain name.",
     )
     """
-    The remote host of the SQL proxy connection. Should be a valid internet domain name.
+    The remote host of the SQL proxy connection.
+
+    Should be a valid internet domain name.
     """
     proxy_port = models.IntegerField(blank=True, null=True, help_text="The port of the SQL proxy connection.")
     """
     The port of the SQL proxy connection.
+
     8080 is a common default for HTTP proxies.
     3128 is another common default for HTTP proxies.
     1080 is a common default for SOCKS proxies.
@@ -275,9 +276,7 @@ class SqlConnection(ConnectionBase):
     proxy_username = models.CharField(
         max_length=255, blank=True, null=True, help_text="The username for the proxy connection."
     )
-    """
-    The username for the proxy connection.
-    """
+    """The username for the proxy connection."""
     proxy_password = models.ForeignKey(
         Secret,
         on_delete=models.CASCADE,
@@ -297,8 +296,35 @@ class SqlConnection(ConnectionBase):
         help_text="The known_hosts file content for verifying SSH connections. Usually comes from ~/.ssh/known_hosts.",
     )
     """
-    The known_hosts file content for verifying SSH connections. Usually comes from ~/.ssh/known_hosts.
+    The known_hosts file content for verifying SSH connections.
+
+    Usually comes from ~/.ssh/known_hosts.
     """
+
+    @property
+    def manifest_url(self) -> str:
+        """
+        Returns the URL to the plugin's manifest.
+
+        Adds the manifest kind as a slug to the base manifest URL defined in the parent class.
+        For example, if the base manifest URL is "/plugins/{hashed_id}" and the manifest
+        kind is "sql_connection", the resulting manifest URL would be "/plugins/{hashed_id}/sql_connection/".
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'sql-connection'
+            self.rfc1034_compliant_name  # 'smarter-test-sql
+            self.manifest_url  # 'http://localhost:9357/connection/connections/sql-connection/smarter-test-sql/'
+        """
+        # pylint: disable=C0415
+        from smarter.apps.connection.urls import ConnectionReverseNames
+
+        return reverse(
+            f"{ConnectionReverseNames.namespace}:{ConnectionReverseNames.sql_detailview}",
+            kwargs={"name": self.rfc1034_compliant_name},
+        )
 
     @property
     def connection(self) -> Optional[BaseDatabaseWrapper]:
@@ -414,6 +440,7 @@ class SqlConnection(ConnectionBase):
     def connection_string(self) -> str:
         """
         Return the database connection string.
+
         This property constructs and returns a database connection string based on the current
         SQL connection instance's configuration.
 
