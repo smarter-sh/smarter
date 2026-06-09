@@ -13,5 +13,5 @@ Technical References
 --------------------
 
 - Django ORM Model: :py:class:`smarter.apps.connection.models.SqlConnection`
-- :doc:`SAM Broker <../sam/brokers/sql-connection>`
-- :doc:`SAM Pydantic Class Reference <../sam/models/sql-connection>`
+- :doc:`SAM Broker <../manifest/brokers/sql-connection>`
+- :doc:`SAM Pydantic Class Reference <../manifest/models/sql-connection>`

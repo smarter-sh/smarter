@@ -6,8 +6,8 @@ Technical References
 
 - Class Reference: :py:class:`smarter.apps.plugin.plugin.sql.ApiPlugin`
 - Django ORM Model: :py:class:`smarter.apps.plugin.models.PluginDataApi`
-- :doc:`SAM Broker <../sam/brokers/sql-plugin>`
-- :doc:`SAM Pydantic Class Reference <../sam/models/sql-plugin>`
+- :doc:`SAM Broker <../manifest/brokers/sql-plugin>`
+- :doc:`SAM Pydantic Class Reference <../manifest/models/sql-plugin>`
 
 
 .. automodule:: smarter.apps.plugin.plugin.sql
