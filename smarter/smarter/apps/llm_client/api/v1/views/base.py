@@ -408,6 +408,13 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 self.account,
                 self.llm_client_id,
             )
+            logger.debug(
+                "%s.dispatch() - not found request: %s, args: %s, kwargs: %s",
+                self.formatted_class_name,
+                self.smarter_build_absolute_uri(request),
+                args,
+                kwargs,
+            )
             return JsonResponse({}, status=HTTPStatus.NOT_FOUND.value)
 
         logger.debug("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
@@ -437,9 +444,11 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                     },
                 },
             }
+            logger.debug("%s.dispatch() - LLMClientHelper not ready", self.formatted_class_name)
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST.value)
         if self.llm_client_helper.is_authentication_required and not is_authenticated_request(request):
             data = {"message": "Forbidden. Please provide a valid API key."}
+            logger.debug("%s.dispatch() - Authentication required", self.formatted_class_name)
             return JsonResponse(data=data, status=HTTPStatus.FORBIDDEN.value)
 
         self.plugins = LLMClientPlugin().plugins(llm_client=self.llm_client)

@@ -1499,6 +1499,9 @@ class SmarterRequestMixin(AccountMixin):
             - http://localhost:9357/api/v1/llm-clients/1556/chat/
               path_parts: ['api', 'v1', 'llm-clients', '<int:pk>', 'chat']
 
+            - http://localhost:9357/api/v1/llm-clients/rMTAwMDAwNwx/chat/
+              path_parts: ['api', 'v1', 'llm-clients', '<str:hashed_id>', 'chat']
+
         Returns:
             bool: True if the URL matches a smarter API llm_client endpoint, otherwise False.
         """
@@ -1546,7 +1549,7 @@ class SmarterRequestMixin(AccountMixin):
                 self.url_path_parts,
             )
             return False
-        if not self.url_path_parts[3].isnumeric():
+        if not self.url_path_parts[3].isnumeric() or isinstance(self.url_path_parts[3], str):
             # expecting <int:pk> to be numeric: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
             verbose_logger.debug(
                 "%s.is_llm_client_smarter_api_url() - fourth part is not numeric: %s",

@@ -25,22 +25,23 @@ logger = logging.getLogger(__name__)
 
 HERE = Path(__file__).resolve().parent
 
-OPENAI_API = "open_ai"
+OPENAI_API = "openai"
 OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
 OPENAI_API_KEY_NAME = "openai_api_key"
 
-GOOGLE_API = "google_ai"
+GOOGLE_API = "googleai"
 GOOGLE_DEFAULT_MODEL = "gemini-flash-latest"
-GOOGLE_API_KEY_NAME = "google_ai_api_key"
+GOOGLE_API_KEY_NAME = "googleai_api_key"
 
-META_API = "meta_ai"
+META_API = "metaai"
 META_DEFAULT_MODEL = "llama3.2-3b"
-META_API_KEY_NAME = "meta_ai_api_key"
+META_API_KEY_NAME = "metaai_api_key"
 
 
 class Command(SmarterCommand):
     """
     Django manage.py initialize_providers.py command.
+
     This command is used to create/update the principal
     Providers that are preloaded on all platforms.
 
@@ -117,9 +118,7 @@ class Command(SmarterCommand):
         )
 
     def initialize_provider_model(self, provider: Provider, model_name: str, is_default: bool = False):
-        """
-        helper function to initialize a single provider model.
-        """
+        """Helper function to initialize a single provider model."""
 
         ProviderModel.objects.update_or_create(
             provider=provider,
@@ -132,9 +131,7 @@ class Command(SmarterCommand):
         )
 
     def initialize_openai(self):
-        """
-        Initialize OpenAI provider and its models.
-        """
+        """Initialize OpenAI provider and its models."""
         logger.info("initialize_openai")
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR("initialize_openai: User profile is not set."))
@@ -188,9 +185,7 @@ class Command(SmarterCommand):
         )
 
     def initialize_googleai(self):
-        """
-        Initialize Google AI provider and its models.
-        """
+        """Initialize Google AI provider and its models."""
         logger.info("initialize_googleai")
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR("initialize_googleai: User profile is not set."))
@@ -269,9 +264,7 @@ class Command(SmarterCommand):
         )
 
     def initialize_metaai(self):
-        """
-        Initialize Meta AI provider and its models.
-        """
+        """Initialize Meta AI provider and its models."""
         logger.info("initialize_metaai")
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
@@ -326,9 +319,7 @@ class Command(SmarterCommand):
         )
 
     def handle(self, *args, **options):
-        """
-        Initialize all built-in providers.
-        """
+        """Initialize all built-in providers."""
         self.handle_begin()
 
         try:

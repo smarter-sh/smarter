@@ -240,7 +240,7 @@ class LLMClientHelper(SmarterRequestMixin):
         >>> helper.formatted_class_name
         'smarter.apps.llm_client.models.LLMClientHelper()'
         """
-        return logging.formatted_text(f"{__name__}.{LLMClientHelper.__name__}()")
+        return logging.formatted_text(f"{__name__}.{LLMClientHelper.__name__}()[{id(self)}]")
 
     @cached_property
     def account(self) -> Optional[Account]:
@@ -371,7 +371,7 @@ class LLMClientHelper(SmarterRequestMixin):
         return None
 
     @cached_property
-    def is_llm_clienthelper_ready(self) -> bool:
+    def is_helper_ready(self) -> bool:
         """
         Returns ``True`` if the LLMClientHelper is ready to be used.
 
@@ -382,10 +382,20 @@ class LLMClientHelper(SmarterRequestMixin):
         :rtype: bool
         """
         if self._is_llm_clienthelper_ready:
-            return True
-        logger_prefix = f"{self.formatted_class_name}.is_llm_clienthelper_ready()"
+            return self._is_llm_clienthelper_ready
+        logger_prefix = f"{self.formatted_class_name}.is_helper_ready()"
+        logger.debug(
+            "%s checking readiness. Current state: url=%s, name=%s, llm_client_id=%s, user_profile=%s, llm_client=%s, llm_client_custom_domain=%s",
+            logger_prefix,
+            self.url,
+            self.name,
+            self.llm_client_id,
+            self.user_profile,
+            self._llm_client,
+            self._llm_client_custom_domain,
+        )
 
-        if isinstance(self._llm_client, LLMClient):
+        if self.llm_client and isinstance(self._llm_client, LLMClient):
             llm_client_helper_logger.debug(
                 "%s returning true because llm_client is initialized: %s",
                 logger_prefix,
@@ -393,6 +403,12 @@ class LLMClientHelper(SmarterRequestMixin):
             )
             self._is_llm_clienthelper_ready = True
             return self._is_llm_clienthelper_ready
+        else:
+            llm_client_helper_logger.debug(
+                "%s llm_client is not initialized: %s",
+                logger_prefix,
+                self._llm_client,
+            )
 
         if self.llm_client_custom_domain:
             llm_client_helper_logger.debug(
@@ -467,9 +483,7 @@ class LLMClientHelper(SmarterRequestMixin):
         :return: A string indicating whether the LLMClientHelper is ready or not.
         """
         return (
-            logging.formatted_text_green("Ready")
-            if self.is_llm_clienthelper_ready
-            else logging.formatted_text_red("Not Ready")
+            logging.formatted_text_green("Ready") if self.is_helper_ready else logging.formatted_text_red("Not Ready")
         )
 
     @property
@@ -484,7 +498,7 @@ class LLMClientHelper(SmarterRequestMixin):
         :rtype: bool
         """
         # there is a scenario where the SmarterRequestMixin is not ready but the LLMClientHelper is.
-        if self.is_llm_clienthelper_ready and self.user_profile and not super().ready:
+        if self.is_helper_ready and self.user_profile and not super().ready:
             llm_client_helper_logger.debug(
                 "%s.ready() returning true because LLMClientHelper is ready even though SmarterRequestMixin is not ready",
                 self.formatted_class_name,
@@ -496,7 +510,7 @@ class LLMClientHelper(SmarterRequestMixin):
             )
             return False
 
-        return self.is_llm_clienthelper_ready
+        return self.is_helper_ready
 
     def to_json(self) -> dict[str, Any]:
         """
@@ -530,7 +544,7 @@ class LLMClientHelper(SmarterRequestMixin):
                 "is_custom_domain": self.is_custom_domain,
                 "is_deployed": self.is_deployed,
                 "is_authentication_required": self.is_authentication_required,
-                "is_llm_clienthelper_ready": self.is_llm_clienthelper_ready,
+                "is_helper_ready": self.is_helper_ready,
                 "rfc1034_compliant_name": self.rfc1034_compliant_name,
                 "llm_client": LLMClientSerializer(self.llm_client).data if self.llm_client else None,
                 "url": self.url,
@@ -612,21 +626,39 @@ class LLMClientHelper(SmarterRequestMixin):
         if self._llm_client:
             return self._llm_client
 
+        logger.debug(
+            "%s.llm_client() attempting to resolve LLMClient. Current state: url=%s, name=%s, llm_client_id=%s, user_profile=%s",
+            self.formatted_class_name,
+            self.url,
+            self.name,
+            self._llm_client_id,
+            self.user_profile,
+        )
+
         # cheapest possibility
         if self._llm_client_id:
-            self.llm_client = LLMClient.get_cached_object(pk=self._llm_client_id)
+            self._llm_client = LLMClient.get_cached_object(pk=self._llm_client_id)
             llm_client_helper_logger.debug(
-                "initialized llm_client %s from llm_client_id %s", self._llm_client, self.llm_client_id
+                "%s.llm_client() initialized llm_client %s from llm_client_id %s",
+                self.formatted_class_name,
+                self._llm_client,
+                self._llm_client_id,
             )
+            self._is_llm_clienthelper_ready = True
             return self._llm_client
 
         # our expected case
         if self.user_profile and self.name:
             try:
-                self.llm_client = LLMClient.get_cached_object(name=self.name, user_profile=self.user_profile)
+                self._llm_client = LLMClient.get_cached_object(name=self.name, user_profile=self.user_profile)
                 llm_client_helper_logger.debug(
-                    "initialized llm_client %s from account %s and name %s", self._llm_client, self.account, self.name
+                    "%s.llm_client() initialized llm_client %s from account %s and name %s",
+                    self.formatted_class_name,
+                    self._llm_client,
+                    self.account,
+                    self.name,
                 )
+                self._is_llm_clienthelper_ready = True
                 return self._llm_client
             except LLMClient.DoesNotExist:
                 llm_client_helper_logger.error(
@@ -641,23 +673,28 @@ class LLMClientHelper(SmarterRequestMixin):
     @llm_client.setter
     def llm_client(self, llm_client: LLMClient):
         """Sets the LLMClient instance for this LLMClientHelper."""
-        self._llm_client = llm_client
-        if self._llm_client:
+        logger_prefix = f"{self.formatted_class_name}.llm_client().setter"
+        if isinstance(llm_client, LLMClient):
+            self._llm_client = llm_client
             self._llm_client_id = self._llm_client.id  # type: ignore[assignment]
             self._name = self._llm_client.name
+            self._is_llm_clienthelper_ready = True
             llm_client_helper_logger.debug(
-                "@llm_client.setter initialized self.llm_client_id=%s and self.name=%s from llm_client",
+                "%s initialized self.llm_client_id=%s and self.name=%s from llm_client",
+                logger_prefix,
                 self._llm_client_id,
                 self._name,
             )
-        else:
+        elif llm_client is None:
             self._llm_client_id = None
             self._name = None
             llm_client_helper_logger.debug(
-                "@llm_client.setter cleared self.llm_client_id and self.name because llm_client is None"
+                "%s cleared self.llm_client_id and self.name because llm_client is None", logger_prefix
             )
-        if hasattr(self, "is_llm_clienthelper_ready"):
-            del self.is_llm_clienthelper_ready
+        else:
+            raise SmarterValueError(f"{logger_prefix} expected a LLMClient instance or None, got {type(llm_client)}")
+        if hasattr(self, "is_helper_ready"):
+            del self.is_helper_ready
 
     @cached_property
     def provider(self) -> Optional[Provider]:
