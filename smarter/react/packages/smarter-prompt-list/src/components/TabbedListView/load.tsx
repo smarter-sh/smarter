@@ -1,5 +1,7 @@
+import type { SessionContext } from "@smarter/common";
+
 import { loggerPrefix } from "@/const";
-import type { LLMClient, SessionContext, UserProfile } from "@/lib/Types";
+import type { LLMClient, UserProfile } from "@/lib/Types";
 import fetchDjangoUrl from "@/lib/django";
 import { setCookie } from "./cookie";
 

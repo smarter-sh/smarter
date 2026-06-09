@@ -97,10 +97,3 @@ export type LLMClient = {
   subdomain: string | null;
   customDomain: string | null;
 };
-
-export type SessionContext = {
-  ApiUrl: string;
-  csrfCookieName: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
-};

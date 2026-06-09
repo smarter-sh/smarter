@@ -16,6 +16,18 @@ Key points:
   standardized across packages.
 - Build artifacts are written into Django static paths and then collected by Django.
 
+## Build For Productino
+
+Use the convenvience commands in Makefile to build all packages and integrate
+to Django.
+
+```console
+make react-build
+make collectstatic
+make build
+make run
+```
+
 ## Workspace Layout
 
 - Root workspace manifest: `smarter/react/package.json`
