@@ -406,7 +406,7 @@ class ChatHelper(SmarterRequestMixin):
 
         Examples
         --------
-        - ``https://hr.3141-5926-5359.alpha.api.example.com/llm_client/``
+        - ``https://hr.3141-5926-5359.alpha.api.example.com/llm-client/``
           returns ``LLMClient(name='hr', account=Account(...))``
 
         :returns: The LLMClient instance.

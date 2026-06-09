@@ -44,7 +44,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
     - http://localhost:9357/
     - http://localhost:9357/docs/
     - http://localhost:9357/dashboard/
-    - https://alpha.platform.smarter.sh/api/v1/workbench/1/llm_client/
+    - https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/
     - https://alpha.platform.smarter.sh/api/v1/cli/chat/example/
     - http://example.com/contact/
     - http://localhost:9357/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
@@ -869,7 +869,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         settings.ALLOWED_HOSTS.append(host_name)
 
         response = self.client.get(
-            f"http://{host_name}/llm_client/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+            f"http://{host_name}/llm-client/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
@@ -893,7 +893,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         if not isinstance(self.client, Client):
             raise TypeError("Expected self.client to be an instance of django.test.Client")
         response = self.client.get(
-            f"http://{host_name}/llm_client/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+            f"http://{host_name}/llm-client/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
@@ -1068,7 +1068,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         settings.ALLOWED_HOSTS.append(host_name)
 
         response = self.client.get(
-            f"http://{host_name}/llm_client/",
+            f"http://{host_name}/llm-client/",
             SERVER_NAME=host_name,
             SERVER_PORT=80,
             HTTP_HOST=host_name,
@@ -1099,7 +1099,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         settings.ALLOWED_HOSTS.append(host_name)
 
         response = self.client.get(
-            f"http://{host_name}/llm_client/",
+            f"http://{host_name}/llm-client/",
             SERVER_NAME=host_name,
             SERVER_PORT=80,
             HTTP_HOST=host_name,

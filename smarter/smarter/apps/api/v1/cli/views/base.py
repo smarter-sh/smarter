@@ -111,7 +111,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     Examples
     --------
     Example URL with a manifest name:
-        ``/api/v1/cli/describe/llm_client/<str:name>/``
+        ``/api/v1/cli/describe/llm-client/<str:name>/``
 
     Example command extraction:
         If the URL path is ``/api/v1/cli/apply/``, then the command will be
@@ -324,7 +324,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         within a Kind. The name can be passed from inside the raw manifest data, or
         it can be passed as part of a url path.
 
-        Example url path with a name: /api/v1/cli/describe/llm_client/<str:name>/
+        Example url path with a name: /api/v1/cli/describe/llm-client/<str:name>/
 
         :return: The name of the manifest
         :rtype: Optional[str]

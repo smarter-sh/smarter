@@ -10,10 +10,10 @@ metadata:
     - llm_client
     - unittests
   annotations:
-    - smarter.sh/llm_client/test-llm_client/creator: QA Team
-    - smarter.sh/llm_client/test-llm_client/purpose: unit testing
-    - smarter.sh/llm_client/test-llm_client/release-date: 2024-06-15
-    - smarter.sh/llm_client/test-llm_client/backward-compatibility: true
+    - smarter.sh/llm-client/test-llm_client/creator: QA Team
+    - smarter.sh/llm-client/test-llm_client/purpose: unit testing
+    - smarter.sh/llm-client/test-llm_client/release-date: 2024-06-15
+    - smarter.sh/llm-client/test-llm_client/backward-compatibility: true
 spec:
   config:
     deployed: false

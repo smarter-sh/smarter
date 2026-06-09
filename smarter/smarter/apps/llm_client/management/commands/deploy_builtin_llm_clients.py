@@ -33,7 +33,7 @@ class Command(SmarterCommand):
     each llm_client as a Celery task.
 
     The deployed llm_clients are accessible at URLs of the form:
-    ``[llm_client-name].[account-number].api.example.com/llm_client/``
+    ``[llm_client-name].[account-number].api.example.com/llm-client/``
 
     **Deployment Steps:**
       - Retrieve the account and its admin user using the provided account number.

@@ -13,7 +13,7 @@ structure:
 
 .. code:: console
 
-   curl --location 'https://example.3141-5926-5359.api.example.com/llm_client/' \
+   curl --location 'https://example.3141-5926-5359.api.example.com/llm-client/' \
    --header 'x-api-key: api-key-string-of-around-64-hashed-characters' \
    --header 'Content-Type: application/json' \
    --data '{
@@ -63,8 +63,8 @@ The Smarter application stack provides consistent behavior for either of
 three different domain name styles
 
 - Default LLMClient domain names:
-  [subdomain].[####-####-####].[environment].smarter.sh/llm_client/
-- Customer’s custom domain names: [subdomain].example.com/llm_client/
+  [subdomain].[####-####-####].[environment].smarter.sh/llm-client/
+- Customer’s custom domain names: [subdomain].example.com/llm-client/
 - The Smarter API: /api/v0/llm-clients/[int]/[LLMClient.name]
 
 Secondarily, it also gracefully adapts to alternatives like
@@ -91,14 +91,14 @@ Default Domain
 The default domain for each LLMClient is accessible regardless of whether
 the customer has also implemented a custom domain.
 
-example: https://example.3141-5926-5359.beta.api.example.com/llm_client/
+example: https://example.3141-5926-5359.beta.api.example.com/llm-client/
 
 where
 
 - ``'example' == LLMClient.name``
 - ``'3141-5926-5359' == LLMClient.account.account_number``
 - ``'beta.api.example.com' == smarter_settings.customer_api_domain``
-- ``/llm_client/`` is a URL endpoint defined in smarter/urls.py and
+- ``/llm-client/`` is a URL endpoint defined in smarter/urls.py and
   resolves to a Django View that invokes Chat with an Account object and
   a List of Smarter Plugin objects.
 
@@ -111,7 +111,7 @@ master Kubernetes ingress controller for the platform. Smarter provides
 ``manage.py`` admin commands for managing the complete lifecycle of
 customer custom domain resources.
 
-example: https://sales.api.example.com/llm_client/ where
+example: https://sales.api.example.com/llm-client/ where
 
 - ``'api.example.com == llm_client.custom_domain'`` is a LLMClientCustomDomain
   object
@@ -119,7 +119,7 @@ example: https://sales.api.example.com/llm_client/ where
   zone for the customer domain
 - ``LLMClientCustomDomain.is_verified == True``. An asynchronous task
   verifies the domain NS records.
-- ``/llm_client/`` is the same URL endpoint used by default domains.
+- ``/llm-client/`` is the same URL endpoint used by default domains.
 
 When using a custom domain,
 ``LLMClient.hostname == LLMClient.custom_domain`` once the following

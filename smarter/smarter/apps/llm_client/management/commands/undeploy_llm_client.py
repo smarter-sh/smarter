@@ -16,7 +16,7 @@ class Command(SmarterCommand):
     This management command allows administrators to remove a deployed llm_client from a specific account,
     identified either by account number or company name. The undeployment process deletes the DNS A record
     associated with the llm_client, effectively disabling its public endpoint at
-    ``[subdomain].[account-number].api.example.com/llm_client/``.
+    ``[subdomain].[account-number].api.example.com/llm-client/``.
 
     **Usage:**
       - Specify the account using either ``--account_number`` or ``--company_name``.

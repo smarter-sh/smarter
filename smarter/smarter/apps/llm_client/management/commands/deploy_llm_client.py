@@ -14,7 +14,7 @@ class Command(SmarterCommand):
     Deploy a customer API.
 
     Provide either an account number or a company name.
-    Deploys to a URL of the form [user-defined-subdomain].####-####-####.api.example.com/llm_client/
+    Deploys to a URL of the form [user-defined-subdomain].####-####-####.api.example.com/llm-client/
     """
 
     def add_arguments(self, parser):
@@ -29,7 +29,7 @@ class Command(SmarterCommand):
 
         This management command enables administrators to deploy a llm_client for a specific account,
         identified either by its account number or company name. The llm_client is deployed to a URL
-        structured as ``[subdomain].[account-number].api.example.com/llm_client/``.
+        structured as ``[subdomain].[account-number].api.example.com/llm-client/``.
 
         The deployment process checks for the existence of the specified account and llm_client, verifies
         DNS status, and initiates deployment either synchronously (foreground) or asynchronously

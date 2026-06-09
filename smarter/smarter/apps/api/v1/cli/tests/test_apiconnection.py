@@ -170,7 +170,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         self.assertIsInstance(response, dict)
 
         # muck up the manifest with some test data
-        new_url = "http://localhost:9357/api/v1/cli/example_manifest/llm_client/"
+        new_url = "http://localhost:9357/api/v1/cli/example_manifest/llm-client/"
         new_description = "new description"
         data = response[SmarterJournalApiResponseKeys.DATA]
         data[SAMKeys.SPEC.value][SAMApiConnectionSpecKeys.CONNECTION.value][

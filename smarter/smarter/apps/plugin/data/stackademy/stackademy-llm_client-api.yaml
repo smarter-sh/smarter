@@ -9,10 +9,10 @@ metadata:
     - api
     - llm_client
   annotations:
-    - smarter.sh/llm_client/stackademy-api/creator: QA Team
-    - smarter.sh/llm_client/stackademy-api/purpose: llm_client for Stackademy course1 catalogue inquiries
-    - smarter.sh/llm_client/stackademy-api/release-date: 2024-06-15
-    - smarter.sh/llm_client/stackademy-api/backward-compatibility: true
+    - smarter.sh/llm-client/stackademy-api/creator: QA Team
+    - smarter.sh/llm-client/stackademy-api/purpose: llm_client for Stackademy course1 catalogue inquiries
+    - smarter.sh/llm-client/stackademy-api/release-date: 2024-06-15
+    - smarter.sh/llm-client/stackademy-api/backward-compatibility: true
 spec:
   config:
     deployed: false
