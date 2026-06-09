@@ -8,7 +8,10 @@ from smarter.lib.drf.models import SmarterAuthToken
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """Django manage.py create_user command. This command is used to create a new user for an account."""
+    """Django manage.py create_user command.
+
+    This command is used to create a new user for an account.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -21,7 +24,7 @@ class Command(SmarterCommand):
         parser.add_argument("--description", type=str, help="Optional brief text description for the api key")
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Create the superuser account."""
         self.handle_begin()
 
         account: Account | None = None
@@ -80,6 +83,6 @@ class Command(SmarterCommand):
         )
         self.stdout.write(
             self.style.NOTICE(
-                f"To associate this key with a Chatbot, run `manage.py add_api_key` and pass this key_id: {auth_token.key_id}"
+                f"To associate this key with a LLMClient, run `manage.py add_api_key` and pass this key_id: {auth_token.key_id}"
             )
         )

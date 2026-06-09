@@ -19,6 +19,11 @@ import re
 import sys
 from pathlib import Path
 
+REGEX_QUOTED_STRING = r'["\'].*?["\']'
+REGEX_ANY_STRING = r'[^"\s]+'
+REGEX_ANY_INTEGER = r"\d+"
+REGEX_SEMVER = rf"{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER}"
+
 
 def update_version_in_file(filepath, pattern, replacement):
     path = Path(filepath)
@@ -33,9 +38,9 @@ def main():
         sys.exit(1)
     new_version = sys.argv[1]
 
-    # Validate semantic version: ##.##.##
-    if not re.match(r"^\d+\.\d+\.\d+$", new_version):
-        print("Error: Version must be in format ##.##.## (e.g., 0.1.20)")
+    # Validate semantic version: ##.##.## or ##.##.##-label.n
+    if not re.match(r"^\d+\.\d+\.\d+(-[A-Za-z0-9.]+)?$", new_version):
+        print("Error: Version must be in format ##.##.## or ##.##.##-label.n (e.g., 0.1.20 or 0.14.0-alpha.1)")
         sys.exit(1)
 
     # Update __version__.py
@@ -72,17 +77,23 @@ def main():
     #     echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:vx.x.x" >> $GITHUB_ENV
     #   env:
     #     AWS_ECR_REPO: ${{ env.NAMESPACE }}
+    docker_image_pattern = (
+        rf'^(\s*echo\s+"SMARTER_DOCKER_IMAGE=)'
+        rf"({REGEX_ANY_STRING}/{REGEX_ANY_STRING}:)"
+        rf"(v{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER}\.{REGEX_ANY_INTEGER})"
+        r'(".*)$'
+    )
     update_version_in_file(
         ".github/actions/deploy/action.yml",
-        r'^(\s*echo\s+"SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v\d+\.\d+\.\d+)(".*)$',
-        f"\\g<1>v{new_version}\\g<3>",
+        docker_image_pattern,
+        rf"\g<1>\g<2>v{new_version}\g<4>",
     )
     print(f"Updated .github/actions/deploy/action.yml to {new_version}")
 
     # Update helm/charts/smarter/values.yaml
     # global:
     #   image:
-    #     pullPolicy: IfNotPresent
+    #     pullPolicy: Always
     #     repository: lpm0073/smarter
     #     tag: vx.x.x
     update_version_in_file(
@@ -99,7 +110,7 @@ def main():
     # Update appVersion in Chart.yaml
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
-        r"(appVersion:\s*)[\d\.]+",
+        r"(appVersion:\s*)[^\s]+",
         f"\\g<1>{new_version}",
     )
     # Update version in Chart.yaml (top-level only)
@@ -109,21 +120,22 @@ def main():
         f"version: {new_version}",
     )
     # Update image version in artifacthub.io/images in Chart.yaml
+    docker_image_pattern_chart = r"(image:\s*[^:\s]+:[v]?)\d+\.\d+\.\d+(?:-[A-Za-z0-9.]+)?"
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
-        r"(image:\s*mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)",
+        docker_image_pattern_chart,
         f"\\g<1>v{new_version}",
     )
     # Update version in artifacthub.io/changes description in Chart.yaml
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
-        r"(description: bump to app version )\d+\.\d+\.\d+",
+        r"(description: bump to app version )\d+\.\d+\.\d+(?:-[A-Za-z0-9.]+)?",
         f"\\g<1>{new_version}",
     )
     # Update version in helm.sh/chart Chart.yaml
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
-        r"(helm\.sh/chart:\s*smarter-)\d+\.\d+\.\d+",
+        r"(helm\.sh/chart:\s*smarter-)[^\s]+",
         f"\\g<1>{new_version}",
     )
 

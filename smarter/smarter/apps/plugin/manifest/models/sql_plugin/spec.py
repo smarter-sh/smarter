@@ -1,18 +1,15 @@
 """Smarter API Manifest - Plugin.spec"""
 
-import logging
 import os
 from typing import ClassVar, List, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, model_validator
 
 from smarter.apps.plugin.manifest.models.common import Parameter, TestValue
 from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
-from smarter.common.conf import smarter_settings
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import SmarterBasePydanticModel
 
@@ -23,13 +20,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 
 
 class SqlData(SmarterBasePydanticModel):
@@ -68,8 +59,17 @@ class SAMSqlPluginSpec(SAMPluginCommonSpec):
         ..., description=f"{class_identifier}.selector[obj]: the SqlData to use for the {MANIFEST_KIND}"
     )
 
-    @field_validator("connection")
-    def validate_limit(cls, v):
+    @model_validator(mode="after")
+    def validate_connection(self):
+        """
+        Validate that the connection value is a valid cleanstring and that at
+        least 1 record exists in the SqlConnection table with the given name.
+
+        If the model includes an authenticated user then also validate that at
+        least 1 record exists in the SqlConnection table with the given name that
+        is accessible by the authenticated user.
+        """
+        v = self.connection
         if not SmarterValidator.is_valid_cleanstring(v):
             raise SAMValidationError(f"connection '{v}' must be a valid cleanstring with no illegal characters.")
-        return v
+        return self

@@ -15,10 +15,12 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from smarter.apps.prompt.providers.const import OpenAIMessageKeys  # noqa: E402
+from smarter.apps.provider.services.text_completion.const import (  # noqa: E402
+    OpenAIMessageKeys,
+)
 
 # our stuff
-from smarter.apps.prompt.providers.utils import (  # noqa: E402
+from smarter.apps.provider.services.text_completion.utils import (  # noqa: E402
     exception_response_factory,
     get_content_for_role,
     get_message_history,

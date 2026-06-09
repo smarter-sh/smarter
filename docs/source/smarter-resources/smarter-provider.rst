@@ -39,12 +39,14 @@ Technical Reference
    :maxdepth: 1
 
    provider/api
-   provider/models
-   provider/sam
-   provider/serializers
    provider/const
-   provider/management-commands
+   provider/management
+   provider/manifest
+   provider/models
+   provider/serializers
+   provider/services
    provider/signals
    provider/tasks
    provider/utils
    provider/verification
+   provider/views

@@ -3,26 +3,11 @@
 from smarter.apps.account.models import (
     Account,
     AccountContact,
-    MetaDataModel,
-    PaymentMethod,
-    Secret,
     User,
     UserProfile,
 )
 from smarter.lib.django.serializers import MetaDataModelSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
-
-
-class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
-    """
-    Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field.
-    """
-
-    # pylint: disable=missing-class-docstring
-    class Meta(MetaDataModelSerializer.Meta):
-        model = MetaDataModel
-        fields = "__all__"
-        read_only_fields = getattr(MetaDataModelSerializer.Meta, "read_only_fields", [])
 
 
 class UserSerializer(MetaDataModelSerializer):
@@ -210,71 +195,6 @@ class UserProfileSerializer(SmarterCamelCaseSerializer):
         )
 
 
-class PaymentMethodSerializer(SmarterCamelCaseSerializer):
-    """
-    Serializer for the `PaymentMethod` model in the Smarter API.
-
-    This serializer exposes all fields of the `PaymentMethod` model, making it suitable for
-    creating, updating, and retrieving payment method details via API endpoints.
-
-    :param ...: All fields as defined in the `PaymentMethod` model.
-
-    **Example usage**::
-
-        from smarter.apps.account.serializers import PaymentMethodSerializer
-        serializer = PaymentMethodSerializer(payment_method_instance)
-        data = serializer.data
-
-    """
-
-    # pylint: disable=missing-class-docstring
-    class Meta:
-        model = PaymentMethod
-        fields = "__all__"
-
-
-class SecretSerializer(MetaDataWithOwnershipModelSerializer):
-    """
-    Serializer for the `Secret` model in the Smarter API.
-
-    This serializer exposes all fields of the `Secret` model, including related user profile information.
-    Use it for endpoints that require secure credential or secret management.
-
-    :param id: Integer. Unique identifier for the secret.
-    :param name: String. Name of the secret.
-    :param description: String. Description of the secret.
-    :param last_accessed: DateTime. Timestamp of last access.
-    :param expires_at: DateTime. Expiration timestamp.
-    :param user_profile: Instance of :class:`UserProfileSerializer`. Associated user profile.
-
-    .. note::
-
-            All fields are read-only in this serializer.
-
-    **Example usage**::
-
-        from smarter.apps.account.serializers import SecretSerializer
-        serializer = SecretSerializer(secret_instance)
-        data = serializer.data
-
-    .. seealso::
-
-            For user profile details, see :class:`UserProfileSerializer`.
-
-    """
-
-    user_profile = UserProfileSerializer()
-
-    # pylint: disable=missing-class-docstring
-    class Meta(MetaDataWithOwnershipModelSerializer.Meta):
-        model = Secret
-        fields = "__all__"
-        read_only_fields = getattr(MetaDataWithOwnershipModelSerializer.Meta, "read_only_fields", []) + [
-            "last_accessed",
-            "expires_at",
-        ]
-
-
 class AccountContactSerializer(SmarterCamelCaseSerializer):
     """
     Serializer for the `AccountContact` model in the Smarter API.
@@ -314,3 +234,23 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
         for field in fields.values():
             field.read_only = True
         return fields
+
+
+class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
+    """
+    Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field.
+    """
+
+    user_profile = UserProfileSerializer(read_only=True)
+
+    # pylint: disable=missing-class-docstring
+    class Meta(MetaDataModelSerializer.Meta):
+        fields = "__all__"
+        read_only_fields = getattr(MetaDataModelSerializer.Meta, "read_only_fields", [])
+
+        # mcdaniel apr-2026: this is an abstract base serializer. if i understand this
+        # correctly, the child serializers will override the Meta class and thus this will not be used.
+        # and at any rate, setting the model there it seems to break Sphinx.
+        # ----------------------------------------------------------------------------------------
+        # model = MetaDataModel
+        # abstract = True

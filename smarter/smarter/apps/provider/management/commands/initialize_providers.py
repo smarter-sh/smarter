@@ -12,34 +12,36 @@ from django.utils import timezone
 from google.auth.exceptions import GoogleAuthError
 from google.oauth2 import service_account
 
-from smarter.apps.account.models import Secret, UserProfile
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
+from smarter.apps.secret.models import Secret
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
-from smarter.common.mixins import json
+from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)
 
 HERE = Path(__file__).resolve().parent
 
-OPENAI_API = "OpenAI"
+OPENAI_API = "openai"
 OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
 OPENAI_API_KEY_NAME = "openai_api_key"
 
-GOOGLE_API = "GoogleAI"
+GOOGLE_API = "googleai"
 GOOGLE_DEFAULT_MODEL = "gemini-flash-latest"
-GOOGLE_API_KEY_NAME = "google_ai_api_key"
+GOOGLE_API_KEY_NAME = "googleai_api_key"
 
-META_API = "MetaAI"
+META_API = "metaai"
 META_DEFAULT_MODEL = "llama3.2-3b"
-META_API_KEY_NAME = "meta_ai_api_key"
+META_API_KEY_NAME = "metaai_api_key"
 
 
 class Command(SmarterCommand):
     """
     Django manage.py initialize_providers.py command.
+
     This command is used to create/update the principal
     Providers that are preloaded on all platforms.
 
@@ -116,9 +118,7 @@ class Command(SmarterCommand):
         )
 
     def initialize_provider_model(self, provider: Provider, model_name: str, is_default: bool = False):
-        """
-        helper function to initialize a single provider model.
-        """
+        """Helper function to initialize a single provider model."""
 
         ProviderModel.objects.update_or_create(
             provider=provider,
@@ -131,9 +131,7 @@ class Command(SmarterCommand):
         )
 
     def initialize_openai(self):
-        """
-        Initialize OpenAI provider and its models.
-        """
+        """Initialize OpenAI provider and its models."""
         logger.info("initialize_openai")
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR("initialize_openai: User profile is not set."))
@@ -161,6 +159,7 @@ class Command(SmarterCommand):
                 "is_suspended": False,
                 "base_url": "https://api.openai.com/v1/",
                 "api_key": openai_api_key,
+                "default_model": OPENAI_DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://www.openai.com/",
                 "contact_email": SMARTER_CONTACT_EMAIL,
@@ -169,7 +168,7 @@ class Command(SmarterCommand):
                 "support_email_verified": timezone.now(),
                 "terms_of_service_url": "https://openai.com/policies/terms-of-use/",
                 "privacy_policy_url": "https://openai.com/policies/privacy-policy/",
-                "docs_url": "https://platform.openai.com/docs/api-reference",
+                "docs_url": "https://developers.openai.com/api/reference/overview",
                 "tos_accepted_at": timezone.now(),
                 "tos_accepted_by": self.user_profile.cached_user,
             },
@@ -186,9 +185,7 @@ class Command(SmarterCommand):
         )
 
     def initialize_googleai(self):
-        """
-        Initialize Google AI provider and its models.
-        """
+        """Initialize Google AI provider and its models."""
         logger.info("initialize_googleai")
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR("initialize_googleai: User profile is not set."))
@@ -243,6 +240,7 @@ class Command(SmarterCommand):
                 "is_suspended": False,
                 "base_url": "https://generativelanguage.googleapis.com/v1beta/",
                 "api_key": googleai_api_key,
+                "default_model": GOOGLE_DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://ai.google.com/",
                 "contact_email": SMARTER_CONTACT_EMAIL,
@@ -266,9 +264,7 @@ class Command(SmarterCommand):
         )
 
     def initialize_metaai(self):
-        """
-        Initialize Meta AI provider and its models.
-        """
+        """Initialize Meta AI provider and its models."""
         logger.info("initialize_metaai")
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
@@ -289,13 +285,14 @@ class Command(SmarterCommand):
                 "description": "Meta AI provides a range of AI and machine learning services.",
                 "user_profile": self.user_profile,
                 "status": ProviderStatus.VERIFIED,
-                "is_active": True,
-                "is_verified": True,
+                "is_active": False,
+                "is_verified": False,
                 "is_deprecated": False,
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://metaai.com/api/",
                 "api_key": metaai_api_key,
+                "default_model": META_DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://ai.meta.com/",
                 "contact_email": SMARTER_CONTACT_EMAIL,
@@ -322,9 +319,7 @@ class Command(SmarterCommand):
         )
 
     def handle(self, *args, **options):
-        """
-        Initialize all built-in providers.
-        """
+        """Initialize all built-in providers."""
         self.handle_begin()
 
         try:

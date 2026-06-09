@@ -258,7 +258,7 @@ By the end of this section you will:
 
 * Connect your local development environment to the NAPL Smarter instance.
 * Verify that Anthropic / Claude Code is available as a provider.
-* Deploy a personal Chatbot and chat with Claude Code from the terminal.
+* Deploy a personal LLMClient and chat with Claude Code from the terminal.
 
 
 Prerequisites
@@ -348,7 +348,7 @@ platform.  Before using Claude Code you should understand four core ideas:
 Smarter API Manifests (SAM)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-All Smarter resources — providers, chatbots, plugins, secrets — are declared
+All Smarter resources — providers, llm_clients, plugins, secrets — are declared
 as human-readable **YAML manifest files** (think Kubernetes manifests).
 You apply them with the CLI:
 
@@ -357,7 +357,7 @@ You apply them with the CLI:
    smarter apply -f my-manifest.yaml
 
 The ``kind`` field selects the resource type:
-``Secret``, ``Provider``, ``ProviderModel``, ``Chatbot``, ``Plugin``, etc.
+``Secret``, ``Provider``, ``ProviderModel``, ``LLMClient``, ``Plugin``, etc.
 
 Providers and Models
 ~~~~~~~~~~~~~~~~~~~~
@@ -381,7 +381,7 @@ Key commands you will use daily:
 * ``smarter apply -f <file>`` — create or update a resource.
 * ``smarter get providers`` — list available LLM providers.
 * ``smarter describe provider Anthropic`` — inspect a provider.
-* ``smarter chat <chatbot-name>`` — start an interactive chat session.
+* ``smarter chat <llm_client-name>`` — start an interactive chat session.
 
 Claude Code and Smarter
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -431,24 +431,24 @@ Step 2 — Inspect the Claude Code Model
 Look for ``claude-sonnet-4-6`` in the ``models`` list.  Note the
 ``is_default`` flag — this is the model used unless you specify another.
 
-Step 3 — Generate a Chatbot Manifest
+Step 3 — Generate a LLMClient Manifest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use the CLI to scaffold a Chatbot manifest pre-filled with defaults:
+Use the CLI to scaffold a LLMClient manifest pre-filled with defaults:
 
 .. code-block:: bash
 
-   smarter manifest chatbot -o yaml > my-claude-chatbot.yaml
+   smarter manifest llm_client -o yaml > my-claude-llm_client.yaml
 
-Open ``my-claude-chatbot.yaml`` in your editor and update the key fields:
+Open ``my-claude-llm_client.yaml`` in your editor and update the key fields:
 
 .. code-block:: yaml
 
    apiVersion: smarter.sh/v1
-   kind: Chatbot
+   kind: LLMClient
    metadata:
-     name: my-claude-chatbot
-     description: Personal Claude Code chatbot for NAPL dev work
+     name: my-claude-llm_client
+     description: Personal Claude Code llm_client for NAPL dev work
      version: 1.0.0
    spec:
      provider: Anthropic
@@ -458,19 +458,19 @@ Open ``my-claude-chatbot.yaml`` in your editor and update the key fields:
        clean, secure, and well-documented code.  Prefer Python and follow
        PEP 8.  Always explain what changed and why.
 
-Step 4 — Apply and Deploy the Chatbot
+Step 4 — Apply and Deploy the LLMClient
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
-   smarter apply -f my-claude-chatbot.yaml
-   smarter deploy chatbot my-claude-chatbot
+   smarter apply -f my-claude-llm_client.yaml
+   smarter deploy llm_client my-claude-llm_client
 
 Confirm it was created:
 
 .. code-block:: bash
 
-   smarter get chatbots
+   smarter get llm_clients
 
 Step 5 — Chat with Claude Code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -479,7 +479,7 @@ Start an interactive terminal session:
 
 .. code-block:: bash
 
-   smarter chat my-claude-chatbot
+   smarter chat my-claude-llm_client
 
 Type a prompt to test:
 
@@ -502,7 +502,7 @@ Proof of Concept
 ----------------
 
 A successful integration produces output like this when you run
-``smarter chat my-claude-chatbot`` and send a test prompt:
+``smarter chat my-claude-llm_client`` and send a test prompt:
 
 .. code-block:: text
 
@@ -535,7 +535,7 @@ Troubleshooting
    * - ``Model claude-sonnet-4-6 not found``
      - The model manifest may not have been applied.  Ask the admin to run
        ``smarter get providers Anthropic models``.
-   * - Chatbot applies but ``smarter chat`` hangs
+   * - LLMClient applies but ``smarter chat`` hangs
      - Check your network route to the Smarter endpoint.  Run
        ``smarter status`` to confirm platform health.  VPN may be required
        if working remotely.

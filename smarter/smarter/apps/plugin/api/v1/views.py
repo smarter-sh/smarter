@@ -8,7 +8,7 @@ from urllib.parse import urljoin
 
 import yaml
 from django.core.exceptions import ValidationError
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from rest_framework import status
@@ -16,9 +16,6 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
-from smarter.apps.account.utils import (
-    valid_resource_owners_for_user,
-)
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
@@ -42,7 +39,7 @@ logger = logging.getLogger(__name__)
 class PluginView(SmarterAuthenticatedAPIView):
     """Plugin view for smarter api."""
 
-    def get(self, request: WSGIRequest, plugin_id):
+    def get(self, request: ASGIRequest, plugin_id):
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
             logger.error(
@@ -56,23 +53,23 @@ class PluginView(SmarterAuthenticatedAPIView):
 
         return get_plugin(request, plugin_id)
 
-    def put(self, request: WSGIRequest):
+    def put(self, request: ASGIRequest):
         return create_plugin(request)
 
-    def post(self, request: WSGIRequest):
+    def post(self, request: ASGIRequest):
         return create_plugin(request)
 
-    def patch(self, request: WSGIRequest):
+    def patch(self, request: ASGIRequest):
         return update_plugin(request)
 
-    def delete(self, request: WSGIRequest, plugin_id):
+    def delete(self, request: ASGIRequest, plugin_id):
         return delete_plugin(request, plugin_id)
 
 
 class PluginCloneView(SmarterAuthenticatedAPIView):
     """Plugin clone view for smarter api."""
 
-    def post(self, request: WSGIRequest, plugin_id, new_name):
+    def post(self, request: ASGIRequest, plugin_id, new_name):
 
         user = get_resolved_user(request.user)
         if not user:
@@ -80,8 +77,6 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.cached_account,  # type: ignore[arg-type]
-            user=user_profile.cached_user,  # type: ignore[arg-type]
             plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -102,16 +97,14 @@ class PluginListView(SmarterAuthenticatedListAPIView):
     serializer_class = PluginMetaSerializer
 
     def get_queryset(self):
-        plugins = PluginMeta.objects.filter(user_profile__account=self.account).order_by("-created_at")
-        valid_owners = valid_resource_owners_for_user(user_profile=self.user_profile)
-        plugins = plugins.filter(user_profile__in=valid_owners)
+        plugins = PluginMeta.objects.with_ownership_permission_for(user=self.user_profile.user).order_by("-created_at")  # type: ignore
         return plugins
 
 
 class AddPluginExamplesView(SmarterAuthenticatedAPIView):
     """Add example plugins to a user profile."""
 
-    def post(self, request: WSGIRequest, user_id=None):
+    def post(self, request: ASGIRequest, user_id=None):
         @cache_results()
         def cached_user_by_id(user_id: int) -> Optional[User]:
             """Retrieve User by ID with caching."""
@@ -162,14 +155,14 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 
         raise SmarterValueError("Invalid data format: expected JSON or YAML.")
 
-    def _create(self, request: WSGIRequest):
+    def _create(self, request: ASGIRequest):
         data = self.parse_yaml_file(data=request.body.decode("utf-8"))
         return create_plugin(request=request, data=data)
 
-    def put(self, request: WSGIRequest):
+    def put(self, request: ASGIRequest):
         return self._create(request)
 
-    def post(self, request: WSGIRequest):
+    def post(self, request: ASGIRequest):
         return self._create(request)
 
 
@@ -189,8 +182,6 @@ def get_plugin(request, plugin_id):
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.cached_account,  # type: ignore[arg-type]
-            user=user_profile.cached_user,  # type: ignore[arg-type]
             plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -234,8 +225,6 @@ def create_plugin(request, data: Optional[dict] = None):
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.cached_account,  # type: ignore[arg-type]
-            user=user_profile.cached_user,  # type: ignore[arg-type]
             manifest=data,  # type: ignore[arg-type]
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -254,7 +243,7 @@ def create_plugin(request, data: Optional[dict] = None):
     return HttpResponseRedirect(plugins_api_url + str(plugin.id) + "/")
 
 
-def update_plugin(request: WSGIRequest):
+def update_plugin(request: ASGIRequest):
     """update a plugin from a json representation in the body of the request."""
     user = get_resolved_user(request.user)
     data: str
@@ -288,8 +277,6 @@ def update_plugin(request: WSGIRequest):
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.cached_account,  # type: ignore[arg-type]
-            user=user_profile.cached_user,  # type: ignore[arg-type]
             manifest=SAMPluginCommon(**data),  # type: ignore[arg-type]
         )
         if not plugin_controller or not plugin_controller.plugin:
@@ -320,8 +307,6 @@ def delete_plugin(request, plugin_id):
     try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.cached_account,  # type: ignore[arg-type]
-            user=user_profile.cached_user,  # type: ignore[arg-type]
             plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:

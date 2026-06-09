@@ -11,9 +11,9 @@ class TestApiCliV1Brokers(SmarterTestBase):
 
     def test_brokers_integrity(self):
         """test that the brokers dictionary is complete."""
-        if not all(item in SAMKinds.all_values() for item in Brokers.all_brokers()):
+        if not all(item in SAMKinds.all() for item in Brokers.all_brokers()):
             brokers_keys = set(Brokers.all_brokers())
-            samkinds_values = set(SAMKinds.all_values())
+            samkinds_values = set(SAMKinds.all())
             difference = brokers_keys.difference(samkinds_values)
             difference_list = list(difference)
             if len(difference_list) == 1:
@@ -27,8 +27,8 @@ class TestApiCliV1Brokers(SmarterTestBase):
 
     def test_snake_to_camel(self):
         """test that snake case strings are converted to camel case correctly."""
-        self.assertEqual(Brokers.snake_to_camel("snake_case"), "snakeCase")
-        self.assertEqual(Brokers.snake_to_camel("super_snake_case"), "superSnakeCase")
+        self.assertEqual(Brokers.to_camel_case("snake_case"), "snakeCase")
+        self.assertEqual(Brokers.to_camel_case("super_snake_case"), "superSnakeCase")
 
     def test_get_broker_kind(self):
         """

@@ -1,12 +1,11 @@
 """Django context processors for account/base.html"""
 
-import logging
-
 from django.conf import settings
-from django.urls import reverse
 
-from smarter.apps.account.urls import AccountNamedUrls
+from smarter.apps.account.urls import AccountReverseNames
 from smarter.common.utils import is_authenticated_request
+from smarter.lib import logging
+from smarter.lib.django.shortcuts import reverse
 
 from .models import UserProfile
 
@@ -26,7 +25,7 @@ def base(request):
         "account_authentication": {
             "login_url": settings.LOGIN_URL,
             "logout_url": "/logout/",
-            "forgot_password_url": reverse(AccountNamedUrls.ACCOUNT_PASSWORD_RESET_REQUEST),
+            "forgot_password_url": reverse(AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST),
         }
     }
     if is_authenticated_request(request):

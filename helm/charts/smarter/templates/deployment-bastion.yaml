@@ -95,7 +95,7 @@ spec:
                 echo "The Smarter Bastion Server is ready to use!"
 
                 while true; do sleep 3600; done
-          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
+          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
           resources:
             requests:
               cpu: 50m

@@ -5,6 +5,11 @@ Please make an effort to follow these guidelines when contributing code to
 this project. They’re designed to help ensure that the code remains of
 high quality, that it's easy to read, and that it's maintainable over time.
 
+New Feature Checklist
+-------------------------
+
+See: `Developer's New Feature Checklist <developer-feature-checklist.html>`__
+
 Unit Testing
 ------------
 

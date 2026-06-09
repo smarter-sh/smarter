@@ -5,8 +5,8 @@ from django.apps import apps
 from smarter.lib.django.waffle import (
     SmarterWaffleSwitches,
     is_database_ready,
-    switch_is_active,
 )
+from smarter.lib.django.waffle.is_active import switch_is_active
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 

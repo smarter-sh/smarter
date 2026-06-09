@@ -1,10 +1,12 @@
 """AWS EKS helper class."""
 
 import logging
+from typing import Any
 
 from smarter.common.conf import smarter_settings
 
 from .aws import AWSBase
+from .exceptions import AWSNotReadyError
 
 logger = logging.getLogger(__name__)
 
@@ -27,14 +29,16 @@ class AWSEks(AWSBase):
     _client = None
     _client_type: str = "eks"
 
-    def get_kubernetes_info(self) -> dict:
+    def get_kubernetes_info(self) -> dict[str, Any]:
         """
         Return the Kubernetes cluster information.
 
         :return: Kubernetes cluster information
-        :rtype: dict
+        :rtype: dict[str, Any]
         """
         logger.debug("%s.get_kubernetes_info() called", self.formatted_class_name)
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS EKS.")
         response = self.client.describe_cluster(name=smarter_settings.aws_eks_cluster_name)
         response = response["cluster"]
         retval = {

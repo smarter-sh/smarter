@@ -23,6 +23,7 @@ from smarter.apps.plugin.models import (
     PluginDataStatic,
     PluginMeta,
 )
+from smarter.common.utils.decorators import camel_case
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
@@ -62,9 +63,10 @@ class SAMTestBroker(AbstractBroker):
         Transform the Smarter API User manifest into a Django ORM model.
         """
         config_dump = self.manifest.spec.model_dump()  # type: ignore[return-value]
-        config_dump = self.camel_to_snake(config_dump)
+        config_dump = self.to_snake_case(config_dump)
         return config_dump  # type: ignore[return-value]
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Transform the Django ORM model into a Pydantic readable
@@ -73,7 +75,7 @@ class SAMTestBroker(AbstractBroker):
         if not self.user:
             raise SAMUserBrokerError("No user set for the broker")
         user_dict = model_to_dict(self.user) if isinstance(self.user, User) else {}
-        user_dict = self.snake_to_camel(user_dict)
+        user_dict = self.to_camel_case(user_dict)
         user_dict.pop("id")  # type: ignore[union-attr]
 
         data = {
@@ -100,6 +102,10 @@ class SAMTestBroker(AbstractBroker):
     @property
     def SerializerClass(self) -> Optional[Type[ModelSerializer]]:
         return ModelSerializer
+
+    @property
+    def ORMMetaModelClass(self) -> type[PluginMeta]:
+        return PluginMeta
 
     @property
     def ORMModelClass(self) -> Type[PluginDataStatic]:
@@ -198,8 +204,8 @@ class SAMTestBroker(AbstractBroker):
         self.user_profile = None
         self.account = None
         self.user = None
-        self.account = value.account
-        self.user = get_cached_admin_user_for_account(account=value.account)
+        self.user_profile = value.user_profile
+        self.user = get_cached_admin_user_for_account(account=value.user_profile.account)
 
     @property
     def formatted_class_name(self) -> str:

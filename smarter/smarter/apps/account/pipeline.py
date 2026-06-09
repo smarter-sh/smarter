@@ -3,27 +3,56 @@
 Authentication pipeline functions for account management.
 """
 
-import logging
+from collections.abc import Awaitable, Callable
+from typing import cast
 
 import requests
+from django.http import HttpRequest, HttpResponse, HttpResponseBase
 from django.shortcuts import redirect
 from social_core.exceptions import AuthAlreadyAssociated
 from social_django.middleware import SocialAuthExceptionMiddleware
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.urls import AccountNamedUrls
+from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(__name__)
+logger_prefix = logging.formatted_text(__name__)
+logger.debug(
+    "%s is %s",
+    logging.formatted_text(__name__ + ".SmarterSocialAuthExceptionMiddleware"),
+    SmarterHelperMixin().formatted_state_ready,
+)
+
+GetResponseCallable = Callable[[HttpRequest], HttpResponse]
+AsyncGetResponseCallable = Callable[[HttpRequest], Awaitable[HttpResponse]]
 
 
-class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
+class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware, SmarterMiddlewareMixin):
     """
     Custom Social Auth Exception Middleware to handle specific exceptions
     during the social authentication pipeline.
     """
+
+    def __init__(self, get_response=None):
+        super().__init__(get_response)
+        SmarterMiddlewareMixin.__init__(self, get_response)
+
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+
+        if self.async_mode:
+            return self.__acall__(request)
+
+        return self.get_response(request)
+
+    async def __acall__(self, request: HttpRequest) -> HttpResponse:
+
+        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+
+        get_response = cast(AsyncGetResponseCallable, self.get_response)
+        return await get_response(request)
 
     def process_exception(self, request, exception):
         # strategy = getattr(request, "social_strategy", None)
@@ -37,7 +66,7 @@ class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
                 request,
                 exception,
             )
-            return redirect(AccountNamedUrls.namespace + ":" + AccountNamedUrls.ACCOUNT_ALREADY_ASSOCIATED)
+            return redirect(AccountReverseNames.namespace + ":" + AccountReverseNames.ACCOUNT_ALREADY_ASSOCIATED)
         return super().process_exception(request, exception)
 
 
@@ -183,12 +212,12 @@ def redirect_inactive_account(strategy, details, *args, user=None, **kwargs):
     if request and request.session.get("account_status") == "inactive":
         # clear the flag so it doesn't persist
         del request.session["account_status"]
-        return redirect(AccountNamedUrls.namespace + ":" + AccountNamedUrls.ACCOUNT_INACTIVE)
+        return redirect(AccountReverseNames.namespace + ":" + AccountReverseNames.ACCOUNT_INACTIVE)
 
     # Self-onboarded user who registered with oauth but their account is
     # not active.
     if user and hasattr(user, "is_active") and not user.is_active:
-        return redirect(AccountNamedUrls.namespace + ":" + AccountNamedUrls.ACCOUNT_INACTIVE)
+        return redirect(AccountReverseNames.namespace + ":" + AccountReverseNames.ACCOUNT_INACTIVE)
 
     # Continue the pipeline as normal
     return None

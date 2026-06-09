@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API User Manifest handler"""
+"""Smarter API Provider Manifest handler"""
 
 import datetime
 import logging
@@ -19,6 +19,7 @@ from smarter.apps.provider.manifest.models.provider.spec import (
 from smarter.apps.provider.manifest.models.provider.status import SAMProviderStatus
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
+from smarter.common.utils.decorators import camel_case
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -42,9 +43,7 @@ from smarter.lib.manifest.enum import (
 # pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) and waffle.switch_is_active(
-        SmarterWaffleSwitches.MANIFEST_LOGGING
-    )
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -161,13 +160,18 @@ class SAMProviderBroker(AbstractBroker):
         """
         metadata = super().manifest_to_django_orm()
         dump = self.manifest.spec.provider.model_dump()  # type: ignore[return-value]
-        dump = self.camel_to_snake(dump)
+        dump = self.to_snake_case(dump)
+        if not isinstance(self.manifest, SAMProvider):
+            raise SAMProviderBrokerError(
+                f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}", thing=self.kind
+            )
         if not isinstance(dump, dict):
             raise SAMProviderBrokerError(
                 f"Failed to convert {self.kind} {self.manifest.metadata.name} provider spec to dict", thing=self.kind
             )
         return {**metadata, **dump}
 
+    @camel_case()
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
         Convert a Django ORM `Provider` model instance into a dictionary formatted for Pydantic manifest consumption.
@@ -566,7 +570,12 @@ class SAMProviderBroker(AbstractBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
-
+        if not self.user:
+            raise SAMProviderBrokerError(
+                message="User must be set to apply provider manifest.",
+                thing=self.kind,
+                command=command,
+            )
         if not self.user.is_staff:
             raise SAMProviderBrokerError(
                 message="Only account admins can apply provider manifests.",
@@ -685,6 +694,12 @@ class SAMProviderBroker(AbstractBroker):
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
 
+        if not self.user:
+            raise SAMProviderBrokerError(
+                message="User must be set to delete provider.",
+                thing=self.kind,
+                command=command,
+            )
         if not self.user.is_staff:
             raise SAMProviderBrokerError(
                 message="Only account admins can delete providers.",

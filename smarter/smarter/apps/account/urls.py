@@ -3,8 +3,11 @@
 from django.urls import include, path
 from django.views.generic.base import RedirectView
 
+from smarter.apps.account.views.dashboard import urls as account_dashboard_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
+from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.lib import logging
 
 from .const import namespace
 from .views.authentication import (
@@ -20,8 +23,10 @@ from .views.authentication import (
 from .views.dashboard.api_keys import APIKeyListView
 from .views.dashboard.users import UsersView, UserView
 
+logger = logging.getLogger(__name__)
 
-class AccountNamedUrls:
+
+class AccountReverseNames:
     """
     Class to hold named URL patterns for the account app.
     This class provides constants for all named URL patterns used in the account dashboard views.
@@ -59,29 +64,30 @@ urlpatterns = [
     path(
         "already-associated/",
         SocialAuthAlreadyAssociatedView.as_view(),
-        name=AccountNamedUrls.ACCOUNT_ALREADY_ASSOCIATED,
+        name=AccountReverseNames.ACCOUNT_ALREADY_ASSOCIATED,
     ),
     path(
         "",
         RedirectView.as_view(url="/dashboard/account/dashboard/", permanent=False),
         name="dashboard_account_dashboard",
     ),
-    path("api/", include("smarter.apps.account.api.urls", namespace=namespace)),
-    path("api-keys/", APIKeyListView.as_view(), name=AccountNamedUrls.API_KEYS_LIST),
-    path("login/", LoginView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGIN),
-    path("logout/", LogoutView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGOUT),
-    path("inactive/", AccountInactiveView.as_view(), name=AccountNamedUrls.ACCOUNT_INACTIVE),
-    path("dashboard/", include("smarter.apps.account.views.dashboard.urls")),
+    path("api-keys/", APIKeyListView.as_view(), name=AccountReverseNames.API_KEYS_LIST),
+    path("login/", LoginView.as_view(), name=AccountReverseNames.ACCOUNT_LOGIN),
+    path("logout/", LogoutView.as_view(), name=AccountReverseNames.ACCOUNT_LOGOUT),
+    path("inactive/", AccountInactiveView.as_view(), name=AccountReverseNames.ACCOUNT_INACTIVE),
+    path("dashboard/", include(account_dashboard_urls)),
     # account lifecycle
-    path("register/", AccountRegisterView.as_view(), name=AccountNamedUrls.ACCOUNT_REGISTER),
-    path("activation/", AccountActivationEmailView.as_view(), name=AccountNamedUrls.ACCOUNT_ACTIVATION),
-    path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name=AccountNamedUrls.ACCOUNT_ACTIVATE),
-    path("deactivate/", AccountDeactivateView.as_view(), name=AccountNamedUrls.ACCOUNT_DEACTIVATE),
-    path("users/", UsersView.as_view(), name=AccountNamedUrls.ACCOUNT_USERS),
-    path("user/<int:user_id>/", UserView.as_view(), name=AccountNamedUrls.ACCOUNT_USER),
+    path("register/", AccountRegisterView.as_view(), name=AccountReverseNames.ACCOUNT_REGISTER),
+    path("activation/", AccountActivationEmailView.as_view(), name=AccountReverseNames.ACCOUNT_ACTIVATION),
+    path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name=AccountReverseNames.ACCOUNT_ACTIVATE),
+    path("deactivate/", AccountDeactivateView.as_view(), name=AccountReverseNames.ACCOUNT_DEACTIVATE),
+    path("users/", UsersView.as_view(), name=AccountReverseNames.ACCOUNT_USERS),
+    path("user/<int:user_id>/", UserView.as_view(), name=AccountReverseNames.ACCOUNT_USER),
 ]
 
 if smarter_settings.environment == SmarterEnvironments.LOCAL:
     from .views.email import EmailWelcomeView
 
     urlpatterns.append(path("email/welcome/<first_name>/", EmailWelcomeView.as_view(), name="welcome"))
+    logger_prefix = formatted_text(__name__)
+    logger.debug("%s added %s URL pattern to Account app URLs.", logger_prefix, "welcome")

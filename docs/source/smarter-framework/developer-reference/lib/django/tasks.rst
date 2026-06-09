@@ -1,0 +1,32 @@
+Asynchronous Tasks
+==================
+
+The Smarter Framework uses Celery to handle asynchronous tasks and background processing.
+Namely, Smarter relies on Celery to for IO intensive operations and/or tasks that are
+either/both long-running or indeterminate in length. Examples of such tasks include sending emails,
+creating database records, processing large datasets, or performing scheduled maintenance operations.
+
+In particular, Smarter relies on asynchronous Celery tasks for all IO related to processing
+LLM prompts and responses, other than for the LLM prompt itself.
+
+Basic Usage
+-------------
+
+.. code-block:: python
+
+  from django.conf import settings
+  from smarter.workers.celery import app
+
+  @app.task(
+      autoretry_for=(Exception,),
+      retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
+      max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
+      queue=smarter_settings.llm_client_tasks_celery_task_queue,
+  )
+  def long_running_task(*args, **kwargs):
+        # Your long-running task logic here
+        pass
+
+  def foo():
+      # Call the long-running task asynchronously
+      long_running_task.delay(arg1, arg2, kwarg1=value1)

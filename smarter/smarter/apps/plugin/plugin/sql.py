@@ -1,6 +1,5 @@
 """
-A PLugin that uses a remote SQL database server to retrieve its return data
-
+A PLugin that uses a remote SQL database server to retrieve its return data.
 
 .. note::
 
@@ -9,7 +8,7 @@ A PLugin that uses a remote SQL database server to retrieve its return data
     1. Smarter Secret: The authentication credential for the remote SQL database connection.
     2. Smarter SQL Connection: The complete connection configuration to the remote SQL database server (host, port, secret, ssh key, username, etc.).
     3. Smarter SQL Plugin: The plugin that defines the SQL query and it's parameters to run against the remote SQL database server.
-    4. Smarter Chatbot: The prompting resource (Chatbot, Agent, Workflow unit, etcetera) that includes the SQL Plugin:
+    4. Smarter LLMClient: The prompting resource (LLMClient, Agent, Workflow unit, etcetera) that includes the SQL Plugin:
 
 .. sphinx note: these are relative to the rst doc that calls automodule on this file.
 
@@ -17,7 +16,7 @@ A PLugin that uses a remote SQL database server to retrieve its return data
     :language: yaml
     :caption: 1.) Example Smarter Secret Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/connection/data/sample-connections/smarter-test-db.yaml
     :language: yaml
     :caption: 2.) Example Smarter SQL Connection Manifest
 
@@ -25,10 +24,9 @@ A PLugin that uses a remote SQL database server to retrieve its return data
     :language: yaml
     :caption: 3.) Example Stackademy SQL Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llm_client-sql.yaml
     :language: yaml
-    :caption: 4.) Example Stackademy Chatbot Manifest
-
+    :caption: 4.) Example Stackademy LLMClient Manifest
 """
 
 import logging
@@ -38,6 +36,7 @@ from typing import Any, Optional, Type, Union
 
 from django.core.exceptions import MultipleObjectsReturned
 
+from smarter.apps.connection.models import SqlConnection
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
@@ -61,13 +60,13 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
     SqlData,
     TestValue,
 )
-from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
+from smarter.apps.plugin.models import PluginDataSql, PluginMeta
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import to_snake_case
 from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -455,7 +454,6 @@ class SqlPlugin(PluginBase):
                     - name: unit
                         value: Celsius
                     limit: 10
-
         """
         if not self._manifest:
             return None
@@ -477,7 +475,7 @@ class SqlPlugin(PluginBase):
             raise SmarterSqlPluginError(
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required SQL data."
             )
-        sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
+        sql_data = {to_snake_case(key): value for key, value in sql_data.items()}
 
         connection_name = self._manifest.spec.connection if self._manifest else None
         if connection_name:
@@ -816,7 +814,7 @@ class SqlPlugin(PluginBase):
                 raise SmarterSqlPluginError(
                     f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
                 )
-            return sql_connection.execute_query(
+            retval = sql_connection.execute_query(
                 sql=sql,
                 limit=(
                     self.plugin_data.limit
@@ -824,6 +822,12 @@ class SqlPlugin(PluginBase):
                     else MAX_SQL_QUERY_LENGTH
                 ),
             )
+            logger.debug(
+                "%s.tool_call_fetch_plugin_response() fetched and cached SQL query result for query: %s",
+                self.formatted_class_name,
+                sql,
+            )
+            return retval
 
         retval = get_cached_query_result(sql)
 

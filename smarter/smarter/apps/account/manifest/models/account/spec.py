@@ -26,28 +26,28 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
             f"{class_identifier}.companyName[str]. The legal entity of your Smarter {MANIFEST_KIND} for invoicing and legal correspondence."
         ),
     )
-    phoneNumber: str = Field(
-        ...,
+    phoneNumber: Optional[str] = Field(
+        None,
         description=(f"{class_identifier}.phoneNumber[str]. The primary phone number for the {MANIFEST_KIND}."),
     )
-    address1: str = Field(
-        ...,
+    address1: Optional[str] = Field(
+        None,
         description=(f"{class_identifier}.address1[str]. The primary address for the {MANIFEST_KIND}."),
     )
     address2: Optional[str] = Field(
         None,
         description=(f"{class_identifier}.address2[str]. Optional. The secondary address for the {MANIFEST_KIND}."),
     )
-    city: str = Field(
-        ...,
+    city: Optional[str] = Field(
+        None,
         description=(f"{class_identifier}.city[str]. The city for the {MANIFEST_KIND}."),
     )
-    state: str = Field(
-        ...,
+    state: Optional[str] = Field(
+        None,
         description=(f"{class_identifier}.state[str]. The state for the {MANIFEST_KIND}."),
     )
-    postalCode: str = Field(
-        ...,
+    postalCode: Optional[str] = Field(
+        None,
         description=(f"{class_identifier}.postalCode[str]. The postal code for the {MANIFEST_KIND}."),
     )
     country: str = Field(

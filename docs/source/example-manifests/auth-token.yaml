@@ -1,5 +1,5 @@
 apiVersion: smarter.sh/v1
-kind: AuthToken
+kind: SmarterAuthToken
 metadata:
   description: An example Smarter API manifest for a SmarterAuthToken
   name: snake-case-name

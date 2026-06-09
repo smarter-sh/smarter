@@ -23,36 +23,49 @@ from .views.json_schema import (
     DocsJsonSchemaApiConnectionView,
     DocsJsonSchemaApiKeyView,
     DocsJsonSchemaApiView,
-    DocsJsonSchemaChatBotView,
     DocsJsonSchemaChatHistoryView,
     DocsJsonSchemaChatPluginUsageView,
     DocsJsonSchemaChatToolCallView,
     DocsJsonSchemaChatView,
+    DocsJsonSchemaLLMClientView,
     DocsJsonSchemaPluginView,
     DocsJsonSchemaProviderView,
     DocsJsonSchemaSecretView,
     DocsJsonSchemaSqlConnectionView,
     DocsJsonSchemaSqlView,
     DocsJsonSchemaUserView,
+    DocsJsonSchemaVectorstoreView,
 )
 from .views.manifest import (
     DocsExampleManifestAccountView,
     DocsExampleManifestApiConnectionView,
     DocsExampleManifestApiKeyView,
     DocsExampleManifestApiView,
-    DocsExampleManifestChatBotView,
     DocsExampleManifestChatHistoryView,
     DocsExampleManifestChatPluginUsageView,
     DocsExampleManifestChatToolCallView,
     DocsExampleManifestChatView,
+    DocsExampleManifestLLMClientView,
     DocsExampleManifestPluginView,
     DocsExampleManifestProviderView,
     DocsExampleManifestSecretView,
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestSqlView,
     DocsExampleManifestUserView,
+    DocsExampleManifestVectorstoreView,
 )
 from .views.views import JsonSchemasView, ManifestsView
+
+
+class DocsReverseNames:
+    """Centralized reverse view names for the docs app."""
+
+    namespace = namespace
+    example_manifests = "example_manifests"
+    swagger_docs = "schema-swagger-ui"
+    redoc = "schema-redoc-ui"
+    json_schemas = "json_schemas"
+
 
 app_name = namespace
 urlpatterns = [
@@ -72,8 +85,8 @@ urlpatterns = [
     # Documentation generators
     # -------------------------------------------------------------------------
     re_path(r"^swagger(?P<format>\.json|\.yaml)$", schema_view.without_ui(cache_timeout=0), name="schema-json"),
-    re_path(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
-    re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc-ui"),
+    re_path(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name=DocsReverseNames.swagger_docs),
+    re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name=DocsReverseNames.redoc),
     # -------------------------------------------------------------------------
     # JSON Schemas
     # -------------------------------------------------------------------------
@@ -108,9 +121,9 @@ urlpatterns = [
         name=json_schema_name(SAMKinds.CHAT_TOOL_CALL.value),
     ),
     path(
-        json_schema_path(SAMKinds.CHATBOT.value),
-        DocsJsonSchemaChatBotView.as_view(),
-        name=json_schema_name(SAMKinds.CHATBOT.value),
+        json_schema_path(SAMKinds.LLM_CLIENT.value),
+        DocsJsonSchemaLLMClientView.as_view(),
+        name=json_schema_name(SAMKinds.LLM_CLIENT.value),
     ),
     path(
         json_schema_path(SAMKinds.STATIC_PLUGIN.value),
@@ -152,6 +165,11 @@ urlpatterns = [
         DocsJsonSchemaProviderView.as_view(),
         name=json_schema_name(SAMKinds.PROVIDER.value),
     ),
+    path(
+        json_schema_path(SAMKinds.VECTORSTORE.value),
+        DocsJsonSchemaVectorstoreView.as_view(),
+        name=json_schema_name(SAMKinds.VECTORSTORE.value),
+    ),
     # -------------------------------------------------------------------------
     # example manifests
     # -------------------------------------------------------------------------
@@ -186,9 +204,9 @@ urlpatterns = [
         name=manifest_name(SAMKinds.CHAT_TOOL_CALL.value),
     ),
     path(
-        manifest_path(SAMKinds.CHATBOT.value),
-        DocsExampleManifestChatBotView.as_view(),
-        name=manifest_name(SAMKinds.CHATBOT.value),
+        manifest_path(SAMKinds.LLM_CLIENT.value),
+        DocsExampleManifestLLMClientView.as_view(),
+        name=manifest_name(SAMKinds.LLM_CLIENT.value),
     ),
     path(
         manifest_path(SAMKinds.STATIC_PLUGIN.value),
@@ -230,12 +248,17 @@ urlpatterns = [
         DocsExampleManifestProviderView.as_view(),
         name=manifest_name(SAMKinds.PROVIDER.value),
     ),
+    path(
+        manifest_path(SAMKinds.VECTORSTORE.value),
+        DocsExampleManifestVectorstoreView.as_view(),
+        name=manifest_name(SAMKinds.VECTORSTORE.value),
+    ),
     # -------------------------------------------------------------------------
     # manifests landing page
     # -------------------------------------------------------------------------
-    path("manifests/", ManifestsView.as_view(), name="example_manifests"),
+    path("manifests/", ManifestsView.as_view(), name=DocsReverseNames.example_manifests),
     # -------------------------------------------------------------------------
     # json schemas landing page
     # -------------------------------------------------------------------------
-    path("json-schemas/", JsonSchemasView.as_view(), name="json_schemas"),
+    path("json-schemas/", JsonSchemasView.as_view(), name=DocsReverseNames.json_schemas),
 ]

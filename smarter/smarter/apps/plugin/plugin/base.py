@@ -47,7 +47,7 @@ from smarter.apps.plugin.signals import (
     plugin_selected,
     plugin_updated,
 )
-from smarter.apps.prompt.providers.const import OpenAIMessageKeys
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
@@ -58,7 +58,6 @@ from smarter.common.exceptions import (
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
-from smarter.lib.django.mixins import SmarterConverterMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
@@ -86,7 +85,7 @@ class SmarterPluginError(SmarterException):
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
+class PluginBase(ABC, AccountMixin):
     """
     Abstract base class for Smarter plugins.
 
@@ -802,12 +801,11 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                 "Configuration error: UserProfile must be set before initializing a plugin instance by its ORM model id."
             )
         self.reinitialize_plugin()
-        try:
-            self._plugin_meta = PluginMeta.objects.get(id=value)
-        except PluginMeta.DoesNotExist as e:
+        self._plugin_meta = PluginMeta.objects.filter(id=value).with_read_permission_for(self.user).first()  # type: ignore
+        if not self._plugin_meta:
             raise SmarterPluginError(
                 f"PluginMeta with id {value} does not exist for plugin {self.formatted_pluginbase_class_name}."
-            ) from e
+            )
 
     @property
     def plugin_meta(self) -> Optional[PluginMeta]:

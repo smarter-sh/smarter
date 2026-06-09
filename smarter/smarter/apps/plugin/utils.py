@@ -1,7 +1,6 @@
 """Ultility functions for plugins."""
 
 import io
-import logging
 import os
 from typing import Optional
 
@@ -12,23 +11,15 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .plugin.utils import PluginExamples
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 logger_prefix = formatted_text(f"{__name__}")
 
 
@@ -88,7 +79,7 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
     data: Optional[dict] = None
     if not isinstance(user_profile, UserProfile):
         raise SmarterValueError("User profile is required to add example plugins.")
-    username: str = user_profile.cached_user.username
+    username: str = user_profile.user.username
     output = io.StringIO()
     error_output = io.StringIO()
 
@@ -107,8 +98,8 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             os.path.join(
                 "smarter", "apps", "account", "data", "example-manifests", "secret-smarter-test-db-proxy-password.yaml"
             ),
-            os.path.join("smarter", "apps", "plugin", "data", "sample-connections", "smarter-test-db.yaml"),
-            os.path.join("smarter", "apps", "plugin", "data", "sample-connections", "smarter-test-api.yaml"),
+            os.path.join("smarter", "apps", "connection", "data", "sample-connections", "smarter-test-db.yaml"),
+            os.path.join("smarter", "apps", "connection", "data", "sample-connections", "smarter-test-api.yaml"),
         ]
         for file_path in file_paths:
             apply(file_path)
@@ -124,8 +115,6 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             data = yaml.safe_load(yaml_data)
             plugin_controller = PluginController(
                 user_profile=user_profile,
-                account=user_profile.cached_account,  # type: ignore[arg-type]
-                user=user_profile.cached_user,  # type: ignore[arg-type]
                 manifest=data,  # type: ignore[arg-type]
             )
             # we do this to ensure that that plugin can instantiate correctly.

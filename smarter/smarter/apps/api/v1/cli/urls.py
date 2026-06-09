@@ -31,7 +31,7 @@ Endpoints
 
 from django.urls import path
 
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .views.apply import ApiV1CliApplyApiView
@@ -75,7 +75,7 @@ class ApiV1CliReverseViews:
     -------
     .. code-block:: python
 
-        from django.urls import reverse
+        from smarter.lib.django.shortcuts import reverse
         url = reverse(ApiV1CliReverseViews.deploy, kwargs={'kind': 'Plugin'})
 
         str(ApiV1CliReverseViews.deploy)
@@ -85,32 +85,21 @@ class ApiV1CliReverseViews:
 
     namespace = f"api:v1:{namespace}:"
 
-    @staticmethod
-    def camel_case(obj) -> str:
-        """
-        Convert CamelCase to snake_case for URL naming.
-
-        :param name: The CamelCase string to convert.
-        :return: The converted snake_case string.
-        :rtype: str
-        """
-        return str(camel_to_snake(obj.__name__))
-
-    manifest = camel_case(ApiV1CliManifestApiView)
-    apply = camel_case(ApiV1CliApplyApiView)
-    chat = camel_case(ApiV1CliChatApiView)
-    chat_config = camel_case(ApiV1CliChatConfigApiView)
-    delete = camel_case(ApiV1CliDeleteApiView)
-    deploy = camel_case(ApiV1CliDeployApiView)
-    undeploy = camel_case(ApiV1CliUndeployApiView)
-    describe = camel_case(ApiV1CliDescribeApiView)
-    get = camel_case(ApiV1CliGetApiView)
-    logs = camel_case(ApiV1CliLogsApiView)
-    example_manifest = camel_case(ApiV1CliManifestApiView)
-    status = camel_case(ApiV1CliStatusApiView)
-    schema = camel_case(ApiV1CliSchemaApiView)
-    version = camel_case(ApiV1CliVersionApiView)
-    whoami = camel_case(ApiV1CliWhoamiApiView)
+    manifest = to_snake_case(ApiV1CliManifestApiView)
+    apply = to_snake_case(ApiV1CliApplyApiView)
+    chat = to_snake_case(ApiV1CliChatApiView)
+    chat_config = to_snake_case(ApiV1CliChatConfigApiView)
+    delete = to_snake_case(ApiV1CliDeleteApiView)
+    deploy = to_snake_case(ApiV1CliDeployApiView)
+    undeploy = to_snake_case(ApiV1CliUndeployApiView)
+    describe = to_snake_case(ApiV1CliDescribeApiView)
+    get = to_snake_case(ApiV1CliGetApiView)
+    logs = to_snake_case(ApiV1CliLogsApiView)
+    example_manifest = to_snake_case(ApiV1CliManifestApiView)
+    status = to_snake_case(ApiV1CliStatusApiView)
+    schema = to_snake_case(ApiV1CliSchemaApiView)
+    version = to_snake_case(ApiV1CliVersionApiView)
+    whoami = to_snake_case(ApiV1CliWhoamiApiView)
 
 
 urlpatterns = [

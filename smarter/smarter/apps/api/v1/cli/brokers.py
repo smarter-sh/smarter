@@ -1,6 +1,8 @@
 # pylint: disable=W0613
 """
-Smarter API command-line interface Brokers. These are the broker classes
+Smarter API command-line interface Brokers.
+
+These are the broker classes
 that implement the broker service pattern for an underlying object. Brokers
 receive a Yaml manifest representation of a model, convert this to a Pydantic
 model, and then instantiate the appropriate Python class that performs
@@ -15,18 +17,20 @@ the necessary operations to facilitate cli requests that include:
     - undeploy
 """
 
-import logging
 from typing import Dict, Optional, Type
 from urllib.parse import urlparse
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
-from smarter.apps.account.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
-from smarter.apps.plugin.manifest.brokers.api_connection import SAMApiConnectionBroker
+from smarter.apps.connection.manifest.brokers.api_connection import (
+    SAMApiConnectionBroker,
+)
+from smarter.apps.connection.manifest.brokers.sql_connection import (
+    SAMSqlConnectionBroker,
+)
+from smarter.apps.llm_client.manifest.brokers.llm_client import SAMLLMClientBroker
 from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
-from smarter.apps.plugin.manifest.brokers.sql_connection import SAMSqlConnectionBroker
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
 from smarter.apps.prompt.manifest.brokers.chat import SAMChatBroker
@@ -36,21 +40,17 @@ from smarter.apps.prompt.manifest.brokers.chat_plugin_usage import (
 )
 from smarter.apps.prompt.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
+from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
+from smarter.apps.vectorstore.manifest.brokers.vectorstore import SAMVectorstoreBroker
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.lib.django import waffle
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthTokenBroker
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import AbstractBroker  # BrokerNotImplemented
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.API_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
+)
 
 
 class Brokers:
@@ -96,7 +96,6 @@ class Brokers:
     >>> broker_cls = Brokers.get_broker("Account")
     >>> broker = broker_cls()
     >>> broker.describe(...)
-
     """
 
     _brokers: Dict[str, Type[AbstractBroker]] = {
@@ -106,7 +105,7 @@ class Brokers:
         SAMKinds.CHAT_HISTORY.value: SAMChatHistoryBroker,
         SAMKinds.CHAT_PLUGIN_USAGE.value: SAMChatPluginUsageBroker,
         SAMKinds.CHAT_TOOL_CALL.value: SAMChatToolCallBroker,
-        SAMKinds.CHATBOT.value: SAMChatbotBroker,
+        SAMKinds.LLM_CLIENT.value: SAMLLMClientBroker,
         SAMKinds.STATIC_PLUGIN.value: SAMStaticPluginBroker,
         SAMKinds.API_PLUGIN.value: SAMApiPluginBroker,
         SAMKinds.SQL_PLUGIN.value: SAMSqlPluginBroker,
@@ -115,6 +114,7 @@ class Brokers:
         SAMKinds.USER.value: SAMUserBroker,
         SAMKinds.SECRET.value: SAMSecretBroker,
         SAMKinds.PROVIDER.value: SAMProviderBroker,
+        SAMKinds.VECTORSTORE.value: SAMVectorstoreBroker,
     }
 
     @classmethod
@@ -127,14 +127,16 @@ class Brokers:
         return cls._brokers.get(kind) or cls._lower_brokers().get(kind.lower())
 
     @classmethod
-    def snake_to_camel(cls, snake_str):
+    def to_camel_case(cls, snake_str):
         components = snake_str.split("_")
         return components[0] + "".join(x.title() for x in components[1:])
 
     @classmethod
     def get_broker_kind(cls, kind: str) -> Optional[str]:
         """
-        Case insensitive broker kind getter. Returns the original SAMKinds
+        Case insensitive broker kind getter.
+
+        Returns the original SAMKinds
         key string from cls._brokers for the given kind.
         """
         if not kind:
@@ -145,7 +147,7 @@ class Brokers:
             kind = kind[:-1]
 
         # ensure kind is in camel case
-        kind = cls.snake_to_camel(kind)
+        kind = cls.to_camel_case(kind)
         lower_kind = kind.lower()
 
         # perform a lower case search to find and return the original key
@@ -162,7 +164,9 @@ class Brokers:
     @classmethod
     def from_url(cls, url) -> Optional[str]:
         """
-        Returns the kind of broker from the given URL. This is used to
+        Returns the kind of broker from the given URL.
+
+        This is used to
         determine the broker to use when the kind is not provided in the
         request.
 

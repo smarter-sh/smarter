@@ -2,22 +2,17 @@
 Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models.
 """
 
-import logging
 from functools import cached_property
 from typing import Dict, Optional, Union
 
 from django.core.exceptions import MultipleObjectsReturned
 
-from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import valid_resource_owners_for_user
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.lib import json
-from smarter.lib.django import waffle
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-
-# lib manifest
 from smarter.lib.journal.enum import SmarterJournalThings
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.controller import AbstractController
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 
@@ -56,14 +51,7 @@ SAM_MAP: dict[str, SAMPluginType] = {
 }
 
 
-# pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 
 
 class SAMPluginControllerError(SAMExceptionBase):
@@ -106,8 +94,6 @@ class PluginController(AbstractController):
         # Initialize a PluginController with manifest data
         my_user_profile = UserProfile.get_cached_object(user=admin_user)
         controller = PluginController(
-            account=my_account,
-            user=admin_user,
             manifest=my_manifest,
             user_profile=my_user_profile
         )
@@ -116,8 +102,6 @@ class PluginController(AbstractController):
         # Initialize with plugin metadata
         my_plugin_meta = PluginMeta.objects.get(id=plugin_id)
         controller = PluginController(
-            account=my_account,
-            user=admin_user,
             plugin_meta=my_plugin_meta,
             user_profile=my_user_profile
         )
@@ -137,22 +121,20 @@ class PluginController(AbstractController):
 
     def __init__(
         self,
-        account: Account,
-        user: User,
-        *args,
-        user_profile: Optional[UserProfile] = None,
+        user_profile: UserProfile,
         manifest: SAMPlugins = None,
         plugin_meta: Optional[PluginMeta] = None,
         name: Optional[str] = None,
         **kwargs,
     ):
-        super().__init__(account, user, *args, user_profile, **kwargs)
+        super().__init__(user_profile, **kwargs)
         logger.debug(
-            "%s.__init__ called with account: %s, user: %s, user_profile: %s, kwargs: %s",
+            "%s.__init__ called with user_profile: %s, manifest: %s, plugin_meta: %s, name: %s, kwargs: %s",
             self.formatted_class_name,
-            account,
-            user,
             user_profile,
+            manifest,
+            plugin_meta,
+            name,
             kwargs,
         )
         if (bool(manifest) and bool(plugin_meta)) or (not bool(manifest) and not bool(plugin_meta) and not bool(name)):
@@ -179,7 +161,7 @@ class PluginController(AbstractController):
             )
             manifest = SAMPluginCls(**manifest)  # type: ignore[call-arg]
 
-        if manifest:
+        if isinstance(manifest, SAMPluginCommon):
             self._manifest = manifest
             logger.debug("%s received manifest: %s", self.formatted_class_name, self._manifest.metadata.name)
             if self._manifest.kind not in VALID_MANIFEST_KINDS:
@@ -187,24 +169,36 @@ class PluginController(AbstractController):
                     f"Manifest kind {self._manifest.kind} should be one of: {VALID_MANIFEST_KINDS}."
                 )
 
-        if plugin_meta:
+        if isinstance(plugin_meta, PluginMeta):
             self._plugin_meta = plugin_meta
             logger.debug("%s received plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
 
-        if name:
+        if isinstance(name, str):
             self._name = name
             logger.debug("%s received name: %s", self.formatted_class_name, self._name)
 
-        logger.debug(
-            "%s initialized with account: %s, user: %s, user_profile: %s, manifest: %s, plugin_meta: %s, name: %s",
-            self.formatted_class_name,
-            self.account,
-            self.user,
-            self.user_profile,
-            self.manifest,
-            self.plugin_meta,
-            self.name,
-        )
+        if self.ready:
+            logger.debug(
+                "%s initialized with account: %s, user: %s, user_profile: %s, manifest: %s, plugin_meta: %s, name: %s",
+                self.formatted_class_name,
+                self.account,
+                self.user,
+                self.user_profile,
+                self.manifest,
+                self.plugin_meta,
+                self.name,
+            )
+        else:
+            logger.warning(
+                "%s initialized but not ready. account: %s, user: %s, user_profile: %s, manifest: %s, plugin_meta: %s, name: %s",
+                self.formatted_class_name,
+                self.account,
+                self.user,
+                self.user_profile,
+                self.manifest,
+                self.plugin_meta,
+                self.name,
+            )
 
     @property
     def formatted_class_name(self) -> str:

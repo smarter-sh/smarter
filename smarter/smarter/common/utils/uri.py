@@ -1,25 +1,47 @@
 """
-Module: smarter.common.utils.smarter_build_absolute_uri
+smarter.common.utils.uri
+=========================
+
+Helpers for building absolute URIs from Django or DRF request objects.
+
+This module provides the ``smarter_build_absolute_uri`` function, which attempts to construct
+an absolute URI from a given request object. It supports Django's ``HttpRequest``, Django REST Framework's
+``Request``, and mock objects for testing. The function is robust to missing or malformed request data and
+returns a fallback test URL if the request cannot be resolved.
+
+**Example usage:**
+
+.. code-block:: python
+
+    from smarter.common.utils import smarter_build_absolute_uri
+    from django.http import HttpRequest
+
+    request = HttpRequest()
+    request.META['HTTP_HOST'] = 'localhost:9357'
+    request.path = '/api/v1/resource/'
+    url = smarter_build_absolute_uri(request)
+    print(url)  # Output: http://localhost:9357/api/v1/resource/
+
 """
 
-import logging
 from typing import Optional
+from unittest.mock import Mock
 
 from django.http import HttpRequest
 
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
+from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 
 logger = logging.getLogger(__name__)
 
-logger_prefix = formatted_text(f"{__name__}.smarter_build_absolute_uri()")
+logger_prefix = logging.formatted_text(f"{__name__}.smarter_build_absolute_uri()")
 
 
 def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
     """
     Attempts to construct the absolute URI for a given request object.
 
-    :param request: The request object, which may be an instance of :class:`django.http.HttpRequest`, :class:`rest_framework.request.Request`, :class:`django.core.handlers.wsgi.WSGIRequest`, or a mock object for testing.
+    :param request: The request object, which may be an instance of :class:`django.http.HttpRequest`, :class:`rest_framework.request.Request`, :class:`django.core.handlers.wsgi.ASGIRequest`, or a mock object for testing.
     :type request: "HttpRequest" or compatible type
 
     :return: The absolute URI as a string, or a fallback test URL if the request is invalid or cannot be resolved.
@@ -111,8 +133,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         )
         return retval
 
-    # If it's a unittest.mock.Mock, synthesize a fake URL for testing
-    if hasattr(request, "__class__") and request.__class__.__name__ == "Mock":
+    if isinstance(request, Mock):
         retval = "http://testserver/mockpath/"
         logger.debug(
             "%s.smarter_build_absolute_uri() called with Mock request; returning fake test URL: %s",
@@ -131,8 +152,8 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         except Exception as e:
             logger.warning(
                 "%s.smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
+                logging.formatted_text_red(str(e)),
                 logger_prefix,
-                formatted_text_red(str(e)),
             )
 
     # Try to build from scheme, host, and path
@@ -148,14 +169,14 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         logger.debug(
             "%s.smarter_build_absolute_uri() could not build url from request attributes due to a KeyError: %s",
             logger_prefix,
-            formatted_text_red(str(e)),
+            logging.formatted_text_red(str(e)),
         )
     # pylint: disable=W0718
     except Exception as e:
         logger.debug(
             "%s.smarter_build_absolute_uri() failed to build URL from request attributes: %s (%s)",
             logger_prefix,
-            formatted_text_red(str(e)),
+            logging.formatted_text_red(str(e)),
             type(e),
         )
 

@@ -72,7 +72,7 @@ spec:
 
                     echo "Backup completed successfully!"
 
-              imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
+              imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
 
               resources:
                 requests:

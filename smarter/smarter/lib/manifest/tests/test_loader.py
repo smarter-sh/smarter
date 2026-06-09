@@ -39,7 +39,7 @@ class TestManifestLoader(SmarterTestBase):
 
         # validate that all items in manifest_metadata_keys are in SAMMetadataKeys
         for key in loader.manifest_metadata_keys:
-            self.assertIn(key, SAMMetadataKeys.all_values())
+            self.assertIn(key, SAMMetadataKeys.all_slugs())
 
         self.assertIsInstance(loader.manifest_spec_keys, list)
         self.assertIsInstance(loader.manifest_status_keys, list)
@@ -93,11 +93,13 @@ class TestManifestLoader(SmarterTestBase):
                 self.fail(f"Failed to load manifest: {e}")
             self.assertTrue(loader.ready, msg="loader is not ready")
             json_data = loader.json_data
+            if not isinstance(json_data, dict):
+                self.fail("json_data is not a dict")
             del json_data[element]
 
             # convert back to yaml
             yaml_data = yaml.dump(json_data)
-            with self.assertRaises(SAMLoaderError):
+            with self.assertRaises(SAMLoaderError, msg=f"Expected SAMLoaderError when {element} is missing"):
                 SAMLoader(manifest=yaml_data)
 
         for element in [SAMKeys.METADATA.value, SAMKeys.SPEC.value]:

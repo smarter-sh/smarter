@@ -39,17 +39,17 @@
           <pre class="code-snippet prettyprint w-100">
             <code>
 apiVersion: smarter.sh/v1
-kind: Chatbot
+kind: LLMClient
 metadata:
   # Metadata about your resource goes here. These required fields are used for identifying
   # and managing your resource inside of Smarter.
   description: A human readable description of this resource. Keep it brief.
-  name: MyChatbot
+  name: MyLLMClient
   version: 1.0.0
 spec:
   # your specification goes here. Each kind of resource has its own spec layout
   # which you can scaffold using the Smarter CLI command `smarter manifest <kind> -o yaml`.
-  # For example: `smarter manifest chatbot -o yaml`
+  # For example: `smarter manifest llm_client -o yaml`
 status:
   # read-only status about your AI resource goes here.
             </code>
@@ -75,7 +75,7 @@ status:
     <!--begin::heading-2-->
     <div id="heading-2">
       <h2 class="mt-6 mb-6">Design, Train, Test, Deploy</h2>
-      <p>A Smarter Manifest describes, in a human-readle format, the resources that makeup your Chatbot solution. You
+      <p>A Smarter Manifest describes, in a human-readle format, the resources that makeup your LLMClient solution. You
         use manifests to creates, manage, deploy, and destroy your AI resources. Manifests are simple text files in YAML
         format. Start with an example manifest, here or from the Smarter CLI. Tweak it to suit your needs. Then use the
         Smarter CLI to apply it. That's it! It doesn't get any simpler.</p>

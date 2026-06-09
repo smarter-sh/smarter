@@ -46,7 +46,7 @@ function showModal(title, message, data, isError = false) {
       { things: ["SqlPlugin", "ApiPlugin", "StaticPlugin"], path: window.pluginListPath },
       { things: ["SqlConnection", "ApiConnection"], path: window.connectionListPath },
       { things: ["Provider"], path: window.providerListPath },
-      { things: ["ChatBot"], path: window.workbenchListPath },
+      { things: ["LLMClient"], path: window.workbenchListPath },
     ];
     for (const entry of thingRedirects) {
       if (entry.things.includes(data.thing)) {

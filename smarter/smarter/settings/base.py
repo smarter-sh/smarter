@@ -40,11 +40,14 @@ logger_prefix = formatted_text(__name__)
 
 load_dotenv()
 
+logger.debug("%s Smarter version: %s", logger_prefix, smarter_version)
+
 
 # pylint: disable=W0621
 def smart_cast(value, default_value):
     """
-    Cast string value to the same data type as the type
+    Cast string value to the same data type as the type.
+
     of the default_value. This is used for casting
     environment variable strings to the
     appropriate settings type.
@@ -87,8 +90,9 @@ APPEND_SLASH = True
 ALLOWED_HOSTS = smarter_settings.allowed_hosts
 """
 A list of strings representing the host/domain names that this Django site can serve.
+
 Smarter implements its own middleware to validate host names.
-See smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware.
+See smarter.apps.llm_client.middleware.security.SmarterSecurityMiddleware.
 
 See:
 
@@ -99,6 +103,7 @@ See:
 LOCAL_HOSTS = smarter_settings.local_hosts
 """
 Supplemental list of local host/domain names that this Django site can serve.
+
 This is specicific to Smarter and not officially part of Django settings.
 
 See: smarter_settings.local_hosts
@@ -111,6 +116,7 @@ if "collectstatic" in sys.argv:
 CORS_ORIGIN_ALLOW_ALL = False
 """
 A boolean that determines whether to allow all origins to make cross-site HTTP requests.
+
 Smarter defaults this to False and uses CORS_ALLOWED_ORIGIN_REGEXES to restrict allowed origins.
 See smarter.lib.django.middleware.cors.SmarterCorsMiddleware.
 
@@ -130,7 +136,9 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     "origin",
 ]
 """
-A list of non-standard HTTP headers that are allowed in cross-site HTTP requests. Smarter
+A list of non-standard HTTP headers that are allowed in cross-site HTTP requests.
+
+Smarter
 Chat frontends pass the Smarter API key in the 'x-api-key' header.
 
 See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
@@ -139,6 +147,7 @@ See `React Integration <https://docs.smarter.sh/en/latest/developers/architectur
 CORS_ALLOW_CREDENTIALS = True
 """
 A boolean that determines whether to allow cookies to be included in cross-site HTTP requests.
+
 Smarter defaults this to True to allow session cookies to be sent by smarter-chat React frontends.
 
 See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
@@ -150,6 +159,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 ]
 """
 A list of regular expressions representing the origins that are allowed to make cross-site HTTP requests.
+
 Smarter uses this setting to restrict allowed origins for CORS requests from smarter-chat React frontends.
 
 See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
@@ -157,7 +167,9 @@ See `React Integration <https://docs.smarter.sh/en/latest/developers/architectur
 
 CORS_ALLOWED_ORIGINS = []
 """
-A list of origins that are allowed to make cross-site HTTP requests. This is initialized here as an empty list
+A list of origins that are allowed to make cross-site HTTP requests.
+
+This is initialized here as an empty list
 because base_aws.py and other environment-specific settings files will append to this list based on derived
 settings values in smarter_settings.
 
@@ -169,7 +181,9 @@ See `React Integration <https://docs.smarter.sh/en/latest/developers/architectur
 # -------------------------------
 CSRF_COOKIE_SECURE = False
 """
-A boolean that determines whether the CSRF cookie should be marked as "secure". This is set to
+A boolean that determines whether the CSRF cookie should be marked as "secure".
+
+This is set to
 False in base settings but **should** be set to True in production environments. Note that
 there are challenges with setting this to True if the Smarter platform is behind a load balancer or
 reverse proxy that terminates SSL.
@@ -183,7 +197,9 @@ See:
 
 CSRF_COOKIE_NAME = "csrftoken"
 """
-The name of the CSRF cookie. Default is 'csrftoken'. This is a placeholder for Smarter-specific
+The name of the CSRF cookie.
+
+Default is 'csrftoken'. This is a placeholder for Smarter-specific
 functionality in smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware.
 
 See:
@@ -195,7 +211,9 @@ See:
 
 CSRF_COOKIE_SAMESITE = "lax"
 """
-The value for the SameSite flag on the CSRF cookie. Default is 'Lax'. Smarters needs
+The value for the SameSite flag on the CSRF cookie.
+
+Default is 'Lax'. Smarters needs
 this to be 'Lax' to support cross-site requests from smarter-chat React frontends.
 
 See:
@@ -207,7 +225,9 @@ See:
 
 CSRF_COOKIE_AGE = 60 * 60 * 24
 """
-The age of the CSRF cookie, in seconds. Default is 60 * 60 * 24 (1 day). This is a placeholder
+The age of the CSRF cookie, in seconds.
+
+Default is 60 * 60 * 24 (1 day). This is a placeholder
 for Smarter-specific functionality in smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware.
 The default value should be sufficient for most use cases, unless your use case involves
 e-commerce checkouts that need a shorter CSRF token lifetime.
@@ -221,7 +241,9 @@ See:
 
 CSRF_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
 """
-The domain to use for the CSRF cookie. This is set to the Smarter platform domain derived
+The domain to use for the CSRF cookie.
+
+This is set to the Smarter platform domain derived
 from smarter_settings.
 
 See:
@@ -234,7 +256,9 @@ See:
 
 CSRF_COOKIE_PATH = "/"
 """
-The path to use for the CSRF cookie. Default is '/'.
+The path to use for the CSRF cookie.
+
+Default is '/'.
 
 See:
 
@@ -245,7 +269,9 @@ See:
 
 CSRF_COOKIE_HTTPONLY = False
 """
-A boolean that determines whether the CSRF cookie should be marked as "HttpOnly". Default is False
+A boolean that determines whether the CSRF cookie should be marked as "HttpOnly".
+
+Default is False
 because the smarter-chat React frontend needs to read the CSRF cookie value via JavaScript to
 include it in the 'X-CSRFToken' header of HTTP requests.
 
@@ -258,7 +284,9 @@ See:
 
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 """
-The name of the HTTP header that carries the CSRF token value. Default is 'HTTP_X_CSRFTOKEN',
+The name of the HTTP header that carries the CSRF token value.
+
+Default is 'HTTP_X_CSRFTOKEN',
 which corresponds to the 'X-CSRFToken' header sent by smarter-chat React frontends.
 
 See:
@@ -273,7 +301,9 @@ CSRF_TRUSTED_ORIGINS = [
     smarter_settings.environment_api_domain,
 ]
 """
-A list of trusted origins for cross-site request forgery protection. This is initialized
+A list of trusted origins for cross-site request forgery protection.
+
+This is initialized
 here with the Smarter platform and API domains derived from smarter_settings.
 
 See:
@@ -287,7 +317,8 @@ See:
 
 CSRF_USE_SESSIONS = False
 """
-A boolean that determines whether to store the CSRF token in the user session instead of
+A boolean that determines whether to store the CSRF token in the user session instead of.
+
 a cookie. Default is False because smarter-chat React frontends rely on the CSRF cookie.
 
 See:
@@ -299,7 +330,9 @@ See:
 
 KNOX_TOKEN_MODEL = "knox.AuthToken"
 """
-The Django model to use for Knox authentication tokens. Smarter uses the default.
+The Django model to use for Knox authentication tokens.
+
+Smarter uses the default.
 """
 
 # -------------------------------
@@ -309,7 +342,9 @@ The Django model to use for Knox authentication tokens. Smarter uses the default
 # This can be 'Lax', 'Strict', 'None', or False to disable the flag.
 SESSION_COOKIE_SAMESITE = "lax"
 """
-The value for the SameSite flag on the session cookie. Default is 'Lax'. Smarters needs
+The value for the SameSite flag on the session cookie.
+
+Default is 'Lax'. Smarters needs
 this to be 'Lax' to support cross-site requests from smarter-chat React frontends.
 
 See:
@@ -321,7 +356,9 @@ See:
 
 SESSION_COOKIE_SECURE = False
 """
-A boolean that determines whether the session cookie should be marked as "secure". This is set to
+A boolean that determines whether the session cookie should be marked as "secure".
+
+This is set to
 False in base settings but **should** be set to True in production environments. Note that
 there are challenges with setting this to True if the Smarter platform is behind a load balancer or
 reverse proxy that terminates SSL.
@@ -335,7 +372,9 @@ See:
 
 SESSION_COOKIE_NAME = "sessionid"
 """
-The name of the session cookie. Default is 'sessionid'. This is a placeholder for Smarter-specific
+The name of the session cookie.
+
+Default is 'sessionid'. This is a placeholder for Smarter-specific
 functionality in smarter.apps.prompt.views.ChatAppWorkbenchView.
 
 See:
@@ -347,12 +386,16 @@ See:
 
 SESSION_COOKIE_AGE = 1209600 * 2
 """
-The age of the session cookie, in seconds. Default is 1209600 (2 weeks).
+The age of the session cookie, in seconds.
+
+Default is 1209600 (2 weeks).
 """
 
 SESSION_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
 """
-The domain to use for the session cookie. This is set to the Smarter platform domain derived
+The domain to use for the session cookie.
+
+This is set to the Smarter platform domain derived
 from smarter_settings.
 
 See:
@@ -363,7 +406,9 @@ See:
 
 SESSION_COOKIE_PATH = "/"
 """
-The path to use for the session cookie. Default is '/'. This is a placeholder.
+The path to use for the session cookie.
+
+Default is '/'. This is a placeholder.
 
 See:
 
@@ -372,7 +417,9 @@ See:
 
 SESSION_COOKIE_HTTPONLY = True
 """
-A boolean that determines whether the session cookie should be marked as "HttpOnly". Default is True.
+A boolean that determines whether the session cookie should be marked as "HttpOnly".
+
+Default is True.
 
 See:
 
@@ -381,7 +428,9 @@ See:
 
 SECURE_PROXY_SSL_HEADER = None
 """
-A tuple representing a header/value combination that signifies a request is secure. This is set to None in base settings
+A tuple representing a header/value combination that signifies a request is secure.
+
+This is set to None in base settings
 and **should** be set appropriately in production environments if the Smarter platform is behind
 a load balancer or reverse proxy that terminates SSL.
 
@@ -441,7 +490,9 @@ STORAGES["staticfiles"] = {
     "OPTIONS": {},
 }
 """
-The Django storages configuration for Smarter. Uses AWS S3 if AWS is configured,
+The Django storages configuration for Smarter.
+
+Uses AWS S3 if AWS is configured,
 otherwise uses local filesystem storage.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#std:setting-STORAGES
@@ -449,7 +500,9 @@ See: https://docs.djangoproject.com/en/5.0/ref/settings/#std:setting-STORAGES
 
 DEFAULT_FILE_STORAGE = smarter_settings.django_default_file_storage
 """
-The default file storage backend for Django. Uses AWS S3 if AWS is configured,
+The default file storage backend for Django.
+
+Uses AWS S3 if AWS is configured,
 otherwise uses local filesystem storage. smarter_settings determines the appropriate
 value based on whether or not it detects AWS authentication configuration in
 the running environment.
@@ -469,7 +522,9 @@ AWS_ACCESS_KEY_ID = (
     else None
 )
 """
-Supplemental setting for configuring AWS support. The AWS access key ID
+Supplemental setting for configuring AWS support.
+
+The AWS access key ID
 is retrieved and validated in smarter_settings.
 
 For production deployments the chain of custody should be:
@@ -477,7 +532,6 @@ For production deployments the chain of custody should be:
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django AWS_ACCESS_KEY_ID.
 
 See: smarter_settings.aws_access_key_id
-
 """
 
 AWS_SECRET_ACCESS_KEY = (
@@ -489,7 +543,9 @@ AWS_SECRET_ACCESS_KEY = (
     else None
 )
 """
-Supplemental setting for configuring AWS support. The AWS secret access key
+Supplemental setting for configuring AWS support.
+
+The AWS secret access key
 is retrieved and validated in smarter_settings.
 
 For production deployments the chain of custody should be:
@@ -501,7 +557,9 @@ See: smarter_settings.aws_secret_access_key
 
 AWS_STORAGE_BUCKET_NAME = smarter_settings.aws_s3_bucket_name
 """
-Supplemental setting for configuring AWS S3 storage support. The S3 bucket name
+Supplemental setting for configuring AWS S3 storage support.
+
+The S3 bucket name
 is derived in smarter_settings.
 
 See:
@@ -511,7 +569,9 @@ See:
 
 AWS_S3_REGION_NAME = smarter_settings.aws_region
 """
-Supplemental setting for configuring AWS support. The AWS region is
+Supplemental setting for configuring AWS support.
+
+The AWS region is
 retrieved and validated in smarter_settings.
 
 See:
@@ -521,7 +581,9 @@ See:
 
 AWS_QUERYSTRING_AUTH = False  # disable querystring auth for public files
 """
-Supplemental setting for configuring AWS S3 storage support. Disables
+Supplemental setting for configuring AWS S3 storage support.
+
+Disables
 querystring authentication for public files in favor of public-read ACL
 that is configured in the Smarter Terraform scripts.
 
@@ -540,7 +602,9 @@ SECRET_KEY = (
     else None
 )
 """
-The secret key for this Django installation. This is retrieved and validated
+The secret key for this Django installation.
+
+This is retrieved and validated
 from smarter_settings. If not set, a random key is generated and logged as a warning.
 
 For production deployments the chain of custody should be:
@@ -567,7 +631,9 @@ logger.debug("SECRET_KEY: %s", SECRET_KEY)
 
 DEBUG = smarter_settings.debug_mode
 """
-A boolean that turns on/off debug mode for Django. This is retrieved
+A boolean that turns on/off debug mode for Django.
+
+This is retrieved
 from smarter_settings.debug_mode.
 
 See:
@@ -598,7 +664,8 @@ See:
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 """
-The Django session engine configuration for Smarter, using the cache backend
+The Django session engine configuration for Smarter, using the cache backend.
+
 (Redis) for session storage. Storing sessions in Redis will preserve user sessions
 across multiple web server instances in a load-balanced environment, and also
 insulates from sessions being lost due to redeployments or restarts of web server.
@@ -620,11 +687,23 @@ See:
 
 CELERY_TASK_TIME_LIMIT = 30 * 60
 """
-The maximum time limit (in seconds) for Celery tasks in Smarter. Default is 30 minutes.
+The maximum time limit (in seconds) for Celery tasks in Smarter.
+
+Default is 30 minutes.
 Smarter sets this primarily due to indeterminate AWS Route53 DNS resolution and propagation
-times when deploying ChatBots/Agents.
+times when deploying LLMClients/Agents.
 
 See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#std:setting-task_time_limit
+"""
+
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+"""
+A Celery setting that prevents Celery workers from hijacking the root logger.
+
+This is set to False
+to allow Celery logs to be integrated with the overall Smarter logging configuration without interference.
+
+See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#std:setting-worker_hijack_root_logger
 """
 
 # Application definition
@@ -636,6 +715,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.admindocs",
+    "django.contrib.humanize",
     "django_hosts",
     "storages",
     # smarter apps
@@ -644,12 +725,15 @@ INSTALLED_APPS = [
     "smarter.lib.journal",
     "smarter.apps.account",
     "smarter.apps.api",
-    "smarter.apps.chatbot",
-    "smarter.apps.prompt",
+    "smarter.apps.llm_client",
+    "smarter.apps.connection",
     "smarter.apps.dashboard",
     "smarter.apps.docs",
     "smarter.apps.plugin",
+    "smarter.apps.prompt",
     "smarter.apps.provider",
+    "smarter.apps.secret",
+    "smarter.apps.vectorstore",
     # 3rd party apps
     # -------------------------------
     "rest_framework",
@@ -658,83 +742,121 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_yasg",
     "django_celery_beat",
-    "django.contrib.admindocs",
     "social_django",
     "waffle",
-    # Stripe
-    # -------------------------------
-    # "djstripe",
 ]
 
 MIDDLEWARE = [
+    # this is a diagnostic middleware used for local development and testing.
+    # It enforces the return type of all middleware in the request chain.
+    # It should be placed at the beginning of the chain to catch any issues
+    # as early as possible.
+    # "smarter.lib.django.middleware.debug.MiddlewareDebugMiddleware",
+    # -------------------------------
+    #
     "django_hosts.middleware.HostsRequestMiddleware",
+    #
     # this replaces corsheaders.middleware.CorsMiddleware"
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    # -------------------------------
+    #
+    #
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    #
+    # replaces rest_framework.authentication.TokenAuthentication
+    # for api-key token authentication. Adds waffle-switched enable,
+    # and Django signals for logging context. This should be placed
+    # near and after AuthenticationMiddleware
+    # -------------------------------
+    "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
+    #
+    #
+    "waffle.middleware.WaffleMiddleware",
+    #
+    # to manage logging context by user. This has to run AFTER
+    # authentication middleware so that it can get the user info for logging context.
+    # -------------------------------
+    "smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware",
+    #
+    # handles cors for deployed llm_clients.
+    # -------------------------------
     "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
-    # this replaces django.middleware.security.SecurityMiddleware
-    # simple middleware to block requests for common sensitive files
-    # like .env, private key files, etc.
+    #
+    # custom middleware that returns 400 responses for requests for common
+    # sensitive files like .env, private key files, etc.
     # -------------------------------
     "smarter.lib.django.middleware.sensitive_files.SmarterBlockSensitiveFilesMiddleware",
-    # to log and block excessive 404 errors, which is a growing problem
+    #
+    # custom throttling middleware to block excessive 404 errors originating
     # from botnets probing for vulnerabilities.
     # -------------------------------
     "smarter.lib.django.middleware.excessive_404.SmarterBlockExcessive404Middleware",
     #
     # -------------------------------
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    #
+    #
     # this replaces django.middleware.csrf.SmarterCsrfViewMiddleware
-    # to add chatbot-specific CSRF handling
+    # to add llm_client-specific CSRF handling
     # -------------------------------
     "smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware",
     #
     # -------------------------------
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
     # to manage ALLOWED_HOSTS
     # -------------------------------
-    "smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware",
+    # this replaces django.middleware.security.SecurityMiddleware
+    # simple middleware to block requests for common sensitive files
+    # like .env, private key files, etc.
+    # -------------------------------
+    "smarter.apps.llm_client.middleware.security.SmarterSecurityMiddleware",
     #
     # -------------------------------
     # to handle 'already associated error from python social auth'
     # -------------------------------
     "smarter.apps.account.pipeline.SmarterSocialAuthExceptionMiddleware",
     #
+    #
+    ###########################################################################
+    # Response middleware
+    ###########################################################################
+    #
+    # compress static files and serve them with WhiteNoise.
     # -------------------------------
-    # to ensure that all http responses are in json format
-    # -------------------------------
-    "smarter.lib.django.middleware.json.SmarterJsonErrorMiddleware",
-    # -------------------------------
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "waffle.middleware.WaffleMiddleware",
-    "smarter.lib.django.middleware.html_minify.HTMLMinifyMiddleware",
     "django_hosts.middleware.HostsResponseMiddleware",
-    #
+    "smarter.lib.django.middleware.json.SmarterJsonErrorMiddleware",
+    "smarter.lib.django.middleware.html_minify.HTMLMinifyMiddleware",
 ]
 
 if smarter_settings.debug_mode and not "test" in sys.argv:
     INSTALLED_APPS += [
         "debug_toolbar",
     ]
+    logger.debug(formatted_text_green("Debug mode is ON. debug_toolbar is added to INSTALLED_APPS."))
 
     MIDDLEWARE += [
         "debug_toolbar.middleware.DebugToolbarMiddleware",
     ]
+    logger.debug(formatted_text_green("Debug mode is ON. debug_toolbar middleware is enabled."))
 
 
 ROOT_HOSTCONF = "smarter.hosts"
 """
-The root host configuration module for django-hosts. Smarter hosts multiple subdomains
-for platform, API, and chatbot apps. These are defined in smarter.hosts.
+The root host configuration module for django-hosts.
+
+Smarter hosts multiple subdomains
+for platform, API, and llm_client apps. These are defined in smarter.hosts.
 
 See: https://django-hosts.readthedocs.io/en/latest/
 """
 
 ROOT_URLCONF = "smarter.urls.console"
 """
-The root URL configuration module for Smarter. This points to smarter.urls.console,
+The root URL configuration module for Smarter.
+
+This points to smarter.urls.console,
 which defines the URL patterns for the Smarter web platform console.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#root-urlconf
@@ -742,7 +864,9 @@ See: https://docs.djangoproject.com/en/5.0/ref/settings/#root-urlconf
 
 DEFAULT_HOST = smarter_settings.platform_subdomain
 """
-The default host name for django-hosts. This is set to the Smarter platform subdomain.
+The default host name for django-hosts.
+
+This is set to the Smarter platform subdomain.
 
 See: https://django-hosts.readthedocs.io/en/latest/
 """
@@ -762,9 +886,10 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "smarter.apps.account.context_processors.base",
                 "smarter.apps.dashboard.context_processors.branding",
+                "smarter.apps.dashboard.context_processors.static_version",
                 "smarter.apps.dashboard.context_processors.base",
                 "smarter.apps.dashboard.context_processors.footer",
-                "smarter.apps.dashboard.context_processors.file_drop_zone",
+                "smarter.apps.dashboard.context_processors.sidebar",
             ],
         },
     },
@@ -787,6 +912,7 @@ DATABASES = {
 }
 """
 The Django database configuration for Smarter, using MySQL as the database backend.
+
 Smarter **should** be able to support other common Sql databases supported by Django
 with minimal or no changes, but MySQL is the recommended and tested database backend.
 
@@ -820,7 +946,8 @@ AUTHENTICATION_BACKENDS = (
     ]
 )
 """
-The authentication backends for Smarter, including social authentication
+The authentication backends for Smarter, including social authentication.
+
 backends for Google, GitHub, and LinkedIn, as well as the default Django
 model backend.
 
@@ -835,7 +962,8 @@ See:
 
 SOCIAL_AUTH_CREATE_USERS = False
 """
-A boolean that determines whether to automatically create user accounts
+A boolean that determines whether to automatically create user accounts.
+
 when a user authenticates via a social authentication provider.
 
 IMPORTANT: Smarter defaults this to False for security reasons to prevent
@@ -932,6 +1060,7 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = urllib.parse.urljoin(
 )
 """
 The redirect URI for Google OAuth2 social authentication in Smarter.
+
 Do not change this value unless you know what you are doing.
 
 See:
@@ -943,6 +1072,7 @@ See:
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ["openid", "email", "profile"]
 """
 The OAuth2 scopes for Google social authentication in Smarter.
+
 See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
 """
 
@@ -1098,7 +1228,9 @@ See: https://python-social-auth.readthedocs.io/en/latest/configuration/django.ht
 
 LOGIN_URL = "/login/"
 """
-The URL to redirect users to for login. Default is '/login/'. Do not change this
+The URL to redirect users to for login.
+
+Default is '/login/'. Do not change this
 value unless you know what you are doing.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#login-url
@@ -1106,7 +1238,9 @@ See: https://docs.djangoproject.com/en/5.0/ref/settings/#login-url
 
 LOGIN_REDIRECT_URL = "/"
 """
-The URL to redirect users to after successful login. Default is '/'.
+The URL to redirect users to after successful login.
+
+Default is '/'.
 Do not change this value unless you know what you are doing.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#login-redirect-url
@@ -1114,7 +1248,9 @@ See: https://docs.djangoproject.com/en/5.0/ref/settings/#login-redirect-url
 
 LOGOUT_REDIRECT_URL = "/"
 """
-The URL to redirect users to after logout. Default is '/'.
+The URL to redirect users to after logout.
+
+Default is '/'.
 Do not change this value unless you know what you are doing.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#logout-redirect-url
@@ -1136,7 +1272,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 """
-The password validation settings for Smarter, using Django's built-in
+The password validation settings for Smarter, using Django's built-in.
+
 password validators. These validators help ensure that user passwords
 meet minimum security requirements. These rules should be sufficient
 for most use cases, but can be customized as needed.
@@ -1148,21 +1285,26 @@ See: https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validator
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 LANGUAGE_CODE = "en-us"
 """
-The default language code for Smarter. Default is 'en-us'.
+The default language code for Smarter.
+
+Default is 'en-us'.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#language-code
 """
 
 TIME_ZONE = "UTC"
 """
-The default time zone for Smarter. Default is 'UTC'.
+The default time zone for Smarter.
+
+Default is 'UTC'.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#time-zone
 """
 
 USE_I18N = True
 """
-A boolean that specifies whether Django's internationalization system
+A boolean that specifies whether Django's internationalization system.
+
 should be enabled. Default is True. I18N support is important for
 Smarter to support multiple languages and locales.
 
@@ -1172,6 +1314,7 @@ See: https://docs.djangoproject.com/en/5.0/ref/settings/#use-i18n
 USE_TZ = True
 """
 A boolean that specifies whether Django should use timezone-aware datetimes.
+
 Default is True. Timezone support is important for Smarter to handle
 date and time data correctly across different time zones.
 
@@ -1187,7 +1330,9 @@ See: https://docs.djangoproject.com/en/5.0/ref/settings/#use-tz
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 STATIC_URL = "/static/"
 """
-The URL prefix for static files in Smarter. Default is '/static/'. This values needs to
+The URL prefix for static files in Smarter.
+
+Default is '/static/'. This values needs to
 be consistent with the STATICFILES_DIRS and STATIC_ROOT settings, and also
 needs to consider how the Dockerfile file system is structured for serving static files.
 
@@ -1202,6 +1347,7 @@ See:
 STATIC_ROOT = PROJECT_ROOT / "staticfiles"
 """
 The absolute file system path to the directory where static files will be collected.
+
 This is set to the 'staticfiles' directory in the project root. This directory
 is used by the 'collectstatic' management command to gather all static files
 from the various Django apps and store them in a single location for serving.
@@ -1211,7 +1357,8 @@ See: https://docs.djangoproject.com/en/5.0/ref/settings/#static-root
 
 STATICFILES_DIRS = [BASE_DIR / "static"]
 """
-A list of directories where Django will also look for static files, in addition
+A list of directories where Django will also look for static files, in addition.
+
 to each app's 'static' subdirectory. This is set to the 'static' directory
 in the BASE_DIR. This allows for global static files that are not tied to
 a specific app.
@@ -1219,22 +1366,14 @@ a specific app.
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#staticfiles-dirs
 """
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
-"""
-The static files storage backend for Smarter. This is set to use WhiteNoise's
-CompressedStaticFilesStorage, which provides efficient static file serving
-with compression and caching support.
-
-This is the recommended static files storage backend for production deployments
-of Django applications.
-"""
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 """
-The default primary key field type for Django models in Smarter. This is set to 'BigAutoField', which
+The default primary key field type for Django models in Smarter.
+
+This is set to 'BigAutoField', which
 is a 64-bit integer that automatically increments. This is suitable for most use cases and provides
 a large range of values for primary keys.
 
@@ -1254,7 +1393,8 @@ REST_FRAMEWORK = {
     ],
 }
 """
-The Django REST Framework configuration for Smarter, including default authentication classes,
+The Django REST Framework configuration for Smarter, including default authentication classes,.
+
 permission classes, and parser classes.
 
 Do not change these values unless you know what you are doing. Even then, it's probably a bad idea.
@@ -1266,59 +1406,116 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "timestamped": {
-            "format": "%(asctime)s - %(levelname)s - %(message)s",
+        "verbose": {
+            "format": "%(asctime)s - %(levelname)s - %(processName)s - %(message)s",
             "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
+        },
+        "truncated": {
+            "format": "%(asctime)s %(levelname)s %(message)s",
+            "datefmt": "[%Y-%m-%d %H:%M:%S]",
+        },
+    },
+    "filters": {
+        "health_check": {
+            "()": "smarter.lib.logging.filters.HealthCheckFilter",
         },
     },
     "handlers": {
         "default": {
             "level": smarter_settings.log_level_name,
             "class": "logging.StreamHandler",
-            "formatter": "timestamped",
+            "formatter": "verbose",
+        },
+        "uvicorn": {
+            "level": logging.INFO,
+            "class": "logging.StreamHandler",
+            "formatter": "truncated",
+            "filters": ["health_check"],
+        },
+        "redis": {
+            "level": logging.INFO,
+            "class": "smarter.lib.logging.RedisLogHandler",
+            "formatter": "truncated",
         },
     },
     "root": {
-        "handlers": ["default"],
+        "handlers": ["default", "redis"],
         "level": smarter_settings.log_level_name,
     },
     "loggers": {
-        "django": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-            "propagate": True,
-        },
-        "django_hosts": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-        },
-        "django.security.DisallowedHost": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-            "propagate": False,
-        },
-        "django.template": {
-            "handlers": ["default"],
-            "level": "ERROR",
+        "uvicorn.access": {
+            "handlers": ["uvicorn"],
+            "level": logging.INFO,
             "propagate": False,
         },
         "celery": {
-            "handlers": ["default"],
-            "level": smarter_settings.log_level_name,
-            "propagate": False,
-        },
-        "celery.task": {
-            "handlers": ["default"],
             "level": smarter_settings.log_level_name,
             "propagate": True,
         },
-        "celery.beat": {
-            "handlers": ["default"],
+        "celery.task": {
             "level": smarter_settings.log_level_name,
             "propagate": True,
         },
     },
 }
+"""
+Comprehensive logging configuration for the Smarter platform.
+
+This dictionary configures Python's built-in logging system for the Smarter
+application. It defines log formatters, handlers, filters, and loggers to
+control how log messages are processed and where they are sent.
+
+Formatters
+----------
+verbose
+    Includes timestamp, log level, process name, and message. Used for detailed logs.
+truncated
+    Shorter format with timestamp, log level, and message. Used for Redis logs.
+
+Filters
+-------
+health_check
+    Uses :class:`smarter.lib.logging.filters.HealthCheckFilter` to suppress log entries
+    for health check endpoints (e.g., /healthz/, /readiness/).
+
+Handlers
+--------
+default
+    Console handler (logging.StreamHandler) for standard output. Uses the 'verbose'
+    formatter and applies the health_check filter. Log level is set by
+    ``smarter_settings.log_level_name``.
+redis
+    Custom handler (:class:`smarter.lib.logging.RedisLogHandler`) for sending logs
+    to Redis. Uses the 'truncated' formatter and applies the health_check filter.
+    Log level is hardcoded to INFO.
+
+Root Logger
+-----------
+Handlers: ['default', 'redis']
+Level: Set by ``smarter_settings.log_level_name``
+All log messages are sent to both the console and Redis unless filtered out.
+
+Loggers
+-------
+celery, celery.task
+    Both propagate to the root logger and use the same log level as the rest
+    of the application.
+
+Log Level
+---------
+The log level for all handlers and loggers is dynamically set by
+``smarter_settings.log_level_name`` (e.g., 'INFO', 'DEBUG', 'WARNING').
+
+References
+----------
+- Django logging documentation: https://docs.djangoproject.com/en/5.0/topics/logging/
+- Python logging documentation: https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
+
+This configuration ensures that health check requests do not clutter logs, and
+that logs are available both in the console and in Redis for further processing
+or monitoring.
+"""
+
 logging.config.dictConfig(LOGGING)
 
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
@@ -1348,6 +1545,7 @@ DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 SMTP_SENDER = smarter_settings.smtp_sender
 """
 The default sender email address for outgoing emails from Smarter.
+
 This is derived from smarter_settings.
 
 See:
@@ -1359,6 +1557,7 @@ See:
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email
 """
 The default "from" email address for outgoing emails from Smarter.
+
 This is derived from smarter_settings.
 
 See:
@@ -1369,7 +1568,9 @@ See:
 
 SMTP_HOST = smarter_settings.smtp_host
 """
-The SMTP host for outgoing emails from Smarter. This is derived from smarter_settings.
+The SMTP host for outgoing emails from Smarter.
+
+This is derived from smarter_settings.
 
 See:
     - https://docs.djangoproject.com/en/5.0/topics/email/
@@ -1382,7 +1583,9 @@ SMTP_PASSWORD = (
     else None
 )
 """
-The SMTP password for outgoing emails from Smarter. This is derived from smarter_settings.
+The SMTP password for outgoing emails from Smarter.
+
+This is derived from smarter_settings.
 When using AWS SES as the SMTP service, this is the SMTP password generated from the AWS SES console.
 Note that this is NOT the AWS secret access key, nor is it the AWS IAM user password.
 
@@ -1402,7 +1605,9 @@ See:
 
 SMTP_PORT = smarter_settings.smtp_port
 """
-The SMTP port for outgoing emails from Smarter. This is derived from smarter_settings.
+The SMTP port for outgoing emails from Smarter.
+
+This is derived from smarter_settings.
 
 See:
     - https://docs.djangoproject.com/en/5.0/topics/email/
@@ -1411,7 +1616,9 @@ See:
 
 SMTP_USE_SSL = smarter_settings.smtp_use_ssl
 """
-A boolean that specifies whether to use SSL for SMTP connections in Smarter. This is derived from smarter_settings.
+A boolean that specifies whether to use SSL for SMTP connections in Smarter.
+
+This is derived from smarter_settings.
 
 See:
 
@@ -1421,7 +1628,9 @@ See:
 
 SMTP_USE_TLS = smarter_settings.smtp_use_tls
 """
-A boolean that specifies whether to use TLS for SMTP connections in Smarter. This is derived from smarter_settings.
+A boolean that specifies whether to use TLS for SMTP connections in Smarter.
+
+This is derived from smarter_settings.
 
 See:
     - https://docs.djangoproject.com/en/5.0/topics/email/
@@ -1434,7 +1643,9 @@ SMTP_USERNAME = (
     else None
 )
 """
-The SMTP username for outgoing emails from Smarter. This is derived from smarter_settings.
+The SMTP username for outgoing emails from Smarter.
+
+This is derived from smarter_settings.
 When using AWS SES as the SMTP service, this is the SMTP password generated from the AWS SES console.
 Note that this is NOT the AWS secret access key, nor is it the AWS IAM user password.
 
@@ -1453,54 +1664,55 @@ See:
 """
 
 TAGGIT_CASE_INSENSITIVE = True
-"""
-If True, makes taggit tags case insensitive.
-"""
+"""If True, makes taggit tags case insensitive."""
 
 TAGGIT_STRIP_UNICODE_WHEN_SLUGIFYING = True
-"""
-If True, strips unicode characters when slugifying tags.
-"""
+"""If True, strips unicode characters when slugifying tags."""
 
 WAFFLE_CREATE_MISSING_SWITCHES = True
 """
-If True, enables automatic creation of missing waffle switches in the database during deployment
+If True, enables automatic creation of missing waffle switches in the database during deployment.
+
 jobs. This is intended to simplify management of waffle switches in Smarter deployments.
 """
 
 # Reverse the default case-sensitive handling of tags
 TAGGIT_CASE_INSENSITIVE = os.environ.get("TAGGIT_CASE_INSENSITIVE", "True").lower() in ("true", "1", "t", "yes")
 """
-A boolean that specifies whether to make taggit tags case insensitive. This is
+A boolean that specifies whether to make taggit tags case insensitive. This is.
+
 derived from the environment variable "TAGGIT_CASE_INSENSITIVE", which defaults
 to "True". If set to True, tags will be treated as case insensitive
 (e.g. "Tag" and "tag" will be considered the same tag).
 """
 
+WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
+
 
 # step 2: load environment variables from .env file (if present)
 ASCII_CONTROL_CHAR_REGEX = re.compile(r"[\x00-\x1F\x7F]")
 """
-Process environment variables to override settings values
+Process environment variables to override settings values.
 
 This allows for 12-factor style configuration via environment variables.
 Environment variable values are cast to the same data type as the
-existing Django and/or Smarter setting value.
+existing Django or Smarter setting value.
 
 The basic process is:
-----------------------
-1. set default settings values, above.
-2. load environment variables from .env file (if present) and os.environ
-3. map environment variables to Django settings by removing the "DJANGO_"
-   prefix, and for any environment variable that matches an existing Django
-   setting, cast the value to the same type as the existing setting value
-   and override the default setting value. For anything else
-   analyze the passed value to attempt to infer the intended data type and
-   usage, and create a new setting with that name and value if it does
-   not already exist.
 
-   * Note that Django settings are prefixed with "DJANGO_"
-     and Smarter settings are prefixed with "SMARTER_".
+1. Set default settings values.
+2. Load environment variables from a .env file (if present) and os.environ.
+3. Map environment variables to Django settings by removing the ``DJANGO_``
+   prefix. For any environment variable that matches an existing Django
+   setting, cast the value to the same type as the existing setting value
+   and override the default.
+
+   For anything else, analyze the passed value to infer the intended data
+   type and create a new setting if it does not already exist.
+
+Note:
+Django settings are prefixed with ``DJANGO_`` and Smarter settings
+are prefixed with ``SMARTER_``.
 """
 
 # step 3: override settings from environment variables

@@ -413,7 +413,9 @@ class SAMLoader(SmarterHelperMixin):
 
     @property
     def name(self) -> str:
-        return self.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown-name")
+        if self.manifest_metadata:
+            return self.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown-name")
+        return "unknown-name"
 
     @property
     def source(self) -> str:
@@ -589,6 +591,18 @@ class SAMLoader(SmarterHelperMixin):
             return None
         if not self.data_format in [SAMDataFormats.JSON, SAMDataFormats.YAML]:
             raise SAMLoaderError("Invalid data format. Supported formats: json, yaml")
+
+        if not isinstance(self.json_data, dict):
+            raise SAMLoaderError(f"Invalid data format. Expected dict but got {type(self.json_data)}")
+
+        if not SAMKeys.APIVERSION.value in self.json_data:
+            raise SAMLoaderError(f"Missing required key: {SAMKeys.APIVERSION.value}")
+        if not SAMKeys.KIND.value in self.json_data:
+            raise SAMLoaderError(f"Missing required key: {SAMKeys.KIND.value}")
+        if not SAMKeys.METADATA.value in self.json_data:
+            raise SAMLoaderError(f"Missing required key: {SAMKeys.METADATA.value}")
+        if not SAMKeys.SPEC.value in self.json_data:
+            raise SAMLoaderError(f"Missing required key: {SAMKeys.SPEC.value}")
 
         # mcdaniel 2026-03-14: this has outlived its usefulness. Deprecating.
         # recursively validate the json representation of the manifest data

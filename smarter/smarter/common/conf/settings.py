@@ -27,7 +27,6 @@ prioritization sequence:
 
     DO NOT import Django or any Django modules in this module. This module
     sits upstream of Django and is intended to be used independently of Django.
-
 """
 
 # python stuff
@@ -93,7 +92,7 @@ logger_prefix = formatted_text(__name__ + ".Settings()")
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 class Settings(BaseSettings):
     """
-    see: https://docs.pydantic.dev/latest/concepts/pydantic_settings/.
+    See: https://docs.pydantic.dev/latest/concepts/pydantic_settings/.
 
     Smarter derived settings. This is intended to be instantiated as
     an immutable singleton object called `smarter_settings`. smarter_settings
@@ -133,7 +132,9 @@ class Settings(BaseSettings):
         validate_default=True,
     )
     """
-    Pydantic v2 Configuration class for the Settings model. This configuration enforces strict type checking,
+    Pydantic v2 Configuration class for the Settings model.
+
+    This configuration enforces strict type checking,
     immutability, and environment variable loading behavior for the Settings class.
     see https://docs.pydantic.dev/latest/concepts/pydantic_settings/
 
@@ -178,12 +179,13 @@ class Settings(BaseSettings):
     def allowed_hosts(self) -> List[str]:
         """
         A list of strings representing the host/domain names that this Django site can serve.
+
         Smarter implements its own middleware to validate host names.
-        See smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware.
+        See smarter.apps.llm_client.middleware.security.SmarterSecurityMiddleware.
 
         See: https://docs.djangoproject.com/en/stable/ref/settings/#allowed-hosts
 
-        Supplemental list of allowed host/domain names for Smarter ChatBots/Agents.
+        Supplemental list of allowed host/domain names for Smarter LLMClients/Agents.
         This is specicific to Smarter and not officially part of Django settings.
 
         List of allowed host/domain names for this Django site.
@@ -236,6 +238,7 @@ class Settings(BaseSettings):
     )
     """
     API key for Anthropic services, used to authenticate requests to the Anthropic API.
+
     Required when registering Anthropic as a provider via a Provider manifest.
 
     Set via the ``SMARTER_ANTHROPIC_API_KEY`` environment variable in ``.env``.
@@ -256,6 +259,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Anthropic API key.
         """
+        warnings.warn(
+            "`anthropic_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if v is None:
             return settings_defaults.ANTHROPIC_API_KEY
 
@@ -272,6 +280,7 @@ class Settings(BaseSettings):
     )
     """
     The description of the API.
+
     This setting provides a brief description of the API's purpose and functionality.
     It is used in various contexts, such as Swagger Api documentation site, logging, and user interfaces.
     :type: str
@@ -301,6 +310,7 @@ class Settings(BaseSettings):
     )
     """
     The name of the API.
+
     This setting specifies the name of the API used in various contexts,
     such as Swagger Api documentation site, logging, and user interfaces.
 
@@ -327,6 +337,7 @@ class Settings(BaseSettings):
     def api_schema(self) -> str:
         """
         The schema to use for API URLs (http or https).
+
         This setting specifies the URL schema to be used when constructing API endpoints.
         It determines whether the API URLs will use HTTP or HTTPS.
         :type: str
@@ -346,7 +357,9 @@ class Settings(BaseSettings):
         title="AWS Profile",
     )
     """
-    The AWS profile to use for authentication. If present, this will take precedence over AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+    The AWS profile to use for authentication.
+
+    If present, this will take precedence over AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
     This setting specifies which AWS credentials profile to use when connecting to AWS services.
     Profiles are defined in the AWS credentials file (typically located at ~/.aws/credentials)
     and allow for managing multiple sets of credentials for different environments or accounts.
@@ -359,6 +372,7 @@ class Settings(BaseSettings):
     @before_field_validator("aws_profile")
     def validate_aws_profile(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `aws_profile` field.
+
         Uses settings_defaults if no value is received.
 
         Args:
@@ -380,7 +394,9 @@ class Settings(BaseSettings):
         title="AWS Access Key ID",
     )
     """
-    The AWS access key ID for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.
+    The AWS access key ID for authentication.
+
+    Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.
     This setting provides the access key ID used to authenticate with AWS services.
     It is used in conjunction with the AWS secret access key to sign requests to AWS APIs.
 
@@ -392,8 +408,8 @@ class Settings(BaseSettings):
     @before_field_validator("aws_access_key_id")
     def validate_aws_access_key_id(cls, v: Optional[SecretStr], values: ValidationInfo) -> Optional[SecretStr]:
         """Validates the `aws_access_key_id` field.
-        Uses settings_defaults if no value is received.
 
+        Uses settings_defaults if no value is received.
 
         Args:
             v (Optional[SecretStr]): The AWS access key ID value to validate.
@@ -430,7 +446,9 @@ class Settings(BaseSettings):
         title="AWS Secret Access Key",
     )
     """
-    The AWS secret access key for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.
+    The AWS secret access key for authentication.
+
+    Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.
     This setting provides the secret access key used to authenticate with AWS services.
     It is used in conjunction with the AWS access key ID to sign requests to AWS APIs.
 
@@ -442,6 +460,7 @@ class Settings(BaseSettings):
     @before_field_validator("aws_secret_access_key")
     def validate_aws_secret_access_key(cls, v: Optional[SecretStr], values: ValidationInfo) -> Optional[SecretStr]:
         """Validates the `aws_secret_access_key` field.
+
         Uses settings_defaults if no value is received.
 
         Args:
@@ -480,6 +499,7 @@ class Settings(BaseSettings):
     )
     """
     A list of AWS regions considered valid for this platform.
+
     This setting defines the AWS regions that the platform is configured to operate in.
     It can be used to restrict operations to specific regions, ensuring that resources
     are created and managed only in approved locations.
@@ -496,6 +516,7 @@ class Settings(BaseSettings):
     )
     """
     The single AWS region in which all AWS service clients will operate.
+
     This setting specifies the default AWS region for the platform.
     All AWS service clients will be configured to use this region unless
     overridden on a per-client basis.
@@ -508,6 +529,7 @@ class Settings(BaseSettings):
     @before_field_validator("aws_region")
     def validate_aws_region(cls, v: Optional[str], values: ValidationInfo, **kwargs) -> Optional[str]:
         """Validates the `aws_region` field.
+
         Uses settings_defaults if no value is received.
 
         Args:
@@ -530,6 +552,7 @@ class Settings(BaseSettings):
     def ready(self) -> bool:
         """
         Returns True if the settings instance has been fully initialized and is ready for use.
+
         This method can be used to check if the settings instance is fully configured
         and ready to be used by the application.
 
@@ -622,7 +645,9 @@ class Settings(BaseSettings):
     @property
     def aws_is_configured(self) -> bool:
         """
-        True if AWS is configured. This is determined by the presence of either AWS_PROFILE or both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+        True if AWS is configured.
+
+        This is determined by the presence of either AWS_PROFILE or both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
         This setting indicates whether the platform has sufficient AWS credentials
         configured to connect to AWS services. If AWS is not configured, attempts
         to use AWS services will fail.
@@ -640,6 +665,7 @@ class Settings(BaseSettings):
     )
     """
     The name of the AWS EKS cluster used for hosting applications.
+
     This setting specifies the Amazon EKS cluster that the platform will use
     for deploying and managing containerized applications. The cluster name
     should correspond to an existing EKS cluster in the configured AWS account.
@@ -675,6 +701,7 @@ class Settings(BaseSettings):
     )
     """
     The RDS database instance identifier used for the platform's primary database.
+
     This setting specifies the Amazon RDS database instance that the platform
     will connect to for data storage and retrieval. The instance identifier should
     correspond to an existing RDS instance in the configured AWS account.
@@ -710,6 +737,7 @@ class Settings(BaseSettings):
     )
     """
     The corporate name used for branding purposes throughout the platform.
+
     This setting specifies the name of the organization or company that owns
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -744,6 +772,7 @@ class Settings(BaseSettings):
     )
     """
     The support phone number used for branding purposes throughout the platform.
+
     This setting specifies the phone number that users can call for support
     or assistance related to the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -777,6 +806,7 @@ class Settings(BaseSettings):
     )
     """
     The support email address used for branding purposes throughout the platform.
+
     This setting specifies the email address that users can contact for support
     or assistance related to the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -811,6 +841,7 @@ class Settings(BaseSettings):
     )
     """
     The corporate address used for branding purposes throughout the platform.
+
     This setting specifies the physical address of the organization or company that owns
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -845,6 +876,7 @@ class Settings(BaseSettings):
     )
     """
     The second line of the corporate address used for branding purposes throughout the platform.
+
     This setting specifies the second line of the physical address of the organization or company that owns
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -879,6 +911,7 @@ class Settings(BaseSettings):
     )
     """
     The corporate city used for branding purposes throughout the platform.
+
     This setting specifies the city of the physical address of the organization or company that owns
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -913,6 +946,7 @@ class Settings(BaseSettings):
     )
     """
     The corporate state used for branding purposes throughout the platform.
+
     This setting specifies the state of the physical address of the organization or company that owns
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -947,6 +981,7 @@ class Settings(BaseSettings):
     )
     """
     The corporate postal code used for branding purposes throughout the platform.
+
     This setting specifies the postal code of the physical address of the organization or company that owns
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -981,6 +1016,7 @@ class Settings(BaseSettings):
     )
     """
     The corporate country used for branding purposes throughout the platform.
+
     This setting specifies the country of the physical address of the organization or company that owns
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -1015,6 +1051,7 @@ class Settings(BaseSettings):
     )
     """
     The currency used for branding purposes throughout the platform.
+
     This setting specifies the currency that is used in various branding contexts,
     such as email templates, user interfaces, and documentation. It can be used to
     indicate the currency in which prices, billing, or financial information
@@ -1050,6 +1087,7 @@ class Settings(BaseSettings):
     )
     """
     The timezone used for branding purposes throughout the platform.
+
     This setting specifies the timezone that is used in various branding contexts,
     such as email templates, user interfaces, and documentation. It can be used to
     indicate the timezone in which dates and times are presented to users.
@@ -1084,6 +1122,7 @@ class Settings(BaseSettings):
     )
     """
     The contact URL used for branding purposes throughout the platform.
+
     This setting specifies the URL that users can visit to contact
     the organization or company that owns or operates the platform.
     It is used in various branding contexts, such as email templates,
@@ -1115,6 +1154,7 @@ class Settings(BaseSettings):
     )
     """
     The support hours used for branding purposes throughout the platform.
+
     This setting specifies the hours during which support is available
     for users of the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -1149,6 +1189,7 @@ class Settings(BaseSettings):
     )
     """
     The Facebook URL used for branding purposes throughout the platform.
+
     This setting specifies the Facebook page URL of the organization or company that owns
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -1160,6 +1201,7 @@ class Settings(BaseSettings):
     @before_field_validator("branding_url_facebook")
     def validate_branding_url_facebook(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_url_facebook` field.
+
         Args:
             v (Optional[HttpUrl]): The branding URL Facebook value to validate.
         Returns:
@@ -1177,6 +1219,7 @@ class Settings(BaseSettings):
     )
     """
     The Twitter URL used for branding purposes throughout the platform.
+
     This setting specifies the Twitter profile URL of the organization or company that owns
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -1188,6 +1231,7 @@ class Settings(BaseSettings):
     @before_field_validator("branding_url_twitter")
     def validate_branding_url_twitter(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_url_twitter` field.
+
         Args:
             v (Optional[HttpUrl]): The branding URL Twitter value to validate.
         Returns:
@@ -1205,6 +1249,7 @@ class Settings(BaseSettings):
     )
     """
     The LinkedIn URL used for branding purposes throughout the platform.
+
     This setting specifies the LinkedIn profile URL of the organization or company that owns
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
@@ -1216,6 +1261,7 @@ class Settings(BaseSettings):
     @before_field_validator("branding_url_linkedin")
     def validate_branding_url_linkedin(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_url_linkedin` field.
+
         Args:
             v (Optional[HttpUrl]): The branding URL LinkedIn value to validate.
         Returns:
@@ -1249,6 +1295,7 @@ class Settings(BaseSettings):
     @before_field_validator("cache_expiration")
     def parse_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'cache_expiration' field.
+
         Args:
             v (Optional[Union[int, str]]): the cache_expiration value to validate
         Returns:
@@ -1274,6 +1321,7 @@ class Settings(BaseSettings):
     )
     """
     The chat cache expiration time in seconds for cached chat data.
+
     This setting defines how long cached chat data should be considered valid before it is
     refreshed or invalidated. A shorter expiration time may lead to more frequent
     cache refreshes, while a longer expiration time can improve performance by reducing
@@ -1289,6 +1337,7 @@ class Settings(BaseSettings):
     @before_field_validator("chat_cache_expiration")
     def parse_chat_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'chat_cache_expiration' field.
+
         Args:
             v (Optional[Union[int, str]]): the chat_cache_expiration value to validate
         Returns:
@@ -1306,264 +1355,281 @@ class Settings(BaseSettings):
         except ValueError as e:
             raise SmarterConfigurationError("could not validate chat_cache_expiration") from e
 
-    chatbot_cache_expiration: int = Field(
-        settings_defaults.CHATBOT_CACHE_EXPIRATION,
+    llm_client_cache_expiration: int = Field(
+        settings_defaults.LLM_CLIENT_CACHE_EXPIRATION,
         gt=0,
-        description="The chatbot cache expiration time in seconds for cached chatbot data.",
-        title="Chatbot Cache Expiration",
+        description="The llm_client cache expiration time in seconds for cached llm_client data.",
+        title="LLMClient Cache Expiration",
     )
     """
-    The chatbot cache expiration time in seconds for cached chatbot data.
-    This setting defines how long cached chatbot data should be considered valid before it is
+    The llm_client cache expiration time in seconds for cached llm_client data.
+
+    This setting defines how long cached llm_client data should be considered valid before it is
     refreshed or invalidated. A shorter expiration time may lead to more frequent
     cache refreshes, while a longer expiration time can improve performance by reducing
     the number of cache lookups.
 
     :type: int
-    :default: Value from ``settings_defaults.CHATBOT_CACHE_EXPIRATION``
+    :default: Value from ``settings_defaults.LLM_CLIENT_CACHE_EXPIRATION``
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
-    @before_field_validator("chatbot_cache_expiration")
-    def parse_chatbot_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
-        """Validates the 'chatbot_cache_expiration' field.
+    @before_field_validator("llm_client_cache_expiration")
+    def parse_llm_client_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'llm_client_cache_expiration' field.
+
         Args:
-            v (Optional[Union[int, str]]): the chatbot_cache_expiration value to validate
+            v (Optional[Union[int, str]]): the llm_client_cache_expiration value to validate
         Returns:
-            int: The validated chatbot_cache_expiration.
+            int: The validated llm_client_cache_expiration.
         """
         if isinstance(v, int):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.CHATBOT_CACHE_EXPIRATION
+            return settings_defaults.LLM_CLIENT_CACHE_EXPIRATION
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
             if int_value < 0:
-                raise SmarterConfigurationError(f"chatbot_cache_expiration {int_value} must be a positive integer.")
+                raise SmarterConfigurationError(f"llm_client_cache_expiration {int_value} must be a positive integer.")
             return int_value
         except ValueError as e:
-            raise SmarterConfigurationError("could not validate chatbot_cache_expiration") from e
+            raise SmarterConfigurationError("could not validate llm_client_cache_expiration") from e
 
-    chatbot_max_returned_history: int = Field(
-        settings_defaults.CHATBOT_MAX_RETURNED_HISTORY,
+    llm_client_max_returned_history: int = Field(
+        settings_defaults.LLM_CLIENT_MAX_RETURNED_HISTORY,
         gt=0,
-        description="The maximum number of chat history messages to return from the chatbot.",
-        title="Chatbot Max Returned History",
+        description="The maximum number of chat history messages to return from the llm_client.",
+        title="LLMClient Max Returned History",
     )
     """
-    The maximum number of chat history messages to return from the chatbot.
-    This setting defines the maximum number of previous chat messages that the chatbot
+    The maximum number of chat history messages to return from the llm_client.
+
+    This setting defines the maximum number of previous chat messages that the llm_client
     will include in its responses. Limiting the number of returned messages can help
     improve performance and reduce response times.
     :type: int
-    :default: Value from ``settings_defaults.CHATBOT_MAX_RETURNED_HISTORY``
+    :default: Value from ``settings_defaults.LLM_CLIENT_MAX_RETURNED_HISTORY``
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
-    @before_field_validator("chatbot_max_returned_history")
-    def parse_chatbot_max_returned_history(cls, v: Optional[Union[int, str]]) -> int:
-        """Validates the 'chatbot_max_returned_history' field.
+    @before_field_validator("llm_client_max_returned_history")
+    def parse_llm_client_max_returned_history(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'llm_client_max_returned_history' field.
+
         Args:
-            v (Optional[Union[int, str]]): the chatbot_max_returned_history value to validate
+            v (Optional[Union[int, str]]): the llm_client_max_returned_history value to validate
         Returns:
-            int: The validated chatbot_max_returned_history.
+            int: The validated llm_client_max_returned_history.
         """
         if isinstance(v, int):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.CHATBOT_MAX_RETURNED_HISTORY
-        try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
-            if int_value < 0:
-                raise SmarterConfigurationError(f"chatbot_max_returned_history {int_value} must be a positive integer.")
-            return int_value
-        except ValueError as e:
-            raise SmarterConfigurationError("could not validate chatbot_max_returned_history") from e
-
-    chatbot_tasks_create_dns_record: bool = Field(
-        settings_defaults.CHATBOT_TASKS_CREATE_DNS_RECORD,
-        description="True if DNS records should be created for chatbot tasks.",
-        title="Chatbot Tasks Create DNS Record",
-    )
-    """
-    Set these to true if we *DO NOT* place a wildcard A record in the customer API domain
-    requiring that every chatbot have its own A record. This is the default behavior.
-    For programmatically creating DNS records in AWS Route53 during ChatBot deployment.
-
-    :type: bool
-    :default: Value from ``settings_defaults.CHATBOT_TASKS_CREATE_DNS_RECORD``
-    :raises SmarterConfigurationError: If the value is not a boolean.
-    """
-
-    @before_field_validator("chatbot_tasks_create_dns_record")
-    def parse_chatbot_tasks_create_dns_record(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'chatbot_tasks_create_dns_record' field.
-
-        Args:
-            v (Optional[Union[bool, str]]): the chatbot_tasks_create_dns_record value to validate
-
-        Returns:
-            bool: The validated chatbot_tasks_create_dns_record.
-        """
-        if isinstance(v, bool):
-            return v
-        if v in THE_EMPTY_SET:
-            return settings_defaults.CHATBOT_TASKS_CREATE_DNS_RECORD
-        if isinstance(v, str):
-            return v.lower() in ["true", "1", "t", "y", "yes"]
-
-        raise SmarterConfigurationError(f"could not validate chatbot_tasks_create_dns_record: {v}")
-
-    chatbot_tasks_create_ingress_manifest: bool = Field(
-        settings_defaults.CHATBOT_TASKS_CREATE_INGRESS_MANIFEST,
-        description="True if ingress manifests should be created for chatbot tasks.",
-        title="Chatbot Tasks Create Ingress Manifest",
-    )
-    """
-    True if ingress manifests should be created for chatbot tasks.
-    For programmatically creating ingress manifests during ChatBot deployment.
-    :type: bool
-    :default: Value from ``settings_defaults.CHATBOT_TASKS_CREATE_INGRESS_MANIFEST``
-    :raises SmarterConfigurationError: If the value is not a boolean.
-    """
-
-    @before_field_validator("chatbot_tasks_create_ingress_manifest")
-    def parse_chatbot_tasks_create_ingress_manifest(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'chatbot_tasks_create_ingress_manifest' field.
-        Args:
-            v (Optional[Union[bool, str]]): the chatbot_tasks_create_ingress_manifest value to validate
-        Returns:
-            bool: The validated chatbot_tasks_create_ingress_manifest.
-        """
-        if isinstance(v, bool):
-            return v
-        if v in THE_EMPTY_SET:
-            return settings_defaults.CHATBOT_TASKS_CREATE_INGRESS_MANIFEST
-        if isinstance(v, str):
-            return v.lower() in ["true", "1", "t", "y", "yes"]
-
-        raise SmarterConfigurationError(f"could not validate chatbot_tasks_create_ingress_manifest: {v}")
-
-    chatbot_tasks_default_ttl: int = Field(
-        settings_defaults.CHATBOT_TASKS_DEFAULT_TTL,
-        description="Default TTL (time to live) for DNS records created in AWS Route53 during ChatBot deployment.",
-        title="Chatbot Tasks Default TTL",
-        ge=0,
-    )
-    """
-    Default TTL (time to live) for DNS records created in AWS Route53 during ChatBot deployment.
-    :type: int
-    :default: Value from ``settings_defaults.CHATBOT_TASKS_DEFAULT_TTL``
-    :raises SmarterConfigurationError: If the value is not a non-negative integer.
-    """
-
-    @before_field_validator("chatbot_tasks_default_ttl")
-    def parse_chatbot_tasks_default_ttl(cls, v: Optional[Union[int, str]]) -> int:
-        """Validates the 'chatbot_tasks_default_ttl' field.
-        Args:
-            v (Optional[Union[int, str]]): the chatbot_tasks_default_ttl value to validate
-        Returns:
-            int: The validated chatbot_tasks_default_ttl.
-        """
-        if isinstance(v, int):
-            return v
-        if v in THE_EMPTY_SET:
-            return settings_defaults.CHATBOT_TASKS_DEFAULT_TTL
+            return settings_defaults.LLM_CLIENT_MAX_RETURNED_HISTORY
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
             if int_value < 0:
                 raise SmarterConfigurationError(
-                    f"chatbot_tasks_default_ttl {int_value} must be a non-negative integer."
+                    f"llm_client_max_returned_history {int_value} must be a positive integer."
                 )
             return int_value
         except ValueError as e:
-            raise SmarterConfigurationError(f"could not validate chatbot_tasks_default_ttl: {v}") from e
+            raise SmarterConfigurationError("could not validate llm_client_max_returned_history") from e
 
-    chatbot_tasks_celery_max_retries: int = Field(
-        settings_defaults.CHATBOT_TASKS_CELERY_MAX_RETRIES,
-        gt=0,
-        description="Maximum number of retries for chatbot tasks in Celery.",
-        title="Chatbot Tasks Celery Max Retries",
+    llm_client_tasks_create_dns_record: bool = Field(
+        settings_defaults.LLM_CLIENT_TASKS_CREATE_DNS_RECORD,
+        description="True if DNS records should be created for llm_client tasks.",
+        title="LLMClient Tasks Create DNS Record",
     )
     """
-    Maximum number of retries for chatbot tasks in Celery.
-    :type: int
-    :default: Value from ``settings_defaults.CHATBOT_TASKS_CELERY_MAX_RETRIES``
-    :raises SmarterConfigurationError: If the value is not a non-negative integer.
-    """
+    Set these to true if we *DO NOT* place a wildcard A record in the customer API domain.
 
-    @before_field_validator("chatbot_tasks_celery_max_retries")
-    def parse_chatbot_tasks_celery_max_retries(cls, v: Optional[Union[int, str]]) -> int:
-        """Validates the 'chatbot_tasks_celery_max_retries' field.
-        Args:
-            v (Optional[Union[int, str]]): the chatbot_tasks_celery_max_retries value to validate
-        Returns:
-            int: The validated chatbot_tasks_celery_max_retries.
-        """
-        if isinstance(v, int):
-            return v
-        if v in THE_EMPTY_SET:
-            return settings_defaults.CHATBOT_TASKS_CELERY_MAX_RETRIES
-        try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
-            return int_value
-        except ValueError as e:
-            raise SmarterConfigurationError(f"could not validate chatbot_tasks_celery_max_retries: {v}") from e
+    requiring that every llm_client have its own A record. This is the default behavior.
+    For programmatically creating DNS records in AWS Route53 during LLMClient deployment.
 
-    chatbot_tasks_celery_retry_backoff: bool = Field(
-        settings_defaults.CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-        description="If True, enables exponential backoff for Celery task retries related to ChatBot deployment and management",
-        title="Chatbot Tasks Celery Retry Backoff",
-    )
-    """
-    If True, enables exponential backoff for Celery task retries related to ChatBot deployment and management.
     :type: bool
-    :default: Value from ``settings_defaults.CHATBOT_TASKS_CELERY_RETRY_BACKOFF``
+    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CREATE_DNS_RECORD``
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @before_field_validator("chatbot_tasks_celery_retry_backoff")
-    def parse_chatbot_tasks_celery_retry_backoff(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'chatbot_tasks_celery_retry_backoff' field.
+    @before_field_validator("llm_client_tasks_create_dns_record")
+    def parse_llm_client_tasks_create_dns_record(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'llm_client_tasks_create_dns_record' field.
+
         Args:
-            v (Optional[Union[bool, str]]): the chatbot_tasks_celery_retry_backoff value to validate
+            v (Optional[Union[bool, str]]): the llm_client_tasks_create_dns_record value to validate
+
         Returns:
-            bool: The validated chatbot_tasks_celery_retry_backoff.
+            bool: The validated llm_client_tasks_create_dns_record.
         """
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.CHATBOT_TASKS_CELERY_RETRY_BACKOFF
+            return settings_defaults.LLM_CLIENT_TASKS_CREATE_DNS_RECORD
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate chatbot_tasks_celery_retry_backoff: {v}")
+        raise SmarterConfigurationError(f"could not validate llm_client_tasks_create_dns_record: {v}")
 
-    chatbot_tasks_celery_task_queue: str = Field(
-        settings_defaults.CHATBOT_TASKS_CELERY_TASK_QUEUE,
-        description="The Celery task queue name for chatbot tasks.",
-        title="Chatbot Tasks Celery Task Queue",
+    llm_client_tasks_create_ingress_manifest: bool = Field(
+        settings_defaults.LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST,
+        description="True if ingress manifests should be created for llm_client tasks.",
+        title="LLMClient Tasks Create Ingress Manifest",
     )
     """
-    The Celery task queue name for chatbot tasks.
+    True if ingress manifests should be created for llm_client tasks.
+
+    For programmatically creating ingress manifests during LLMClient deployment.
+    :type: bool
+    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
+    @before_field_validator("llm_client_tasks_create_ingress_manifest")
+    def parse_llm_client_tasks_create_ingress_manifest(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'llm_client_tasks_create_ingress_manifest' field.
+
+        Args:
+            v (Optional[Union[bool, str]]): the llm_client_tasks_create_ingress_manifest value to validate
+        Returns:
+            bool: The validated llm_client_tasks_create_ingress_manifest.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate llm_client_tasks_create_ingress_manifest: {v}")
+
+    llm_client_tasks_default_ttl: int = Field(
+        settings_defaults.LLM_CLIENT_TASKS_DEFAULT_TTL,
+        description="Default TTL (time to live) for DNS records created in AWS Route53 during LLMClient deployment.",
+        title="LLMClient Tasks Default TTL",
+        ge=0,
+    )
+    """
+    Default TTL (time to live) for DNS records created in AWS Route53 during LLMClient deployment.
+
+    :type: int
+    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_DEFAULT_TTL``
+    :raises SmarterConfigurationError: If the value is not a non-negative integer.
+    """
+
+    @before_field_validator("llm_client_tasks_default_ttl")
+    def parse_llm_client_tasks_default_ttl(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'llm_client_tasks_default_ttl' field.
+
+        Args:
+            v (Optional[Union[int, str]]): the llm_client_tasks_default_ttl value to validate
+        Returns:
+            int: The validated llm_client_tasks_default_ttl.
+        """
+        if isinstance(v, int):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.LLM_CLIENT_TASKS_DEFAULT_TTL
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            if int_value < 0:
+                raise SmarterConfigurationError(
+                    f"llm_client_tasks_default_ttl {int_value} must be a non-negative integer."
+                )
+            return int_value
+        except ValueError as e:
+            raise SmarterConfigurationError(f"could not validate llm_client_tasks_default_ttl: {v}") from e
+
+    llm_client_tasks_celery_max_retries: int = Field(
+        settings_defaults.LLM_CLIENT_TASKS_CELERY_MAX_RETRIES,
+        gt=0,
+        description="Maximum number of retries for llm_client tasks in Celery.",
+        title="LLMClient Tasks Celery Max Retries",
+    )
+    """
+    Maximum number of retries for llm_client tasks in Celery.
+
+    :type: int
+    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CELERY_MAX_RETRIES``
+    :raises SmarterConfigurationError: If the value is not a non-negative integer.
+    """
+
+    @before_field_validator("llm_client_tasks_celery_max_retries")
+    def parse_llm_client_tasks_celery_max_retries(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'llm_client_tasks_celery_max_retries' field.
+
+        Args:
+            v (Optional[Union[int, str]]): the llm_client_tasks_celery_max_retries value to validate
+        Returns:
+            int: The validated llm_client_tasks_celery_max_retries.
+        """
+        if isinstance(v, int):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.LLM_CLIENT_TASKS_CELERY_MAX_RETRIES
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            return int_value
+        except ValueError as e:
+            raise SmarterConfigurationError(f"could not validate llm_client_tasks_celery_max_retries: {v}") from e
+
+    llm_client_tasks_celery_retry_backoff: bool = Field(
+        settings_defaults.LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF,
+        description="If True, enables exponential backoff for Celery task retries related to LLMClient deployment and management",
+        title="LLMClient Tasks Celery Retry Backoff",
+    )
+    """
+    If True, enables exponential backoff for Celery task retries related to LLMClient deployment and management.
+
+    :type: bool
+    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
+    @before_field_validator("llm_client_tasks_celery_retry_backoff")
+    def parse_llm_client_tasks_celery_retry_backoff(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'llm_client_tasks_celery_retry_backoff' field.
+
+        Args:
+            v (Optional[Union[bool, str]]): the llm_client_tasks_celery_retry_backoff value to validate
+        Returns:
+            bool: The validated llm_client_tasks_celery_retry_backoff.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate llm_client_tasks_celery_retry_backoff: {v}")
+
+    llm_client_tasks_celery_task_queue: str = Field(
+        settings_defaults.LLM_CLIENT_TASKS_CELERY_TASK_QUEUE,
+        description="The Celery task queue name for llm_client tasks.",
+        title="LLMClient Tasks Celery Task Queue",
+    )
+    """
+    The Celery task queue name for llm_client tasks.
+
     :type: str
-    :default: Value from ``settings_defaults.CHATBOT_TASKS_CELERY_TASK_QUEUE``
+    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CELERY_TASK_QUEUE``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("chatbot_tasks_celery_task_queue")
-    def validate_chatbot_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
-        """Validates the `chatbot_tasks_celery_task_queue` field.
+    @before_field_validator("llm_client_tasks_celery_task_queue")
+    def validate_llm_client_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
+        """Validates the `llm_client_tasks_celery_task_queue` field.
+
         Args:
-            v (Optional[str]): The chatbot tasks celery task queue value to validate.
+            v (Optional[str]): The llm_client tasks celery task queue value to validate.
         Returns:
-            str: The validated chatbot tasks celery task queue.
+            str: The validated llm_client tasks celery task queue.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.CHATBOT_TASKS_CELERY_TASK_QUEUE
+            return settings_defaults.LLM_CLIENT_TASKS_CELERY_TASK_QUEUE
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError(f"chatbot_tasks_celery_task_queue of type {type(v)} is not a str: {v}")
+            raise SmarterConfigurationError(f"llm_client_tasks_celery_task_queue of type {type(v)} is not a str: {v}")
 
         return v
 
@@ -1575,6 +1641,7 @@ class Settings(BaseSettings):
     )
     """
     A global maximum number of data row results that can be returned by any Smarter plugin.
+
     This setting helps to prevent excessive data retrieval that could impact performance
     or lead to resource exhaustion. Plugins should respect this limit when querying
     data sources and returning results to ensure efficient operation of the platform.
@@ -1586,6 +1653,7 @@ class Settings(BaseSettings):
     @before_field_validator("plugin_max_data_results")
     def parse_plugin_max_data_results(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'plugin_max_data_results' field.
+
         Args:
             v (Optional[Union[int, str]]): the plugin_max_data_results value to validate
         Returns:
@@ -1615,6 +1683,7 @@ class Settings(BaseSettings):
     )
     """
     Sensitive file amnesty patterns used by smarter.lib.django.middleware.sensitive_files.SensitiveFileAccessMiddleware.
+
     Requests matching these patterns will be allowed even if they match sensitive file names.
 
     .. note::
@@ -1634,6 +1703,7 @@ class Settings(BaseSettings):
     @before_field_validator("sensitive_files_amnesty_patterns")
     def parse_sensitive_files_amnesty_patterns(cls, v: Optional[Union[List[str], str]]) -> List[Pattern]:
         """Validates the 'sensitive_files_amnesty_patterns' field.
+
         Args:
             v (Optional[Union[List[str], str]]): the sensitive_files_amnesty_patterns value to validate
         Returns:
@@ -1673,7 +1743,9 @@ class Settings(BaseSettings):
         title="Debug Mode",
     )
     """
-    True if debug mode is enabled. This enables verbose logging and other debug features.
+    True if debug mode is enabled.
+
+    This enables verbose logging and other debug features.
 
     When debug mode is enabled, the platform will log additional information useful for
     troubles hooting and development. This may include detailed error messages, stack traces, and
@@ -1710,6 +1782,7 @@ class Settings(BaseSettings):
     )
     """
     True if default values should be dumped for debugging purposes.
+
     When enabled, the platform will log or output the default configuration values
     used during initialization. This can help developers and administrators
     understand the effective configuration of the system, especially when
@@ -1746,7 +1819,9 @@ class Settings(BaseSettings):
         title="Default Missing Value",
     )
     """
-    Default missing value placeholder string. Used for consistency across settings.
+    Default missing value placeholder string.
+
+    Used for consistency across settings.
     This string is used as a placeholder for configuration values that have not been set.
     It indicates that the value is missing and should be provided by the user or administrator.
     Using a consistent placeholder helps identify unset values during debugging and configuration reviews.
@@ -1765,7 +1840,9 @@ class Settings(BaseSettings):
         title="Developer Mode",
     )
     """
-    True if developer mode is enabled. Used as a means to configure a production Docker container to run locally for student use.
+    True if developer mode is enabled.
+
+    Used as a means to configure a production Docker container to run locally for student use.
     When developer mode is enabled, certain restrictions or configurations that are typical
     of a production environment may be relaxed or altered to facilitate local development
     and testing. This allows developers to work with a production-like setup without the
@@ -1779,6 +1856,7 @@ class Settings(BaseSettings):
     @before_field_validator("developer_mode")
     def parse_developer_mode(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'developer_mode' field.
+
         Args:
             v (Optional[Union[bool, str]]): the developer_mode value to validate
         Returns:
@@ -1801,6 +1879,7 @@ class Settings(BaseSettings):
     )
     """
     The default Django file storage backend.
+
     This setting determines where Django will store uploaded files by default.
     It can be configured to use different storage backends, such as Amazon S3 or the local file system,
     depending on the needs of the application and its deployment environment.
@@ -1818,6 +1897,7 @@ class Settings(BaseSettings):
     )
     """
     The administrator email address used for system notifications and alerts.
+
     This email address is used as the primary contact for system notifications,
     alerts, and other administrative communications related to the platform.
 
@@ -1842,6 +1922,122 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"email_admin is not a valid EmailStr: {v}")
         return v
 
+    enable_dashboard_apply: bool = Field(
+        settings_defaults.ENABLE_DASHBOARD_APPLY,
+        description="True if the file drop zone feature is enabled based on the current environment.",
+        title="Enable File Drop Zone",
+    )
+    """Determines if the file drop zone feature is enabled based on the current environment.
+
+    Returns:
+        bool: True if the file drop zone is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_dashboard_apply")
+    def parse_enable_dashboard_apply(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_dashboard_apply' field.
+
+        Args:
+            v (Optional[Union[bool, str]]): the enable_dashboard_apply value to validate
+        Returns:
+            bool: The validated enable_dashboard_apply.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_DASHBOARD_APPLY
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_dashboard_apply: {v}")
+
+    enable_vectorstore: bool = Field(
+        settings_defaults.ENABLE_VECTORSTORE,
+        description="True if the vectorstore feature is enabled based on the current environment.",
+        title="Enable Vectorstore",
+    )
+    """Determines if the vectorstore feature is enabled based on the current environment.
+
+    Returns:
+        bool: True if the vectorstore is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_vectorstore")
+    def parse_enable_vectorstore(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_vectorstore' field.
+
+        Args:
+            v (Optional[Union[bool, str]]): the enable_vectorstore value to validate
+        Returns:
+            bool: The validated enable_vectorstore.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_VECTORSTORE
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_vectorstore: {v}")
+
+    enable_dashboard_server_logs: bool = Field(
+        settings_defaults.ENABLE_DASHBOARD_SERVER_LOGS,
+        description="True if the terminal app feature is enabled based on the current environment.",
+        title="Enabled Terminal App",
+    )
+    """Determines if the terminal app feature is enabled based on the current environment.
+
+    Returns:
+        bool: True if the terminal app is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_dashboard_server_logs")
+    def parse_enabled_terminal_app(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_dashboard_server_logs' field.
+
+        Args:
+            v (Optional[Union[bool, str]]): the enable_dashboard_server_logs value to validate
+        Returns:
+            bool: The validated enable_dashboard_server_logs.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_DASHBOARD_SERVER_LOGS
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_dashboard_server_logs: {v}")
+
+    enable_dashboard_passthrough_prompt: bool = Field(
+        settings_defaults.ENABLE_DASHBOARD_PASSTHROUGH_PROMPT,
+        description="True if the passthrough prompt feature is enabled based on the current environment.",
+        title="Enable Passthrough Prompt",
+    )
+    """Determines if the passthrough prompt feature is enabled based on the current environment.
+
+    Returns:
+        bool: True if the passthrough prompt is enabled, False otherwise.
+    """
+
+    @before_field_validator("enable_dashboard_passthrough_prompt")
+    def parse_enable_dashboard_passthrough_prompt(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'enable_dashboard_passthrough_prompt' field.
+
+        Args:
+            v (Optional[Union[bool, str]]): the enable_dashboard_passthrough_prompt value to validate
+        Returns:
+            bool: The validated enable_dashboard_passthrough_prompt.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.ENABLE_DASHBOARD_PASSTHROUGH_PROMPT
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate enable_dashboard_passthrough_prompt: {v}")
+
     environment: str = Field(
         settings_defaults.ENVIRONMENT,
         description="The deployment environment for the platform.",
@@ -1850,6 +2046,7 @@ class Settings(BaseSettings):
     )
     """
     The deployment environment for the platform.
+
     This setting indicates the environment in which the platform is running,
     such as development, staging, or production. It can be used to adjust
     behavior and configurations based on the environment.
@@ -1883,6 +2080,7 @@ class Settings(BaseSettings):
     )
     """
     The Fernet encryption key used for encrypting Smarter Secrets data.
+
     This setting provides the key used for symmetric encryption and decryption
     of sensitive data within the platform. The key should be a URL-safe base64-encoded
     32-byte key.
@@ -1942,7 +2140,9 @@ class Settings(BaseSettings):
         title="Google Gemini API Key",
     )
     """
-    The API key for Google Gemini services. Masked by pydantic SecretStr.
+    The API key for Google Gemini services.
+
+    Masked by pydantic SecretStr.
     This setting provides the API key used to authenticate with Google Gemini services.
     It is required for accessing Gemini's APIs and services.
 
@@ -1961,6 +2161,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Gemini API key.
         """
+        warnings.warn(
+            "`gemini_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if str(v) in THE_EMPTY_SET:
             return settings_defaults.GEMINI_API_KEY
         if not isinstance(v, SecretStr):
@@ -1975,7 +2180,9 @@ class Settings(BaseSettings):
         title="Google Maps API Key",
     )
     """
-    The API key for Google Maps services. Masked by pydantic SecretStr. Used for geocoding, maps, and places APIs, for the OpenAI get_weather() example function.
+    The API key for Google Maps services.
+
+    Masked by pydantic SecretStr. Used for geocoding, maps, and places APIs, for the OpenAI get_weather() example function.
     This setting provides the API key used to authenticate with Google Maps services.
     It is required for accessing Google Maps APIs such as geocoding, maps rendering,
     and places information.
@@ -2008,7 +2215,9 @@ class Settings(BaseSettings):
         title="Google Service Account Credentials",
     )
     """
-    The Google service account credentials as a dictionary. Used for Google Cloud services integration.
+    The Google service account credentials as a dictionary.
+
+    Used for Google Cloud services integration.
     This setting contains the credentials for a Google service account in JSON format.
     It is used to authenticate and authorize access to Google Cloud services on behalf
     of the platform.
@@ -2041,7 +2250,8 @@ class Settings(BaseSettings):
         title="Internal IP Prefixes",
     )
     """
-    Supplemental list of internal IP prefixes used in smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware
+    Supplemental list of internal IP prefixes used in smarter.apps.llm_client.middleware.security.SmarterSecurityMiddleware.
+
     and smarter.lib.django.middleware security features.
 
     The default value is based on the default internal IP range used by Kubernetes clusters
@@ -2090,7 +2300,9 @@ class Settings(BaseSettings):
         title="LLaMA API Key",
     )
     """
-    The API key for LLaMA services. Masked by pydantic SecretStr.
+    The API key for LLaMA services.
+
+    Masked by pydantic SecretStr.
     This setting provides the API key used to authenticate with LLaMA services.
     It is required for accessing LLaMA's APIs and services.
 
@@ -2109,6 +2321,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated Llama API key.
         """
+        warnings.warn(
+            "`llama_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if str(v) in THE_EMPTY_SET:
             return settings_defaults.LLAMA_API_KEY
 
@@ -2124,6 +2341,7 @@ class Settings(BaseSettings):
     )
     """
     A list of hostnames considered local for development and testing purposes.
+
     This setting defines hostnames that are treated as local addresses by the platform.
     It is useful for distinguishing between local and remote requests, especially
     during development and testing.
@@ -2158,6 +2376,7 @@ class Settings(BaseSettings):
     )
     """
     The key used for LangChain memory storage.
+
     This setting specifies the key under which LangChain memory data is stored.
     It is used to manage and retrieve memory data within LangChain applications.
 
@@ -2192,6 +2411,7 @@ class Settings(BaseSettings):
     )
     """
     The default LLM provider to use for language model interactions.
+
     This setting specifies which language model provider should be used by default
     for processing natural language tasks. It determines the backend service that
     will handle requests for language generation, understanding, and other related functions.
@@ -2226,6 +2446,7 @@ class Settings(BaseSettings):
     )
     """
     The default LLM model to use for language model interactions.
+
     This setting specifies which specific language model should be used by default
     for processing natural language tasks. It determines the model variant that
     will handle requests for language generation, understanding, and other related functions.
@@ -2255,11 +2476,12 @@ class Settings(BaseSettings):
     llm_default_system_role: str = Field(
         settings_defaults.LLM_DEFAULT_SYSTEM_ROLE,
         description="The default system role prompt to use for language model interactions.",
-        examples=["You are a helpful chatbot..."],
+        examples=["You are a helpful llm_client..."],
         title="Default LLM System Role",
     )
     """
     The default system role prompt to use for language model interactions.
+
     This setting provides the default system role prompt that guides the behavior
     of the language model during interactions. It helps define the context and
     tone of the responses generated by the model.
@@ -2294,6 +2516,7 @@ class Settings(BaseSettings):
     )
     """
     The default temperature to use for language model interactions.
+
     This setting controls the randomness of the language model's output.
     A lower temperature (e.g., 0.0) results in more deterministic and focused
     responses, while a higher temperature (e.g., 1.0) produces more diverse
@@ -2332,6 +2555,7 @@ class Settings(BaseSettings):
     )
     """
     The default maximum number of tokens to generate for language model interactions.
+
     This setting specifies the upper limit on the number of tokens that the language
     model can generate in response to a single request. It helps control the length
     of the output and manage resource usage.
@@ -2370,6 +2594,7 @@ class Settings(BaseSettings):
     )
     """
     The URL to the platform's logo image.
+
     This setting specifies the web address of the logo image used in the platform's user interface.
     It should be a valid URL pointing to an external image resource accessible by the frontend.
 
@@ -2399,7 +2624,9 @@ class Settings(BaseSettings):
         title="Mailchimp API Key",
     )
     """
-    The API key for Mailchimp services. Masked by pydantic SecretStr.
+    The API key for Mailchimp services.
+
+    Masked by pydantic SecretStr.
     This setting provides the API key used to authenticate with Mailchimp services.
     It is required for accessing Mailchimp's APIs and services.
 
@@ -2433,6 +2660,7 @@ class Settings(BaseSettings):
     )
     """
     The Mailchimp list ID for managing email subscribers.
+
     This setting specifies the unique identifier of the Mailchimp list
     used for managing email subscribers. It is required for adding, removing,
     and managing subscribers within Mailchimp.
@@ -2464,6 +2692,7 @@ class Settings(BaseSettings):
     )
     """
     The URL to the platform's marketing site.
+
     This setting specifies the web address of the marketing site associated
     with the platform. It should be a valid URL pointing to an external website.
 
@@ -2493,6 +2722,7 @@ class Settings(BaseSettings):
     )
     """
     The OpenAI API organization ID.
+
     This setting specifies the organization ID used when making requests to the OpenAI API.
     It is used to associate API requests with a specific organization account.
 
@@ -2525,7 +2755,9 @@ class Settings(BaseSettings):
         title="OpenAI API Key",
     )
     """
-    The API key for OpenAI services. Masked by pydantic SecretStr.
+    The API key for OpenAI services.
+
+    Masked by pydantic SecretStr.
     This setting provides the API key used to authenticate with OpenAI services.
     It is required for accessing OpenAI's APIs and services.
 
@@ -2543,6 +2775,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated OpenAI API key.
         """
+        warnings.warn(
+            "`openai_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if str(v) in THE_EMPTY_SET and settings_defaults.OPENAI_API_KEY is not None:
             return settings_defaults.OPENAI_API_KEY
 
@@ -2559,6 +2796,7 @@ class Settings(BaseSettings):
     )
     """
     The number of images to generate per request to the OpenAI image endpoint.
+
     This setting specifies how many images should be generated in response to
     a single request to the OpenAI image generation API.
 
@@ -2599,6 +2837,7 @@ class Settings(BaseSettings):
     )
     """
     The size of images to generate from the OpenAI image endpoint.
+
     This setting specifies the dimensions of the images to be generated
     by the OpenAI image generation API.
 
@@ -2639,7 +2878,9 @@ class Settings(BaseSettings):
         title="Pinecone API Key",
     )
     """
-    The API key for Pinecone services. Masked by pydantic SecretStr.
+    The API key for Pinecone services.
+
+    Masked by pydantic SecretStr.
     This setting provides the API key used to authenticate with Pinecone services.
     It is required for accessing Pinecone's APIs and services.
 
@@ -2674,6 +2915,7 @@ class Settings(BaseSettings):
     )
     """
     The root domain for the platform.
+
     This setting specifies the primary domain name used by the platform.
     It is used for constructing URLs, email addresses, and other domain-related
     configurations.
@@ -2712,6 +2954,7 @@ class Settings(BaseSettings):
     )
     """
     The Django secret key for cryptographic signing.
+
     This setting provides the secret key used by Django for cryptographic signing.
     It is essential for maintaining the security of sessions, cookies, and other
     cryptographic operations within the Django framework.
@@ -2751,6 +2994,7 @@ class Settings(BaseSettings):
     )
     """
     If True, enables verbose output of Smarter run-time settings during Django startup.
+
     This will generate a multi-line header in new terminal windows launched from
     Kubernetes pods running Smarter services.
 
@@ -2795,7 +3039,6 @@ class Settings(BaseSettings):
         - The identifier should be a simple word, using only lowercase letters.
         - Avoid changing this value after initial deployment, as it would likely lead to resource naming conflicts and unintended consequences in Kubernetes, cloud infrastructure, and other services relying on consistent naming conventions.
 
-
     **Typical usage:**
         - As a prefix for cloud resource names (e.g., ``smarter-platform-alpha``)
         - To distinguish resources in multi-tenant or multi-environment deployments
@@ -2814,6 +3057,7 @@ class Settings(BaseSettings):
     @before_field_validator("shared_resource_identifier")
     def validate_shared_resource_identifier(cls, v: Optional[str]) -> str:
         """Validates the `shared_resource_identifier` field.
+
         Uses settings_defaults if no value is received.
 
         Args:
@@ -2837,7 +3081,9 @@ class Settings(BaseSettings):
         title="Smarter MySQL Test Database Secret Name",
     )
     """
-    The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.
+    The secret name for the Smarter MySQL test database.
+
+    Used for example Smarter Plugins that are pre-installed on new installations.
     This setting specifies the name of the secret in AWS Secrets Manager
     that contains the credentials for the Smarter MySQL test database.
     It is used by example Smarter Plugins that require access to a test database.
@@ -2854,7 +3100,9 @@ class Settings(BaseSettings):
         title="Smarter MySQL Test Database Password",
     )
     """
-    The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.
+    The password for the Smarter MySQL test database.
+
+    Used for example Smarter Plugins that are pre-installed on new installations.
     This setting provides the password used to connect to the Smarter MySQL test database.
     It is used by example Smarter Plugins that require access to a test database.
 
@@ -2871,6 +3119,7 @@ class Settings(BaseSettings):
     )
     """
     The path to the ReactJS app loader script.
+
     This setting specifies the URL path where the ReactJS application loader script is located.
     It is used to load the ReactJS frontend for the platform.
 
@@ -2881,7 +3130,9 @@ class Settings(BaseSettings):
 
     @before_field_validator("smarter_reactjs_app_loader_path")
     def validate_smarter_reactjs_app_loader_path(cls, v: Optional[str]) -> str:
-        """Validates the `smarter_reactjs_app_loader_path` field. Needs
+        """Validates the `smarter_reactjs_app_loader_path` field.
+
+        Needs
         to start with a slash (/) and end with '.js'. The final string value
         should be url friendly. example: /ui-chat/app-loader.js
 
@@ -2910,7 +3161,9 @@ class Settings(BaseSettings):
         title="Google OAuth2 Key",
     )
     """
-    The OAuth2 key for Google social authentication. Masked by pydantic SecretStr.
+    The OAuth2 key for Google social authentication.
+
+    Masked by pydantic SecretStr.
     This setting provides the OAuth2 client ID used for Google social authentication.
     It is required for enabling users to log in using their Google accounts.
 
@@ -2942,7 +3195,9 @@ class Settings(BaseSettings):
         title="Google OAuth2 Secret",
     )
     """
-    The OAuth2 secret for Google social authentication. Masked by pydantic SecretStr.
+    The OAuth2 secret for Google social authentication.
+
+    Masked by pydantic SecretStr.
     This setting provides the OAuth2 client secret used for Google social authentication.
     It is required for enabling users to log in using their Google accounts.
 
@@ -2975,7 +3230,9 @@ class Settings(BaseSettings):
         title="GitHub OAuth2 Key",
     )
     """
-    The OAuth2 key for GitHub social authentication. Masked by pydantic SecretStr.
+    The OAuth2 key for GitHub social authentication.
+
+    Masked by pydantic SecretStr.
     This setting provides the OAuth2 client ID used for GitHub social authentication.
     It is required for enabling users to log in using their GitHub accounts.
 
@@ -3008,7 +3265,9 @@ class Settings(BaseSettings):
         title="GitHub OAuth2 Secret",
     )
     """
-    The OAuth2 secret for GitHub social authentication. Masked by pydantic SecretStr.
+    The OAuth2 secret for GitHub social authentication.
+
+    Masked by pydantic SecretStr.
     This setting provides the OAuth2 client secret used for GitHub social authentication.
     It is required for enabling users to log in using their GitHub accounts.
 
@@ -3040,7 +3299,8 @@ class Settings(BaseSettings):
         title="LinkedIn OAuth2 Key",
     )
     """
-    .. deprecated:: 0.13.35
+    .. deprecated:: 0.13.35.
+
         This setting is deprecated and will be removed in a future release. LinkedIn social authentication is no longer supported or recommended for new deployments.
 
     The OAuth2 key for LinkedIn social authentication. Masked by pydantic SecretStr.
@@ -3074,7 +3334,8 @@ class Settings(BaseSettings):
         title="LinkedIn OAuth2 Secret",
     )
     """
-    .. deprecated:: 0.13.35
+    .. deprecated:: 0.13.35.
+
         This setting is deprecated and will be removed in a future release. LinkedIn social authentication is no longer supported or recommended for new deployments.
 
     The OAuth2 secret for LinkedIn social authentication. Masked by pydantic SecretStr.
@@ -3110,6 +3371,7 @@ class Settings(BaseSettings):
     )
     """
     The sender email address for SMTP emails.
+
     This setting specifies the email address that will appear as the sender
     in outgoing SMTP emails sent by the platform.
 
@@ -3125,7 +3387,9 @@ class Settings(BaseSettings):
         title="Smarter MySQL Test Database Secret Name",
     )
     """
-    The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.
+    The secret name for the Smarter MySQL test database.
+
+    Used for example Smarter Plugins that are pre-installed on new installations.
     This setting specifies the name of the secret in AWS Secrets Manager
     that contains the credentials for the Smarter MySQL test database.
     It is used by example Smarter Plugins that require access to a test database.
@@ -3141,7 +3405,9 @@ class Settings(BaseSettings):
         title="Smarter MySQL Test Database Password",
     )
     """
-    The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.
+    The password for the Smarter MySQL test database.
+
+    Used for example Smarter Plugins that are pre-installed on new installations.
     This setting provides the password used to connect to the Smarter MySQL test database.
     It is used by example Smarter Plugins that require access to a test database.
     :type: Optional[SecretStr]
@@ -3175,6 +3441,7 @@ class Settings(BaseSettings):
     )
     """
     The SMTP password for authentication.
+
     This setting provides the password used to authenticate with the SMTP server.
     It is required for sending emails through the SMTP server.
 
@@ -3207,6 +3474,7 @@ class Settings(BaseSettings):
     )
     """
     The SMTP port for sending emails.
+
     This setting specifies the port number used to connect to the SMTP server
     for sending outgoing emails.
 
@@ -3245,6 +3513,7 @@ class Settings(BaseSettings):
     )
     """
     Whether to use SSL for SMTP connections.
+
     This setting indicates whether SSL (Secure Sockets Layer) should be used
     when connecting to the SMTP server for sending emails.
 
@@ -3277,6 +3546,7 @@ class Settings(BaseSettings):
     )
     """
     Whether to use TLS for SMTP connections.
+
     This setting indicates whether TLS (Transport Layer Security) should be used
     when connecting to the SMTP server for sending emails.
 
@@ -3308,6 +3578,7 @@ class Settings(BaseSettings):
     )
     """
     The SMTP username for authentication.
+
     This setting provides the username used to authenticate with the SMTP server.
     It is required for sending emails through the SMTP server.
 
@@ -3337,7 +3608,8 @@ class Settings(BaseSettings):
         title="Stripe Live Secret Key",
     )
     """
-    .. deprecated:: 0.13.0
+    .. deprecated:: 0.13.0.
+
         This setting is deprecated and will be removed in a future release. Please use the new payment processing configuration settings.
 
     The secret key for Stripe live environment.
@@ -3377,7 +3649,8 @@ class Settings(BaseSettings):
         title="Stripe Test Secret Key",
     )
     """
-    .. deprecated:: 0.13.0
+    .. deprecated:: 0.13.0.
+
         This setting is deprecated and will be removed in a future release. Please use the new payment processing configuration settings.
 
     The secret key for Stripe test environment.
@@ -3418,6 +3691,7 @@ class Settings(BaseSettings):
     )
     """
     Whether to enable verbose logging for debugging purposes.
+
     If True, enables verbose logging throughout the Smarter platform for debugging purposes.
     :type: bool
     :default: Value from ``settings_defaults.VERBOSE_LOGGING``
@@ -3464,7 +3738,9 @@ class Settings(BaseSettings):
     @cached_property
     def smtp_is_configured(self) -> bool:
         """
-        Return True if SMTP is configured. All required smtp fields must be set.
+        Return True if SMTP is configured.
+
+        All required smtp fields must be set.
 
         Example:
             >>> print(smarter_settings.smtp_is_configured)
@@ -3604,6 +3880,42 @@ class Settings(BaseSettings):
         return retval
 
     @cached_property
+    def root_cdn_domain(self) -> str:
+        """
+        Return the CDN domain for the root domain.
+
+        Example:
+            >>> print(smarter_settings.root_cdn_domain)
+            'cdn.example.com'
+        See Also:
+            - smarter_settings.platform_subdomain
+            - smarter_settings.root_domain
+        """
+        return f"cdn.{self.root_domain}"
+
+    @cached_property
+    def root_cdn_url(self) -> str:
+        """
+        Return the CDN URL for the root domain.
+
+        Example:
+            >>> print(smarter_settings.root_cdn_url)
+            https://cdn.example.com
+        Raises:
+            SmarterConfigurationError: If the constructed URL is invalid.
+        See Also:
+            - SmarterValidator.urlify()
+            - smarter_settings.root_cdn_domain
+            - smarter_settings.environment
+        """
+        retval = SmarterValidator.urlify(self.root_cdn_domain, environment=self.environment)
+        if retval is None:
+            raise SmarterConfigurationError(
+                f"Invalid root_cdn_domain: {self.root_cdn_domain}. " "Please check your environment settings."
+            )
+        return retval
+
+    @cached_property
     def root_platform_domain(self) -> str:
         """
         Return the platform domain name for the root domain.
@@ -3622,13 +3934,13 @@ class Settings(BaseSettings):
     def root_proxy_domain(self) -> str:
         """
         Return the proxy domain name for the root domain.
+
         Used for proxying local requests inside of AWS Kubernetes environments
         during unit testing.
 
         Example:
             >>> print(smarter_settings.root_proxy_domain)
             'local.example.com'
-
         """
         return f"{SmarterEnvironments.LOCAL}.{self.root_domain}"
 
@@ -3686,9 +3998,37 @@ class Settings(BaseSettings):
         return f"{self.environment}.{self.root_platform_domain}"
 
     @cached_property
+    def environment_platform_url(self) -> str:
+        """
+        Return the platform URL for the environment platform domain.
+
+        Example:
+            >>> print(smarter_settings.environment_platform_url)
+            https://alpha.platform.example.com
+            >>> print(smarter_settings.environment_platform_url)
+            http://localhost:9357
+
+        Raises:
+            SmarterConfigurationError: If the constructed URL is invalid.
+        See Also:
+            - SmarterValidator.urlify()
+            - smarter_settings.environment_platform_domain
+            - smarter_settings.environment
+        """
+        retval = SmarterValidator.urlify(self.environment_platform_domain, environment=self.environment)
+        if retval is None:
+            raise SmarterConfigurationError(
+                f"Invalid environment_platform_domain: {self.environment_platform_domain}. "
+                "Please check your environment settings."
+            )
+        return retval
+
+    @cached_property
     def all_domains(self) -> List[str]:
         """
-        Return all domains for the environment. Domains are
+        Return all domains for the environment.
+
+        Domains are
         generated from the root domain, subdomains, and environments and
         are returned as a sorted list.
 
@@ -3832,7 +4172,8 @@ class Settings(BaseSettings):
     @cached_property
     def root_api_domain(self) -> str:
         """
-        Return the root API domain name, generated
+        Return the root API domain name, generated.
+
         from the system constant `SMARTER_API_SUBDOMAIN` and the root platform domain.
 
         Example:
@@ -3850,13 +4191,13 @@ class Settings(BaseSettings):
     def proxy_api_domain(self) -> str:
         """
         Return the proxy API domain name for the root domain.
+
         Used for proxying local requests inside of AWS Kubernetes environments
         during unit testing.
 
         Example:
             >>> print(smarter_settings.proxy_api_domain)
             'api.local.example.com'
-
         """
         return f"{self.api_subdomain}.{self.root_proxy_domain}"
 
@@ -3896,6 +4237,7 @@ class Settings(BaseSettings):
     def environment_api_url(self) -> str:
         """
         Creates a valid url from smarter_settings.environment_api_domain.
+
         Based on the Smarter shared resource identifier and the root platform domain.
         Uses urlify() to ensure consistency in http protocol and formatting and
         trailing slash.
@@ -3924,6 +4266,7 @@ class Settings(BaseSettings):
     def aws_s3_bucket_name(self) -> str:
         """
         Returns the AWS S3 bucket name for the current environment.
+
         The bucket name is constructed from the Smarter shared resource identifier
         and the root platform domain.
 
@@ -4071,6 +4414,7 @@ class Settings(BaseSettings):
     def smarter_reactjs_app_loader_url(self) -> str:
         """
         Return the full URL to the ReactJS app loader script.
+
         This is used for loading the ReactJS Chat frontend component into html
         web pages. Attempts to validate the URL by checking for HTTP 200 status.
         Provides a fallback URL if the primary URL is not reachable.
@@ -4087,6 +4431,7 @@ class Settings(BaseSettings):
         def check_smarter_reactjs_app_loader_url(url, timeout: float = 1.50) -> bool:
             """
             Checks if the smarter_reactjs_app_loader_url returns HTTP 200 status.
+
             Returns True if status code is 200, False otherwise.
             Uses requests if available, else falls back to urllib.
             """
@@ -4127,6 +4472,7 @@ class Settings(BaseSettings):
     def smarter_reactjs_root_div_id(self) -> str:
         """
         Return the HTML div ID used as the root for the ReactJS Chat app.
+
         Start with a string like: "example.com/v1/ui-chat/root", then
         convert it into an html safe id like: "example-com-v1-ui-chat-root"
 
@@ -4150,7 +4496,8 @@ class Settings(BaseSettings):
     @cached_property
     def version(self) -> str:
         """
-        Current version of the Smarter platform codebase
+        Current version of the Smarter platform codebase.
+
         based on the semantic version currently persisted
         to smarter.__version__.py.
 
@@ -4187,6 +4534,71 @@ class Settings(BaseSettings):
             return "Unknown Python version"
 
     @cached_property
+    def pydantic_version(self) -> str:
+        """
+        Current version of Pydantic running the Smarter platform codebase.
+
+        Example:
+            >>> print(smarter_settings.pydantic_version)
+            '2.10.4'
+        """
+        try:
+            # pylint: disable=import-outside-toplevel
+            import pydantic
+
+            return pydantic.__version__
+        # pylint: disable=broad-except
+        except Exception:  # catch broad exceptions to avoid any issues with retrieving Pydantic version
+            return "Unknown Pydantic version"
+
+    @cached_property
+    def drf_version(self) -> str:
+        """
+        Current version of Django REST Framework running the Smarter platform codebase.
+
+        Example:
+            >>> print(smarter_settings.drf_version)
+            '3.14.0'
+        """
+        try:
+            # pylint: disable=import-outside-toplevel
+            import rest_framework
+
+            return rest_framework.VERSION
+        # pylint: disable=broad-except
+        except Exception:  # catch broad exceptions to avoid any issues with retrieving DRF version
+            return "Unknown DRF version"
+
+    @cached_property
+    def linux_distribution(self) -> str:
+        """
+        Current Linux distribution running the Smarter platform codebase.
+
+        Example:
+            >>> print(smarter_settings.linux_distribution)
+            'Ubuntu 20.04.6 LTS (Focal Fossa)'
+
+        Note:
+            This is based on the platform module's linux_distribution function, which is deprecated in Python 3.8 and removed in Python 3.10.
+            As a result, this method uses a fallback approach to attempt to retrieve Linux distribution information from common files like /etc/os-release.
+            If the platform module's linux_distribution function is available, it will be used; otherwise, the fallback approach will be attempted.
+            Due to the deprecation and removal of linux_distribution, the returned value may be "Unknown Linux distribution" in some environments or Python versions.
+        """
+        try:
+            # pylint: disable=import-outside-toplevel
+            import platform
+
+            if hasattr(platform, "platform"):
+                return " ".join(
+                    platform.platform().split("-")[:2]
+                )  # Get the first two components of the platform string
+            else:
+                return "Unknown Linux distribution"
+        # pylint: disable=broad-except
+        except Exception:
+            return "Unknown Linux distribution"
+
+    @cached_property
     def django_version(self) -> str:
         """
         Current version of Django installed in the Smarter platform codebase.
@@ -4219,13 +4631,14 @@ class Settings(BaseSettings):
             This is based on the Dockerfile located in the root of the repository.
             Settings are `chmod -R 700 /home/smarter_user/.cache`
             See ./Dockerfile for more information.
-
         """
         return "/home/smarter_user/.cache"
 
     def to_json(self) -> dict[str, Any]:
         """
-        Dump all settings. Useful for debugging and logging.
+        Dump all settings.
+
+        Useful for debugging and logging.
 
         Returns:
             dict: A dictionary containing all settings and their values.
@@ -4245,7 +4658,6 @@ class Settings(BaseSettings):
 
             Sensitive values are masked by Pydantic SecretStr and will not be displayed in full.
             The dump is cached after the first call for performance.
-
         """
 
         retval = {

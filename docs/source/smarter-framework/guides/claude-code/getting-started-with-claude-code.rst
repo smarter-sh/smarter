@@ -361,7 +361,7 @@ credential entirely behind the scenes.
 4.2 The Smarter Manifest System
 ---------------------------------
 
-Smarter resources — ChatBots, Plugins, API keys, data connectors, and more
+Smarter resources — LLMClients, Plugins, API keys, data connectors, and more
 — are described using **YAML manifest files**, a design deliberately modelled
 after the Kubernetes ``kubectl`` workflow.  If you have used
 ``kubectl apply``, the pattern is immediately familiar.
@@ -406,7 +406,7 @@ command structure:
    * - ``smarter delete <kind> <name>``
      - Permanently removes a resource
    * - ``smarter deploy <kind> <name>``
-     - Deploys a deployable resource (ChatBot, Plugin)
+     - Deploys a deployable resource (LLMClient, Plugin)
    * - ``smarter whoami``
      - Shows account information for the configured API key
    * - ``smarter version``
@@ -422,7 +422,7 @@ For a complete list of subcommands under any verb, run
 ---------------------------------------------
 
 <cite name="4-1">The Smarter CLI interacts with a range of resource kinds
-including ChatBots, Plugins, SqlConnections, Users, and ApiKeys.</cite>  The
+including LLMClients, Plugins, SqlConnections, Users, and ApiKeys.</cite>  The
 kinds most relevant to your initial setup are:
 
 .. list-table::
@@ -435,12 +435,12 @@ kinds most relevant to your initial setup are:
      - A personal Smarter authentication token.  This is what Claude Code
        sends as its bearer token to the gateway.  Each developer creates
        their own.
-   * - ``ChatBot``
+   * - ``LLMClient``
      - A deployable conversational AI resource.  Not used directly in this
        tutorial, but it is the principal resource kind you will work with
        once you move beyond basic Claude Code usage.
    * - ``Plugin``
-     - Extends a ChatBot's knowledge domain using function-calling and data
+     - Extends a LLMClient's knowledge domain using function-calling and data
        connectors (SQL, REST API, static data).  Out of scope for this
        tutorial but documented at
        ``https://docs.smarter.sh/en/latest/smarter-resources/plugins/``

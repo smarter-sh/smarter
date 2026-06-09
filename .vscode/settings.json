@@ -1,4 +1,7 @@
 {
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "cornflakes.linter.executablePath": "../venv/bin/flake8",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
@@ -15,11 +18,12 @@
     "**/node_modules": true,
     "**/.tox": true,
     "**/.terraform": true,
-    "**/venv": true,
     "**/dist": true,
+    "**/venv": true,
     "**/keen_v3.0.6": true,
     "**/staticfiles": true
   },
+  "prettier.printWidth": 120,
   "python.linting.flake8Enabled": true,
   "python.linting.enabled": true,
   "python.envFile": "${workspaceFolder}/.env",

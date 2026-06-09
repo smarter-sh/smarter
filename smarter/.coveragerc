@@ -6,7 +6,7 @@ omit =
     **/migrations/*
     smarter/apps/account/models.py
     smarter/apps/chat/models.py
-    smarter/apps/chatbot/models.py
+    smarter/apps/llm_client/models.py
     smarter/common/
     smarter/lib/
 [report]

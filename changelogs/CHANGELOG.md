@@ -1,0 +1,193 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+
+
+## [0.14.0-alpha.59](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.58...v0.14.0-alpha.59) (2026-06-09)
+
+### Bug Fixes
+
+* force a new release ([b6d53a4](https://github.com/smarter-sh/smarter/commit/b6d53a4c0c47c04213c6630e9999ef600b34baa8))
+
+## [0.14.0-alpha.58](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.57...v0.14.0-alpha.58) (2026-06-09)
+
+### Bug Fixes
+
+* all manifest_url() should use hashed_id ([ae01bd8](https://github.com/smarter-sh/smarter/commit/ae01bd8f67a48ae536cbc48b91395aa81bef7b7a))
+
+## [0.14.0-alpha.57](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.56...v0.14.0-alpha.57) (2026-06-09)
+
+### Bug Fixes
+
+* detail manifest views ([206e284](https://github.com/smarter-sh/smarter/commit/206e284718e84d3af494bf878d159b7d0c83c62a))
+
+## [0.14.0-alpha.56](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.55...v0.14.0-alpha.56) (2026-06-09)
+
+### Bug Fixes
+
+* client_helper initialization ([79e2b8c](https://github.com/smarter-sh/smarter/commit/79e2b8c05e03917443982a85da63a9cc8e9bc18b))
+
+## [0.14.0-alpha.55](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.54...v0.14.0-alpha.55) (2026-06-08)
+
+### Bug Fixes
+
+* to_snake_case should convert LLMClient to llm_client ([fbd7f08](https://github.com/smarter-sh/smarter/commit/fbd7f08f83fded957045fe6c414c0fe57fdf5646))
+
+## [0.14.0-alpha.54](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.53...v0.14.0-alpha.54) (2026-06-05)
+
+### Bug Fixes
+
+* scaffold authtoken react list view ([ae9b8dd](https://github.com/smarter-sh/smarter/commit/ae9b8ddb552af72787886171321b2f4525f1909c))
+
+## [0.14.0-alpha.53](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.52...v0.14.0-alpha.53) (2026-06-04)
+
+### Bug Fixes
+
+* apply npm [@smarter](https://github.com/smarter) namespace in django template tags ([904b510](https://github.com/smarter-sh/smarter/commit/904b5109e19f1d368efb76e968dc205c72bf75a8))
+
+## [0.14.0-alpha.52](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.51...v0.14.0-alpha.52) (2026-06-04)
+
+### Bug Fixes
+
+* force a new release ([89bf5a8](https://github.com/smarter-sh/smarter/commit/89bf5a8bd22629d5689464feb60bc23ab8baab69))
+
+## [0.14.0-alpha.51](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.50...v0.14.0-alpha.51) (2026-06-04)
+
+### Bug Fixes
+
+* provider names should be snake_case ([aac468a](https://github.com/smarter-sh/smarter/commit/aac468aed426854d7120f8f6d2e8248d79e303fb))
+
+## [0.14.0-alpha.50](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.49...v0.14.0-alpha.50) (2026-06-04)
+
+### Bug Fixes
+
+* scaffold provider react list ([32210bf](https://github.com/smarter-sh/smarter/commit/32210bfbf43e8714554fe9022bfc1c67c0f4528a))
+
+## [0.14.0-alpha.49](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.48...v0.14.0-alpha.49) (2026-06-04)
+
+### Bug Fixes
+
+* scaffold secret react list view ([ac0aa13](https://github.com/smarter-sh/smarter/commit/ac0aa13196b3ee471bb3aae8d89d60b7082919e3))
+
+## [0.14.0-alpha.48](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.47...v0.14.0-alpha.48) (2026-06-04)
+
+### Bug Fixes
+
+* finalize react list prototype ([07bf901](https://github.com/smarter-sh/smarter/commit/07bf90149065a5be78c371f9c2b50cf68565bbe3))
+
+## [0.14.0-alpha.47](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.46...v0.14.0-alpha.47) (2026-06-03)
+
+### Bug Fixes
+
+* should not touch staticfiles when building react apps ([c84e408](https://github.com/smarter-sh/smarter/commit/c84e408e2c66678d86f11e909659e63fcdae01b3))
+
+## [0.14.0-alpha.46](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.45...v0.14.0-alpha.46) (2026-06-03)
+
+### Bug Fixes
+
+* refactor for shared use ([aca2d06](https://github.com/smarter-sh/smarter/commit/aca2d061a3b10c68a09c392d9e120fa6478b26ec))
+
+## [0.14.0-alpha.45](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.44...v0.14.0-alpha.45) (2026-06-03)
+
+### Bug Fixes
+
+* scaffold common code library ([7ebd670](https://github.com/smarter-sh/smarter/commit/7ebd67022f4ba3d3cced2bbdf07bc2a5799e29da))
+
+## [0.14.0-alpha.44](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.43...v0.14.0-alpha.44) (2026-06-02)
+
+### Bug Fixes
+
+* switch to session-based storage ([f2ba419](https://github.com/smarter-sh/smarter/commit/f2ba4193fa55c36f398ada5299ae3162f172bc89))
+
+## [0.14.0-alpha.43](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.42...v0.14.0-alpha.43) (2026-06-02)
+
+### Bug Fixes
+
+* standardize cache keys ([70d7b87](https://github.com/smarter-sh/smarter/commit/70d7b87c32dde5d0cf9c7cf33436ee49e64cb548))
+
+## [0.14.0-alpha.42](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.41...v0.14.0-alpha.42) (2026-06-02)
+
+### Bug Fixes
+
+* cache each api fetch and use this as interim page content during component initialization ([1c08dd5](https://github.com/smarter-sh/smarter/commit/1c08dd50f7ba649a9144335f83ec6529b1287b23))
+
+## [0.14.0-alpha.41](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.40...v0.14.0-alpha.41) (2026-06-01)
+
+### Bug Fixes
+
+* add plugin_list react component ([3817fec](https://github.com/smarter-sh/smarter/commit/3817fec8026673c2f6435124d4cf7450731f4d2f))
+
+## [0.14.0-alpha.40](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.39...v0.14.0-alpha.40) (2026-05-31)
+
+### Bug Fixes
+
+* track shared and owned list fetches separately ([7f25321](https://github.com/smarter-sh/smarter/commit/7f2532142421ea1d36cf3ad87879b2df4849d321))
+
+## [0.14.0-alpha.39](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.38...v0.14.0-alpha.39) (2026-05-31)
+
+### Bug Fixes
+
+* add list row chunking ([ac79e4d](https://github.com/smarter-sh/smarter/commit/ac79e4d7bcbe1008d7add996bfe9908f825a1823))
+
+## [0.14.0-alpha.38](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.37...v0.14.0-alpha.38) (2026-05-31)
+
+### Bug Fixes
+
+* middleware order ([78a2b3d](https://github.com/smarter-sh/smarter/commit/78a2b3dc90e751f9b7b12406f858c2e14107c6d6))
+
+## [0.14.0-alpha.37](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.36...v0.14.0-alpha.37) (2026-05-31)
+
+### Bug Fixes
+
+* add custom manifest.json meta data ([1899755](https://github.com/smarter-sh/smarter/commit/18997551cfb3628b1a3e7099f1979ebb08eed083))
+
+## [0.14.0-alpha.36](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.35...v0.14.0-alpha.36) (2026-05-31)
+
+### Bug Fixes
+
+* show ghost rows while isLoading ([2771e2c](https://github.com/smarter-sh/smarter/commit/2771e2c25687e4c71b6a8389e4cc41a7125b42b9))
+
+## [0.14.0-alpha.35](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.34...v0.14.0-alpha.35) (2026-05-30)
+
+### Bug Fixes
+
+* force a new release ([7859355](https://github.com/smarter-sh/smarter/commit/785935537ba65f2dfd7105528db50f39cebd777e))
+
+## [0.14.0-alpha.34](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.33...v0.14.0-alpha.34) (2026-05-30)
+
+### Bug Fixes
+
+* force a new release ([701d146](https://github.com/smarter-sh/smarter/commit/701d14637a39d07df9c2725d92b9815fce5b189d))
+
+## [0.14.0-alpha.33](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.32...v0.14.0-alpha.33) (2026-05-30)
+
+### Bug Fixes
+
+* setup a dedicated uvicorn logging handler ([fc2fb90](https://github.com/smarter-sh/smarter/commit/fc2fb90a54bb680b2d2e5a076dfe3371a8642004))
+
+## [0.14.0-alpha.32](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.31...v0.14.0-alpha.32) (2026-05-30)
+
+### Bug Fixes
+
+* pare down the situations where we actually use HealthCheckFilter ([251dbc4](https://github.com/smarter-sh/smarter/commit/251dbc4a40c74986707b1546df7933ddda7efbd1))
+
+## [0.14.0-alpha.31](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.30...v0.14.0-alpha.31) (2026-05-30)
+
+### Bug Fixes
+
+* switch to an analysis of record ([f600cb3](https://github.com/smarter-sh/smarter/commit/f600cb3bdd8c9e7d84c4116698c87eeb48d4a67a))
+
+## [0.14.0-alpha.30](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.29...v0.14.0-alpha.30) (2026-05-30)
+
+### Bug Fixes
+
+* inherit from logging.Filter ([5b9dede](https://github.com/smarter-sh/smarter/commit/5b9dededd50c2c74efb8cc97940b2d4b2f29e4c4))
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).

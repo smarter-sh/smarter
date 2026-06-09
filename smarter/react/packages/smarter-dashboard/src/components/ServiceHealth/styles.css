@@ -1,0 +1,27 @@
+.service-health-ring {
+	position: relative;
+	width: 92px;
+	height: 92px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.service-health-ring__svg {
+	overflow: visible;
+}
+
+.service-health-ring__progress {
+	transition: stroke-dashoffset 240ms linear;
+}
+
+.service-health-ring__label {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: #1f2937;
+}

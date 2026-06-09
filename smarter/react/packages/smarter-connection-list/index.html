@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Connections List</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+
+    <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/common-styles.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  </head>
+  <body>
+    <!--
+    only used for development via 'npm run dev'. In production, this file is rendered
+    by Django.
+
+    See:
+    - smarter.apps.connection.views.listview.view.ConnectionListView
+    - smarter.apps.connection.templatetags.react_connection_list.connection_list_react_assets
+    - templates/react/connection-list.html
+    - http://example.com/connection/connections/
+    -->
+    <div
+      id="smarter-connection-list-root"
+      smarter-connection-list-api-url="/connection/react-integration/api/listview/"
+      django-cookie-domain="localhost"
+      django-csrf-cookie-name="csrftoken"
+      django-session-cookie-name="sessionid"
+      ></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+  <script src="/assets/plugins/global/plugins.bundle.js"></script>
+  <script src="/assets/js/scripts.bundle.js"></script>
+</html>

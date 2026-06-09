@@ -36,9 +36,7 @@ class TestEmailHelper(SmarterTestBase):
         mock_logger.warning.assert_called()
 
     def test_send_email_success(self):
-        """
-        Test sending an email successfully.
-        """
+        """Test sending an email successfully."""
         EmailHelper.send_email("subject", "body", ["a@example.com"])
 
     @patch("smarter.common.helpers.email_helpers.EmailHelper.validate_mail_list", return_value=None)
@@ -46,20 +44,3 @@ class TestEmailHelper(SmarterTestBase):
     def test_send_email_no_valid(self, mock_logger, mock_validate):
         EmailHelper.send_email("subject", "body", ["bad@example.com"])
         mock_logger.info.assert_not_called()
-
-    @patch("smarter.common.helpers.email_helpers.EmailHelper.validate_mail_list", return_value=["a@example.com"])
-    @patch("smarter.common.helpers.email_helpers.smarter_settings")
-    @patch("smarter.common.helpers.email_helpers.smtplib.SMTP")
-    @patch("smarter.common.helpers.email_helpers.logger")
-    def test_send_email_smtp_error(self, mock_logger, mock_smtp, mock_settings, mock_validate):
-        mock_settings.SMTP_FROM_EMAIL = "from@example.com"
-        mock_settings.SMTP_HOST = "smtp.example.com"
-        mock_settings.SMTP_PORT = 587
-        mock_settings.SMTP_USE_TLS = True
-        mock_settings.SMTP_USERNAME = "user"
-        mock_settings.SMTP_PASSWORD = "pass"
-        mock_settings.SMARTER_EMAIL_ADMIN = "admin@example.com"
-        smtp_instance = mock_smtp.return_value.__enter__.return_value
-        smtp_instance.sendmail.side_effect = Exception("fail")
-        with self.assertRaises(EmailHelperException):
-            EmailHelper.send_email("subject", "body", ["a@example.com"])

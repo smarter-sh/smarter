@@ -281,7 +281,7 @@ class AWSBase(SmarterHelperMixin):
         return self._identity
 
     @cached_property
-    def version(self):
+    def version(self) -> str:
         """
         Return the version.
 
@@ -291,7 +291,7 @@ class AWSBase(SmarterHelperMixin):
         return boto3.__version__
 
     @property
-    def debug_mode(self):
+    def debug_mode(self) -> bool:
         """
         Debug mode
 
@@ -301,7 +301,7 @@ class AWSBase(SmarterHelperMixin):
         return self._debug_mode
 
     @property
-    def authentication_credentials_are_initialized(self):
+    def authentication_credentials_are_initialized(self) -> bool:
         """
         Are aws authentication settings initialized?
         True if we have enoug information to try to connect to AWS.
@@ -333,7 +333,7 @@ class AWSBase(SmarterHelperMixin):
         return smarter_settings.aws_is_configured
 
     @property
-    def aws_profile(self):
+    def aws_profile(self) -> Optional[str]:
         """
         AWS profile
 
@@ -343,7 +343,7 @@ class AWSBase(SmarterHelperMixin):
         return self._aws_profile
 
     @property
-    def aws_account_id(self):
+    def aws_account_id(self) -> Optional[str]:
         """
         AWS account id
 
@@ -359,7 +359,7 @@ class AWSBase(SmarterHelperMixin):
         return self.identity.get("Account", None)
 
     @property
-    def aws_iam_arn(self):
+    def aws_iam_arn(self) -> Optional[str]:
         """
         AWS IAM ARN
 
@@ -375,7 +375,7 @@ class AWSBase(SmarterHelperMixin):
         return self.identity.get("Arn", None)
 
     @property
-    def aws_region(self):
+    def aws_region(self) -> Optional[str]:
         """
         AWS region
 
@@ -385,7 +385,7 @@ class AWSBase(SmarterHelperMixin):
         return self._aws_region
 
     @property
-    def aws_access_key_id_source(self):
+    def aws_access_key_id_source(self) -> Optional[str]:
         """
         AWS access key id source
 
@@ -395,7 +395,7 @@ class AWSBase(SmarterHelperMixin):
         return self._aws_access_key_id_source
 
     @property
-    def aws_access_key_id(self):
+    def aws_access_key_id(self) -> Optional[str]:
         """
         AWS access key id
 
@@ -405,7 +405,7 @@ class AWSBase(SmarterHelperMixin):
         return self._aws_access_key_id
 
     @property
-    def aws_secret_access_key_source(self):
+    def aws_secret_access_key_source(self) -> Optional[str]:
         """
         AWS secret access key source
         :return: AWS secret access key source
@@ -414,7 +414,7 @@ class AWSBase(SmarterHelperMixin):
         return self._aws_secret_access_key_source
 
     @property
-    def aws_secret_access_key(self):
+    def aws_secret_access_key(self) -> Optional[str]:
         """
         AWS secret access key
 
@@ -424,12 +424,12 @@ class AWSBase(SmarterHelperMixin):
         return self._aws_secret_access_key
 
     @property
-    def aws_auth(self) -> dict:
+    def aws_auth(self) -> dict[str, Optional[str]]:
         """
         AWS authentication
 
         :return: AWS authentication details
-        :rtype: dict
+        :rtype: dict[str, Optional[str]]
         """
         retval = {
             "aws_profile": self.aws_profile,
@@ -440,7 +440,7 @@ class AWSBase(SmarterHelperMixin):
         return retval
 
     @property
-    def aws_session(self):
+    def aws_session(self) -> Optional[boto3.Session]:
         """
         AWS session
 
@@ -499,16 +499,16 @@ class AWSBase(SmarterHelperMixin):
             logger.error(msg)
 
         if self._aws_session:
-            msg = f"{self.formatted_class_name}.aws_session() {formatted_text_green('established AWS boto session.')}"
+            msg = f"{self.formatted_class_name}.aws_session() is {self.formatted_state_ready}"
             logger.debug(msg)
         else:
-            msg = f"{self.formatted_class_name}.aws_session() {formatted_text_red('Unable to establish AWS boto session.')}"
+            msg = f"{self.formatted_class_name}.aws_session() is {self.formatted_state_not_ready}"
             logger.error(msg)
 
         return self._aws_session
 
     @property
-    def shared_resource_identifier(self):
+    def shared_resource_identifier(self) -> Optional[str]:
         """
         Return the shared resource identifier.
 

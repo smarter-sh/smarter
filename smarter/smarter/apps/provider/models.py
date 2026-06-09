@@ -13,18 +13,16 @@ from django.conf import settings
 from django.db import models
 
 from smarter.apps.account.models import (
-    Account,
     MetaDataWithOwnershipModel,
-    Secret,
+    MetaDataWithOwnershipModelManager,
     User,
     UserProfile,
 )
 from smarter.apps.account.utils import (
     get_cached_account_for_user,
-    get_cached_admin_user_for_account,
     get_cached_smarter_admin_user_profile,
-    smarter_cached_objects,
 )
+from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
@@ -35,6 +33,7 @@ from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -55,7 +54,7 @@ from .signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) and waffle.switch_is_active(
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) or waffle.switch_is_active(
         SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 
@@ -131,11 +130,13 @@ class ProviderModelVerificationTypes(models.TextChoices):
 
 
 class Provider(MetaDataWithOwnershipModel):
-    """Chat model."""
+    """Provider model."""
 
     class Meta:
         verbose_name = "Provider"
         verbose_name_plural = "Providers"
+
+    objects: MetaDataWithOwnershipModelManager["Provider"] = MetaDataWithOwnershipModelManager()
 
     status = models.CharField(
         max_length=32,
@@ -145,6 +146,7 @@ class Provider(MetaDataWithOwnershipModel):
         null=False,
     )
     # good things
+    is_default = models.BooleanField(default=False, blank=False, null=False)
     is_active = models.BooleanField(default=False, blank=False, null=False)
     is_verified = models.BooleanField(default=False, blank=False, null=False)
     is_featured = models.BooleanField(default=False, blank=False, null=False)
@@ -163,6 +165,9 @@ class Provider(MetaDataWithOwnershipModel):
         null=True,
         related_name="provider_api_key",
         help_text="The API key for the provider.",
+    )
+    default_model = models.CharField(
+        max_length=255, blank=True, null=True, help_text="The default model to use for the provider."
     )
     connectivity_test_path = models.CharField(
         max_length=255,
@@ -226,6 +231,31 @@ class Provider(MetaDataWithOwnershipModel):
     )
 
     @property
+    def manifest_url(self) -> Optional[str]:
+        """
+        Returns the URL to the plugin's manifest.
+
+        This property constructs the URL to the plugin's manifest based on its kind and RFC 1034-compliant name.
+        The URL follows the pattern: ``/plugins/{kind}/{name}/manifest/``, where ``{kind}`` is the RFC 1034-compliant kind
+        of the plugin, and ``{name}`` is the RFC 1034-compliant name of the plugin.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.rfc1034_compliant_kind  # 'static'
+            self.rfc1034_compliant_name  # 'example-plugin
+            self.manifest_url  # '/plugins/static/example-plugin/manifest/'
+        """
+        # pylint: disable=C0415
+        from smarter.apps.provider.urls import ProviderReverseNames
+
+        return reverse(
+            f"{ProviderReverseNames.namespace}:{ProviderReverseNames.detailview}",
+            kwargs={"hashed_id": self.hashed_id},  # type: ignore
+        )
+
+    @property
     def is_official_provider(self) -> bool:
         """Check if the provider is an official provider."""
         smarter_admin = get_cached_smarter_admin_user_profile()
@@ -271,16 +301,16 @@ class Provider(MetaDataWithOwnershipModel):
     @property
     def rfc1034_compliant_name(self) -> Optional[str]:
         """
-        Returns a URL-friendly name for the chatbot.
+        Returns a URL-friendly name for the llm_client.
 
-        This property returns an RFC 1034-compliant name for the chatbot, suitable for use in URLs and DNS labels.
+        This property returns an RFC 1034-compliant name for the llm_client, suitable for use in URLs and DNS labels.
 
         **Example:**
 
         .. code-block:: python
 
-            self.name = 'Example ChatBot 1'
-            self.rfc1034_compliant_name  # 'example-chatbot-1'
+            self.name = 'Example LLMClient 1'
+            self.rfc1034_compliant_name  # 'example-llm_client-1'
 
         :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
         :rtype: Optional[str]
@@ -292,6 +322,7 @@ class Provider(MetaDataWithOwnershipModel):
     def test_connectivity(self) -> bool:
         """
         Test connectivity to the provider's API.
+
         This method should be overridden by subclasses to implement specific connectivity tests.
         """
         if not self.base_url:
@@ -333,6 +364,7 @@ class Provider(MetaDataWithOwnershipModel):
     def verify(self):
         """
         Request a batch of acceptance tests.
+
         Set the status but don't change the is_verified flag.
         This is used to indicate that the provider is being verified but has not yet been activated.
         """
@@ -469,7 +501,14 @@ class Provider(MetaDataWithOwnershipModel):
                     account_id,
                     name,
                 )
-                return cls.objects.get(user_profile__account__id=account_id, name=name)
+                retval = cls.objects.get(user_profile__account__id=account_id, name=name)
+                logger.debug(
+                    "%s.cached_provider_by_account_id_and_name() fetched and cached provider for account_id: %s, name: %s",
+                    logger_prefix,
+                    account_id,
+                    name,
+                )
+                return retval
             except cls.DoesNotExist:
                 logger.debug(
                     "%s.cached_provider_by_account_id_and_name() no provider found for account_id: %s, name: %s",
@@ -490,55 +529,32 @@ class Provider(MetaDataWithOwnershipModel):
         cls, invalidate: Optional[bool] = False, user: Optional[User] = None
     ) -> Sequence["Provider"]:
         """Get cached providers for a user."""
+        logger_prefix = formatted_text(__name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()")
 
         @cache_results()
-        def cached_providers_by_account_id(account_id: int) -> Sequence["Provider"]:
-            if not user_profile:
-                logger.debug(
-                    "%s: No user profile found for user %s, returning empty list", cls.formatted_class_name, user
-                )
-                return []
-            admin_user = get_cached_admin_user_for_account(invalidate=invalidate, account=user_profile.cached_account)  # type: ignore[arg-type]
-            admin_user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=admin_user)  # type: ignore[arg-type]
-
-            account_providers = (
-                Provider.objects.filter(user_profile=admin_user_profile)
-                .select_related(
-                    "user_profile",
-                    "user_profile__account",
-                    "user_profile__user",
-                )
-                .order_by("name")
-            )
-            smarter_providers = (
-                Provider.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile)
-                .select_related(
-                    "user_profile",
-                    "user_profile__account",
-                    "user_profile__user",
-                )
-                .order_by("name")
-            )
-            retval = list((account_providers | smarter_providers).distinct()) or []
+        def cached_providers_by_user_id(user_id: int) -> Sequence["Provider"]:
+            logger.debug("%s cache miss for user_id: %s", logger_prefix, user_id)
+            retval = Provider.objects.with_read_permission_for(user_profile.user)
             logger.debug(
-                "%s.cached_providers_by_account_id() retrieved %s providers for account %s",
-                cls.formatted_class_name,
-                retval,
-                user_profile.account,
+                "%s.cached_providers_by_user_id() fetched and cached providers for user_id: %s", logger_prefix, user_id
             )
-            return retval
+            return list(retval) if retval else []
 
-        user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
-        if not user_profile:
-            logger.debug("%s: No user profile found for user %s, returning empty list", cls.formatted_class_name, user)
+        try:
+            user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
+        except UserProfile.DoesNotExist:
+            logger.error(
+                "%s UserProfile does not exist for user: %s. This is a bug.",
+                logger_prefix,
+                user,
+            )
             return []
 
         if invalidate and user_profile and user_profile.account:
-            cached_providers_by_account_id.invalidate(user_profile.account.id)
+            cached_providers_by_user_id.invalidate(user_profile.account.id)
 
-        if user_profile and user_profile.account:
-            providers = cached_providers_by_account_id(user_profile.account.id)
-            return list(providers) or []
+        if user_profile:
+            return cached_providers_by_user_id(user_profile.user.id)
         return []
 
     @classmethod
@@ -547,6 +563,7 @@ class Provider(MetaDataWithOwnershipModel):
     ) -> Optional["Provider"]:
         """
         Return a single instance of Provider by name for the given user.
+
         This method caches the results to improve performance.
 
         :param user: The user whose provider should be retrieved.
@@ -560,7 +577,7 @@ class Provider(MetaDataWithOwnershipModel):
         account = get_cached_account_for_user(invalidate=invalidate, user=user)
         if not account:
             return None
-        return cls.get_cached_provider_by_account_id_and_name(invalidate=invalidate, account_id=account.id, name=name)
+        return cls.get_cached_provider_by_account_id_and_name(invalidate=invalidate, account_id=account.id, name=name)  # type: ignore
 
     def validate(self) -> None:
         """Validate the provider before saving."""
@@ -697,7 +714,9 @@ class ProviderModelVerification(TimestampedModel):
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_provider(provider_name: str) -> Provider:
     """
-    Get the provider by name and account number. This is the primary way to
+    Get the provider by name and account number.
+
+    This is the primary way to
     retrieve a provider. Raises a Smarter error if anything goes wrong.
     """
 
@@ -706,21 +725,26 @@ def get_provider(provider_name: str) -> Provider:
     except Provider.DoesNotExist as e:
         raise SmarterValueError(f"Provider {provider_name} does not exist.") from e
 
-    if not provider.account.is_active:
-        raise SmarterBusinessRuleViolation(f"Provider account {provider.account.account_number} is not active.")
+    if not provider.user_profile.account.is_active:
+        raise SmarterBusinessRuleViolation(
+            f"Provider account {provider.user_profile.account.account_number} is not active."
+        )
 
     # the Provider might be inactive for a variety of reasons: suspended, flagged, deprecated, or something else.
     # We don't care why we just want to know if it is active or not.
     if not provider.is_active:
         raise SmarterBusinessRuleViolation(f"Provider {provider_name} is not active.")
 
+    logger.debug("Fetched and cached provider %s for provider_name: %s", provider, provider_name)
     return provider
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_providers() -> list[Provider]:
     """
-    Get all active providers. This is the primary way to retrieve all providers.
+    Get all active providers.
+
+    This is the primary way to retrieve all providers.
     Raises a Smarter error if anything goes wrong.
     """
     try:
@@ -730,13 +754,16 @@ def get_providers() -> list[Provider]:
     except Provider.DoesNotExist as e:
         raise SmarterValueError("No active providers found.") from e
 
+    logger.debug("Fetched and cached providers: %s", list(providers))
     return list(providers)
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_model_for_provider(provider_name: str, model_name: Optional[str] = None) -> ProviderModelTypedDict:
     """
-    Get the model for a provider by name and account number. This is the
+    Get the model for a provider by name and account number.
+
+    This is the
     primary way to retrieve a model for a provider. Raises a Smarter error if
     anything goes wrong.
     """
@@ -765,6 +792,7 @@ def get_model_for_provider(provider_name: str, model_name: Optional[str] = None)
     if not model.is_active:
         raise SmarterBusinessRuleViolation(f"Model {model_name} for provider {provider_name} is not active.")
 
+    logger.debug("Fetched and cached model %s for provider_name: %s, model_name: %s", model, provider_name, model_name)
     return {
         ProviderModelEnum.API_KEY.value: provider.production_api_key(mask=False),
         ProviderModelEnum.PROVIDER_NAME.value: provider.name,
@@ -794,13 +822,16 @@ def get_model_for_provider(provider_name: str, model_name: Optional[str] = None)
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_models_for_provider(provider_name: str) -> list[ProviderModelTypedDict]:
     """
-    Get all models for a provider by name and account number. This is the
+    Get all models for a provider by name and account number.
+
+    This is the
     primary way to retrieve all models for a provider. Raises a Smarter error if
     anything goes wrong.
     """
     provider = get_provider(provider_name=provider_name)
     provider_models = ProviderModel.objects.filter(provider=provider, is_active=True)
 
+    logger.debug("Fetched and cached models for provider_name: %s, models: %s", provider_name, list(provider_models))
     return [
         get_model_for_provider(provider_name=provider_name, model_name=provider_model.name)
         for provider_model in provider_models

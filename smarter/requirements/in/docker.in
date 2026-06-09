@@ -12,5 +12,6 @@
 
 -r constraints.in
 -r base.in
+-r mariadb.in
 
-gunicorn~=24.0
+uvicorn

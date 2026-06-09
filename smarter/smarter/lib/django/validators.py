@@ -1,9 +1,10 @@
 # pylint: disable=C0413,C0302
 """
-Internal validation features. This module contains functions for validating various data types.
+Internal validation features.
+
+This module contains functions for validating various data types.
 Before adding anything to this module, please first check if there is a built-in Python function
 or a Django utility that can do the validation.
-
 """
 
 import logging
@@ -53,7 +54,9 @@ logger_prefix = formatted_text(f"{__name__}.SmarterValidator")
 # pylint: disable=R0904
 class SmarterValidator:
     """
-    Class for validating various data types. Before adding anything to this class, please
+    Class for validating various data types.
+
+    Before adding anything to this class, please
     first check if there is a built-in Python function or a Django utility that can do the validation.
 
     .. todo::
@@ -76,7 +79,7 @@ class SmarterValidator:
     VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
     """Pattern for validating Smarter account numbers."""
 
-    VALID_CHATBOT_SLUG_PATTERN = r"^[a-zA-Z0-9-]+$"
+    VALID_LLM_CLIENT_SLUG_PATTERN = r"^[a-zA-Z0-9-]+$"
 
     VALID_PORT_PATTERN = r"^[0-9]{1,5}$"
     """Pattern for validating port numbers."""
@@ -125,7 +128,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_camel_case(value: str) -> str:
-        """Validate camel case format
+        """Validate camel case format.
 
         Checks if the provided string is in camel case format.
 
@@ -139,7 +142,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_camel_case("myCamelCase")  # returns "myCamelCase"
             SmarterValidator.validate_camel_case("NotCamelCase")  # raises SmarterValueError
-
         """
         logger.debug("%s.validate_camel_case() %s", logger_prefix, value)
         if not re.match(SmarterValidator.VALID_CAMEL_CASE, value):
@@ -158,7 +160,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_camel_case(value: str) -> bool:
-        """Check if the value is valid camel case
+        """Check if the value is valid camel case.
 
         Checks whether the provided string is in camel case format.
 
@@ -171,7 +173,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_camel_case("myCamelCase")  # returns True
             SmarterValidator.is_valid_camel_case("NotCamelCase")  # returns False
-
         """
         logger.debug("%s.is_valid_camel_case() %s", logger_prefix, value)
         try:
@@ -183,7 +184,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_snake_case(value: str) -> None:
-        """Validate snake case format
+        """Validate snake case format.
 
         Checks if the provided string is in snake case format.
 
@@ -197,7 +198,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_snake_case("my_snake_case")  # returns None
             SmarterValidator.validate_snake_case("NotSnakeCase")   # raises SmarterValueError
-
         """
         logger.debug("%s.validate_snake_case() %s", logger_prefix, value)
         if not value:
@@ -208,7 +208,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_snake_case(value: str) -> bool:
-        """Check if the value is valid snake case
+        """Check if the value is valid snake case.
 
         Checks whether the provided string is in snake case format.
 
@@ -221,7 +221,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_snake_case("my_snake_case")  # returns True
             SmarterValidator.is_valid_snake_case("NotSnakeCase")   # returns False
-
         """
         logger.debug("%s.is_valid_snake_case() %s", logger_prefix, value)
         try:
@@ -233,7 +232,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_pascal_case(value: str) -> str:
-        """Validate pascal case format
+        """Validate pascal case format.
 
         Checks if the provided string is in pascal case format.
 
@@ -247,7 +246,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_pascal_case("MyPascalCase")  # returns "MyPascalCase"
             SmarterValidator.validate_pascal_case("notPascalCase") # raises SmarterValueError
-
         """
         logger.debug("%s.validate_pascal_case() %s", logger_prefix, value)
         if not re.match(SmarterValidator.VALID_PASCAL_CASE, value):
@@ -268,7 +266,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_pascal_case(value: str) -> bool:
-        """Check if the value is valid pascal case
+        """Check if the value is valid pascal case.
 
         Checks whether the provided string is in pascal case format.
 
@@ -281,7 +279,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_pascal_case("MyPascalCase")  # returns True
             SmarterValidator.is_valid_pascal_case("notPascalCase") # returns False
-
         """
         logger.debug("%s.is_valid_pascal_case() %s", logger_prefix, value)
         try:
@@ -293,7 +290,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_json(value: str) -> Optional[str]:
-        """Validate JSON format
+        """Validate JSON format.
 
         Checks if the provided string is valid JSON.
 
@@ -307,7 +304,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_json('{"key": "value"}')  # returns '{"key": "value"}'
             SmarterValidator.validate_json('not json')          # raises SmarterValueError
-
         """
         logger.debug("%s.validate_json() %s", logger_prefix, value)
         try:
@@ -322,7 +318,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_json(value: str) -> bool:
-        """Check if the value is valid JSON
+        """Check if the value is valid JSON.
 
         Checks whether the provided string is valid JSON.
 
@@ -335,7 +331,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_json('{"key": "value"}')  # returns True
             SmarterValidator.is_valid_json('not json')          # returns False
-
         """
         logger.debug("%s.is_valid_json() %s", logger_prefix, value)
         try:
@@ -347,7 +342,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_semantic_version(version: str) -> str:
-        """Validate semantic version format (e.g., 1.12.1)
+        """Validate semantic version format (e.g., 1.12.1).
 
         Checks if the provided string is a valid semantic version.
 
@@ -361,7 +356,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_semantic_version("1.2.3")    # returns "1.2.3"
             SmarterValidator.validate_semantic_version("1.2")      # raises SmarterValueError
-
         """
         logger.debug("%s.validate_semantic_version() %s", logger_prefix, version)
         if not re.match(SmarterValidator.VALID_SEMANTIC_VERSION, version):
@@ -370,7 +364,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_semantic_version(version: str) -> bool:
-        """Check if the semantic version is valid
+        """Check if the semantic version is valid.
 
         Checks whether the provided string is a valid semantic version.
 
@@ -383,7 +377,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_semantic_version("1.2.3")    # returns True
             SmarterValidator.is_valid_semantic_version("1.2")      # returns False
-
         """
         logger.debug("%s.is_valid_semantic_version() %s", logger_prefix, version)
         try:
@@ -395,7 +388,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_is_not_none(value: str) -> str:
-        """Validate that the value is not None
+        """Validate that the value is not None.
 
         Checks if the provided value is not None and not empty.
 
@@ -409,7 +402,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_is_not_none("something")  # returns "something"
             SmarterValidator.validate_is_not_none(None)         # raises SmarterValueError
-
         """
         logger.debug("%s.validate_is_not_none() %s", logger_prefix, value)
         if value is None:
@@ -420,7 +412,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_not_none(value: str) -> bool:
-        """Check if the value is not None
+        """Check if the value is not None.
 
         Checks whether the provided value is not None and not empty.
 
@@ -433,7 +425,6 @@ class SmarterValidator:
 
             SmarterValidator.is_not_none("something")  # returns True
             SmarterValidator.is_not_none(None)         # returns False
-
         """
         logger.debug("%s.is_not_none() %s", logger_prefix, value)
         try:
@@ -445,7 +436,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_session_key(session_key: str) -> str:
-        """Validate session key format
+        """Validate session key format.
 
         Checks if the provided string is a valid session key.
 
@@ -459,7 +450,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_session_key("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")  # returns the session key
             SmarterValidator.validate_session_key("invalid")  # raises SmarterValueError
-
         """
         logger.debug("%s.validate_session_key() %s", logger_prefix, session_key)
         if not re.match(SmarterValidator.VALID_SESSION_KEY, session_key):
@@ -468,7 +458,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_account_number(account_number: str) -> str:
-        """Validate account number format
+        """Validate account number format.
 
         Checks if the provided string is a valid account number in the format XXXX-XXXX-XXXX.
 
@@ -482,7 +472,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_account_number("1234-5678-9012")  # returns "1234-5678-9012"
             SmarterValidator.validate_account_number("invalid")         # raises SmarterValueError
-
         """
         logger.debug("%s.validate_account_number() %s", logger_prefix, account_number)
         if not re.match(SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN, account_number):
@@ -490,31 +479,30 @@ class SmarterValidator:
         return account_number
 
     @staticmethod
-    def validate_chatbot_slug(slug: str) -> str:
-        """Validate chatbot slug format
+    def validate_llm_client_slug(slug: str) -> str:
+        """Validate llm_client slug format.
 
-        Checks if the provided string is a valid chatbot slug.
+        Checks if the provided string is a valid llm_client slug.
 
-        :param slug: The chatbot slug to validate.
+        :param slug: The llm_client slug to validate.
         :type slug: str
-        :raises SmarterValueError: If the chatbot slug is not valid.
-        :returns: The validated chatbot slug.
+        :raises SmarterValueError: If the llm_client slug is not valid.
+        :returns: The validated llm_client slug.
         :rtype: str
 
         Example::
 
-            SmarterValidator.validate_chatbot_slug("example-slug")  # returns "example-slug"
-            SmarterValidator.validate_chatbot_slug("invalid slug")  # raises SmarterValueError
-
+            SmarterValidator.validate_llm_client_slug("example-slug")  # returns "example-slug"
+            SmarterValidator.validate_llm_client_slug("invalid slug")  # raises SmarterValueError
         """
-        logger.debug("%s.validate_chatbot_slug() %s", logger_prefix, slug)
-        if not re.match(SmarterValidator.VALID_CHATBOT_SLUG_PATTERN, slug):
-            raise SmarterValueError(f"Invalid chatbot slug {slug}")
+        logger.debug("%s.validate_llm_client_slug() %s", logger_prefix, slug)
+        if not re.match(SmarterValidator.VALID_LLM_CLIENT_SLUG_PATTERN, slug):
+            raise SmarterValueError(f"Invalid llm_client slug {slug}")
         return slug
 
     @staticmethod
     def validate_username(username: str) -> str:
-        """Validate username format
+        """Validate username format.
 
         Checks if the provided string is a valid username.
 
@@ -528,7 +516,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_username("valid_username")  # returns "valid_username"
             SmarterValidator.validate_username("invalid username") # raises SmarterValueError
-
         """
         logger.debug("%s.validate_username() %s", logger_prefix, username)
         if not re.match(r"^[a-zA-Z0-9_.-]+$", username):
@@ -537,7 +524,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_domain(domain: Optional[str]) -> Optional[str]:
-        """Validate domain format
+        """Validate domain format.
 
         Checks if the provided string is a valid domain.
 
@@ -551,7 +538,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_domain("example.com")  # returns "example.com"
             SmarterValidator.validate_domain("invalid_domain")  # raises SmarterValueError
-
         """
         logger.debug("%s.validate_domain() %s", logger_prefix, domain)
         if isinstance(domain, str) and domain not in SmarterValidator.LOCAL_HOSTS + [None, ""]:
@@ -561,7 +547,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_email(email: str) -> str:
-        """Validate email format
+        """Validate email format.
 
         Checks if the provided string is a valid email address.
 
@@ -575,7 +561,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_email("user@example.com")  # returns "user@example.com"
             SmarterValidator.validate_email("invalid")           # raises SmarterValueError
-
         """
         logger.debug("%s.validate_email() %s", logger_prefix, email)
 
@@ -585,7 +570,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_ip(ip: str) -> str:
-        """Validate IP address format
+        """Validate IP address format.
 
         Checks if the provided string is a valid IP address.
 
@@ -599,7 +584,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_ip("192.168.1.1")  # returns "192.168.1.1"
             SmarterValidator.validate_ip("invalid")      # raises SmarterValueError
-
         """
         logger.debug("%s.validate_ip() %s", logger_prefix, ip)
         try:
@@ -614,7 +598,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_port(port: str) -> str:
-        """Validate port format
+        """Validate port format.
 
         Checks if the provided string is a valid port number.
 
@@ -628,7 +612,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_port("8080")  # returns "8080"
             SmarterValidator.validate_port("99999") # raises SmarterValueError
-
         """
         logger.debug("%s.validate_port() %s", logger_prefix, port)
         if not re.match(SmarterValidator.VALID_PORT_PATTERN, port):
@@ -642,7 +625,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_url_path(path: str) -> str:
-        """Validate URL path format
+        """Validate URL path format.
 
         Checks if the provided string is a valid URL path.
 
@@ -656,7 +639,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_url_path("/api/v1/resource/")  # returns "/api/v1/resource/"
             SmarterValidator.validate_url_path("invalid_path")       # raises SmarterValueError
-
         """
         logger.debug("%s.validate_url_path() %s", logger_prefix, path)
         if not path.startswith("/"):
@@ -667,7 +649,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_url(url: str) -> str:
-        """Validate URL format
+        """Validate URL format.
 
         Checks if the provided string is a valid URL.
 
@@ -681,7 +663,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_url("https://example.com")  # returns "https://example.com"
             SmarterValidator.validate_url("invalid_url")          # raises SmarterValueError
-
         """
         logger.debug("%s.validate_url() %s", logger_prefix, url)
         valid_protocols = ["http", "https"]
@@ -721,7 +702,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_hostname(hostname: str) -> str:
-        """Validate hostname format
+        """Validate hostname format.
 
         Checks if the provided string is a valid hostname.
 
@@ -735,7 +716,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_hostname("example.com")  # returns "example.com"
             SmarterValidator.validate_hostname("invalid_hostname!")  # raises SmarterValueError
-
         """
         logger.debug("%s.validate_hostname() %s", logger_prefix, hostname)
         # Accept Django wildcard hostnames starting with a dot (e.g., .api.localhost)
@@ -765,7 +745,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_uuid(uuid: str) -> str:
-        """Validate UUID format
+        """Validate UUID format.
 
         Checks if the provided string is a valid UUID.
 
@@ -779,7 +759,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_uuid("123e4567-e89b-12d3-a456-426614174000")  # returns the UUID
             SmarterValidator.validate_uuid("invalid")  # raises SmarterValueError
-
         """
         logger.debug("%s.validate_uuid() %s", logger_prefix, uuid)
         if not re.match(SmarterValidator.VALID_UUID_PATTERN, uuid):
@@ -788,7 +767,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_clean_string(v: str) -> str:
-        """Validate clean string format
+        """Validate clean string format.
 
         Checks if the provided string is a valid "clean" string (alphanumeric, underscores, or hyphens, and may include dots).
 
@@ -802,7 +781,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_clean_string("valid_string-123")  # returns "valid_string-123"
             SmarterValidator.validate_clean_string("invalid string!")   # raises SmarterValueError
-
         """
         logger.debug("%s.validate_clean_string() %s", logger_prefix, v)
         if not re.match(SmarterValidator.VALID_CLEAN_STRING, v):
@@ -812,7 +790,7 @@ class SmarterValidator:
     @staticmethod
     def validate_http_request_header_key(key: str) -> str:
         """
-        Validate HTTP request header key format
+        Validate HTTP request header key format.
 
         HTTP header name must be ASCII and cannot contain special characters like ()<>@,;:\"/[]?={} \t
 
@@ -826,7 +804,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_http_request_header_key("X-Custom-Header")  # returns "X-Custom-Header"
             SmarterValidator.validate_http_request_header_key("Invalid Header!")  # raises SmarterValueError
-
         """
         logger.debug("%s.validate_http_request_header_key() %s", logger_prefix, key)
         if not key.isascii() or not re.match(r"^[!#$%&'*+\-.^_`|~0-9a-zA-Z]+$", key):
@@ -836,7 +813,8 @@ class SmarterValidator:
     @staticmethod
     def validate_http_request_header_value(value: str) -> str:
         """
-        Validate HTTP request header value format
+        Validate HTTP request header value format.
+
         HTTP header value must not contain control characters like escaped nor special characters.
 
         :param value: The HTTP header value to validate.
@@ -844,7 +822,6 @@ class SmarterValidator:
         :raises SmarterValueError: If the header value contains invalid characters.
         :returns: The validated header value.
         :rtype: str
-
         """
         logger.debug("%s.validate_http_request_header_value() %s", logger_prefix, value)
         if not re.match(r"^[\t\x20-\x7E\x80-\xFF]*$", value):
@@ -856,7 +833,7 @@ class SmarterValidator:
     # --------------------------------------------------------------------------
     @staticmethod
     def is_valid_http_request_header_key(key: str) -> bool:
-        """Check if HTTP request header key is valid
+        """Check if HTTP request header key is valid.
 
         Checks whether the provided HTTP request header key is valid.
 
@@ -869,7 +846,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_http_request_header_key("X-Custom-Header")  # returns True
             SmarterValidator.is_valid_http_request_header_key("Invalid Header!")  # returns False
-
         """
         logger.debug("%s.is_valid_http_request_header_key() %s", logger_prefix, key)
         try:
@@ -881,7 +857,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_http_request_header_value(value: str) -> bool:
-        """Check if HTTP request header value is valid
+        """Check if HTTP request header value is valid.
 
         Checks whether the provided HTTP request header value is valid.
 
@@ -900,7 +876,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_session_key(session_key: str) -> bool:
-        """Check if session key is valid
+        """Check if session key is valid.
 
         Checks whether the provided session key is valid.
 
@@ -913,7 +889,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_session_key("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")  # returns True
             SmarterValidator.is_valid_session_key("invalid")  # returns False
-
         """
         logger.debug("%s.is_valid_session_key() %s", logger_prefix, session_key)
         try:
@@ -925,7 +900,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_account_number(account_number: str) -> bool:
-        """Check if account number is valid
+        """Check if account number is valid.
 
         Checks whether the provided account number is valid.
 
@@ -938,7 +913,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_account_number("1234-5678-9012")  # returns True
             SmarterValidator.is_valid_account_number("invalid")         # returns False
-
         """
         logger.debug("%s.is_valid_account_number() %s", logger_prefix, account_number)
         try:
@@ -949,33 +923,32 @@ class SmarterValidator:
             return False
 
     @staticmethod
-    def is_valid_chatbot_slug(slug: str) -> bool:
-        """Check if chatbot slug is valid
+    def is_valid_llm_client_slug(slug: str) -> bool:
+        """Check if llm_client slug is valid.
 
-        Checks whether the provided chatbot slug is valid.
+        Checks whether the provided llm_client slug is valid.
 
-        :param slug: The chatbot slug to check.
+        :param slug: The llm_client slug to check.
         :type slug: str
-        :returns: True if the chatbot slug is valid, otherwise False.
+        :returns: True if the llm_client slug is valid, otherwise False.
         :rtype: bool
 
         Example::
 
-            SmarterValidator.is_valid_chatbot_slug("example-slug")  # returns True
-            SmarterValidator.is_valid_chatbot_slug("invalid slug")  # returns False
-
+            SmarterValidator.is_valid_llm_client_slug("example-slug")  # returns True
+            SmarterValidator.is_valid_llm_client_slug("invalid slug")  # returns False
         """
-        logger.debug("%s.is_valid_chatbot_slug() %s", logger_prefix, slug)
+        logger.debug("%s.is_valid_llm_client_slug() %s", logger_prefix, slug)
         try:
-            SmarterValidator.validate_chatbot_slug(slug)
+            SmarterValidator.validate_llm_client_slug(slug)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_chatbot_slug() invalid %s", logger_prefix, slug)
+            logger.debug("%s.is_valid_llm_client_slug() invalid %s", logger_prefix, slug)
             return False
 
     @staticmethod
     def is_valid_username(username: str) -> bool:
-        """Check if username is valid
+        """Check if username is valid.
 
         Checks whether the provided username is valid.
 
@@ -988,7 +961,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_username("valid_username")  # returns True
             SmarterValidator.is_valid_username("invalid username") # returns False
-
         """
         logger.debug("%s.is_valid_username() %s", logger_prefix, username)
         try:
@@ -1000,7 +972,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_domain(domain: str) -> bool:
-        """Check if domain is valid
+        """Check if domain is valid.
 
         Checks whether the provided domain is valid.
 
@@ -1013,7 +985,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_domain("example.com")      # returns True
             SmarterValidator.is_valid_domain("invalid_domain")   # returns False
-
         """
         logger.debug("%s.is_valid_domain() %s", logger_prefix, domain)
         try:
@@ -1025,7 +996,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_email(email: str) -> bool:
-        """Check if email is valid
+        """Check if email is valid.
 
         Checks whether the provided email address is valid.
 
@@ -1038,7 +1009,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_email("user@example.com")  # returns True
             SmarterValidator.is_valid_email("invalid")           # returns False
-
         """
         logger.debug("%s.is_valid_email() %s", logger_prefix, email)
         try:
@@ -1050,7 +1020,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_ip(ip: str) -> bool:
-        """Check if IP address is valid
+        """Check if IP address is valid.
 
         Checks whether the provided IP address is valid.
 
@@ -1063,7 +1033,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_ip("192.168.1.1")  # returns True
             SmarterValidator.is_valid_ip("invalid")      # returns False
-
         """
         logger.debug("%s.is_valid_ip() %s", logger_prefix, ip)
         try:
@@ -1075,7 +1044,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_port(port: str) -> bool:
-        """Check if port is valid
+        """Check if port is valid.
 
         Checks whether the provided port is valid.
 
@@ -1088,7 +1057,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_port("8080")  # returns True
             SmarterValidator.is_valid_port("invalid")  # returns False
-
         """
         logger.debug("%s.is_valid_port() %s", logger_prefix, port)
         try:
@@ -1100,7 +1068,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_url(url: str) -> bool:
-        """Check if URL is valid
+        """Check if URL is valid.
 
         Checks whether the provided URL is valid.
 
@@ -1113,7 +1081,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_url("https://example.com")  # returns True
             SmarterValidator.is_valid_url("invalid_url")          # returns False
-
         """
         logger.debug("%s.is_valid_url() %s", logger_prefix, url)
         try:
@@ -1125,7 +1092,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_url_path(url_path: str) -> bool:
-        """Check if URL path is valid
+        """Check if URL path is valid.
 
         Checks whether the provided URL path is valid.
 
@@ -1138,7 +1105,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_url_path("/api/v1/tests/unauthenticated/list/")  # returns True
             SmarterValidator.is_valid_url_path("invalid_url_path")                     # returns False
-
         """
         logger.debug("%s.is_valid_url_path() %s", logger_prefix, url_path)
         try:
@@ -1150,7 +1116,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_hostname(hostname: str) -> bool:
-        """Check if URL is valid
+        """Check if URL is valid.
 
         Checks whether the provided URL is valid.
 
@@ -1163,7 +1129,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_url("https://example.com")  # returns True
             SmarterValidator.is_valid_url("invalid_url")          # returns False
-
         """
         logger.debug("%s.is_valid_hostname() %s", logger_prefix, hostname)
         try:
@@ -1175,7 +1140,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_uuid(uuid: str) -> bool:
-        """Check if UUID is valid
+        """Check if UUID is valid.
 
         Checks whether the provided UUID is valid.
 
@@ -1188,7 +1153,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_uuid("123e4567-e89b-12d3-a456-426614174000")  # returns True
             SmarterValidator.is_valid_uuid("invalid")                                # returns False
-
         """
         logger.debug("%s.is_valid_uuid() %s", logger_prefix, uuid)
         try:
@@ -1200,7 +1164,7 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_cleanstring(v: str) -> bool:
-        """Check if hostname is valid
+        """Check if hostname is valid.
 
         Checks whether the provided hostname is valid.
 
@@ -1213,7 +1177,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_hostname("example.com")         # returns True
             SmarterValidator.is_valid_hostname("invalid_hostname!")   # returns False
-
         """
         logger.debug("%s.is_valid_cleanstring() %s", logger_prefix, v)
         try:
@@ -1239,7 +1202,6 @@ class SmarterValidator:
 
             SmarterValidator.is_valid_url_endpoint("/api/v1/tests/unauthenticated/list/")  # returns True
             SmarterValidator.is_valid_url_endpoint("/api/v1/tests/unauthenticated/list")   # returns False
-
         """
         logger.debug("%s.is_valid_url_endpoint() %s", logger_prefix, url)
         try:
@@ -1265,7 +1227,6 @@ class SmarterValidator:
 
             SmarterValidator.is_api_endpoint("/api/v1/tests/unauthenticated/list/")  # returns True
             SmarterValidator.is_api_endpoint("/v1/tests/unauthenticated/list/")      # returns False
-
         """
         logger.debug("%s.is_api_endpoint() %s", logger_prefix, url)
         if not isinstance(url, str):
@@ -1291,7 +1252,7 @@ class SmarterValidator:
     @staticmethod
     def validate_url_endpoint(url: str) -> None:
         """
-        Validate URL endpoint format
+        Validate URL endpoint format.
 
         Checks if the provided string is a valid URL endpoint (must start and end with a slash).
 
@@ -1305,7 +1266,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_url_endpoint("/api/v1/tests/unauthenticated/list/")  # returns None
             SmarterValidator.validate_url_endpoint("/api/v1/tests/unauthenticated/list")   # raises SmarterValueError
-
         """
         logger.debug("%s.validate_url_endpoint() %s", logger_prefix, url)
         if not re.match(SmarterValidator.VALID_URL_ENDPOINT, url):
@@ -1317,7 +1277,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_list_of_account_numbers(account_numbers: list) -> None:
-        """Validate list of account numbers
+        """Validate list of account numbers.
 
         Checks if each item in the provided list is a valid account number.
 
@@ -1331,7 +1291,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_list_of_account_numbers(["1234-5678-9012", "2345-6789-0123"])  # returns None
             SmarterValidator.validate_list_of_account_numbers(["invalid", "2345-6789-0123"])         # raises SmarterValueError
-
         """
         logger.debug("%s.validate_list_of_account_numbers() %s", logger_prefix, account_numbers)
         for account_number in account_numbers:
@@ -1339,7 +1298,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_list_of_domains(domains: list) -> None:
-        """Validate list of domains
+        """Validate list of domains.
 
         Checks if each item in the provided list is a valid domain.
 
@@ -1353,7 +1312,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_list_of_domains(["example.com", "test.com"])  # returns None
             SmarterValidator.validate_list_of_domains(["invalid_domain", "test.com"])  # raises SmarterValueError
-
         """
         logger.debug("%s.validate_list_of_domains() %s", logger_prefix, domains)
         for domain in domains:
@@ -1361,7 +1319,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_list_of_emails(emails: list) -> None:
-        """Validate list of emails
+        """Validate list of emails.
 
         Checks if each item in the provided list is a valid email address.
 
@@ -1375,7 +1333,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_list_of_emails(["user@example.com", "admin@test.com"])  # returns None
             SmarterValidator.validate_list_of_emails(["invalid", "admin@test.com"])           # raises SmarterValueError
-
         """
         logger.debug("%s.validate_list_of_emails() %s", logger_prefix, emails)
         for email in emails:
@@ -1383,7 +1340,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_list_of_ips(ips: list) -> None:
-        """Validate list of IP addresses
+        """Validate list of IP addresses.
 
         Checks if each item in the provided list is a valid IP address.
 
@@ -1397,7 +1354,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_list_of_ips(["192.168.1.1", "10.0.0.1"])  # returns None
             SmarterValidator.validate_list_of_ips(["invalid", "10.0.0.1"])      # raises SmarterValueError
-
         """
         logger.debug("%s.validate_list_of_ips() %s", logger_prefix, ips)
         for ip in ips:
@@ -1406,7 +1362,7 @@ class SmarterValidator:
     @staticmethod
     def validate_list_of_ports(ports: list) -> None:
         """
-        Validate list of ports
+        Validate list of ports.
 
         Checks if each item in the provided list is a valid port.
 
@@ -1420,7 +1376,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_list_of_ports(["8080", "443"])    # returns None
             SmarterValidator.validate_list_of_ports(["invalid", "443"]) # raises SmarterValueError
-
         """
         logger.debug("%s.validate_list_of_ports() %s", logger_prefix, ports)
         for port in ports:
@@ -1428,7 +1383,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_list_of_urls(urls: list) -> None:
-        """Validate list of URLs
+        """Validate list of URLs.
 
         Checks if each item in the provided list is a valid URL.
 
@@ -1442,7 +1397,6 @@ class SmarterValidator:
 
             SmarterValidator.validate_list_of_urls(["https://example.com", "https://test.com"])  # returns None
             SmarterValidator.validate_list_of_urls(["invalid_url", "https://test.com"])          # raises SmarterValueError
-
         """
         logger.debug("%s.validate_list_of_urls() %s", logger_prefix, urls)
         for url in urls:
@@ -1450,7 +1404,7 @@ class SmarterValidator:
 
     @staticmethod
     def validate_list_of_uuids(uuids: list) -> None:
-        """Validate list of UUIDs
+        """Validate list of UUIDs.
 
         Checks if each item in the provided list is a valid UUID.
 
@@ -1471,7 +1425,6 @@ class SmarterValidator:
                 "invalid",
                 "987e6543-e21b-12d3-a456-426614174111"
             ])  # raises SmarterValueError
-
         """
         logger.debug("%s.validate_list_of_uuids() %s", logger_prefix, uuids)
         for uuid in uuids:
@@ -1496,7 +1449,6 @@ class SmarterValidator:
 
             SmarterValidator.base_domain("https://example.com/path/")  # returns "example.com"
             SmarterValidator.base_domain("")                           # returns None
-
         """
         logger.debug("%s.base_domain() %s", logger_prefix, url)
         if not url:
@@ -1523,7 +1475,6 @@ class SmarterValidator:
 
             SmarterValidator.base_url("https://example.com/path/")  # returns "https://example.com"
             SmarterValidator.base_url("")                           # returns None
-
         """
         logger.debug("%s.base_url() %s", logger_prefix, url)
         if not url:
@@ -1536,7 +1487,7 @@ class SmarterValidator:
     @staticmethod
     def trailing_slash(url: str) -> Optional[str]:
         """
-        ensure that URL ends with a trailing slash
+        Ensure that URL ends with a trailing slash.
 
         Appends a trailing slash to the URL if it does not already have one.
 
@@ -1550,7 +1501,6 @@ class SmarterValidator:
             SmarterValidator.trailing_slash("https://example.com")   # returns "https://example.com/"
             SmarterValidator.trailing_slash("https://example.com/")  # returns "https://example.com/"
             SmarterValidator.trailing_slash("")                      # returns None
-
         """
         logger.debug("%s.trailing_slash() %s", logger_prefix, url)
         if not url:
@@ -1560,7 +1510,7 @@ class SmarterValidator:
     @staticmethod
     def leading_slash(path: str) -> Optional[str]:
         """
-        ensure that URL path starts with a leading slash
+        Ensure that URL path starts with a leading slash.
 
         Appends a leading slash to the URL path if it does not already have one.
 
@@ -1574,7 +1524,6 @@ class SmarterValidator:
             SmarterValidator.leading_slash("api/v1/resource/")   # returns "/api/v1/resource/"
             SmarterValidator.leading_slash("/api/v1/resource/")  # returns "/api/v1/resource/"
             SmarterValidator.leading_slash("")                    # returns None
-
         """
         logger.debug("%s.leading_slash() %s", logger_prefix, path)
         if not path:
@@ -1584,7 +1533,8 @@ class SmarterValidator:
     @staticmethod
     def urlify(url: str, scheme: Optional[str] = None, environment: str = SmarterEnvironments.LOCAL) -> str:
         """
-        ensure that URL starts with http:// or https://
+        Ensure that URL starts with http:// or https://.
+
         and ends with a trailing slash
 
         Ensures the provided URL starts with a valid scheme (http or https) and ends with a trailing slash.
@@ -1603,7 +1553,6 @@ class SmarterValidator:
             SmarterValidator.urlify("example.com")                # returns "https://example.com/"
             SmarterValidator.urlify("example.com", scheme="http") # returns "http://example.com/"
             SmarterValidator.urlify("https://example.com")        # returns "https://example.com/"
-
         """
         logger.debug("%s.urlify() %s, %s", logger_prefix, url, scheme)
         if not url:
@@ -1627,5 +1576,11 @@ class SmarterValidator:
 
     @staticmethod
     def raise_error(msg: str) -> None:
-        """Raise a SmarterValueError with the given message"""
+        """Raise a SmarterValueError with the given message."""
         raise SmarterValueError(msg)
+
+    @staticmethod
+    def validate_no_spaces(value) -> None:
+        """Validate that the string does not contain spaces."""
+        if " " in value:
+            raise SmarterValueError(f"Value must not contain spaces: {value}")

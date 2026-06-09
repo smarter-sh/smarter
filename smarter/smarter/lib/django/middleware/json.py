@@ -1,95 +1,301 @@
 """
-Middleware to ensure that all requests for 'application/JSON' return responses
-that are also in JSON format.
+Middleware that guarantees JSON-formatted error responses for clients
+requesting JSON content.
+
+This middleware intercepts non-JSON error responses and converts them
+into standardized ``JsonResponse`` objects when the client explicitly
+indicates JSON support through HTTP content negotiation headers.
+
+Key Features
+============
+
+- Converts non-JSON error responses into JSON
+- Preserves original HTTP status codes
+- Supports sync and async Django execution
+- Performs HTTP Accept-header content negotiation
+- Leaves successful responses untouched
+- Preserves existing JSON responses
+- Feature-flag enablement via Django Waffle
+
+Behavior
+========
+
+For each response, the middleware:
+
+#. Determines whether the client accepts JSON responses
+#. Detects whether the response represents an error condition
+#. Detects whether the response is already JSON
+#. Converts eligible error responses into ``JsonResponse`` objects
+#. Preserves the original HTTP status code
+
+Only error responses are normalized.
+
+Responses with status codes below ``400 Bad Request`` are returned
+unchanged.
+
+Content Negotiation
+===================
+
+The middleware performs lightweight content negotiation using the
+request ``Accept`` header.
+
+JSON normalization is enabled only when the client advertises support
+for one of the configured JSON content types.
+
+Supported JSON content types include:
+
+- ``application/json``
+- ``application/problem+json``
+
+Error Payload Format
+====================
+
+Normalized JSON responses use the following structure:
+
+.. code-block:: json
+
+   {
+     "error": {
+       "status_code": 404,
+       "message": "Not Found"
+     }
+   }
+
+The payload preserves:
+
+- the original HTTP status code
+- the original HTTP reason phrase
+
+Async Compatibility
+===================
+
+The middleware supports both synchronous and asynchronous Django
+execution models.
+
+Coroutine-based request handlers are detected automatically during
+middleware initialization.
+
+Async request execution delegates synchronous middleware processing
+through ``sync_to_async()`` to preserve compatibility with Django's
+middleware lifecycle.
+
+Response Handling Rules
+=======================
+
+The middleware intentionally avoids modifying:
+
+- successful responses
+- existing JSON responses
+- clients not requesting JSON content
+
+This ensures compatibility with:
+
+- HTML browser workflows
+- Django admin
+- traditional server-rendered views
+- API clients expecting structured JSON errors
+
+Feature Flags
+=============
+
+Middleware activation is controlled using Django Waffle:
+
+- ``ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR``
+
+When disabled, the middleware behaves as a transparent pass-through.
+
+Logging
+=======
+
+The middleware emits structured logs for:
+
+- middleware initialization
+- request processing
+- JSON error normalization events
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: generated/
+
+   SmarterJsonErrorMiddleware
+
+Dependencies
+============
+
+- Django
+- asgiref
+- Django Waffle
+
+Warnings
+========
+
+This middleware performs lightweight content negotiation based solely
+on ``Accept`` headers and does not implement full RFC-compliant
+negotiation semantics.
+
+Clients advertising wildcard media types without explicit JSON support
+may not receive normalized JSON errors.
+
+Notes
+=====
+
+This middleware depends on helper functionality provided by
+:class:`smarter.common.mixins.SmarterMiddlewareMixin`.
+
+The middleware preserves Django response semantics by avoiding
+modification of successful responses and preserving original HTTP
+status codes during normalization.
 """
 
-import logging
+from __future__ import annotations
+
 from collections.abc import Awaitable
 from http import HTTPStatus
 
+from asgiref.sync import sync_to_async
 from django.http import JsonResponse
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseBase
 
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.mixins import SmarterMiddlewareMixin
+from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return (waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)) or level >= logging.WARNING
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-
-logger.debug("Loading %s", formatted_text(__name__ + ".SmarterJsonErrorMiddleware"))
+if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
+    logger.debug(
+        "%s is %s",
+        formatted_text(__name__ + ".SmarterJsonErrorMiddleware"),
+        SmarterHelperMixin().formatted_state_ready,
+    )
+else:
+    logger.debug(
+        "%s is %s. Enable with Django waffle in the admin console.",
+        formatted_text(__name__ + ".SmarterJsonErrorMiddleware"),
+        SmarterHelperMixin().formatted_state_not_ready,
+    )
 
 
 class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
     """
-    Middleware to ensure that all requests for ``application/json`` return responses
-    that are also in JSON format.
-
-    This middleware intercepts HTTP responses for requests that specify an ``Accept: application/json``
-    header. If the response is an error (status code >= 400) and is not already a ``JsonResponse``,
-    it wraps the error details in a JSON structure and returns a standardized JSON error response.
-
-    This ensures that API clients and frontend applications expecting JSON always receive a
-    consistent JSON error format, improving developer experience and error handling.
-
-    **Key Features**
-
-    - Detects requests with ``Accept: application/json``.
-    - Converts non-JSON error responses (status code >= 400) to a standardized JSON format.
-    - Preserves the original status code in the JSON response.
-    - Integrates seamlessly with Django's middleware stack.
-
-    .. note::
-        - Only affects responses to requests that explicitly accept JSON.
-        - Does not alter successful (status < 400) responses or responses already in JSON format.
-
-    **Example**
-
-    To enable this middleware, add it to your Django project's middleware settings::
-
-        MIDDLEWARE = [
-            ...
-            'smarter.lib.django.middleware.json.SmarterJsonErrorMiddleware',
-            ...
-        ]
-
-    :param request: The incoming HTTP request object.
-    :type request: django.http.HttpRequest
-
-    :param response: The outgoing HTTP response object.
-    :type response: django.http.HttpResponse
-
-    :returns: The original response, or a ``JsonResponse`` if the request expects JSON and an error occurred.
-    :rtype: django.http.HttpResponse or django.http.JsonResponse
-
+    Middleware that converts non-JSON error responses into JSON responses
+    for clients requesting JSON content.
     """
+
+    JSON_CONTENT_TYPES = (
+        "application/json",
+        "application/problem+json",
+    )
+
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+
+        if self.async_mode:
+            return self.__acall__(request)
+
+        if self.deserves_amnesty(request.path):
+            return super().__call__(request)
+
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
+            return super().__call__(request)
+
+        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        response = super().__call__(request)
+        response = self.process_response(request, response)  # type: ignore
+
+        return response
+
+    async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
+
+        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
+            return await sync_to_async(self.get_response)(request)
+
+        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        callback = super().__acall__
+        response = await sync_to_async(callback)(request)  # type: ignore
+        response = await self.async_process_response(request, response)  # type: ignore
+
+        return response
 
     @property
     def formatted_class_name(self) -> str:
-        """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{SmarterJsonErrorMiddleware.__name__}")
+        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
 
-    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
-        logger.debug("%s.__call__(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
-        return super().__call__(request)
+    def process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
 
-    def process_response(self, request, response):
-        if request.headers.get("Accept") == "application/json" and response.status_code >= HTTPStatus.BAD_REQUEST:
-            if not isinstance(response, JsonResponse):
-                data = {
-                    "error": {
-                        "status_code": response.status_code,
-                        "message": response.reason_phrase,
-                    }
-                }
-                return JsonResponse(data, status=response.status_code)
-        return response
+        if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
+            return response
+
+        return self.normalize_json_error_response(request=request, response=response)
+
+    async def async_process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
+
+        if not await waffle.async_switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_JSON_ERROR):
+            return response
+
+        return await sync_to_async(self.normalize_json_error_response)(request=request, response=response)
+
+    def normalize_json_error_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
+        """
+        Convert non-JSON error responses into JsonResponse objects.
+        """
+
+        if not self.client_accepts_json(request):
+            return response
+
+        if response.status_code < HTTPStatus.BAD_REQUEST:
+            return response
+
+        if self.response_is_json(response):
+            return response
+
+        logger.debug(
+            "%s converting non-json error response status=%d",
+            self.formatted_class_name,
+            response.status_code,
+        )
+
+        payload = self.build_error_payload(response)
+
+        return JsonResponse(payload, status=response.status_code)
+
+    def client_accepts_json(self, request: HttpRequest) -> bool:
+        """
+        Determine whether the client accepts JSON responses.
+        """
+
+        accept_header = request.headers.get("Accept", "").lower()
+
+        if not accept_header:
+            return False
+
+        return any(content_type in accept_header for content_type in self.JSON_CONTENT_TYPES)
+
+    @staticmethod
+    def response_is_json(response: HttpResponseBase) -> bool:
+        """
+        Detect whether the response is already JSON.
+        """
+
+        content_type = response.get(
+            "Content-Type",
+            "",
+        ).lower()
+        return "json" in content_type
+
+    @staticmethod
+    def build_error_payload(response: HttpResponseBase) -> dict:
+        """
+        Build standardized JSON error payload.
+        """
+
+        return {
+            "error": {
+                "status_code": response.status_code,
+                "message": response.reason_phrase,
+            }
+        }

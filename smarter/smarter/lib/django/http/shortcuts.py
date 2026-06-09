@@ -79,12 +79,16 @@ class SmarterHttpResponse(HttpResponse):
         super().__init__(content=content, *args, **kwargs)
 
 
-class SmarterHttpResponseBadRequest(SmarterHttpResponse):
+class SmarterHttpErrorResponse(SmarterHttpResponse):
+    pass
+
+
+class SmarterHttpResponseBadRequest(SmarterHttpErrorResponse):
     """
     SmarterHttpResponseBadRequest(request, error_message=None, *args, **kwargs)
 
     Specialized HTTP 400 (Bad Request) response for Smarter Django applications.
-    This class extends :class:`SmarterHttpResponse` to provide a standardized way to return
+    This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
     a "Bad Request" response, rendering the ``400.html`` template with a customizable error message.
 
     :param request: The Django ``HttpRequest`` object associated with the response.
@@ -92,8 +96,8 @@ class SmarterHttpResponseBadRequest(SmarterHttpResponse):
     :param error_message: An optional custom error message to display in the rendered template.
                          If not provided, a default message is used: "Dohhhh, that's a bad request my friend."
     :type error_message: str, optional
-    :param args: Additional positional arguments passed to the parent ``SmarterHttpResponse``.
-    :param kwargs: Additional keyword arguments passed to the parent ``SmarterHttpResponse``.
+    :param args: Additional positional arguments passed to the parent ``SmarterHttpErrorResponse``.
+    :param kwargs: Additional keyword arguments passed to the parent ``SmarterHttpErrorResponse``.
 
     **Context:**
         The template is rendered with a context dictionary containing:
@@ -137,12 +141,12 @@ class SmarterHttpResponseBadRequest(SmarterHttpResponse):
         )
 
 
-class SmarterHttpResponseForbidden(SmarterHttpResponse):
+class SmarterHttpResponseForbidden(SmarterHttpErrorResponse):
     """
     SmarterHttpResponseForbidden(request, error_message=None, *args, **kwargs)
 
     Specialized HTTP 403 (Forbidden) response for Smarter Django applications.
-    This class extends :class:`SmarterHttpResponse` to provide a standardized way to return
+    This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
     a "Forbidden" response, rendering the ``403.html`` template with a customizable error message.
 
     :param request: The Django ``HttpRequest`` object associated with the response.
@@ -150,8 +154,8 @@ class SmarterHttpResponseForbidden(SmarterHttpResponse):
     :param error_message: An optional custom error message to display in the rendered template.
                          If not provided, a default message is used: "Awe shucks, you're not allowed to do that."
     :type error_message: str, optional
-    :param args: Additional positional arguments passed to the parent ``SmarterHttpResponse``.
-    :param kwargs: Additional keyword arguments passed to the parent ``SmarterHttpResponse``.
+    :param args: Additional positional arguments passed to the parent ``SmarterHttpErrorResponse``.
+    :param kwargs: Additional keyword arguments passed to the parent ``SmarterHttpErrorResponse``.
 
     **Context:**
         The template is rendered with a context dictionary containing:
@@ -195,12 +199,12 @@ class SmarterHttpResponseForbidden(SmarterHttpResponse):
         )
 
 
-class SmarterHttpResponseNotFound(SmarterHttpResponse):
+class SmarterHttpResponseNotFound(SmarterHttpErrorResponse):
     """
     SmarterHttpResponseNotFound(request, error_message=None, *args, **kwargs)
 
     Specialized HTTP 404 (Not Found) response for Smarter Django applications.
-    This class extends :class:`SmarterHttpResponse` to provide a standardized way to return
+    This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
     a "Not Found" response, rendering the ``404.html`` template with a customizable error message.
 
     :param request: The Django ``HttpRequest`` object associated with the response.
@@ -208,8 +212,8 @@ class SmarterHttpResponseNotFound(SmarterHttpResponse):
     :param error_message: An optional custom error message to display in the rendered template.
                          If not provided, a default message is used: "Oh no!!! We couldn't find that page."
     :type error_message: str, optional
-    :param args: Additional positional arguments passed to the parent ``SmarterHttpResponse``.
-    :param kwargs: Additional keyword arguments passed to the parent ``SmarterHttpResponse``.
+    :param args: Additional positional arguments passed to the parent ``SmarterHttpErrorResponse``.
+    :param kwargs: Additional keyword arguments passed to the parent ``SmarterHttpErrorResponse``.
 
     **Context:**
         The template is rendered with a context dictionary containing:
@@ -254,12 +258,12 @@ class SmarterHttpResponseNotFound(SmarterHttpResponse):
         )
 
 
-class SmarterHttpResponseServerError(SmarterHttpResponse):
+class SmarterHttpResponseServerError(SmarterHttpErrorResponse):
     """
     SmarterHttpResponseServerError(request, error_message=None, *args, **kwargs)
 
     Specialized HTTP 500 (Internal Server Error) response for Smarter Django applications.
-    This class extends :class:`SmarterHttpResponse` to provide a standardized way to return
+    This class extends :class:`SmarterHttpErrorResponse` to provide a standardized way to return
     an "Internal Server Error" response, rendering the ``500.html`` template with a customizable error message.
 
     :param request: The Django ``HttpRequest`` object associated with the response.
@@ -267,8 +271,8 @@ class SmarterHttpResponseServerError(SmarterHttpResponse):
     :param error_message: An optional custom error message to display in the rendered template.
                          If not provided, a default message is used: "Ugh!!! Something went wrong on our end."
     :type error_message: str, optional
-    :param args: Additional positional arguments passed to the parent ``SmarterHttpResponse``.
-    :param kwargs: Additional keyword arguments passed to the parent ``SmarterHttpResponse``.
+    :param args: Additional positional arguments passed to the parent ``SmarterHttpErrorResponse``.
+    :param kwargs: Additional keyword arguments passed to the parent ``SmarterHttpErrorResponse``.
 
     **Context:**
         The template is rendered with a context dictionary containing:

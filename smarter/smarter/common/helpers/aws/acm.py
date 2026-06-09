@@ -4,11 +4,11 @@ import logging
 
 # python stuff
 import time
-from typing import Optional
+from typing import Any, Optional
 
 # our stuff
 from .aws import AWSBase
-from .exceptions import AWSACMVerificationFailed
+from .exceptions import AWSACMVerificationFailed, AWSNotReadyError
 
 logger = logging.getLogger(__name__)
 
@@ -60,13 +60,15 @@ class AWSCertificateManager(AWSBase):
         :return: The certificate ARN if found, else None.
         :rtype: Optional[str]
         """
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS ACM.")
         response = self.client.list_certificates()
         for certificate in response["CertificateSummaryList"]:
             if certificate["DomainName"] == domain_name:
                 return certificate["CertificateArn"]
         return None
 
-    def get_certificate_status(self, certificate_arn: str) -> dict:
+    def get_certificate_status(self, certificate_arn: str) -> dict[str, Any]:
         """
         Return the certificate status
         see example return in ./data/aws/certificate_detail.json
@@ -74,8 +76,10 @@ class AWSCertificateManager(AWSBase):
         :param certificate_arn: The ARN of the certificate.
         :type certificate_arn: str
         :return: The certificate details.
-        :rtype: dict
+        :rtype: dict[str, Any]
         """
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS ACM.")
         sleep_interval = 5
         max_attempts = int(600 / sleep_interval)
         attempts = 0
@@ -113,6 +117,8 @@ class AWSCertificateManager(AWSBase):
         :return: The certificate ARN.
         :rtype: str
         """
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS ACM.")
         # look for existing certificate
         certificate_arn = self.get_certificate_arn(domain_name)
         if not certificate_arn:
@@ -126,14 +132,14 @@ class AWSCertificateManager(AWSBase):
 
         return certificate_arn
 
-    def get_or_create_certificate_dns_record(self, certificate_arn: str) -> dict:
+    def get_or_create_certificate_dns_record(self, certificate_arn: str) -> dict[Any, Any]:
         """
         Get or create the DNS verification record for the certificate.
 
         :param certificate_arn: The ARN of the certificate.
         :type certificate_arn: str
         :return: The DNS record.
-        :rtype: dict
+        :rtype: dict[Any, Any]
         """
         # get the certificate details
         certificate_detail = self.get_certificate_status(certificate_arn=certificate_arn)
@@ -195,13 +201,15 @@ class AWSCertificateManager(AWSBase):
             time.sleep(sleep_interval)
         return True
 
-    def delete_certificate(self, certificate_arn: str):
+    def delete_certificate(self, certificate_arn: str) -> None:
         """
         Delete the certificate.
 
         :param certificate_arn: The ARN of the certificate.
         :type certificate_arn: str
         """
+        if not self.ready or not self.client:
+            raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS ACM.")
         try:
             self.client.delete_certificate(CertificateArn=certificate_arn)
         except self.client.exceptions.ResourceNotFoundException:

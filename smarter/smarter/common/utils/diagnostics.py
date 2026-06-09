@@ -1,5 +1,10 @@
 """
-This module provides a function to gather diagnostics information about the
+smarter.common.utils.diagnostics
+=================================
+
+Module providing diagnostics utility functions for the Smarter framework.
+
+This module includes a function to gather diagnostics information about the
 current environment, including platform details, Python environment, resource
 usage, and network connections. The diagnostics information is returned as a
 structured dictionary that can be used for debugging and monitoring purposes.

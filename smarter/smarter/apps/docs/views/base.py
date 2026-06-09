@@ -1,27 +1,28 @@
 # pylint: disable=W0613
 """
-Django REST framework base views for /docs/ brokered viewsets,
+Django REST framework base views for /docs/ brokered viewsets,.
+
 manifest and schema.
 """
 
 import os
-from logging import getLogger
 from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urlparse
 
 import httpx
 import markdown
+from django.core.handlers.asgi import ASGIRequest
 from django.http.response import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.test import RequestFactory
-from django.urls import reverse
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterException
 from smarter.common.utils import is_authenticated_request
-from smarter.lib import json
+from smarter.lib import json, logging
+from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
     SmarterWebHtmlView,
@@ -33,7 +34,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
     from rest_framework.views import AsView
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 # note: this is the path from the Docker container, not the GitHub repo.
 DOCS_PATH = "/home/smarter_user/data/docs/"
@@ -51,7 +52,7 @@ class DocsError(SmarterException):
 # Public Access Views
 # ------------------------------------------------------------------------------
 class DocsBaseView(SmarterAuthenticatedWebView):
-    """JSON Schema base view"""
+    """JSON Schema base view."""
 
     template_path: Optional[str] = None
     name: Optional[str] = None
@@ -59,27 +60,31 @@ class DocsBaseView(SmarterAuthenticatedWebView):
     context: dict = {}
     kwargs: Optional[dict] = None
 
+    @property
+    def formatted_class_name(self):
+        return logging.formatted_text(f"{__name__}.{DocsBaseView.__name__}")
+
     def get_brokered_json_response(
         self, reverse_name: str, view: "AsView", request: "HttpRequest", *args, **kwargs
     ) -> dict[str, Any]:
         """
         Get the JSON response from the brokered smarter.sh/api endpoint.
+
         This method constructs a brokered request to the specified API view, using
         Django's RequestFactory to create a new request object.
         The brokered request is made on behalf of the original request user to
         resolve possible permission issues related to object ownership in the
         API views, in cases where the authenticated user is not the owner of
-        the object being accessed in the API view (e.g. a chatbot manifest).
+        the object being accessed in the API view (e.g. an llm_client manifest).
         The response from the API view is expected to be a JSON response, which is then decoded
         and returned as a Python dictionary.
 
         Why we do this:
         Any authenticated user can access the /docs/ views, which contain links to all
-        SAM resource kinds (e.g. chatbots, plugins, connections, etc.) regardless
+        SAM resource kinds (e.g. llm_clients, plugins, connections, etc.) regardless
         of ownership. Therefore, as a matter of standardized procedure, we spoof the
         resource owner when we make the brokered request to the API view
         to ensure that the user has sufficient access.
-
 
         Args:
             reverse_name (str): The name of the URL pattern to reverse for the API endpoint.
@@ -190,7 +195,8 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 
     def dispatch(self, request: "HttpRequest", *args, **kwargs) -> HttpResponse:
         """
-        Override dispatch to set up context and handle authentication for brokered
+        Override dispatch to set up context and handle authentication for brokered.
+
         API requests. Since the /docs/ views are publicly accessible to any
         authenticated user, and the brokered API requests made within these
         views need to be made on behalf of the original request user, we
@@ -225,16 +231,16 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 
         return super().dispatch(request, *args, **kwargs)  # type: ignore[return]
 
-    def put(self, request, *args, **kwargs):
+    def put(self, request: ASGIRequest, *args, **kwargs):
         return HttpResponseBadRequest("PUT method not supported for this view.")
 
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: ASGIRequest, *args, **kwargs):
         return HttpResponseBadRequest("PATCH method not supported for this view.")
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: ASGIRequest, *args, **kwargs):
         return HttpResponseBadRequest("PATCH method not supported for this view.")
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: ASGIRequest, *args, **kwargs):
         return HttpResponseBadRequest("DELETE method not supported for this view.")
 
 
@@ -242,14 +248,14 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 # Public Access Base Views
 # ------------------------------------------------------------------------------
 class TxtBaseView(SmarterWebTxtView):
-    """Text base view"""
+    """Text base view."""
 
     template_path = "docs/txt_file.html"
     text_file: Optional[str] = None
     title: Optional[str] = None
     leader: Optional[str] = None
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: ASGIRequest, *args, **kwargs):
         file_path = self.text_file
         if not file_path:
             raise DocsError("self.text_file not set.")
@@ -266,12 +272,12 @@ class TxtBaseView(SmarterWebTxtView):
 
 
 class MarkdownBaseView(SmarterWebHtmlView):
-    """Markdown base view"""
+    """Markdown base view."""
 
     template_path = "docs/markdown.html"
     markdown_file: Optional[str] = None
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: ASGIRequest, *args, **kwargs):
         if not self.markdown_file:
             raise DocsError("self.markdown_file not set.")
         file_path = os.path.join(DOCS_PATH, self.markdown_file)

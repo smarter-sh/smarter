@@ -1,0 +1,25 @@
+apiVersion: smarter.sh/v1
+kind: Vectorstore
+metadata:
+  annotations:
+  - smarter.sh/vectorstore: example_provider
+  - smarter.sh/created_by: lawrence
+  description: an example Pinecone vectorstore
+  name: pinecone_example
+  tags:
+  - pinecone
+  - vectorstore
+  version: 1.0.0
+spec:
+  backend: pinecone
+  connection: pinecone
+  embeddings:
+    api_key: pinecone
+    dimensions: 1536
+    provider: openai
+    provider_model: text-embedding-ada-002
+  indexModel:
+    dimension: 1536
+  vectorstore:
+    namespace: pinecone_example
+    text_key: key_id
