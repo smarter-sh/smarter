@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.56](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.55...v0.14.0-alpha.56) (2026-06-09)
+
+### Bug Fixes
+
+* client_helper initialization ([79e2b8c](https://github.com/smarter-sh/smarter/commit/79e2b8c05e03917443982a85da63a9cc8e9bc18b))
+
 ## [0.14.0-alpha.55](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.54...v0.14.0-alpha.55) (2026-06-08)
 
 ### Bug Fixes
