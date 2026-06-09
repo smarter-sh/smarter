@@ -204,7 +204,7 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
     def test_get(self) -> None:
         """Test get command."""
 
-        # create a llm_client so that we have something to get.
+        # create an llm_client so that we have something to get.
         self.llm_client = self.llm_client_factory()
 
         def validate_titles(data):
@@ -265,7 +265,7 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
 
     def test_deploy(self) -> None:
         """Test deploy command."""
-        # create a llm_client so that we have something to deploy
+        # create an llm_client so that we have something to deploy
         self.llm_client = self.llm_client_factory()
 
         path = reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
@@ -280,7 +280,7 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
     def test_undeploy(self) -> None:
         """Test undeploy command."""
 
-        # create a llm_client so that we have something to undeploy
+        # create an llm_client so that we have something to undeploy
         self.llm_client = self.llm_client_factory()
 
         path = reverse(self.namespace + ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
@@ -304,7 +304,7 @@ class TestApiCliV1LLMClient(ApiV1CliTestBase):
 
     def test_delete(self) -> None:
         """Test delete command."""
-        # create a llm_client so that we have something to delete
+        # create an llm_client so that we have something to delete
         self.llm_client = self.llm_client_factory()
 
         path = reverse(self.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)

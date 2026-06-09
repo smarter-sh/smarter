@@ -155,7 +155,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     - Integrates with Django and the `django-cors-headers` package.
 
     .. note::
-        - The llm_client URL is only added to the allowed origins if a llm_client is associated with the request.
+        - The llm_client URL is only added to the allowed origins if an llm_client is associated with the request.
         - Internal requests and health checks are short-circuited for efficiency.
         - Logging is controlled via a waffle switch and the application's log level.
 

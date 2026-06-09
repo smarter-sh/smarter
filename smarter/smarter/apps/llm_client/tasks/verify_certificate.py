@@ -28,7 +28,7 @@ Task execution and certificate verification are logged using the smarter logging
 Usage
 -----
 
-Import this module and call the Celery task as needed to asynchronously verify a llm_client ACM certificate:
+Import this module and call the Celery task as needed to asynchronously verify an llm_client ACM certificate:
 
     verify_certificate.delay(certificate_arn)
 

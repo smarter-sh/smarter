@@ -108,7 +108,7 @@ Usage
 
    smarter apply -f stackademy-llm_client-sql.yaml
 
-**3. Interact with the LLMClient**
+**3. Interact**
 
 .. raw:: html
 

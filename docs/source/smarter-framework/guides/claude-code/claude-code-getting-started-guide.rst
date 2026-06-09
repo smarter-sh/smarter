@@ -88,7 +88,7 @@ Three concepts you need to understand:
   llm_client, provider, and plugin is described this way.
 
 You interact with **llm_clients**, not providers directly. Your administrator has
-already created a llm_client backed by Claude Code — you just need its name.
+already created an llm_client backed by Claude Code — you just need its name.
 
 Step-by-Step: Using Claude Code
 ================================
@@ -100,7 +100,7 @@ Step 4: Find Your LLMClient
 
    smarter get llm_clients
 
-This lists every llm_client assigned to your account. Note the name of a llm_client
+This lists every llm_client assigned to your account. Note the name of an llm_client
 configured with the Anthropic provider.
 
 Step 5: Chat from the Terminal
@@ -120,7 +120,7 @@ Useful commands while exploring:
    # Confirm the Anthropic provider is active
    smarter describe provider anthropic
 
-   # Inspect a llm_client's full configuration
+   # Inspect an llm_client's full configuration
    smarter describe llm_client <llm_client-name>
 
 Step 6: Chat from the Browser
@@ -185,8 +185,8 @@ Troubleshooting
    inline with ``--api_key``.
 
 **"No llm_clients found"**
-   Your administrator has not yet assigned a llm_client to your account. Ask them
-   to grant you access to a llm_client configured with the Anthropic provider.
+   Your administrator has not yet assigned an llm_client to your account. Ask them
+   to grant you access to an llm_client configured with the Anthropic provider.
 
 **Slow or timed-out responses**
    Run ``smarter status``. If the platform is healthy, the delay is on

@@ -1,13 +1,13 @@
 """
 Celery tasks for deleting llm_client API resources.
 
-This module defines Celery tasks for deleting AWS and Kubernetes resources associated with a llm_client's default API, including Route53 DNS records and ingress resources.
+This module defines Celery tasks for deleting AWS and Kubernetes resources associated with an llm_client's default API, including Route53 DNS records and ingress resources.
 
 Main Tasks
 ----------
 
 - delete_default_api(api_url, account_number, name):
-    Deletes the default domain Route53 A record and Kubernetes ingress resources (ingress, certificate, secret) for a llm_client API.
+    Deletes the default domain Route53 A record and Kubernetes ingress resources (ingress, certificate, secret) for an llm_client API.
 
 Signals
 -------
@@ -147,11 +147,11 @@ def delete_default_api(name: str, account_id: int, api_url: str):
     request_mixin = SmarterRequestMixin(request=request)
     if not request_mixin.is_llm_client:
         raise SmarterConfigurationError(
-            f"{logger_prefix} - Request path {request.path} is not recognized as a llm_client URL."
+            f"{logger_prefix} - Request path {request.path} is not recognized as an llm_client URL."
         )
     if not request_mixin.is_llm_client_named_url:
         raise SmarterConfigurationError(
-            f"{logger_prefix} - Request path {request.path} is not recognized as a llm_client named URL."
+            f"{logger_prefix} - Request path {request.path} is not recognized as an llm_client named URL."
         )
 
     task_id = delete_default_api.request.id

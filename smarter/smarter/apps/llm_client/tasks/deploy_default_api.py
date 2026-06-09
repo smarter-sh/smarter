@@ -7,7 +7,7 @@ Main Tasks
 ----------
 
 - deploy_default_api(llm_client_id, with_domain_verification=True):
-    Creates a default domain A record for a llm_client, manages ingress and certificate resources, and optionally verifies the domain.
+    Creates a default domain A record for an llm_client, manages ingress and certificate resources, and optionally verifies the domain.
 
 Signals
 -------
@@ -34,7 +34,7 @@ Task execution, resource creation, and deployment status are logged using the sm
 Usage
 -----
 
-Import this module and call the Celery task as needed to asynchronously deploy a llm_client default API domain:
+Import this module and call the Celery task as needed to asynchronously deploy an llm_client default API domain:
 
     deploy_default_api.delay(llm_client_id, with_domain_verification=True)
 
@@ -87,7 +87,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 )
 def deploy_default_api(llm_client_id: int, with_domain_verification: bool = True):
     """
-    Create a customer API default domain A record for a llm_client and manage deployment resources.
+    Create a customer API default domain A record for an llm_client and manage deployment resources.
 
     This Celery task performs the following steps:
     1. Sends a pre-deploy signal for the llm_client API.

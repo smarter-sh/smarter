@@ -7,7 +7,7 @@ Main Tasks
 ----------
 
 - deploy_custom_api(llm_client_id):
-    Creates a custom domain A record for a llm_client's customer API and verifies the hosted zone.
+    Creates a custom domain A record for an llm_client's customer API and verifies the hosted zone.
 
 Signals
 -------
@@ -28,7 +28,7 @@ Task execution and domain deployment are logged using the smarter logging librar
 Usage
 -----
 
-Import this module and call the Celery task as needed to asynchronously deploy a llm_client custom API domain:
+Import this module and call the Celery task as needed to asynchronously deploy an llm_client custom API domain:
 
     deploy_custom_api.delay(llm_client_id)
 
@@ -69,7 +69,7 @@ logger_prefix = logging.formatted_text(__name__)
 )
 def deploy_custom_api(llm_client_id: int):
     """
-    Create a custom domain A record for a llm_client's customer API.
+    Create a custom domain A record for an llm_client's customer API.
 
     This Celery task performs the following steps:
     1. Sends a pre-deploy signal for the llm_client API.

@@ -85,7 +85,7 @@ class Command(SmarterCommand):
                 raise CommandError(f"Failed to apply manifest {file_path}: {str(e)}") from e
 
         try:
-            logger.debug("%s - Creating Stackademy Sql LLMClient...", logger_prefix)
+            logger.debug("%s - Creating Stackademy SQL Prompt Integration...", logger_prefix)
             sql_file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml",
                 "smarter/apps/connection/data/sample-connections/smarter-test-db.yaml",
@@ -95,7 +95,7 @@ class Command(SmarterCommand):
             for file_path in sql_file_paths:
                 apply(file_path)
 
-            logger.debug("%s - Successfully created Stackademy Sql LLMClient.", logger_prefix)
+            logger.debug("%s - Successfully created Stackademy SQL Prompt Integration.", logger_prefix)
 
             logger.debug("%s - Creating Stackademy Api LLMClient...", logger_prefix)
             api_file_paths = [

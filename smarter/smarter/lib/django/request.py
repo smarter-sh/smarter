@@ -604,7 +604,7 @@ class SmarterRequestMixin(AccountMixin):
                 self.url,
             )
             # internal processes running in a AWS kubernetes internal subnet.
-            # definitely not a llm_client request.
+            # definitely not an llm_client request.
             return False
 
         if path in self.amnesty_urls:
@@ -960,7 +960,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         if not self.is_llm_client:
             verbose_logger.debug(
-                "%s.smarter_request_llm_client_name() - request is not a llm_client url: %s",
+                "%s.smarter_request_llm_client_name() - request is not an llm_client url: %s",
                 self.request_mixin_logger_prefix,
                 self.url,
             )
@@ -1290,7 +1290,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         if not self.is_llm_client:
             verbose_logger.debug(
-                "%s.is_config() - not a llm_client url: %s", self.request_mixin_logger_prefix, self.url
+                "%s.is_config() - not an llm_client url: %s", self.request_mixin_logger_prefix, self.url
             )
             return False
         if not isinstance(self.url_path_parts, list):
@@ -1425,7 +1425,7 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_llm_client(self) -> bool:
         """
-        Returns True if the URL resolves to a llm_client endpoint.
+        Returns True if the URL resolves to an llm_client endpoint.
 
         Conditions are checked in a lazy sequence to avoid unnecessary processing.
 
@@ -1439,7 +1439,7 @@ class SmarterRequestMixin(AccountMixin):
             - http://localhost:9357/workbench/llm-clients/<str:hashed_id>/manifest/
 
         Returns:
-            bool: True if the URL is a llm_client endpoint, otherwise False.
+            bool: True if the URL is an llm_client endpoint, otherwise False.
         """
 
         retval = self.qualified_request and (
@@ -1449,7 +1449,7 @@ class SmarterRequestMixin(AccountMixin):
             or self.is_llm_client_cli_api_url
         )
         verbose_logger.debug(
-            "%s.is_llm_client() - is url a llm_client: %s -> %s", self.request_mixin_logger_prefix, self.url, retval
+            "%s.is_llm_client() - is url an llm_client: %s -> %s", self.request_mixin_logger_prefix, self.url, retval
         )
         return retval
 
@@ -1714,7 +1714,7 @@ class SmarterRequestMixin(AccountMixin):
             path_parts: ['workbench', 'llm-clients', 'rxy123hashedx']
 
         Returns:
-            bool: True if the URL matches a llm_client sandbox endpoint, otherwise False.
+            bool: True if the URL matches an llm_client sandbox endpoint, otherwise False.
         """
         if not self.qualified_request:
             verbose_logger.debug(
@@ -1736,7 +1736,7 @@ class SmarterRequestMixin(AccountMixin):
             and path_parts[4] == "chat"
         ):
             verbose_logger.debug(
-                "%s.is_llm_client_sandbox_url() - url %s is a llm_client sandbox smarter api url.",
+                "%s.is_llm_client_sandbox_url() - url %s is an llm_client sandbox smarter api url.",
                 self.request_mixin_logger_prefix,
                 self.url,
             )
@@ -1801,14 +1801,14 @@ class SmarterRequestMixin(AccountMixin):
             #   ['workbench', '<slug>', 'chat']
             #   ['workbench', '<slug>', 'config']
             verbose_logger.debug(
-                "%s.is_llm_client_sandbox_url() - url %s is a llm_client sandbox url.",
+                "%s.is_llm_client_sandbox_url() - url %s is an llm_client sandbox url.",
                 self.request_mixin_logger_prefix,
                 self.url,
             )
             return True
 
         verbose_logger.debug(
-            "%s.is_llm_client_sandbox_url() - could not verify whether url is a llm_client sandbox url: %s",
+            "%s.is_llm_client_sandbox_url() - could not verify whether url is an llm_client sandbox url: %s",
             self.request_mixin_logger_prefix,
             path_parts,
         )
@@ -2178,7 +2178,7 @@ class SmarterRequestMixin(AccountMixin):
 
     def eval_llm_client_url(self):
         """
-        If we are a llm_client, based on analysis of the URL format.
+        If we are an llm_client, based on analysis of the URL format.
 
         then we need to make a follow up check of the user and account.
 

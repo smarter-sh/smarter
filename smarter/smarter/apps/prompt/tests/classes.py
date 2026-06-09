@@ -169,7 +169,7 @@ class ProviderBaseClass(TestAccountMixin):
             self.plugins = [self.plugin]
         print(f"plugin: {self.plugin}")
 
-        # create a llm_client that uses the provider
+        # create an llm_client that uses the provider
         print(f"Setting up provider {self.provider}")
         self.llm_client = self.llm_client_factory(provider=self.provider)  # type: ignore[assignment]
 

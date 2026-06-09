@@ -15,7 +15,7 @@ class LLMClientRequests(TimestampedModel):
     """
     Stores the request history for a LLMClient instance within the Smarter platform.
 
-    This model is designed to record and manage all incoming requests made to a llm_client, providing a persistent audit trail
+    This model is designed to record and manage all incoming requests made to an llm_client, providing a persistent audit trail
     of interactions for analysis, debugging, and reporting. Each record in this model captures the details of a single request,
     including the associated llm_client, the request payload, session information, and aggregation status.
 
@@ -43,7 +43,7 @@ class LLMClientRequests(TimestampedModel):
 
     .. code-block:: python
 
-        # Record a new request for a llm_client
+        # Record a new request for an llm_client
         LLMClientRequests.objects.create(
             llm_client=my_llm_client,
             request={"message": "Hello, llm_client!"},

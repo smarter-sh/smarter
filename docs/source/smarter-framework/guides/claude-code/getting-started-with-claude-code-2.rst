@@ -110,7 +110,7 @@ Check that the Anthropic API key is available to Smarter and that the base URL a
 Optional Next Step
 ------------------
 
-After the provider is active, the next logical step would be to create a llm_client that uses it.
+After the provider is active, the next logical step would be to create an llm_client that uses it.
 
 The following example shows the intended shape of an Anthropic llm_client manifest, based on the same style as the ``smarter-deploy`` OpenAI llm_client example. This is shown as a target-state example only.
 

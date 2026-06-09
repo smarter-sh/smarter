@@ -30,9 +30,9 @@ spec:
       provide the best possible responses to the user.
     defaultTemperature: 0.5
     defaultMaxTokens: 1024
-    appName: Stackademy SQL LLMClient
+    appName: Stackademy Assistant
     appAssistant: Stanley
-    appWelcomeMessage: Welcome to Stackademy SQL LLMClient! How can I help you today?
+    appWelcomeMessage: Welcome to Stackademy! How can I help you today?
     appExamplePrompts:
       - "Do you offer any courses on AI?"
       - "My budget is $1,000. What courses can I take?"

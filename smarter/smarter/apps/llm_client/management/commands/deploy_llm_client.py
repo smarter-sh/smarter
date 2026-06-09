@@ -27,7 +27,7 @@ class Command(SmarterCommand):
         """
         Deploy a customer-facing llm_client API for a Smarter account.
 
-        This management command enables administrators to deploy a llm_client for a specific account,
+        This management command enables administrators to deploy an llm_client for a specific account,
         identified either by its account number or company name. The llm_client is deployed to a URL
         structured as ``[subdomain].[account-number].api.example.com/llm-client/``.
 

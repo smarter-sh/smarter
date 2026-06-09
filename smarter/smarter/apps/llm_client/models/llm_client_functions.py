@@ -18,8 +18,8 @@ class LLMClientFunctions(TimestampedModel):
     """
     Represents the set of callable functions that are available to a LLMClient instance within the Smarter platform.
 
-    This model is used to define and manage the specific functions that a llm_client can access or invoke during its operation.
-    Each record in this model links a llm_client to a named function, enabling fine-grained control over the llm_client's capabilities.
+    This model is used to define and manage the specific functions that an llm_client can access or invoke during its operation.
+    Each record in this model links an llm_client to a named function, enabling fine-grained control over the llm_client's capabilities.
     The available functions are defined by a fixed set of choices, such as "weather", "news", "prices", and "math".
 
     By associating functions with llm_clients, the platform allows for extensible and customizable llm_client behavior, supporting
@@ -36,17 +36,17 @@ class LLMClientFunctions(TimestampedModel):
 
     .. code-block:: python
 
-        # Assign a function to a llm_client
+        # Assign a function to an llm_client
         LLMClientFunctions.objects.create(llm_client=my_llm_client, name="weather")
 
-        # List all functions available to a llm_client
+        # List all functions available to an llm_client
         functions = LLMClientFunctions.objects.filter(llm_client=my_llm_client)
 
     **Notes**
 
     - The set of available functions is controlled by the ``CHOICES`` class attribute.
     - This model is intended for internal use to manage and audit llm_client capabilities.
-    - Uniqueness is not enforced, so a llm_client may have multiple entries for the same function if needed.
+    - Uniqueness is not enforced, so an llm_client may have multiple entries for the same function if needed.
     """
 
     # pylint: disable=C0115
@@ -118,7 +118,7 @@ class LLMClientFunctions(TimestampedModel):
             llm_client_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["LLMClientFunctions"]:
             """
-            Caches the functions for a llm_client by llm_client_id to optimize.
+            Caches the functions for an llm_client by llm_client_id to optimize.
 
             performance and reduce database queries.
 

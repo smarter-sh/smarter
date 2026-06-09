@@ -98,7 +98,7 @@ class SAMLLMClientBroker(AbstractBroker):
     - Transforming data between Django ORM models and Pydantic models to enable
       seamless conversion between database and API representations.
     - Coordinating composite models, such as LLMClient, LLMClientAPIKey,
-      LLMClientPlugin, and LLMClientFunctions, to ensure all components of a llm_client
+      LLMClientPlugin, and LLMClientFunctions, to ensure all components of an llm_client
       are synchronized according to the manifest specification.
     - Ensuring atomic and consistent application of changes using Django's
       transaction management.
@@ -616,7 +616,7 @@ class SAMLLMClientBroker(AbstractBroker):
         This method constructs and returns an instance of the ``SAMLLMClient`` Pydantic model,
         which represents the full manifest for a Smarter API LLMClient. The manifest contains
         all configuration, metadata, and specification details required to describe and deploy
-        a llm_client within the Smarter platform.
+        an llm_client within the Smarter platform.
 
         The manifest is initialized using data provided by the manifest loader. The loader
         supplies the manifest's API version, kind, metadata, and specification, which are

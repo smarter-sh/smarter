@@ -331,7 +331,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         welcome_message: Optional[str] = self.llm_client_config.get("app_welcome_message")
         example_prompts: Optional[list[str]] = self.llm_client_config.get("app_example_prompts")
         if example_prompts and welcome_message:
-            app_assistant: str = self.llm_client_config.get("app_assistant", "a llm_client")
+            app_assistant: str = self.llm_client_config.get("app_assistant", "an llm_client")
             bullet_points = "\n".join(f"    - {prompt}" for prompt in example_prompts) if example_prompts else ""
             bullet_points = "Following are some example prompts:\n\n" + bullet_points + "\n\n"
             intro = f"I'm {app_assistant}, how can I assist you today?"

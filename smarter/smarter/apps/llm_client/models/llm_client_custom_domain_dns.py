@@ -18,11 +18,11 @@ class LLMClientCustomDomainDNS(TimestampedModel):
     This model is responsible for storing and managing individual DNS records that are linked to a
     specific :class:`LLMClientCustomDomain`. Each instance of this model corresponds to a single DNS
     record, such as an A, CNAME, or TXT record, which is required for the proper operation and
-    verification of a llm_client's custom domain.
+    verification of an llm_client's custom domain.
 
     The primary use case for this model is to facilitate the automation and tracking of DNS
     configurations necessary for deploying llm_clients on customer-branded domains. By maintaining a
-    record of all DNS entries related to a llm_client's custom domain, the platform can automate DNS
+    record of all DNS entries related to an llm_client's custom domain, the platform can automate DNS
     verification, support trouble shooting, and ensure that all required DNS records are present and
     correctly configured.
 
@@ -35,7 +35,7 @@ class LLMClientCustomDomainDNS(TimestampedModel):
 
     **Usage Scenarios**
 
-    - When deploying a llm_client to a custom domain, instances of this model are created to represent
+    - When deploying an llm_client to a custom domain, instances of this model are created to represent
       the required DNS records (e.g., for domain verification, routing, or certificate issuance).
     - The platform can query this model to retrieve all DNS records associated with a given custom domain,
       enabling automated checks and updates.
@@ -58,7 +58,7 @@ class LLMClientCustomDomainDNS(TimestampedModel):
 
     .. code-block:: python
 
-        # Create a new DNS record for a llm_client custom domain
+        # Create a new DNS record for an llm_client custom domain
         dns_record = LLMClientCustomDomainDNS.objects.create(
             custom_domain=my_custom_domain,
             record_name="_acme-challenge.llm_client.example.com",

@@ -8,7 +8,7 @@ from django.dispatch import Signal
 
 llm_client_called = Signal()
 """
-Signal triggered when a llm_client is called.
+Signal triggered when an llm_client is called.
 
 Arguments:
     llm_client (LLMClient): The llm_client instance.
@@ -23,7 +23,7 @@ Example::
 
 llm_client_dns_verification_initiated = Signal()
 """
-Signal triggered when DNS verification is initiated for a llm_client.
+Signal triggered when DNS verification is initiated for an llm_client.
 
 Arguments:
     llm_client (LLMClient): The llm_client instance.
@@ -35,7 +35,7 @@ Example::
 
 llm_client_dns_verified = Signal()
 """
-Signal triggered when DNS verification is successful for a llm_client.
+Signal triggered when DNS verification is successful for an llm_client.
 
 Arguments:
     llm_client (LLMClient): The llm_client instance.
@@ -47,7 +47,7 @@ Example::
 
 llm_client_dns_failed = Signal()
 """
-Signal triggered when DNS verification fails for a llm_client.
+Signal triggered when DNS verification fails for an llm_client.
 
 Arguments:
     llm_client (LLMClient): The llm_client instance.
@@ -59,7 +59,7 @@ Example::
 
 llm_client_dns_verification_status_changed = Signal()
 """
-Signal triggered when the DNS verification status changes for a llm_client.
+Signal triggered when the DNS verification status changes for an llm_client.
 
 Arguments:
     llm_client (LLMClient): The llm_client instance.
@@ -71,7 +71,7 @@ Example::
 
 llm_client_deploy = Signal()
 """
-Signal triggered when a llm_client deployment is initiated.
+Signal triggered when an llm_client deployment is initiated.
 
 Arguments:
     llm_client (LLMClient): The llm_client instance.
@@ -84,7 +84,7 @@ Example::
 
 llm_client_deployed = Signal()
 """
-Signal triggered when a llm_client is successfully deployed.
+Signal triggered when an llm_client is successfully deployed.
 
 Arguments:
     llm_client (LLMClient): The llm_client instance.
@@ -96,7 +96,7 @@ Example::
 
 llm_client_deploy_failed = Signal()
 """
-Signal triggered when a llm_client deployment fails.
+Signal triggered when an llm_client deployment fails.
 
 Arguments:
     llm_client (LLMClient): The llm_client instance.
@@ -108,7 +108,7 @@ Example::
 
 llm_client_deploy_status_changed = Signal()
 """
-Signal triggered when the deployment status of a llm_client changes.
+Signal triggered when the deployment status of an llm_client changes.
 
 Arguments:
     llm_client (LLMClient): The llm_client instance.
@@ -133,7 +133,7 @@ Example::
 """
 pre_create_llm_client_request = Signal()
 """
-Signal triggered before creating a llm_client request.
+Signal triggered before creating an llm_client request.
 
 Arguments:
     llm_client_id (int): The ID of the llm_client.
@@ -284,7 +284,7 @@ Example::
 
 post_create_llm_client_request = Signal()
 """
-Signal triggered after creating a llm_client request.
+Signal triggered after creating an llm_client request.
 
 Arguments:
     llm_client_id (int): The ID of the llm_client.

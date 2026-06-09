@@ -7,7 +7,7 @@ Main Tasks
 ----------
 
 - create_custom_domain_dns_record(llm_client_custom_domain_id, record_name, record_type, record_value, record_ttl=600):
-    Gets or creates a DNS record in an AWS Route53 hosted zone for a llm_client custom domain. Handles pre- and post-create signals, logging, and error retries.
+    Gets or creates a DNS record in an AWS Route53 hosted zone for an llm_client custom domain. Handles pre- and post-create signals, logging, and error retries.
 
 Signals
 -------
@@ -75,7 +75,7 @@ def create_custom_domain_dns_record(
     llm_client_custom_domain_id: int, record_name: str, record_type: str, record_value: str, record_ttl: int = 600
 ):
     """
-    Get or create a DNS record in an AWS Route53 hosted zone for a llm_client custom domain.
+    Get or create a DNS record in an AWS Route53 hosted zone for an llm_client custom domain.
 
     This Celery task performs the following steps:
     1. Sends a pre-create signal for the DNS record.
