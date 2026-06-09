@@ -56,7 +56,7 @@ Usage
     - :doc:`Smarter Chat <../smarter-framework/developer-reference/react-integration/smarter-chat>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
     - :doc:`Smarter API <../smarter-framework/smarter-api>`
-    - :doc:`Smarter Journal <../smarter-framework/smarter-journal>`
+    - :doc:`Smarter Journal <../smarter-framework/developer-reference/smarter-journal>`
     - :doc:`Smarter Account <../smarter-resources/smarter-account>`
     - :doc:`Smarter LLMClients <../smarter-resources/smarter-llm_client>`
     - :doc:`Smarter Plugins <../smarter-resources/smarter-plugin>`
