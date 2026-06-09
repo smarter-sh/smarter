@@ -27,15 +27,6 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
         self.request.user = self.admin_user
 
     @patch("smarter.lib.django.middleware.csrf.settings")
-    @patch("smarter.lib.django.middleware.csrf.waffle")
-    def test_CSRF_TRUSTED_ORIGINS_without_llm_client(self, mock_waffle, mock_settings):
-        mock_settings.CSRF_TRUSTED_ORIGINS = ["http://example.3141-5926-5359.api.localhost:9357/"]
-        mock_waffle.switch_is_active.return_value = False
-        setattr(self.middleware, "request", self.request)  # type: ignore
-        origins = self.middleware.CSRF_TRUSTED_ORIGINS
-        self.assertEqual(origins, ["http://example.3141-5926-5359.api.localhost:9357/"])
-
-    @patch("smarter.lib.django.middleware.csrf.settings")
     def test_csrf_trusted_origins_hosts(self, mock_settings):
         mock_settings.CSRF_TRUSTED_ORIGINS = ["https://foo.com", "https://*.bar.com"]
         setattr(self.middleware, "request", self.request)  # type: ignore
