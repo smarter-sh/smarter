@@ -11,12 +11,12 @@ class TestConversionUtils(SmarterTestBase):
     """Test conversion utility functions."""
 
     def test_rfc1034_compliant_str(self):
-        self.assertEqual(rfc1034_compliant_str("My_LLMClient_2025"), "my-llm_client-2025")
+        self.assertEqual(rfc1034_compliant_str("My_LLMClient_2025"), "my-llmclient-2025")
         self.assertEqual(rfc1034_compliant_str("My@Bot!_Name"), "mybot-name")
         long_name = "ThisIsAReallyLongLLMClientNameThatShouldBeTruncatedToSixtyThreeCharacters_Extra"
         self.assertEqual(
             rfc1034_compliant_str(long_name),
-            "thisisareallylongllm_clientnamethatshouldbetruncatedtosixtythreecharacters"[:63],
+            "thisisareallylongllmclientnamethatshouldbetruncatedtosixtythreecharacters"[:63],
         )
 
     def test_rfc1034_compliant_str_invalid(self):

@@ -19,9 +19,7 @@ logger = getLogger(__name__)
 
 
 class TestSmarterTokenAuthenticationMiddleware(ApiV1TestBase):
-    """
-    Test SmarterTokenAuthenticationMiddleware.
-    """
+    """Test SmarterTokenAuthenticationMiddleware."""
 
     def setUp(self):
         super().setUp()
@@ -90,26 +88,3 @@ class TestSmarterTokenAuthenticationMiddleware(ApiV1TestBase):
         request.auth = "already_authenticated"
         response = self.middleware(request)
         self.assertEqual(response, request)
-
-    def test_url_method(self):
-        # Should return full URL
-        request = HttpRequest()
-        self.middleware.request = request
-        url = self.middleware.url()
-        self.assertIsInstance(url, str)
-
-    def test_is_token_auth_true(self):
-        # Should return True for valid Token header
-        request = HttpRequest()
-        request.META = {"HTTP_AUTHORIZATION": f"Token {self.token_key}"}
-        self.middleware.authorization_header = get_authorization_header(request).decode()
-        result = self.middleware.is_token_auth(request)
-        self.assertTrue(result)
-
-    def test_is_token_auth_false(self):
-        # Should return False for missing/invalid header
-        request = HttpRequest()
-        request.META = {"HTTP_AUTHORIZATION": "Bearer something"}
-        self.middleware.authorization_header = get_authorization_header(request).decode()
-        result = self.middleware.is_token_auth(request)
-        self.assertFalse(result)

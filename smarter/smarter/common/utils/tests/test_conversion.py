@@ -24,7 +24,7 @@ class TestConversionUtils(SmarterTestBase):
 
     def test_camel_to_snake_dict(self):
         d = {"camelCase": 1, "nestedDict": {"innerKey": 2}}
-        result = to_snake_case(d)
+        result = to_snake_case(d, convert_values=True)
         logger.debug("test_camel_to_snake_dict - result: %s", result)
 
         self.assertIn("camel_case", result)
@@ -35,7 +35,7 @@ class TestConversionUtils(SmarterTestBase):
         self.assertEqual(to_camel_case("user_name"), "userName")
         self.assertEqual(to_camel_case(["first_name", "last_name"]), ["firstName", "lastName"])
         self.assertEqual(
-            to_camel_case({"user_name": "alice", "user_profile": {"first_name": "Alice"}}),
+            to_camel_case({"user_name": "alice", "user_profile": {"first_name": "Alice"}}, convert_values=True),
             {"userName": "alice", "userProfile": {"firstName": "Alice"}},
         )
         self.assertEqual(to_camel_case({"user_name": "first_name"}, convert_values=True), {"userName": "firstName"})
