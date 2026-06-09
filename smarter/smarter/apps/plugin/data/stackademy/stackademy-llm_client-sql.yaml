@@ -9,11 +9,11 @@ metadata:
     - sql
     - llm_client
   annotations:
-    - smarter.sh/llm_client/stackademy-sql/creator: QA Team
-    - smarter.sh/llm_client/stackademy-sql/purpose: llm_client for Stackademy course catalogue inquiries
-    - smarter.sh/llm_client/stackademy-sql/release-date: 2024-06-15
-    - smarter.sh/llm_client/stackademy-sql/backward-compatibility: true
-    - smarter.sh/llm_client/stackademy-sql/note: |
+    - smarter.sh/llm-client/stackademy-sql/creator: QA Team
+    - smarter.sh/llm-client/stackademy-sql/purpose: llm_client for Stackademy course catalogue inquiries
+    - smarter.sh/llm-client/stackademy-sql/release-date: 2024-06-15
+    - smarter.sh/llm-client/stackademy-sql/backward-compatibility: true
+    - smarter.sh/llm-client/stackademy-sql/note: |
         Uses SQL plugin to answer course catalogue questions.
         Very fast and accurate when the database is well-structured.
         Leverages cache for improved performance.

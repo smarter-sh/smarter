@@ -135,7 +135,7 @@ class SmarterRequestMixin(AccountMixin):
     - ``http://localhost:9357/``
     - ``http://localhost:9357/docs/``
     - ``http://localhost:9357/dashboard/``
-    - ``https://alpha.platform.smarter.sh/api/v1/workbench/1/llm_client/``
+    - ``https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/``
     - ``http://example.com/contact/``
     - ``http://localhost:9357/workbench/example/config/?session_key=...``
     - ``https://hr.3141-5926-5359.alpha.api.example.com/``
@@ -1854,8 +1854,8 @@ class SmarterRequestMixin(AccountMixin):
             Optional[str]: The path as a string, or None if not found.
 
         Examples:
-            - https://hr.3141-5926-5359.alpha.api.example.com/llm_client/
-              returns '/llm_client/'
+            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
+              returns '/llm-client/'
         """
         if not self.smarter_request:
             verbose_logger.debug("%s.path() - request is None. Cannot extract path.", self.request_mixin_logger_prefix)
@@ -1875,7 +1875,7 @@ class SmarterRequestMixin(AccountMixin):
 
             request_mixin = SmarterRequestMixin(request)
             print(request_mixin.root_domain)
-            # For 'https://hr.3141-5926-5359.alpha.api.example.com/llm_client/' → 'smarter.sh'
+            # For 'https://hr.3141-5926-5359.alpha.api.example.com/llm-client/' → 'smarter.sh'
             # For 'http://localhost:9357/' → 'localhost'
         """
         if not self.smarter_request:
@@ -1912,7 +1912,7 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             sub = request_mixin.subdomain
             print(sub)  # e.g., 'hr.3141-5926-5359.alpha' for
-                        # 'https://hr.3141-5926-5359.alpha.api.example.com/llm_client/'
+                        # 'https://hr.3141-5926-5359.alpha.api.example.com/llm-client/'
         """
         if not self.smarter_request:
             return None
@@ -1930,7 +1930,7 @@ class SmarterRequestMixin(AccountMixin):
 
         example::
 
-            - https://hr.3141-5926-5359.alpha.api.example.com/llm_client/
+            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
             returns 'hr'
         """
         if not self.smarter_request:
@@ -1954,7 +1954,7 @@ class SmarterRequestMixin(AccountMixin):
 
         examples::
 
-            - https://hr.3141-5926-5359.alpha.api.example.com/llm_client/
+            - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
               returns 'hr.3141-5926-5359.alpha.api.example.com'
         """
         if not self.smarter_request:
@@ -2185,7 +2185,7 @@ class SmarterRequestMixin(AccountMixin):
         Examples:
 
             - http://example.3141-5926-5359.api.localhost:9357/
-            - https://alpha.platform.smarter.sh/api/v1/workbench/1/llm_client/
+            - https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/
             - http://localhost:9357/api/v1/cli/chat/example/
 
         1.) For named urls, we extract the account number from the url,
@@ -2208,7 +2208,7 @@ class SmarterRequestMixin(AccountMixin):
             if self.account and not self.user:
                 self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
         if self.is_llm_client_smarter_api_url:
-            # https://alpha.platform.smarter.sh/api/v1/workbench/1/llm_client/
+            # https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/
             pass
         if self.is_llm_client_cli_api_url:
             # http://localhost:9357/api/v1/cli/chat/example/

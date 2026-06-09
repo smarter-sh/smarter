@@ -80,7 +80,7 @@ class PromptManifestView(DocsBaseView):
 
     **Example usage**::
 
-        GET /llm_client/detail/?name=my_llm_client&kind=custom
+        GET /llm-client/detail/?name=my_llm_client&kind=custom
     """
 
     template_path = "prompt/manifest-detail.html"

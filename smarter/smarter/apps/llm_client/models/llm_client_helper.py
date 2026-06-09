@@ -58,7 +58,7 @@ class LLMClientHelper(SmarterRequestMixin):
 
     - **Authenticated URLs:**
         - ``https://alpha.api.example-username.com/smarter/example/``
-        - ``https://example-username.smarter.sh/llm_client/``
+        - ``https://example-username.smarter.sh/llm-client/``
         - ``https://alpha.api.example-username.com/workbench/1/``
         - ``https://alpha.api.example-username.com/workbench/example/``
 
@@ -563,7 +563,7 @@ class LLMClientHelper(SmarterRequestMixin):
         Examples
         --------
         Named URL:
-            - ``https://hr.3141-5926-5359.alpha.api.example.com/llm_client/``
+            - ``https://hr.3141-5926-5359.alpha.api.example.com/llm-client/``
               returns ``'alpha.api.example.com'``
 
         Sandbox URL:
@@ -571,7 +571,7 @@ class LLMClientHelper(SmarterRequestMixin):
               returns ``'api.localhost:9357'``
 
         Custom domain URL:
-            - ``https://hr.smarter.sh/llm_client/``
+            - ``https://hr.smarter.sh/llm-client/``
               returns ``'hr.smarter.sh'``
 
         :returns: The API host as a string, or ``None`` if not found.
@@ -617,7 +617,7 @@ class LLMClientHelper(SmarterRequestMixin):
 
         Examples
         --------
-        - https://hr.3141-5926-5359.alpha.api.example.com/llm_client/
+        - https://hr.3141-5926-5359.alpha.api.example.com/llm-client/
           returns LLMClient(name='hr', account=Account(...))
 
         :returns: The LLMClient instance, or ``None`` if not found.
@@ -754,7 +754,7 @@ class LLMClientHelper(SmarterRequestMixin):
 
         Examples
         --------
-        - ``https://hr.smarter.sh/llm_client/``
+        - ``https://hr.smarter.sh/llm-client/``
           returns ``LLMClientCustomDomain(domain_name='smarter.sh')``
 
         :returns: The LLMClientCustomDomain instance, or ``None`` if not found.

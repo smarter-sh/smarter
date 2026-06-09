@@ -529,13 +529,13 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         The LLMClient instance is determined by parsing the request host. There are two supported formats:
 
         1. **URL with default API domain**
-            Example: ``https://customer-support.3141-5926-5359.api.example.com/llm_client/``
+            Example: ``https://customer-support.3141-5926-5359.api.example.com/llm-client/``
             - ``customer-support``: The llm_client's name.
             - ``3141-5926-5359``: The llm_client's account number.
             - ``api.example.com``: The default API domain.
 
         2. **URL with custom domain**
-            Example: ``https://api.example.com/llm_client/``
+            Example: ``https://api.example.com/llm-client/``
             - ``api.example.com``: The llm_client's custom domain.
             - The custom domain must be verified (``LLMClientCustomDomain.is_verified == True``).
 

@@ -1,5 +1,5 @@
 Smarter LLMClient
-================
+==================
 
 .. attention::
 
@@ -30,7 +30,7 @@ LLMClients are managed with the :doc:`Smarter command-line interface (CLI) <../s
     - :doc:`Smarter Plugin <../smarter-resources/smarter-plugin>`
     - :doc:`Smarter Prompt <../smarter-resources/smarter-prompt>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
-    - :doc:`Smarter Chat <../smarter-framework/develop-reference/react-integration/smarter-chat>`
+    - :doc:`Smarter Chat <../smarter-framework/developer-reference/react-integration/smarter-chat>`
 
 Usage
 --------
