@@ -55,5 +55,5 @@ urlpatterns = [
         PluginListApiRenameView.as_view(),
         name=PluginReverseNames.listview_api_rename,
     ),
-    path("plugins/<str:name>/", PluginDetailView.as_view(), name=PluginReverseNames.detailview),
+    path("plugins/<str:hashed_id>/", PluginDetailView.as_view(), name=PluginReverseNames.detailview),
 ]

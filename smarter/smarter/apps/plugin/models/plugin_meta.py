@@ -178,7 +178,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         return reverse(
             f"{PluginReverseNames.namespace}:{PluginReverseNames.detailview}",
-            kwargs={"name": self.rfc1034_compliant_name},
+            kwargs={"hashed_id": self.hashed_id},
         )
 
     @property

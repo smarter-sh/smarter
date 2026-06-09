@@ -252,7 +252,7 @@ class Provider(MetaDataWithOwnershipModel):
 
         return reverse(
             f"{ProviderReverseNames.namespace}:{ProviderReverseNames.detailview}",
-            kwargs={"provider_id": self.id},  # type: ignore
+            kwargs={"hashed_id": self.hashed_id},  # type: ignore
         )
 
     @property
