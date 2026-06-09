@@ -310,7 +310,7 @@ langchain-classic==1.0.7
     # via langchain-community
 langchain-community==0.4.1
     # via -r smarter/requirements/in/base.in
-langchain-core==1.4.0
+langchain-core==1.3.3
     # via
     #   langchain
     #   langchain-classic
