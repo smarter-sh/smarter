@@ -28,7 +28,7 @@ Task execution and resource destruction are logged using the smarter logging lib
 Usage
 -----
 
-Import this module and call the function as needed to destroy a llm_client domain A record:
+Import this module and call the function as needed to destroy an llm_client domain A record:
 
     destroy_domain_A_record(hostname, api_host_domain)
 

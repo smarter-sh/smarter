@@ -103,7 +103,7 @@ class StaticPlugin(PluginBase):
 
     **Example Use Cases:**
 
-        - Providing static product information for a llm_client.
+        - Providing static product information for an llm_client.
         - Supplying company contact details or promotional codes.
         - Returning biographical information about a company founder.
     """

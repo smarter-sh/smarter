@@ -96,7 +96,7 @@ const LLMClientRow = React.memo(function LLMClientRow({
     return <span>{formatDateTime(date, "relative", createdAt)}</span>;
   };
 
-  // A helper component to display combined plugins and functions for a llm_client
+  // A helper component to display combined plugins and functions for an llm_client
   // as a comma-separated list.
   const Plugins = ({ llm_client }: { llm_client: LLMClient }) => {
     const plugins = llm_client.plugins

@@ -28,7 +28,7 @@ Task execution and domain registration are logged using the smarter logging libr
 Usage
 -----
 
-Import this module and call the Celery task as needed to asynchronously register a llm_client custom domain:
+Import this module and call the Celery task as needed to asynchronously register an llm_client custom domain:
 
     register_custom_domain.delay(account_id, domain_name)
 

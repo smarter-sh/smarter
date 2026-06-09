@@ -7,7 +7,7 @@ Main Tasks
 ----------
 
 - undeploy_default_api(llm_client_id):
-    Reverses a llm_client deployment by destroying the customer API default domain A record and updating the llm_client's deployment state.
+    Reverses an llm_client deployment by destroying the customer API default domain A record and updating the llm_client's deployment state.
 
 Signals
 -------
@@ -28,7 +28,7 @@ Task execution and undeployment actions are logged using the smarter logging lib
 Usage
 -----
 
-Import this module and call the Celery task as needed to asynchronously undeploy a llm_client default API domain:
+Import this module and call the Celery task as needed to asynchronously undeploy an llm_client default API domain:
 
     undeploy_default_api.delay(llm_client_id)
 
@@ -67,7 +67,7 @@ logger_prefix = logging.formatted_text(__name__)
 )
 def undeploy_default_api(llm_client_id: int):
     """
-    Reverse a LLMClient deployment by destroying the customer API default domain A record for a llm_client.
+    Reverse a LLMClient deployment by destroying the customer API default domain A record for an llm_client.
 
     This Celery task performs the following steps:
     1. Sends a pre-undeploy signal for the llm_client API.

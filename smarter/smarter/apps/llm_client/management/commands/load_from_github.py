@@ -42,7 +42,7 @@ class Command(SmarterCommand):
     The command supports two repository layouts:
 
     - **Version 1:** Each folder in the repository represents a customer API (subdomain), and contains
-      YAML plugin manifests. The command creates a llm_client for each folder and attaches plugins
+      YAML plugin manifests. The command creates an llm_client for each folder and attaches plugins
       found within.
 
     - **Version 2:** The repository contains 'plugins' and 'llm_clients' directories. All plugin manifests

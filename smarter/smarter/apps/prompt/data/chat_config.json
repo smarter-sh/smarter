@@ -20,9 +20,9 @@
             "default_model": "gpt-4o-mini",
             "default_temperature": 0.5,
             "default_max_tokens": 1024,
-            "app_name": "Stackademy SQL LLMClient",
+            "app_name": "Stackademy",
             "app_assistant": "Stanley",
-            "app_welcome_message": "Welcome to Stackademy SQL LLMClient! How can I help you today?",
+            "app_welcome_message": "Welcome to Stackademy! How can I help you today?",
             "app_example_prompts": [
                 "Do you offer any courses on AI?",
                 "My budget is $1,000. What courses can I take?",
@@ -58,7 +58,7 @@
                 },
                 {
                     "role": "assistant",
-                    "content": "Welcome to Stackademy SQL LLMClient! How can I help you today?",
+                    "content": "Welcome to Stackademy! How can I help you today?",
                     "smarter_is_new": false
                 },
                 {
@@ -177,7 +177,7 @@
                             },
                             {
                                 "role": "assistant",
-                                "content": "Welcome to Stackademy SQL LLMClient! How can I help you today?"
+                                "content": "Welcome to Stackademy! How can I help you today?"
                             },
                             {
                                 "role": "assistant",
@@ -203,7 +203,7 @@
             "llm_client_name": null,
             "llm_client_custom_domain": null,
             "environment_api_domain": "api.localhost:9357",
-            "err": "LLMClientHelper.__init__() not a llm_client. Quitting. http://localhost:9357/api/v1/llm-clients/9/chat/config/",
+            "err": "LLMClientHelper.__init__() not an llm_client. Quitting. http://localhost:9357/api/v1/llm-clients/9/chat/config/",
             "is_custom_domain": false,
             "is_deployed": false,
             "is_valid": true,
@@ -226,9 +226,9 @@
                 "default_system_role": "You are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n",
                 "default_temperature": 0.5,
                 "default_max_tokens": 1024,
-                "app_name": "Stackademy SQL LLMClient",
+                "app_name": "Stackademy",
                 "app_assistant": "Stanley",
-                "app_welcome_message": "Welcome to Stackademy SQL LLMClient! How can I help you today?",
+                "app_welcome_message": "Welcome to Stackademy! How can I help you today?",
                 "app_example_prompts": [
                     "Do you offer any courses on AI?",
                     "My budget is $1,000. What courses can I take?",

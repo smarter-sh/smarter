@@ -81,7 +81,7 @@ class SAMKinds(SmarterEnumAbstract):
         CHAT_HISTORY: Represents a chat history manifest kind.
         CHAT_PLUGIN_USAGE: Represents a chat plugin usage manifest kind.
         CHAT_TOOL_CALL: Represents a chat tool call manifest kind.
-        LLM_CLIENT: Represents a llm_client manifest kind.
+        LLM_CLIENT: Represents an llm_client manifest kind.
         PROVIDER: Represents a provider manifest kind.
 
     Methods:

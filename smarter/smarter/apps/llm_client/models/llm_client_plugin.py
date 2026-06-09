@@ -44,11 +44,11 @@ class LLMClientPlugin(TimestampedModel):
 
     .. code-block:: python
 
-        # Add a plugin to a llm_client
+        # Add a plugin to an llm_client
         plugin_meta = PluginMeta.objects.get(name="weather")
         llm_client_plugin = LLMClientPlugin.objects.create(llm_client=my_llm_client, plugin_meta=plugin_meta)
 
-        # List all plugins for a llm_client
+        # List all plugins for an llm_client
         plugins = LLMClientPlugin.objects.filter(llm_client=my_llm_client)
 
     **Notes**
@@ -215,7 +215,7 @@ class LLMClientPlugin(TimestampedModel):
             llm_client_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["LLMClientPlugin"]:
             """
-            Caches the plugins for a llm_client by llm_client_id to optimize.
+            Caches the plugins for an llm_client by llm_client_id to optimize.
 
             performance and reduce database queries.
 

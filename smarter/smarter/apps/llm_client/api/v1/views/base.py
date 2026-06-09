@@ -162,7 +162,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         """
         if self._llm_client_helper:
             return self._llm_client_helper
-        # ensure that we have some combination of properties that can identify a llm_client
+        # ensure that we have some combination of properties that can identify an llm_client
         if not (self.url or self.llm_client_id or (self.user_profile and self.name)):
             return None
         try:

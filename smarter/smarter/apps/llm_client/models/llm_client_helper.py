@@ -274,10 +274,10 @@ class LLMClientHelper(SmarterRequestMixin):
 
         This property attempts to resolve the LLMClient's unique integer ID using several strategies:
 
-        1. If a llm_client ID was provided at initialization, it is returned immediately.
+        1. If an llm_client ID was provided at initialization, it is returned immediately.
         2. If a LLMClient object is already cached, its ID is returned.
-        3. If the parent :class:`SmarterRequestMixin` provides a llm_client ID (e.g., parsed from the URL), it is used.
-        4. If both a llm_client name and account are available, attempts to resolve and cache the LLMClient object and its ID.
+        3. If the parent :class:`SmarterRequestMixin` provides an llm_client ID (e.g., parsed from the URL), it is used.
+        4. If both an llm_client name and account are available, attempts to resolve and cache the LLMClient object and its ID.
 
         :returns: The resolved LLMClient ID, or ``None`` if not found.
         :rtype: Optional[int]
@@ -286,12 +286,12 @@ class LLMClientHelper(SmarterRequestMixin):
         if self._llm_client_id:
             return self._llm_client_id
 
-        # check for a llm_client object
+        # check for an llm_client object
         if self._llm_client:
             self._llm_client_id = self.llm_client.id  # type: ignore[return-value]
             return self._llm_client_id
 
-        # check SmarterRequestMixin for a llm_client_id derived from the  url
+        # check SmarterRequestMixin for an llm_client_id derived from the  url
         self._llm_client_id = super().smarter_request_llm_client_id
         if self._llm_client_id:
             return self._llm_client_id
@@ -424,7 +424,7 @@ class LLMClientHelper(SmarterRequestMixin):
             return False
         else:
             llm_client_helper_logger.debug(
-                "%s confirmed URL is a llm_client URL. url=%s",
+                "%s confirmed URL is an llm_client URL. url=%s",
                 logger_prefix,
                 self._url,
             )

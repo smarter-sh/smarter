@@ -1,4 +1,4 @@
-"""This module is used to add an api key to a llm_client."""
+"""This module is used to add an api key to an llm_client."""
 
 from smarter.apps.account.models import Account
 from smarter.apps.llm_client.models import LLMClient, LLMClientAPIKey
@@ -9,7 +9,7 @@ from smarter.lib.drf.models import SmarterAuthToken
 # pylint: disable=E1101
 class Command(SmarterCommand):
     """
-    Management command for associating an API key with a llm_client.
+    Management command for associating an API key with an llm_client.
 
     This command allows administrators to link an existing API key to a specific llm_client instance
     within a Smarter account. The command requires the account number, the API key ID (UUID format),
@@ -36,7 +36,7 @@ class Command(SmarterCommand):
         parser.add_argument("--name", type=str, help="The name (ie subdomain) of the llm_client")
 
     def handle(self, *args, **options):
-        """Associate an API key with a llm_client based on the provided account number, API key ID, and llm_client name."""
+        """Associate an API key with an llm_client based on the provided account number, API key ID, and llm_client name."""
         self.handle_begin()
 
         account_number = options["account_number"]

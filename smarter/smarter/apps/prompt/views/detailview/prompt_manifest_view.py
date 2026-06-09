@@ -2,7 +2,7 @@
 """
 PromptManifestView is a Django class-based view that renders a detail view of.
 
-a SAM manifest for a llm_client.
+a SAM manifest for an llm_client.
 """
 
 import logging

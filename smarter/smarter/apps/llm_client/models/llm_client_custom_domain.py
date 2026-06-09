@@ -35,7 +35,7 @@ class LLMClientCustomDomain(TimestampedModel):
 
     **Usage Scenarios**
 
-    - When a customer wishes to deploy a llm_client at a custom subdomain (e.g., ``llm_client.example.com``),
+    - When a customer wishes to deploy an llm_client at a custom subdomain (e.g., ``llm_client.example.com``),
       an instance of this model is created to represent and manage that domain.
     - The platform uses the AWS Hosted Zone ID to automate DNS record creation and validation as part
       of the llm_client deployment workflow.
@@ -62,7 +62,7 @@ class LLMClientCustomDomain(TimestampedModel):
 
     .. code-block:: python
 
-        # Create a new custom domain for a llm_client
+        # Create a new custom domain for an llm_client
         custom_domain = LLMClientCustomDomain.objects.create(
             account=my_account,
             aws_hosted_zone_id="Z1234567890ABCDEF",

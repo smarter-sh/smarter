@@ -75,7 +75,7 @@ class DocsBaseView(SmarterAuthenticatedWebView):
         The brokered request is made on behalf of the original request user to
         resolve possible permission issues related to object ownership in the
         API views, in cases where the authenticated user is not the owner of
-        the object being accessed in the API view (e.g. a llm_client manifest).
+        the object being accessed in the API view (e.g. an llm_client manifest).
         The response from the API view is expected to be a JSON response, which is then decoded
         and returned as a Python dictionary.
 

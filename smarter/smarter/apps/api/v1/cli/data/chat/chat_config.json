@@ -138,7 +138,7 @@
             "llm_client_name": null,
             "llm_client_custom_domain": null,
             "environment_api_domain": "api.localhost:9357",
-            "err": "LLMClientHelper.__init__() not a llm_client. Quitting. http://localhost:9357/api/v1/llm-clients/1/chat/config/",
+            "err": "LLMClientHelper.__init__() not an llm_client. Quitting. http://localhost:9357/api/v1/llm-clients/1/chat/config/",
             "is_custom_domain": false,
             "is_deployed": true,
             "is_valid": true,

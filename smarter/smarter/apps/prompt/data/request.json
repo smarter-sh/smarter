@@ -20,7 +20,7 @@
       },
       {
         "role": "assistant",
-        "content": "Welcome to Stackademy SQL LLMClient! How can I help you today?"
+        "content": "Welcome to Stackademy! How can I help you today?"
       },
       {
         "role": "assistant",

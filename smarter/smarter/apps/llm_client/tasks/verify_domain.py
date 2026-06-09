@@ -32,7 +32,7 @@ Task execution, verification attempts, and results are logged using the smarter 
 Usage
 -----
 
-Import this module and call the Celery task as needed to asynchronously verify a llm_client domain:
+Import this module and call the Celery task as needed to asynchronously verify an llm_client domain:
 
     verify_domain.delay(domain_name, record_type, llm_client, activate_llm_client, hosted_zone_id, task_id)
 

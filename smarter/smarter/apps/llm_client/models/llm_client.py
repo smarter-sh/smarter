@@ -70,7 +70,7 @@ class LLMClient(MetaDataWithOwnershipModel):
     """
     Implements the LLMClient API model for a customer account.
 
-    This Django model represents a llm_client instance associated with a specific customer account.
+    This Django model represents an llm_client instance associated with a specific customer account.
     It provides configuration, deployment status, domain management, and API endpoint properties
     for each llm_client. The model supports multiple modes of operation (sandbox, custom, default),
     DNS verification, TLS certificate management, and integration with external providers.

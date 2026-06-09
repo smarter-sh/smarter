@@ -26,8 +26,8 @@ Smarter sessions do not expire unless deleted by an administrator as part of MyS
 .. note::
 
   Smarter sessions are distinct from Smarter LLMClients. A Smarter LLMClient is a resource that defines
-  the configuration of a llm_client, including its system prompt, plugins, and other settings. A Smarter session,
-  on the other hand, is an instance of a conversation with a llm_client, which includes the
+  the configuration of an llm_client, including its system prompt, plugins, and other settings. A Smarter session,
+  on the other hand, is an instance of a conversation with an llm_client, which includes the
   complete history of messages exchanged during that conversation.
 
   Smarter sessions originate in Smarter Prompt, are passed to the ReactJS component as part of the

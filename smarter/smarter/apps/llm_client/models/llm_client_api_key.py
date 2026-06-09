@@ -37,7 +37,7 @@ class LLMClientAPIKey(TimestampedModel):
     monitor usage at the llm_client level.
 
     Typical usage involves creating a LLMClientAPIKey instance whenever a new API key is
-    provisioned for a llm_client, and querying this model to validate incoming requests
+    provisioned for an llm_client, and querying this model to validate incoming requests
     against active keys.
 
     **Model Relationships**
@@ -49,11 +49,11 @@ class LLMClientAPIKey(TimestampedModel):
 
     .. code-block:: python
 
-        # Assign an API key to a llm_client
+        # Assign an API key to an llm_client
         api_key = SmarterAuthToken.objects.create(...)
         llm_client_api_key = LLMClientAPIKey.objects.create(llm_client=my_llm_client, api_key=api_key)
 
-        # Query API keys for a llm_client
+        # Query API keys for an llm_client
         keys = LLMClientAPIKey.objects.filter(llm_client=my_llm_client)
 
     **Notes**
@@ -101,7 +101,7 @@ class LLMClientAPIKey(TimestampedModel):
 
         .. code-block:: python
 
-            # Retrieve API keys for a llm_client with caching
+            # Retrieve API keys for an llm_client with caching
             api_keys = LLMClientAPIKey.get_cached_objects(my_llm_client, invalidate=True)
 
         :param invalidate: Whether to invalidate the cache for this retrieval.

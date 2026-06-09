@@ -2,7 +2,7 @@
  * Toolbar React Component
  *
  * This component provides a toolbar for managing llm_client resources, used in both ListView and CardView displays.
- * It offers actions for opening, editing, cloning, renaming, and deleting a llm_client, with modal dialogs for confirmation and error handling.
+ * It offers actions for opening, editing, cloning, renaming, and deleting an llm_client, with modal dialogs for confirmation and error handling.
  *
  * Features:
  * - Action buttons for: Open (chat), Edit (YAML manifest), Clone, Rename, and Delete llm_client resources.

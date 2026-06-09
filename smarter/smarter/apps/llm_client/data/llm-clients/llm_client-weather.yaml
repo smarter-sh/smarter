@@ -1,7 +1,7 @@
 apiVersion: smarter.sh/v1
 kind: LLMClient
 metadata:
-  description: "A llm_client that predicts the weather."
+  description: "an llm_client that predicts the weather."
   name: weather
   version: 0.1.0
   tags:

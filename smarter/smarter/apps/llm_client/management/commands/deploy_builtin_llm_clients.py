@@ -75,9 +75,9 @@ class Command(SmarterCommand):
         )
 
     def delete_llm_client(self, name: str):
-        """Delete a llm_client by name."""
+        """Delete an llm_client by name."""
         if not self.user_profile:
-            raise SmarterValueError("UserProfile is required to delete a llm_client.")
+            raise SmarterValueError("UserProfile is required to delete an llm_client.")
 
         try:
             llm_client = LLMClient.objects.get(user_profile=self.user_profile, name=name)
@@ -113,7 +113,7 @@ class Command(SmarterCommand):
 
     def create_and_deploy_llm_client(self, filespec: str) -> bool:
         """
-        Create and deploy a llm_client by name.
+        Create and deploy an llm_client by name.
 
         Apply the Smarter yaml manifest:
         - Read and Parse the YAML file
@@ -124,7 +124,7 @@ class Command(SmarterCommand):
         - deploy the llm_client as a Celery task
         """
         if not self.user_profile:
-            raise SmarterValueError("UserProfile is required to create and deploy a llm_client.")
+            raise SmarterValueError("UserProfile is required to create and deploy an llm_client.")
 
         self.stdout.write(
             f"Creating and deploying llm_client from manifest {filespec} for user_profile {self.user_profile}."

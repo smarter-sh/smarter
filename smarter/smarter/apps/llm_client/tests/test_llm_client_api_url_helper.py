@@ -99,7 +99,7 @@ class TestLLMClientApiUrlHelper(TestAccountMixin):
 
         self.assertTrue(
             helper.ready,
-            f"Expected a llm_client helper to be valid, but got {helper.ready} for url {self.llm_client.url} -- helper: {helper}, user: {helper.user}, profile: {helper.user_profile}",
+            f"Expected an llm_client helper to be valid, but got {helper.ready} for url {self.llm_client.url} -- helper: {helper}, user: {helper.user}, profile: {helper.user_profile}",
         )
         self.assertTrue(helper.account == self.account, f"Expected {self.account}, but got {helper.account}")
         self.assertTrue(
