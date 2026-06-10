@@ -244,8 +244,8 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         :return: Formatted class name string.
         :rtype: str
         """
-        inherited_class = super().formatted_class_name
-        return f"{inherited_class} {LLMClientApiBaseViewSet.__name__}[{id(self)}]"
+        class_name = f"{__name__}.{LLMClientApiBaseViewSet.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def url(self) -> Optional[ParseResult]:

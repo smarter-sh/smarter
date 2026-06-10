@@ -173,7 +173,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :rtype: str
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{CliBaseApiView.__name__}()"
+        this_class = f".{CliBaseApiView.__name__}[][{id(self)}]"
+        return f"{parent_class}{self.formatted_text(this_class)}"
 
     @property
     def loader(self) -> Optional[SAMLoader]:
@@ -546,7 +547,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 exc_info=True,
             )
             raise SmarterConfigurationError(
-                "%s error during initialization: could not set request object." % self.formatted_class_name
+                f"{self.formatted_class_name} error during initialization: could not set request object."
             ) from e
 
         logger.debug("hi mom")
@@ -605,8 +606,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     )
                 else:
                     logger.error(
-                        "%s.initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact %s %s",
-                        self.logger_prefix,
+                        "%s.initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact %s: %s",
+                        self.formatted_class_name,
                         SMARTER_CUSTOMER_SUPPORT_EMAIL,
                         e,
                     )
@@ -616,7 +617,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         except Exception as e:
             logger.error(
                 "%s.initial() - unexpected error during authentication: %s: %s",
-                self.logger_prefix,
+                self.formatted_class_name,
                 type(e),
                 e,
                 exc_info=True,

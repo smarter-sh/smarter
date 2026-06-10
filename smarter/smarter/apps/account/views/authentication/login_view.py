@@ -1,6 +1,4 @@
-"""
-Django Account Authentication Login view.
-"""
+"""Django Account Authentication Login view."""
 
 import traceback
 from typing import Optional, Union
@@ -31,9 +29,7 @@ logger = logging.getSmarterLogger(
 
 
 class LoginView(SmarterNeverCachedWebView):
-    """
-    View for logging in browser session.
-    """
+    """View for logging in browser session."""
 
     class LoginForm(forms.Form):
         """Form for the sign-in page."""
@@ -56,12 +52,14 @@ class LoginView(SmarterNeverCachedWebView):
 
     @property
     def formatted_class_name(self):
-        return logging.formatted_text(f"{__name__}.{LoginView.__name__}")
+        return self.formatted_text(f"{__name__}.{LoginView.__name__}")
 
     @property
     def is_google_oauth_enabled(self) -> bool:
         """
-        Check if Google OAuth is enabled. If True, the sign-in page
+        Check if Google OAuth is enabled.
+
+        If True, the sign-in page
         will show the Google OAuth sign-in option. To return True,
         both the key and secret must be set in settings, and
         the appropriate authentication backend must be included
@@ -118,7 +116,9 @@ class LoginView(SmarterNeverCachedWebView):
     @property
     def is_github_oauth_enabled(self) -> bool:
         """
-        Check if GitHub OAuth is enabled. If True, the sign-in page
+        Check if GitHub OAuth is enabled.
+
+        If True, the sign-in page
         will show the GitHub OAuth sign-in option. To return True,
         both the key and secret must be set in settings, and
         the appropriate authentication backend must be included
@@ -197,9 +197,7 @@ class LoginView(SmarterNeverCachedWebView):
         SmarterHttpResponseForbidden,
         SmarterHttpResponseServerError,
     ]:
-        """
-        Handle POST request to log in user with email and password.
-        """
+        """Handle POST request to log in user with email and password."""
         logger.debug(
             "%s.LoginView.post() called with request type: %s %s, args: %s, kwargs: %s",
             self.formatted_class_name,

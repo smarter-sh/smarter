@@ -386,8 +386,8 @@ class ChatHelper(SmarterRequestMixin):
         :returns: The formatted class name as a string, including the parent class name.
         :rtype: str
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.ChatHelper()"
+        class_name = f"{__name__}.{ChatHelper.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def chat(self):

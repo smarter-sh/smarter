@@ -1,6 +1,4 @@
-"""
-Debug middleware for logging the type of the response returned by the view.
-"""
+"""Debug middleware for logging the type of the response returned by the view."""
 
 from collections.abc import Awaitable
 
@@ -20,9 +18,7 @@ logger.debug(
 
 
 class MiddlewareDebugMiddleware(SmarterMiddlewareMixin):
-    """
-    Middleware that logs the type of the response returned by the view.
-    """
+    """Middleware that logs the type of the response returned by the view."""
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
 
@@ -58,4 +54,15 @@ class MiddlewareDebugMiddleware(SmarterMiddlewareMixin):
 
     @property
     def formatted_class_name(self) -> str:
-        return logging.formatted_text(f"{__name__}.{self.__class__.__name__}")
+        """
+        Return the formatted class name for logging purposes.
+
+         This method constructs a formatted class name string that includes the module name, class name, and instance ID. It is used to provide a more readable and informative class name in logs, which can help with debugging and tracing the flow of requests through the middleware.
+
+         The formatted class name follows the pattern: "module.ClassName[instance_id]". For example, if the module is "smarter.lib.django.middleware.debug" and the class is "MiddlewareDebugMiddleware", the formatted class name might look like "smarter.lib.django.middleware.debug.MiddlewareDebugMiddleware[12345678]".
+
+         :return: The formatted class name as a string.
+         :rtype: str
+        """
+        class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)

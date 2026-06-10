@@ -57,9 +57,16 @@ class ServiceHealthView(SmarterAuthenticatedWebView):
         }
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this view."""
+        class_name = f"{__name__}.{ServiceHealthView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to return platform health metadata.
+
         :param request: The incoming HTTP POST request from the client.
         :type request: django.http.HttpRequest
         :param args: Additional positional arguments forwarded by the URL dispatcher.

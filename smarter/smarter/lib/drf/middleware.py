@@ -1,5 +1,5 @@
 """
-smarter.lib.drf.middleware
+Smarter.lib.drf.middleware
 ==========================
 
 Middleware for Smarter token authentication using SmarterTokenAuthentication.
@@ -102,16 +102,15 @@ else:
 
 
 class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
-    """
-    Middleware for token authentication using SmarterTokenAuthentication.
-    """
+    """Middleware for token authentication using SmarterTokenAuthentication."""
 
     sync_capable = True
     async_capable = True
 
     @property
     def formatted_class_name(self) -> str:
-        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+        class_name = f"{__name__}.{self.__class__.__name__}"
+        return self.formatted_text(class_name)
 
     def __call__(self, request: Request) -> HttpResponseBase | Awaitable[HttpResponseBase]:
 
@@ -224,9 +223,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         return str(prefix)
 
     def extract_token(self, authorization_header: str) -> str | None:
-        """
-        Extract token from Authorization header.
-        """
+        """Extract token from Authorization header."""
 
         if not authorization_header:
             return None
@@ -277,9 +274,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         user,
         auth_obj,
     ) -> None:
-        """
-        Warn on tokens exceeding configured lifetime.
-        """
+        """Warn on tokens exceeding configured lifetime."""
 
         digest = getattr(auth_obj, "digest", None)
 

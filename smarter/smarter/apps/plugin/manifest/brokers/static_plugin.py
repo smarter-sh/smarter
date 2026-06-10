@@ -1,5 +1,5 @@
 # pylint: disable=W0718,C0302
-"""Smarter API StaticPlugin Manifest handler"""
+"""Smarter API StaticPlugin Manifest handler."""
 
 from datetime import datetime, timezone
 from typing import Optional, Type
@@ -105,7 +105,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         - `SAMPluginBaseBroker` for base broker functionality.
         - `SAMStaticPlugin` for the manifest model.
         - Django ORM models: `PluginMeta`, `PluginDataStatic`, `PluginPrompt`, `PluginSelector`.
-
     """
 
     # override the base abstract manifest model with the StaticPlugin model
@@ -205,7 +204,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         .. seealso::
 
             - `SAMPluginBaseBroker.init`
-
         """
         super().plugin_init()
         self._manifest = None
@@ -239,10 +237,9 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         .. seealso::
             - `SAMPluginBaseBroker.formatted_class_name`
-
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.{SAMStaticPluginBroker.__name__}[{id(self)}]"
+        class_name = f"{SAMStaticPluginBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def kind(self) -> str:
@@ -263,12 +260,10 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             print(broker.kind)
             # Output: "Plugin"
 
-
         .. seealso::
 
             - `MANIFEST_KIND` constant in `smarter.apps.plugin.manifest.models.static_plugin.const`
             - `SAMStaticPluginBroker.manifest`
-
         """
         return MANIFEST_KIND
 
@@ -311,6 +306,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     def manifest(self) -> Optional[SAMStaticPlugin]:
         """
         Returns the manifest for the static plugin as a Pydantic model instance.
+
         This can be initialized any of three ways:
         1. If already from the constructor, return the cached manifest.
         2. If the plugin metadata exists, build the manifest from the Django ORM models.
@@ -337,7 +333,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             - `SAMStaticPlugin`
             - `SAMPluginCommonMetadata`
             - `SAMPluginStaticSpec`
-
         """
         if self._manifest:
             if not isinstance(self._manifest, SAMStaticPlugin):
@@ -464,7 +459,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         :raises SAMPluginBrokerError:
             If there is an error retrieving the plugin data from the database.
 
-
         .. seealso::
 
             - `PluginDataStatic`
@@ -552,7 +546,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         :raises SAMPluginBrokerError:
             If there is an error retrieving or converting the plugin data.
 
-
         .. seealso::
 
             - `PluginDataStatic`
@@ -589,7 +582,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         :raises SAMPluginBrokerError:
             If there is an error retrieving or converting any component of the plugin specification.
 
-
         .. seealso::
 
             - `SAMPluginStaticSpec`
@@ -620,9 +612,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def cache_invalidations(self) -> None:
-        """
-        Invalidate any relevant caches when the manifest or plugin data changes.
-        """
+        """Invalidate any relevant caches when the manifest or plugin data changes."""
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
         PluginDataStatic.get_cached_object(invalidate=True, plugin=self.plugin_meta)  # type: ignore
         return super().cache_invalidations()
@@ -649,14 +639,11 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             response = broker.example_manifest(request, foo="bar")
             print(response.data)
 
-
         .. seealso::
 
             - `StaticPlugin.example_manifest`
             - `SmarterJournaledJsonResponse`
             - `SmarterJournalCliCommands`
-
-
         """
         logger.debug(
             "%s.example_manifest() called for %s %s %s",
@@ -794,7 +781,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         -------
         SmarterJournaledJsonResponse
             JSON response containing the plugin manifest or error details.
-
         """
         logger.debug(
             "%s.describe() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
@@ -838,7 +824,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             If the plugin or plugin metadata is not initialized
         :raises SAMBrokerErrorNotReady:
             If the plugin is not ready after creation
-
 
         .. seealso::
 
@@ -967,7 +952,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             - `StaticPlugin.delete`
             - `SmarterJournaledJsonResponse`
             - :meth:`SAMPluginBaseBroker.set_and_verify_name_param`
-
         """
         logger.debug(
             "%s.delete() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile

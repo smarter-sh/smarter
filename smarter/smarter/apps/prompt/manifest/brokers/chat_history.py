@@ -1,5 +1,5 @@
 # pylint: disable=W0718,W0613
-"""Smarter API Chat Manifest handler"""
+"""Smarter API Chat Manifest handler."""
 
 import logging
 from typing import Optional, Type
@@ -61,7 +61,7 @@ class SAMChatHistoryBrokerError(SAMBrokerError):
 
 
 class ChatHistorySerializer(ModelSerializer):
-    """Django REST Framework serializer for get()"""
+    """Django REST Framework serializer for get()."""
 
     # pylint: disable=C0115
     class Meta:
@@ -71,7 +71,9 @@ class ChatHistorySerializer(ModelSerializer):
 
 class SAMChatHistoryBroker(AbstractBroker):
     """
-    Smarter API Chat Manifest Broker. This class is responsible for
+    Smarter API Chat Manifest Broker.
+
+    This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Chat manifests
     - using the manifest to initialize the corresponding Pydantic model
 
@@ -95,7 +97,8 @@ class SAMChatHistoryBroker(AbstractBroker):
     @property
     def chat_history(self) -> Optional[ChatHistory]:
         """
-        The Chat object is a Django ORM model subclass from knox.AuthToken
+        The Chat object is a Django ORM model subclass from knox.AuthToken.
+
         that represents a Chat api key. The Chat object is
         used to store the authentication hash and Smarter metadata for the Smarter API.
         The Chat object is retrieved from the database, if it exists,
@@ -112,9 +115,7 @@ class SAMChatHistoryBroker(AbstractBroker):
         return self._chat_history
 
     def manifest_to_django_orm(self) -> dict:
-        """
-        Transform the Smarter API SAMChatHistory manifest into a Django ORM model.
-        """
+        """Transform the Smarter API SAMChatHistory manifest into a Django ORM model."""
         metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.model_dump()
         config_dump = self.to_snake_case(config_dump)
@@ -127,7 +128,8 @@ class SAMChatHistoryBroker(AbstractBroker):
     @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
-        Transform the Django ORM model into a Pydantic readable
+        Transform the Django ORM model into a Pydantic readable.
+
         Smarter API SAMChatHistory manifest dict.
         """
         if not self.chat_history:
@@ -175,10 +177,11 @@ class SAMChatHistoryBroker(AbstractBroker):
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
+
         This is used to provide a more readable class name in logs.
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMChatHistoryBroker[{id(self)}]"
+        class_name = f"{__name__}.{SAMChatHistoryBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def ORMMetaModelClass(self) -> Type[ChatHistory]:
@@ -201,7 +204,8 @@ class SAMChatHistoryBroker(AbstractBroker):
     @property
     def manifest(self) -> SAMChatHistory:
         """
-        SAMChatHistory() is a Pydantic model
+        SAMChatHistory() is a Pydantic model.
+
         that is used to represent the Smarter API SAMChatHistory manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -300,9 +304,7 @@ class SAMChatHistoryBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=data)
 
     def apply(self, request: ASGIRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
-        """
-        Chat is a read-only django table, populated by the LLM handlers
-        """
+        """Chat is a read-only django table, populated by the LLM handlers."""
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError(f"Read-only {self.kind} {self.name}", thing=self.kind, command=command)

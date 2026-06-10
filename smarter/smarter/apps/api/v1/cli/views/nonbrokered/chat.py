@@ -76,7 +76,8 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliChatBaseApiView.__name__}[{id(self)}]"
+        this_class = f".{ApiV1CliChatBaseApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
 
     @property
     def prompt(self) -> Optional[str]:
@@ -254,7 +255,8 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliChatApiView.__name__}[{id(self)}]"
+        this_class = f".{ApiV1CliChatApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
 
     @property
     def chat_config(self) -> dict:

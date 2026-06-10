@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'schema' view"""
+"""Smarter API command-line interface 'schema' view."""
 
 from http import HTTPStatus
 
@@ -34,11 +34,13 @@ class ApiV1CliSchemaApiView(CliBaseApiView):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliSchemaApiView.__name__}[{id(self)}]"
+        this_class = f".{ApiV1CliSchemaApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
 
     @swagger_auto_schema(
         operation_description="""
@@ -56,6 +58,8 @@ The response from this endpoint is a JSON object containing the published JSON s
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def post(self, request, kind: str, *args, **kwargs):
+        if not self.broker:
+            raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         return self.broker.schema(request=request, kwargs=kwargs)
 
     @swagger_auto_schema(
@@ -76,5 +80,7 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"], COMMON_SWAGGER_PARAMETERS["name_query_param"]],
     )
     def get(self, request, kind: str, *args, **kwargs):
+        if not self.broker:
+            raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         response = self.broker.schema(request=request, kwargs=kwargs)
         return response

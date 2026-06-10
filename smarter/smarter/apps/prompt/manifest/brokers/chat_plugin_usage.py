@@ -1,5 +1,5 @@
 # pylint: disable=W0718,W0613
-"""Smarter API ChatPluginUsage Manifest handler"""
+"""Smarter API ChatPluginUsage Manifest handler."""
 
 import logging
 import typing
@@ -62,7 +62,7 @@ class SAMChatPluginUsageBrokerError(SAMBrokerError):
 
 
 class ChatPluginUsageSerializer(ModelSerializer):
-    """Django REST Framework serializer for get()"""
+    """Django REST Framework serializer for get()."""
 
     # pylint: disable=C0115
     class Meta:
@@ -72,7 +72,9 @@ class ChatPluginUsageSerializer(ModelSerializer):
 
 class SAMChatPluginUsageBroker(AbstractBroker):
     """
-    Smarter API ChatPluginUsage Manifest Broker. This class is responsible for
+    Smarter API ChatPluginUsage Manifest Broker.
+
+    This class is responsible for
     - loading, validating and parsing the Smarter Api yaml ChatPluginUsage manifests
     - using the manifest to initialize the corresponding Pydantic model
 
@@ -96,7 +98,8 @@ class SAMChatPluginUsageBroker(AbstractBroker):
     @property
     def chat_plugin_usage(self) -> ChatPluginUsage:
         """
-        The ChatPluginUsage object is a Django ORM model subclass from knox.AuthToken
+        The ChatPluginUsage object is a Django ORM model subclass from knox.AuthToken.
+
         that represents a ChatPluginUsage api key. The ChatPluginUsage object is
         used to store the authentication hash and Smarter metadata for the Smarter API.
         The ChatPluginUsage object is retrieved from the database, if it exists,
@@ -113,9 +116,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         return self._chat_history
 
     def manifest_to_django_orm(self) -> dict:
-        """
-        Transform the Smarter API SAMChatPluginUsage manifest into a Django ORM model.
-        """
+        """Transform the Smarter API SAMChatPluginUsage manifest into a Django ORM model."""
         metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.model_dump()
         config_dump = self.to_snake_case(config_dump)
@@ -129,7 +130,8 @@ class SAMChatPluginUsageBroker(AbstractBroker):
     @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
-        Transform the Django ORM model into a Pydantic readable
+        Transform the Django ORM model into a Pydantic readable.
+
         Smarter API SAMChatPluginUsage manifest dict.
         """
         chat_dict = model_to_dict(self.chat_plugin_usage)
@@ -173,10 +175,11 @@ class SAMChatPluginUsageBroker(AbstractBroker):
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
+
         This is used to provide a more readable class name in logs.
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMPluginUsageBroker[{id(self)}]"
+        class_name = f"{__name__}.{SAMChatPluginUsageBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def ORMMetaModelClass(self) -> typing.Type[ChatPluginUsage]:
@@ -199,7 +202,8 @@ class SAMChatPluginUsageBroker(AbstractBroker):
     @property
     def manifest(self) -> SAMChatPluginUsage:
         """
-        SAMChatPluginUsage() is a Pydantic model
+        SAMChatPluginUsage() is a Pydantic model.
+
         that is used to represent the Smarter API SAMChatPluginUsage manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -296,9 +300,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=data)
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        Chat is a read-only django table, populated by the LLM handlers
-        """
+        """Chat is a read-only django table, populated by the LLM handlers."""
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError(f"Cannot apply {self.kind} {self.session_key}", thing=self.kind, command=command)

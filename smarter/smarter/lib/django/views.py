@@ -14,7 +14,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import cache_control, cache_page, never_cache
 
-from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.models import User
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.lib import logging
@@ -24,6 +24,7 @@ from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
+# pylint: disable=W0613
 def should_log_verbose(level):
     """Check if logging should be done based on the waffle switch."""
     return smarter_settings.verbose_logging
@@ -33,7 +34,6 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 verbose_logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.VIEW_LOGGING], condition_func=should_log_verbose
 )
-logger_prefix = formatted_text(__name__)
 logger_prefix_invalidations = formatted_text_blue(f"{__name__}.smarter_cache_page_by_user.invalidate()")
 
 register = template.Library()
@@ -52,6 +52,7 @@ def redirect_and_expire_cache(path: str = "/"):
 def smarter_cache_page_by_user(timeout):
     """
     Decorator to cache a view's response based on the authenticated user.
+
     This decorator applies Django's `cache_page` decorator with a cache key
     that is unique to each user. Authenticated users will have their
     responses cached separately, while anonymous users will share a single
@@ -75,6 +76,8 @@ def smarter_cache_page_by_user(timeout):
 
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
+            logger_prefix = formatted_text(__name__)
+
             if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SMARTER_PAGE_CACHING):
                 return view_func(request, *args, **kwargs)
             path = str(request.path).replace("/", ".").strip(".")
@@ -114,7 +117,7 @@ def smarter_cache_page_by_user(timeout):
 # ------------------------------------------------------------------------------
 # Web Views
 # ------------------------------------------------------------------------------
-class SmarterView(View, SmarterRequestMixin):
+class SmarterView(View):
     """
     The foundational base view for all Smarter platform views.
 
@@ -132,37 +135,24 @@ class SmarterView(View, SmarterRequestMixin):
     configuration, making it the cornerstone of the Smarter view architecture.
     """
 
+    _ready: bool = False
     template_path: str = ""
     context: dict = {}
 
-    def __init__(self, *args, **kwargs):
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this view."""
+        class_name = f"{__name__}.{SmarterView.__name__}[{id(self)}]"
+        return logging.formatted_text(class_name)
+
+    @property
+    def ready(self) -> bool:
         """
-        Initialize the SmarterView with request and other arguments.
-        This method initializes the SmarterRequestMixin with the request.
+        Returns True if the view is ready to handle requests, False otherwise.
 
-        :param args: Positional arguments, where the first argument is expected to be the HttpRequest.
-        :param kwargs: Keyword arguments, which may include the HttpRequest under the 'request'
-                          key.
-        :return: None
-        :rtype: None
+        This can be used to check if the necessary context or data is available before processing a request.
         """
-        verbose_logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.logger_prefix, args, kwargs)
-        super().__init__(*args, **kwargs)
-
-        # none of these are actually expected until sometime between dispatch() and setup()
-        request = kwargs.pop("request", None) or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
-        user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
-        account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
-        user_profile = kwargs.pop("user_profile", None) or next(
-            (arg for arg in args if isinstance(arg, UserProfile)), None
-        )
-        SmarterRequestMixin.__init__(
-            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
-        )
-
-    @cached_property
-    def logger_prefix(self):
-        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+        return self._ready
 
     @register.filter
     def remove_comments(self, html):
@@ -212,8 +202,8 @@ class SmarterView(View, SmarterRequestMixin):
         except Exception as e:
             logger.error(
                 "%s.render_clean_html(): %s, %s. error: %s",
-                self.logger_prefix,
-                self.smarter_build_absolute_uri(request),
+                self.formatted_class_name,
+                request.build_absolute_uri(),
                 template_path,
                 e,
                 exc_info=True,
@@ -225,56 +215,46 @@ class SmarterView(View, SmarterRequestMixin):
         minified_html = self.minify_html(html=html_no_comments)
         return minified_html
 
-    def setup(self, request: HttpRequest, *args, **kwargs):
-        """
-        Setup the view with the request and any additional arguments.
-        This method initializes the SmarterRequestMixin with the request.
-
-        :param request: The HTTP request object.
-        :type request: HttpRequest
-        :param args: Additional positional arguments.
-        :param kwargs: Additional keyword arguments.
-        :return: The result of the superclass setup method.
-        :rtype: Any
-        """
-        if not self.smarter_request:
-            self.smarter_request = (
-                request or kwargs["request"] or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
-            )
-            if not self.smarter_request:
-                logger.warning(
-                    "%s.setup() - SmarterRequestMixin.smarter_request could not be initialized.",
-                    self.logger_prefix,
-                )
-        return super().setup(request, *args, **kwargs)
-
 
 class SmarterWebXmlView(SmarterView):
-    """
-    Base view for smarter xml web views.
-    """
+    """Base view for smarter xml web views."""
 
     def get(self, request):
         return render(request=request, template_name=self.template_path, context=self.context)
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this view."""
+        class_name = f"{__name__}.{SmarterWebXmlView.__name__}[{id(self)}]"
+        return logging.formatted_text(class_name)
+
 
 class SmarterWebTxtView(SmarterView):
-    """
-    Base view for smarter text web views.
-    """
+    """Base view for smarter text web views."""
 
     def get(self, request):
         minified_html = self.render_clean_html(request, template_path=self.template_path, context=self.context)
         return HttpResponse(content=minified_html, content_type="text/plain")
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this view."""
+        class_name = f"{__name__}.{SmarterWebTxtView.__name__}[{id(self)}]"
+        return logging.formatted_text(class_name)
+
 
 class SmarterWebHtmlView(SmarterView):
     """
     Base view for smarter web views.
+
     Includes helpers for rendering, minifying and stripping out developer comments.
-
-
     """
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this view."""
+        class_name = f"{__name__}.{SmarterWebHtmlView.__name__}[{id(self)}]"
+        return logging.formatted_text(class_name)
 
     # pylint: disable=W0613
     def clean_http_response(self, request: HttpRequest, template_path, *args, context=None, **kwargs):
@@ -331,9 +311,15 @@ class SmarterNeverCachedWebView(SmarterWebHtmlView):
     This makes it ideal for pages displaying private, frequently changing, or security-sensitive data.
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this view."""
+        class_name = f"{__name__}.{SmarterNeverCachedWebView.__name__}[{id(self)}]"
+        return logging.formatted_text(class_name)
+
 
 @method_decorator(login_required, name="dispatch")
-class SmarterAuthenticatedWebView(SmarterWebHtmlView):
+class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
     """
     An optimized view that requires authentication.
 
@@ -365,9 +351,20 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     .. versionadded:: v0.13.39
     """
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        SmarterRequestMixin.__init__(self, **kwargs)
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this view."""
+        class_name = f"{__name__}.{SmarterAuthenticatedWebView.__name__}[{id(self)}]"
+        return logging.formatted_text(class_name)
+
     def setup(self, request: HttpRequest, *args, **kwargs):
         """
         Setup the view with the request and any additional arguments.
+
         This method initializes the SmarterRequestMixin with the request.
 
         :param request: The HTTP request object.
@@ -377,24 +374,25 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         :return: The result of the superclass setup method.
         :rtype: Any
         """
+        user = getattr(request, "user", None)
         verbose_logger.debug(
             "%s.setup() called with request: %s, args: %s, kwargs: %s, user: %s",
-            self.logger_prefix,
+            self.formatted_class_name,
             request,
             args,
             kwargs,
-            getattr(request, "user", None),
+            user,
         )
         # This flag is used to circumvent DRF token authentication for the brokered
         # request we make to our own API views in get_brokered_json_response().
         # We initialize it now, to ensure that it's present for any downstream
         # code that might check it before we get to dispatch().
         request = self.set_is_internal_api_request(request, False)
-
-        retval = super().setup(request, *args, **kwargs)
-        if not self.smarter_request:
-            self.smarter_request = request
-        return retval
+        super().setup(request, *args, **kwargs)
+        SmarterRequestMixin.setup(self, *args, request=request, user=user, **kwargs)
+        if super().ready:
+            self._ready = True
+        self.log_ready_status()
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
@@ -407,7 +405,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         """
         verbose_logger.debug(
             "%s.dispatch() called with request: %s, user: %s, args: %s, kwargs: %s",
-            self.logger_prefix,
+            self.formatted_class_name,
             request,
             getattr(request, "user", None),
             args,

@@ -14,11 +14,10 @@ from django.shortcuts import render
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
-from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.helpers.console_helpers import formatted_json
-from smarter.common.utils import is_authenticated_request, rfc1034_compliant_to_snake
+from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
@@ -64,7 +63,8 @@ class PluginDetailView(DocsBaseView):
 
     @property
     def formatted_class_name(self):
-        return logging.formatted_text(f"{__name__}.{PluginDetailView.__name__}")
+        class_name = f"{__name__}.{PluginDetailView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
         """

@@ -70,7 +70,8 @@ class ConnectionBase(MetaDataWithOwnershipModel):
         :rtype: str
         """
 
-        return formatted_text(self.__class__.__module__ + "." + self.__class__.__name__)
+        class_name = f"{__name__}.{ConnectionBase.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def manifest_url(self) -> str:

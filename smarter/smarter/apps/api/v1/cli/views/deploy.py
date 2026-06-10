@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'deploy' view"""
+"""Smarter API command-line interface 'deploy' view."""
 
 import logging
 from http import HTTPStatus
@@ -32,11 +32,13 @@ class ApiV1CliDeployApiView(CliBaseApiView):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliDeployApiView.__name__}[{id(self)}]"
+        this_class = f".{ApiV1CliDeployApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
 
     @swagger_auto_schema(
         operation_description="""
@@ -57,5 +59,7 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         logger.debug(
             "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
         )
+        if not self.broker:
+            raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         response = self.broker.deploy(request=request, kwargs=kwargs)
         return response
