@@ -88,6 +88,12 @@ class PromptManifestView(DocsBaseView):
     llm_client: Optional[LLMClient] = None
     llm_client_helper: Optional[LLMClientHelper] = None
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PromptManifestView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         Handle GET requests to render the llm_client manifest detail view.

@@ -149,6 +149,12 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
     _llm_client: Optional[LLMClient] = None
 
     @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ChatConfigView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
+    @property
     def llm_client(self) -> Optional[LLMClient]:
         return self._llm_client
 
