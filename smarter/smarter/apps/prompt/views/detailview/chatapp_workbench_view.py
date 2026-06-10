@@ -87,6 +87,12 @@ class SmarterChatSession(SmarterHelperMixin):
     request: Optional[HttpRequest] = None
     _session_key: str
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{SmarterChatSession.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def __init__(self, request: HttpRequest, session_key: str, *args, llm_client: Optional[LLMClient] = None, **kwargs):
         super().__init__()
         verbose_logger.debug(
