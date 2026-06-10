@@ -467,14 +467,20 @@ class SmarterRequestMixin(AccountMixin):
                 self._url,
             )
             if self.is_authenticated:
-                self._smarter_request_user = request.user  # type: ignore
-                verbose_logger.debug(
-                    "%s.smarter_request setter - smarter_request_user set to: %s is_authenticated=%s",
-                    self.srm_formatted_class_name,
-                    self.smarter_request_user,
-                    request.user.is_authenticated,
-                )
-                self.user = self._smarter_request_user
+                if not self.user:
+                    self._smarter_request_user = request.user  # type: ignore
+                    verbose_logger.debug(
+                        "%s.smarter_request setter - smarter_request_user set to: %s is_authenticated=%s",
+                        self.srm_formatted_class_name,
+                        self.smarter_request_user,
+                        request.user.is_authenticated,
+                    )
+                    self.user = self._smarter_request_user
+                else:
+                    if self.user != request.user:
+                        raise SmarterValueError(
+                            f"{self.srm_formatted_class_name}.smarter_request setter - user mismatch: existing user: {self.user}, request user: {request.user}"
+                        )
             else:
                 # this duplicates the functionality of the DRF
                 # authentication class. there are a variety of
