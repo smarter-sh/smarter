@@ -14,7 +14,6 @@ known url patterns for Smarter llm_clients. key features include:
 
 import hashlib
 import inspect
-import logging
 import re
 from datetime import datetime
 from functools import cached_property
@@ -52,12 +51,11 @@ from smarter.common.utils import (
     rfc1034_compliant_to_snake,
     smarter_build_absolute_uri,
 )
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # Match netloc: llm_client_name.account_number.api.environment_api_domain
 netloc_pattern_named_url = re.compile(
@@ -66,21 +64,13 @@ netloc_pattern_named_url = re.compile(
 
 
 # pylint: disable=W0613
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
-
-
-# pylint: disable=W0613
 def should_log_verbose(level):
     """Check if logging should be done based on the waffle switch."""
-    # return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
-    return True
+    return smarter_settings.verbose_logging and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
+logger = logging.getSmarterLogger(__name__, all_switches=[SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING])
+verbose_logger = logging.getSmarterLogger(__name__, condition_func=should_log_verbose)
 
 SmarterRequestType = Optional[Union[RestFrameworkRequest, HttpRequest, ASGIRequest, MagicMock]]
 """Type alias for all Smarter request types."""
@@ -2233,6 +2223,11 @@ class SmarterRequestMixin(AccountMixin):
             logger.debug(msg)
         else:
             logger.warning(msg)
+
+    def log_ready_status(self):
+        """Logs the ready status of the view."""
+        msg = f"{self.formatted_class_name} is {self.ready_state}"
+        logger.info(msg)
 
     def to_json(self) -> dict[str, Any]:
         """

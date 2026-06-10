@@ -895,15 +895,9 @@ class AccountMixin(SmarterHelperMixin):
     def log_ready_status(self):
         """Logs the ready status of the view."""
         msg = f"{self.formatted_class_name} is {self.ready_state}"
-        if self.ready:
-            logger.info(msg)
-        else:
-            logger.warning(msg)
+        logger.info(msg)
 
     def _am_log_ready_status(self):
         """Logs the am_ready status of the AccountMixin."""
         msg = f"{self._am_formatted_class_name} is {self._am_ready_state}"
-        if self.am_ready:
-            logger.info(msg)
-        else:
-            logger.warning(msg)
+        logger.info(msg)

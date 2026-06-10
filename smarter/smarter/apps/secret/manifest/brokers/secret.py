@@ -1,5 +1,5 @@
 # pylint: disable=W0718,C0302
-"""Smarter API User Manifest handler"""
+"""Smarter API User Manifest handler."""
 
 import logging
 import traceback
@@ -85,7 +85,7 @@ class SAMSecretBrokerError(SAMBrokerError):
 
 class SAMSecretBroker(AbstractBroker):
     """
-    Smarter API Secret Manifest Broker
+    Smarter API Secret Manifest Broker.
 
     This class manages the lifecycle of Smarter API Secret manifests, including loading, validating, parsing, and transforming them between Django ORM models and Pydantic models for serialization and deserialization.
 
@@ -120,7 +120,6 @@ class SAMSecretBroker(AbstractBroker):
        - :class:`SAMSecretMetadata`
        - :class:`SAMSecretSpec`
        - :meth:`SAMLoader`
-
     """
 
     # override the base abstract manifest model with the Secret model
@@ -174,10 +173,7 @@ class SAMSecretBroker(AbstractBroker):
                 thing=self.kind,
             )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
-        if self.ready:
-            logger.debug(msg)
-        else:
-            logger.warning(msg)
+        logger.info(msg)
 
     def init_secret(self):
         """Initialize the secret transformer."""
@@ -263,7 +259,6 @@ class SAMSecretBroker(AbstractBroker):
             broker = SAMSecretBroker(manifest=manifest_data)
             serializer_cls = broker.SerializerClass
             serializer = serializer_cls(instance=secret_instance)
-
         """
         return SecretSerializer
 
@@ -280,7 +275,6 @@ class SAMSecretBroker(AbstractBroker):
         .. important::
 
            The returned object reflects the current state of the manifest in the database. If the manifest has not been applied or the secret does not exist, this property will return `None`.
-
 
         **Example usage**::
 
@@ -368,7 +362,6 @@ class SAMSecretBroker(AbstractBroker):
            :class:`SAMSecretSpecKeys`
            :class:`SAMSecretStatusKeys`
            :class:`SAMKeys`
-
         """
         if not self.secret:
             logger.warning("%s.django_orm_to_manifest_dict() called with no secret", self.formatted_class_name)
@@ -438,11 +431,9 @@ class SAMSecretBroker(AbstractBroker):
         :returns: str
             The formatted class name.
 
-
         **Example usage**::
 
             logger.debug(broker.formatted_class_name)
-
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.{SAMSecretBroker.__name__}[{id(self)}]"
@@ -460,7 +451,6 @@ class SAMSecretBroker(AbstractBroker):
             broker = SAMSecretBroker(manifest=manifest_data)
             print(broker.kind)  # Output
                 "Secret"
-
         """
         return MANIFEST_KIND
 
@@ -631,7 +621,6 @@ class SAMSecretBroker(AbstractBroker):
 
             response = broker.example_manifest(request)
             print(response.data)
-
         """
         logger.debug("%s.example_manifest() called", self.formatted_class_name)
         command = self.example_manifest.__name__
@@ -680,7 +669,6 @@ class SAMSecretBroker(AbstractBroker):
 
         :raises SAMSecretBrokerError:
             If there is an error during manifest retrieval or serialization.
-
 
         :returns: SmarterJournaledJsonResponse
             A JSON response containing the retrieved manifests.
@@ -848,7 +836,6 @@ class SAMSecretBroker(AbstractBroker):
 
     def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             this is not implemented for Smarter API Secret manifests.
@@ -887,8 +874,6 @@ class SAMSecretBroker(AbstractBroker):
 
         :returns: SmarterJournaledJsonResponse
             A JSON response containing the manifest details.
-
-
         """
         logger.debug("%s.describe() called", self.formatted_class_name)
         command = self.describe.__name__
@@ -987,7 +972,6 @@ class SAMSecretBroker(AbstractBroker):
 
     def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             this is not implemented for Smarter API Secret manifests.
@@ -1009,7 +993,6 @@ class SAMSecretBroker(AbstractBroker):
 
     def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             this is not implemented for Smarter API Secret manifests.
@@ -1031,7 +1014,6 @@ class SAMSecretBroker(AbstractBroker):
 
     def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             this is not implemented for Smarter API Secret manifests.

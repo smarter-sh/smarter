@@ -180,10 +180,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                     self._manifest.metadata.name,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
-        if self.ready:
-            logger.info(msg)
-        else:
-            logger.warning(msg)
+        logger.info(msg)
 
     def plugin_init(self):
         """
