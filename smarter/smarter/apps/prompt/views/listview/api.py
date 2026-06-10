@@ -125,6 +125,12 @@ class PromptListApiView(SmarterAuthenticatedNeverCachedWebView):
                     to DEFAULT_PAGE_SIZE.
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PromptListApiView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to retrieve a list of LLMClients based on ownership filters and pagination.
@@ -226,6 +232,12 @@ class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: JsonResponse
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PromptListApiCloneView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to clone an existing LLMClient.
@@ -294,6 +306,12 @@ class PromptListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
     This view is protected and requires the user to be authenticated.
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PromptListApiDeleteView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to delete an existing LLMClient.
@@ -352,17 +370,21 @@ class PromptListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
     """
     API view for renaming a LLMClient.
 
-    This view is protected and requires the
-    user to be authenticated. The user must provide the ID of the LLMClient to
-    rename and a new name for the LLMClient.
+    This view is protected and requires the user to be authenticated.
+    The user must provide the ID of the LLMClient to rename and a new name for the LLMClient.
     """
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PromptListApiRenameView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to rename an existing LLMClient.
 
-        Validates input
-        parameters, checks for the existence of the LLMClient to be renamed, and
+        Validates input parameters, checks for the existence of the LLMClient to be renamed, and
         renames the LLMClient if it exists. Invalidates the cache for the user's
         LLMClients after renaming.
 

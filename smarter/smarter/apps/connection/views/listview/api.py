@@ -58,6 +58,12 @@ class ConnectionListApiView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: HttpResponse
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ConnectionListApiView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def get(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         return self.post(request, *args, **kwargs)
 
@@ -111,6 +117,12 @@ class ConnectionListApiView(SmarterAuthenticatedNeverCachedWebView):
 
 class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
     """Clone a connection for the authenticated user."""
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ConnectionListApiCloneView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
@@ -208,6 +220,12 @@ class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 class ConnectionListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
     """Delete a connection for the authenticated user."""
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ConnectionListApiDeleteView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to delete an existing ConnectionBase.
@@ -267,6 +285,12 @@ class ConnectionListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
 
 class ConnectionListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
     """Rename a connection for the authenticated user."""
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ConnectionListApiRenameView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """

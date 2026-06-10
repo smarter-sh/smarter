@@ -1,6 +1,4 @@
-"""
-Views for provider-related pages in the Smarter Workbench web console.
-"""
+"""Views for provider-related pages in the Smarter Workbench web console."""
 
 import logging
 from typing import Optional, Sequence
@@ -67,7 +65,6 @@ class ProviderDetailView(DocsBaseView):
     **Example usage**::
 
         GET /plugin/detail/?name=my_plugin&kind=custom
-
     """
 
     template_path = "common/manifest_detail.html"
@@ -76,6 +73,7 @@ class ProviderDetailView(DocsBaseView):
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         Handle GET requests to render the provider manifest detail view.
+
         This method processes the incoming request to retrieve the
         specified provider's manifest details and renders them in a
         user-friendly format. It performs validation on the provided provider
@@ -184,16 +182,21 @@ class ProviderListView(SmarterAuthenticatedNeverCachedWebView):
 
     :returns: Rendered HTML page with a card for each provider, or a 404 error page if the user is not authenticated.
     :rtype: HttpResponse
-
-
     """
 
     template_path = "provider/provider_list.html"
     providers: Sequence[Provider]
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ProviderListView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def get(self, request: ASGIRequest, *args, **kwargs):
         """
         Handle GET requests to render the provider list view.
+
         This method retrieves all providers available to the authenticated user and renders them in a card-based layout
         """
 

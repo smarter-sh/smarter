@@ -39,9 +39,16 @@ logger = logging.getLogger(__name__)
 
 class ManifestDropZoneView(SmarterAuthenticatedNeverCachedWebView):
     """
-    A simple view that renders a page with a manifest drop zone
+    A simple view that renders a page with a manifest drop zone.
+
     for plugin development.
     """
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ManifestDropZoneView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def get_context(self) -> dict[str, Any]:
         """

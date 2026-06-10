@@ -1,7 +1,7 @@
 """Django template and view helper functions."""
 
 import re
-from functools import cached_property, wraps
+from functools import wraps
 from http import HTTPStatus
 
 from bs4 import BeautifulSoup
@@ -359,7 +359,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
     def formatted_class_name(self) -> str:
         """Returns the class name in a formatted string along with the name of this view."""
         class_name = f"{__name__}.{SmarterAuthenticatedWebView.__name__}[{id(self)}]"
-        return logging.formatted_text(class_name)
+        return self.formatted_text(class_name)
 
     def log_ready_status(self):
         """Logs the ready status of the view."""
