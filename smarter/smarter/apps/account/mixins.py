@@ -389,7 +389,7 @@ class AccountMixin(SmarterHelperMixin):
     def _am_formatted_class_name(self) -> str:
         """Returns the logger prefix for the class."""
         class_name = f"{__name__}.{AccountMixin.__name__}[{id(self)}]"
-        return logging.formatted_text(class_name)
+        return self.formatted_text(class_name)
 
     @property
     def account(self) -> Optional[Account]:

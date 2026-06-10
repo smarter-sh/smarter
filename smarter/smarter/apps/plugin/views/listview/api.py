@@ -53,6 +53,12 @@ class PluginListApiView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: HttpResponse
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PluginListApiView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         qs: models.QuerySet[PluginMeta]
         ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
@@ -103,6 +109,12 @@ class PluginListApiView(SmarterAuthenticatedNeverCachedWebView):
 
 class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
     """Clone a plugin for the authenticated user."""
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PluginListApiCloneView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
@@ -170,6 +182,12 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 class PluginListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
     """Delete a plugin for the authenticated user."""
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PluginListApiDeleteView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to delete an existing PluginMeta.
@@ -228,6 +246,12 @@ class PluginListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
 
 class PluginListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
     """Rename a plugin for the authenticated user."""
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PluginListApiRenameView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """

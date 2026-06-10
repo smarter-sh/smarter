@@ -70,6 +70,12 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
         }
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{TerminalEmulatorLogView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         Render the terminal emulator page for the authenticated user.

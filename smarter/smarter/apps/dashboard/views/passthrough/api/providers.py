@@ -33,14 +33,14 @@ from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.views import (
-    SmarterView,
+    SmarterAuthenticatedNeverCachedWebView,
 )
 
 logger = logging.getLogger(__name__)
 
 
 @method_decorator(login_required, name="dispatch")
-class ProviderApiView(SmarterView):
+class ProviderApiView(SmarterAuthenticatedNeverCachedWebView):
     """
     Authenticated JSON API view that returns LLM providers accessible to the requesting user.
 
@@ -68,6 +68,12 @@ class ProviderApiView(SmarterView):
 
     Additional provider objects may appear in the ``providers`` array.
     """
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ProviderApiView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """

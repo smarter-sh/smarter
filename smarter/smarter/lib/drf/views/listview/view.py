@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """
-This module contains views to implement the React
+This module contains views to implement the React.
+
 AuthToken list view in the Smarter Dashboard.
 """
 
@@ -36,6 +37,12 @@ class AuthTokenListView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "react/authtoken-list.html"
     authtokens: list[AuthToken]
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{AuthTokenListView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
         # pylint: disable=C0415

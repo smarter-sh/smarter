@@ -109,9 +109,6 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     plugins: Optional[List[PluginBase]] = None
     functions: Optional[list[str]] = None
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(**kwargs)
-
     @property
     def llm_client_id(self):
         """

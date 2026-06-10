@@ -53,6 +53,12 @@ class ProviderListApiView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: HttpResponse
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ProviderListApiView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         qs: models.QuerySet[Provider]
         ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
@@ -103,6 +109,12 @@ class ProviderListApiView(SmarterAuthenticatedNeverCachedWebView):
 
 class ProviderListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
     """Clone a provider for the authenticated user."""
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ProviderListApiCloneView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
@@ -168,6 +180,12 @@ class ProviderListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 class ProviderListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
     """Delete a provider for the authenticated user."""
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ProviderListApiDeleteView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to delete an existing Provider.
@@ -222,6 +240,12 @@ class ProviderListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
 
 class ProviderListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
     """Rename a provider for the authenticated user."""
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{ProviderListApiRenameView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
