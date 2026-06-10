@@ -396,7 +396,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
     @property
-    def is_cli_base_api_view_ready(self) -> bool:
+    def cba_ready(self) -> bool:
         """
         Check if the CliBaseApiView is ready.
 
@@ -413,7 +413,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: Readiness state as a string
         :rtype: str
         """
-        if self.is_cli_base_api_view_ready:
+        if self.cba_ready:
             return self.formatted_state_ready
         return self.formatted_state_not_ready
 
@@ -425,13 +425,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: True if both the view and mixin are ready, False otherwise
         :rtype: bool
         """
-        if not self.is_accountmixin_ready:
-            logger.debug("%s.ready() - returning False because AccountMixin is not ready", self.logger_prefix)
-            return False
-        if not self.is_requestmixin_ready:
+        if not self.srm_ready:
             logger.debug("%s.ready() - returning False because SmarterRequestMixin is not ready", self.logger_prefix)
             return False
-        return self.is_cli_base_api_view_ready
+        return self.cba_ready
 
     def setup(self, request: Request, *args, **kwargs):
         """
@@ -444,6 +441,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :type request: Request
         """
         super().setup(request, *args, **kwargs)
+        SmarterRequestMixin.setup(self, request=request, *args, **kwargs)
         logger.debug(
             "%s.setup() called for request: %s with args %s and kwargs %s auth header: %s, is_internal_api_request: %s",
             self.logger_prefix,

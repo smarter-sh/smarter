@@ -452,14 +452,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 "%s.is_ready_abstract_broker() - Broker name is not set. Cannot process broker.",
                 self.abstract_broker_logger_prefix,
             )
-        if not self.is_accountmixin_ready:
+        if not self.srm_ready:
             logger.warning(
-                "%s.is_ready_abstract_broker() - AccountMixin is not ready. Cannot process broker.",
-                self.abstract_broker_logger_prefix,
-            )
-        if not self.is_requestmixin_ready:
-            logger.warning(
-                "%s.is_ready_abstract_broker() - RequestMixin is not ready. Cannot process broker.",
+                "%s.is_ready_abstract_broker() - SmarterRequestMixin is not ready. Cannot process broker.",
                 self.abstract_broker_logger_prefix,
             )
         if not bool(self._manifest):
