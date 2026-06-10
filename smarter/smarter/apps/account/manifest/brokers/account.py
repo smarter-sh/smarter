@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API Account Manifest handler"""
+"""Smarter API Account Manifest handler."""
 
 import datetime
 import traceback
@@ -69,6 +69,7 @@ class SAMAccountBrokerError(SAMBrokerError):
 class SAMAccountBroker(AbstractBroker):
     """
     Handles Smarter API Account Manifest operations, including loading, validating, and parsing YAML manifests, and mapping them to Django ORM and Pydantic models.
+
     This broker transforms between Django ORM and Pydantic models, ensuring data consistency for serialization and API responses.
 
     This broker is responsible for:
@@ -109,7 +110,6 @@ class SAMAccountBroker(AbstractBroker):
     .. versionadded:: 1.0.0
 
         Initial implementation of the Smarter API Account Manifest Broker.
-
     """
 
     # override the base abstract manifest model with the Account model
@@ -194,7 +194,8 @@ class SAMAccountBroker(AbstractBroker):
     @property
     def brokered_account(self) -> Optional[Account]:
         """
-        In order to disambiguate between the AccountMixin.account
+        In order to disambiguate between the AccountMixin.account.
+
         (the authenticated account making the request) and the Account
         resource being brokered, we use the term "brokered_account".
 
@@ -246,10 +247,10 @@ class SAMAccountBroker(AbstractBroker):
         **Example usage**::
 
             logger.info(broker.formatted_class_name)
-
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{SAMAccountBroker.__name__}[{id(self)}]"
+        this_class = f".{SAMAccountBroker.__name__}[{id(self)}]"
+        return f"{parent_class}{self.formatted_text(this_class)}"
 
     @property
     def kind(self) -> str:
@@ -293,7 +294,6 @@ class SAMAccountBroker(AbstractBroker):
         .. warning::
 
             If the manifest loader or manifest metadata is missing, or if the account is not set, the manifest will not be initialized and None may be returned or an exception raised.
-
 
         **Example usage**::
 
@@ -391,9 +391,7 @@ class SAMAccountBroker(AbstractBroker):
     # Transformation methods
     ###########################################################################
     def manifest_to_django_orm(self) -> dict:
-        """
-        Transform the Smarter API Account manifest into a Django ORM model.
-        """
+        """Transform the Smarter API Account manifest into a Django ORM model."""
         if not isinstance(self.manifest, SAMAccount):
             raise SAMAccountBrokerError(
                 message=f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}",
@@ -456,7 +454,6 @@ class SAMAccountBroker(AbstractBroker):
 
         .. versionchanged:: 1.0.0
             Method now ensures camelCase conversion and excludes the primary key field.
-
         """
         if self.brokered_account is None:
             raise SAMBrokerErrorNotFound(
@@ -545,7 +542,8 @@ class SAMAccountBroker(AbstractBroker):
 
     def orm_meta_instance_setter(self) -> None:
         """
-        Override of parent method to initialize the Django ORM meta model
+        Override of parent method to initialize the Django ORM meta model.
+
         instance for the broker.
         """
         if self._orm_instance:
@@ -595,7 +593,9 @@ class SAMAccountBroker(AbstractBroker):
 
     def cache_invalidations(self) -> None:
         """
-        Handle broker specific cache invalidation logic. Invalidates
+        Handle broker specific cache invalidation logic.
+
+        Invalidates
         the cache for the `Account` and `UserProfile` models.
         """
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
@@ -618,7 +618,6 @@ class SAMAccountBroker(AbstractBroker):
             - :class:`SAMKeys`
             - :class:`SAMMetadataKeys`
             - :class:`SAMAccountSpecKeys`
-
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
@@ -667,7 +666,7 @@ class SAMAccountBroker(AbstractBroker):
 
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        get the manifest(s) for the Smarter API Account.
+        Get the manifest(s) for the Smarter API Account.
 
         :param request: The HTTP request object.
         :type request: "HttpRequest"
@@ -781,7 +780,6 @@ class SAMAccountBroker(AbstractBroker):
 
             - :meth:`manifest_to_django_orm`
             - :meth:`django_orm_to_manifest_dict`
-
         """
         logger.debug("%s.apply() called", self.formatted_class_name)
         super().apply(request, kwargs)
@@ -918,7 +916,6 @@ class SAMAccountBroker(AbstractBroker):
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             Delete functionality is not implemented for the Smarter API Account.
@@ -940,7 +937,6 @@ class SAMAccountBroker(AbstractBroker):
 
     def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             Deploy functionality is not implemented for the Smarter API Account.
@@ -983,7 +979,6 @@ class SAMAccountBroker(AbstractBroker):
 
     def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             Logs functionality is not implemented for the Smarter API Account.

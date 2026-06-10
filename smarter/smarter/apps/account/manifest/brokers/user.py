@@ -1,5 +1,5 @@
 # pylint: disable=W0718,C0302
-"""Smarter API User Manifest handler"""
+"""Smarter API User Manifest handler."""
 
 from typing import TYPE_CHECKING, Any, Optional, Type
 
@@ -48,6 +48,7 @@ logger = logging.getSmarterLogger(
 MAX_RESULTS = 1000
 """
 Maximum number of results to return for list operations.
+
 This limit helps prevent performance issues and excessive data retrieval.
 
 TODO: Make this configurable via smarter_settings.
@@ -64,7 +65,7 @@ class SAMUserBrokerError(SAMBrokerError):
 
 class SAMUserBroker(AbstractBroker):
     """
-    Smarter API User Manifest Broker
+    Smarter API User Manifest Broker.
 
     This class manages the lifecycle of Smarter API User manifests, including loading, validating, parsing, and mapping them to Django ORM models and Pydantic models for serialization and deserialization.
 
@@ -96,7 +97,6 @@ class SAMUserBroker(AbstractBroker):
     .. todo::
 
        Make the maximum results for list operations configurable via `smarter_settings`.
-
     """
 
     # override the base abstract manifest model with the User model
@@ -193,7 +193,8 @@ class SAMUserBroker(AbstractBroker):
     @property
     def brokered_user(self) -> Optional[User]:
         """
-        In order to disambiguate between the AccountMixin.user
+        In order to disambiguate between the AccountMixin.user.
+
         (the authenticated user making the request) and the User
         resource being brokered, we use the term "brokered_user".
 
@@ -265,7 +266,9 @@ class SAMUserBroker(AbstractBroker):
     @property
     def brokered_user_profile(self) -> Optional[UserProfile]:
         """
-        The UserProfile associated with the brokered user. This disambiguates
+        The UserProfile associated with the brokered user.
+
+        This disambiguates
         between the AccountMixin.user_profile (the profile of the authenticated
         user making the request) and the UserProfile resource being brokered.
 
@@ -356,7 +359,6 @@ class SAMUserBroker(AbstractBroker):
            - This property returns `None` if the user is not set or not authenticated.
            - If no matching `AccountContact` exists for the user's email and account, `None` is returned.
 
-
         **Example usage:**
 
         .. code-block:: python
@@ -438,7 +440,6 @@ class SAMUserBroker(AbstractBroker):
 
            The returned dictionary may include fields that are not editable in the Django ORM model. Ensure you filter out read-only fields before saving.
 
-
         **Example usage:**
 
         .. code-block:: python
@@ -452,7 +453,6 @@ class SAMUserBroker(AbstractBroker):
 
            - :meth:`django_orm_to_manifest_dict`
            - :class:`smarter.apps.account.models.User`
-
         """
         if not isinstance(self.manifest, SAMUser):
             raise SAMUserBrokerError(
@@ -503,7 +503,6 @@ class SAMUserBroker(AbstractBroker):
            - :class:`smarter.lib.manifest.enum.SamKeys`
            - :class:`smarter.lib.manifest.enumSAMMetadataKeys`
            - :class:`smarter.lib.manifest.enumSAMUserSpecKeys`
-
         """
         if not self.manifest:
             raise SAMUserBrokerError("User manifest is not set", thing=self.kind)
@@ -532,10 +531,10 @@ class SAMUserBroker(AbstractBroker):
         .. code-block:: python
 
            logger.info(broker.formatted_class_name)
-
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{SAMUserBroker.__name__}[{id(self)}]"
+        this_class = f".{SAMUserBroker.__name__}[{id(self)}]"
+        return f"{parent_class}{self.formatted_text(this_class)}"
 
     @property
     def kind(self) -> str:
@@ -550,7 +549,6 @@ class SAMUserBroker(AbstractBroker):
 
            if broker.kind == "User":
                print("This broker handles User manifests.")
-
         """
         return MANIFEST_KIND
 
@@ -726,7 +724,8 @@ class SAMUserBroker(AbstractBroker):
 
     def orm_meta_instance_setter(self) -> None:
         """
-        Override the base method to initialize the ORM meta model instance for
+        Override the base method to initialize the ORM meta model instance for.
+
         the broker.
         """
         if self._orm_instance:
@@ -784,6 +783,7 @@ class SAMUserBroker(AbstractBroker):
     def cache_invalidations(self) -> None:
         """
         Invalidate any relevant caches for the brokered user.
+
         Invalidates the UserProfile cache for the brokered user and account.
         """
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
@@ -800,7 +800,6 @@ class SAMUserBroker(AbstractBroker):
 
            - :class:`smarter.apps.account.models.User`
            - :meth:`django_orm_to_manifest_dict`
-
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
@@ -844,7 +843,6 @@ class SAMUserBroker(AbstractBroker):
            - :class:`smarter.lib.manifest.enum.SAMMetadataKeys`
            - :class:`smarter.lib.manifest.enum.SCLIResponseGet`
            - :class:`smarter.lib.manifest.enum.SCLIResponseGetData`
-
         """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
@@ -915,7 +913,6 @@ class SAMUserBroker(AbstractBroker):
         :raises: :class:`SAMUserBrokerError`
            If the user instance is not set or is invalid
 
-
         **Example usage:**
 
         .. code-block:: python
@@ -928,7 +925,6 @@ class SAMUserBroker(AbstractBroker):
            - :meth:`manifest_to_django_orm`
            - :class:`smarter.apps.account.models.User`
            - :class:`SAMUserBrokerError`
-
         """
         super().apply(request, kwargs)
         command = self.apply.__name__
@@ -1020,7 +1016,6 @@ class SAMUserBroker(AbstractBroker):
 
     def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             this is not implemented for the Smarter API User manifest.
@@ -1053,7 +1048,6 @@ class SAMUserBroker(AbstractBroker):
            If the user with the specified username does not exist or is not associated with the account.
         :raises: :class:`SAMUserBrokerError`
            If serialization fails for the user.
-
         """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
@@ -1109,7 +1103,6 @@ class SAMUserBroker(AbstractBroker):
            If the user with the specified username does not exist.
         :raises: :class:`SAMUserBrokerError`
            If deletion fails for the user.
-
         """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)

@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """
-Smarter API command-line interface 'apply' view
+Smarter API command-line interface 'apply' view.
+
 /api/v1/cli/apply/
 """
 
@@ -48,11 +49,13 @@ class ApiV1CliApplyApiView(CliBaseApiView):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliApplyApiView.__name__}[{id(self)}]"
+        this_class = f".{ApiV1CliApplyApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
 
     @swagger_auto_schema(
         operation_description="""
@@ -70,9 +73,7 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         request_body=ManifestSerializer,
     )
     def post(self, request: ASGIRequest, *args, **kwargs):
-        """
-        Handles POST requests to apply a Smarter manifest.
-        """
+        """Handles POST requests to apply a Smarter manifest."""
 
         logger.debug(
             "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
@@ -84,6 +85,8 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         user = kwargs.pop("user", None)
         account = kwargs.pop("account", None)
         user_profile = kwargs.pop("user_profile", None)
+        if not self.broker:
+            raise APIV1CLIViewError(f"No broker found for manifest kind '{self.manifest_kind}'.")
         response = self.broker.apply(
             request, user=user, account=account, user_profile=user_profile, args=args, kwargs=kwargs
         )

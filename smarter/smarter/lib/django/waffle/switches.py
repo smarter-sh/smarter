@@ -140,6 +140,9 @@ class SmarterWaffleSwitches:
     ENABLE_SMARTER_PAGE_CACHING = "enable_smarter_page_caching"
     """Enables the Smarter user-based page caching decorator for user-facing pages to improve performance."""
 
+    ENABLE_FORMATTED_LOGGING = "enable_formatted_logging"
+    """Enables formatted logging with ANSI color codes for enhanced readability in logs."""
+
     MANIFEST_LOGGING = "log_manifest_brokers"
     """Enables detailed diagnostic logging for manifest initialization, validation and brokered operations."""
 
@@ -322,6 +325,11 @@ class SmarterWaffleSwitches:
             name=ENABLE_NEW_USER_PASSWORD_EMAIL,
             comment="Enables sending textemail with password to new users.",
             default=False,
+        ),
+        ENABLE_FORMATTED_LOGGING: SmarterWaffleSwitch(
+            name=ENABLE_FORMATTED_LOGGING,
+            comment="Enables formatted logging with ANSI color codes for enhanced readability in logs.",
+            default=True,
         ),
         MANIFEST_LOGGING: SmarterWaffleSwitch(
             name=MANIFEST_LOGGING,

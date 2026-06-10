@@ -36,7 +36,6 @@ Example
     resolved_user = get_resolved_user(request.user)
     if resolved_user and resolved_user.is_authenticated:
         print(account.account_number)
-
 """
 
 import os
@@ -50,7 +49,6 @@ from django.test.client import RequestFactory
 from django.utils.functional import SimpleLazyObject
 
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
@@ -70,6 +68,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 ResolvedUserType = Optional[Union[User, AbstractUser, AnonymousUser]]
 
 
+# pylint: disable=W0613
 def should_log_verbose(level) -> bool:
     return smarter_settings.verbose_logging
 
@@ -85,6 +84,7 @@ verbose_logger = logging.getSmarterLogger(
 def welcome_email_context(first_name: str) -> dict:
     """
     Return the context for the welcome email template.
+
     templates/account/email/welcome.html
     """
     # pylint: disable=import-outside-toplevel
@@ -140,7 +140,6 @@ def get_resolved_user(
 
             Handles edge cases such as lazy objects and test mocks.
 
-
     **Example usage**::
 
         from smarter.apps.account.models import get_resolved_user
@@ -152,7 +151,6 @@ def get_resolved_user(
 
             :class:`django.contrib.auth.models.User`
             :class:`django.utils.functional.SimpleLazyObject`
-
     """
     verbose_logger.debug(
         "%s called for user type: %s", logging.formatted_text(__name__) + ".get_resolved_user()", type(user)
@@ -163,8 +161,10 @@ def get_resolved_user(
     # this is the expected case
     if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
         verbose_logger.debug(
-            "%s - user is instance of expected type: %s",
+            "%s - user[%s] %s is instance of expected type: %s",
             logging.formatted_text(__name__) + ".get_resolved_user()",
+            id(user),
+            user,
             type(user),
         )
         return user
@@ -175,16 +175,20 @@ def get_resolved_user(
     # pylint: disable=W0212
     if isinstance(user, SimpleLazyObject):
         verbose_logger.debug(
-            "%s - user is instance of SimpleLazyObject, returning wrapped user: %s",
+            "%s - user[%s] %s is instance of SimpleLazyObject, returning wrapped user: %s",
             logging.formatted_text(__name__) + ".get_resolved_user()",
+            id(user),
+            user,
             type(user._wrapped),
         )
         return user._wrapped
     # Allow unittest.mock.MagicMock or Mock for testing
     if hasattr(user, "__class__") and user.__class__.__name__ in ("MagicMock", "Mock"):
         verbose_logger.debug(
-            "%s - user is instance of test mock: %s",
+            "%s - user[%s] %s is instance of test mock: %s",
             logging.formatted_text(__name__) + ".get_resolved_user()",
+            id(user),
+            user,
             type(user),
         )
         return user  # type: ignore[return-value]
@@ -274,14 +278,11 @@ class Account(MetaDataModel):
 
             The generated account number is zero-padded and segmented for readability.
 
-
         **Example usage**::
 
             from smarter.apps.account.models import Account
             account_number = Account.randomized_account_number()
             print(account_number)  # e.g., '1234-5678-9012'
-
-
         """
         ACCOUNT_NUMBER_SEGMENTS = 3
         ACCOUNT_NUMBER_SEGMENT_LENGTH = 4
@@ -316,7 +317,6 @@ class Account(MetaDataModel):
 
             account = Account(company_name="Acme Corp")
             account.save()  # Ensures account_number is unique and valid
-
         """
         orig = None
         if self.pk is not None:
@@ -363,8 +363,6 @@ class Account(MetaDataModel):
         :param account_number: String. The account number to search for.
         :returns: Optional[Account]
             The Account instance if found, otherwise None.
-
-
         """
         try:
             return cls.objects.get(account_number=account_number)
@@ -411,7 +409,6 @@ class Account(MetaDataModel):
             account = Account.get_cached_object(account_number="1234-5678-9012")
             if account:
                 print(account.company_name)
-
         """
         logger_prefix = logging.formatted_text(f"{__name__}.{cls.__name__}.get_cached_object()")
         logger.debug(

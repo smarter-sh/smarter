@@ -1,5 +1,5 @@
 """
-smarter.lib.logging.middleware
+Smarter.lib.logging.middleware
 ==============================
 
 Middleware for Per-Request Logging Context
@@ -43,7 +43,6 @@ Dependencies
 - smarter.common.mixins
 - smarter.lib.logging.redis_log_handler
 - smarter.lib.django.waffle
-
 """
 
 from __future__ import annotations
@@ -67,7 +66,6 @@ from .redis_log_handler import (
     user_id_context,
 )
 
-# logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 logger = logging.getSmarterLogger(__name__)
 
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_REQUEST_LOG_CONTEXT):
@@ -140,28 +138,23 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
 
     @property
     def formatted_class_name(self) -> str:
-        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @staticmethod
     def set_logging_context(context: str) -> Token:
-        """
-        Set request-scoped logging context.
-        """
+        """Set request-scoped logging context."""
 
         return user_id_context.set(context)
 
     @staticmethod
     def reset_logging_context(token: Token) -> None:
-        """
-        Restore previous logging context.
-        """
+        """Restore previous logging context."""
 
         user_id_context.reset(token)
 
     def get_sync_context(self, request: HttpRequest) -> str:
-        """
-        Resolve logging context for sync requests.
-        """
+        """Resolve logging context for sync requests."""
 
         user = getattr(request, "user", None)
 
@@ -171,9 +164,7 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
         return job_id_factory()
 
     async def get_async_context(self, request: HttpRequest) -> str:
-        """
-        Resolve logging context for async requests.
-        """
+        """Resolve logging context for async requests."""
 
         auser = getattr(request, "auser", None)
 
@@ -189,8 +180,6 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def is_authenticated(user) -> bool:
-        """
-        Safely determine whether a user is authenticated.
-        """
+        """Safely determine whether a user is authenticated."""
 
         return bool(user is not None and getattr(user, "is_authenticated", False))

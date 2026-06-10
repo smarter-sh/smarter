@@ -1,5 +1,6 @@
 """
-Middleware for throttling unauthenticated clients generating excessive
+Middleware for throttling unauthenticated clients generating excessive.
+
 HTTP 404 responses.
 
 This middleware detects repeated invalid URL requests from unauthenticated
@@ -216,19 +217,16 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
 
     @property
     def formatted_class_name(self) -> str:
-        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     async def async_process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
-        """
-        Async entry point for ASGI deployments.
-        """
+        """Async entry point for ASGI deployments."""
 
         return self._process_response(request, response)
 
     def process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
-        """
-        Sync response middleware entry point.
-        """
+        """Sync response middleware entry point."""
 
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
             return response
@@ -236,9 +234,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         return self._process_response(request, response)
 
     def _process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
-        """
-        Shared sync/async implementation.
-        """
+        """Shared sync/async implementation."""
 
         if response.status_code != HTTPStatus.NOT_FOUND:
             return response
@@ -289,9 +285,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         return f"excessive_404_throttle:{client_ip}"
 
     def increment_throttle(self, throttle_key: str) -> None:
-        """
-        Increment the client's 404 counter.
-        """
+        """Increment the client's 404 counter."""
 
         try:
             blocked_count = cache.incr(throttle_key)
@@ -316,9 +310,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         client_ip: str,
         blocked_count: int,
     ) -> None:
-        """
-        Sample logs to reduce spam during bot scans.
-        """
+        """Sample logs to reduce spam during bot scans."""
 
         if blocked_count % self.LOG_SAMPLE_RATE != 0:
             return

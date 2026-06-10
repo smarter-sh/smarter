@@ -586,7 +586,8 @@ class SAMLLMClientBroker(AbstractBroker):
         :returns: A string containing the formatted class name, suitable for use in log output.
         :rtype: str
         """
-        return logging.formatted_text(f"{SAMLLMClientBroker.__name__}[{id(self)}]")
+        class_name = f"{SAMLLMClientBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def kind(self) -> str:

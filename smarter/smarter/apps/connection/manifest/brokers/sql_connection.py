@@ -202,7 +202,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 logger.info(broker.formatted_class_name)
                 # Output: ParentClass.SAMSqlConnectionBroker()
         """
-        return f"{__name__}.{SAMSqlConnectionBroker.__name__}[{id(self)}]"
+        class_name = f"{__name__}.{SAMSqlConnectionBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def ORMMetaModelClass(self) -> Type[SqlConnection]:

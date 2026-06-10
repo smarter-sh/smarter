@@ -31,7 +31,6 @@ from smarter.apps.account.utils import (
 from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.common.utils.decorators import snake_case
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
@@ -250,7 +249,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         user_profile = self.user_profile or "Anonymous"
         name = self._name or "Unknown"
 
-        return f"{formatted_text(self.__class__.__name__)}[id={id(self)}](name={name}, user_profile={user_profile})"
+        return (
+            f"{self.formatted_text(self.__class__.__name__)}[id={id(self)}](name={name}, user_profile={user_profile})"
+        )
 
     def __repr__(self) -> str:
         """
@@ -354,7 +355,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
         """
-        return formatted_text_blue(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        prefix = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text_blue(prefix)
 
     @property
     def abstract_broker_logger_prefix(self) -> str:
@@ -363,7 +365,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def formatted_class_name(self) -> str:
@@ -372,7 +375,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def formatted_class_name_cache_invalidations(self) -> str:
@@ -381,7 +385,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker cache invalidations.
         :rtype: str
         """
-        return formatted_text_blue(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text_blue(class_name)
 
     @property
     def is_ready_abstract_broker(self) -> bool:
@@ -1972,7 +1977,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: Optional[str]
         """
         class_name = self.__class__.__name__ + "().clean_cli_param()"
-        class_name = formatted_text(class_name)
+        class_name = self.formatted_text(class_name)
         retval = param.strip() if isinstance(param, str) else param
 
         if isinstance(param, str):

@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 # API public views
 # ------------------------------------------------------------------------------
 class UnauthenticatedPermissionClass(BasePermission):
-    """
-    Allows public access to APIS.
-    """
+    """Allows public access to APIS."""
 
     # pylint: disable=unused-argument
     def has_all_permission(self, request: Request, view) -> bool:
@@ -29,18 +27,21 @@ class UnauthenticatedPermissionClass(BasePermission):
 
 class SmarterAuthenticatedPermissionClass(IsAuthenticated):
     """
-    Implements an internal API permission class that allows
+    Implements an internal API permission class that allows.
+
     authenticated users to access internal API endpoints without
     requiring bearer tokens or other authentication methods.
     """
 
     @property
     def formatted_class_name(self) -> str:
-        return formatted_text(f"{self.__class__.__module__}.{self.__class__.__name__}")
+        class_name = f"{__name__}.{self.__class__.__name__}"
+        return formatted_text(class_name)
 
     def has_all_permission(self, request: Request, view) -> bool:
         """
-        Allows internal view access to authenticated users and
+        Allows internal view access to authenticated users and.
+
         internal API requests.
         """
         if is_authenticated_request(request) and getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False):

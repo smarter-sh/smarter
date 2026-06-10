@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'delete' view"""
+"""Smarter API command-line interface 'delete' view."""
 
 from http import HTTPStatus
 
@@ -33,11 +33,13 @@ class ApiV1CliDeleteApiView(CliBaseApiView):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliDeleteApiView.__name__}[{id(self)}]"
+        this_class = f".{ApiV1CliDeleteApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
 
     @swagger_auto_schema(
         operation_description="""
