@@ -197,10 +197,7 @@ class SAMLLMClientBroker(AbstractBroker):
                     self.manifest.metadata.name if self.manifest and self.manifest.metadata else None,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
-        if self.ready:
-            logger.debug(msg)
-        else:
-            logger.warning(msg)
+        logger.info(msg)
 
     @property
     def SerializerClass(self) -> Type[LLMClientSerializer]:

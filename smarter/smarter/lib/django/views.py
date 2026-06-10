@@ -361,6 +361,11 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         class_name = f"{__name__}.{SmarterAuthenticatedWebView.__name__}[{id(self)}]"
         return logging.formatted_text(class_name)
 
+    def log_ready_status(self):
+        """Logs the ready status of the view."""
+        msg = f"{self.formatted_class_name} is {self.ready_state}"
+        logger.info(msg)
+
     def setup(self, request: HttpRequest, *args, **kwargs):
         """
         Setup the view with the request and any additional arguments.
@@ -442,6 +447,11 @@ class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
     without compromising security. The dispatch method also patches vary headers to ensure proper cache differentiation based
     on cookies, further protecting user data.
     """
+
+    def log_ready_status(self):
+        """Logs the ready status of the view."""
+        msg = f"{self.formatted_class_name} is {self.ready_state}"
+        logger.info(msg)
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
