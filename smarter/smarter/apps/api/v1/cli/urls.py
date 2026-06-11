@@ -41,8 +41,8 @@ from .views.describe import ApiV1CliDescribeApiView
 from .views.get import ApiV1CliGetApiView
 from .views.logs import ApiV1CliLogsApiView
 from .views.manifest import ApiV1CliManifestApiView
-from .views.nonbrokered.chat import ApiV1CliChatApiView
-from .views.nonbrokered.chat_config import ApiV1CliChatConfigApiView
+from .views.nonbrokered.prompt import ApiV1CliPromptApiView
+from .views.nonbrokered.prompt_config import ApiV1CliPromptConfigApiView
 from .views.nonbrokered.status import ApiV1CliStatusApiView
 from .views.nonbrokered.version import ApiV1CliVersionApiView
 from .views.nonbrokered.whoami import ApiV1CliWhoamiApiView
@@ -54,7 +54,8 @@ app_name = namespace
 
 class ApiV1CliReverseViews:
     """
-    Reverse views for the CLI commands
+    Reverse views for the CLI commands.
+
     Provides named references for reversing CLI-related API endpoints.
 
     This class is used for reverse URL resolution in Django, where each attribute
@@ -80,15 +81,14 @@ class ApiV1CliReverseViews:
 
         str(ApiV1CliReverseViews.deploy)
         returns 'api_v1_cli_deploy_api_view'
-
     """
 
     namespace = f"api:v1:{namespace}:"
 
     manifest = to_snake_case(ApiV1CliManifestApiView)
     apply = to_snake_case(ApiV1CliApplyApiView)
-    chat = to_snake_case(ApiV1CliChatApiView)
-    chat_config = to_snake_case(ApiV1CliChatConfigApiView)
+    prompt = to_snake_case(ApiV1CliPromptApiView)
+    chat_config = to_snake_case(ApiV1CliPromptConfigApiView)
     delete = to_snake_case(ApiV1CliDeleteApiView)
     deploy = to_snake_case(ApiV1CliDeployApiView)
     undeploy = to_snake_case(ApiV1CliUndeployApiView)
@@ -104,8 +104,8 @@ class ApiV1CliReverseViews:
 
 urlpatterns = [
     path("apply/", ApiV1CliApplyApiView.as_view(), name=ApiV1CliReverseViews.apply),
-    path("chat/<str:name>/", ApiV1CliChatApiView.as_view(), name=ApiV1CliReverseViews.chat),
-    path("chat/config/<str:name>/", ApiV1CliChatConfigApiView.as_view(), name=ApiV1CliReverseViews.chat_config),
+    path("prompt/<str:name>/", ApiV1CliPromptApiView.as_view(), name=ApiV1CliReverseViews.prompt),
+    path("prompt/config/<str:name>/", ApiV1CliPromptConfigApiView.as_view(), name=ApiV1CliReverseViews.chat_config),
     path("delete/<str:kind>/", ApiV1CliDeleteApiView.as_view(), name=ApiV1CliReverseViews.delete),
     path("deploy/<str:kind>/", ApiV1CliDeployApiView.as_view(), name=ApiV1CliReverseViews.deploy),
     path("undeploy/<str:kind>/", ApiV1CliUndeployApiView.as_view(), name=ApiV1CliReverseViews.undeploy),

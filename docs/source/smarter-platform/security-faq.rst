@@ -81,7 +81,7 @@ Following are commonly asked questions about Smarter security.
     Environment variable GOOGLE_SERVICE_ACCOUNT_B64 found: GOOGLE_SERVICE_ACCOUNT_B64='****'
     Environment variable GEMINI_API_KEY found: GEMINI_API_KEY='****'
     Environment variable INTERNAL_IP_PREFIXES found: INTERNAL_IP_PREFIXES=['192.168.']
-    Environment variable LANGCHAIN_MEMORY_KEY found: LANGCHAIN_MEMORY_KEY='chat_history'
+    Environment variable LANGCHAIN_MEMORY_KEY found: LANGCHAIN_MEMORY_KEY='prompt_history'
     Environment variable LLAMA_API_KEY found: LLAMA_API_KEY='****'
     Environment variable DEBUG_MODE found: DEBUG_MODE=False
     Environment variable MAILCHIMP_API_KEY found: MAILCHIMP_API_KEY='****'

@@ -256,7 +256,8 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
 
     @property
     def formatted_class_name(self) -> str:
-        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def process_response(self, request: HttpRequest, response):
 
@@ -273,9 +274,7 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         return await sync_to_async(self.minify_response)(response)
 
     def should_skip(self, request: HttpRequest, response) -> bool:
-        """
-        Determine whether minification should be skipped.
-        """
+        """Determine whether minification should be skipped."""
 
         if isinstance(response, FileResponse):
             return True
@@ -309,9 +308,7 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
         return False
 
     def minify_response(self, response):
-        """
-        Minify HTML response content.
-        """
+        """Minify HTML response content."""
 
         try:
 
@@ -335,9 +332,7 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def decode_content(content) -> str:
-        """
-        Decode response content safely.
-        """
+        """Decode response content safely."""
 
         if isinstance(content, bytes):
             return content.decode("utf-8", errors="replace").lstrip()
@@ -346,9 +341,7 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
 
     @classmethod
     def looks_like_xml(cls, html: str) -> bool:
-        """
-        Detect XML/RSS/Feed responses.
-        """
+        """Detect XML/RSS/Feed responses."""
 
         html = html.lower()
 
@@ -356,17 +349,13 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def remove_comments(soup: BeautifulSoup) -> None:
-        """
-        Remove HTML comments from soup.
-        """
+        """Remove HTML comments from soup."""
 
         for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
             comment.extract()
 
     @staticmethod
     def serialize_html(soup: BeautifulSoup) -> str:
-        """
-        Serialize minimized HTML.
-        """
+        """Serialize minimized HTML."""
 
         return soup.decode(formatter="minimal")

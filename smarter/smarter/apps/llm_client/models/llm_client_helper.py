@@ -6,15 +6,8 @@ from urllib.parse import ParseResult
 
 from django.http import HttpRequest
 
-from smarter.apps.account.models import (
-    Account,
-    UserProfile,
-)
-from smarter.apps.account.utils import (
-    account_number_from_url,
-    get_cached_admin_user_for_account,
-    smarter_cached_objects,
-)
+from smarter.apps.account.models import Account
+from smarter.apps.account.utils import account_number_from_url
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
@@ -240,7 +233,8 @@ class LLMClientHelper(SmarterRequestMixin):
         >>> helper.formatted_class_name
         'smarter.apps.llm_client.models.LLMClientHelper()'
         """
-        return logging.formatted_text(f"{__name__}.{LLMClientHelper.__name__}()[{id(self)}]")
+        class_name = f"{__name__}.{LLMClientHelper.__name__}()[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @cached_property
     def account(self) -> Optional[Account]:
@@ -567,7 +561,7 @@ class LLMClientHelper(SmarterRequestMixin):
               returns ``'alpha.api.example.com'``
 
         Sandbox URL:
-            - ``http://api.localhost:9357/api/v1/llm-clients/1/chat/``
+            - ``http://api.localhost:9357/api/v1/llm-clients/1/prompt/``
               returns ``'api.localhost:9357'``
 
         Custom domain URL:

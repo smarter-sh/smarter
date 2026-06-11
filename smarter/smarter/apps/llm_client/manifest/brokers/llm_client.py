@@ -197,10 +197,7 @@ class SAMLLMClientBroker(AbstractBroker):
                     self.manifest.metadata.name if self.manifest and self.manifest.metadata else None,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
-        if self.ready:
-            logger.debug(msg)
-        else:
-            logger.warning(msg)
+        logger.info(msg)
 
     @property
     def SerializerClass(self) -> Type[LLMClientSerializer]:
@@ -586,7 +583,8 @@ class SAMLLMClientBroker(AbstractBroker):
         :returns: A string containing the formatted class name, suitable for use in log output.
         :rtype: str
         """
-        return logging.formatted_text(f"{SAMLLMClientBroker.__name__}[{id(self)}]")
+        class_name = f"{SAMLLMClientBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def kind(self) -> str:
@@ -785,8 +783,8 @@ class SAMLLMClientBroker(AbstractBroker):
             ],
             appPlaceholder="Type your message here...",
             appInfoUrl="https://example.com/info",
-            appBackgroundImageUrl="https://cdn.smarter.sh/chat-ui/background.png",
-            appLogoUrl="https://cdn.smarter.sh/chat-ui/logo.png",
+            appBackgroundImageUrl="https://cdn.smarter.sh/prompt-ui/background.png",
+            appLogoUrl="https://cdn.smarter.sh/prompt-ui/logo.png",
             appFileAttachment=False,
         )
 
@@ -1064,10 +1062,10 @@ class SAMLLMClientBroker(AbstractBroker):
             self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        command = self.chat.__name__
+    def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__

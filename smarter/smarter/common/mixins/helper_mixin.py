@@ -1,4 +1,4 @@
-"""Common classes"""
+"""Common classes."""
 
 import re
 from functools import cached_property
@@ -8,9 +8,9 @@ import yaml
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
+    SmarterFormattedTextColorCodes,
+    formatted_json,
     formatted_text,
-    formatted_text_green,
-    formatted_text_red,
 )
 from smarter.common.utils import (
     ConvertibleCaseType,
@@ -39,8 +39,6 @@ from smarter.common.utils import to_snake_case as utils_to_snake_case
 from smarter.lib import json
 from smarter.lib.cache import cache_results
 
-from .logger import logger
-
 if TYPE_CHECKING:
     from django.http import HttpRequest
 MOCK_REGEX = re.compile(r"<MagicMock|<Mock|mock\\.MagicMock|mock\\.Mock", re.IGNORECASE)
@@ -49,12 +47,10 @@ FOREVER = 60 * 60 * 24 * 365  # 1 year in seconds
 
 
 class SmarterReadyState:
-    """
-    Constants representing the ready state of a Smarter class, formatted for logging.
-    """
+    """Constants representing the ready state of a Smarter class, formatted for logging."""
 
-    READY = formatted_text_green("READY")
-    NOT_READY = formatted_text_red("NOT_READY")
+    READY = formatted_text("READY", SmarterFormattedTextColorCodes.BRIGHT_GREEN)
+    NOT_READY = formatted_text("NOT_READY", SmarterFormattedTextColorCodes.DARK_RED)
 
 
 class SmarterHelperMixin:
@@ -105,12 +101,17 @@ class SmarterHelperMixin:
     - ``get_readonly_csv_file(file_path)``: Opens a CSV file in read-only mode.
     - ``get_readonly_yaml_file(file_path)``: Opens a YAML file in read-only mode.
     - Case conversion utilities: ``to_snake_case``, ``to_snake_case``, ``to_snake_case``, ``snake_case``, ``to_camel_case``, ``to_snake_case``, ``rfc1034_compliant_str``, ``rfc1034_compliant_to_snake``.
-
-
     """
 
     def __init__(self, *args, **kwargs):
-        logger.debug("%s.__init__() - initializing with args=%s, kwargs=%s", self.formatted_class_name, args, kwargs)
+        """
+        Note: this needs to exist.
+
+        something in the Python MRO requires it,
+        even if it does nothing. If you remove this, you will get a mysterious error
+        about something downstream expecting exactly one object.
+        """
+        # logger.debug("%s.__init__() - initializing with args=%s, kwargs=%s", self.formatted_class_name, args, kwargs)
 
     @cached_property
     def formatted_class_name(self) -> str:
@@ -119,7 +120,6 @@ class SmarterHelperMixin:
 
         :return: The formatted class name as a string.
         :rtype: str
-
         """
         return formatted_text(self.__class__.__name__)
 
@@ -158,7 +158,9 @@ class SmarterHelperMixin:
     @property
     def ready(self) -> bool:
         """
-        Indicates whether the object is ready for use. This is a placeholder
+        Indicates whether the object is ready for use.
+
+        This is a placeholder
         that should be overridden in subclasses.
 
         :return: True if ready, False otherwise.
@@ -189,6 +191,7 @@ class SmarterHelperMixin:
     def deserves_amnesty(self, slug: str) -> bool:
         """
         Determines if a given URL deserves amnesty based on the amnesty URLs list.
+
         This excuses certain endpoints (like health checks) from select middleware
         checks.
 
@@ -223,6 +226,9 @@ class SmarterHelperMixin:
 
         return _smarter_build_absolute_uri()
 
+    ###########################################################################
+    # String utilities
+    ###########################################################################
     def mask_string(
         self, string: Optional[str] = "", mask_char: str = "*", mask_length: int = 4, string_length: int = 8
     ) -> str:
@@ -247,6 +253,63 @@ class SmarterHelperMixin:
         return util_mask_string(
             string=string, mask_char=mask_char, mask_length=mask_length, string_length=string_length  # type: ignore
         )
+
+    def formatted_text(self, text: str, color_code: str = SmarterFormattedTextColorCodes.DEFAULT) -> str:
+        """
+        Formats text with ANSI color codes for logging.
+
+        :param text: The text to format.
+        :type text: str
+        :param color_code: The ANSI color code to apply.
+        :type color_code: str
+        :return: The formatted text with ANSI color codes.
+        :rtype: str
+        """
+        return formatted_text(text, color_code=color_code)
+
+    def formatted_text_green(self, text: str) -> str:
+        """
+        Formats text in bright green for logging.
+
+        :param text: The text to format.
+        :type text: str
+        :return: The formatted text in bright green.
+        :rtype: str
+        """
+        return formatted_text(text, color_code=SmarterFormattedTextColorCodes.BRIGHT_GREEN)
+
+    def formatted_text_red(self, text: str) -> str:
+        """
+        Formats text in dark red for logging.
+
+        :param text: The text to format.
+        :type text: str
+        :return: The formatted text in dark red.
+        :rtype: str
+        """
+        return formatted_text(text, color_code=SmarterFormattedTextColorCodes.DARK_RED)
+
+    def formatted_text_blue(self, text: str) -> str:
+        """
+        Formats text in bold dark blue for logging.
+
+        :param text: The text to format.
+        :type text: str
+        :return: The formatted text in bold dark blue.
+        :rtype: str
+        """
+        return formatted_text(text, color_code=SmarterFormattedTextColorCodes.BOLD_DARK_BLUE)
+
+    def formatted_json(self, json_obj: Union[dict, list]) -> str:
+        """
+        Formats a JSON object as a pretty-printed string with ANSI color codes for logging.
+
+        :param json_obj: The JSON object (dict or list) to format.
+        :type json_obj: Union[dict, list]
+        :return: A string representation of the JSON object with ANSI color codes.
+        :rtype: str
+        """
+        return formatted_json(json_obj)
 
     def bool_environment_variable(self, var_name: str, default: bool = False) -> bool:
         """
@@ -321,6 +384,7 @@ class SmarterHelperMixin:
     def dict_is_contained_in(self, dict1: dict, dict2: dict) -> bool:
         """
         Checks if one dictionary is contained within another.
+
         This method determines if all key-value pairs in `dict1` are present in `dict2`.
 
         :param dict1: The dictionary to check for containment.

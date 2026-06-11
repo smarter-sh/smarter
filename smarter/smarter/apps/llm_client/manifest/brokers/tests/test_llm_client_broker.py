@@ -411,9 +411,9 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         self.assertFalse(self.broker.llm_client.deployed)
 
     def test_chat_not_implemented(self):
-        """Test chat method raises not implemented."""
+        """Test prompt method raises not implemented."""
         with self.assertRaises(SAMBrokerErrorNotImplemented):
-            self.broker.chat(self.request, **self.kwargs)
+            self.broker.prompt(self.request, **self.kwargs)
 
     def test_delete_account_not_found(self):
         """Test delete method raises not found for missing account."""

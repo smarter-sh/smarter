@@ -118,8 +118,8 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django Auth User model instance.
     """
 
-    CHAT = "Chat"
-    """Smarter Chat resource.
+    CHAT = "Prompt"
+    """Smarter Prompt resource.
 
     A Django ORM model instance.
     """
@@ -130,20 +130,20 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A JSON dictionary generated real-time
     """
 
-    CHAT_HISTORY = "ChatHistory"
-    """Smarter ChatHistory resource.
+    CHAT_HISTORY = "PromptHistory"
+    """Smarter PromptHistory resource.
 
     A list of Django ORM model instances.
     """
 
-    CHAT_PLUGIN_USAGE = "ChatPluginUsage"
-    """Smarter ChatPluginUsage resource.
+    CHAT_PLUGIN_USAGE = "PromptPluginUsage"
+    """Smarter PromptPluginUsage resource.
 
     A list of Django ORM model instances.
     """
 
-    CHAT_TOOL_CALL = "ChatToolCall"
-    """Smarter ChatToolCall resource.
+    CHAT_TOOL_CALL = "PromptToolCall"
+    """Smarter PromptToolCall resource.
 
     A list of Django ORM model instances.
     """
@@ -204,7 +204,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     For flexibility, it also allows instantiation with a string value, enabling a ``SmarterJournalCliCommands`` value
     to be passed as a strongly typed object.
 
-    Each member represents a supported CLI command in the Smarter API, such as ``apply``, ``chat``, ``delete``, ``deploy``, etc.
+    Each member represents a supported CLI command in the Smarter API, such as ``apply``, ``prompt``, ``delete``, ``deploy``, etc.
 
     Example usage::
 
@@ -213,7 +213,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     """
 
     APPLY = "apply"
-    CHAT = "chat"
+    CHAT = "prompt"
     CHAT_CONFIG = "chat_config"
     DELETE = "delete"
     DEPLOY = "deploy"

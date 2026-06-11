@@ -1,4 +1,4 @@
-"""knox TokenAuthentication subclass that checks if the token is active."""
+"""Knox TokenAuthentication subclass that checks if the token is active."""
 
 import logging
 
@@ -47,9 +47,7 @@ class SmarterTokenAuthenticationError(SmarterException):
 
 # pylint: disable=W0223
 class SmarterAnonymousUser(AnonymousUser):
-    """
-    AnonymousUser subclass for SmarterTokenAuthenticationMiddleware logging purposes.
-    """
+    """AnonymousUser subclass for SmarterTokenAuthenticationMiddleware logging purposes."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -57,7 +55,7 @@ class SmarterAnonymousUser(AnonymousUser):
 
 
 class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
-    """Enhanced Django Rest Framework (DRF) knox TokenAuthentication
+    """Enhanced Django Rest Framework (DRF) knox TokenAuthentication.
 
     This subclass adds:
 
@@ -76,7 +74,8 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
     @property
     def formatted_class_name(self) -> str:
         """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{SmarterTokenAuthentication.__name__}")
+        class_name = f"{__name__}.{SmarterTokenAuthentication.__name__}"
+        return self.formatted_text(class_name)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

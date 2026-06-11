@@ -1,4 +1,4 @@
-"""Smarter API Chat Manifest - enumerated datatypes."""
+"""Smarter API Prompt Manifest - enumerated datatypes."""
 
 # from smarter.lib.manifest.enum import SmarterEnumAbstract
 

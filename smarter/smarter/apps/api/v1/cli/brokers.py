@@ -33,12 +33,14 @@ from smarter.apps.llm_client.manifest.brokers.llm_client import SAMLLMClientBrok
 from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
-from smarter.apps.prompt.manifest.brokers.chat import SAMChatBroker
-from smarter.apps.prompt.manifest.brokers.chat_history import SAMChatHistoryBroker
-from smarter.apps.prompt.manifest.brokers.chat_plugin_usage import (
-    SAMChatPluginUsageBroker,
+from smarter.apps.prompt.manifest.brokers.prompt import SAMPromptBroker
+from smarter.apps.prompt.manifest.brokers.prompt_history import SAMPromptHistoryBroker
+from smarter.apps.prompt.manifest.brokers.prompt_plugin_usage import (
+    SAMPromptPluginUsageBroker,
 )
-from smarter.apps.prompt.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
+from smarter.apps.prompt.manifest.brokers.prompt_tool_call import (
+    SAMPromptToolCallBroker,
+)
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
 from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.vectorstore.manifest.brokers.vectorstore import SAMVectorstoreBroker
@@ -101,10 +103,10 @@ class Brokers:
     _brokers: Dict[str, Type[AbstractBroker]] = {
         SAMKinds.ACCOUNT.value: SAMAccountBroker,
         SAMKinds.AUTH_TOKEN.value: SAMSmarterAuthTokenBroker,
-        SAMKinds.CHAT.value: SAMChatBroker,
-        SAMKinds.CHAT_HISTORY.value: SAMChatHistoryBroker,
-        SAMKinds.CHAT_PLUGIN_USAGE.value: SAMChatPluginUsageBroker,
-        SAMKinds.CHAT_TOOL_CALL.value: SAMChatToolCallBroker,
+        SAMKinds.CHAT.value: SAMPromptBroker,
+        SAMKinds.CHAT_HISTORY.value: SAMPromptHistoryBroker,
+        SAMKinds.CHAT_PLUGIN_USAGE.value: SAMPromptPluginUsageBroker,
+        SAMKinds.CHAT_TOOL_CALL.value: SAMPromptToolCallBroker,
         SAMKinds.LLM_CLIENT.value: SAMLLMClientBroker,
         SAMKinds.STATIC_PLUGIN.value: SAMStaticPluginBroker,
         SAMKinds.API_PLUGIN.value: SAMApiPluginBroker,

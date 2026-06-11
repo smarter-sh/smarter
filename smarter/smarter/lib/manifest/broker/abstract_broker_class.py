@@ -31,7 +31,6 @@ from smarter.apps.account.utils import (
 from smarter.apps.secret.models import Secret
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_blue
 from smarter.common.utils.decorators import snake_case
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
@@ -250,7 +249,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         user_profile = self.user_profile or "Anonymous"
         name = self._name or "Unknown"
 
-        return f"{formatted_text(self.__class__.__name__)}[id={id(self)}](name={name}, user_profile={user_profile})"
+        return (
+            f"{self.formatted_text(self.__class__.__name__)}[id={id(self)}](name={name}, user_profile={user_profile})"
+        )
 
     def __repr__(self) -> str:
         """
@@ -354,7 +355,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
         """
-        return formatted_text_blue(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        prefix = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text_blue(prefix)
 
     @property
     def abstract_broker_logger_prefix(self) -> str:
@@ -363,7 +365,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def formatted_class_name(self) -> str:
@@ -372,7 +375,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def formatted_class_name_cache_invalidations(self) -> str:
@@ -381,7 +385,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The logger prefix for the AbstractBroker cache invalidations.
         :rtype: str
         """
-        return formatted_text_blue(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return self.formatted_text_blue(class_name)
 
     @property
     def is_ready_abstract_broker(self) -> bool:
@@ -447,14 +452,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 "%s.is_ready_abstract_broker() - Broker name is not set. Cannot process broker.",
                 self.abstract_broker_logger_prefix,
             )
-        if not self.is_accountmixin_ready:
+        if not self.srm_ready:
             logger.warning(
-                "%s.is_ready_abstract_broker() - AccountMixin is not ready. Cannot process broker.",
-                self.abstract_broker_logger_prefix,
-            )
-        if not self.is_requestmixin_ready:
-            logger.warning(
-                "%s.is_ready_abstract_broker() - RequestMixin is not ready. Cannot process broker.",
+                "%s.is_ready_abstract_broker() - SmarterRequestMixin is not ready. Cannot process broker.",
                 self.abstract_broker_logger_prefix,
             )
         if not bool(self._manifest):
@@ -1437,22 +1437,22 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     @abstractmethod
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Invoke a chat operation.
+        Invoke a prompt operation.
 
         This abstract method should be implemented by subclasses to provide
-        chat-based interactions with the broker resource.
+        prompt-based interactions with the broker resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
-        :return: A SmarterJournaledJsonResponse containing the chat response.
+        :return: A SmarterJournaledJsonResponse containing the prompt response.
         :rtype: SmarterJournaledJsonResponse
         """
         raise SAMBrokerErrorNotImplemented(
-            message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
+            message="prompt() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
         )
 
     @abstractmethod
@@ -1972,7 +1972,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: Optional[str]
         """
         class_name = self.__class__.__name__ + "().clean_cli_param()"
-        class_name = formatted_text(class_name)
+        class_name = self.formatted_text(class_name)
         retval = param.strip() if isinstance(param, str) else param
 
         if isinstance(param, str):
@@ -2100,8 +2100,8 @@ class BrokerNotImplemented(AbstractBroker):
     def manifest(self) -> Optional[Union[AbstractSAMBase, dict]]:
         raise SAMBrokerErrorNotImplemented("Subclasses must implement the manifest property.")
 
-    def chat(self, request: SmarterRequest, *args, **kwargs):
-        super().chat(request, args, kwargs)
+    def prompt(self, request: SmarterRequest, *args, **kwargs):
+        super().prompt(request, args, kwargs)
 
     def delete(self, request: SmarterRequest, *args, **kwargs):
         super().delete(request, args, kwargs)

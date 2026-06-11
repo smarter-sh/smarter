@@ -66,7 +66,7 @@ class SmarterWaffleSwitches:
     """Enables logging throughout the smarter.app.prompt namespace."""
 
     CHATAPP_LOGGING = "log_chatapp"
-    """For the React Chat UI component.
+    """For the React Prompt UI component.
 
     Enables debug-level javascript console logging inside the browser
     """
@@ -84,7 +84,7 @@ class SmarterWaffleSwitches:
     """Enables logging throughout the smarter.app.vectorstore namespace."""
 
     CSRF_SUPPRESS_FOR_LLM_CLIENTS = "disable_csrf_middleware_for_llm_clients"
-    """Disables CSRF middleware checks for chat completion endpoints."""
+    """Disables CSRF middleware checks for prompt completion endpoints."""
 
     ENABLE_DEBUG_MODE = "enable_debug_mode"
     """Enables debug mode for the entire Smarter application, which may include additional logging and diagnostic information."""
@@ -132,13 +132,16 @@ class SmarterWaffleSwitches:
     """Enables SmarterSecurityMiddleware."""
 
     ENABLE_REACTAPP_DEBUG_MODE = "enable_reactapp_debug_mode"
-    """Enables React app debug mode within the Smarter React Chat component."""
+    """Enables React app debug mode within the Smarter React Prompt component."""
 
     ENABLE_NEW_USER_PASSWORD_EMAIL = "enable_new_user_password_email"
     """Enables sending textemail with password to new users."""
 
     ENABLE_SMARTER_PAGE_CACHING = "enable_smarter_page_caching"
     """Enables the Smarter user-based page caching decorator for user-facing pages to improve performance."""
+
+    ENABLE_FORMATTED_LOGGING = "enable_formatted_logging"
+    """Enables formatted logging with ANSI color codes for enhanced readability in logs."""
 
     MANIFEST_LOGGING = "log_manifest_brokers"
     """Enables detailed diagnostic logging for manifest initialization, validation and brokered operations."""
@@ -200,7 +203,7 @@ class SmarterWaffleSwitches:
         ),
         CHATAPP_LOGGING: SmarterWaffleSwitch(
             name=CHATAPP_LOGGING,
-            comment="For the React Chat UI component. Enables debug-level javascript console logging inside the browser",
+            comment="For the React Prompt UI component. Enables debug-level javascript console logging inside the browser",
             default=True,
         ),
         LLM_CLIENT_LOGGING: SmarterWaffleSwitch(
@@ -230,7 +233,7 @@ class SmarterWaffleSwitches:
         ),
         CSRF_SUPPRESS_FOR_LLM_CLIENTS: SmarterWaffleSwitch(
             name=CSRF_SUPPRESS_FOR_LLM_CLIENTS,
-            comment="Disables CSRF middleware checks for chat completion endpoints.",
+            comment="Disables CSRF middleware checks for prompt completion endpoints.",
             default=False,
         ),
         ENABLE_DEBUG_MODE: SmarterWaffleSwitch(
@@ -315,13 +318,18 @@ class SmarterWaffleSwitches:
         ),
         ENABLE_REACTAPP_DEBUG_MODE: SmarterWaffleSwitch(
             name=ENABLE_REACTAPP_DEBUG_MODE,
-            comment="Enables React app debug mode within the Smarter React Chat component.",
+            comment="Enables React app debug mode within the Smarter React Prompt component.",
             default=True,
         ),
         ENABLE_NEW_USER_PASSWORD_EMAIL: SmarterWaffleSwitch(
             name=ENABLE_NEW_USER_PASSWORD_EMAIL,
             comment="Enables sending textemail with password to new users.",
             default=False,
+        ),
+        ENABLE_FORMATTED_LOGGING: SmarterWaffleSwitch(
+            name=ENABLE_FORMATTED_LOGGING,
+            comment="Enables formatted logging with ANSI color codes for enhanced readability in logs.",
+            default=True,
         ),
         MANIFEST_LOGGING: SmarterWaffleSwitch(
             name=MANIFEST_LOGGING,

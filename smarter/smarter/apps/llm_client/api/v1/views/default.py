@@ -17,9 +17,9 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 class DefaultLLMClientApiView(LLMClientApiBaseViewSet):
     """
-    Main view for Smarter LLMClient API chat prompts.
+    Main view for Smarter LLMClient API prompt prompts.
 
-    top-level viewset for customer-deployed Plugin-based Chat APIs.
+    top-level viewset for customer-deployed Plugin-based Prompt APIs.
     """
 
     def dispatch(self, request, *args, **kwargs):

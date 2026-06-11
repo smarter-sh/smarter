@@ -201,7 +201,7 @@ class SettingsDefaults:
 
     GEMINI_API_KEY: SecretStr = SecretStr(get_env("GEMINI_API_KEY", is_secret=True, is_required=True))
     INTERNAL_IP_PREFIXES: List[str] = get_env("INTERNAL_IP_PREFIXES", ["192.168."])
-    LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "chat_history")
+    LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "prompt_history")
 
     LLAMA_API_KEY: SecretStr = SecretStr(get_env("LLAMA_API_KEY", is_secret=True, is_required=True))
     LLM_DEFAULT_PROVIDER = "openai"

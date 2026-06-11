@@ -60,6 +60,12 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
     # template_path = "dashboard/authenticated.html"
     template_path = "react/dashboard.html"
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this view."""
+        class_name = f"{__name__}.{DashboardView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         Handle GET requests to render the dashboard page for authenticated users.

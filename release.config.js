@@ -10,6 +10,7 @@ module.exports = {
           { type: "docs", release: false },
           { type: "test", release: false },
           { type: "style", release: false },
+          { type: "refactor", release: false },
         ],
         parserOpts: {
           noteKeywords: ["BREAKING CHANGE", "BREAKING CHANGES"],
@@ -20,11 +21,12 @@ module.exports = {
       "@semantic-release/release-notes-generator",
       {
         preset: "conventionalcommits",
-        parserOpts: {
+        presetConfig: {
           types: [
-            { type: "feat", section: "Features" },
-            { type: "fix", section: "Bug Fixes" },
-            { type: "refactor", section: "Refactoring" },
+            { type: "feat", section: "Features", hidden: false },
+            { type: "fix", section: "Bug Fixes", hidden: false },
+            { type: "refactor", section: "Refactoring", hidden: false },
+            { type: "perf", section: "Performance", hidden: false },
           ],
         },
       },
@@ -57,8 +59,7 @@ module.exports = {
           "pyproject.toml",
           "Dockerfile",
         ],
-        message:
-          "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
+        message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
       },
     ],
   ],

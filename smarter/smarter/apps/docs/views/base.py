@@ -62,7 +62,8 @@ class DocsBaseView(SmarterAuthenticatedWebView):
 
     @property
     def formatted_class_name(self):
-        return logging.formatted_text(f"{__name__}.{DocsBaseView.__name__}")
+        class_name = f"{__name__}.{DocsBaseView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def get_brokered_json_response(
         self, reverse_name: str, view: "AsView", request: "HttpRequest", *args, **kwargs

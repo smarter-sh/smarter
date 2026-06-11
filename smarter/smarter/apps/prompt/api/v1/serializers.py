@@ -4,41 +4,46 @@
 from rest_framework import serializers
 
 from smarter.apps.plugin.serializers import PluginMetaSerializer
-from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from smarter.apps.prompt.models import (
+    Prompt,
+    PromptHistory,
+    PromptPluginUsage,
+    PromptToolCall,
+)
 
 
-class ChatSerializer(serializers.ModelSerializer):
+class PromptSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Chat
+        model = Prompt
         fields = "__all__"
 
 
 class ChatHistorySerializer(serializers.ModelSerializer):
-    """Serializer for the ChatHistory model."""
+    """Serializer for the PromptHistory model."""
 
-    chat = ChatSerializer(read_only=True)
+    prompt = PromptSerializer(read_only=True)
 
     class Meta:
-        model = ChatHistory
+        model = PromptHistory
         fields = "__all__"
 
 
-class ChatPluginUsageSerializer(serializers.ModelSerializer):
-    """Serializer for the ChatPluginUsage model."""
+class PromptPluginUsageSerializer(serializers.ModelSerializer):
+    """Serializer for the PromptPluginUsage model."""
 
-    chat = ChatSerializer(read_only=True)
+    prompt = PromptSerializer(read_only=True)
     plugin = PluginMetaSerializer()
 
     class Meta:
-        model = ChatPluginUsage
+        model = PromptPluginUsage
         fields = "__all__"
 
 
-class ChatToolCallSerializer(serializers.ModelSerializer):
-    """Serializer for the ChatToolCall model."""
+class PromptToolCallSerializer(serializers.ModelSerializer):
+    """Serializer for the PromptToolCall model."""
 
-    chat = ChatSerializer(read_only=True)
+    prompt = PromptSerializer(read_only=True)
 
     class Meta:
-        model = ChatToolCall
+        model = PromptToolCall
         fields = "__all__"

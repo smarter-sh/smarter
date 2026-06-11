@@ -121,10 +121,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                     self._manifest.metadata.name,
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
-        if self.ready:
-            logger.info(msg)
-        else:
-            logger.warning(msg)
+        logger.info(msg)
 
     # override the base abstract manifest model with the SqlConnection model
     _manifest: Optional[SAMSqlConnection] = None
@@ -202,7 +199,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 logger.info(broker.formatted_class_name)
                 # Output: ParentClass.SAMSqlConnectionBroker()
         """
-        return f"{__name__}.{SAMSqlConnectionBroker.__name__}[{id(self)}]"
+        class_name = f"{__name__}.{SAMSqlConnectionBroker.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def ORMMetaModelClass(self) -> Type[SqlConnection]:
@@ -1033,14 +1031,14 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Return a JSON response for chat interactions.
+        Return a JSON response for prompt interactions.
 
         This is not implemented for SQL connections.
 
         :raises SAMBrokerErrorNotImplemented:
-            Always, as chat functionality is not supported for SQL connections.
+            Always, as prompt functionality is not supported for SQL connections.
 
         :param request: The Django HTTP request object.
         :type request: "HttpRequest"
@@ -1050,7 +1048,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.chat() called for %s %s %s args: %s kwargs: %s",
+            "%s.prompt() called for %s %s %s args: %s kwargs: %s",
             self.formatted_class_name,
             self.kind,
             self.name,
@@ -1058,9 +1056,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.chat.__name__
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

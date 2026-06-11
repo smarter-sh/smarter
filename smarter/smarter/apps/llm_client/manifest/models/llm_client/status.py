@@ -56,7 +56,7 @@ class SAMLLMClientStatus(AbstractSAMStatusBase):
         description=f"{class_identifier}.urlChatapp: The chatapp URL for this {MANIFEST_KIND}. Read only.",
     )
     urlChatConfig: str = Field(
-        description=f"{class_identifier}.urlChatConfig: The chat config URL for this {MANIFEST_KIND}. Read only.",
+        description=f"{class_identifier}.urlChatConfig: The prompt config URL for this {MANIFEST_KIND}. Read only.",
     )
     dnsVerificationStatus: str = Field(
         description=f"{class_identifier}.dnsVerificationStatus: The DNS verification status for this {MANIFEST_KIND}. Read only.",

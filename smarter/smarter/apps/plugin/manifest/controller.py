@@ -1,6 +1,4 @@
-"""
-Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models.
-"""
+"""Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
 
 from functools import cached_property
 from typing import Dict, Optional, Union
@@ -60,7 +58,8 @@ class SAMPluginControllerError(SAMExceptionBase):
 
 class PluginController(AbstractController):
     """
-    Provides a unified interface for mapping between Pydantic manifest models, plugin implementations,
+    Provides a unified interface for mapping between Pydantic manifest models, plugin implementations,.
+
     and Django ORM models within the Smarter platform.
 
     The PluginController is responsible for orchestrating the instantiation and management of plugin
@@ -203,10 +202,12 @@ class PluginController(AbstractController):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
         """
-        return f"{__name__}.{PluginController.__name__}[{id(self)}]"
+        class_name = f"{__name__}.{PluginController.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     ###########################################################################
     # Abstract property implementations

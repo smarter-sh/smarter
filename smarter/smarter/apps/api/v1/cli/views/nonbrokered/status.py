@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'apply' view"""
+"""Smarter API command-line interface 'apply' view."""
 
 import logging
 import platform
@@ -23,16 +23,18 @@ logger = logging.getLogger(__name__)
 
 
 class ApiV1CliStatusApiView(CliBaseApiView):
-    """Smarter API command-line interface 'status' view"""
+    """Smarter API command-line interface 'status' view."""
 
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliStatusApiView.__name__}[{id(self)}]"
+        this_class = f".{ApiV1CliStatusApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
 
     def get_service_status(self, region_name):
         try:
@@ -52,6 +54,7 @@ class ApiV1CliStatusApiView(CliBaseApiView):
     def get_redis_info(self):
         """
         Return Redis server information.
+
         :return: Redis server information
         :rtype: dict
         """

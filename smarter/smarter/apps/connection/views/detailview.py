@@ -68,7 +68,8 @@ class ApiConnectionDetailView(DocsBaseView):
     @property
     def formatted_class_name(self) -> str:
         """Helper method to get the formatted class name for logging."""
-        return logging.formatted_text(f"{__name__}.{ApiConnectionDetailView.__name__}")
+        class_name = f"{__name__}.{ApiConnectionDetailView.__name__}"
+        return self.formatted_text(class_name)
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
         """
@@ -260,7 +261,8 @@ class SqlConnectionDetailView(DocsBaseView):
     @property
     def formatted_class_name(self) -> str:
         """Helper method to get the formatted class name for logging."""
-        return logging.formatted_text(f"{__name__}.{SqlConnectionDetailView.__name__}")
+        class_name = f"{__name__}.{SqlConnectionDetailView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
         """

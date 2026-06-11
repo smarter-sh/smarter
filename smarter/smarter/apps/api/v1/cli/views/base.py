@@ -24,7 +24,7 @@ from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.apps.docs.views.base import DocsError
 from smarter.apps.llm_client.exceptions import SmarterLLMClientException
 from smarter.apps.plugin.plugin.base import SmarterPluginError
-from smarter.apps.prompt.views.detailview.chatapp_workbench_view import (
+from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
     SmarterChatappViewError,
 )
 from smarter.common.const import (
@@ -173,7 +173,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :rtype: str
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{CliBaseApiView.__name__}()"
+        this_class = f".{CliBaseApiView.__name__}[][{id(self)}]"
+        return f"{parent_class}{self.formatted_text(this_class)}"
 
     @property
     def loader(self) -> Optional[SAMLoader]:
@@ -356,7 +357,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # analyze the url path to determine the manifest kind.
         # urls:
         # - http://testserver/api/v1/cli/logs/LLMClient/?name=TestLLMClient
-        # - http://testserver/api/v1/cli/chat/config/TestLLMClient/
+        # - http://testserver/api/v1/cli/prompt/config/TestLLMClient/
         if not self._manifest_kind:
             self._manifest_kind = SAMKinds.from_url(self.url)
             if self._manifest_kind:
@@ -395,7 +396,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
     @property
-    def is_cli_base_api_view_ready(self) -> bool:
+    def cba_ready(self) -> bool:
         """
         Check if the CliBaseApiView is ready.
 
@@ -412,7 +413,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: Readiness state as a string
         :rtype: str
         """
-        if self.is_cli_base_api_view_ready:
+        if self.cba_ready:
             return self.formatted_state_ready
         return self.formatted_state_not_ready
 
@@ -424,13 +425,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: True if both the view and mixin are ready, False otherwise
         :rtype: bool
         """
-        if not self.is_accountmixin_ready:
-            logger.debug("%s.ready() - returning False because AccountMixin is not ready", self.logger_prefix)
-            return False
-        if not self.is_requestmixin_ready:
+        if not self.srm_ready:
             logger.debug("%s.ready() - returning False because SmarterRequestMixin is not ready", self.logger_prefix)
             return False
-        return self.is_cli_base_api_view_ready
+        return self.cba_ready
 
     def setup(self, request: Request, *args, **kwargs):
         """
@@ -443,6 +441,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :type request: Request
         """
         super().setup(request, *args, **kwargs)
+        SmarterRequestMixin.setup(self, request=request, *args, **kwargs)
         logger.debug(
             "%s.setup() called for request: %s with args %s and kwargs %s auth header: %s, is_internal_api_request: %s",
             self.logger_prefix,
@@ -546,7 +545,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 exc_info=True,
             )
             raise SmarterConfigurationError(
-                "%s error during initialization: could not set request object." % self.formatted_class_name
+                f"{self.formatted_class_name} error during initialization: could not set request object."
             ) from e
 
         logger.debug("hi mom")
@@ -605,8 +604,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     )
                 else:
                     logger.error(
-                        "%s.initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact %s %s",
-                        self.logger_prefix,
+                        "%s.initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact %s: %s",
+                        self.formatted_class_name,
                         SMARTER_CUSTOMER_SUPPORT_EMAIL,
                         e,
                     )
@@ -616,7 +615,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         except Exception as e:
             logger.error(
                 "%s.initial() - unexpected error during authentication: %s: %s",
-                self.logger_prefix,
+                self.formatted_class_name,
                 type(e),
                 e,
                 exc_info=True,
@@ -639,7 +638,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # from the request body, and then we'll leave it to the child views to
         # decide if/when to actually parse the manifest and instantiate the broker.
 
-        # if the command is 'chat', then the raw prompt text
+        # if the command is 'prompt', then the raw prompt text
         # or the encoded file attachment data will be in the request body.
         # otherwise, the request body should contain manifest text.
         if self.command == SmarterJournalCliCommands.CHAT:

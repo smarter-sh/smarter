@@ -1,8 +1,8 @@
 # pylint: disable=W0613,C0115,R0913
 """
-Celery tasks for chat app.
+Celery tasks for prompt app.
 
-These tasks are i/o intensive operations for creating chat and plugin history records with
+These tasks are i/o intensive operations for creating prompt and plugin history records with
 Celery workers in order to avoid blocking the main app thread. This is advance work to lay groundwork for
 future high-traffic scenarios.
 """
@@ -19,7 +19,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.workers.celery import app
 
-from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from .models import Prompt, PromptHistory, PromptPluginUsage, PromptToolCall
 
 
 def should_log(level):
@@ -40,14 +40,16 @@ module_prefix = "smarter.apps.prompt.tasks."
     max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
     queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
-def create_chat_history(chat_id, request, response, messages):
-    logger.info("%s chat_id: %s", formatted_text(module_prefix + "create_chat_history()"), chat_id)
+def create_prompt_history(chat_id, request, response, messages):
+    logger.info("%s chat_id: %s", formatted_text(module_prefix + "create_prompt_history()"), chat_id)
     try:
-        chat = Chat.objects.get(id=chat_id)
-    except Chat.DoesNotExist:
-        logger.error("%s chat_id: %s does not exist", formatted_text(module_prefix + "create_chat_history()"), chat_id)
+        prompt = Prompt.objects.get(id=chat_id)
+    except Prompt.DoesNotExist:
+        logger.error(
+            "%s chat_id: %s does not exist", formatted_text(module_prefix + "create_prompt_history()"), chat_id
+        )
         return
-    ChatHistory.objects.create(chat=chat, request=request, response=response, messages=messages)
+    PromptHistory.objects.create(prompt=prompt, request=request, response=response, messages=messages)
 
 
 def aggregate_chat_history():
@@ -61,14 +63,14 @@ def aggregate_chat_history():
     max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
     queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
-def create_chat(session_key, llm_client_id):
+def create_prompt(session_key, llm_client_id):
     """
-    Create chat record with flattened LLM response.
+    Create prompt record with flattened LLM response.
 
     DELETE THIS? IT IS NOT USED.
     """
     llm_client = LLMClient.objects.get(id=llm_client_id)
-    Chat.objects.create(session_key=session_key, llm_client=llm_client)
+    Prompt.objects.create(session_key=session_key, llm_client=llm_client)
 
 
 @app.task(
@@ -77,16 +79,16 @@ def create_chat(session_key, llm_client_id):
     max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
     queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
-def create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, function_args, request, response):
-    """Create chat tool call history record."""
-    logger.info("%s", formatted_text(module_prefix + "create_chat_tool_call_history()"))
-    chat = None
+def create_prompt_tool_call_history(chat_id, plugin_meta_id, function_name, function_args, request, response):
+    """Create prompt tool call history record."""
+    logger.info("%s", formatted_text(module_prefix + "create_prompt_tool_call_history()"))
+    prompt = None
     plugin_meta = None
 
     try:
-        chat = Chat.objects.get(id=chat_id)
-    except Chat.DoesNotExist as e:
-        raise SmarterValueError(f"Chat with id {chat_id} does not exist") from e
+        prompt = Prompt.objects.get(id=chat_id)
+    except Prompt.DoesNotExist as e:
+        raise SmarterValueError(f"Prompt with id {chat_id} does not exist") from e
 
     try:
         if plugin_meta_id:
@@ -94,8 +96,8 @@ def create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, functi
     except PluginMeta.DoesNotExist as e:
         raise SmarterValueError(f"PluginMeta with id {plugin_meta_id} does not exist") from e
 
-    ChatToolCall.objects.create(
-        chat=chat,
+    PromptToolCall.objects.create(
+        prompt=prompt,
         plugin=plugin_meta,
         function_name=function_name,
         function_args=function_args,
@@ -110,7 +112,7 @@ def create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, functi
     max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
     queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
-def create_chat_plugin_usage(*args, **kwargs):
+def create_prompt_plugin_usage(*args, **kwargs):
     """Create plugin usage record."""
     chat_id = kwargs.get("chat_id", None)
     plugin_id = kwargs.get("plugin_id", None)
@@ -128,17 +130,17 @@ def create_chat_plugin_usage(*args, **kwargs):
     if input_text is None:
         raise SmarterValueError("input_text is required")
     try:
-        chat = Chat.objects.get(id=chat_id)
-    except Chat.DoesNotExist as e:
-        raise SmarterValueError(f"Chat with id {chat_id} does not exist") from e
+        prompt = Prompt.objects.get(id=chat_id)
+    except Prompt.DoesNotExist as e:
+        raise SmarterValueError(f"Prompt with id {chat_id} does not exist") from e
 
     try:
         plugin_meta = PluginMeta.objects.get(id=plugin_id)
     except PluginMeta.DoesNotExist as e:
         raise SmarterValueError(f"PluginMeta with id {plugin_id} does not exist") from e
 
-    ChatPluginUsage.objects.create(
-        chat=chat,
+    PromptPluginUsage.objects.create(
+        prompt=prompt,
         plugin=plugin_meta,
         input_text=input_text,
     )

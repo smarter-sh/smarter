@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API User Manifest handler"""
+"""Smarter API User Manifest handler."""
 
 import logging
 from typing import Optional, Type
@@ -59,9 +59,7 @@ class SAMTestBroker(AbstractBroker):
         return self._username
 
     def manifest_to_django_orm(self) -> dict:
-        """
-        Transform the Smarter API User manifest into a Django ORM model.
-        """
+        """Transform the Smarter API User manifest into a Django ORM model."""
         config_dump = self.manifest.spec.model_dump()  # type: ignore[return-value]
         config_dump = self.to_snake_case(config_dump)
         return config_dump  # type: ignore[return-value]
@@ -69,7 +67,8 @@ class SAMTestBroker(AbstractBroker):
     @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
-        Transform the Django ORM model into a Pydantic readable
+        Transform the Django ORM model into a Pydantic readable.
+
         Smarter API User manifest dict.
         """
         if not self.user:
@@ -177,7 +176,6 @@ class SAMTestBroker(AbstractBroker):
                 print(meta.name, meta.account)
             else:
                 print("No plugin metadata found.")
-
         """
         if self._plugin_meta:
             return self._plugin_meta
@@ -211,10 +209,11 @@ class SAMTestBroker(AbstractBroker):
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
+
         This is used to provide a more readable class name in logs.
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMTestBroker()"
+        class_name = f"{__name__}.{self.__class__.__name__}()[{id(self)}]"
+        return self.formatted_text(class_name)
 
     @property
     def kind(self) -> str:
@@ -225,7 +224,8 @@ class SAMTestBroker(AbstractBroker):
     @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
         """
-        SAMPluginCommon() is a Pydantic model
+        SAMPluginCommon() is a Pydantic model.
+
         that is used to represent the Smarter API User manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -248,8 +248,8 @@ class SAMTestBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        return super().chat(request=request, kwargs=kwargs)
+    def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        return super().prompt(request=request, kwargs=kwargs)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         return super().describe(request=request, kwargs=kwargs)
