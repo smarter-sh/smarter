@@ -1,8 +1,8 @@
-"""URL configuration for chat app."""
+"""URL configuration for prompt app."""
 
 from django.urls import path
 
-from smarter.apps.prompt.views.detailview import ChatConfigView
+from smarter.apps.prompt.views.detailviews import PromptConfigView
 from smarter.common.utils import to_snake_case
 
 from .const import namespace
@@ -61,12 +61,12 @@ class LLMClientApiV1ReverseViews:
     # reverse() by hashed_id
     # --------------------------------------------------------------------------
     llm_client_view_by_hashed_id = to_snake_case(LLMClientView) + BY_HASHED_ID
-    chat_config_view_by_hashed_id = to_snake_case(ChatConfigView) + BY_HASHED_ID
+    chat_config_view_by_hashed_id = to_snake_case(PromptConfigView) + BY_HASHED_ID
     default_llm_client_api_view_by_hashed_id = to_snake_case(DefaultLLMClientApiView) + BY_HASHED_ID
 
     # legacy reverse() references by llm_client_id
     # --------------------------------------------------------------------------
-    chat_config_view_by_id = to_snake_case(ChatConfigView)
+    chat_config_view_by_id = to_snake_case(PromptConfigView)
     default_llm_client_api_view_by_id = to_snake_case(DefaultLLMClientApiView)
 
     # currently no reverse() references to these named views.
@@ -92,25 +92,27 @@ urlpatterns = [
     path("<str:hashed_id>/", LLMClientView.as_view(), name=LLMClientApiV1ReverseViews.llm_client_view_by_hashed_id),
     path(
         "<str:hashed_id>/config/",
-        ChatConfigView.as_view(),
+        PromptConfigView.as_view(),
         name=LLMClientApiV1ReverseViews.chat_config_view_by_hashed_id,
     ),
     path(
-        "<str:hashed_id>/chat/",
+        "<str:hashed_id>/prompt/",
         DefaultLLMClientApiView.as_view(),
         name=LLMClientApiV1ReverseViews.default_llm_client_api_view_by_hashed_id,
     ),
     # mcdaniel: this is a patch to keep the react component working with the new hashed_id urls.
-    path("<str:hashed_id>/chat/config/", ChatConfigView.as_view()),
+    path("<str:hashed_id>/prompt/config/", PromptConfigView.as_view()),
     # --------------------------------------------------------------------------
     # paths by llm_client_id
     # --------------------------------------------------------------------------
     path("<int:llm_client_id>/", LLMClientView.as_view(), name=LLMClientApiV1ReverseViews.llm_client_view_by_id),
     path(
-        "<int:llm_client_id>/config/", ChatConfigView.as_view(), name=LLMClientApiV1ReverseViews.chat_config_view_by_id
+        "<int:llm_client_id>/config/",
+        PromptConfigView.as_view(),
+        name=LLMClientApiV1ReverseViews.chat_config_view_by_id,
     ),
     path(
-        "<int:llm_client_id>/chat/",
+        "<int:llm_client_id>/prompt/",
         DefaultLLMClientApiView.as_view(),
         name=LLMClientApiV1ReverseViews.default_llm_client_api_view_by_id,
     ),
@@ -118,7 +120,7 @@ urlpatterns = [
     # paths by llm_client_id that are not currently referenced by reverse()
     # in the codebase
     # --------------------------------------------------------------------------
-    path("<int:llm_client_id>/chat/config/", ChatConfigView.as_view(), name="chat_config_view_legacy"),
+    path("<int:llm_client_id>/prompt/config/", PromptConfigView.as_view(), name="chat_config_view_legacy"),
     path(
         "<int:llm_client_id>/plugins/",
         LLMClientPluginListView.as_view(),

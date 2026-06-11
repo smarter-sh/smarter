@@ -55,6 +55,12 @@ class AuthTokenListApiView(SmarterAuthenticatedNeverCachedWebView):
     :rtype: HttpResponse
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{AuthTokenListApiView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: ASGIRequest, *args, **kwargs) -> Union[JsonResponse, SmarterHttpResponseNotFound]:
         qs: models.QuerySet[AuthToken]
         ownership_filter = kwargs.get("ownership_filter", SmarterResourceOwnershipFilterEnum.ALL)
@@ -105,6 +111,12 @@ class AuthTokenListApiView(SmarterAuthenticatedNeverCachedWebView):
 
 class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
     """Clone a authtoken for the authenticated user."""
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{AuthTokenListApiCloneView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
@@ -170,6 +182,12 @@ class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
     """Delete a authtoken for the authenticated user."""
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{AuthTokenListApiDeleteView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Handle POST requests to delete an existing AuthToken.
@@ -224,6 +242,12 @@ class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
 
 class AuthTokenListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
     """Rename a authtoken for the authenticated user."""
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{AuthTokenListApiRenameView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """

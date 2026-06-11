@@ -1,8 +1,8 @@
 # pylint: disable=W0613,C0115,R0913
 """
-Celery tasks for chat app.
+Celery tasks for prompt app.
 
-These tasks are i/o intensive operations for creating chat and plugin history records with
+These tasks are i/o intensive operations for creating prompt and plugin history records with
 Celery workers in order to avoid blocking the main app thread. This is advance work to lay groundwork for
 future high-traffic scenarios.
 """

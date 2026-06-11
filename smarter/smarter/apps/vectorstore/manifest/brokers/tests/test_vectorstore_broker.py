@@ -28,13 +28,16 @@ logger = logging.getLogger(__name__)
 class TestSmarterVectorstoreBroker(TestSAMBrokerBaseClass):
     """
     Test the Smarter SAMVectorstoreBroker.
+
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
 
     def setUp(self):
         """
-        test-level setup. Before we delve into the actual unit tests, we need to
+        Test-level setup.
+
+        Before we delve into the actual unit tests, we need to
         ensure that our test environment is properly configured and that we
         can initialize the precursors for testing the SAMVectorstoreBroker.
         """
@@ -90,9 +93,7 @@ class TestSmarterVectorstoreBroker(TestSAMBrokerBaseClass):
         self.assertTrue(self.ready)
 
     def test_is_valid(self):
-        """
-        Test that the is_valid property returns True.
-        """
+        """Test that the is_valid property returns True."""
         self.assertTrue(self.broker.is_valid)
 
     def test_sam_broker_initialization(self):
@@ -172,7 +173,8 @@ class TestSmarterVectorstoreBroker(TestSAMBrokerBaseClass):
 
     def test_example_manifest(self):
         """
-        test example_manifest method.
+        Test example_manifest method.
+
         Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
@@ -184,7 +186,9 @@ class TestSmarterVectorstoreBroker(TestSAMBrokerBaseClass):
 
     def test_get(self):
         """
-        test get method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test get method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         response = self.broker.get(self.request, **self.kwargs)
@@ -195,7 +199,9 @@ class TestSmarterVectorstoreBroker(TestSAMBrokerBaseClass):
 
     def test_apply(self):
         """
-        test apply method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test apply method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         response = self.broker.apply(self.request, **self.kwargs)
@@ -237,7 +243,9 @@ class TestSmarterVectorstoreBroker(TestSAMBrokerBaseClass):
 
     def test_describe(self):
         """
-        Stub: test describe method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Stub: test describe method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         response = self.broker.apply(self.request, **self.kwargs)
@@ -255,7 +263,9 @@ class TestSmarterVectorstoreBroker(TestSAMBrokerBaseClass):
 
     def test_deploy(self):
         """
-        test deploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test deploy method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         with self.assertRaises(SAMBrokerErrorNotImplemented):
@@ -263,26 +273,24 @@ class TestSmarterVectorstoreBroker(TestSAMBrokerBaseClass):
 
     def test_undeploy(self):
         """
-        test undeploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test undeploy method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.undeploy(self.request, **self.kwargs)
 
     def test_chat_not_implemented(self):
-        """test chat method raises not implemented."""
+        """Test prompt method raises not implemented."""
         with self.assertRaises(SAMBrokerErrorNotImplemented):
-            self.broker.chat(self.request, **self.kwargs)
+            self.broker.prompt(self.request, **self.kwargs)
 
     def test_delete_secret_not_found(self):
-        """
-        test delete method raises not found for missing secret.
-        """
+        """Test delete method raises not found for missing secret."""
 
     def test_describe_secret_not_found(self):
-        """
-        Test describe method raises not found for missing secret.
-        """
+        """Test describe method raises not found for missing secret."""
         self.broker.user = None
         with self.assertRaises(SAMBrokerErrorNotFound):
             self.broker.describe(self.request, **self.kwargs)

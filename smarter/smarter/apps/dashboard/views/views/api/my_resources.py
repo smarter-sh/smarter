@@ -335,6 +335,12 @@ def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] 
 class MyResourcesView(SmarterAuthenticatedWebView):
     """API view for the "My Resources" React component on the dashboard."""
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns the class name in a formatted string along with the name of this view."""
+        class_name = f"{__name__}.{MyResourcesView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
 
         user = get_resolved_user(request.user)

@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """
-This module contains passthrough views for interacting directly with the LLM
+This module contains passthrough views for interacting directly with the LLM.
+
 provider backend API.
 """
 
@@ -58,20 +59,20 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
     This endpoint allows authenticated users to send arbitrary prompt dicts
     to the underlying LLM provider (such as OpenAI). The request body should
     be a JSON object containing any valid parameters accepted by the
-    provider's chat completion API.
+    provider's prompt completion API.
 
-    :param request: The HTTP request object, expected to have a JSON body with chat completion parameters.
+    :param request: The HTTP request object, expected to have a JSON body with prompt completion parameters.
     :type request: rest_framework.request.ASGIRequest
     :param args: Additional positional arguments (unused).
     :param kwargs: Additional keyword arguments. May include 'provider' to select the LLM provider.
-    :return: A JSON response containing the provider's chat completion result, or an error message.
+    :return: A JSON response containing the provider's prompt completion result, or an error message.
     :rtype: SmarterJournaledJsonResponse | SmarterJournaledJsonErrorResponse | SmarterHttpResponseBadRequest | SmarterHttpResponseForbidden | SmarterHttpResponseNotFound
 
     :signals:
-        - ``chat_started``: Sent before the chat completion request is made.
+        - ``chat_started``: Sent before the prompt completion request is made.
         - ``chat_completion_request``: Sent with the prompt data before calling the provider.
         - ``chat_completion_response``: Sent after a successful response from the provider.
-        - ``chat_finished``: Sent after the chat completion process is finished.
+        - ``chat_finished``: Sent after the prompt completion process is finished.
         - ``chat_response_failure``: Sent if an exception occurs during the provider call.
 
     :raises SmarterHttpResponseForbidden: If the user is not authenticated.
@@ -81,8 +82,8 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
 
     .. seealso::
 
-        - The OpenAI API documentation for chat completions: https://developers.openai.com/api/reference/overview/chat/create
-        - :class:`openai.types.chat.chat_completion.ChatCompletion`
+        - The OpenAI API documentation for prompt completions: https://developers.openai.com/api/reference/overview/prompt/create
+        - :class:`openai.types.prompt.chat_completion.ChatCompletion`
     """
 
     provider_name: str
@@ -91,6 +92,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
     def setup(self, request: ASGIRequest, *args, **kwargs):
         """
         Set the provider_name and handler based on the URL kwargs.
+
         The handler can be any function that implements the
         :class:`OpenAICompatiblePassthroughProtocol` interface.
 
@@ -122,7 +124,8 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
         | SmarterHttpResponseForbidden
     ):
         """
-        Handle POST requests to the passthrough endpoint for direct LLM
+        Handle POST requests to the passthrough endpoint for direct LLM.
+
         provider API access.
         """
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.post()")

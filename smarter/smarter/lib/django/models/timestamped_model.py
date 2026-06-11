@@ -541,7 +541,11 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             try:
                 verbose_logger.debug(
-                    "%s.get_cached_object() called with pk: %s, invalidate=%s", logger_prefix, pk, invalidate
+                    "%s.get_cached_object() %s called with pk: %s, invalidate=%s",
+                    logger_prefix,
+                    class_name,
+                    pk,
+                    invalidate,
                 )
                 retval = cls.objects.get(pk=pk)
                 verbose_logger.debug(

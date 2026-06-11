@@ -29,10 +29,6 @@ from functools import lru_cache
 from typing import Any, Union
 
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib import logging
-
-logger = logging.getLogger(__name__)
-logger_prefix = logging.formatted_text(__name__)
 
 LRU_MAXSIZE = 32  # Default max size for LRU caches in this module
 SNAKE_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
@@ -52,6 +48,7 @@ def _convert_snake_to_camel(name: str) -> str:
     return components[0] + "".join(x.title() for x in components[1:])
 
 
+# pylint: disable=W0613
 def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = False) -> Any:
     """
     Convert snake_case strings, dictionary keys, or lists to camelCase format.
@@ -114,8 +111,6 @@ def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
             if convert_values:
                 value = to_camel_case(value, convert_values=convert_values, is_recursive=True)
             retval[key] = value
-        if not is_recursive:
-            logger.debug("%s.to_camel_case() - converted '%s' to '%s'", logger_prefix, data, retval)
         return retval
     else:
         try:
@@ -186,13 +181,11 @@ def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False) -> An
     if isinstance(data, str):
         return _convert_camel_to_snake(data)
     elif isinstance(data, list):
-        logger.debug("%s.to_snake_case() - converting list: %s", logger_prefix, data)
         return [
             to_snake_case(item, convert_values=convert_values) if isinstance(item, (dict, list)) else item
             for item in data
         ]
     elif isinstance(data, dict):
-        logger.debug("%s.to_snake_case() - converting dict: %s", logger_prefix, data)
         retval = {}
         for key, value in data.items():
             key = _convert_camel_to_snake(key)

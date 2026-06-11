@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """
-smarter.apps.plugin.views.vectorstore
+Smarter.apps.plugin.views.vectorstore.
+
 This module contains views to implement the card-style list view
 in the Smarter Dashboard.
 """
@@ -69,7 +70,6 @@ class VectorstoreManifestView(DocsBaseView):
     **Example usage**::
 
         GET /vectorstore/detail/?name=my_vectorstore&kind=custom
-
     """
 
     template_path = "common/manifest_detail.html"
@@ -79,6 +79,7 @@ class VectorstoreManifestView(DocsBaseView):
     def get(self, request, *args, **kwargs) -> HttpResponse:
         """
         Handle GET requests to render the vectorstore manifest detail view.
+
         This method processes the incoming request to retrieve the
         specified vectorstore's manifest details and renders them in a
         user-friendly format. It performs validation on the provided vectorstore
@@ -208,11 +209,16 @@ class VectorstoreListView(SmarterAuthenticatedNeverCachedWebView):
     **Example usage**::
 
         GET /vectorstore/list/
-
     """
 
     template_path = "vectorstore/vectorstore_list.html"
     vectorstores: list[VectorestoreMeta] = []
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{VectorstoreListView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def get(self, request: ASGIRequest, *args, **kwargs):
         if request.user is None:

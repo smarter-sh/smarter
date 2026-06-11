@@ -1,6 +1,4 @@
-"""
-Django Account Authentication views.
-"""
+"""Django Account Authentication views."""
 
 import traceback
 from typing import Union
@@ -107,8 +105,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
             else:
                 # pylint: disable=broad-exception-raised
                 raise Exception(
-                    "%s.post() Authentication failed immediately after registration. This is a bug."
-                    % self.formatted_class_name
+                    f"{self.formatted_class_name}.post() Authentication failed immediately after registration. This is a bug."
                 )
         return self.get(request=request)
 
@@ -119,6 +116,12 @@ class AccountActivationEmailView(SmarterAuthenticatedNeverCachedWebView):
     template_path = "account/activation.html"
     email_template_path = "account/authentication/email/account-activation.html"
     expiring_token = ExpiringTokenGenerator()
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{AccountActivationEmailView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
 
@@ -175,6 +178,12 @@ class AccountActivateView(SmarterNeverCachedWebView):
 
     template_path = "account/welcome.html"
     expiring_token = ExpiringTokenGenerator()
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{AccountActivateView.__name__}[{id(self)}]"
+        return logging.formatted_text(class_name)
 
     def get(self, request, *args, **kwargs):
         logger.debug(
@@ -233,3 +242,9 @@ class AccountDeactivateView(SmarterAuthenticatedNeverCachedWebView):
     """View for the account deactivation page."""
 
     template_path = "account/account-deactivated.html"
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{AccountDeactivateView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)

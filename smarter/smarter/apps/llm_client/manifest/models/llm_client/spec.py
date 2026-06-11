@@ -80,31 +80,31 @@ class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
 
     appName: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.app_name[str]. Optional. The name of the llm_client. Example: 'Sales Support LLMClient'. This is the name that will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-chat.",
+        description=f"{class_identifier}.app_name[str]. Optional. The name of the llm_client. Example: 'Sales Support LLMClient'. This is the name that will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
     )
     appAssistant: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.app_assistant[str]. Optional. The assistant name of the llm_client. Example: 'Joe'. This is the fictitious assistant name that will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-chat.",
+        description=f"{class_identifier}.app_assistant[str]. Optional. The assistant name of the llm_client. Example: 'Joe'. This is the fictitious assistant name that will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
     )
     appWelcomeMessage: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.app_welcome_message[str]. Optional. The welcome message of the llm_client. Example: 'Welcome to Smarter's sales support llm_client!' The welcome messages will appear as the first assistant message in each message list from the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-chat.",
+        description=f"{class_identifier}.app_welcome_message[str]. Optional. The welcome message of the llm_client. Example: 'Welcome to Smarter's sales support llm_client!' The welcome messages will appear as the first assistant message in each message list from the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
     )
     appExamplePrompts: Optional[List[str]] = Field(
         None,
-        description=f"{class_identifier}.app_example_prompts[list]. Optional. A list of example prompts to add to new chat sessions. These are intended to be brief, and the list is assumed to include only a few examples. Example: ['How do I get a refund?', 'What is the return policy?']. These are intended to help the user to understand the llm_client's capabilities. These will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-chat.",
+        description=f"{class_identifier}.app_example_prompts[list]. Optional. A list of example prompts to add to new prompt sessions. These are intended to be brief, and the list is assumed to include only a few examples. Example: ['How do I get a refund?', 'What is the return policy?']. These are intended to help the user to understand the llm_client's capabilities. These will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
     )
     appPlaceholder: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.app_placeholder[str]. Optional. The text placeholder added to the chat input box for all new chat sessions. Example: 'ask me anything...'. The place holder will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-chat.",
+        description=f"{class_identifier}.app_placeholder[str]. Optional. The text placeholder added to the prompt input box for all new prompt sessions. Example: 'ask me anything...'. The place holder will be displayed to users in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
     )
     appInfoUrl: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.app_info_url[str]. Optional. The custom info URL of the llm_client. This is a user control button located on the right-hand side of the header of the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-chat.",
+        description=f"{class_identifier}.app_info_url[str]. Optional. The custom info URL of the llm_client. This is a user control button located on the right-hand side of the header of the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
     )
     appBackgroundImageUrl: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.app_background_image_url[str]. Optional. The image URL for the background image of the chat window in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-chat.",
+        description=f"{class_identifier}.app_background_image_url[str]. Optional. The image URL for the background image of the prompt window in the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
     )
     appLogoUrl: Optional[str] = Field(
         None,
@@ -112,7 +112,7 @@ class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
     )
     appFileAttachment: Optional[bool] = Field(
         False,
-        description=f"{class_identifier}.app_file_attachment[bool]. Optional. Whether the llm_client supports file attachments. Defaults to False. When set to True, a file attachment button will be displayed in the chat input box of the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-chat.",
+        description=f"{class_identifier}.app_file_attachment[bool]. Optional. Whether the llm_client supports file attachments. Defaults to False. When set to True, a file attachment button will be displayed in the prompt input box of the Smarter Prompt Engineer Workbench, as well as any production UI that leverages the SmarterChat React.js Component - https://www.npmjs.com/package/@smarter.sh/ui-prompt.",
     )
 
 

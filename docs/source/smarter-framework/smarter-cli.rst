@@ -97,9 +97,9 @@ Kind
 - `Account <../smarter/smarter/apps/account/api/v1/manifests/>`__
 - `ApiKey <../smarter/smarter/apps/account/api/v1/manifests/>`__
 - `Chat <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `ChatHistory <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `ChatPluginUsage <../smarter/smarter/apps/chat/api/v1/manifests/>`__
-- `ChatToolCall <../smarter/smarter/apps/chat/api/v1/manifests/>`__
+- `PromptHistory <../smarter/smarter/apps/chat/api/v1/manifests/>`__
+- `PromptPluginUsage <../smarter/smarter/apps/chat/api/v1/manifests/>`__
+- `PromptToolCall <../smarter/smarter/apps/chat/api/v1/manifests/>`__
 - `LLMClient <../smarter/smarter/apps/llm_client/api/v1/manifests/>`__
 - `Plugin <../smarter/smarter/apps/plugin/api/v1/manifests/>`__
 - `SqlConnection <../smarter/smarter/apps/plugin/api/v1/manifests/>`__

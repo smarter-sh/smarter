@@ -1,13 +1,11 @@
-"""
-Constants for the OpenAI provider.
-"""
+"""Constants for the OpenAI provider."""
 
 
 # pylint: disable=too-few-public-methods
 class OpenAIObjectTypes:
-    """V1 API Object Types (replace OpeanAIEndPoint)"""
+    """V1 API Object Types (replace OpeanAIEndPoint)."""
 
-    ChatCompletion = "chat.completion"
+    ChatCompletion = "prompt.completion"
 
     # removed in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
     # -------------------------------------------------------------------------
@@ -29,7 +27,7 @@ class OpenAIEndPoint:
         endpoint (str): The URL of the OpenAI API endpoint.
     """
 
-    ChatCompletion = "chat/completions"
+    ChatCompletion = "prompt/completions"
 
     # removed in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
     # -------------------------------------------------------------------------
@@ -200,7 +198,7 @@ VALID_CHAT_COMPLETION_MODELS = [
     "gpt-4o-transcribe",
     "gpt-5",
     "gpt-5-2025-08-07",
-    "gpt-5-chat-latest",
+    "gpt-5-prompt-latest",
     "gpt-5-mini",
     "gpt-5-mini-2025-08-07",
     "gpt-5-nano",

@@ -27,7 +27,7 @@ Usage
   - :doc:`Example Prompt Response <./example-response>`
   - :doc:`Django Hosts <../../smarter-framework/developer-reference/lib/django/hosts>`
   - :doc:`Smarter Chat <../../smarter-framework/developer-reference/react-integration/smarter-chat>`
-  - class reference :py:class:`smarter.apps.prompt.views.ChatAppWorkbenchView`
+  - class reference :py:class:`smarter.apps.prompt.views.PromptWorkbenchView`
 
 
 Example JSON Object

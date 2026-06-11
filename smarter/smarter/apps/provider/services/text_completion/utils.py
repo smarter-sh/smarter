@@ -1,6 +1,6 @@
 # pylint: disable=duplicate-code
 # pylint: disable=E1101
-"""Utility functions for the OpenAI Lambda functions"""
+"""Utility functions for the OpenAI Lambda functions."""
 
 import base64
 import logging
@@ -76,7 +76,8 @@ def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[
 
 def exception_response_factory(exception, request_meta_data: Optional[dict] = None) -> Union[list, dict]:
     """
-    Generate a standardized error response dictionary that includes
+    Generate a standardized error response dictionary that includes.
+
     the Python exception type and stack trace.
 
     exception: a descendant of Python Exception class
@@ -142,10 +143,10 @@ def get_request_body(data) -> dict:
 
 
 def parse_request(request_body: dict):
-    """Parse the request body and return the endpoint, model, messages, and input_text"""
+    """Parse the request body and return the endpoint, model, messages, and input_text."""
     messages: Optional[list[dict[str, Any]]] = request_body.get("messages")
     input_text: Optional[str] = request_body.get("input_text")
-    chat_history: Optional[list[dict[str, Any]]] = request_body.get("chat_history")
+    prompt_history: Optional[list[dict[str, Any]]] = request_body.get("prompt_history")
 
     if not messages and not input_text:
         raise SmarterValueError("A value for either messages or input_text is required")
@@ -163,12 +164,12 @@ def parse_request(request_body: dict):
         if "role" not in message or "content" not in message:
             raise SmarterValueError("Each message must contain 'role' and 'content' keys")
 
-    if chat_history and input_text:
+    if prompt_history and input_text:
         # memory-enabled request assumed to be destined for langchain_passthrough
-        # we'll need to rebuild the messages list from the chat_history
+        # we'll need to rebuild the messages list from the prompt_history
         messages = []
-        for chat in chat_history:
-            messages.append({"role": chat["sender"], "content": chat["message"]})
+        for prompt in prompt_history:
+            messages.append({"role": prompt["sender"], "content": prompt["message"]})
         messages.append({"role": "user", "content": input_text})
 
     if isinstance(messages, list) and not input_text:
@@ -179,7 +180,7 @@ def parse_request(request_body: dict):
 
 
 def get_content_for_role(messages: list, role: str) -> str:
-    """Get the text content from the messages list for a given role"""
+    """Get the text content from the messages list for a given role."""
     retval = [d.get("content") for d in messages if d["role"] == role]
     try:
         return retval[-1]
@@ -188,7 +189,7 @@ def get_content_for_role(messages: list, role: str) -> str:
 
 
 def get_message_history(messages: list) -> list:
-    """Get the text content from the messages list for a given role"""
+    """Get the text content from the messages list for a given role."""
     message_history = [
         {"role": d["role"], "content": d.get("content")}
         for d in messages
@@ -198,7 +199,7 @@ def get_message_history(messages: list) -> list:
 
 
 def get_messages_for_role(messages: list, role: str) -> list:
-    """Get the text content from the messages list for a given role"""
+    """Get the text content from the messages list for a given role."""
     retval = [d.get("content") for d in messages if d["role"] == role]
     return retval
 
@@ -206,9 +207,7 @@ def get_messages_for_role(messages: list, role: str) -> list:
 def ensure_system_role_present(
     messages: list[dict[str, Any]], default_system_role: str = smarter_settings.llm_default_system_role  # type: ignore
 ) -> list:
-    """
-    Ensure that a system role is present in the messages list
-    """
+    """Ensure that a system role is present in the messages list."""
     if not isinstance(messages, list):
         raise SmarterValueError("Messages must be a list")
     if not all(isinstance(d, dict) for d in messages):

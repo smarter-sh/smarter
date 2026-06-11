@@ -1,4 +1,4 @@
-"""Test abstract Broker class"""
+"""Test abstract Broker class."""
 
 import logging
 import os
@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 class TestAbstractBrokerClass(TestAccountMixin):
     """
     Test abstract Broker class coverage gaps.
+
     531
     """
 
@@ -258,11 +259,11 @@ class TestAbstractBrokerClass(TestAccountMixin):
         if not self.broker:
             raise ValueError("Broker is not initialized")
         try:
-            self.broker.chat(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
+            self.broker.prompt(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]
         except SAMBrokerErrorNotImplemented as e:
             self.assertEqual(
                 e.get_formatted_err_message,
-                "Smarter API Plugin manifest broker: chat() not implemented error.  chat() not implemented",
+                "Smarter API Plugin manifest broker: prompt() not implemented error.  prompt() not implemented",
             )
 
     def test_describe(self) -> None:

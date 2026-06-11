@@ -1,0 +1,623 @@
+# pylint: disable=W0613
+"""Smarter API command-line interface 'prompt' view."""
+
+import traceback
+from http import HTTPStatus
+from typing import Any, Optional
+
+from django.http import HttpRequest, JsonResponse
+from django.test import RequestFactory
+from django.views.decorators.csrf import csrf_exempt
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.request import Request
+
+from smarter.apps.llm_client.api.v1.views.default import DefaultLLMClientApiView
+from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.prompt.models import Prompt, PromptHistory
+from smarter.apps.prompt.views.detailviews import PromptConfigView
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib import json, logging
+from smarter.lib.cache import lazy_cache as cache
+from smarter.lib.django import waffle
+from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.journal.enum import (
+    SmarterJournalApiResponseKeys,
+    SmarterJournalCliCommands,
+    SmarterJournalThings,
+)
+from smarter.lib.journal.http import (
+    SmarterJournaledJsonErrorResponse,
+    SmarterJournaledJsonResponse,
+)
+from smarter.lib.manifest.enum import SAMMetadataKeys, SCLIResponseGet
+
+from ..base import APIV1CLIViewError, CliBaseApiView
+from ..swagger import (
+    COMMON_SWAGGER_PARAMETERS,
+    COMMON_SWAGGER_RESPONSES,
+    CliChatSerializer,
+    openai_success_response,
+)
+
+# for establishing a lifetime for prompt sessions. we create a session_key, then cache it
+# and reuse it until it eventually expires.
+CACHE_EXPIRATION = 24 * 60 * 60  # 24 hours
+
+
+logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
+
+
+class APIV1CLIChatViewError(APIV1CLIViewError):
+    """APIV1CLIChatViewError exception class."""
+
+    @property
+    def get_formatted_err_message(self):
+        return "Smarter api v1 cli prompt error"
+
+
+class ApiV1CliPromptBaseApiView(CliBaseApiView):
+    """Smarter API command-line interface 'prompt' view."""
+
+    _cache_key: Optional[str] = None
+    _data: Optional[dict] = None
+    _name: Optional[str] = None
+    _prompt: Optional[str] = None
+
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string.
+
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        this_class = f".{ApiV1CliPromptBaseApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
+
+    @property
+    def prompt(self) -> Optional[str]:
+        """
+        The prompt prompt from the request body.
+
+        This is a single raw text input
+        from the user. This will need to be added to a message list and sent
+        to the llm_client.
+        """
+        if self.is_config:
+            # config views are not expected to have a prompt
+            return None
+        if self._prompt is None:
+            self._prompt = self.data.get("prompt", None) if isinstance(self.data, dict) else None
+            if not self._prompt:
+                raise APIV1CLIChatViewError(
+                    f"Internal error. 'prompt' key is missing from the request body. self.data: {self.data}"
+                )
+            logger.debug("%s.prompt() found prompt: %s", self.formatted_class_name, self._prompt)
+        return self._prompt
+
+    @property
+    def new_session(self) -> bool:
+        """
+        True if the new_session url parameter was passed and is set to 'true'.
+
+        example: http://localhost:9357/api/v1/cli/prompt/smarter/?new_session=false&uid=mcdaniel
+        """
+        if not self.params:
+            return False
+        if self.params.get("new_session", "false").lower() not in ["true", "false"]:
+            bad_value = self.params.get("new_session")
+            raise APIV1CLIChatViewError(
+                f"Invalid value '{bad_value}' provided for url param new_session. Must be 'true' or 'false'."
+            )
+        return str(self.params.get("new_session", "false")).lower() == "true"
+
+    @property
+    def name(self) -> Optional[str]:
+        """The name of the LLMClient.
+
+        This is passed as a url slug.
+        """
+        return self._name
+
+    def validate(self):
+        """
+        Common validations for the prompt views.
+
+        This is called before dispatch() and is used to
+        """
+
+    def initial(self, request: Request, *args, **kwargs):
+        """
+        Initialize the view.
+
+        This is called by DRF after setup() but before dispatch().
+
+        Base dispatch method for the Prompt views. This method will attempt to
+        extract the session_key from the request body. If the session_key is
+        not provided then it will attempt to retrieve it from the cache. If
+        the session_key is retrieved from the cache then it will be added to
+        the request body and passed along to the PromptConfigView.
+
+        This view also extracts the prompt from the request body and sets it.
+
+        - cache_key: the cache key is derived from unique identifiers send by the client
+          in the form of a url parameter named 'uid'. The cache key is used to cache
+          the session_key for Prompt.
+
+        - prompt: the prompt is the raw text of the prompt message that is sent to the
+            llm_client. The prompt is added to the payload of the request body and is
+            distinguished from the manifest text based on the url path.
+        """
+        super().initial(request, *args, **kwargs)
+        self._name = kwargs.get(SAMMetadataKeys.NAME.value)
+        logger.debug("%s.initial() prompt view name: %s", self.formatted_class_name, self.name)
+
+        if not self.data and not self.is_config:
+            raise APIV1CLIChatViewError(
+                f"Internal error. Request body is empty. This is intended to be a json object with a 'prompt' key and an optional 'session_key' key. url: {self.url}"
+            )
+
+        if not self.uid:
+            raise APIV1CLIChatViewError(
+                f"Internal error. UID is missing. This is intended to be a unique identifier for the client, passed as a url param named 'uid'. url: {self.url}"
+            )
+
+        # if the new_session url parameter was passed and is set to True
+        # then we will delete the cache_key and the session_key.
+        if self.new_session:
+            logger.debug(
+                "%s.initial() new_session is True, resetting the session_key and deleting cache_key: %s",
+                self.formatted_class_name,
+                self.cache_key,
+            )
+            self._session_key = self.generate_session_key()
+            cache.delete(self.cache_key)
+            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logger.debug("%s.initial() deleted cache_key: %s", self.formatted_class_name, self.cache_key)
+
+        # 1.) attempt to retrieve a session_key from the cache. if we get a hit
+        # then we will update the request body with the session_key
+        # and pass it along to the PromptConfigView.
+        session_key = cache.get(self.cache_key)
+        if session_key is not None:
+            logger.debug(
+                "%s.initial() resetting session_key from %s to cached key: %s",
+                self.formatted_class_name,
+                self.session_key,
+                session_key,
+            )
+            self._session_key = session_key
+
+        # 3.) at this point we either have a session_key from the cache, or from the request body
+        #     or from SmarterRequestMixin(). Otherwise, this will raise a SmarterValueError.
+        if self.session_key:
+            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logger.debug(
+                    "%s.initial() caching session_key for prompt config: %s",
+                    self.formatted_class_name,
+                    self.session_key,
+                )
+            if isinstance(self.data, dict):
+                new_body = self.data.copy()
+                new_body[SMARTER_CHAT_SESSION_KEY_NAME] = self.session_key
+                new_body = json.dumps(new_body)
+            else:
+                new_body = json.dumps({SMARTER_CHAT_SESSION_KEY_NAME: self.session_key})
+
+            # pylint: disable=W0212
+            request._body = new_body.encode("utf-8")
+
+        self.validate()
+
+
+class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
+    """
+    Smarter API command-line interface 'prompt' view.
+
+    Constructs a prompt message list
+    and returns the Smarter prompt response.
+
+    This is a passthrough view that generates its response via ???????.
+    ???????.post() is called with an optional session_key added to the
+    json request body. If the session_key is provided then it is used to
+    generate the response. If the session_key is not provided then it
+    will generate a new session_key and return it in the response.
+
+    In either case, the session_key that is returned will be cached for 24 hours
+    using the cache_key property. Note that reused session_keys will be recached
+    indefinitely.
+
+    The cache_key is a combination of the class name, the prompt name and a client
+    UID created from the machine mac address and its hostname.
+
+    Example kwargs:
+    kwargs: {'new_session': ['false'], 'uid': ['Lawrences-Mac-Studio.local-c6%3A6b%3A2e%3A7a%3A3d%3A6c']}
+
+    example request/response:
+    - smarter/apps/workbench/data/chat_config.json
+    - smarter/apps/workbench/data/request.json
+    - smarter/apps/workbench/data/response.json
+    """
+
+    _chat: Optional[Prompt] = None
+    _chat_config: dict = {}
+    _chat_history: Optional[PromptHistory] = None
+    _messages: Optional[list[dict[str, str]]] = None
+
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string.
+
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        this_class = f".{ApiV1CliPromptApiView.__name__}[{id(self)}]"
+        return f"{inherited_class}{self.formatted_text(this_class)}"
+
+    @property
+    def chat_config(self) -> dict:
+        """The prompt configuration dict."""
+        return self._chat_config
+
+    @property
+    def llm_client_config(self) -> dict[str, Any]:
+        """The llm_client configuration dict."""
+        return self.chat_config.get("llm_client", {})
+
+    @property
+    def url_llm_client(self) -> Optional[str]:
+        """The url of the llm_client."""
+        return self.llm_client_config.get("url_llm_client", None)
+
+    @property
+    def prompt(self) -> Optional[Prompt]:
+        """The prompt object for the session_key."""
+        if self._chat:
+            return self._chat
+        if self.session_key:
+            self._chat = Prompt.objects.get(session_key=self.session_key)
+
+    @property
+    def prompt_history(self) -> Optional[PromptHistory]:
+
+        if not self._chat_history:
+            if self.prompt:
+                self._chat_history = PromptHistory.objects.filter(prompt=self.prompt).latest()
+        return self._chat_history
+
+    @property
+    def messages(self) -> Optional[list[dict[str, str]]]:
+        """The message list for the prompt."""
+        if self._messages:
+            return self._messages
+
+        # the cli is forcing a new session, so disregard the prompt history
+        # and create a new message list that includes the welcome message.
+        if self.new_session:
+            self._messages = self.new_message_list_factory()
+        else:
+            # try to get the messages from the prompt history, is it exists
+            messages: Optional[list] = (
+                self.data.get("messages")
+                if isinstance(self.data, dict) and isinstance(self.data.get("messages"), list)
+                else None
+            )
+            if messages:
+                messages.append({"role": "user", "content": self.prompt})
+            else:
+                # otherwise, create a new message list
+                self._messages = self.new_message_list_factory()
+        logger.debug("%s.messages() value is set: %s", self.formatted_class_name, self._messages)
+        return self._messages
+
+    def new_message_list_factory(self) -> list[dict[str, str]]:
+
+        logger.debug("%s.new_message_list_factory() called", self.formatted_class_name)
+
+        system_dict: Optional[dict] = None
+        welcome_dict: Optional[dict] = None
+        prompt_dict: Optional[dict] = None
+
+        system_role: str = self.llm_client_config.get(
+            "default_system_role",
+            self.chat_config.get("default_system_role", smarter_settings.llm_default_system_role),
+        )
+        system_dict = {
+            OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+            OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role,
+        }
+        welcome_message: Optional[str] = self.llm_client_config.get("app_welcome_message")
+        example_prompts: Optional[list[str]] = self.llm_client_config.get("app_example_prompts")
+        if example_prompts and welcome_message:
+            app_assistant: str = self.llm_client_config.get("app_assistant", "an llm_client")
+            bullet_points = "\n".join(f"    - {prompt}" for prompt in example_prompts) if example_prompts else ""
+            bullet_points = "Following are some example prompts:\n\n" + bullet_points + "\n\n"
+            intro = f"I'm {app_assistant}, how can I assist you today?"
+            welcome_dict = {
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{welcome_message}. {bullet_points}{intro}",
+            }
+
+        prompt_dict = {
+            OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+            OpenAIMessageKeys.MESSAGE_CONTENT_KEY: self.prompt,
+        }
+
+        retval = [system_dict]
+        if welcome_dict:
+            retval.append(welcome_dict)
+        retval.append(prompt_dict)
+
+        logger.debug("%s.new_message_list_factory() retval: %s", self.formatted_class_name, retval)
+        return retval
+
+    def chat_request_body_factory(self) -> dict[str, Any]:
+        retval = {SMARTER_CHAT_SESSION_KEY_NAME: self.session_key, "messages": self.messages}
+        logger.debug("%s.chat_request_body_factory() retval: %s", self.formatted_class_name, retval)
+        return retval
+
+    def chat_request_factory(self, request_body: dict) -> HttpRequest:
+        """Create a new request for the llm_client API."""
+        if self.parsed_url is None:
+            raise SmarterConfigurationError(
+                f"Internal error. The parsed_url is None. This should never happen. url: {self.url}"
+            )
+        if not isinstance(request_body, dict):
+            raise SmarterConfigurationError(
+                f"Internal error. The request_body must be a dict, got {type(request_body)}. url: {self.url}"
+            )
+        factory = RequestFactory()
+        new_request = factory.post(self.parsed_url.path, data=request_body, content_type="application/json")
+        new_request.META = self.request.META.copy()
+        new_request.META["HTTP_HOST"] = self.parsed_url.hostname
+        new_request.META["SERVER_PORT"] = self.parsed_url.port
+        new_request.META["QUERY_STRING"] = ""
+        new_request.user = self.request.user if self.request and self.request.user else None  # type: ignore[union-attr]
+        new_request.session = self.request.session if self.request and hasattr(self.request, "session") else None  # type: ignore[union-attr]
+
+        return new_request
+
+    def handler(self, request, name, *args, **kwargs):
+        # get the prompt configuration for the LLMClient (name)
+        logger.debug(
+            "%s.handler() 1. name: %s url: %s data: %s session_key: %s, new session: %s",
+            self.formatted_class_name,
+            name,
+            self.url,
+            self.data,
+            self.session_key,
+            self.new_session,
+        )
+
+        chat_config: JsonResponse = PromptConfigView.as_view()(request, name=name, session_key=self.session_key)  # type: ignore[return-value]
+        if not isinstance(chat_config, JsonResponse):
+            raise APIV1CLIChatViewError(
+                f"Internal error. Prompt config view did not return a JsonResponse. chat_config: {chat_config}"
+            )
+        if chat_config.status_code != 200:  # type: ignore[union-attr]
+            raise APIV1CLIChatViewError(
+                f"Internal error. Failed to get prompt config for llm_client: {name} {chat_config.get('content')}"
+            )
+        logger.debug("%s.handler() 2. chat_config: %s %s", self.formatted_class_name, chat_config, type(chat_config))
+
+        try:
+            # bootstrap our prompt session configuration
+            chat_config_content = chat_config.content
+            if chat_config_content is None:
+                raise APIV1CLIViewError(
+                    f"Internal error. Prompt config 'content' is None. This should never happen. chat_config: {chat_config}"
+                )
+            chat_config_content = (
+                chat_config_content.decode("utf-8") if isinstance(chat_config_content, bytes) else chat_config_content
+            )
+            chat_config: dict = json.loads(chat_config_content)
+            self._chat_config = chat_config.get(SCLIResponseGet.DATA.value, {})
+            session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
+            if session_key is not None:
+                self._session_key = session_key
+                logger.debug(
+                    "%s.handler() initialized session_key from chat_config: %s",
+                    self.formatted_class_name,
+                    self.session_key,
+                )
+            cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
+            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logger.debug(
+                    "%s.handler() caching session_key for prompt config: %s",
+                    self.formatted_class_name,
+                    self.session_key,
+                )
+        except json.JSONDecodeError as e:
+            raise APIV1CLIViewError(
+                f"Misconfigured. Failed to cache session key for prompt config: {chat_config}"
+            ) from e
+        except TypeError as e:
+            raise APIV1CLIViewError(f"Internal error. Prompt config 'content' is missing: {chat_config}") from e
+
+        logger.debug(
+            "%s.handler() 3. config: %s",
+            self.formatted_class_name,
+            json.dumps(self.chat_config),
+        )
+
+        # create a Smarter llm_client request body
+        request_body = self.chat_request_body_factory()
+
+        # create a Smarter llm_client request and prompt the llm_client
+        chat_request = self.chat_request_factory(request_body=request_body)
+        chat_response = DefaultLLMClientApiView.as_view()(request=chat_request, name=name)
+        if not isinstance(chat_response, JsonResponse):
+            raise APIV1CLIChatViewError(
+                f"Internal error. Prompt response is not a JsonResponse. chat_response: {chat_response}"
+            )
+        chat_response = json.loads(chat_response.content)
+
+        response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
+        logger.debug(
+            "%s.handler() 4. response_data: %s",
+            self.formatted_class_name,
+            json.dumps(response_data),
+        )
+        try:
+            if not response_data:
+                raise APIV1CLIChatViewError(f"Internal error. Prompt response key 'data' is missing: {chat_response}")
+
+            response_body = response_data.get("body")
+            if not response_body:
+                # an internal error might have occurred, so look for an error key
+                response_error = response_data.get("error")
+                if response_error:
+                    raise APIV1CLIChatViewError(f"Prompt response error: {response_error}")
+                raise APIV1CLIChatViewError(f"Internal error: {response_data}")
+        except APIV1CLIChatViewError as e:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=e,
+                thing=SmarterJournalThings(SmarterJournalThings.CHAT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                stack_trace=traceback.format_exc(),
+            )
+
+        # unescape the prompt response body so that it looks
+        # normal from the cli command line.
+        body_dict = json.loads(response_body)
+        chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
+
+        data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
+        logger.debug("%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data))
+        return SmarterJournaledJsonResponse(
+            request=request,
+            data=data,
+            thing=SmarterJournalThings(SmarterJournalThings.CHAT),
+            command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+        )
+
+    def validate(self):
+        """
+        Validate the request body and url parameters.
+
+        Note that we are not necessarily expecting a complete
+        set of messages. The message list + the prompt will be sent to the llm_client, which is responsible
+        for ensuring that the system prompt is included in the request.
+
+        example request body:
+        {
+            "session_key": "45089cdcbcbc2ded87da784afd0e368ddece23ca9fb61260cf43c58a708e05e1",
+            "messages": [
+                {
+                "role": "user",
+                "content": "hello world"
+                }
+            ],
+            "prompt": "who's your daddy?"
+        }
+        """
+        super().validate()
+        if not self.prompt and not self.is_config:
+            raise APIV1CLIChatViewError("Internal error. 'prompt' key is missing from the request body.")
+        messages = self.data.get("messages", None) if isinstance(self.data, dict) else None
+        if messages:
+            try:
+                messages = messages if isinstance(messages, list) else json.loads(messages)
+            except json.JSONDecodeError as e:
+                raise APIV1CLIChatViewError(f"Internal error. Failed to decode messages: {messages}") from e
+            if not isinstance(messages, list):
+                raise APIV1CLIChatViewError(f"Internal error. Messages must be a list: {messages}")
+        session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME, None) if isinstance(self.data, dict) else None
+
+        if session_key:
+            SmarterValidator.validate_session_key(session_key=session_key)
+
+    # pylint: disable=too-many-locals
+    @swagger_auto_schema(
+        operation_description="""
+Smarter API command-line interface 'prompt' view. This is a non-brokered view
+that sends prompt sessions to a LLMClient by creating a http post request
+to the LLMClient's published url. The llm_client is expected to be a Smarter llm_client
+that is capable of receiving a list of messages and returning a response in the
+smarter.sh/v1 protocol.
+
+Chats are based on sticky sessions that are identified by a cached session_key. The session_key is
+generated ....
+
+Args:
+- request: an authenticated Django HttpRequest object
+- name: str. the name of a LLMClient associated with the Account to which the authenticated user belongs.
+
+request body:
+- session_key: str. optional. the session_key for the prompt session. if not provided then a new session_key will be generated.
+- prompt: str. the raw text of the prompt to send to the llm_client. This will be appended to the message list, if this is not a new session.
+
+url params:
+- new_session: str. optional flag. if present then the cache_key and session_key will be deleted.
+- uid: str. required. a unique identifier for the client. this is assumed to be a combination of the machine mac address and the hostname.
+
+Api v1 post method for prompt config view. Returns the configuration
+dict used to configure the React prompt component.
+
+The client must send `uid` and optionally `session_key` as form data (`application/x-www-form-urlencoded`).
+
+The client making the HTTP request to this endpoint is expected to be the Smarter CLI, emulating the Smarter Prompt React component, which is written in Golang and available on Windows, macOS, and Linux.
+
+The response from this endpoint is a JSON object.
+
+This is a Non-brokered operation.
+""",
+        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Prompt generated successfully")},
+        request_body=CliChatSerializer,
+        manual_parameters=[
+            COMMON_SWAGGER_PARAMETERS["name"],
+            openapi.Parameter(
+                "new_session",
+                openapi.IN_QUERY,
+                description="If present then a new session will be created.",
+                type=openapi.TYPE_STRING,
+                required=False,
+            ),
+            openapi.Parameter(
+                "uid",
+                openapi.IN_QUERY,
+                description="a unique identifier for the client. this is assumed to be a combination of the machine mac address and the hostname.",
+                type=openapi.TYPE_STRING,
+                required=True,
+            ),
+        ],
+    )
+    @csrf_exempt
+    def post(self, request, name, *args, **kwargs):
+
+        # validate the llm_client name, as this is the most likely point of failure
+        try:
+            if not LLMClient.objects.filter(name=name).with_read_permission_for(self.request.user).exists():  # type: ignore
+                raise LLMClient.DoesNotExist()
+        except LLMClient.DoesNotExist as e:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=e,
+                thing=SmarterJournalThings(SmarterJournalThings.CHAT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.NOT_FOUND,
+                stack_trace=traceback.format_exc(),
+                description=f"{self.formatted_class_name}.post() LLMClient {name} not found for account {self.account}",
+            )
+
+        # pylint: disable=W0718
+        try:
+            response = self.handler(request, name, *args, **kwargs)
+            return response
+        except Exception as e:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=e,
+                thing=SmarterJournalThings(SmarterJournalThings.CHAT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                stack_trace=traceback.format_exc(),
+            )

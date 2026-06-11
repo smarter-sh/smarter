@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
     """
     Test the Smarter SAMStaticPluginBroker.
+
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
@@ -60,6 +61,7 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
     def test_setup(self):
         """
         Test that the test setup is correct.
+
         1. ready property is True.
         2. non_admin_user_profile is initialized.
         3. loader is an instance of SAMLoader with valid json_data and yaml_data.
@@ -81,15 +83,11 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         )
 
     def test_is_valid(self):
-        """
-        Test that the is_valid property returns True.
-        """
+        """Test that the is_valid property returns True."""
         self.assertTrue(self.broker.is_valid)
 
     def test_immutability(self):
-        """
-        Test that any property of any Pydantic broker model are immutable.
-        """
+        """Test that any property of any Pydantic broker model are immutable."""
         with self.assertRaises(AttributeError):
             self.broker.kind = "NewKind"
         with self.assertRaises(ValidationError):
@@ -102,15 +100,11 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
             self.broker.manifest.spec.prompt.maxTokens = 2048
 
     def test_ready(self):
-        """
-        Test that the test setup is correct.
-        """
+        """Test that the test setup is correct."""
         self.assertTrue(self.ready)
 
     def test_sam_broker_initialization(self):
-        """
-        Test that the SAMStaticPlugin model can be initialized from the manifest data.
-        """
+        """Test that the SAMStaticPlugin model can be initialized from the manifest data."""
         metadata = {**self.loader.manifest_metadata}
         logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
         SAMStaticPlugin(
@@ -123,6 +117,7 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
     def test_broker_initialization(self):
         """
         Test that the SAMStaticPluginBroker can be initialized from the request and loader.
+
         1. broker is an instance of SAMStaticPluginBroker.
         2. broker.kind is "Plugin".
         3. broker.ORMModelClass is SAMStaticPlugin.
@@ -134,53 +129,42 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         self.assertEqual(broker.ORMModelClass.__name__, "PluginDataStatic")
 
     def test_initialization_from_class(self):
-        """
-        Test that the SAMStaticPluginBroker can be initialized from SAMBrokerClass.
-        """
+        """Test that the SAMStaticPluginBroker can be initialized from SAMBrokerClass."""
         broker: SAMStaticPluginBroker = self.SAMBrokerClass(self.request, self.loader)
         self.assertIsInstance(broker, SAMStaticPluginBroker)
         self.assertTrue(broker.ready)
 
     def test_to_json(self):
-        """
-        Test that SAMStaticPluginBroker can serialize itself to JSON.
-        """
+        """Test that SAMStaticPluginBroker can serialize itself to JSON."""
         d = json.loads(json.dumps(self.broker.to_json()))
         self.assertIsInstance(d, dict)
 
     def test_manifest_initialization(self):
-        """
-        Test that the SAMStaticPluginBroker can be initialized from a manifest.
-        """
+        """Test that the SAMStaticPluginBroker can be initialized from a manifest."""
         broker = self.SAMBrokerClass(self.request, self.broker.manifest)
         self.assertIsInstance(broker, SAMStaticPluginBroker)
 
     def test_manifest_model_initialization(self):
         """
-        Test that the SAMStaticPlugin can be initialized from
+        Test that the SAMStaticPlugin can be initialized from.
+
         a json dump of the manifest model.
         """
         static_plugin = SAMStaticPlugin(**self.broker.manifest.model_dump())
         self.assertIsInstance(static_plugin, SAMStaticPlugin)
 
     def test_formatted_class_name(self):
-        """
-        Test that the formatted_class_name property returns the correct value.
-        """
+        """Test that the formatted_class_name property returns the correct value."""
         name = self.broker.formatted_class_name
         self.assertIsInstance(name, str)
         self.assertIn("SAMStaticPluginBroker", name)
 
     def test_kind_property(self):
-        """
-        Test that the kind property returns "Plugin".
-        """
+        """Test that the kind property returns "Plugin"."""
         self.assertEqual(self.broker.kind, "Plugin")
 
     def test_manifest_property(self):
-        """
-        Test that the manifest property returns a SAMStaticPlugin instance.
-        """
+        """Test that the manifest property returns a SAMStaticPlugin instance."""
         try:
             manifest = self.broker.manifest
         # pylint: disable=broad-except
@@ -190,16 +174,15 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
 
     def test_django_orm_to_manifest_dict(self):
         """
-        Test that we can convert the Django plugin spec ORM
+        Test that we can convert the Django plugin spec ORM.
+
         to a Pydantic manifest spec.
         """
         manifest_dict = self.broker.plugin_static_spec_orm2pydantic()
         self.assertIsInstance(manifest_dict, SAMPluginStaticSpec)
 
     def test_example_manifest(self):
-        """
-        Test the example_manifest() generates a valid manifest response.
-        """
+        """Test the example_manifest() generates a valid manifest response."""
         response = self.broker.example_manifest(self.request)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
@@ -207,9 +190,7 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         self.assertTrue(is_valid_response)
 
     def test_get(self):
-        """
-        Test the get() method returns a valid manifest response.
-        """
+        """Test the get() method returns a valid manifest response."""
         response = self.broker.get(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
@@ -217,9 +198,7 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         self.assertTrue(is_valid_response)
 
     def test_apply(self):
-        """
-        Test the apply() method returns a valid manifest response.
-        """
+        """Test the apply() method returns a valid manifest response."""
         response = self.broker.apply(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
@@ -281,18 +260,14 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         self.assertEqual(self.broker.manifest.spec.data.staticData, self.broker.plugin.plugin_data.static_data)
 
     def test_plugin(self):
-        """
-        Test that the plugin property returns a StaticPlugin instance.
-        """
+        """Test that the plugin property returns a StaticPlugin instance."""
 
         plugin = self.broker.plugin
         self.assertIsInstance(plugin, StaticPlugin)
         self.assertTrue(plugin.ready)
 
     def test_plugin_data(self):
-        """
-        Test that the plugin data matches the manifest spec.
-        """
+        """Test that the plugin data matches the manifest spec."""
         plugin_data = self.broker.plugin_data
         self.assertIsInstance(plugin_data, PluginDataStatic)
         self.assertEqual(
@@ -302,9 +277,7 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         )
 
     def test_describe(self):
-        """
-        Test the describe() method returns a valid manifest response.
-        """
+        """Test the describe() method returns a valid manifest response."""
         response = self.broker.describe(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
@@ -314,29 +287,21 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         pass
 
     def test_deploy(self):
-        """
-        Test that deploy() raises NotImplementedError.
-        """
+        """Test that deploy() raises NotImplementedError."""
         with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.deploy(self.request, **self.kwargs)
 
     def test_undeploy(self):
-        """
-        Test that undeploy() raises NotImplementedError.
-        """
+        """Test that undeploy() raises NotImplementedError."""
         with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.undeploy(self.request, **self.kwargs)
 
     def test_chat_not_implemented(self):
-        """
-        Test that chat() raises NotImplementedError.
-        """
+        """Test that prompt() raises NotImplementedError."""
         with self.assertRaises(SAMBrokerErrorNotImplemented):
-            self.broker.chat(self.request, **self.kwargs)
+            self.broker.prompt(self.request, **self.kwargs)
 
     def test_logs_returns_ok(self):
-        """
-        Test that logs() raises NotImplementedError.
-        """
+        """Test that logs() raises NotImplementedError."""
         with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.logs(self.request, **self.kwargs)

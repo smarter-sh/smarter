@@ -1,5 +1,6 @@
 """
-Middleware that blocks requests targeting sensitive files, configuration
+Middleware that blocks requests targeting sensitive files, configuration.
+
 artifacts, and common attack-probe endpoints.
 
 This middleware detects suspicious path access attempts commonly associated
@@ -395,7 +396,8 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
     @property
     def formatted_class_name(self) -> str:
-        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+        class_name = f"{__name__}.{self.__class__.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
 
     def _inspect_request(
         self,
@@ -451,9 +453,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
     @staticmethod
     def normalize_path(path: str) -> str:
-        """
-        Normalize paths to reduce traversal and encoding bypasses.
-        """
+        """Normalize paths to reduce traversal and encoding bypasses."""
 
         for _ in range(2):
             path = urllib.parse.unquote(path)
@@ -528,9 +528,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     @classmethod
     @cache_results(timeout=60 * 60 * 24)
     def is_sensitive_request(cls, path: str) -> bool:
-        """
-        Cached sensitive file detection.
-        """
+        """Cached sensitive file detection."""
 
         path_segments = tuple(cls.iter_path_segments(path))
 

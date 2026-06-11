@@ -42,6 +42,12 @@ class PromptListView(SmarterAuthenticatedWebView):
 
     template_path = "react/prompt-list.html"
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PromptListView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         # pylint: disable=C0415
         from smarter.apps.prompt.urls import PromptReverseNames

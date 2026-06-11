@@ -2,7 +2,7 @@
 Django URL patterns for the prompt app.
 
 These are the
-endpoints for for the Workbench React app and chat configuration.
+endpoints for for the Workbench React app and prompt configuration.
 
 how we got here:
  - /
@@ -14,11 +14,11 @@ from django.urls import path, re_path
 from smarter.common.utils import to_snake_case
 
 from .const import namespace
-from .views.detailview import (
-    ChatAppWorkbenchView,
-    ChatConfigView,
-    PromptLandingView,
-    PromptManifestView,
+from .views.detailviews import (
+    LLMClientDetailView,
+    PromptConfigView,
+    PromptSandboxView,
+    PromptWorkbenchView,
 )
 from .views.listview import (
     PromptListView,
@@ -67,10 +67,10 @@ class PromptReverseNames:
 
     namespace = namespace
 
-    manifest_by_hashed_id = to_snake_case(PromptManifestView)
-    chat_by_hashed_id = to_snake_case(ChatAppWorkbenchView)
-    config_by_hashed_id = to_snake_case(ChatConfigView)
-    landing_by_hashed_id = to_snake_case(PromptLandingView)
+    manifest_by_hashed_id = to_snake_case(LLMClientDetailView)
+    chat_by_hashed_id = to_snake_case(PromptWorkbenchView)
+    config_by_hashed_id = to_snake_case(PromptConfigView)
+    sandbox_by_hashed_id = to_snake_case(PromptSandboxView)
 
     listview = to_snake_case(PromptListView)
     listview_api = to_snake_case(PromptListApiView)
@@ -103,16 +103,18 @@ urlpatterns = [
         PromptListApiRenameView.as_view(),
         name=PromptReverseNames.listview_api_rename,
     ),
-    path("llm-clients/<str:hashed_id>/", PromptLandingView.as_view(), name=PromptReverseNames.landing_by_hashed_id),
+    path("llm-clients/<str:hashed_id>/", PromptSandboxView.as_view(), name=PromptReverseNames.sandbox_by_hashed_id),
     path(
         "llm-clients/<str:hashed_id>/manifest/",
-        PromptManifestView.as_view(),
+        LLMClientDetailView.as_view(),
         name=PromptReverseNames.manifest_by_hashed_id,
     ),
     path(
-        "llm-clients/<str:hashed_id>/chat/",
-        ChatAppWorkbenchView.as_view(),
+        "llm-clients/<str:hashed_id>/prompt/",
+        PromptWorkbenchView.as_view(),
         name=PromptReverseNames.chat_by_hashed_id,
     ),
-    path("llm-clients/<str:hashed_id>/config/", ChatConfigView.as_view(), name=PromptReverseNames.config_by_hashed_id),
+    path(
+        "llm-clients/<str:hashed_id>/config/", PromptConfigView.as_view(), name=PromptReverseNames.config_by_hashed_id
+    ),
 ]

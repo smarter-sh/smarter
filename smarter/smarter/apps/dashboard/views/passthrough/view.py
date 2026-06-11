@@ -66,6 +66,12 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "prompt/passthrough.html"
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Returns a formatted string of the class name for logging purposes."""
+        class_name = f"{__name__}.{PromptPassthroughView.__name__}[{id(self)}]"
+        return self.formatted_text(class_name)
+
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         Render the prompt passthrough page for the authenticated user.
@@ -81,7 +87,9 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
         :param request: The incoming HTTP GET request from the client.
         :type request: django.http.HttpRequest
         :param args: Additional positional arguments forwarded by the URL dispatcher.
+        :type args: tuple
         :param kwargs: Additional keyword arguments forwarded by the URL dispatcher.
+        :type kwargs: dict
         :returns: An HTTP 200 response rendering ``react/prompt-passthrough.html``
             with the passthrough context dictionary.
         :rtype: django.http.HttpResponse

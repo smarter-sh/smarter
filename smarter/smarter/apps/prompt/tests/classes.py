@@ -1,4 +1,4 @@
-"""Base class for creating units tests of chat providers."""
+"""Base class for creating units tests of prompt providers."""
 
 import logging
 import os
@@ -21,7 +21,12 @@ from smarter.apps.plugin.models import PluginDataValueError
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
-from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from smarter.apps.prompt.models import (
+    Prompt,
+    PromptHistory,
+    PromptPluginUsage,
+    PromptToolCall,
+)
 from smarter.apps.prompt.signals import (
     chat_completion_response,
     chat_finished,
@@ -68,7 +73,7 @@ class ProviderBaseClass(TestAccountMixin):
     plugins: Optional[list[PluginBase]]
     llm_client: Optional[LLMClient]
     client: Optional[Client]
-    chat: Optional[Chat]
+    prompt: Optional[Prompt]
 
     _plugin_called = False
     _plugin_selected = False
@@ -90,7 +95,7 @@ class ProviderBaseClass(TestAccountMixin):
         self.plugins = None
         self.llm_client = None
         self.client = None
-        self.chat = None
+        self.prompt = None
 
         self._plugin_called = False
         self._plugin_selected = False
@@ -188,7 +193,7 @@ class ProviderBaseClass(TestAccountMixin):
         self.handler = smarter_compatible_client.get_smarter_handler(request=request, provider_name=self.provider)
         print(f"provider {self.provider} is setup")
 
-        self.chat = Chat.objects.create(
+        self.prompt = Prompt.objects.create(
             session_key=secrets.token_hex(32),
             llm_client=self.llm_client,
             user_profile=self.user_profile,
@@ -199,18 +204,18 @@ class ProviderBaseClass(TestAccountMixin):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        if self.chat:
-            chat = self.chat  # to mitigate a race condition where the test
-            # may delete the chat before these models are deleted
-            # ChatHistory.objects.filter(chat=chat).delete()
-            # ChatToolCall.objects.filter(chat=chat).delete()
-            # ChatPluginUsage.objects.filter(chat=chat).delete()
-            ChatHistory.objects.filter(chat=chat).delete()
-            ChatToolCall.objects.filter(chat=chat).delete()
-            ChatPluginUsage.objects.filter(chat=chat).delete()
+        if self.prompt:
+            prompt = self.prompt  # to mitigate a race condition where the test
+            # may delete the prompt before these models are deleted
+            # PromptHistory.objects.filter(prompt=prompt).delete()
+            # PromptToolCall.objects.filter(prompt=prompt).delete()
+            # PromptPluginUsage.objects.filter(prompt=prompt).delete()
+            PromptHistory.objects.filter(prompt=prompt).delete()
+            PromptToolCall.objects.filter(prompt=prompt).delete()
+            PromptPluginUsage.objects.filter(prompt=prompt).delete()
 
             try:
-                chat.delete()
+                prompt.delete()
             except IntegrityError as e:
                 logger.debug("IntegrityError details: %s", e)
 
@@ -243,7 +248,7 @@ class ProviderBaseClass(TestAccountMixin):
         return llm_client
 
     def check_response(self, response):
-        """Check response structure from api.v1.views.chat handler()."""
+        """Check response structure from api.v1.views.prompt handler()."""
         if response["statusCode"] != 200:
             print(f"response: {response}")
 
@@ -328,7 +333,7 @@ class ProviderBaseClass(TestAccountMixin):
         true_assertion("everlasting gobstopper")
 
     def test_handler_gobstoppers(self):
-        """Test api.v1.views.chat handler() - Gobstoppers."""
+        """Test api.v1.views.prompt handler() - Gobstoppers."""
 
         # setup receivers for all signals to check if they are called
         plugin_selected.connect(self.plugin_selected_signal_handler)
@@ -348,7 +353,7 @@ class ProviderBaseClass(TestAccountMixin):
                 )
 
             response = self.handler(
-                chat=self.chat, data=event_about_gobstoppers, plugins=self.plugins, user=self.admin_user
+                prompt=self.prompt, data=event_about_gobstoppers, plugins=self.plugins, user=self.admin_user
             )
             sleep(1)
         # pylint: disable=broad-except
@@ -365,30 +370,30 @@ class ProviderBaseClass(TestAccountMixin):
                 print("assertFalse key:", key, "value:", value)
                 # self.assertFalse(value)
 
-        # assert that Chat has one or more records for self.admin_user
-        chat_histories = Chat.objects.filter().first()
+        # assert that Prompt has one or more records for self.admin_user
+        chat_histories = Prompt.objects.filter().first()
         self.assertIsNotNone(chat_histories)
 
-        # test url api endpoint for chat history
-        chat = ChatHistory.objects.order_by("-id").first()
-        url = reverse("prompt:api:v1:chathistory", kwargs={"pk": chat.id if chat else 1})  # type: ignore[union-attr]
+        # test url api endpoint for prompt history
+        prompt = PromptHistory.objects.order_by("-id").first()
+        url = reverse("prompt:api:v1:chathistory", kwargs={"pk": prompt.id if prompt else 1})  # type: ignore[union-attr]
         response = self.client.get(url)  # type: ignore[union-attr]
 
         self.assertEqual(response.status_code, 200)
         print(f"{url} response:", response.json())
 
-        # give celery time to process the chat completion
+        # give celery time to process the prompt completion
         time.sleep(CELERY_WAIT)  # Pause execution for 1 second
 
-        # assert that ChatPluginUsage has one or more records for self.admin_user
-        plugin_selection_histories = ChatPluginUsage.objects.filter(chat=self.chat).first()
+        # assert that PromptPluginUsage has one or more records for self.admin_user
+        plugin_selection_histories = PromptPluginUsage.objects.filter(prompt=self.prompt).first()
         if not plugin_selection_histories:
-            print("ChatPluginUsage.objects.first() is None. llm did not call the plugin.")
+            print("PromptPluginUsage.objects.first() is None. llm did not call the plugin.")
         else:
             self.assertIsNotNone(plugin_selection_histories)
 
     def test_handler_weather(self):
-        """Test api.v1.views.chat handler() - weather."""
+        """Test api.v1.views.prompt handler() - weather."""
         response = None
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
@@ -399,7 +404,7 @@ class ProviderBaseClass(TestAccountMixin):
                 )
 
             response = self.handler(
-                chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_weather
+                prompt=self.prompt, plugins=self.plugins, user=self.admin_user, data=event_about_weather
             )
         # pylint: disable=broad-except
         except Exception as error:
@@ -407,7 +412,7 @@ class ProviderBaseClass(TestAccountMixin):
         self.check_response(response)
 
     def test_handler_recipes(self):
-        """Test api.v1.views.chat handler() - recipes."""
+        """Test api.v1.views.prompt handler() - recipes."""
         response = None
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 
@@ -418,7 +423,7 @@ class ProviderBaseClass(TestAccountMixin):
                 )
 
             response = self.handler(
-                chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_recipes
+                prompt=self.prompt, plugins=self.plugins, user=self.admin_user, data=event_about_recipes
             )
         # pylint: disable=broad-except
         except Exception as error:

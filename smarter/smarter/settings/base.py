@@ -121,10 +121,10 @@ Smarter defaults this to False and uses CORS_ALLOWED_ORIGIN_REGEXES to restrict 
 See smarter.lib.django.middleware.cors.SmarterCorsMiddleware.
 
 This affects the Access-Control-Allow-Origin header in responses to cross-site requests. It
-affects the behavior for smarter-chat React frontend applications making requests to the Smarter API.
+affects the behavior for smarter-prompt React frontend applications making requests to the Smarter API.
 
 Modifications to this will require comensurate changes to the CORS headers sent by
-a Smarter Chat host (e.g. AWS CloudFront distribution) to avoid CORS errors in browsers.
+a Smarter Prompt host (e.g. AWS CloudFront distribution) to avoid CORS errors in browsers.
 
 See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
@@ -139,7 +139,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 A list of non-standard HTTP headers that are allowed in cross-site HTTP requests.
 
 Smarter
-Chat frontends pass the Smarter API key in the 'x-api-key' header.
+Prompt frontends pass the Smarter API key in the 'x-api-key' header.
 
 See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
@@ -148,7 +148,7 @@ CORS_ALLOW_CREDENTIALS = True
 """
 A boolean that determines whether to allow cookies to be included in cross-site HTTP requests.
 
-Smarter defaults this to True to allow session cookies to be sent by smarter-chat React frontends.
+Smarter defaults this to True to allow session cookies to be sent by smarter-prompt React frontends.
 
 See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
@@ -160,7 +160,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 """
 A list of regular expressions representing the origins that are allowed to make cross-site HTTP requests.
 
-Smarter uses this setting to restrict allowed origins for CORS requests from smarter-chat React frontends.
+Smarter uses this setting to restrict allowed origins for CORS requests from smarter-prompt React frontends.
 
 See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
@@ -191,7 +191,7 @@ reverse proxy that terminates SSL.
 See:
 
 - `Django reference: <https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-secure>`__
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
@@ -205,7 +205,7 @@ functionality in smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware.
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-name
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
@@ -214,12 +214,12 @@ CSRF_COOKIE_SAMESITE = "lax"
 The value for the SameSite flag on the CSRF cookie.
 
 Default is 'Lax'. Smarters needs
-this to be 'Lax' to support cross-site requests from smarter-chat React frontends.
+this to be 'Lax' to support cross-site requests from smarter-prompt React frontends.
 
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-samesite
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
@@ -235,7 +235,7 @@ e-commerce checkouts that need a shorter CSRF token lifetime.
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-age
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
@@ -249,7 +249,7 @@ from smarter_settings.
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-domain
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 - smarter_settings.environment_platform_domain
 """
@@ -263,7 +263,7 @@ Default is '/'.
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-path
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
@@ -272,13 +272,13 @@ CSRF_COOKIE_HTTPONLY = False
 A boolean that determines whether the CSRF cookie should be marked as "HttpOnly".
 
 Default is False
-because the smarter-chat React frontend needs to read the CSRF cookie value via JavaScript to
+because the smarter-prompt React frontend needs to read the CSRF cookie value via JavaScript to
 include it in the 'X-CSRFToken' header of HTTP requests.
 
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-httponly
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
@@ -287,12 +287,12 @@ CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 The name of the HTTP header that carries the CSRF token value.
 
 Default is 'HTTP_X_CSRFTOKEN',
-which corresponds to the 'X-CSRFToken' header sent by smarter-chat React frontends.
+which corresponds to the 'X-CSRFToken' header sent by smarter-prompt React frontends.
 
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-header-name
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
@@ -309,7 +309,7 @@ here with the Smarter platform and API domains derived from smarter_settings.
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-trusted-origins
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 - smarter_settings.environment_platform_domain
 - smarter_settings.environment_api_domain
@@ -319,12 +319,12 @@ CSRF_USE_SESSIONS = False
 """
 A boolean that determines whether to store the CSRF token in the user session instead of.
 
-a cookie. Default is False because smarter-chat React frontends rely on the CSRF cookie.
+a cookie. Default is False because smarter-prompt React frontends rely on the CSRF cookie.
 
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-use-sessions
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
@@ -345,12 +345,12 @@ SESSION_COOKIE_SAMESITE = "lax"
 The value for the SameSite flag on the session cookie.
 
 Default is 'Lax'. Smarters needs
-this to be 'Lax' to support cross-site requests from smarter-chat React frontends.
+this to be 'Lax' to support cross-site requests from smarter-prompt React frontends.
 
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#session-cookie-samesite
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
@@ -366,7 +366,7 @@ reverse proxy that terminates SSL.
 See:
 
 - `Django reference: <https://docs.djangoproject.com/en/5.0/ref/settings/#session-cookie-secure>`__
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
@@ -375,12 +375,12 @@ SESSION_COOKIE_NAME = "sessionid"
 The name of the session cookie.
 
 Default is 'sessionid'. This is a placeholder for Smarter-specific
-functionality in smarter.apps.prompt.views.ChatAppWorkbenchView.
+functionality in smarter.apps.prompt.views.PromptWorkbenchView.
 
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#session-cookie-name
-- `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
+- `Smarter Prompt: <https://github.com/smarter-sh/smarter-prompt/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 

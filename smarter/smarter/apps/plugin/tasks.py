@@ -50,7 +50,7 @@ def create_plugin_selector_history(*args, **kwargs):
         - input_text (str, optional): The user's input text.
         - messages (list[dict], optional): List of message objects.
         - search_term (str, optional): The search term used by the user.
-        - session_key (str, optional): The chat session key.
+        - session_key (str, optional): The prompt session key.
 
     :return: None
 

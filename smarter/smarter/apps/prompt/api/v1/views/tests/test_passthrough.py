@@ -1,5 +1,5 @@
 # pylint: disable=W0613,W0718
-"""Test prompt API chat passthrough view"""
+"""Test prompt API prompt passthrough view."""
 
 import logging
 import os
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestPassthroughView(TestAccountMixin):
-    """Test prompt API chat passthrough view."""
+    """Test prompt API prompt passthrough view."""
 
     providers = Provider.objects.filter(is_active=True).values_list("name", flat=True)
 
@@ -45,7 +45,7 @@ class TestPassthroughView(TestAccountMixin):
         return cast(dict[str, Any], self.get_readonly_json_file(os.path.join(HERE, "data", filename)))
 
     def test_passthrough_providers(self):
-        """Test that we can create a chat completion using the passthrough view."""
+        """Test that we can create a prompt completion using the passthrough view."""
 
         def get_provider_config(provider_name: str):
             # /api/v1/prompts/passthrough/openai/

@@ -30,10 +30,10 @@ SMARTER_ORGANIZATION_NAME = "Lawrence P. McDaniel"  # FIX NOTE: set this to the 
 SMARTER_PROJECT_CDN_URL = f"https://cdn.{SMARTER_PROJECT_ROOT_DOMAIN}"
 SMARTER_PROJECT_DOCS_URL = f"https://docs.{SMARTER_PROJECT_ROOT_DOMAIN}"
 SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
-SMARTER_DEFAULT_REACTJS_APP_LOADER_URL = "https://cdn.smarter.sh/ui-chat/app-loader.js"
+SMARTER_DEFAULT_REACTJS_APP_LOADER_URL = "https://cdn.smarter.sh/ui-prompt/app-loader.js"
 
 # The following are used in the React app
-# to store the llm_client chat session key and debug mode settings
+# to store the llm_client prompt session key and debug mode settings
 # as browser cookies. The React app has constants
 # for these values as well which should be kept in sync.
 SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
@@ -46,9 +46,9 @@ SMARTER_IS_INTERNAL_API_REQUEST = "smarter_is_internal_api_request"
 # Default maximum lifetime for Smarter API keys in days.
 SMARTER_API_KEY_MAX_LIFETIME_DAYS = 365 * 3  # 3 years
 
-# Default path to the Smarter Chat Component app-loader.js script
-# used to load the React chat component into a web page.
-SMARTER_DEFAULT_APP_LOADER_PATH = "/ui-chat/app-loader.js"
+# Default path to the Smarter Prompt Component app-loader.js script
+# used to load the React prompt component into a web page.
+SMARTER_DEFAULT_APP_LOADER_PATH = "/ui-prompt/app-loader.js"
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common

@@ -1,15 +1,15 @@
 """
-===============================
-Chat Provider Handler Protocols
-===============================
+=================================
+Prompt Provider Handler Protocols
+=================================
 
-This module defines protocols for chat provider handler functions, ensuring a
+This module defines protocols for prompt provider handler functions, ensuring a
 consistent interface across all implementations.
 
 Overview
 --------
 These protocols use :class:`typing.Protocol` to specify the expected function
-signatures for chat provider handlers. This approach enforces structural typing,
+signatures for prompt provider handlers. This approach enforces structural typing,
 allowing maximum flexibility in implementation while guaranteeing that all
 handlers conform to the required interface.
 
@@ -19,7 +19,7 @@ Key Points:
    in this module.
 - :class:`typing.Protocol` is used to define these structural types, without
    enforcing a specific class hierarchy.
-- This ensures interoperability and consistency across different chat provider integrations.
+- This ensures interoperability and consistency across different prompt provider integrations.
 """
 
 from typing import (
@@ -35,7 +35,7 @@ from rest_framework.request import Request
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.prompt.models import Chat
+from smarter.apps.prompt.models import Prompt
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
@@ -55,13 +55,14 @@ OpenAICompatibleChatCompletionResponseType = Union[
     SmarterJournaledJsonResponse,
 ]
 """
-OpenAICompatibleChatCompletionResponseType is a type alias that defines the expected
-return type for OpenAI-compatible chat provider handler functions. It can be either a
+OpenAICompatibleChatCompletionResponseType is a type alias that defines the expected.
+
+return type for OpenAI-compatible prompt provider handler functions. It can be either a
 ChatCompletion object (representing a successful response) or one of several specific
 error response types, including HTTP 403 Forbidden, HTTP 404 Not Found,
 HTTP 400 Bad Request, or journaled JSON error/response types. This allows
 for consistent handling of both successful and error responses across all
-chat provider handlers that implement the OpenAICompatiblePassthroughProtocol.
+prompt provider handlers that implement the OpenAICompatiblePassthroughProtocol.
 """
 
 SmarterChatCompletionResponseType = Union[
@@ -73,19 +74,21 @@ SmarterChatCompletionResponseType = Union[
     SmarterJournaledJsonResponse,
 ]
 """
-SmarterChatCompletionResponseType is a type alias that defines the expected
-return type for Smarter chat provider handler functions. It can be either a
+SmarterChatCompletionResponseType is a type alias that defines the expected.
+
+return type for Smarter prompt provider handler functions. It can be either a
 dictionary (representing a successful response) or one of several specific
 error response types, including HTTP 403 Forbidden, HTTP 404 Not Found,
 HTTP 400 Bad Request, or journaled JSON error/response types. This allows
 for consistent handling of both successful and error responses across all
-chat provider handlers that implement the SmarterChatHandlerProtocol.
+prompt provider handlers that implement the SmarterChatHandlerProtocol.
 """
 
 
 class OpenAICompatiblePassthroughProtocol(Protocol):
     """
     A Protocol for OpenAI compatible passthrough functions.
+
     Ensures that passthrough function call signature conforms to
     this exact standard.
 
@@ -93,7 +96,7 @@ class OpenAICompatiblePassthroughProtocol(Protocol):
     :type request: Request
     :param user_profile: The user profile making the request.
     :type user_profile: UserProfile
-    :param data: The OpenAI-compatible chat completion request data.
+    :param data: The OpenAI-compatible prompt completion request data.
     :type data: dict[str, Any]
 
     :returns: The response data.
@@ -112,15 +115,16 @@ class OpenAICompatiblePassthroughProtocol(Protocol):
 
 class SmarterChatHandlerProtocol(Protocol):
     """
-    A fixed Protocol for all Smarter chat provider handler functions.
+    A fixed Protocol for all Smarter prompt provider handler functions.
+
     Ensures that handler function call signature conforms to
     this exact standard.
 
     :param user_profile: The user profile making the request.
     :type user_profile: UserProfile
-    :param chat: The chat object.
-    :type chat: Chat
-    :param data: The Smarter chat API request data.
+    :param prompt: The prompt object.
+    :type prompt: Prompt
+    :param data: The Smarter prompt API request data.
     :type data: Union[dict[str, Any], list]
     :param plugins: Optional list of plugins to use.
     :type plugins: Optional[List[PluginBase]]
@@ -134,7 +138,7 @@ class SmarterChatHandlerProtocol(Protocol):
     def __call__(
         self,
         user_profile: UserProfile,
-        chat: Chat,
+        prompt: Prompt,
         data: Union[dict[str, Any], list],
         plugins: Optional[List[PluginBase]] = None,
         functions: Optional[list[str]] = None,

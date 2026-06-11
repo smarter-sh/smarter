@@ -37,7 +37,7 @@ class LLMClientRequestsSerializer(serializers.ModelSerializer):
 
 class LLMClientConfigSerializer(serializers.ModelSerializer):
     """
-    Serializer for the smarter.apps.prompt.views.ChatConfigView.
+    Serializer for the smarter.apps.prompt.views.PromptConfigView.
 
     which should not be camelCased.
     """

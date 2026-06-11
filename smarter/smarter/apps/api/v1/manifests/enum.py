@@ -24,16 +24,16 @@ from smarter.apps.plugin.manifest.models.sql_plugin.const import (
 from smarter.apps.plugin.manifest.models.static_plugin.const import (
     MANIFEST_KIND as STATICPLUGIN_MANIFEST_KIND,
 )
-from smarter.apps.prompt.manifest.models.chat.const import (
+from smarter.apps.prompt.manifest.models.prompt.const import (
     MANIFEST_KIND as CHAT_MANIFEST_KIND,
 )
-from smarter.apps.prompt.manifest.models.chat_history.const import (
+from smarter.apps.prompt.manifest.models.prompt_history.const import (
     MANIFEST_KIND as CHAT_HISTORY_MANIFEST_KIND,
 )
-from smarter.apps.prompt.manifest.models.chat_plugin_usage.const import (
+from smarter.apps.prompt.manifest.models.prompt_plugin_usage.const import (
     MANIFEST_KIND as CHAT_PLUGIN_USAGE_MANIFEST_KIND,
 )
-from smarter.apps.prompt.manifest.models.chat_tool_call.const import (
+from smarter.apps.prompt.manifest.models.prompt_tool_call.const import (
     MANIFEST_KIND as CHAT_TOOL_CALL_MANIFEST_KIND,
 )
 from smarter.apps.provider.manifest.models.provider.const import (
@@ -64,7 +64,7 @@ class SAMKinds(SmarterEnumAbstract):
     manifest kinds supported by the Smarter platform.
 
     Each manifest kind corresponds to a specific resource type within the
-    Smarter ecosystem, such as plugins, connections, account resources, chat
+    Smarter ecosystem, such as plugins, connections, account resources, prompt
     resources, and provider resources.
 
     Attributes:
@@ -77,10 +77,10 @@ class SAMKinds(SmarterEnumAbstract):
         AUTH_TOKEN: Represents an authentication token manifest kind.
         USER: Represents a user manifest kind.
         SECRET: Represents a secret manifest kind.
-        CHAT: Represents a chat manifest kind.
-        CHAT_HISTORY: Represents a chat history manifest kind.
-        CHAT_PLUGIN_USAGE: Represents a chat plugin usage manifest kind.
-        CHAT_TOOL_CALL: Represents a chat tool call manifest kind.
+        CHAT: Represents a prompt manifest kind.
+        CHAT_HISTORY: Represents a prompt history manifest kind.
+        CHAT_PLUGIN_USAGE: Represents a prompt plugin usage manifest kind.
+        CHAT_TOOL_CALL: Represents a prompt tool call manifest kind.
         LLM_CLIENT: Represents an llm_client manifest kind.
         PROVIDER: Represents a provider manifest kind.
 
@@ -116,7 +116,7 @@ class SAMKinds(SmarterEnumAbstract):
     USER = USER_MANIFEST_KIND
     SECRET = SECRET_MANIFEST_KIND
 
-    # chat resources
+    # prompt resources
     CHAT = CHAT_MANIFEST_KIND
     CHAT_HISTORY = CHAT_HISTORY_MANIFEST_KIND
     CHAT_PLUGIN_USAGE = CHAT_PLUGIN_USAGE_MANIFEST_KIND

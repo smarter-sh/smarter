@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="Chat",
+            name="Prompt",
             fields=[
                 (
                     "id",
@@ -115,13 +115,13 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name_plural": "Chats",
+                "verbose_name_plural": "Prompts",
                 "unique_together": {("session_key", "url")},
             },
             bases=(models.Model, smarter.common.mixins.helper_mixin.SmarterHelperMixin),
         ),
         migrations.CreateModel(
-            name="ChatHistory",
+            name="PromptHistory",
             fields=[
                 (
                     "id",
@@ -165,17 +165,17 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "chat",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="prompt.chat"),
+                    "prompt",
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="prompt.prompt"),
                 ),
             ],
             options={
-                "verbose_name_plural": "Chat History",
+                "verbose_name_plural": "Prompt History",
             },
             bases=(models.Model, smarter.common.mixins.helper_mixin.SmarterHelperMixin),
         ),
         migrations.CreateModel(
-            name="ChatPluginUsage",
+            name="PromptPluginUsage",
             fields=[
                 (
                     "id",
@@ -196,8 +196,8 @@ class Migration(migrations.Migration):
                 ),
                 ("input_text", models.TextField(blank=True, null=True)),
                 (
-                    "chat",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="prompt.chat"),
+                    "prompt",
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="prompt.prompt"),
                 ),
                 (
                     "plugin",
@@ -208,12 +208,12 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name_plural": "Plugin Usage",
+                "verbose_name_plural": "Prompt Plugin Usage",
             },
             bases=(models.Model, smarter.common.mixins.helper_mixin.SmarterHelperMixin),
         ),
         migrations.CreateModel(
-            name="ChatToolCall",
+            name="PromptToolCall",
             fields=[
                 (
                     "id",
@@ -257,8 +257,8 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "chat",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="prompt.chat"),
+                    "prompt",
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="prompt.prompt"),
                 ),
                 (
                     "plugin",
@@ -271,7 +271,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name_plural": "Chat Tool Call History",
+                "verbose_name_plural": "Prompt Tool Call History",
             },
             bases=(models.Model, smarter.common.mixins.helper_mixin.SmarterHelperMixin),
         ),

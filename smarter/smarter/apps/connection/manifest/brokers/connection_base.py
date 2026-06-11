@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter Api ApiConnection Manifest handler"""
+"""Smarter Api ApiConnection Manifest handler."""
 
 from typing import Optional, Type
 
@@ -67,7 +67,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
 
         broker = MyConnectionBroker(...)
         broker.apply(request, manifest_data=manifest_dict)
-
     """
 
     _connection: Optional[ConnectionBase] = None
@@ -88,7 +87,8 @@ class SAMConnectionBaseBroker(AbstractBroker):
         :return: The formatted class name.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{SAMConnectionBaseBroker.__name__}[{id(self)}]")
+        class_name = formatted_text(f"{__name__}.{SAMConnectionBaseBroker.__name__}[{id(self)}]")
+        return self.formatted_text(class_name)
 
     @property
     def ready(self) -> bool:
@@ -151,7 +151,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
         **Example usage**::
 
             metadata = broker.sam_connection_metadata()
-
         """
         if self.connection:
             self._sam_connection_metadata = SAMConnectionCommonMetadata(
@@ -164,9 +163,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
         return self._sam_connection_metadata
 
     def sam_connection_status(self) -> Optional[SAMConnectionCommonStatus]:
-        """
-        Return the common connection status from the manifest.
-        """
+        """Return the common connection status from the manifest."""
         if self.connection:
             admin = get_cached_admin_user_for_account(account=self.connection.user_profile.cached_account)
             if not admin:
@@ -239,7 +236,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
         **Example usage**::
 
             broker.apply(request, manifest_data=manifest_dict)
-
         """
         logger.info(
             "%s.apply() called with request: %s", self.formatted_class_name, smarter_build_absolute_uri(request=request)
