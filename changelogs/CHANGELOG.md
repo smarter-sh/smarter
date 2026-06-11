@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.1](https://github.com/smarter-sh/smarter/compare/v0.14.0...v0.14.1) (2026-06-11)
+
+### Bug Fixes
+
+* force a new release ([b7d2ccd](https://github.com/smarter-sh/smarter/commit/b7d2ccda203e97e4a0d33f22c4c4f6de9e7131ae))
+* rename prompt app models and views ([3dec181](https://github.com/smarter-sh/smarter/commit/3dec1813b4bde40b21177d4759510c9e10a3d317))
+
+### Refactoring
+
+* logger class name prefix and class ready status ([06998ff](https://github.com/smarter-sh/smarter/commit/06998ffbe143c210b2c58e386eab25190a21e8dc))
+* logger class name prefix and class ready status ([7d7c3d2](https://github.com/smarter-sh/smarter/commit/7d7c3d2d6db2408a9b225b85861e49023fa8442b))
+* logger class name prefix and class ready status ([b272ced](https://github.com/smarter-sh/smarter/commit/b272ced4dccf20a035c87776937281469b4669c8))
+* logger class name prefix and class ready status ([afd57d7](https://github.com/smarter-sh/smarter/commit/afd57d7efdcabd3e9d1aa2134126681e88496771))
+* logger class name prefix and class ready status ([e1e0b5b](https://github.com/smarter-sh/smarter/commit/e1e0b5bddadaac2735fc99d0089d2eac788dcf41))
+* logger class name prefix and class ready status ([3705d14](https://github.com/smarter-sh/smarter/commit/3705d146fffcd78ac931305e7c6c23b62d4aa689))
+* rename prompt.models.Chat to prompt.models.Prompt ([58edba7](https://github.com/smarter-sh/smarter/commit/58edba7e3047cf034f5a9db444a29c219b6c98e4))
+* split out prompt models ([46bf615](https://github.com/smarter-sh/smarter/commit/46bf6158fe0580f3d89f5fabff7f38828e053aac))
+
 ## [0.14.1-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.1-alpha.1...v0.14.1-alpha.2) (2026-06-11)
 
 ### Bug Fixes
