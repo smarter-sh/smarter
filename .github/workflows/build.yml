@@ -80,6 +80,12 @@ jobs:
           fi
           echo "TAG=$TAG" >> $GITHUB_ENV
 
+      - name: Set version
+        id: set-version
+        shell: bash
+        run: |
+          python smarter/scripts/bump_version.py $TAG --cicd
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
         with:
