@@ -1,3 +1,5 @@
+"""This module contains the Prompt models."""
+
 from .prompt import Prompt
 from .prompt_helper import PromptHelper
 from .prompt_history import PromptHistory
