@@ -1,5 +1,5 @@
 # pylint: disable=W0613,C0302
-"""PromptLandingView is a Django class-based view that serves as the base URL."""
+"""PromptSandboxView is a Django class-based view that serves as the base URL."""
 
 import logging
 
@@ -32,18 +32,20 @@ def should_log_verbose(level):
 verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
 
 
-class PromptLandingView(SmarterAuthenticatedNeverCachedWebView):
+class PromptSandboxView(SmarterAuthenticatedNeverCachedWebView):
     """
-    Base url for the Smarter prompt application.
+    Base url for LLMClient.sandbox_url.
 
-    Provides a logical
-    endpoint without actually implementing any functionality.
+    This a a noop view that
+    is used for generating the base URL for the workbench prompt
+    /chat/ and /chat/config/ endpoints, both of which are constructed
+    inside of the React app and are not actual Django views.
     """
 
     @property
     def formatted_class_name(self) -> str:
         """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{PromptLandingView.__name__}[{id(self)}]"
+        class_name = f"{__name__}.{PromptSandboxView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):

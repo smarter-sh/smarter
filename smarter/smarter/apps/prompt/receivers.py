@@ -17,7 +17,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from .models import Chat, PromptHistory, PromptPluginUsage, PromptToolCall
 from .signals import (
     chat_completion_plugin_called,
     chat_completion_request,
@@ -35,7 +35,7 @@ from .signals import (
     llm_tool_responded,
 )
 from .tasks import create_chat_history
-from .views.detailview import ChatConfigView, SmarterChatSession
+from .views.detailviews import PromptConfigView, SmarterPromptSession
 
 
 def should_log(level):
@@ -50,7 +50,8 @@ prefix = "smarter.apps.prompt.receivers"
 
 def get_sender_name(sender: Any) -> str:
     """
-    Get a readable name for the sender of a signal, handling both class and
+    Get a readable name for the sender of a signal, handling both class and.
+
     instance methods.
     """
     if isinstance(sender, type):
@@ -71,7 +72,7 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 
 # chat_session_invoked.send(sender=self.__class__, instance=self, request=request)
 @receiver(chat_session_invoked, dispatch_uid="chat_session_invoked")
-def handle_chat_session_invoked(sender, instance: SmarterChatSession, request: ASGIRequest, *args, **kwargs):
+def handle_chat_session_invoked(sender, instance: SmarterPromptSession, request: ASGIRequest, *args, **kwargs):
     """Handle chat session invoked signal."""
     if isinstance(request, ASGIRequest):
         url: str = request.build_absolute_uri()
@@ -84,7 +85,7 @@ def handle_chat_session_invoked(sender, instance: SmarterChatSession, request: A
 
 
 @receiver(chat_config_invoked, dispatch_uid="chat_config_invoked")
-def handle_chat_config_invoked_(sender, instance: ChatConfigView, request, data: dict, *args, **kwargs):
+def handle_chat_config_invoked_(sender, instance: PromptConfigView, request, data: dict, *args, **kwargs):
     """Handle chat config invoked signal."""
     url: Optional[str] = instance.url
 
@@ -375,40 +376,40 @@ def handle_chat_post_save(sender, instance, created, **kwargs):
         logger.info("%s", formatted_text(prefix + ".Chat() record updated."))
 
 
-@receiver(post_save, sender=ChatHistory)
+@receiver(post_save, sender=PromptHistory)
 def handle_chat_history_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text(prefix + ".ChatHistory() record created."))
+        logger.info("%s", formatted_text(prefix + ".PromptHistory() record created."))
     else:
-        logger.info("%s", formatted_text(prefix + ".ChatHistory() record updated."))
+        logger.info("%s", formatted_text(prefix + ".PromptHistory() record updated."))
 
 
-@receiver(post_save, sender=ChatToolCall)
+@receiver(post_save, sender=PromptToolCall)
 def handle_chat_tool_call_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text(prefix + ".ChatToolCall() record created."))
+        logger.info("%s", formatted_text(prefix + ".PromptToolCall() record created."))
     else:
-        logger.info("%s", formatted_text(prefix + ".ChatToolCall() record updated."))
+        logger.info("%s", formatted_text(prefix + ".PromptToolCall() record updated."))
 
 
-@receiver(post_save, sender=ChatPluginUsage)
+@receiver(post_save, sender=PromptPluginUsage)
 def handle_chat_plugin_usage_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text(prefix + ".ChatPluginUsage() record created."))
+        logger.info("%s", formatted_text(prefix + ".PromptPluginUsage() record created."))
     else:
-        logger.info("%s", formatted_text(prefix + ".ChatPluginUsage() record updated."))
+        logger.info("%s", formatted_text(prefix + ".PromptPluginUsage() record updated."))
 
 
-@receiver(pre_delete, sender=ChatToolCall)
+@receiver(pre_delete, sender=PromptToolCall)
 def handle_chat_tool_call_post_delete(sender, instance, **kwargs):
-    """Handle ChatToolCall post delete signal."""
-    logger.info("%s %s deleting", formatted_text(prefix + ".ChatToolCall() record"), instance)
+    """Handle PromptToolCall post delete signal."""
+    logger.info("%s %s deleting", formatted_text(prefix + ".PromptToolCall() record"), instance)
 
 
-@receiver(pre_delete, sender=ChatPluginUsage)
+@receiver(pre_delete, sender=PromptPluginUsage)
 def handle_chat_plugin_usage_post_delete(sender, instance, **kwargs):
-    """Handle ChatPluginUsage post delete signal."""
-    logger.info("%s %s deleting", formatted_text(prefix + ".ChatPluginUsage() record"), instance)
+    """Handle PromptPluginUsage post delete signal."""
+    logger.info("%s %s deleting", formatted_text(prefix + ".PromptPluginUsage() record"), instance)

@@ -1,4 +1,4 @@
-"""Smarter API ChatPluginUsage - ChatPluginUsage.metadata"""
+"""Smarter API PromptPluginUsage - PromptPluginUsage.metadata."""
 
 import os
 from typing import ClassVar
@@ -11,6 +11,6 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMChatPluginUsageMetadata(AbstractSAMMetadataBase):
-    """Smarter API ChatPluginUsage Manifest - Metadata class."""
+    """Smarter API PromptPluginUsage Manifest - Metadata class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

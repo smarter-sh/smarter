@@ -14,8 +14,8 @@ from rest_framework.request import Request
 
 from smarter.apps.llm_client.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.llm_client.models import LLMClient
-from smarter.apps.prompt.models import Chat, ChatHistory
-from smarter.apps.prompt.views.detailview import ChatConfigView
+from smarter.apps.prompt.models import Chat, PromptHistory
+from smarter.apps.prompt.views.detailviews import PromptConfigView
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
@@ -141,7 +141,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         extract the session_key from the request body. If the session_key is
         not provided then it will attempt to retrieve it from the cache. If
         the session_key is retrieved from the cache then it will be added to
-        the request body and passed along to the ChatConfigView.
+        the request body and passed along to the PromptConfigView.
 
         This view also extracts the prompt from the request body and sets it.
 
@@ -182,7 +182,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
 
         # 1.) attempt to retrieve a session_key from the cache. if we get a hit
         # then we will update the request body with the session_key
-        # and pass it along to the ChatConfigView.
+        # and pass it along to the PromptConfigView.
         session_key = cache.get(self.cache_key)
         if session_key is not None:
             logger.debug(
@@ -244,7 +244,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
     _chat: Optional[Chat] = None
     _chat_config: dict = {}
-    _chat_history: Optional[ChatHistory] = None
+    _chat_history: Optional[PromptHistory] = None
     _messages: Optional[list[dict[str, str]]] = None
 
     @property
@@ -282,11 +282,11 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             self._chat = Chat.objects.get(session_key=self.session_key)
 
     @property
-    def chat_history(self) -> Optional[ChatHistory]:
+    def chat_history(self) -> Optional[PromptHistory]:
 
         if not self._chat_history:
             if self.chat:
-                self._chat_history = ChatHistory.objects.filter(chat=self.chat).latest()
+                self._chat_history = PromptHistory.objects.filter(chat=self.chat).latest()
         return self._chat_history
 
     @property
@@ -393,7 +393,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             self.new_session,
         )
 
-        chat_config: JsonResponse = ChatConfigView.as_view()(request, name=name, session_key=self.session_key)  # type: ignore[return-value]
+        chat_config: JsonResponse = PromptConfigView.as_view()(request, name=name, session_key=self.session_key)  # type: ignore[return-value]
         if not isinstance(chat_config, JsonResponse):
             raise APIV1CLIChatViewError(
                 f"Internal error. Chat config view did not return a JsonResponse. chat_config: {chat_config}"

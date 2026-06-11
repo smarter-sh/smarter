@@ -1,5 +1,5 @@
 # pylint: disable=W0718,W0613
-"""Smarter API ChatPluginUsage Manifest handler."""
+"""Smarter API PromptPluginUsage Manifest handler."""
 
 import logging
 import typing
@@ -18,7 +18,7 @@ from smarter.apps.prompt.manifest.models.chat_plugin_usage.model import (
 from smarter.apps.prompt.manifest.models.chat_plugin_usage.spec import (
     SAMChatPluginUsageSpecConfig,
 )
-from smarter.apps.prompt.models import Chat, ChatPluginUsage
+from smarter.apps.prompt.models import Chat, PromptPluginUsage
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.utils.decorators import camel_case
 from smarter.lib.django import waffle
@@ -54,28 +54,28 @@ MAX_RESULTS = 1000
 
 
 class SAMChatPluginUsageBrokerError(SAMBrokerError):
-    """Base exception for Smarter API ChatPluginUsage Broker handling."""
+    """Base exception for Smarter API PromptPluginUsage Broker handling."""
 
     @property
     def get_formatted_err_message(self):
-        return "Smarter API ChatPluginUsage Manifest Broker Error"
+        return "Smarter API PromptPluginUsage Manifest Broker Error"
 
 
-class ChatPluginUsageSerializer(ModelSerializer):
+class PromptPluginUsageSerializer(ModelSerializer):
     """Django REST Framework serializer for get()."""
 
     # pylint: disable=C0115
     class Meta:
-        model = ChatPluginUsage
+        model = PromptPluginUsage
         fields = "__all__"
 
 
 class SAMChatPluginUsageBroker(AbstractBroker):
     """
-    Smarter API ChatPluginUsage Manifest Broker.
+    Smarter API PromptPluginUsage Manifest Broker.
 
     This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml ChatPluginUsage manifests
+    - loading, validating and parsing the Smarter Api yaml PromptPluginUsage manifests
     - using the manifest to initialize the corresponding Pydantic model
 
     This Broker class interacts with the collection of Django ORM models that
@@ -88,7 +88,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
     # override the base abstract manifest model with the SAMChatPluginUsage model
     _manifest: SAMChatPluginUsage
     _pydantic_model: typing.Type[SAMChatPluginUsage] = SAMChatPluginUsage
-    _chat_history: ChatPluginUsage
+    _chat_history: PromptPluginUsage
     _session_key: str
 
     @property
@@ -96,21 +96,21 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         return self._session_key
 
     @property
-    def chat_plugin_usage(self) -> ChatPluginUsage:
+    def chat_plugin_usage(self) -> PromptPluginUsage:
         """
-        The ChatPluginUsage object is a Django ORM model subclass from knox.AuthToken.
+        The PromptPluginUsage object is a Django ORM model subclass from knox.AuthToken.
 
-        that represents a ChatPluginUsage api key. The ChatPluginUsage object is
+        that represents a PromptPluginUsage api key. The PromptPluginUsage object is
         used to store the authentication hash and Smarter metadata for the Smarter API.
-        The ChatPluginUsage object is retrieved from the database, if it exists,
+        The PromptPluginUsage object is retrieved from the database, if it exists,
         or created from the manifest if it does not.
         """
         if self._chat_history:
             return self._chat_history
         try:
             chat = Chat.objects.get(session_key=self.session_key)
-            self._chat_history = ChatPluginUsage.objects.get(chat=chat)
-        except (ChatPluginUsage.DoesNotExist, Chat.DoesNotExist):
+            self._chat_history = PromptPluginUsage.objects.get(chat=chat)
+        except (PromptPluginUsage.DoesNotExist, Chat.DoesNotExist):
             pass
 
         return self._chat_history
@@ -162,14 +162,14 @@ class SAMChatPluginUsageBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
-    def SerializerClass(self) -> typing.Type[ChatPluginUsageSerializer]:
+    def SerializerClass(self) -> typing.Type[PromptPluginUsageSerializer]:
         """
-        Get the Django REST Framework serializer class for the Smarter API ChatPluginUsage.
+        Get the Django REST Framework serializer class for the Smarter API PromptPluginUsage.
 
-        :returns: The `ChatPluginUsageSerializer` class.
-        :rtype: Type[ChatPluginUsageSerializer]
+        :returns: The `PromptPluginUsageSerializer` class.
+        :rtype: Type[PromptPluginUsageSerializer]
         """
-        return ChatPluginUsageSerializer
+        return PromptPluginUsageSerializer
 
     @property
     def formatted_class_name(self) -> str:
@@ -182,18 +182,18 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         return self.formatted_text(class_name)
 
     @property
-    def ORMMetaModelClass(self) -> typing.Type[ChatPluginUsage]:
+    def ORMMetaModelClass(self) -> typing.Type[PromptPluginUsage]:
         """
         Return the Django ORM meta model class for the broker.
 
         :return: The Django ORM meta model class definition for the broker.
-        :rtype: Type[ChatPluginUsage]
+        :rtype: Type[PromptPluginUsage]
         """
-        return ChatPluginUsage
+        return PromptPluginUsage
 
     @property
-    def ORMModelClass(self) -> typing.Type[ChatPluginUsage]:
-        return ChatPluginUsage
+    def ORMModelClass(self) -> typing.Type[PromptPluginUsage]:
+        return PromptPluginUsage
 
     @property
     def kind(self) -> str:
@@ -240,7 +240,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.NAME.value: "snake-case-name",
-                SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a ChatPluginUsage",
+                SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a PromptPluginUsage",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
             },
             SAMKeys.SPEC.value: None,
@@ -265,7 +265,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
                 chat = Chat.objects.get(session_key=self.session_key)
             except Chat.DoesNotExist:
                 pass
-            plugin_usages = ChatPluginUsage.objects.filter(chat=chat).order_by("created_at")[:MAX_RESULTS]
+            plugin_usages = PromptPluginUsage.objects.filter(chat=chat).order_by("created_at")[:MAX_RESULTS]
             logger.debug(
                 "SAMChatPluginUsageBroker().get() found %s plugin_usage records for chat session %s in account %s",
                 plugin_usages.count(),
@@ -273,10 +273,10 @@ class SAMChatPluginUsageBroker(AbstractBroker):
                 self.account,
             )
 
-        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each ChatPluginUsage
+        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each PromptPluginUsage
         for plugin_usage in plugin_usages:
             try:
-                model_dump = ChatPluginUsageSerializer(plugin_usage).data
+                model_dump = PromptPluginUsageSerializer(plugin_usage).data
                 if not model_dump:
                     raise SAMChatPluginUsageBrokerError(
                         f"Model dump failed for {self.kind} {plugin_usage.id}", thing=self.kind, command=command  # type: ignore
@@ -293,7 +293,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=ChatPluginUsageSerializer()),
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=PromptPluginUsageSerializer()),
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }

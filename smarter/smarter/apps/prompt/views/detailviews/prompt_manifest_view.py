@@ -1,6 +1,6 @@
 # pylint: disable=W0613,C0302
 """
-PromptManifestView is a Django class-based view that renders a detail view of.
+LLMClientDetailView is a Django class-based view that renders a detail view of.
 
 a SAM manifest for an llm_client.
 """
@@ -50,7 +50,7 @@ def should_log_verbose(level):
 verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
 
 
-class PromptManifestView(DocsBaseView):
+class LLMClientDetailView(DocsBaseView):
     """
     Renders the detail view for a Smarter llm_client.
 
@@ -91,7 +91,7 @@ class PromptManifestView(DocsBaseView):
     @property
     def formatted_class_name(self) -> str:
         """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{PromptManifestView.__name__}[{id(self)}]"
+        class_name = f"{__name__}.{LLMClientDetailView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:

@@ -1,7 +1,7 @@
 apiVersion: smarter.sh/v1
-kind: ChatToolCall
+kind: PromptToolCall
 metadata:
-  description: An example Smarter API manifest for a ChatToolCall
+  description: An example Smarter API manifest for a PromptToolCall
   name: snake-case-name
   version: 1.0.0
 spec: null

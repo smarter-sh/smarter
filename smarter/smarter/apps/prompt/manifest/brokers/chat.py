@@ -55,7 +55,7 @@ class SAMChatBrokerError(SAMBrokerError):
         return "Smarter API Chat Manifest Broker Error"
 
 
-class ChatSerializer(ModelSerializer):
+class PromptSerializer(ModelSerializer):
     """Django REST Framework serializer for get()."""
 
     # pylint: disable=C0115
@@ -155,14 +155,14 @@ class SAMChatBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
-    def SerializerClass(self) -> typing.Type[ChatSerializer]:
+    def SerializerClass(self) -> typing.Type[PromptSerializer]:
         """
         Get the Django REST Framework serializer class for the Smarter API Chat.
 
-        :returns: The `ChatSerializer` class.
-        :rtype: Type[ChatSerializer]
+        :returns: The `PromptSerializer` class.
+        :rtype: Type[PromptSerializer]
         """
-        return ChatSerializer
+        return PromptSerializer
 
     @property
     def formatted_class_name(self) -> str:
@@ -264,7 +264,7 @@ class SAMChatBroker(AbstractBroker):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Chat
         for chat in chats:
             try:
-                model_dump = ChatSerializer(chat).data
+                model_dump = PromptSerializer(chat).data
                 if not model_dump:
                     raise SAMChatBrokerError(f"Model dump failed for {self.kind} {chat.id}")  # type: ignore
                 camel_cased_model_dump = self.to_camel_case(model_dump)
@@ -279,7 +279,7 @@ class SAMChatBroker(AbstractBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=ChatSerializer()),
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=PromptSerializer()),
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }

@@ -1,7 +1,7 @@
 apiVersion: smarter.sh/v1
-kind: ChatPluginUsage
+kind: PromptPluginUsage
 metadata:
-  description: An example Smarter API manifest for a ChatPluginUsage
+  description: An example Smarter API manifest for a PromptPluginUsage
   name: snake-case-name
   version: 1.0.0
 spec: null

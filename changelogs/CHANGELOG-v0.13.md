@@ -795,7 +795,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Bug Fixes
 
-- history in ChatConfigView ([28bbbc2](https://github.com/smarter-sh/smarter/commit/28bbbc286e627e49c835e7f1f62a3fcc3d3900a9))
+- history in PromptConfigView ([28bbbc2](https://github.com/smarter-sh/smarter/commit/28bbbc286e627e49c835e7f1f62a3fcc3d3900a9))
 
 ## [0.13.109](https://github.com/smarter-sh/smarter/compare/v0.13.108...v0.13.109) (2026-01-28)
 
@@ -1577,8 +1577,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - recast DRF Request as HttpRequest ([a3f39ac](https://github.com/smarter-sh/smarter/commit/a3f39ac5f922d97129f073b9d29f11cc0f111b0e))
 - setup cache invalidations and implement for Account, User, UserProfile and related SAM objects ([3fb8de7](https://github.com/smarter-sh/smarter/commit/3fb8de7f2a19a275e8b615e861b1463a33d62fb7))
 - should_log() should ensure that log level is >= logging.INFO ([fdda0fc](https://github.com/smarter-sh/smarter/commit/fdda0fc334cfcaa28981aed4f261a69dc7c574ec))
-- trouble shoot ChatConfigView initialization ([71c2b37](https://github.com/smarter-sh/smarter/commit/71c2b37af7fadda8a32835ecfce56cfefda25697))
-- trouble shoot ChatConfigView initialization ([46104b8](https://github.com/smarter-sh/smarter/commit/46104b8ed3faefc47d990be088a8e666c25f4aff))
+- trouble shoot PromptConfigView initialization ([71c2b37](https://github.com/smarter-sh/smarter/commit/71c2b37af7fadda8a32835ecfce56cfefda25697))
+- trouble shoot PromptConfigView initialization ([46104b8](https://github.com/smarter-sh/smarter/commit/46104b8ed3faefc47d990be088a8e666c25f4aff))
 
 ### Features
 

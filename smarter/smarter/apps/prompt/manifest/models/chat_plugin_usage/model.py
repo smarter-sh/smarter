@@ -1,4 +1,4 @@
-"""Smarter API ChatPluginUsage Manifest"""
+"""Smarter API PromptPluginUsage Manifest."""
 
 from typing import ClassVar, Optional
 
@@ -16,7 +16,7 @@ MODULE_IDENTIFIER = MANIFEST_KIND
 
 
 class SAMChatPluginUsage(AbstractSAMBase):
-    """Smarter API Manifest - ChatPluginUsage"""
+    """Smarter API Manifest - PromptPluginUsage."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

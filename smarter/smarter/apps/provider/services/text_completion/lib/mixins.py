@@ -1,6 +1,4 @@
-"""
-This file contains the mixins for the provider model.
-"""
+"""This file contains the mixins for the provider model."""
 
 import logging
 from typing import Optional
@@ -11,7 +9,12 @@ from django.db.models.query import QuerySet
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Charge
 from smarter.apps.account.tasks import create_charge
-from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from smarter.apps.prompt.models import (
+    Chat,
+    PromptHistory,
+    PromptPluginUsage,
+    PromptToolCall,
+)
 from smarter.apps.prompt.tasks import (
     create_chat_plugin_usage,
     create_chat_tool_call_history,
@@ -35,9 +38,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class _InternalKeys:
-    """
-    This class contains the internal keys for the provider model.
-    """
+    """This class contains the internal keys for the provider model."""
 
     PromptTokens = "prompt_tokens"
     CompletionTokens = "completion_tokens"
@@ -75,7 +76,6 @@ class ChatDbMixin(AccountMixin):
                     history = self.chat_history
                     # Insert a charge
                     self.db_insert_charge(...)
-
     """
 
     __slots__ = (
@@ -119,10 +119,10 @@ class ChatDbMixin(AccountMixin):
         """
 
         self._chat: Optional[Chat] = None
-        self._chat_tool_call: QuerySet[ChatToolCall] = None  # type: ignore
-        self._chat_plugin_usage: Optional[QuerySet[ChatPluginUsage]] = None
+        self._chat_tool_call: QuerySet[PromptToolCall] = None  # type: ignore
+        self._chat_plugin_usage: Optional[QuerySet[PromptPluginUsage]] = None
         self._charges: Optional[QuerySet[Charge]] = None
-        self._chat_history: Optional[QuerySet[ChatHistory]] = None
+        self._chat_history: Optional[QuerySet[PromptHistory]] = None
         self._message_history: Optional[list[dict]] = None
         self._provider_name: Optional[str] = kwargs.get("provider_name", None)
         self._provider: Optional[Provider] = kwargs.get("provider", None)
@@ -249,17 +249,17 @@ class ChatDbMixin(AccountMixin):
         logger.debug("%s.chat setter reset lazy attributes due to chat change.", self.formatted_class_name)
 
     @property
-    def chat_history(self) -> Optional[QuerySet[ChatHistory]]:
+    def chat_history(self) -> Optional[QuerySet[PromptHistory]]:
         """
         Get the chat history queryset for the current chat session.
 
-        This property returns a Django QuerySet of `ChatHistory` objects associated
+        This property returns a Django QuerySet of `PromptHistory` objects associated
         with the current chat session. If no chat is set, or if there is no history,
         returns None. The queryset is cached for efficiency.
 
         Returns
         -------
-        QuerySet[ChatHistory] or None
+        QuerySet[PromptHistory] or None
             QuerySet of chat history records for the current chat, or None if unavailable.
 
         Example
@@ -272,7 +272,7 @@ class ChatDbMixin(AccountMixin):
                     print(record.created_at, record.messages)
         """
         if self._chat_history is None and self.chat is not None:
-            self._chat_history = ChatHistory.objects.filter(chat=self.chat)
+            self._chat_history = PromptHistory.objects.filter(chat=self.chat)
             logger.debug(
                 "%s.chat_history property loaded chat history queryset with %d records.",
                 self.formatted_class_name,
@@ -323,17 +323,17 @@ class ChatDbMixin(AccountMixin):
         return self._message_history
 
     @property
-    def db_chat_tool_call(self) -> QuerySet[ChatToolCall]:
+    def db_chat_tool_call(self) -> QuerySet[PromptToolCall]:
         """
         Get the queryset of chat tool call records for the current chat session.
 
-        This property returns a Django QuerySet of `ChatToolCall` objects associated with
+        This property returns a Django QuerySet of `PromptToolCall` objects associated with
         the current chat session. If no chat is set, returns an empty queryset. The queryset
         is cached for efficiency.
 
         Returns
         -------
-        QuerySet[ChatToolCall]
+        QuerySet[PromptToolCall]
             QuerySet of chat tool call records for the current chat session, or an empty queryset if unavailable.
 
         Example
@@ -346,27 +346,27 @@ class ChatDbMixin(AccountMixin):
         """
 
         if self._chat_tool_call is None and self.chat is not None:
-            self._chat_tool_call = ChatToolCall.objects.filter(chat=self.chat)
+            self._chat_tool_call = PromptToolCall.objects.filter(chat=self.chat)
             logger.debug(
                 "%s.db_chat_tool_call() loaded chat tool call queryset with %d records.",
                 self.formatted_class_name,
                 self._chat_tool_call.count(),
             )
             return self._chat_tool_call
-        return ChatToolCall.objects.none()
+        return PromptToolCall.objects.none()
 
     @property
-    def db_chat_plugin_usage(self) -> QuerySet[ChatPluginUsage]:
+    def db_chat_plugin_usage(self) -> QuerySet[PromptPluginUsage]:
         """
         Get the chat plugin usage instance for the current chat session.
 
-        This property returns the `ChatPluginUsage` object associated with the
+        This property returns the `PromptPluginUsage` object associated with the
         current chat session, if available. The result is cached for efficiency.
         If no chat is set or no plugin usage exists, returns None.
 
         Returns
         -------
-        ChatPluginUsage or None
+        PromptPluginUsage or None
             The chat plugin usage instance for the current chat, or None if unavailable.
 
         Example
@@ -379,14 +379,14 @@ class ChatDbMixin(AccountMixin):
         """
 
         if self._chat_plugin_usage is None and self.chat is not None:
-            self._chat_plugin_usage = ChatPluginUsage.objects.filter(chat=self.chat)
+            self._chat_plugin_usage = PromptPluginUsage.objects.filter(chat=self.chat)
             logger.debug(
                 "%s.db_chat_plugin_usage() loaded chat plugin usage queryset with %d records.",
                 self.formatted_class_name,
                 self._chat_plugin_usage.count(),
             )
             return self._chat_plugin_usage
-        return ChatPluginUsage.objects.none()
+        return PromptPluginUsage.objects.none()
 
     @property
     def db_charges(self) -> QuerySet[Charge]:
@@ -614,7 +614,7 @@ class ChatDbMixin(AccountMixin):
         """
         Insert a chat tool call record for the current chat session.
 
-        This method creates a new `ChatToolCall` record associated with the
+        This method creates a new `PromptToolCall` record associated with the
         current chat session. The insertion is performed asynchronously using
         a background task. If no chat is set, the method returns without
         action.
@@ -662,7 +662,7 @@ class ChatDbMixin(AccountMixin):
         """
         Insert a chat plugin usage record for the specified chat session.
 
-        This method creates a new `ChatPluginUsage` record associated with the given chat session.
+        This method creates a new `PromptPluginUsage` record associated with the given chat session.
         The insertion is performed asynchronously using a background task. If no chat is provided,
         the method logs a warning and returns without action.
 

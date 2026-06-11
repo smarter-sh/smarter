@@ -21,7 +21,12 @@ from smarter.apps.plugin.models import PluginDataValueError
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
-from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from smarter.apps.prompt.models import (
+    Chat,
+    PromptHistory,
+    PromptPluginUsage,
+    PromptToolCall,
+)
 from smarter.apps.prompt.signals import (
     chat_completion_response,
     chat_finished,
@@ -202,12 +207,12 @@ class ProviderBaseClass(TestAccountMixin):
         if self.chat:
             chat = self.chat  # to mitigate a race condition where the test
             # may delete the chat before these models are deleted
-            # ChatHistory.objects.filter(chat=chat).delete()
-            # ChatToolCall.objects.filter(chat=chat).delete()
-            # ChatPluginUsage.objects.filter(chat=chat).delete()
-            ChatHistory.objects.filter(chat=chat).delete()
-            ChatToolCall.objects.filter(chat=chat).delete()
-            ChatPluginUsage.objects.filter(chat=chat).delete()
+            # PromptHistory.objects.filter(chat=chat).delete()
+            # PromptToolCall.objects.filter(chat=chat).delete()
+            # PromptPluginUsage.objects.filter(chat=chat).delete()
+            PromptHistory.objects.filter(chat=chat).delete()
+            PromptToolCall.objects.filter(chat=chat).delete()
+            PromptPluginUsage.objects.filter(chat=chat).delete()
 
             try:
                 chat.delete()
@@ -370,7 +375,7 @@ class ProviderBaseClass(TestAccountMixin):
         self.assertIsNotNone(chat_histories)
 
         # test url api endpoint for chat history
-        chat = ChatHistory.objects.order_by("-id").first()
+        chat = PromptHistory.objects.order_by("-id").first()
         url = reverse("prompt:api:v1:chathistory", kwargs={"pk": chat.id if chat else 1})  # type: ignore[union-attr]
         response = self.client.get(url)  # type: ignore[union-attr]
 
@@ -380,10 +385,10 @@ class ProviderBaseClass(TestAccountMixin):
         # give celery time to process the chat completion
         time.sleep(CELERY_WAIT)  # Pause execution for 1 second
 
-        # assert that ChatPluginUsage has one or more records for self.admin_user
-        plugin_selection_histories = ChatPluginUsage.objects.filter(chat=self.chat).first()
+        # assert that PromptPluginUsage has one or more records for self.admin_user
+        plugin_selection_histories = PromptPluginUsage.objects.filter(chat=self.chat).first()
         if not plugin_selection_histories:
-            print("ChatPluginUsage.objects.first() is None. llm did not call the plugin.")
+            print("PromptPluginUsage.objects.first() is None. llm did not call the plugin.")
         else:
             self.assertIsNotNone(plugin_selection_histories)
 

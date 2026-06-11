@@ -16,7 +16,7 @@ from smarter.apps.prompt.manifest.models.chat_history.model import SAMChatHistor
 from smarter.apps.prompt.manifest.models.chat_history.spec import (
     SAMChatHistorySpecConfig,
 )
-from smarter.apps.prompt.models import Chat, ChatHistory
+from smarter.apps.prompt.models import Chat, PromptHistory
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.utils.decorators import camel_case
 from smarter.lib.django import waffle
@@ -57,7 +57,7 @@ class SAMChatHistoryBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
-        return "Smarter API ChatHistory Manifest Broker Error"
+        return "Smarter API PromptHistory Manifest Broker Error"
 
 
 class ChatHistorySerializer(ModelSerializer):
@@ -65,7 +65,7 @@ class ChatHistorySerializer(ModelSerializer):
 
     # pylint: disable=C0115
     class Meta:
-        model = ChatHistory
+        model = PromptHistory
         fields = "__all__"
 
 
@@ -87,7 +87,7 @@ class SAMChatHistoryBroker(AbstractBroker):
     # override the base abstract manifest model with the SAMChatHistory model
     _manifest: Optional[SAMChatHistory] = None
     _pydantic_model: Type[SAMChatHistory] = SAMChatHistory
-    _chat_history: Optional[ChatHistory] = None
+    _chat_history: Optional[PromptHistory] = None
     _session_key: Optional[str] = None
 
     @property
@@ -95,7 +95,7 @@ class SAMChatHistoryBroker(AbstractBroker):
         return self._session_key
 
     @property
-    def chat_history(self) -> Optional[ChatHistory]:
+    def chat_history(self) -> Optional[PromptHistory]:
         """
         The Chat object is a Django ORM model subclass from knox.AuthToken.
 
@@ -108,8 +108,8 @@ class SAMChatHistoryBroker(AbstractBroker):
             return self._chat_history
         try:
             chat = Chat.objects.get(session_key=self.session_key)
-            self._chat_history = ChatHistory.objects.get(chat=chat)
-        except (ChatHistory.DoesNotExist, Chat.DoesNotExist):
+            self._chat_history = PromptHistory.objects.get(chat=chat)
+        except (PromptHistory.DoesNotExist, Chat.DoesNotExist):
             pass
 
         return self._chat_history
@@ -134,7 +134,7 @@ class SAMChatHistoryBroker(AbstractBroker):
         """
         if not self.chat_history:
             raise SAMChatHistoryBrokerError(
-                f"ChatHistory not found for session key {self.session_key}", thing=self.kind
+                f"PromptHistory not found for session key {self.session_key}", thing=self.kind
             )
         chat_dict = model_to_dict(self.chat_history)
         chat_dict = self.to_camel_case(chat_dict)
@@ -166,7 +166,7 @@ class SAMChatHistoryBroker(AbstractBroker):
     @property
     def SerializerClass(self) -> Type[ChatHistorySerializer]:
         """
-        Get the Django REST Framework serializer class for the Smarter API ChatHistory.
+        Get the Django REST Framework serializer class for the Smarter API PromptHistory.
 
         :returns: The `ChatHistorySerializer` class.
         :rtype: Type[ChatHistorySerializer]
@@ -184,18 +184,18 @@ class SAMChatHistoryBroker(AbstractBroker):
         return self.formatted_text(class_name)
 
     @property
-    def ORMMetaModelClass(self) -> Type[ChatHistory]:
+    def ORMMetaModelClass(self) -> Type[PromptHistory]:
         """
         Return the Django ORM meta model class for the broker.
 
         :return: The Django ORM meta model class definition for the broker.
-        :rtype: Type[ChatHistory]
+        :rtype: Type[PromptHistory]
         """
-        return ChatHistory
+        return PromptHistory
 
     @property
-    def ORMModelClass(self) -> Type[ChatHistory]:
-        return ChatHistory
+    def ORMModelClass(self) -> Type[PromptHistory]:
+        return PromptHistory
 
     @property
     def kind(self) -> str:
@@ -244,7 +244,7 @@ class SAMChatHistoryBroker(AbstractBroker):
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.NAME.value: "snake-case-name",
-                SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a ChatHistory",
+                SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a PromptHistory",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
             },
             SAMKeys.SPEC.value: None,
@@ -269,7 +269,7 @@ class SAMChatHistoryBroker(AbstractBroker):
                 chat = Chat.objects.get(session_key=self.session_key)
             except Chat.DoesNotExist:
                 pass
-            chat_history = ChatHistory.objects.filter(chat=chat).order_by("-created_at")[:MAX_RESULTS]
+            chat_history = PromptHistory.objects.filter(chat=chat).order_by("-created_at")[:MAX_RESULTS]
             logger.debug(
                 "SAMChatHistoryBroker().get() found %s chat_history records for chat session %s in account %s",
                 chat_history.count(),
@@ -277,7 +277,7 @@ class SAMChatHistoryBroker(AbstractBroker):
                 self.account,
             )
 
-        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each ChatHistory
+        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each PromptHistory
         for chat in chat_history:  # type: ignore
             try:
                 model_dump = ChatHistorySerializer(chat).data
@@ -326,7 +326,7 @@ class SAMChatHistoryBroker(AbstractBroker):
                 raise SAMChatHistoryBrokerError(
                     f"Failed to describe {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(f"ChatHistory {self.name} not ready", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotReady(f"PromptHistory {self.name} not ready", thing=self.kind, command=command)
 
     def delete(self, request: ASGIRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
@@ -354,4 +354,4 @@ class SAMChatHistoryBroker(AbstractBroker):
         if self.chat_history:
             data = {}
             return self.json_response_ok(command=command, data=data)
-        raise SAMBrokerErrorNotReady(f"ChatHistory {self.name} not ready", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotReady(f"PromptHistory {self.name} not ready", thing=self.kind, command=command)

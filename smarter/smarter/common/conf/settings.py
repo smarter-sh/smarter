@@ -1331,7 +1331,7 @@ class Settings(BaseSettings):
     :default: Value from ``settings_defaults.CHAT_CACHE_EXPIRATION``
     :raises SmarterConfigurationError: If the value is not a positive integer.
 
-    see: :class:`smarter.apps.prompt.models.ChatHelper`
+    see: :class:`smarter.apps.prompt.models.PromptHelper`
     """
 
     @before_field_validator("chat_cache_expiration")
