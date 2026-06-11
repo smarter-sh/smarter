@@ -1,5 +1,5 @@
-# pylint: disable=W0613,C0115
-"""All models for the OpenAI Function Calling API app."""
+# pylint: disable=C0115
+"""PromptHelper for the prompt app."""
 
 from functools import cached_property
 from typing import Any, Optional, Union
@@ -9,23 +9,22 @@ from django.db.utils import IntegrityError
 from django.http import HttpRequest
 from rest_framework import serializers
 
-from smarter.apps.account.models import (
-    MetaDataWithOwnershipModel,
-    MetaDataWithOwnershipModelManager,
-)
 from smarter.apps.llm_client.models import LLMClient, get_cached_llm_client_by_request
-from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
-from smarter.lib import json, logging
+from smarter.lib import logging
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
-from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
+from .prompt import Prompt
+from .prompt_history import PromptHistory
+from .prompt_plugin_usage import PromptPluginUsage
+from .prompt_tool_call import PromptToolCall
 
+
+# pylint: disable=W0613
 def should_log_verbose(level) -> bool:
     return smarter_settings.verbose_logging
 
@@ -36,134 +35,8 @@ logger_verbose = logging.getSmarterLogger(
 )
 
 
-class Prompt(MetaDataWithOwnershipModel):
-    """Prompt model."""
-
-    class Meta:
-        verbose_name_plural = "Chats"
-        unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
-
-    objects: MetaDataWithOwnershipModelManager["Prompt"] = MetaDataWithOwnershipModelManager()
-
-    session_key = models.CharField(max_length=255, blank=False, null=False, unique=True)
-    llm_client = models.ForeignKey(LLMClient, on_delete=models.CASCADE, blank=False, null=False)
-    ip_address = models.GenericIPAddressField(blank=False, null=False)
-    user_agent = models.CharField(max_length=255, blank=False, null=False)
-    url = models.URLField(blank=False, null=False)
-
-    def __str__(self):
-        # pylint: disable=E1136
-        return f"{self.id} - {self.ip_address} - {self.url}"  # type: ignore[return]
-
-    def delete(self, *args, **kwargs):
-        if self.session_key:
-            cache.delete(self.session_key)
-        super().delete(*args, **kwargs)
-
-
-class PromptHistory(TimestampedModel):
-    """Prompt history model."""
-
-    class Meta:
-        verbose_name_plural = "Prompt History"
-
-    prompt = models.ForeignKey(Prompt, on_delete=models.CASCADE)
-    request = models.JSONField(
-        blank=True,
-        null=True,
-        encoder=json.SmarterJSONEncoder,
-    )
-    response = models.JSONField(
-        blank=True,
-        null=True,
-        encoder=json.SmarterJSONEncoder,
-    )
-    messages = models.JSONField(
-        blank=True,
-        null=True,
-        encoder=json.SmarterJSONEncoder,
-    )
-
-    def __str__(self):
-        return f"{self.prompt.id}"  # type: ignore[return]
-
-    @property
-    def prompt_history(self) -> list[dict]:
-        """Used by the Reactapp (via PromptConfigView) to display the prompt history."""
-        history = self.messages if self.messages else self.request.get("messages", []) if self.request else []
-        # response = self.response.get("choices", []) if self.response else []
-        # response = response[0] if response else {}
-        # response = response.get("message", {})
-        # history.append(response)
-        return history
-
-
-class PromptToolCall(TimestampedModel):
-    """Prompt tool call history model."""
-
-    class Meta:
-        verbose_name_plural = "Prompt Tool Call History"
-
-    prompt = models.ForeignKey(Prompt, on_delete=models.CASCADE)
-    plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE, blank=True, null=True)
-    function_name = models.CharField(max_length=255, blank=True, null=True)
-    function_args = models.CharField(max_length=255, blank=True, null=True)
-    request = models.JSONField(
-        blank=True,
-        null=True,
-        encoder=json.SmarterJSONEncoder,
-    )
-    response = models.JSONField(
-        blank=True,
-        null=True,
-        encoder=json.SmarterJSONEncoder,
-    )
-
-    @classmethod
-    def get_cached_object(
-        cls, *args, invalidate: Optional[bool] = False, pk: Optional[int] = None, **kwargs
-    ) -> Optional["PromptToolCall"]:
-        """
-        Get the PromptToolCall instance for the given primary key from the cache.
-
-        This method retrieves the PromptToolCall instance associated with the given primary key
-        from the cache. If the instance is not found in the cache, it attempts to
-        retrieve it from the database. If it still cannot be found, it returns ``None``.
-
-        :param invalidate: Whether to invalidate the cache before retrieving the object.
-        :type invalidate: Optional[bool]
-        :param pk: The primary key of the PromptToolCall instance to retrieve.
-        :type pk: Optional[int]
-
-        :returns: The PromptToolCall instance associated with the given primary key, or ``None`` if not found.
-        :rtype: Optional[PromptToolCall]
-        """
-        return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return]
-
-    def __str__(self):
-        if self.plugin:
-            name = f"{self.prompt.id} - {self.plugin.name}"  # type: ignore[return]
-        else:
-            name = f"{self.prompt.id} - {self.function_name}"  # type: ignore[return]
-        return name
-
-
-class PromptPluginUsage(TimestampedModel):
-    """Plugin selection history model."""
-
-    class Meta:
-        verbose_name_plural = "Prompt Plugin Usage"
-
-    prompt = models.ForeignKey(Prompt, on_delete=models.CASCADE)
-    plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
-    input_text = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.prompt.id} - {self.plugin.name}"  # type: ignore[return]
-
-
 # --------------------------------------------------------------------------------
-# Serializers
+# Mini Serializers - only used by PromptHelper.
 # --------------------------------------------------------------------------------
 class PromptSerializer(serializers.ModelSerializer):
     class Meta:
