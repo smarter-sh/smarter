@@ -13,7 +13,7 @@
           "content": "what's the weather in florida right now?"
       }
   ],
-  "chat_history": [
+  "prompt_history": [
       {
           "message": "Hello, How can I help you?",
           "direction": "incoming",

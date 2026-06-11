@@ -1,4 +1,4 @@
-"""This module is used to generate seed records for the chat history models."""
+"""This module is used to generate seed records for the prompt history models."""
 
 import glob
 import os
@@ -10,7 +10,7 @@ from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
 )
 from smarter.apps.llm_client.models import LLMClient, LLMClientPlugin
-from smarter.apps.prompt.models import Chat
+from smarter.apps.prompt.models import Prompt
 from smarter.apps.provider.services.text_completion.providers import (
     smarter_compatible_client,
 )
@@ -27,10 +27,10 @@ class Command(SmarterCommand):
     """
     Django manage.py seed_chat_history.py command.
 
-    This command is used to seed the chat history and audit tables.
+    This command is used to seed the prompt history and audit tables.
     This is only used for local development and testing purposes.
     This command secondarily is a run-time verification of the
-    Chat, LLMClient, Plugin and function calling sub systems.
+    Prompt, LLMClient, Plugin and function calling sub systems.
     """
 
     def handle(self, *args, **options):
@@ -69,11 +69,11 @@ class Command(SmarterCommand):
             raise ValueError(f"LLMClient not found {SMARTER_EXAMPLE_LLM_CLIENT_NAME}")
 
         session_key = "seed_chat_history.py_" + secrets.token_urlsafe(16)
-        chat, _ = Chat.objects.get_or_create(
+        prompt, _ = Prompt.objects.get_or_create(
             session_key=session_key,
             llm_client=llm_client,
             user_profile=user_profile,
-            url="https://localhost:9357/seed-chat-history",
+            url="https://localhost:9357/seed-prompt-history",
             ip_address="192.1.1.1",
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
         )
@@ -86,10 +86,10 @@ class Command(SmarterCommand):
                 if not plugins or len(plugins) == 0:
                     raise ValueError(
                         f"No plugins found for llm_client: {llm_client}. "
-                        "Seeding the chat history is only useful if the LLMClient has "
+                        "Seeding the prompt history is only useful if the LLMClient has "
                         "one or more plugins. Please check the LLMClientPlugin model."
                     )
 
-                default_handler(chat=chat, plugins=plugins, user=user_profile.cached_user, data=data)  # type: ignore
-                self.stdout.write(self.style.SUCCESS("Chat history seeded."))
+                default_handler(prompt=prompt, plugins=plugins, user=user_profile.cached_user, data=data)  # type: ignore
+                self.stdout.write(self.style.SUCCESS("Prompt history seeded."))
         self.handle_completed_success()

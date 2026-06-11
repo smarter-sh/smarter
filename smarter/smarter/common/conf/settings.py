@@ -1316,13 +1316,13 @@ class Settings(BaseSettings):
     chat_cache_expiration: int = Field(
         settings_defaults.CHAT_CACHE_EXPIRATION,
         gt=0,
-        description="The chat cache expiration time in seconds for cached chat data.",
-        title="Chat Cache Expiration",
+        description="The prompt cache expiration time in seconds for cached prompt data.",
+        title="Prompt Cache Expiration",
     )
     """
-    The chat cache expiration time in seconds for cached chat data.
+    The prompt cache expiration time in seconds for cached prompt data.
 
-    This setting defines how long cached chat data should be considered valid before it is
+    This setting defines how long cached prompt data should be considered valid before it is
     refreshed or invalidated. A shorter expiration time may lead to more frequent
     cache refreshes, while a longer expiration time can improve performance by reducing
     the number of cache lookups.
@@ -1398,13 +1398,13 @@ class Settings(BaseSettings):
     llm_client_max_returned_history: int = Field(
         settings_defaults.LLM_CLIENT_MAX_RETURNED_HISTORY,
         gt=0,
-        description="The maximum number of chat history messages to return from the llm_client.",
+        description="The maximum number of prompt history messages to return from the llm_client.",
         title="LLMClient Max Returned History",
     )
     """
-    The maximum number of chat history messages to return from the llm_client.
+    The maximum number of prompt history messages to return from the llm_client.
 
-    This setting defines the maximum number of previous chat messages that the llm_client
+    This setting defines the maximum number of previous prompt messages that the llm_client
     will include in its responses. Limiting the number of returned messages can help
     improve performance and reduce response times.
     :type: int
@@ -3114,7 +3114,7 @@ class Settings(BaseSettings):
     smarter_reactjs_app_loader_path: str = Field(
         settings_defaults.REACTJS_APP_LOADER_PATH,
         description="The path to the ReactJS app loader script.",
-        examples=["/ui-chat/app-loader.js"],
+        examples=["/ui-prompt/app-loader.js"],
         title="Smarter ReactJS App Loader Path",
     )
     """
@@ -3134,7 +3134,7 @@ class Settings(BaseSettings):
 
         Needs
         to start with a slash (/) and end with '.js'. The final string value
-        should be url friendly. example: /ui-chat/app-loader.js
+        should be url friendly. example: /ui-prompt/app-loader.js
 
         Args:
             v (Optional[str]): The Smarter ReactJS app loader path value to validate.
@@ -4415,13 +4415,13 @@ class Settings(BaseSettings):
         """
         Return the full URL to the ReactJS app loader script.
 
-        This is used for loading the ReactJS Chat frontend component into html
+        This is used for loading the ReactJS Prompt frontend component into html
         web pages. Attempts to validate the URL by checking for HTTP 200 status.
         Provides a fallback URL if the primary URL is not reachable.
 
         Example:
             >>> print(smarter_settings.smarter_reactjs_app_loader_url)
-            'https://alpha.platform.example.com/ui-chat/app-loader.js'
+            'https://alpha.platform.example.com/ui-prompt/app-loader.js'
 
         See Also:
             - smarter_settings.environment_cdn_url
@@ -4460,7 +4460,7 @@ class Settings(BaseSettings):
             return fallback_url
         else:
             logger.error(
-                "%s.smarter_reactjs_app_loader_url() is %s. Could not retrieve the ReactJS app loader from either %s or %s. Please check your CDN configuration and internet connectivity. See https://github.com/smarter-sh/web-integration-example for details on configuring Smarter Chat.",
+                "%s.smarter_reactjs_app_loader_url() is %s. Could not retrieve the ReactJS app loader from either %s or %s. Please check your CDN configuration and internet connectivity. See https://github.com/smarter-sh/web-integration-example for details on configuring Smarter Prompt.",
                 logger_prefix,
                 formatted_text_red("NOT_READY"),
                 intended_url,
@@ -4471,14 +4471,14 @@ class Settings(BaseSettings):
     @cached_property
     def smarter_reactjs_root_div_id(self) -> str:
         """
-        Return the HTML div ID used as the root for the ReactJS Chat app.
+        Return the HTML div ID used as the root for the ReactJS Prompt app.
 
-        Start with a string like: "example.com/v1/ui-chat/root", then
-        convert it into an html safe id like: "example-com-v1-ui-chat-root"
+        Start with a string like: "example.com/v1/ui-prompt/root", then
+        convert it into an html safe id like: "example-com-v1-ui-prompt-root"
 
         Example:
             >>> print(smarter_settings.smarter_reactjs_root_div_id)
-            'example-com-v1-ui-chat-root'
+            'example-com-v1-ui-prompt-root'
         """
         APP_LOADER_FILENAME = "app-loader.js"
 

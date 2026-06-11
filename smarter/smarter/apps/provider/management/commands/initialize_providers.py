@@ -1,4 +1,4 @@
-"""This module is used to generate seed records for the chat history models."""
+"""This module is used to generate seed records for the prompt history models."""
 
 import logging
 from http import HTTPStatus
@@ -160,7 +160,7 @@ class Command(SmarterCommand):
                 "base_url": "https://api.openai.com/v1/",
                 "api_key": openai_api_key,
                 "default_model": OPENAI_DEFAULT_MODEL,
-                "connectivity_test_path": "chat/completions",
+                "connectivity_test_path": "prompt/completions",
                 "website_url": "https://www.openai.com/",
                 "contact_email": SMARTER_CONTACT_EMAIL,
                 "contact_email_verified": timezone.now(),
@@ -241,7 +241,7 @@ class Command(SmarterCommand):
                 "base_url": "https://generativelanguage.googleapis.com/v1beta/",
                 "api_key": googleai_api_key,
                 "default_model": GOOGLE_DEFAULT_MODEL,
-                "connectivity_test_path": "chat/completions",
+                "connectivity_test_path": "prompt/completions",
                 "website_url": "https://ai.google.com/",
                 "contact_email": SMARTER_CONTACT_EMAIL,
                 "contact_email_verified": timezone.now(),
@@ -293,7 +293,7 @@ class Command(SmarterCommand):
                 "base_url": "https://metaai.com/api/",
                 "api_key": metaai_api_key,
                 "default_model": META_DEFAULT_MODEL,
-                "connectivity_test_path": "chat/completions",
+                "connectivity_test_path": "prompt/completions",
                 "website_url": "https://ai.meta.com/",
                 "contact_email": SMARTER_CONTACT_EMAIL,
                 "contact_email_verified": timezone.now(),

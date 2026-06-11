@@ -783,8 +783,8 @@ class SAMLLMClientBroker(AbstractBroker):
             ],
             appPlaceholder="Type your message here...",
             appInfoUrl="https://example.com/info",
-            appBackgroundImageUrl="https://cdn.smarter.sh/chat-ui/background.png",
-            appLogoUrl="https://cdn.smarter.sh/chat-ui/logo.png",
+            appBackgroundImageUrl="https://cdn.smarter.sh/prompt-ui/background.png",
+            appLogoUrl="https://cdn.smarter.sh/prompt-ui/logo.png",
             appFileAttachment=False,
         )
 
@@ -1062,10 +1062,10 @@ class SAMLLMClientBroker(AbstractBroker):
             self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        command = self.chat.__name__
+    def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__

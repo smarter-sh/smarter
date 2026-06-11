@@ -10,14 +10,14 @@ from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Charge
 from smarter.apps.account.tasks import create_charge
 from smarter.apps.prompt.models import (
-    Chat,
+    Prompt,
     PromptHistory,
     PromptPluginUsage,
     PromptToolCall,
 )
 from smarter.apps.prompt.tasks import (
-    create_chat_plugin_usage,
-    create_chat_tool_call_history,
+    create_prompt_plugin_usage,
+    create_prompt_tool_call_history,
 )
 from smarter.apps.provider.models import Provider
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
@@ -49,8 +49,8 @@ class ChatDbMixin(AccountMixin):
     """
     Mixin for database-related methods for provider models.
 
-    This mixin provides database access and persistence logic for chat provider
-    models, including management of chat sessions, chat history, plugin/tool
+    This mixin provides database access and persistence logic for prompt provider
+    models, including management of prompt sessions, prompt history, plugin/tool
     usage, and charge records. It is intended to be used as a base class for
     provider implementations that require integration with the Smarter database
     models. This provides layers of abstraction for asynchronously creating
@@ -58,22 +58,22 @@ class ChatDbMixin(AccountMixin):
 
     **Key Features:**
 
-        - Manages retrieval and caching of chat, chat history, tool calls, plugin usage, and charge records.
-        - Provides properties for accessing and updating chat-related data.
+        - Manages retrieval and caching of prompt, prompt history, tool calls, plugin usage, and charge records.
+        - Provides properties for accessing and updating prompt-related data.
         - Supports insertion of new tool call, plugin usage, and charge records via asynchronous tasks.
         - Aggregates token usage statistics for billing and analytics.
 
     **Usage:**
 
-        Inherit from this mixin in a provider class to enable database-backed chat session and usage tracking.
+        Inherit from this mixin in a provider class to enable database-backed prompt session and usage tracking.
 
     **Example:**
         .. code-block:: python
 
             class MyProvider(ChatDbMixin):
                 def custom_method(self):
-                    # Access chat history
-                    history = self.chat_history
+                    # Access prompt history
+                    history = self.prompt_history
                     # Insert a charge
                     self.db_insert_charge(...)
     """
@@ -95,10 +95,10 @@ class ChatDbMixin(AccountMixin):
         Initialize the ChatDbMixin.
 
         This constructor sets up the database-related attributes for the
-        provider model, including chat session, tool call, plugin usage,
-        charge, and chat history references. It attempts to retrieve the
-        current chat session using a session key if provided, or falls
-        back to a chat object in kwargs.
+        provider model, including prompt session, tool call, plugin usage,
+        charge, and prompt history references. It attempts to retrieve the
+        current prompt session using a session key if provided, or falls
+        back to a prompt object in kwargs.
 
         Parameters
         ----------
@@ -106,19 +106,19 @@ class ChatDbMixin(AccountMixin):
             Positional arguments passed to the superclass constructor.
         **kwargs : dict
             Keyword arguments passed to the superclass constructor. Recognized keys:
-                - SMARTER_CHAT_SESSION_KEY_NAME (str): Default is 'session_key'. Session key for the chat session.
-                - chat (Chat): Chat instance to use if session key is not provided.
+                - SMARTER_CHAT_SESSION_KEY_NAME (str): Default is 'session_key'. Session key for the prompt session.
+                - prompt (Prompt): Prompt instance to use if session key is not provided.
 
         Example
         -------
         .. code-block:: python
 
-            mixin = ChatDbMixin(chat=my_chat)
+            mixin = ChatDbMixin(prompt=my_chat)
             # or
             mixin = ChatDbMixin(session_key="abc123")
         """
 
-        self._chat: Optional[Chat] = None
+        self._chat: Optional[Prompt] = None
         self._chat_tool_call: QuerySet[PromptToolCall] = None  # type: ignore
         self._chat_plugin_usage: Optional[QuerySet[PromptPluginUsage]] = None
         self._charges: Optional[QuerySet[Charge]] = None
@@ -130,15 +130,15 @@ class ChatDbMixin(AccountMixin):
         super().__init__(*args, **kwargs)
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
         if session_key:
-            self._chat = Chat.get_cached_object(session_key=session_key)  # type: ignore
+            self._chat = Prompt.get_cached_object(session_key=session_key)  # type: ignore
         else:
-            self._chat = kwargs.get("chat", None)
+            self._chat = kwargs.get("prompt", None)
 
         if self.ready:
             logger.debug(
-                "%s.__init__() initialized with chat session key: %s",
+                "%s.__init__() initialized with prompt session key: %s",
                 self.formatted_class_name,
-                self.chat.session_key if self.chat else "None",
+                self.prompt.session_key if self.prompt else "None",
             )
         else:
             logger.warning("%s.__init__() initialized but not ready.", self.formatted_class_name)
@@ -148,14 +148,14 @@ class ChatDbMixin(AccountMixin):
         """
         Indicates whether the mixin and its dependencies are ready for use.
 
-        This property checks if both the superclass and the chat instance are ready.
+        This property checks if both the superclass and the prompt instance are ready.
         It is useful for determining if the provider is fully initialized and can
-        interact with the database and chat session.
+        interact with the database and prompt session.
 
         Returns
         -------
         bool
-            True if both the superclass and chat are ready, False otherwise.
+            True if both the superclass and prompt are ready, False otherwise.
 
         Example
         -------
@@ -171,57 +171,57 @@ class ChatDbMixin(AccountMixin):
         if not super_ready:
             logger.warning("%s.ready() is not ready because the superclass is not ready.", self.formatted_class_name)
             return False
-        chat_ready = True if isinstance(self.chat, Chat) else False
+        chat_ready = True if isinstance(self.prompt, Prompt) else False
         self._ready = chat_ready and super_ready
         if self._ready:
             logger.debug("%s.ready() is now ready for use.", self.formatted_class_name)
         else:
-            logger.warning("%s.ready() is not ready because chat is not set.", self.formatted_class_name)
+            logger.warning("%s.ready() is not ready because prompt is not set.", self.formatted_class_name)
         return self._ready
 
     @property
-    def chat(self) -> Optional[Chat]:
+    def prompt(self) -> Optional[Prompt]:
         """
-        Get the current chat session instance.
+        Get the current prompt session instance.
 
-        This property returns the active `Chat` object associated with the provider,
-        or `None` if no chat session is set. It is used to access chat-specific
+        This property returns the active `Prompt` object associated with the provider,
+        or `None` if no prompt session is set. It is used to access prompt-specific
         data and operations throughout the provider's logic.
 
         Returns
         -------
-        Chat or None
-            The current chat session instance, or None if not set.
+        Prompt or None
+            The current prompt session instance, or None if not set.
 
         Example
         -------
         .. code-block:: python
 
-            chat = provider.chat
-            if chat is not None:
-                print(chat.session_key)
+            prompt = provider.prompt
+            if prompt is not None:
+                print(prompt.session_key)
         """
         return self._chat
 
-    @chat.setter
-    def chat(self, value: Chat):
+    @prompt.setter
+    def prompt(self, value: Prompt):
         """
-        Set the current chat session instance.
+        Set the current prompt session instance.
 
-        This setter updates the active `Chat` object for the provider. It also
+        This setter updates the active `Prompt` object for the provider. It also
         resetsall cached database-related attributes to ensure consistency
-        with the new chat session. If the provided value is not a `Chat`
+        with the new prompt session. If the provided value is not a `Prompt`
         instance or `None`, a `SmarterValueError` is raised.
 
         Parameters
         ----------
-        value : Chat or None
-            The new chat session instance to associate with the provider, or None to unset.
+        value : Prompt or None
+            The new prompt session instance to associate with the provider, or None to unset.
 
         Raises
         ------
         SmarterValueError
-            If the value is not a `Chat` instance or None.
+            If the value is not a `Prompt` instance or None.
 
         Side Effects
         ------------
@@ -232,49 +232,51 @@ class ChatDbMixin(AccountMixin):
         -------
         .. code-block:: python
 
-            provider.chat = new_chat
+            provider.prompt = new_chat
             # All cached database attributes are reset
         """
-        if not isinstance(value, Chat) and not value is None:
-            raise SmarterValueError("Chat must be an instance of Chat or None")
+        if not isinstance(value, Prompt) and not value is None:
+            raise SmarterValueError("Prompt must be an instance of Prompt or None")
         self._chat = value
-        if isinstance(value, Chat):
-            logger.debug("%s.chat setter updated chat session key to: %s", self.formatted_class_name, value.session_key)
+        if isinstance(value, Prompt):
+            logger.debug(
+                "%s.prompt setter updated prompt session key to: %s", self.formatted_class_name, value.session_key
+            )
         self._chat = None
         self._chat_tool_call = None  # type: ignore
         self._chat_plugin_usage = None  # type: ignore
         self._charges = None
         self._chat_history = None
         self._message_history = None
-        logger.debug("%s.chat setter reset lazy attributes due to chat change.", self.formatted_class_name)
+        logger.debug("%s.prompt setter reset lazy attributes due to prompt change.", self.formatted_class_name)
 
     @property
-    def chat_history(self) -> Optional[QuerySet[PromptHistory]]:
+    def prompt_history(self) -> Optional[QuerySet[PromptHistory]]:
         """
-        Get the chat history queryset for the current chat session.
+        Get the prompt history queryset for the current prompt session.
 
         This property returns a Django QuerySet of `PromptHistory` objects associated
-        with the current chat session. If no chat is set, or if there is no history,
+        with the current prompt session. If no prompt is set, or if there is no history,
         returns None. The queryset is cached for efficiency.
 
         Returns
         -------
         QuerySet[PromptHistory] or None
-            QuerySet of chat history records for the current chat, or None if unavailable.
+            QuerySet of prompt history records for the current prompt, or None if unavailable.
 
         Example
         -------
         .. code-block:: python
 
-            history_qs = provider.chat_history
+            history_qs = provider.prompt_history
             if history_qs is not None:
                 for record in history_qs:
                     print(record.created_at, record.messages)
         """
-        if self._chat_history is None and self.chat is not None:
-            self._chat_history = PromptHistory.objects.filter(chat=self.chat)
+        if self._chat_history is None and self.prompt is not None:
+            self._chat_history = PromptHistory.objects.filter(prompt=self.prompt)
             logger.debug(
-                "%s.chat_history property loaded chat history queryset with %d records.",
+                "%s.prompt_history property loaded prompt history queryset with %d records.",
                 self.formatted_class_name,
                 self._chat_history.count(),
             )
@@ -283,16 +285,16 @@ class ChatDbMixin(AccountMixin):
     @property
     def db_message_history(self) -> Optional[list[dict]]:
         """
-        Get the most recently persisted messages in the chat history.
+        Get the most recently persisted messages in the prompt history.
 
-        This property returns the latest list of messages stored in the chat history
-        for the current chat session. If no messages are available, returns None.
+        This property returns the latest list of messages stored in the prompt history
+        for the current prompt session. If no messages are available, returns None.
         The result is cached for efficiency.
 
         Returns
         -------
         list[dict] or None
-            The most recent list of message dictionaries from chat history, or None if unavailable.
+            The most recent list of message dictionaries from prompt history, or None if unavailable.
 
         Example
         -------
@@ -305,8 +307,8 @@ class ChatDbMixin(AccountMixin):
         """
         if isinstance(self._message_history, list):
             return self._message_history
-        if self.chat_history and self.chat_history.exists():
-            newest_record = self.chat_history.latest("created_at")
+        if self.prompt_history and self.prompt_history.exists():
+            newest_record = self.prompt_history.latest("created_at")
             if newest_record.messages:
                 self._message_history = newest_record.messages
                 if not isinstance(self._message_history, list):
@@ -316,7 +318,7 @@ class ChatDbMixin(AccountMixin):
                         type(self._message_history).__name__,
                     )
                 logger.debug(
-                    "%s.db_message_history property loaded %d messages from the latest chat history record.",
+                    "%s.db_message_history property loaded %d messages from the latest prompt history record.",
                     self.formatted_class_name,
                     len(self._message_history) if isinstance(self._message_history, list) else 0,
                 )
@@ -325,16 +327,16 @@ class ChatDbMixin(AccountMixin):
     @property
     def db_chat_tool_call(self) -> QuerySet[PromptToolCall]:
         """
-        Get the queryset of chat tool call records for the current chat session.
+        Get the queryset of prompt tool call records for the current prompt session.
 
         This property returns a Django QuerySet of `PromptToolCall` objects associated with
-        the current chat session. If no chat is set, returns an empty queryset. The queryset
+        the current prompt session. If no prompt is set, returns an empty queryset. The queryset
         is cached for efficiency.
 
         Returns
         -------
         QuerySet[PromptToolCall]
-            QuerySet of chat tool call records for the current chat session, or an empty queryset if unavailable.
+            QuerySet of prompt tool call records for the current prompt session, or an empty queryset if unavailable.
 
         Example
         -------
@@ -345,10 +347,10 @@ class ChatDbMixin(AccountMixin):
                 print(tool_call.function_name, tool_call.created_at)
         """
 
-        if self._chat_tool_call is None and self.chat is not None:
-            self._chat_tool_call = PromptToolCall.objects.filter(chat=self.chat)
+        if self._chat_tool_call is None and self.prompt is not None:
+            self._chat_tool_call = PromptToolCall.objects.filter(prompt=self.prompt)
             logger.debug(
-                "%s.db_chat_tool_call() loaded chat tool call queryset with %d records.",
+                "%s.db_chat_tool_call() loaded prompt tool call queryset with %d records.",
                 self.formatted_class_name,
                 self._chat_tool_call.count(),
             )
@@ -358,16 +360,16 @@ class ChatDbMixin(AccountMixin):
     @property
     def db_chat_plugin_usage(self) -> QuerySet[PromptPluginUsage]:
         """
-        Get the chat plugin usage instance for the current chat session.
+        Get the prompt plugin usage instance for the current prompt session.
 
         This property returns the `PromptPluginUsage` object associated with the
-        current chat session, if available. The result is cached for efficiency.
-        If no chat is set or no plugin usage exists, returns None.
+        current prompt session, if available. The result is cached for efficiency.
+        If no prompt is set or no plugin usage exists, returns None.
 
         Returns
         -------
         PromptPluginUsage or None
-            The chat plugin usage instance for the current chat, or None if unavailable.
+            The prompt plugin usage instance for the current prompt, or None if unavailable.
 
         Example
         -------
@@ -378,10 +380,10 @@ class ChatDbMixin(AccountMixin):
                 print(plugin_usage.plugin, plugin_usage.input_text)
         """
 
-        if self._chat_plugin_usage is None and self.chat is not None:
-            self._chat_plugin_usage = PromptPluginUsage.objects.filter(chat=self.chat)
+        if self._chat_plugin_usage is None and self.prompt is not None:
+            self._chat_plugin_usage = PromptPluginUsage.objects.filter(prompt=self.prompt)
             logger.debug(
-                "%s.db_chat_plugin_usage() loaded chat plugin usage queryset with %d records.",
+                "%s.db_chat_plugin_usage() loaded prompt plugin usage queryset with %d records.",
                 self.formatted_class_name,
                 self._chat_plugin_usage.count(),
             )
@@ -391,10 +393,10 @@ class ChatDbMixin(AccountMixin):
     @property
     def db_charges(self) -> QuerySet[Charge]:
         """
-        Get the queryset of charge records for the current chat session and UserProfile.
+        Get the queryset of charge records for the current prompt session and UserProfile.
 
         This property returns a Django QuerySet of `Charge` objects filtered by the
-        current user profile and chat session key. If either the user profile or chat is not set,
+        current user profile and prompt session key. If either the user profile or prompt is not set,
         returns None. The queryset is cached for efficiency.
 
         Each `Charge` record typically contains fields such as:
@@ -417,8 +419,8 @@ class ChatDbMixin(AccountMixin):
                     print(charge.prompt_tokens, charge.completion_tokens, charge.total_tokens)
         """
 
-        if self._charges is None and self.user_profile is not None and self.chat is not None:
-            self._charges = Charge.objects.filter(user_profile=self.user_profile, session_key=self.chat.session_key)
+        if self._charges is None and self.user_profile is not None and self.prompt is not None:
+            self._charges = Charge.objects.filter(user_profile=self.user_profile, session_key=self.prompt.session_key)
             logger.debug(
                 "%s.db_charges() loaded charge queryset with %d records.",
                 self.formatted_class_name,
@@ -429,10 +431,10 @@ class ChatDbMixin(AccountMixin):
     @property
     def db_total_prompt_tokens(self) -> int:
         """
-        Get the total number of prompt tokens used in the current chat session.
+        Get the total number of prompt tokens used in the current prompt session.
 
         This property aggregates the `prompt_tokens` field across all charge records
-        for the current chat session and account. If no charges are available, returns 0.
+        for the current prompt session and account. If no charges are available, returns 0.
 
         Returns
         -------
@@ -453,10 +455,10 @@ class ChatDbMixin(AccountMixin):
     @property
     def db_total_completion_tokens(self) -> int:
         """
-        Get the total number of completion tokens used in the current chat session.
+        Get the total number of completion tokens used in the current prompt session.
 
         This property aggregates the `completion_tokens` field across all charge records
-        for the current chat session and account. If no charges are available, returns 0.
+        for the current prompt session and account. If no charges are available, returns 0.
 
         Returns
         -------
@@ -477,10 +479,10 @@ class ChatDbMixin(AccountMixin):
     @property
     def db_total_total_tokens(self) -> int:
         """
-        Get the total number of tokens used in the current chat session.
+        Get the total number of tokens used in the current prompt session.
 
         This property aggregates the `total_tokens` field across all charge records
-        for the current chat session and account. If no charges are available, returns 0.
+        for the current prompt session and account. If no charges are available, returns 0.
 
         Returns
         -------
@@ -504,7 +506,7 @@ class ChatDbMixin(AccountMixin):
         Get a dictionary containing the total prompt, completion, and overall tokens used.
 
         This property returns a dictionary with the total number of prompt tokens,
-        completion tokens, and overall tokens used in the current chat session.
+        completion tokens, and overall tokens used in the current prompt session.
         The values are aggregated from all charge records for the session.
 
         Returns
@@ -533,7 +535,7 @@ class ChatDbMixin(AccountMixin):
         Get the provider name associated with this provider model.
 
         This property returns the name of the provider that this model is configured to use.
-        It is typically used to determine which provider's handler to invoke for chat completions.
+        It is typically used to determine which provider's handler to invoke for prompt completions.
 
         Returns
         -------
@@ -594,9 +596,9 @@ class ChatDbMixin(AccountMixin):
         """
         Refresh the provider instance and its cached database attributes.
 
-        This method refreshes the chat instance from the database and resets the cached
+        This method refreshes the prompt instance from the database and resets the cached
         charges queryset. Use this method to ensure the provider has the latest data
-        after external changes to the chat or related records.
+        after external changes to the prompt or related records.
 
         Example
         -------
@@ -606,17 +608,17 @@ class ChatDbMixin(AccountMixin):
             # Now provider.db_charges and related properties are up to date
         """
         logger.debug("%s.db_refresh() called.", self.formatted_class_name)
-        if self.chat:
+        if self.prompt:
             # resets all lazy attributes to force reload on next access
-            self.chat = self.chat
+            self.prompt = self.prompt
 
     def db_insert_chat_tool_call(self, *args, **kwargs):
         """
-        Insert a chat tool call record for the current chat session.
+        Insert a prompt tool call record for the current prompt session.
 
         This method creates a new `PromptToolCall` record associated with the
-        current chat session. The insertion is performed asynchronously using
-        a background task. If no chat is set, the method returns without
+        current prompt session. The insertion is performed asynchronously using
+        a background task. If no prompt is set, the method returns without
         action.
 
         Parameters
@@ -647,31 +649,31 @@ class ChatDbMixin(AccountMixin):
         logger.debug(
             "%s.db_insert_chat_tool_call() called with args: %s kwargs: %s", self.formatted_class_name, args, kwargs
         )
-        if not self.chat:
+        if not self.prompt:
             return
-        chat_id = self.chat.id  # type: ignore
+        chat_id = self.prompt.id  # type: ignore
         plugin = kwargs.get("plugin", None)
         plugin_id = plugin.id if plugin else None
         function_name = kwargs.get("function_name", None)
         function_args = kwargs.get("function_args", None)
         request = kwargs.get("request", None)
         response = kwargs.get("response", None)
-        create_chat_tool_call_history.delay(chat_id, plugin_id, function_name, function_args, request, response)
+        create_prompt_tool_call_history.delay(chat_id, plugin_id, function_name, function_args, request, response)
 
     def db_insert_chat_plugin_usage(self, *args, **kwargs):
         """
-        Insert a chat plugin usage record for the specified chat session.
+        Insert a prompt plugin usage record for the specified prompt session.
 
-        This method creates a new `PromptPluginUsage` record associated with the given chat session.
-        The insertion is performed asynchronously using a background task. If no chat is provided,
+        This method creates a new `PromptPluginUsage` record associated with the given prompt session.
+        The insertion is performed asynchronously using a background task. If no prompt is provided,
         the method logs a warning and returns without action.
 
         Parameters
         ----------
-        chat : Chat, required
-            The chat instance for which to record plugin usage.
+        prompt : Prompt, required
+            The prompt instance for which to record plugin usage.
         plugin : Plugin, optional
-            The plugin instance used in the chat (default: None).
+            The plugin instance used in the prompt (default: None).
         input_text : str, optional
             The input text sent to the plugin (default: None).
 
@@ -680,7 +682,7 @@ class ChatDbMixin(AccountMixin):
         .. code-block:: python
 
             provider.db_insert_chat_plugin_usage(
-                chat=my_chat,
+                prompt=my_chat,
                 plugin=my_plugin,
                 input_text="search for weather"
             )
@@ -688,21 +690,21 @@ class ChatDbMixin(AccountMixin):
         logger.debug(
             "%s.db_insert_chat_plugin_usage() called with args: %s kwargs: %s", self.formatted_class_name, args, kwargs
         )
-        chat = kwargs.get("chat", None)
-        if not chat:
-            logger.warning("db_insert_chat_plugin_usage() Chat is required to create a chat plugin usage record.")
+        prompt = kwargs.get("prompt", None)
+        if not prompt:
+            logger.warning("db_insert_chat_plugin_usage() Prompt is required to create a prompt plugin usage record.")
             return
-        chat_id = chat.id  # type: ignore
+        chat_id = prompt.id  # type: ignore
         plugin = kwargs.get("plugin", None)
         plugin_id = plugin.id if plugin else None
         input_text = kwargs.get("input_text", None)
-        create_chat_plugin_usage.delay(chat_id=chat_id, plugin_id=plugin_id, input_text=input_text)
+        create_prompt_plugin_usage.delay(chat_id=chat_id, plugin_id=plugin_id, input_text=input_text)
 
     def db_insert_charge(self, provider, charge_type, completion_tokens, prompt_tokens, total_tokens, model, reference):
         """
-        Insert a new charge record for the current account and chat session.
+        Insert a new charge record for the current account and prompt session.
 
-        This method asynchronously creates a new `Charge` record associated with the current account, user, and chat session. It is typically used to persist billing or usage information for a model completion or related operation.
+        This method asynchronously creates a new `Charge` record associated with the current account, user, and prompt session. It is typically used to persist billing or usage information for a model completion or related operation.
 
         Parameters
         ----------
@@ -724,7 +726,7 @@ class ChatDbMixin(AccountMixin):
         Raises
         ------
         SmarterValueError
-            If the account or chat is not set.
+            If the account or prompt is not set.
 
         Example
         -------
@@ -742,8 +744,8 @@ class ChatDbMixin(AccountMixin):
         """
         if not self.account:
             raise SmarterValueError("Account is required to create a charge record.")
-        if not self.chat:
-            raise SmarterValueError("Chat is required to create a charge record.")
+        if not self.prompt:
+            raise SmarterValueError("Prompt is required to create a charge record.")
         if not self.provider:
             raise SmarterValueError("Provider is required to create a charge record.")
         if not self.user:
@@ -751,7 +753,7 @@ class ChatDbMixin(AccountMixin):
 
         create_charge.delay(
             user_profile_id=self.user_profile.id if self.user_profile else None,  # type: ignore
-            session_key=self.chat.session_key,
+            session_key=self.prompt.session_key,
             provider_id=provider.id,  # type: ignore
             charge_type=charge_type,
             prompt_tokens=prompt_tokens,

@@ -32,13 +32,16 @@ logger = logging.getLogger(__name__)
 class TestSmarterAuthTokenBrokerBase(TestSAMBrokerBaseClass):
     """
     Test the Smarter SAMSmarterAuthTokenBroker.
+
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
 
     def setUp(self):
         """
-        test-level setup. Before we delve into the actual unit tests, we need to
+        Test-level setup.
+
+        Before we delve into the actual unit tests, we need to
         ensure that our test environment is properly configured and that we
         can initialize the precursors for testing the SAMSmarterAuthTokenBroker.
         """
@@ -84,6 +87,7 @@ class TestSmarterAuthTokenBrokerBase(TestSAMBrokerBaseClass):
 class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
     """
     Test the Smarter SAMSmarterAuthTokenBroker.
+
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
@@ -105,9 +109,7 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
         )
 
     def test_is_valid(self):
-        """
-        Test that the is_valid property returns True.
-        """
+        """Test that the is_valid property returns True."""
         self.assertTrue(self.broker.is_valid)
 
     def test_immutability(self):
@@ -213,7 +215,8 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
 
     def test_example_manifest(self):
         """
-        test example_manifest method.
+        Test example_manifest method.
+
         Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
@@ -225,7 +228,9 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
 
     def test_get(self):
         """
-        test get method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test get method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         response = self.broker.get(self.request, **self.kwargs)  # type: ignore
@@ -236,7 +241,9 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
 
     def test_apply(self):
         """
-        test apply method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test apply method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         logger.debug("test_apply() request body: %s", self.request.body.decode() if self.request.body else None)
@@ -299,7 +306,9 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
 
     def test_describe(self):
         """
-        Stub: test describe method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Stub: test describe method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         response = self.broker.apply(self.request, **self.kwargs)  # type: ignore
@@ -313,7 +322,9 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
 
     def test_undeploy(self):
         """
-        test undeploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test undeploy method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         response = self.broker.undeploy(self.request, **self.kwargs)  # type: ignore
@@ -322,9 +333,9 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
         logger.info("Describe response: %s", response.content.decode())
 
     def test_chat_not_implemented(self):
-        """test chat method raises not implemented."""
+        """Test prompt method raises not implemented."""
         with self.assertRaises(SAMBrokerErrorNotImplemented):
-            self.broker.chat(self.request, **self.kwargs)  # type: ignore
+            self.broker.prompt(self.request, **self.kwargs)  # type: ignore
 
     def test_logs_returns_ok(self):
         """Stub: test logs method returns ok response."""
@@ -377,7 +388,9 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
 
     def test_deploy(self):
         """
-        test deploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        Test deploy method.
+
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
         response = self.broker.apply(self.request, **self.kwargs)  # type: ignore
@@ -391,9 +404,7 @@ class TestSmarterAuthTokenBroker2(TestSmarterAuthTokenBrokerBase):
 
     # pylint: disable=W0212
     def test_delete_smarter_auth_token_not_found(self):
-        """
-        test delete method raises not found for missing smarter_auth_token.
-        """
+        """Test delete method raises not found for missing smarter_auth_token."""
         self.request._body = None  # type: ignore
         self._broker = self.SAMBrokerClass(self.request)
 
@@ -405,9 +416,7 @@ class TestSmarterAuthTokenBroker3(TestSmarterAuthTokenBrokerBase):
 
     # pylint: disable=W0212
     def test_describe_smarter_auth_token_not_found(self):
-        """
-        Test describe method raises not found for missing smarter_auth_token.
-        """
+        """Test describe method raises not found for missing smarter_auth_token."""
         request = self.request
         request._body = None  # type: ignore
         self._broker = self.SAMBrokerClass(request)

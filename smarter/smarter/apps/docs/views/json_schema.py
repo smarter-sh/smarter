@@ -61,7 +61,7 @@ class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
 
 
 class DocsJsonSchemaChatView(DocsJsonSchemaBaseView):
-    """Chat JSON Schema view."""
+    """Prompt JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.CHAT)
 

@@ -1,4 +1,4 @@
-"""Base class for chat providers."""
+"""Base class for prompt providers."""
 
 import logging
 from functools import cached_property
@@ -22,7 +22,7 @@ from smarter.apps.prompt.functions.function_weather import (
     get_current_weather,
     weather_tool_factory,
 )
-from smarter.apps.prompt.models import Chat
+from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.signals import (
     chat_provider_initialized,
 )
@@ -60,20 +60,20 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class SmarterChatProviderBase(ChatDbMixin):
     """
-    Base class for all Smarter chat providers.
+    Base class for all Smarter prompt providers.
 
-    This class defines the core interface and shared logic for chat providers
+    This class defines the core interface and shared logic for prompt providers
     that interact with LLMClients via the Smarter API, including both the
     Reactapp and deployed LLMClients accessible through named URLs. It is
     designed to be subclassed by specific provider_name implementations.
 
-    The API is largely a superset of the OpenAI chat completion API, with
+    The API is largely a superset of the OpenAI prompt completion API, with
     additional properties and methods for configuring the Reactapp and for
     managing additional message content types that are proprietary to Smarter.
 
     **Key Features:**
 
-        - Provides a unified interface for chat providers, supporting both OpenAI-compatible and proprietary Smarter features.
+        - Provides a unified interface for prompt providers, supporting both OpenAI-compatible and proprietary Smarter features.
         - Handles message thread management, including system prompts, user/assistant messages, and plugin/tool messages.
         - Supports built-in tools (e.g., weather, date calculator) and plugin integration.
         - Manages provider_name configuration, validation, and readiness checks.
@@ -81,7 +81,7 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     **Usage:**
 
-        Subclass this base class to implement a new chat provider_name. Override or extend methods as needed for provider_name-specific logic.
+        Subclass this base class to implement a new prompt provider_name. Override or extend methods as needed for provider_name-specific logic.
 
     **Example:**
         .. code-block:: python
@@ -134,7 +134,7 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     _base_url: Optional[str]
     _api_key: Optional[str]
-    _chat: Optional[Chat]
+    _chat: Optional[Prompt]
 
     data: Optional[dict[str, Any]]
     plugins: Optional[List[PluginBase]]
@@ -179,23 +179,23 @@ class SmarterChatProviderBase(ChatDbMixin):
         """
         Initialize the SmarterChatProviderBase with the given parameters.
 
-        :param provider: The Provider instance for the chat provider.
+        :param provider: The Provider instance for the prompt provider.
         :type provider: Provider
-        :param provider_name: The name of the chat provider_name (e.g., "openai", "google").
+        :param provider_name: The name of the prompt provider_name (e.g., "openai", "google").
         :type provider_name: str
-        :param base_url: The base URL for the chat provider_name's API.
+        :param base_url: The base URL for the prompt provider_name's API.
         :type base_url: str
-        :param api_key: The API key for authenticating with the chat provider_name.
+        :param api_key: The API key for authenticating with the prompt provider_name.
         :type api_key: str
-        :param default_model: The default model to use for chat completions.
+        :param default_model: The default model to use for prompt completions.
         :type default_model: str
         :param default_system_role: The default system role to use in the message thread.
         :type default_system_role: str
-        :param default_temperature: The default temperature to use for chat completions.
+        :param default_temperature: The default temperature to use for prompt completions.
         :type default_temperature: float
-        :param default_max_tokens: The default maximum number of tokens for chat completions.
+        :param default_max_tokens: The default maximum number of tokens for prompt completions.
         :type default_max_tokens: int
-        :param valid_chat_completion_models: A list of valid chat completion models for the provider_name.
+        :param valid_chat_completion_models: A list of valid prompt completion models for the provider_name.
         :type valid_chat_completion_models: list[str]
         :param add_built_in_tools: Whether to add built-in tools (weather and date calculator) to the provider_name.
         :type add_built_in_tools: bool
@@ -249,7 +249,7 @@ class SmarterChatProviderBase(ChatDbMixin):
 
         # initializations
         self.serialized_tool_calls = None
-        self._chat = kwargs.get("chat")
+        self._chat = kwargs.get("prompt")
         self._provider_name = provider_name
         self._base_url = base_url
         self._api_key = api_key.get_secret_value() if api_key else None
@@ -309,8 +309,8 @@ class SmarterChatProviderBase(ChatDbMixin):
         :returns: None
         :rtype: None
         """
-        if not self.chat:
-            raise SmarterValueError(f"{self.formatted_class_name}: chat object is required")
+        if not self.prompt:
+            raise SmarterValueError(f"{self.formatted_class_name}: prompt object is required")
         if not self.data:
             raise SmarterValueError(f"{self.formatted_class_name}: data object is required")
         if not self.user:
@@ -330,22 +330,22 @@ class SmarterChatProviderBase(ChatDbMixin):
             )
 
         if not self.account:
-            self.account = self.chat.user_profile.account
+            self.account = self.prompt.user_profile.account
 
     @cached_property
     def ready(self) -> bool:
         """
-        Check if the chat provider_name is ready to process requests.
+        Check if the prompt provider_name is ready to process requests.
 
-        :returns: True if the chat provider_name is ready, False otherwise.
+        :returns: True if the prompt provider_name is ready, False otherwise.
         :rtype: bool
         """
-        return bool(self.chat) and bool(self.data) and bool(self.account)
+        return bool(self.prompt) and bool(self.data) and bool(self.account)
 
     @property
     def messages(self) -> Optional[List[Dict[str, str]]]:
         """
-        Get the list of messages in the chat.
+        Get the list of messages in the prompt.
 
         This property
         returns the internal _messages attribute.
@@ -358,7 +358,7 @@ class SmarterChatProviderBase(ChatDbMixin):
     @messages.setter
     def messages(self, value: List[Dict[str, str]]) -> None:
         """
-        Set the list of messages in the chat.
+        Set the list of messages in the prompt.
 
         This property
         sets the internal _messages attribute.
@@ -386,12 +386,12 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def base_url(self) -> Optional[str]:
         """
-        Get the base URL of the chat provider_name.
+        Get the base URL of the prompt provider_name.
 
         This property
         returns the internal _base_url attribute.
 
-        :returns: The base URL of the chat provider_name.
+        :returns: The base URL of the prompt provider_name.
         :rtype: Optional[str]
         """
         return self._base_url
@@ -399,31 +399,31 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def url(self) -> Optional[str]:
         """
-        Get the full URL for chat completions.
+        Get the full URL for prompt completions.
 
         This property
-        constructs the URL by appending the chat completions
+        constructs the URL by appending the prompt completions
         endpoint to the base URL.
 
         :examples:
 
             If the base URL is "https://api.some-llm-company.com", the full URL will be
-            "https://api.some-llm-company.com/v1/chat/completions".
+            "https://api.some-llm-company.com/v1/prompt/completions".
 
-        :returns: The full URL for chat completions.
+        :returns: The full URL for prompt completions.
         :rtype: Optional[str]
         """
-        return self._base_url + "chat/completions" if self._base_url else None
+        return self._base_url + "prompt/completions" if self._base_url else None
 
     @property
     def api_key(self) -> Optional[str]:
         """
-        Get the API key of the chat provider_name.
+        Get the API key of the prompt provider_name.
 
         This property
         returns the unmasked internal _api_key attribute.
 
-        :returns: The unmasked API key of the chat provider_name.
+        :returns: The unmasked API key of the prompt provider_name.
         :rtype: Optional[str]
         """
         return self._api_key
@@ -431,12 +431,12 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_model(self) -> Optional[str]:
         """
-        Get the default model of the chat provider_name.
+        Get the default model of the prompt provider_name.
 
         This property
         returns the internal _default_model attribute.
 
-        :returns: The default model of the chat provider_name.
+        :returns: The default model of the prompt provider_name.
         :rtype: Optional[str]
         """
         if self._default_model:
@@ -448,12 +448,12 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_system_role(self) -> Optional[str]:
         """
-        Get the default system role of the chat provider_name.
+        Get the default system role of the prompt provider_name.
 
         This property
         returns the internal _default_system_role attribute.
 
-        :returns: The default system role of the chat provider_name.
+        :returns: The default system role of the prompt provider_name.
         :rtype: Optional[str]
         """
         return self._default_system_role
@@ -461,12 +461,12 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_temperature(self) -> Optional[float]:
         """
-        Get the default temperature of the chat provider_name.
+        Get the default temperature of the prompt provider_name.
 
         This property
         returns the internal _default_temperature attribute.
 
-        :returns: The default temperature of the chat provider_name.
+        :returns: The default temperature of the prompt provider_name.
         :rtype: Optional[float]
         """
         return self._default_temperature
@@ -474,12 +474,12 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def default_max_tokens(self) -> Optional[int]:
         """
-        Get the default max completion tokens of the chat provider_name.
+        Get the default max completion tokens of the prompt provider_name.
 
         This property
         returns the internal _default_max_completion_tokens attribute.
 
-        :returns: The default max completion tokens of the chat provider_name.
+        :returns: The default max completion tokens of the prompt provider_name.
         :rtype: Optional[int]
         """
         return self._default_max_completion_tokens
@@ -487,15 +487,15 @@ class SmarterChatProviderBase(ChatDbMixin):
     @property
     def valid_chat_completion_models(self) -> Optional[list[str]]:
         """
-        Get the list of valid chat completion models for the chat provider_name.
+        Get the list of valid prompt completion models for the prompt provider_name.
 
         This property
         returns the internal _valid_chat_completion_models attribute.
 
-        A valid chat completion model is one that is supported by the chat provider_name's
-        API for chat completions.
+        A valid prompt completion model is one that is supported by the prompt provider_name's
+        API for prompt completions.
 
-        :returns: The list of valid chat completion models.
+        :returns: The list of valid prompt completion models.
         :rtype: Optional[list[str]]
         """
         return self._valid_chat_completion_models
@@ -535,8 +535,8 @@ class SmarterChatProviderBase(ChatDbMixin):
         :rtype: List[Dict[str, str]]
         """
         default_system_role = get_date_time_string()
-        if self.chat and self.chat.llm_client and self.chat.llm_client.default_system_role_enhanced:
-            default_system_role += self.chat.llm_client.default_system_role_enhanced
+        if self.prompt and self.prompt.llm_client and self.prompt.llm_client.default_system_role_enhanced:
+            default_system_role += self.prompt.llm_client.default_system_role_enhanced
         request_body = get_request_body(data=data)
         client_message_thread, _ = parse_request(request_body)
         if not isinstance(client_message_thread, list):

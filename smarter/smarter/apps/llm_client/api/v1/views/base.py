@@ -24,7 +24,7 @@ from smarter.apps.llm_client.models import (
 from smarter.apps.llm_client.serializers import LLMClientSerializer
 from smarter.apps.llm_client.signals import llm_client_called
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.prompt.models import Chat, PromptHelper
+from smarter.apps.prompt.models import Prompt, PromptHelper
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import is_authenticated_request
@@ -84,7 +84,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         - ``https://customer-support.3141-5926-5359.api.example.com/``
         - ``https://platform.smarter/workbench/example/``
-        - ``https://platform.smarter/api/v1/workbench/1/chat/``
+        - ``https://platform.smarter/api/v1/workbench/1/prompt/``
 
     **Notes:**
 
@@ -96,7 +96,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     **See Also:**
         - Django REST Framework View lifecycle: https://www.django-rest-framework.org/api-guide/views/#view-initialization
         - SmarterRequestMixin for request context management.
-        - LLMClientHelper and PromptHelper for llm_client and chat session logic.
+        - LLMClientHelper and PromptHelper for llm_client and prompt session logic.
         - Smarter LLM Tool Call Plugin architecture documentation.
     """
 
@@ -138,7 +138,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             )
             if self._chat_helper:
                 self.helper_logger(
-                    f"{self.formatted_class_name} initialized with chat: {self.chat_helper.chat}, llm_client: {self.llm_client}"
+                    f"{self.formatted_class_name} initialized with prompt: {self.chat_helper.prompt}, llm_client: {self.llm_client}"
                 )
         else:
             raise SmarterLLMClientException(
@@ -292,7 +292,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         - Initialize the :class:`SmarterRequestMixin` with the current request and any additional arguments.
         - Prepare and set up the :class:`LLMClientHelper` and :class:`PromptHelper` instances, which are used
-          throughout the request lifecycle for llm_client-specific logic and chat session management.
+          throughout the request lifecycle for llm_client-specific logic and prompt session management.
         - Log key setup events for observability and debugging.
 
         Parameters
@@ -318,7 +318,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         --------
         - Django REST Framework View lifecycle: https://www.django-rest-framework.org/api-guide/views/#view-initialization
         - SmarterRequestMixin for request context management.
-        - LLMClientHelper and PromptHelper for llm_client and chat session logic.
+        - LLMClientHelper and PromptHelper for llm_client and prompt session logic.
         """
         logger.debug(
             "%s.setup() - request: %s, args: %s, kwargs: %s",
@@ -380,7 +380,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         See Also
         --------
         - Django REST Framework View dispatch: https://www.django-rest-framework.org/api-guide/views/#view-methods
-        - LLMClientHelper and PromptHelper for llm_client and chat session logic.
+        - LLMClientHelper and PromptHelper for llm_client and prompt session logic.
         """
         self._llm_client_id = kwargs.get("llm_client_id")
         if self._llm_client_id:
@@ -477,7 +477,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
     def options(self, request, *args, **kwargs):
         """
-        OPTIONS request handler for the Smarter Chat API.
+        OPTIONS request handler for the Smarter Prompt API.
 
         Sets CORS headers to allow cross-origin requests from the Smarter environment URL.
 
@@ -498,7 +498,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     # pylint: disable=W0613
     def get(self, request, *args, name: Optional[str] = None, **kwargs):
         """
-        GET request handler for the Smarter Chat API.
+        GET request handler for the Smarter Prompt API.
 
         Currently, GET requests are not supported and will return a message indicating that POST should be used
         instead.
@@ -514,7 +514,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     # pylint: disable=W0613
     def post(self, request, *args, name: Optional[str] = None, **kwargs):
         """
-        POST request handler for the Smarter Chat API.
+        POST request handler for the Smarter Prompt API.
 
         This method processes POST requests to the llm_client API endpoint. It determines which
         LLMClient instance to use based on the request's host, supporting both default API domains
@@ -543,9 +543,9 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         ----------------
         - Logs key request and context information for observability.
         - Validates that a LLMClient instance is available; returns an error response if not found.
-        - Retrieves the appropriate chat provider handler for the LLMClient.
+        - Retrieves the appropriate prompt provider handler for the LLMClient.
         - Ensures a valid PromptHelper instance is available; returns an error response if not found.
-        - Invokes the chat provider handler with the chat session, request data, plugins, and user context.
+        - Invokes the prompt provider handler with the prompt session, request data, plugins, and user context.
         - Wraps the response in a ``SmarterJournaledJsonResponse`` for consistent API output.
 
         Parameters
@@ -565,7 +565,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         Returns
         -------
         SmarterJournaledJsonResponse
-            A structured JSON response containing the result of the chat operation, or an error response
+            A structured JSON response containing the result of the prompt operation, or an error response
             if the LLMClient or PromptHelper could not be initialized.
 
         Notes
@@ -578,7 +578,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         --------
         - Django REST Framework APIView: https://www.django-rest-framework.org/api-guide/views/
         - SmarterJournaledJsonResponse for response structure.
-        - LLMClientHelper and PromptHelper for llm_client and chat session logic.
+        - LLMClientHelper and PromptHelper for llm_client and prompt session logic.
         """
 
         # pylint: disable=C0415
@@ -594,9 +594,9 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         logger.debug("%s.post() - account: %s - %s", self.formatted_class_name, self.account, self.account_number)
         logger.debug("%s.post() - user: %s", self.formatted_class_name, self.user)
         logger.debug(
-            "%s.post() - chat: %s",
+            "%s.post() - prompt: %s",
             self.formatted_class_name,
-            self.chat_helper.chat.user_profile if self.chat_helper and self.chat_helper.chat else None,
+            self.chat_helper.prompt.user_profile if self.chat_helper and self.chat_helper.prompt else None,
         )
         logger.debug("%s.post() - llm_client: %s", self.formatted_class_name, self.llm_client)
         logger.debug("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
@@ -619,7 +619,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         if not self.chat_helper:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
-                e=Chat.DoesNotExist(
+                e=Prompt.DoesNotExist(
                     f"PromptHelper not found. request={self.smarter_request} name={self.name}, llm_client_id={self.llm_client_id}, session_key={self.session_key}, user_profile={self.user_profile}"
                 ),
                 safe=False,
@@ -628,9 +628,9 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.NOT_FOUND.value,
                 stack_trace=traceback.format_exc(),
             )
-        if not self.chat_helper.chat:
+        if not self.chat_helper.prompt:
             raise SmarterLLMClientException(
-                f"Chat not found. This is a bug. request={self.smarter_request} name={self.name}, llm_client_id={self.llm_client_id}, session_key={self.session_key}, user_profile={self.user_profile}"
+                f"Prompt not found. This is a bug. request={self.smarter_request} name={self.name}, llm_client_id={self.llm_client_id}, session_key={self.session_key}, user_profile={self.user_profile}"
             )
         if not self.data:
             raise SmarterLLMClientException(
@@ -651,7 +651,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 f"UserProfile is not a valid UserProfile instance. request={self.smarter_request} name={self.name}, llm_client_id={self.llm_client_id}, session_key={self.session_key}, user_profile={self.user_profile}, user_profile_type={type(self.user_profile)}"
             )
         response = handler(
-            self.user_profile, self.chat_helper.chat, self.data, plugins=self.plugins, functions=self.functions
+            self.user_profile, self.chat_helper.prompt, self.data, plugins=self.plugins, functions=self.functions
         )
         response = {
             SmarterJournalApiResponseKeys.DATA: response,

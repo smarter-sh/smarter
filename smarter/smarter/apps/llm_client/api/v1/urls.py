@@ -1,4 +1,4 @@
-"""URL configuration for chat app."""
+"""URL configuration for prompt app."""
 
 from django.urls import path
 
@@ -96,12 +96,12 @@ urlpatterns = [
         name=LLMClientApiV1ReverseViews.chat_config_view_by_hashed_id,
     ),
     path(
-        "<str:hashed_id>/chat/",
+        "<str:hashed_id>/prompt/",
         DefaultLLMClientApiView.as_view(),
         name=LLMClientApiV1ReverseViews.default_llm_client_api_view_by_hashed_id,
     ),
     # mcdaniel: this is a patch to keep the react component working with the new hashed_id urls.
-    path("<str:hashed_id>/chat/config/", PromptConfigView.as_view()),
+    path("<str:hashed_id>/prompt/config/", PromptConfigView.as_view()),
     # --------------------------------------------------------------------------
     # paths by llm_client_id
     # --------------------------------------------------------------------------
@@ -112,7 +112,7 @@ urlpatterns = [
         name=LLMClientApiV1ReverseViews.chat_config_view_by_id,
     ),
     path(
-        "<int:llm_client_id>/chat/",
+        "<int:llm_client_id>/prompt/",
         DefaultLLMClientApiView.as_view(),
         name=LLMClientApiV1ReverseViews.default_llm_client_api_view_by_id,
     ),
@@ -120,7 +120,7 @@ urlpatterns = [
     # paths by llm_client_id that are not currently referenced by reverse()
     # in the codebase
     # --------------------------------------------------------------------------
-    path("<int:llm_client_id>/chat/config/", PromptConfigView.as_view(), name="chat_config_view_legacy"),
+    path("<int:llm_client_id>/prompt/config/", PromptConfigView.as_view(), name="chat_config_view_legacy"),
     path(
         "<int:llm_client_id>/plugins/",
         LLMClientPluginListView.as_view(),

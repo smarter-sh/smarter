@@ -79,7 +79,7 @@ class DocsExampleManifestApiKeyView(DocsExampleManifestBaseView):
 
 
 class DocsExampleManifestChatView(DocsExampleManifestBaseView):
-    """Chat JSON Schema view."""
+    """Prompt JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.CHAT)
 

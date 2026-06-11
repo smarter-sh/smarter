@@ -1,5 +1,5 @@
 # pylint: disable=C0302,W0718
-"""Smarter API User Manifest handler"""
+"""Smarter API User Manifest handler."""
 
 import datetime
 import logging
@@ -71,6 +71,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 MAX_RESULTS = 1000
 """
 Maximum number of results to return for list operations.
+
 This limit helps prevent performance issues and excessive data retrieval.
 
 TODO: Make this configurable via smarter_settings.
@@ -87,7 +88,7 @@ class SAMVectorstoreBrokerError(SAMBrokerError):
 
 class SAMVectorstoreBroker(AbstractBroker):
     """
-    Smarter API Vectorstore Manifest Broker
+    Smarter API Vectorstore Manifest Broker.
 
     This class manages the lifecycle of Smarter API Vectorstore manifests, including loading, validating, parsing, and mapping them to Django ORM models and Pydantic models for serialization and deserialization.
     **Responsibilities:**
@@ -118,7 +119,6 @@ class SAMVectorstoreBroker(AbstractBroker):
     .. todo::
 
        Make the maximum results for list operations configurable via `smarter_settings`.
-
     """
 
     # override the base abstract manifest model with the Vectorstore model
@@ -264,7 +264,8 @@ class SAMVectorstoreBroker(AbstractBroker):
 
     def django_meta_orm_to_manifest(self) -> SAMVectorstoreMetadata:
         """
-        Convert the Django ORM `VectorestoreMeta` model instance into a
+        Convert the Django ORM `VectorestoreMeta` model instance into a.
+
         `SAMVectorstoreMetadata` Pydantic model for manifest serialization.
 
         :raises: :class:`SAMVectorstoreBrokerError`
@@ -295,7 +296,8 @@ class SAMVectorstoreBroker(AbstractBroker):
 
     def django_vector_interface_to_manifest(self) -> SAMVectorstoreInterface:
         """
-        Convert the Django ORM `VectorstoreInterface` model instance into a
+        Convert the Django ORM `VectorstoreInterface` model instance into a.
+
         `SAMVectorstoreInterface` Pydantic model for manifest serialization.
 
         :raises: :class:`SAMVectorstoreBrokerError`
@@ -328,7 +330,8 @@ class SAMVectorstoreBroker(AbstractBroker):
 
     def django_embeddings_interface_to_manifest(self) -> SAMEmbeddingsInterface:
         """
-        Convert the Django ORM `EmbeddingsInterface` model instance into a
+        Convert the Django ORM `EmbeddingsInterface` model instance into a.
+
         `SAMEmbeddingsInterface` Pydantic model for manifest serialization.
 
         :raises: :class:`SAMVectorstoreBrokerError`
@@ -384,7 +387,8 @@ class SAMVectorstoreBroker(AbstractBroker):
 
     def django_index_model_to_manifest(self) -> SAMIndexModelInterface:
         """
-        Convert the Django ORM `IndexModelInterface` model instance into a
+        Convert the Django ORM `IndexModelInterface` model instance into a.
+
         `SAMIndexModelInterface` Pydantic model for manifest serialization.
 
         :raises: :class:`SAMVectorstoreBrokerError`
@@ -442,7 +446,6 @@ class SAMVectorstoreBroker(AbstractBroker):
            - :class:`smarter.lib.manifest.enum.SamKeys`
            - :class:`smarter.lib.manifest.enumSAMMetadataKeys`
            - :class:`smarter.lib.manifest.enumSAMVectorstoreSpecKeys`
-
         """
         logger.debug(
             "%s.django_orm_to_manifest() called for %s %s", self.formatted_class_name, self.name, self.user_profile
@@ -515,7 +518,6 @@ class SAMVectorstoreBroker(AbstractBroker):
         .. code-block:: python
 
            logger.debug(broker.formatted_class_name)
-
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.{SAMVectorstoreBroker.__name__}[{id(self)}]"
@@ -533,7 +535,6 @@ class SAMVectorstoreBroker(AbstractBroker):
 
            if broker.kind == "Vectorstore":
                print("This broker handles Vectorstore manifests.")
-
         """
         return MANIFEST_KIND
 
@@ -628,7 +629,6 @@ class SAMVectorstoreBroker(AbstractBroker):
            - :class:`smarter.apps.SamKeys`
            - :class:`SAMMetadataKeys`
            - :class:`SAMVectorstoreSpecKeys`
-
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
@@ -748,7 +748,6 @@ class SAMVectorstoreBroker(AbstractBroker):
            - :class:`smarter.lib.manifest.enum.SAMMetadataKeys`
            - :class:`smarter.lib.manifest.enum.SCLIResponseGet`
            - :class:`smarter.lib.manifest.enum.SCLIResponseGetData`
-
         """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
@@ -798,7 +797,6 @@ class SAMVectorstoreBroker(AbstractBroker):
         """
         Apply the manifest data to the Django ORM `Vectorstore` model and persist changes to the database.
 
-
         .. note::
 
             tags are handled separately because they are of type TaggableManager and
@@ -821,7 +819,6 @@ class SAMVectorstoreBroker(AbstractBroker):
         :raises: :class:`SAMVectorstoreBrokerError`
            If the user instance is not set or is invalid
 
-
         **Example usage:**
 
         .. code-block:: python
@@ -833,7 +830,6 @@ class SAMVectorstoreBroker(AbstractBroker):
 
            - :class:`smarter.apps.vectorstore.models.Vectorstore`
            - :class:`SAMVectorstoreBrokerError`
-
         """
         super().apply(request, kwargs)
         command = self.apply.__name__
@@ -1000,6 +996,7 @@ class SAMVectorstoreBroker(AbstractBroker):
         def _apply_embeddings_interface():
             """
             Apply the embeddings interface from the manifest to the Django ORM model instance.
+
             - get the EmbeddingsInterface instance associated with the vectorstore, or create it if it doesn't exist
             - map the fields from the manifest to the EmbeddingsInterface instance, excluding read-only fields and
                 foreign key relationships (provider and provider_model).
@@ -1097,15 +1094,14 @@ class SAMVectorstoreBroker(AbstractBroker):
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-
         .. attention::
 
             this is not implemented for the Smarter API Vectorstore manifest.
 
         :raises: :class:`SAMBrokerErrorNotImplemented`
-            Always raised to indicate that the chat operation is not implemented for this manifest type.
+            Always raised to indicate that the prompt operation is not implemented for this manifest type.
 
         :param request: The Django `HttpRequest` object.
         :param args: Additional positional arguments.
@@ -1113,9 +1109,9 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         :returns: Never returns; always raises an exception.
         """
-        command = self.chat.__name__
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -1177,7 +1173,6 @@ class SAMVectorstoreBroker(AbstractBroker):
            If the vectorstore with the specified name does not exist.
         :raises: :class:`SAMVectorstoreBrokerError`
            If deletion fails for the vectorstore.
-
         """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)

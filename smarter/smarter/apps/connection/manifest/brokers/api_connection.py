@@ -927,11 +927,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Handle chat operations for the API connection broker.
+        Handle prompt operations for the API connection broker.
 
-        This method is intended to process chat requests using the manifest broker. Currently, it is not implemented and will always raise a `SAMBrokerErrorNotImplemented` exception.
+        This method is intended to process prompt requests using the manifest broker. Currently, it is not implemented and will always raise a `SAMBrokerErrorNotImplemented` exception.
         This method is not implemented. Any invocation will result in an error.
 
         :param request: Django HTTP request object.
@@ -950,21 +950,21 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         **Example usage**::
 
             try:
-                response = broker.chat(request)
+                response = broker.prompt(request)
             except SAMBrokerErrorNotImplemented as e:
-                print("Chat not implemented:", e)
+                print("Prompt not implemented:", e)
         """
         logger.debug(
-            "%s.chat() called for %s %s args: %s kwargs: %s",
+            "%s.prompt() called for %s %s args: %s kwargs: %s",
             self.formatted_class_name,
             self.kind,
             self.name,
             args,
             kwargs,
         )
-        command = self.chat.__name__
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

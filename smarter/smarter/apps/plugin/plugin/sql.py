@@ -124,7 +124,7 @@ class SqlPlugin(PluginBase):
 
     .. seealso::
 
-        - OpenAI Function Calling: https://platform.openai.com/docs/guides/function-calling?api-mode=chat
+        - OpenAI Function Calling: https://platform.openai.com/docs/guides/function-calling?api-mode=prompt
         - Smarter Plugin Manifest Documentation
     """
 
@@ -361,7 +361,7 @@ class SqlPlugin(PluginBase):
         Transform the Pydantic model to the PluginDataSql Django ORM model and return the plugin data definition as a JSON object.
 
         See the OpenAI documentation:
-        https://platform.openai.com/docs/guides/function-calling?api-mode=chat
+        https://platform.openai.com/docs/guides/function-calling?api-mode=prompt
 
         The Pydantic 'Parameters' model is not directly compatible with OpenAI's function calling schema,
         and our Django ORM model expects a dictionary format for the parameters. This method converts

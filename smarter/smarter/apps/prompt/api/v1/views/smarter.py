@@ -10,10 +10,9 @@ from smarter.lib.drf.views.token_authentication_helpers import (
 
 class SmarterChatApiViewSet(SmarterAuthenticatedAPIView):
     """
-    top-level viewset for openai api function calling
+    Top-level viewset for openai api function calling.
 
-    path: /api/v1/prompt/chat/smarter/{provider_name}/
-
+    path: /api/v1/prompt/prompt/smarter/{provider_name}/
     """
 
     provider_name: str

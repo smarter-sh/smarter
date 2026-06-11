@@ -1,19 +1,19 @@
 # pylint: disable=W0613,C0115
-"""Signals for chat app."""
+"""Signals for prompt app."""
 
 from django.dispatch import Signal
 
-# chat signals
+# prompt signals
 chat_started = Signal()
 chat_finished = Signal()
 chat_response_failure = Signal()
 
 
-# chat completion signals
+# prompt completion signals
 chat_completion_request = Signal()
 chat_completion_response = Signal()
 
-# chat completion tools signals
+# prompt completion tools signals
 chat_completion_tool_called = Signal()
 chat_completion_plugin_called = Signal()
 

@@ -45,7 +45,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
     - http://localhost:9357/docs/
     - http://localhost:9357/dashboard/
     - https://alpha.platform.smarter.sh/api/v1/workbench/1/llm-client/
-    - https://alpha.platform.smarter.sh/api/v1/cli/chat/example/
+    - https://alpha.platform.smarter.sh/api/v1/cli/prompt/example/
     - http://example.com/contact/
     - http://localhost:9357/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
     - https://hr.3141-5926-5359.alpha.api.smarter.sh/
@@ -54,7 +54,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
     - http://example.3141-5926-5359.api.localhost:9357/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
     - http://example.3141-5926-5359.api.localhost:9357/config/
     - http://example.3141-5926-5359.api.localhost:9357/config/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
-    - http://localhost:9357/api/v1/workbench/1/chat/
+    - http://localhost:9357/api/v1/workbench/1/prompt/
     - https://hr.smarter.sh/
     """
 
@@ -218,7 +218,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         if smarter_admin_user_profile is None:
             self.skipTest("Smarter admin user profile is not available")
 
-        path = "/workbench/llm-clients/rMTAwMDAwNgx/chat/"
+        path = "/workbench/llm-clients/rMTAwMDAwNgx/prompt/"
         url = "http://localhost:9357" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
@@ -239,13 +239,13 @@ class TestSmarterRequestMixin(TestAccountMixin):
         """
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
 
-        http://localhost:9357/api/v1/prompt/1/chat/
+        http://localhost:9357/api/v1/prompt/1/prompt/
         """
         smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
         if smarter_admin_user_profile is None:
             self.skipTest("Smarter admin user profile is not available")
 
-        path = "/api/v1/prompt/1/chat/"
+        path = "/api/v1/prompt/1/prompt/"
         url = "http://localhost:9357" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
@@ -264,13 +264,13 @@ class TestSmarterRequestMixin(TestAccountMixin):
         """
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
 
-        http://localhost:9357/api/v1/cli/chat/example/config/
+        http://localhost:9357/api/v1/cli/prompt/example/config/
         """
         smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
         if smarter_admin_user_profile is None:
             self.skipTest("Smarter admin user profile is not available")
 
-        path = "/api/v1/cli/chat/example/"
+        path = "/api/v1/cli/prompt/example/"
         url = "http://localhost:9357" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
@@ -285,9 +285,9 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertTrue(srm.is_smarter_api)
         self.assertEqual(srm.path, path)
 
-    # mcdaniel: have to do this later. we'll need to establish a new chat session with uid == the session key.
-    # url = "https://alpha.platform.smarter.sh/api/v1/cli/chat/example/?uid=ded1f63c8e7574255961cd65e3c3fecb606f4b3b4c7ef1d8432f467ec8bd8da9"
-    # test_url(url, "/api/v1/cli/chat/example/")
+    # mcdaniel: have to do this later. we'll need to establish a new prompt session with uid == the session key.
+    # url = "https://alpha.platform.smarter.sh/api/v1/cli/prompt/example/?uid=ded1f63c8e7574255961cd65e3c3fecb606f4b3b4c7ef1d8432f467ec8bd8da9"
+    # test_url(url, "/api/v1/cli/prompt/example/")
 
     ###########################################################################
     # GitHub Copilot Coverage Tests for uncovered lines in smarter/lib/django/request.py
@@ -493,7 +493,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
     @patch.object(SmarterRequestMixin, "is_llm_client_smarter_api_url", new=property(lambda self: False))
     @patch.object(SmarterRequestMixin, "is_llm_client_cli_api_url", new=property(lambda self: True))
     @patch.object(
-        SmarterRequestMixin, "url_path_parts", new=property(lambda self: ["api", "v1", "cli", "chat", "mybot"])
+        SmarterRequestMixin, "url_path_parts", new=property(lambda self: ["api", "v1", "cli", "prompt", "mybot"])
     )
     def test_smarter_request_llm_client_name_cli_api_url(self):
         """Extract llm_client name from CLI API URL."""
@@ -612,15 +612,18 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         Returns True if the URL is of the form:
 
-            - http://localhost:9357/api/v1/workbench/1/chat/
-              path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+            - http://localhost:9357/api/v1/workbench/1/prompt/
+              path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'prompt']
 
-            - http://localhost:9357/api/v1/llm-clients/1556/chat/
-              path_parts: ['api', 'v1', 'llm_clients', '<int:pk>', 'chat']
+            - http://localhost:9357/api/v1/llm-clients/1556/prompt/
+              path_parts: ['api', 'v1', 'llm_clients', '<int:pk>', 'prompt']
         """
         host_name = "localhost:9357"
         response = self.client.get(
-            f"http://{host_name}/api/v1/llm-clients/1/chat/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+            f"http://{host_name}/api/v1/llm-clients/1/prompt/",
+            SERVER_NAME=host_name,
+            SERVER_PORT=80,
+            HTTP_HOST=host_name,
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
@@ -663,7 +666,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         """Returns True for valid CLI API llm_client URL."""
         host_name = "localhost:9357"
         response = self.client.get(
-            f"http://{host_name}/api/v1/cli/chat/example/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+            f"http://{host_name}/api/v1/cli/prompt/example/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
         )
         request = response.wsgi_request
 
@@ -742,7 +745,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         if not isinstance(self.client, Client):
             raise TypeError("Expected self.client to be an instance of django.test.Client")
         response = self.client.get(
-            f"http://{host_name}/workbench/llm-clients/rMTAwMDAwNgx/chat/",
+            f"http://{host_name}/workbench/llm-clients/rMTAwMDAwNgx/prompt/",
             SERVER_NAME=host_name,
             SERVER_PORT=80,
             HTTP_HOST=host_name,

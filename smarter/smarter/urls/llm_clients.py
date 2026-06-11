@@ -13,7 +13,7 @@ Endpoints
      - Named llm_client configuration view
    * - /config/
      - Named llm_client configuration view
-   * - /chat/
+   * - /prompt/
      - Default llm_client API view
 
 .. seealso::
@@ -31,7 +31,7 @@ from smarter.apps.prompt.views.detailviews import PromptConfigView
 urlpatterns = [
     path("", PromptConfigView.as_view(), name="console_home"),
     path("config/", PromptConfigView.as_view(), name="llm_client_named_config"),
-    path("chat/", DefaultLLMClientApiView.as_view(), name="llm_client_named_chat"),
+    path("prompt/", DefaultLLMClientApiView.as_view(), name="llm_client_named_chat"),
 ]
 
 __all__ = ["urlpatterns"]
