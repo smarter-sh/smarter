@@ -1,6 +1,6 @@
 # pylint: disable=W0613,C0302
 """
-ChatConfigView is a Django class-based view responsible for providing.
+PromptConfigView is a Django class-based view responsible for providing.
 
 configuration data to the ReactJS chat UI component in the Smarter
 web application.
@@ -36,8 +36,8 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistorySerializer,
 )
 from smarter.apps.prompt.signals import chat_config_invoked
-from smarter.apps.prompt.views.detailview.chatapp_workbench_view import (
-    SmarterChatSession,
+from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
+    SmarterPromptSession,
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
@@ -82,7 +82,7 @@ def should_log_verbose(level):
 verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
 
 
-class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
+class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat configuration view for the Smarter web application.
 
@@ -133,7 +133,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
         - If authentication is required and the user is not authenticated, a 403 Forbidden response is returned.
 
     **See Also:**
-        - `SmarterChatSession`: Helper class for managing chat sessions.
+        - `SmarterPromptSession`: Helper class for managing chat sessions.
         - `LLMClientConfigSerializer`, `LLMClientPluginSerializer`: Serializers for llm_client and plugin data.
         - `LLMClientHelper`: Helper for llm_client-related operations.
     """
@@ -143,7 +143,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
 
     thing: Optional[SmarterJournalThings] = None
     command: Optional[SmarterJournalCliCommands] = None
-    session: Optional[SmarterChatSession] = None
+    session: Optional[SmarterPromptSession] = None
     llm_client_name: Optional[str] = None
     _llm_client_helper: Optional[LLMClientHelper] = None
     _llm_client: Optional[LLMClient] = None
@@ -151,7 +151,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
     @property
     def formatted_class_name(self) -> str:
         """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{ChatConfigView.__name__}[{id(self)}]"
+        class_name = f"{__name__}.{PromptConfigView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
     @property
@@ -253,7 +253,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
           including llm_client metadata, plugin information, session keys, and chat history.
 
         - **Session-Based:**
-          The configuration is tied to a unique chat session, as defined by the :class:`SmarterChatSession` helper,
+          The configuration is tied to a unique chat session, as defined by the :class:`SmarterPromptSession` helper,
           which uses a combination of the user's IP address and device-identifying information to uniquely identify
           each session.
 
@@ -282,7 +282,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
 
         See Also
         --------
-        SmarterChatSession : Helper class for managing chat sessions.
+        SmarterPromptSession : Helper class for managing chat sessions.
         LLMClientConfigSerializer, LLMClientPluginSerializer : Serializers for llm_client and plugin data.
         LLMClientHelper : Helper for llm_client-related operations.
         """
@@ -393,7 +393,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
           including llm_client metadata, plugin information, session keys, and chat history.
 
         - **Session-Based:**
-          Sessions are managed by the :class:`SmarterChatSession` helper, which uniquely defines a chat session
+          Sessions are managed by the :class:`SmarterPromptSession` helper, which uniquely defines a chat session
           using a combination of the user's IP address and device-identifying information. This ensures each device/browser
           instance receives a unique session key, which is used to track chat history and plugin usage.
 
@@ -421,7 +421,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
 
         See Also
         --------
-        SmarterChatSession : Helper class for managing chat sessions.
+        SmarterPromptSession : Helper class for managing chat sessions.
         LLMClientConfigSerializer, LLMClientPluginSerializer : Serializers for llm_client and plugin data.
         LLMClientHelper : Helper for llm_client-related operations.
         """
@@ -480,7 +480,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual llm_client session
         # for the device.
-        self.session = SmarterChatSession(request, session_key=self.session_key, llm_client=self.llm_client)
+        self.session = SmarterPromptSession(request, session_key=self.session_key, llm_client=self.llm_client)
 
         if (
             self.llm_client_helper
@@ -514,7 +514,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
         return super().dispatch(request, *args, **kwargs)  # type: ignore[return-value]
 
     def __str__(self):
-        return str(self.llm_client) if self.llm_client else "ChatConfigView"
+        return str(self.llm_client) if self.llm_client else "PromptConfigView"
 
     # pylint: disable=unused-argument
     def post(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

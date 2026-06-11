@@ -96,19 +96,19 @@ class SmarterRequestMixin(AccountMixin):
        (``self.is_llm_client_named_url == True``)
 
        - ``http://example.3141-5926-5359.api.localhost:9357/`` → ``smarter.apps.llm_client.api.v1.views.default.DefaultLLMClientApiView``
-       - ``http://example.3141-5926-5359.api.localhost:9357/config`` → ``smarter.apps.prompt.views.ChatConfigView``
+       - ``http://example.3141-5926-5359.api.localhost:9357/config`` → ``smarter.apps.prompt.views.PromptConfigView``
 
     2. Authenticated sandbox endpoints (authenticated chats)
        (``self.is_llm_client_sandbox_url == True``)
 
-       - ``http://localhost:9357/workbench/<str:name>/`` → ``smarter.apps.prompt.views.ChatAppWorkbenchView``
-       - ``http://localhost:9357/workbench/<str:name>/config/`` → ``smarter.apps.prompt.views.ChatConfigView``
+       - ``http://localhost:9357/workbench/<str:name>/`` → ``smarter.apps.prompt.views.PromptWorkbenchView``
+       - ``http://localhost:9357/workbench/<str:name>/config/`` → ``smarter.apps.prompt.views.PromptConfigView``
 
     3. smarter.sh/v1 endpoints (public or authenticated chats)
        (``self.is_llm_client_smarter_api_url == True``)
 
        - ``http://localhost:9357/api/v1/workbench/<int:llm_client_id>/chat/`` → ``smarter.apps.llm_client.api.v1.views.default.DefaultLLMClientApiView``
-       - ``http://localhost:9357/api/v1/workbench/<int:llm_client_id>/chat/config/`` → ``smarter.apps.prompt.views.ChatConfigView``
+       - ``http://localhost:9357/api/v1/workbench/<int:llm_client_id>/chat/config/`` → ``smarter.apps.prompt.views.PromptConfigView``
 
     4. Command-line interface API endpoints (authenticated chats)
        (``self.is_llm_client_cli_api_url == True``)

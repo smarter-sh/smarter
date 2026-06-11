@@ -121,7 +121,7 @@ class Migration(migrations.Migration):
             bases=(models.Model, smarter.common.mixins.helper_mixin.SmarterHelperMixin),
         ),
         migrations.CreateModel(
-            name="ChatHistory",
+            name="PromptHistory",
             fields=[
                 (
                     "id",
@@ -175,7 +175,7 @@ class Migration(migrations.Migration):
             bases=(models.Model, smarter.common.mixins.helper_mixin.SmarterHelperMixin),
         ),
         migrations.CreateModel(
-            name="ChatPluginUsage",
+            name="PromptPluginUsage",
             fields=[
                 (
                     "id",
@@ -213,7 +213,7 @@ class Migration(migrations.Migration):
             bases=(models.Model, smarter.common.mixins.helper_mixin.SmarterHelperMixin),
         ),
         migrations.CreateModel(
-            name="ChatToolCall",
+            name="PromptToolCall",
             fields=[
                 (
                     "id",

@@ -1,4 +1,4 @@
-"""Smarter API Manifest - ChatToolCall.status"""
+"""Smarter API Manifest - PromptToolCall.status."""
 
 import os
 from typing import ClassVar
@@ -11,6 +11,6 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMChatToolCallStatus(AbstractSAMStatusBase):
-    """Smarter API ChatToolCall Manifest - Status class."""
+    """Smarter API PromptToolCall Manifest - Status class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

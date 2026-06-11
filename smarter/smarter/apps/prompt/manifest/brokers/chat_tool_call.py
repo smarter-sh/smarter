@@ -1,5 +1,5 @@
 # pylint: disable=W0718,W0613
-"""Smarter API ChatToolCall Manifest handler"""
+"""Smarter API PromptToolCall Manifest handler."""
 
 import logging
 import typing
@@ -16,7 +16,7 @@ from smarter.apps.prompt.manifest.models.chat_tool_call.model import SAMChatTool
 from smarter.apps.prompt.manifest.models.chat_tool_call.spec import (
     SAMChatToolCallSpecConfig,
 )
-from smarter.apps.prompt.models import Chat, ChatToolCall
+from smarter.apps.prompt.models import Chat, PromptToolCall
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.utils.decorators import camel_case
 from smarter.lib.django import waffle
@@ -53,26 +53,28 @@ MAX_RESULTS = 1000
 
 
 class SAMChatToolCallBrokerError(SAMBrokerError):
-    """Base exception for Smarter API ChatToolCall Broker handling."""
+    """Base exception for Smarter API PromptToolCall Broker handling."""
 
     @property
     def get_formatted_err_message(self):
-        return "Smarter API ChatToolCall Manifest Broker Error"
+        return "Smarter API PromptToolCall Manifest Broker Error"
 
 
-class ChatToolCallSerializer(ModelSerializer):
-    """Django REST Framework serializer for get()"""
+class PromptToolCallSerializer(ModelSerializer):
+    """Django REST Framework serializer for get()."""
 
     # pylint: disable=C0115
     class Meta:
-        model = ChatToolCall
+        model = PromptToolCall
         fields = "__all__"
 
 
 class SAMChatToolCallBroker(AbstractBroker):
     """
-    Smarter API ChatToolCall Manifest Broker. This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml ChatToolCall manifests
+    Smarter API PromptToolCall Manifest Broker.
+
+    This class is responsible for
+    - loading, validating and parsing the Smarter Api yaml PromptToolCall manifests
     - using the manifest to initialize the corresponding Pydantic model
 
     This Broker class interacts with the collection of Django ORM models that
@@ -85,7 +87,7 @@ class SAMChatToolCallBroker(AbstractBroker):
     # override the base abstract manifest model with the SAMChatToolCall model
     _manifest: SAMChatToolCall
     _pydantic_model: typing.Type[SAMChatToolCall] = SAMChatToolCall
-    _chat_history: ChatToolCall
+    _chat_history: PromptToolCall
     _session_key: str
 
     @property
@@ -93,28 +95,27 @@ class SAMChatToolCallBroker(AbstractBroker):
         return self._session_key
 
     @property
-    def chat_tool_call(self) -> ChatToolCall:
+    def chat_tool_call(self) -> PromptToolCall:
         """
-        The ChatToolCall object is a Django ORM model subclass from knox.AuthToken
-        that represents a ChatToolCall api key. The ChatToolCall object is
+        The PromptToolCall object is a Django ORM model subclass from knox.AuthToken.
+
+        that represents a PromptToolCall api key. The PromptToolCall object is
         used to store the authentication hash and Smarter metadata for the Smarter API.
-        The ChatToolCall object is retrieved from the database, if it exists,
+        The PromptToolCall object is retrieved from the database, if it exists,
         or created from the manifest if it does not.
         """
         if self._chat_history:
             return self._chat_history
         try:
             chat = Chat.objects.get(session_key=self.session_key)
-            self._chat_history = ChatToolCall.objects.get(chat=chat)
-        except (ChatToolCall.DoesNotExist, Chat.DoesNotExist):
+            self._chat_history = PromptToolCall.objects.get(chat=chat)
+        except (PromptToolCall.DoesNotExist, Chat.DoesNotExist):
             pass
 
         return self._chat_history
 
     def manifest_to_django_orm(self) -> dict:
-        """
-        Transform the Smarter API SAMChatToolCall manifest into a Django ORM model.
-        """
+        """Transform the Smarter API SAMChatToolCall manifest into a Django ORM model."""
         metadata = super().manifest_to_django_orm()
         config_dump = self.manifest.spec.model_dump()
         config_dump = self.to_snake_case(config_dump)
@@ -127,7 +128,8 @@ class SAMChatToolCallBroker(AbstractBroker):
     @camel_case()
     def django_orm_to_manifest_dict(self) -> dict:
         """
-        Transform the Django ORM model into a Pydantic readable
+        Transform the Django ORM model into a Pydantic readable.
+
         Smarter API SAMChatToolCall manifest dict.
         """
         chat_dict = model_to_dict(self.chat_tool_call)
@@ -158,37 +160,38 @@ class SAMChatToolCallBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
-    def SerializerClass(self) -> typing.Type[ChatToolCallSerializer]:
+    def SerializerClass(self) -> typing.Type[PromptToolCallSerializer]:
         """
-        Get the Django REST Framework serializer class for the Smarter API ChatToolCall.
+        Get the Django REST Framework serializer class for the Smarter API PromptToolCall.
 
-        :returns: The `ChatToolCallSerializer` class.
-        :rtype: Type[ChatToolCallSerializer]
+        :returns: The `PromptToolCallSerializer` class.
+        :rtype: Type[PromptToolCallSerializer]
         """
-        return ChatToolCallSerializer
+        return PromptToolCallSerializer
 
     @property
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
+
         This is used to provide a more readable class name in logs.
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.{SAMChatToolCallBroker.__name__}[{id(self)}]"
 
     @property
-    def ORMMetaModelClass(self) -> typing.Type[ChatToolCall]:
+    def ORMMetaModelClass(self) -> typing.Type[PromptToolCall]:
         """
         Return the Django ORM meta model class for the broker.
 
         :return: The Django ORM meta model class definition for the broker.
-        :rtype: Type[ChatToolCall]
+        :rtype: Type[PromptToolCall]
         """
-        return ChatToolCall
+        return PromptToolCall
 
     @property
-    def ORMModelClass(self) -> typing.Type[ChatToolCall]:
-        return ChatToolCall
+    def ORMModelClass(self) -> typing.Type[PromptToolCall]:
+        return PromptToolCall
 
     @property
     def kind(self) -> str:
@@ -197,7 +200,8 @@ class SAMChatToolCallBroker(AbstractBroker):
     @property
     def manifest(self) -> SAMChatToolCall:
         """
-        SAMChatToolCall() is a Pydantic model
+        SAMChatToolCall() is a Pydantic model.
+
         that is used to represent the Smarter API SAMChatToolCall manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -234,7 +238,7 @@ class SAMChatToolCallBroker(AbstractBroker):
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.NAME.value: "snake-case-name",
-                SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a ChatToolCall",
+                SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a PromptToolCall",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
             },
             SAMKeys.SPEC.value: None,
@@ -259,7 +263,7 @@ class SAMChatToolCallBroker(AbstractBroker):
                 chat = Chat.objects.get(session_key=self.session_key)
             except Chat.DoesNotExist:
                 pass
-            tool_calls = ChatToolCall.objects.filter(chat=chat).order_by("-created_at")[:MAX_RESULTS]
+            tool_calls = PromptToolCall.objects.filter(chat=chat).order_by("-created_at")[:MAX_RESULTS]
             logger.debug(
                 "SAMChatBroker().get() found %s tool_call records for chat session %s in account %s",
                 tool_calls.count(),
@@ -267,10 +271,10 @@ class SAMChatToolCallBroker(AbstractBroker):
                 self.account,
             )
 
-        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each ChatToolCall
+        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each PromptToolCall
         for tool_call in tool_calls:
             try:
-                model_dump = ChatToolCallSerializer(tool_call).data
+                model_dump = PromptToolCallSerializer(tool_call).data
                 if not model_dump:
                     raise SAMChatToolCallBrokerError(
                         f"Model dump failed for {self.kind} {tool_call.id}", thing=self.kind, command=command  # type: ignore
@@ -287,16 +291,14 @@ class SAMChatToolCallBroker(AbstractBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=ChatToolCallSerializer()),
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=PromptToolCallSerializer()),
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
         return self.json_response_ok(command=command, data=data)
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        Chat is a read-only django table, populated by the LLM handlers
-        """
+        """Chat is a read-only django table, populated by the LLM handlers."""
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError("Chat is a read-only table", thing=self.kind, command=command)
@@ -317,7 +319,7 @@ class SAMChatToolCallBroker(AbstractBroker):
             except Exception as e:
                 return self.json_response_err(SmarterJournalCliCommands.DESCRIBE, e)
         raise SAMBrokerErrorNotReady(
-            f"ChatToolCall not found for session_key {self.session_key}", thing=self.kind, command=command
+            f"PromptToolCall not found for session_key {self.session_key}", thing=self.kind, command=command
         )
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -345,5 +347,5 @@ class SAMChatToolCallBroker(AbstractBroker):
             data = {}
             return self.json_response_ok(command=command, data=data)
         raise SAMBrokerErrorNotReady(
-            f"ChatToolCall not found for session_key {self.session_key}", thing=self.kind, command=command
+            f"PromptToolCall not found for session_key {self.session_key}", thing=self.kind, command=command
         )

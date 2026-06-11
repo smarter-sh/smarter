@@ -18,7 +18,7 @@ Endpoints
 
 .. seealso::
 
-    - :class:`smarter.apps.prompt.views.ChatConfigView`
+    - :class:`smarter.apps.prompt.views.PromptConfigView`
     - :class:`smarter.apps.llm_client.api.v1.views.default.DefaultLLMClientApiView`
 """
 
@@ -26,11 +26,11 @@ Endpoints
 from django.urls import path
 
 from smarter.apps.llm_client.api.v1.views.default import DefaultLLMClientApiView
-from smarter.apps.prompt.views.detailview import ChatConfigView
+from smarter.apps.prompt.views.detailviews import PromptConfigView
 
 urlpatterns = [
-    path("", ChatConfigView.as_view(), name="console_home"),
-    path("config/", ChatConfigView.as_view(), name="llm_client_named_config"),
+    path("", PromptConfigView.as_view(), name="console_home"),
+    path("config/", PromptConfigView.as_view(), name="llm_client_named_config"),
     path("chat/", DefaultLLMClientApiView.as_view(), name="llm_client_named_chat"),
 ]
 

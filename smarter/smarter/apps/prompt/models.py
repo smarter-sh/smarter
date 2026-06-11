@@ -61,11 +61,11 @@ class Chat(MetaDataWithOwnershipModel):
         super().delete(*args, **kwargs)
 
 
-class ChatHistory(TimestampedModel):
-    """Chat history model."""
+class PromptHistory(TimestampedModel):
+    """Prompt history model."""
 
     class Meta:
-        verbose_name_plural = "Chat History"
+        verbose_name_plural = "Prompt History"
 
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     request = models.JSONField(
@@ -89,7 +89,7 @@ class ChatHistory(TimestampedModel):
 
     @property
     def chat_history(self) -> list[dict]:
-        """Used by the Reactapp (via ChatConfigView) to display the chat history."""
+        """Used by the Reactapp (via PromptConfigView) to display the chat history."""
         history = self.messages if self.messages else self.request.get("messages", []) if self.request else []
         # response = self.response.get("choices", []) if self.response else []
         # response = response[0] if response else {}
@@ -98,11 +98,11 @@ class ChatHistory(TimestampedModel):
         return history
 
 
-class ChatToolCall(TimestampedModel):
-    """Chat tool call history model."""
+class PromptToolCall(TimestampedModel):
+    """Prompt tool call history model."""
 
     class Meta:
-        verbose_name_plural = "Chat Tool Call History"
+        verbose_name_plural = "Prompt Tool Call History"
 
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE, blank=True, null=True)
@@ -121,24 +121,24 @@ class ChatToolCall(TimestampedModel):
 
     @classmethod
     def get_cached_object(
-        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None
-    ) -> Optional["ChatToolCall"]:
+        cls, *args, invalidate: Optional[bool] = False, pk: Optional[int] = None, **kwargs
+    ) -> Optional["PromptToolCall"]:
         """
-        Get the ChatToolCall instance for the given primary key from the cache.
+        Get the PromptToolCall instance for the given primary key from the cache.
 
-        This method retrieves the ChatToolCall instance associated with the given primary key
+        This method retrieves the PromptToolCall instance associated with the given primary key
         from the cache. If the instance is not found in the cache, it attempts to
         retrieve it from the database. If it still cannot be found, it returns ``None``.
 
         :param invalidate: Whether to invalidate the cache before retrieving the object.
         :type invalidate: Optional[bool]
-        :param pk: The primary key of the ChatToolCall instance to retrieve.
+        :param pk: The primary key of the PromptToolCall instance to retrieve.
         :type pk: Optional[int]
 
-        :returns: The ChatToolCall instance associated with the given primary key, or ``None`` if not found.
-        :rtype: Optional[ChatToolCall]
+        :returns: The PromptToolCall instance associated with the given primary key, or ``None`` if not found.
+        :rtype: Optional[PromptToolCall]
         """
-        return super().get_cached_object(invalidate=invalidate, pk=pk)  # type: ignore[return]
+        return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return]
 
     def __str__(self):
         if self.plugin:
@@ -148,11 +148,11 @@ class ChatToolCall(TimestampedModel):
         return name
 
 
-class ChatPluginUsage(TimestampedModel):
+class PromptPluginUsage(TimestampedModel):
     """Plugin selection history model."""
 
     class Meta:
-        verbose_name_plural = "Plugin Usage"
+        verbose_name_plural = "Prompt Plugin Usage"
 
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
@@ -165,33 +165,33 @@ class ChatPluginUsage(TimestampedModel):
 # --------------------------------------------------------------------------------
 # Serializers
 # --------------------------------------------------------------------------------
-class ChatSerializer(serializers.ModelSerializer):
+class PromptSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
         fields = "__all__"
 
 
-class ChatToolCallSerializer(serializers.ModelSerializer):
-    """Serializer for the ChatToolCall model."""
+class PromptToolCallSerializer(serializers.ModelSerializer):
+    """Serializer for the PromptToolCall model."""
 
-    chat = ChatSerializer(read_only=True)
+    chat = PromptSerializer(read_only=True)
 
     class Meta:
-        model = ChatToolCall
+        model = PromptToolCall
         fields = "__all__"
 
 
-class ChatPluginUsageSerializer(serializers.ModelSerializer):
-    """Serializer for the ChatPluginUsage model."""
+class PromptPluginUsageSerializer(serializers.ModelSerializer):
+    """Serializer for the PromptPluginUsage model."""
 
-    chat = ChatSerializer(read_only=True)
+    chat = PromptSerializer(read_only=True)
 
     class Meta:
-        model = ChatPluginUsage
+        model = PromptPluginUsage
         fields = "__all__"
 
 
-class ChatHelper(SmarterRequestMixin):
+class PromptHelper(SmarterRequestMixin):
     """
     Helper class for working with :class:`Chat` objects.
 
@@ -217,7 +217,7 @@ class ChatHelper(SmarterRequestMixin):
     -------
     .. code-block:: python
 
-        helper = ChatHelper(request, session_key)
+        helper = PromptHelper(request, session_key)
         if helper.ready:
             chat = helper.chat
             llm_client = helper.llm_client
@@ -251,15 +251,15 @@ class ChatHelper(SmarterRequestMixin):
 
     _chat: Optional[Chat] = None
     _llm_client: Optional[LLMClient] = None
-    _chat_tool_call: Optional[Union[models.QuerySet, list]] = None
-    _chat_plugin_usage: Optional[Union[models.QuerySet, list]] = None
+    _prompt_tool_call: Optional[Union[models.QuerySet, list]] = None
+    _prompt_plugin_usage: Optional[Union[models.QuerySet, list]] = None
     _history: Optional[dict] = None
 
     def __init__(
         self, request: HttpRequest, session_key: Optional[str], *args, llm_client: Optional[LLMClient] = None, **kwargs
     ) -> None:
         """
-        Initialize the ChatHelper instance.
+        Initialize the PromptHelper instance.
 
         :param request: The Django HttpRequest object for the current session.
         :type request: django.http.HttpRequest
@@ -285,8 +285,8 @@ class ChatHelper(SmarterRequestMixin):
         super().__init__(request, session_key=session_key, **kwargs)
         self._chat = None
         self._llm_client = llm_client
-        self._chat_tool_call = None
-        self._chat_plugin_usage = None
+        self._prompt_tool_call = None
+        self._prompt_plugin_usage = None
         self._history = None
 
         if not session_key and not llm_client:
@@ -330,26 +330,26 @@ class ChatHelper(SmarterRequestMixin):
     @property
     def ready(self) -> bool:
         """
-        Check if the ChatHelper is ready to use.
+        Check if the PromptHelper is ready to use.
 
         This property returns ``True`` if the chat instance is available and all required
         attributes are set, otherwise returns ``False``. It is useful for determining
-        whether the ChatHelper is fully initialized and ready for chat operations.
+        whether the PromptHelper is fully initialized and ready for chat operations.
 
-        :returns: ``True`` if the ChatHelper is ready to use, otherwise ``False``.
+        :returns: ``True`` if the PromptHelper is ready to use, otherwise ``False``.
         :rtype: bool
         """
         return bool(super().ready) and bool(self._session_key) and bool(self._chat) and bool(self._llm_client)
 
     def to_json(self) -> dict[str, Any]:
         """
-        Convert the ChatHelper instance to a JSON serializable dictionary.
+        Convert the PromptHelper instance to a JSON serializable dictionary.
 
-        This method returns a dictionary representation of the ChatHelper instance,
+        This method returns a dictionary representation of the PromptHelper instance,
         including key metadata and related objects such as the chat, llm_client, chat history,
         and a unique client string.
 
-        :returns: A dictionary containing the serialized state of the ChatHelper.
+        :returns: A dictionary containing the serialized state of the PromptHelper.
         :rtype: dict[str, Any]
         """
         return self.sorted_dict(
@@ -367,11 +367,11 @@ class ChatHelper(SmarterRequestMixin):
     @cached_property
     def formatted_class_name(self) -> str:
         """
-        Returns the formatted class name for the ChatHelper.
+        Returns the formatted class name for the PromptHelper.
 
         This property returns a string representation of the class name,
         formatted to include the parent class's formatted name and the
-        ``ChatHelper`` class. This is useful for logging and debugging
+        ``PromptHelper`` class. This is useful for logging and debugging
         purposes, as it provides a clear and consistent identifier for
         instances of this helper class.
 
@@ -379,14 +379,14 @@ class ChatHelper(SmarterRequestMixin):
         -------
         .. code-block:: python
 
-            helper = ChatHelper(request, session_key)
+            helper = PromptHelper(request, session_key)
             helper.formatted_class_name
-            # 'SmarterRequestMixin.ChatHelper()'
+            # 'SmarterRequestMixin.PromptHelper()'
 
         :returns: The formatted class name as a string, including the parent class name.
         :rtype: str
         """
-        class_name = f"{__name__}.{ChatHelper.__name__}[{id(self)}]"
+        class_name = f"{__name__}.{PromptHelper.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
     @property
@@ -421,37 +421,37 @@ class ChatHelper(SmarterRequestMixin):
         """
         Get the most recent chat history for the current chat session.
 
-        :returns: The most recent ChatHistory instance's chat_history field, or an empty list if none found.
+        :returns: The most recent PromptHistory instance's chat_history field, or an empty list if none found.
         :rtype: Union[models.QuerySet, list]
         """
-        rec = ChatHistory.objects.filter(chat=self.chat).order_by("-created_at").first()
+        rec = PromptHistory.objects.filter(chat=self.chat).order_by("-created_at").first()
         return rec.chat_history if rec else []
 
     @property
-    def chat_tool_call(self) -> Union[models.QuerySet, list]:
+    def prompt_tool_call(self) -> Union[models.QuerySet, list]:
         """
         Get the most recent chat tool call history for the current chat session.
 
-        :returns: A queryset of ChatToolCall instances for the current chat session, ordered by creation date.
+        :returns: A queryset of PromptToolCall instances for the current chat session, ordered by creation date.
         :rtype: Union[models.QuerySet, list]
         """
-        if self._chat_tool_call:
-            return self._chat_tool_call
-        self._chat_tool_call = ChatToolCall.objects.filter(chat=self.chat).order_by("-created_at") or []
-        return self._chat_tool_call
+        if self._prompt_tool_call:
+            return self._prompt_tool_call
+        self._prompt_tool_call = PromptToolCall.objects.filter(chat=self.chat).order_by("-created_at") or []
+        return self._prompt_tool_call
 
     @property
-    def chat_plugin_usage(self) -> Union[models.QuerySet, list]:
+    def prompt_plugin_usage(self) -> Union[models.QuerySet, list]:
         """
         Get the most recent chat plugin usage history for the current chat session.
 
-        :returns: A queryset of ChatPluginUsage instances for the current chat session, ordered by creation date.
+        :returns: A queryset of PromptPluginUsage instances for the current chat session, ordered by creation date.
         :rtype: Union[models.QuerySet, list]
         """
-        if self._chat_plugin_usage:
-            return self._chat_plugin_usage
-        self._chat_plugin_usage = ChatPluginUsage.objects.filter(chat=self.chat).order_by("-created_at") or []
-        return self._chat_plugin_usage
+        if self._prompt_plugin_usage:
+            return self._prompt_plugin_usage
+        self._prompt_plugin_usage = PromptPluginUsage.objects.filter(chat=self.chat).order_by("-created_at") or []
+        return self._prompt_plugin_usage
 
     @property
     def history(self) -> dict:
@@ -463,14 +463,14 @@ class ChatHelper(SmarterRequestMixin):
         """
         if self._history:
             return self._history
-        chat_serializer = ChatSerializer(self.chat)
-        chat_tool_call_serializer = ChatToolCallSerializer(self.chat_tool_call, many=True)
-        chat_plugin_usage_serializer = ChatPluginUsageSerializer(self.chat_plugin_usage, many=True)
+        chat_serializer = PromptSerializer(self.chat)
+        prompt_tool_call_serializer = PromptToolCallSerializer(self.prompt_tool_call, many=True)
+        prompt_plugin_usage_serializer = PromptPluginUsageSerializer(self.prompt_plugin_usage, many=True)
         self._history = {
             "chat": chat_serializer.data,
             "chat_history": self.chat_history,
-            "chat_tool_call_history": chat_tool_call_serializer.data,
-            "chat_plugin_usage_history": chat_plugin_usage_serializer.data,
+            "prompt_tool_call_history": prompt_tool_call_serializer.data,
+            "prompt_plugin_usage_history": prompt_plugin_usage_serializer.data,
             # these two will be added upstream.
             "llm_client_request_history": None,  # LLMClientRequests
         }
@@ -489,7 +489,7 @@ class ChatHelper(SmarterRequestMixin):
         :rtype: Optional[Chat]
         """
         if not self.smarter_request:
-            logger.error("%s - request object is required for ChatHelper.", self.formatted_class_name)
+            logger.error("%s - request object is required for PromptHelper.", self.formatted_class_name)
             return None
 
         chat: Chat = cache.get(self.session_key)  # type: ignore[assignment]

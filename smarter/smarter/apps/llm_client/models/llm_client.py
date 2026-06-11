@@ -491,7 +491,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         # pylint: disable=C0415
         from smarter.apps.prompt.urls import PromptReverseNames
 
-        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.landing_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
+        path = reverse(f"{PromptReverseNames.namespace}:{PromptReverseNames.sandbox_by_hashed_id}", kwargs={"hashed_id": self.hashed_id})  # type: ignore[arg-type]
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
         return url
@@ -545,7 +545,7 @@ class LLMClient(MetaDataWithOwnershipModel):
     @property
     def url_llm_client(self) -> str:
         """
-        The Smarter Api url returned by ChatConfigView.config() as the.
+        The Smarter Api url returned by PromptConfigView.config() as the.
 
         key, "url_llm_client". This url is consumed by React.js app for http
         requests on new prompts.

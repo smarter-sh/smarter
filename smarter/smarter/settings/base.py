@@ -375,7 +375,7 @@ SESSION_COOKIE_NAME = "sessionid"
 The name of the session cookie.
 
 Default is 'sessionid'. This is a placeholder for Smarter-specific
-functionality in smarter.apps.prompt.views.ChatAppWorkbenchView.
+functionality in smarter.apps.prompt.views.PromptWorkbenchView.
 
 See:
 

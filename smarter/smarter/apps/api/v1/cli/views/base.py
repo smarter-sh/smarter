@@ -24,7 +24,7 @@ from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.apps.docs.views.base import DocsError
 from smarter.apps.llm_client.exceptions import SmarterLLMClientException
 from smarter.apps.plugin.plugin.base import SmarterPluginError
-from smarter.apps.prompt.views.detailview.chatapp_workbench_view import (
+from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
     SmarterChatappViewError,
 )
 from smarter.common.const import (

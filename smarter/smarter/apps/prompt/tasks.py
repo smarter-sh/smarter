@@ -19,7 +19,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.workers.celery import app
 
-from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from .models import Chat, PromptHistory, PromptPluginUsage, PromptToolCall
 
 
 def should_log(level):
@@ -47,7 +47,7 @@ def create_chat_history(chat_id, request, response, messages):
     except Chat.DoesNotExist:
         logger.error("%s chat_id: %s does not exist", formatted_text(module_prefix + "create_chat_history()"), chat_id)
         return
-    ChatHistory.objects.create(chat=chat, request=request, response=response, messages=messages)
+    PromptHistory.objects.create(chat=chat, request=request, response=response, messages=messages)
 
 
 def aggregate_chat_history():
@@ -94,7 +94,7 @@ def create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, functi
     except PluginMeta.DoesNotExist as e:
         raise SmarterValueError(f"PluginMeta with id {plugin_meta_id} does not exist") from e
 
-    ChatToolCall.objects.create(
+    PromptToolCall.objects.create(
         chat=chat,
         plugin=plugin_meta,
         function_name=function_name,
@@ -137,7 +137,7 @@ def create_chat_plugin_usage(*args, **kwargs):
     except PluginMeta.DoesNotExist as e:
         raise SmarterValueError(f"PluginMeta with id {plugin_id} does not exist") from e
 
-    ChatPluginUsage.objects.create(
+    PromptPluginUsage.objects.create(
         chat=chat,
         plugin=plugin_meta,
         input_text=input_text,

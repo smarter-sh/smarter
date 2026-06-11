@@ -1,6 +1,6 @@
 # pylint: disable=W0613,C0302
 """
-ChatAppWorkbenchView is a Django class-based view responsible for serving the.
+PromptWorkbenchView is a Django class-based view responsible for serving the.
 
 main chat application page within the Smarter dashboard web app. It integrates
 the ReactJS chat UI with the Django template system by injecting a React build
@@ -24,7 +24,7 @@ from smarter.apps.llm_client.models import (
     LLMClientHelper,
     get_cached_llm_client_by_request,
 )
-from smarter.apps.prompt.models import Chat, ChatHelper
+from smarter.apps.prompt.models import Chat, PromptHelper
 from smarter.apps.prompt.signals import chat_session_invoked
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
@@ -78,11 +78,11 @@ class SmarterChatappViewError(SmarterException):
         return "Smarter Chatapp error"
 
 
-class SmarterChatSession(SmarterHelperMixin):
+class SmarterPromptSession(SmarterHelperMixin):
     """Helper class that provides methods for creating a session key and client key."""
 
     _chat: Optional[Chat] = None
-    _chat_helper: Optional[ChatHelper] = None
+    _chat_helper: Optional[PromptHelper] = None
     _llm_client: Optional[LLMClient] = None
     request: Optional[HttpRequest] = None
     _session_key: str
@@ -90,13 +90,13 @@ class SmarterChatSession(SmarterHelperMixin):
     @property
     def formatted_class_name(self) -> str:
         """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{SmarterChatSession.__name__}[{id(self)}]"
+        class_name = f"{__name__}.{SmarterPromptSession.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
     def __init__(self, request: HttpRequest, session_key: str, *args, llm_client: Optional[LLMClient] = None, **kwargs):
         super().__init__()
         verbose_logger.debug(
-            "SmarterChatSession().__init__() called with session_key=%s, llm_client=%s", session_key, llm_client
+            "SmarterPromptSession().__init__() called with session_key=%s, llm_client=%s", session_key, llm_client
         )
         self.request = request
         if not isinstance(session_key, str):
@@ -111,7 +111,7 @@ class SmarterChatSession(SmarterHelperMixin):
         if not self.session_key and not self.llm_client:
             logger.error("%s - either session_key or llm_client must be provided", self.formatted_class_name)
 
-        self._chat_helper = ChatHelper(
+        self._chat_helper = PromptHelper(
             request, *args, session_key=self.session_key, llm_client=self.llm_client, **kwargs
         )
         self._chat = self._chat_helper.chat
@@ -122,14 +122,14 @@ class SmarterChatSession(SmarterHelperMixin):
 
     def __str__(self):
         return (
-            f"{SmarterChatSession.__name__}[{id(self)}](llm_client={self.llm_client}, session_key={self.session_key})"
+            f"{SmarterPromptSession.__name__}[{id(self)}](llm_client={self.llm_client}, session_key={self.session_key})"
         )
 
     def __repr__(self):
         return self.__str__()
 
     def __eq__(self, value: object) -> bool:
-        return isinstance(value, SmarterChatSession) and self.session_key == value.session_key
+        return isinstance(value, SmarterPromptSession) and self.session_key == value.session_key
 
     @property
     def session_key(self) -> str:
@@ -166,7 +166,7 @@ class SmarterChatSession(SmarterHelperMixin):
         return retval
 
 
-class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
+class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat app view for the Smarter web application.
 
@@ -208,7 +208,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         Renders the Django template for the chat app, injecting the React loader and configuration context.
 
     **See Also:**
-        - `ChatConfigView` — for the endpoint that provides configuration data to the React app.
+        - `PromptConfigView` — for the endpoint that provides configuration data to the React app.
     """
 
     template_path = "prompt/workbench.html"
@@ -266,7 +266,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
 
         See Also
         --------
-        ChatConfigView : The endpoint that provides configuration data to the React app.
+        PromptConfigView : The endpoint that provides configuration data to the React app.
         """
         if not self.user_profile:
             logger.error(

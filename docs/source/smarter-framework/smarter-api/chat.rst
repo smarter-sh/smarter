@@ -17,7 +17,7 @@ URL Patterns
    :lines: 25-
 
 
-ChatConfigView Class Reference
+PromptConfigView Class Reference
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: smarter.apps.prompt.views.detailview.chat_config_view

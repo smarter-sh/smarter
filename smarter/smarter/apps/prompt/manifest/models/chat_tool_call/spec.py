@@ -1,4 +1,4 @@
-"""Smarter API ChatToolCall - ChatToolCall.spec"""
+"""Smarter API PromptToolCall - PromptToolCall.spec."""
 
 import os
 from typing import ClassVar
@@ -11,6 +11,6 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMChatToolCallSpecConfig(AbstractSAMSpecBase):
-    """Smarter API ChatToolCall Manifest ChatToolCall.spec.config"""
+    """Smarter API PromptToolCall Manifest PromptToolCall.spec.config."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".configuration"

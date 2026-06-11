@@ -130,20 +130,20 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A JSON dictionary generated real-time
     """
 
-    CHAT_HISTORY = "ChatHistory"
-    """Smarter ChatHistory resource.
+    CHAT_HISTORY = "PromptHistory"
+    """Smarter PromptHistory resource.
 
     A list of Django ORM model instances.
     """
 
-    CHAT_PLUGIN_USAGE = "ChatPluginUsage"
-    """Smarter ChatPluginUsage resource.
+    CHAT_PLUGIN_USAGE = "PromptPluginUsage"
+    """Smarter PromptPluginUsage resource.
 
     A list of Django ORM model instances.
     """
 
-    CHAT_TOOL_CALL = "ChatToolCall"
-    """Smarter ChatToolCall resource.
+    CHAT_TOOL_CALL = "PromptToolCall"
+    """Smarter PromptToolCall resource.
 
     A list of Django ORM model instances.
     """

@@ -17,7 +17,7 @@ from smarter.apps.llm_client.models import LLMClient, LLMClientPlugin
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
-from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage
+from smarter.apps.prompt.models import Chat, PromptHistory, PromptPluginUsage
 from smarter.apps.prompt.signals import (
     chat_completion_response,
     chat_finished,
@@ -268,7 +268,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
 
         # test url api endpoint for chat history
         # TODO: THIS SELECTION CRITERIA IS PATHETIC.
-        chat = ChatHistory.objects.order_by("-id").first()
+        chat = PromptHistory.objects.order_by("-id").first()
         self.assertIsNotNone(chat)
         url = reverse("prompt:api:v1:chathistory", kwargs={"pk": chat.id})
         response = self.client.get(url)
@@ -278,12 +278,12 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         # give celery time to process the chat completion
         time.sleep(CELERY_WAIT)  # Pause execution for 1 second
 
-        # assert that ChatPluginUsage has one or more records for self.admin_user
-        plugin_selection_histories = ChatPluginUsage.objects.first()
+        # assert that PromptPluginUsage has one or more records for self.admin_user
+        plugin_selection_histories = PromptPluginUsage.objects.first()
         if plugin_selection_histories:
             self.assertIsNotNone(plugin_selection_histories)
         else:
-            print("No ChatPluginUsage records found.")
+            print("No PromptPluginUsage records found.")
 
     def test_handler_weather(self):
         """Test api.v1.views.chat handler() - weather."""

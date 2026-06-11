@@ -1,4 +1,4 @@
-"""Smarter API Manifest - ChatPluginUsage.status"""
+"""Smarter API Manifest - PromptPluginUsage.status."""
 
 import os
 from typing import ClassVar
@@ -11,6 +11,6 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMChatPluginUsageStatus(AbstractSAMStatusBase):
-    """Smarter API ChatPluginUsage Manifest - Status class."""
+    """Smarter API PromptPluginUsage Manifest - Status class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

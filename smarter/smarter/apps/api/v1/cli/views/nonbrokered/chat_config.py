@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'chat' config view"""
+"""Smarter API command-line interface 'chat' config view."""
 
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Optional
@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Optional
 from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 
-from smarter.apps.prompt.views.detailview import ChatConfigView
+from smarter.apps.prompt.views.detailviews import PromptConfigView
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import json, logging
 from smarter.lib.cache import lazy_cache as cache
@@ -31,13 +31,15 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
     """
-    Smarter API command-line interface 'chat' config view. Returns
+    Smarter API command-line interface 'chat' config view.
+
+    Returns
     the configuration dict used to configure the React chat component.
 
-    This is a passthrough view that generates its response via ChatConfigView.
-    ChatConfigView.post() is called with an optional session_key added to the
+    This is a passthrough view that generates its response via PromptConfigView.
+    PromptConfigView.post() is called with an optional session_key added to the
     json request body. If the session_key is provided then it is used to
-    generate the response. If the session_key is not provided then ChatConfigView
+    generate the response. If the session_key is not provided then PromptConfigView
     will generate a new session_key and return it in the response.
 
     In either case, the session_key that is returned will be cached for 24 hours
@@ -54,7 +56,8 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the class name in a formatted string
+        Returns the class name in a formatted string.
+
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
@@ -78,7 +81,7 @@ This is a Non-brokered operation.
     )
     @csrf_exempt
     def post(self, request: "HttpRequest", name: str, *args, **kwargs):
-        """Handle POST requests for chat config"""
+        """Handle POST requests for chat config."""
 
         logger.debug(
             "%s.post() called for chat %s with %s, args %s, kwargs %s",
@@ -102,7 +105,7 @@ This is a Non-brokered operation.
             self.account,
         )
 
-        response = ChatConfigView.as_view()(
+        response = PromptConfigView.as_view()(
             request, *args, name=name, uid=uid, session_key=session_key, user_profile=self.user_profile, **kwargs
         )
 
