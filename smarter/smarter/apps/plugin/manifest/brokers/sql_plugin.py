@@ -793,9 +793,9 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Chat with the SQL plugin (not implemented).
+        Prompt with the SQL plugin (not implemented).
 
         This is not implemented for SQL plugins.
 
@@ -809,16 +809,16 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.chat() called for %s %s args: %s kwargs: %s",
+            "%s.prompt() called for %s %s args: %s kwargs: %s",
             self.formatted_class_name,
             self.kind,
             self.name,
             args,
             kwargs,
         )
-        command = self.chat.__name__
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="prompt() not implemented", thing=self.kind, command=command)
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

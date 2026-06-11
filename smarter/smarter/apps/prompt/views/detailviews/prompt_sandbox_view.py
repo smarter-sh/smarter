@@ -38,7 +38,7 @@ class PromptSandboxView(SmarterAuthenticatedNeverCachedWebView):
 
     This a a noop view that
     is used for generating the base URL for the workbench prompt
-    /chat/ and /chat/config/ endpoints, both of which are constructed
+    /prompt/ and /prompt/config/ endpoints, both of which are constructed
     inside of the React app and are not actual Django views.
     """
 

@@ -1,5 +1,5 @@
 # pylint: disable=W0602,C0302
-"""Base class for chat providers."""
+"""Base class for prompt providers."""
 
 import ast
 import logging
@@ -40,7 +40,7 @@ from smarter.apps.prompt.functions.function_weather import (
     get_current_weather,
     weather_tool_factory,
 )
-from smarter.apps.prompt.models import Chat
+from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.receivers import (
     llm_tool_presented,
     llm_tool_requested,
@@ -93,22 +93,22 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class OpenAISmarterClient(SmarterChatProviderBase):
     """
-    Chat provider for OpenAI-compatible text completion APIs.
+    Prompt provider for OpenAI-compatible text completion APIs.
 
     This provider class enables seamless integration with any vendor or service
-    that implements the OpenAI chat completion API, including both OpenAI and third-party providers
+    that implements the OpenAI prompt completion API, including both OpenAI and third-party providers
     that adhere to the same protocol and message formats.
 
     **Key Features:**
 
-        - Supports OpenAI's chat completion API and compatible alternatives.
+        - Supports OpenAI's prompt completion API and compatible alternatives.
         - Handles message formatting, tool calls, plugin integration, and billing.
-        - Manages multi-step chat completion workflows, including tool and plugin responses.
+        - Manages multi-step prompt completion workflows, including tool and plugin responses.
         - Provides hooks for plugin selection, function registration, and error handling.
 
     **Usage:**
 
-        Inherit from this class to implement a chat provider that communicates with any OpenAI-compatible API endpoint.
+        Inherit from this class to implement a prompt provider that communicates with any OpenAI-compatible API endpoint.
         This class is suitable for use cases where you want to support multiple LLM vendors with a unified interface.
 
     **Example:**
@@ -119,24 +119,24 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 pass
 
             provider = MyProvider()
-            response = provider.handler(user_profile, chat, data)
+            response = provider.handler(user_profile, prompt, data)
 
     .. seealso::
-        - https://developers.openai.com/api/reference/overview/chat
+        - https://developers.openai.com/api/reference/overview/prompt
         - :class:`SmarterChatProviderBase`
     """
 
     @property
     def openai_messages(self) -> list[dict[str, Any]]:
         """
-        Return a sanitized list of messages compatible with OpenAI's chat completion API.
+        Return a sanitized list of messages compatible with OpenAI's prompt completion API.
 
         This property processes the internal message list, removing Smarter-specific annotations
         (such as metadata about tool calls and interim completion token charges) to ensure that
         only valid OpenAI message fields are included. This is essential for avoiding API errors
         related to unexpected or extraneous fields.
 
-        :returns: A list of dictionaries representing chat messages, formatted for OpenAI's API.
+        :returns: A list of dictionaries representing prompt messages, formatted for OpenAI's API.
         :rtype: list[dict[str, Any]]
 
         :raises SmarterValueError: If the internal message list is not a list.
@@ -176,7 +176,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         .. seealso::
 
-            - https://developers.openai.com/api/reference/overview/chat/create
+            - https://developers.openai.com/api/reference/overview/prompt/create
             - :class:`OpenAIMessageKeys`
         """
         if not isinstance(self.messages, list):
@@ -230,10 +230,10 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def prep_first_request(self):
         """
-        Prepare the first request for the chat completion.
+        Prepare the first request for the prompt completion.
 
         This is called
-        at the beginning of the chat completion process.
+        at the beginning of the prompt completion process.
 
         :raises SmarterValueError: If the messages are not a list, or if tool definitions are invalid.
 
@@ -310,18 +310,18 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 content = content + f"\n\nTool definition:\n--------------------\n{json.dumps(tool, indent=4)}"
                 self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
-        # send a chat completion request signal. this triggers a variety of db records to be created
+        # send a prompt completion request signal. this triggers a variety of db records to be created
         # asynchronously in the background via Celery tasks.
         chat_completion_request.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             iteration=self.iteration,
             data=self.first_iteration[_InternalKeys.REQUEST_KEY],
         )
 
     def prep_second_request(self):
         """
-        Prepare the second request for the chat completion.
+        Prepare the second request for the prompt completion.
 
         This is called
         in response to a tool call that requires a second request to the LLM.
@@ -342,7 +342,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         }
         chat_completion_request.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             iteration=self.iteration,
             data=self.second_iteration[_InternalKeys.REQUEST_KEY],
         )
@@ -354,7 +354,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         2025-06-20: updated to use model_dump_json() to ensure compatibility with Pydantic v2.
         2025-10-02: updated to validate that the response message is indeed a ChatCompletionMessage.
 
-        :param response: The OpenAI-compatible chat completion response.
+        :param response: The OpenAI-compatible prompt completion response.
         :type response: ChatCompletion
 
         :returns: None
@@ -373,7 +373,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         """
         Append an error message to the internal message list based on the OpenAI response.
 
-        :param response: The OpenAI chat completion response containing the error.
+        :param response: The OpenAI prompt completion response containing the error.
         :type response: ChatCompletion
 
         :returns: None
@@ -498,7 +498,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         chat_completion_response.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             iteration=self.iteration,
             request=serialized_request,
             response=serialized_response,
@@ -524,7 +524,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         response = (self.first_iteration[_InternalKeys.RESPONSE_KEY],)
         chat_completion_tool_called.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             plugin=None,
             function_name=function_name,
             function_args=function_args,
@@ -551,12 +551,12 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         logger.debug("%s.handle_plugin_called() - %s", self.formatted_class_name, plugin.name)
         chat_completion_plugin_called.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             plugin=plugin,
             input_text=self.input_text,
         )
         self._insert_charge_by_type(CHARGE_TYPE_PLUGIN)
-        self.db_insert_chat_plugin_usage(chat=self.chat, plugin=plugin, input_text=self.input_text)
+        self.db_insert_chat_plugin_usage(prompt=self.prompt, plugin=plugin, input_text=self.input_text)
 
     def process_tool_call(self, tool_call: ChatCompletionMessageToolCallUnion):
         """
@@ -731,12 +731,12 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
     def handle_completion(self) -> dict:
         """
-        Handle chat completion response.
+        Handle prompt completion response.
 
         This method
         formats the final response to be returned to the client.
 
-        :returns: A dictionary representing the final chat completion response.
+        :returns: A dictionary representing the final prompt completion response.
         :rtype: dict
         """
         logger.debug("%s.handle_completion() called", self.formatted_class_name)
@@ -784,15 +784,15 @@ class OpenAISmarterClient(SmarterChatProviderBase):
     def handler(
         self,
         user_profile: UserProfile,
-        chat: Chat,
+        prompt: Prompt,
         data: Union[dict[str, Any], list],
         plugins: Optional[list[PluginBase]] = None,
         functions: Optional[list[str]] = None,
     ) -> SmarterChatCompletionResponseType:
         """
-        Process a chat prompt request and invoke the appropriate OpenAI-compatible API endpoint.
+        Process a prompt prompt request and invoke the appropriate OpenAI-compatible API endpoint.
 
-        This method orchestrates the entire chat completion workflow, including:
+        This method orchestrates the entire prompt completion workflow, including:
 
         - Validating input and internal state.
         - Initializing or updating the message thread.
@@ -804,8 +804,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         :param user_profile: The user_profile instance making the request.
         :type user_profile: UserProfile
-        :param chat: The chat session instance associated with this request.
-        :type chat: Chat
+        :param prompt: The prompt session instance associated with this request.
+        :type prompt: Prompt
         :param data: The request payload, typically containing a session key and a list of message dictionaries.
         :type data: Union[dict[str, Any], list]
 
@@ -849,7 +849,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         Example usage::
 
             response = provider.handler(
-                chat=chat_instance,
+                prompt=chat_instance,
                 data=request_data,
                 plugins=[plugin1, plugin2],
                 functions=[function_definition_1, function_definition_2],
@@ -858,44 +858,44 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         """
         plugins_list = [plugin.name for plugin in plugins] if plugins else []
         logger.debug(
-            "%s.handler() called with user_profile=%s, chat=%s, plugins=%s, functions=%s",
+            "%s.handler() called with user_profile=%s, prompt=%s, plugins=%s, functions=%s",
             self.formatted_class_name,
             user_profile,
-            chat,
+            prompt,
             plugins_list,
             functions,
         )
-        self._chat = chat
+        self._chat = prompt
         self.user_profile = user_profile
-        if chat and chat.user_profile:
-            self._user_profile = chat.user_profile
-            self._account = chat.user_profile.account
-            self._user = chat.user_profile.user
+        if prompt and prompt.user_profile:
+            self._user_profile = prompt.user_profile
+            self._account = prompt.user_profile.account
+            self._user = prompt.user_profile.user
             logger.debug(
-                "%s.handler() - reinitialized user_profile from chat: %s, user_profile: %s",
+                "%s.handler() - reinitialized user_profile from prompt: %s, user_profile: %s",
                 self.formatted_class_name,
-                chat,
+                prompt,
                 self._user_profile,
             )
         self.data = data  # type: ignore[assignment]
         self.plugins = plugins
         self.functions = functions
 
-        chat_started.send(sender=self.handler, chat=self.chat, data=self.data)
+        chat_started.send(sender=self.handler, prompt=self.prompt, data=self.data)
         self.iteration = 1
         openai.api_key = self.api_key
         openai.base_url = self.base_url
 
-        if not isinstance(self.chat, Chat):
+        if not isinstance(self.prompt, Prompt):
             raise SmarterValueError(
-                f"{self.formatted_class_name}: chat must be an instance of Chat, got {type(self.chat)}"
+                f"{self.formatted_class_name}: prompt must be an instance of Prompt, got {type(self.prompt)}"
             )
 
         try:
             self.validate()
-            self.model = self.chat.llm_client.default_model or self.default_model
-            self.temperature = self.chat.llm_client.default_temperature or self.default_temperature
-            self.max_completion_tokens = self.chat.llm_client.default_max_tokens or self.default_max_tokens
+            self.model = self.prompt.llm_client.default_model or self.default_model
+            self.temperature = self.prompt.llm_client.default_temperature or self.default_temperature
+            self.max_completion_tokens = self.prompt.llm_client.default_max_tokens or self.default_max_tokens
             if not self.data:
                 raise SmarterValueError(f"{self.formatted_class_name}: data is required")
             self.input_text = self.get_input_text_prompt(data=self.data)
@@ -905,7 +905,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             # message history in the database, if it exists,
             # and append the user_profile's message.
             #
-            # using the persisted message history ensures that the chat
+            # using the persisted message history ensures that the prompt
             # provider has a consistent view of the conversation history
             # and that system and meta messages are preserved in their
             # original form and order.
@@ -1014,7 +1014,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             chat_response_failure.send(
                 sender=self.handler,
                 iteration=self.iteration,
-                chat=self.chat,
+                prompt=self.prompt,
                 request_meta_data=self.request_meta_data,
                 exception=e,
                 first_iteration=self.first_iteration,
@@ -1052,7 +1052,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         chat_finished.send(
             sender=self.handler,
-            chat=self.chat,
+            prompt=self.prompt,
             request=self.first_iteration.get(_InternalKeys.REQUEST_KEY),
             response=response,
             messages=self.messages,

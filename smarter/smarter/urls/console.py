@@ -177,7 +177,7 @@ urlpatterns = [
     # LLMClients.
     # mcdaniel: 2026-01-31: are these even reachable anymore?
     # -----------------------------------
-    path("chat/", DefaultLLMClientApiView.as_view(), name=f"{name_prefix}_chat"),
+    path("prompt/", DefaultLLMClientApiView.as_view(), name=f"{name_prefix}_chat"),
     path("config/", PromptConfigView.as_view(), name=f"{name_prefix}_config"),
     # -----------------------------------
     # password management

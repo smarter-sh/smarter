@@ -13,7 +13,7 @@
           "content": "where can i buy an everlasting gobstopper and how much do they cost?"
       }
   ],
-  "chat_history": [
+  "prompt_history": [
       {
           "message": "Hello, How can I help you?",
           "direction": "incoming",

@@ -20,7 +20,7 @@ URL Patterns
 PromptConfigView Class Reference
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: smarter.apps.prompt.views.detailview.chat_config_view
+.. automodule:: smarter.apps.prompt.views.detailviews.prompt_config_view
     :members:
     :undoc-members:
     :show-inheritance:

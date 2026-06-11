@@ -635,11 +635,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        logger.debug("%s.chat() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
-        command = self.chat.__name__
+    def prompt(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.debug("%s.prompt() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug(

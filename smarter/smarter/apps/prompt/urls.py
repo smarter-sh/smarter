@@ -2,7 +2,7 @@
 Django URL patterns for the prompt app.
 
 These are the
-endpoints for for the Workbench React app and chat configuration.
+endpoints for for the Workbench React app and prompt configuration.
 
 how we got here:
  - /
@@ -110,7 +110,7 @@ urlpatterns = [
         name=PromptReverseNames.manifest_by_hashed_id,
     ),
     path(
-        "llm-clients/<str:hashed_id>/chat/",
+        "llm-clients/<str:hashed_id>/prompt/",
         PromptWorkbenchView.as_view(),
         name=PromptReverseNames.chat_by_hashed_id,
     ),

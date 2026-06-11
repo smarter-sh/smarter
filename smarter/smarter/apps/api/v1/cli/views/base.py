@@ -357,7 +357,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # analyze the url path to determine the manifest kind.
         # urls:
         # - http://testserver/api/v1/cli/logs/LLMClient/?name=TestLLMClient
-        # - http://testserver/api/v1/cli/chat/config/TestLLMClient/
+        # - http://testserver/api/v1/cli/prompt/config/TestLLMClient/
         if not self._manifest_kind:
             self._manifest_kind = SAMKinds.from_url(self.url)
             if self._manifest_kind:
@@ -638,7 +638,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # from the request body, and then we'll leave it to the child views to
         # decide if/when to actually parse the manifest and instantiate the broker.
 
-        # if the command is 'chat', then the raw prompt text
+        # if the command is 'prompt', then the raw prompt text
         # or the encoded file attachment data will be in the request body.
         # otherwise, the request body should contain manifest text.
         if self.command == SmarterJournalCliCommands.CHAT:

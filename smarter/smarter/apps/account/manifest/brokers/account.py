@@ -845,24 +845,24 @@ class SAMAccountBroker(AbstractBroker):
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Chat functionality is not implemented for the Smarter API Account.
+        Prompt functionality is not implemented for the Smarter API Account.
 
         :param request: The HTTP request object.
         :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
-        :raises SAMBrokerErrorNotImplemented: Always raised to indicate that chat is not implemented.
+        :raises SAMBrokerErrorNotImplemented: Always raised to indicate that prompt is not implemented.
 
-        :returns: A JSON response indicating that chat is not implemented.
+        :returns: A JSON response indicating that prompt is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
-        logger.debug("%s.chat() called", self.formatted_class_name)
-        command = self.chat.__name__
+        logger.debug("%s.prompt() called", self.formatted_class_name)
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

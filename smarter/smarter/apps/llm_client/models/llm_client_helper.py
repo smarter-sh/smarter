@@ -561,7 +561,7 @@ class LLMClientHelper(SmarterRequestMixin):
               returns ``'alpha.api.example.com'``
 
         Sandbox URL:
-            - ``http://api.localhost:9357/api/v1/llm-clients/1/chat/``
+            - ``http://api.localhost:9357/api/v1/llm-clients/1/prompt/``
               returns ``'api.localhost:9357'``
 
         Custom domain URL:

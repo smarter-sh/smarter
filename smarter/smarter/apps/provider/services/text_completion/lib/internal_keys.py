@@ -1,14 +1,10 @@
-"""
-Internal keys used in the chat provider.
-"""
+"""Internal keys used in the prompt provider."""
 
 SMARTER_SYSTEM_KEY_PREFIX = "smarter_"
 
 
 class _InternalKeys:
-    """
-    Internal dict keys used in the chat provider.
-    """
+    """Internal dict keys used in the prompt provider."""
 
     REQUEST_KEY = "request"
     RESPONSE_KEY = "response"

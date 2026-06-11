@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.prompt.models import (
-    Chat,
+    Prompt,
     PromptHistory,
     PromptPluginUsage,
     PromptToolCall,
@@ -14,14 +14,14 @@ from smarter.apps.prompt.models import (
 
 class PromptSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Chat
+        model = Prompt
         fields = "__all__"
 
 
 class ChatHistorySerializer(serializers.ModelSerializer):
     """Serializer for the PromptHistory model."""
 
-    chat = PromptSerializer(read_only=True)
+    prompt = PromptSerializer(read_only=True)
 
     class Meta:
         model = PromptHistory
@@ -31,7 +31,7 @@ class ChatHistorySerializer(serializers.ModelSerializer):
 class PromptPluginUsageSerializer(serializers.ModelSerializer):
     """Serializer for the PromptPluginUsage model."""
 
-    chat = PromptSerializer(read_only=True)
+    prompt = PromptSerializer(read_only=True)
     plugin = PluginMetaSerializer()
 
     class Meta:
@@ -42,7 +42,7 @@ class PromptPluginUsageSerializer(serializers.ModelSerializer):
 class PromptToolCallSerializer(serializers.ModelSerializer):
     """Serializer for the PromptToolCall model."""
 
-    chat = PromptSerializer(read_only=True)
+    prompt = PromptSerializer(read_only=True)
 
     class Meta:
         model = PromptToolCall

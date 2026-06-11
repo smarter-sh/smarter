@@ -1437,22 +1437,22 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     @abstractmethod
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Invoke a chat operation.
+        Invoke a prompt operation.
 
         This abstract method should be implemented by subclasses to provide
-        chat-based interactions with the broker resource.
+        prompt-based interactions with the broker resource.
 
         :param request: The HTTP request object.
         :type request: HttpRequest
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
-        :return: A SmarterJournaledJsonResponse containing the chat response.
+        :return: A SmarterJournaledJsonResponse containing the prompt response.
         :rtype: SmarterJournaledJsonResponse
         """
         raise SAMBrokerErrorNotImplemented(
-            message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
+            message="prompt() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
         )
 
     @abstractmethod
@@ -2100,8 +2100,8 @@ class BrokerNotImplemented(AbstractBroker):
     def manifest(self) -> Optional[Union[AbstractSAMBase, dict]]:
         raise SAMBrokerErrorNotImplemented("Subclasses must implement the manifest property.")
 
-    def chat(self, request: SmarterRequest, *args, **kwargs):
-        super().chat(request, args, kwargs)
+    def prompt(self, request: SmarterRequest, *args, **kwargs):
+        super().prompt(request, args, kwargs)
 
     def delete(self, request: SmarterRequest, *args, **kwargs):
         super().delete(request, args, kwargs)

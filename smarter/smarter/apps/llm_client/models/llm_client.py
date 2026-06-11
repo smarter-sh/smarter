@@ -46,7 +46,7 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 def validate_provider(value):
     """
-    Validate that the provider is in the list of valid chat providers.
+    Validate that the provider is in the list of valid prompt providers.
 
     :param value: The provider value to validate.
     :raises ValidationError: If the provider is not valid.
@@ -221,7 +221,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         encoder=json.SmarterJSONEncoder,
     )
 
-    #: The LLMClient UI configuration fields. Placeholder text in the chat input area.
+    #: The LLMClient UI configuration fields. Placeholder text in the prompt input area.
     #: Example: "Ask me anything about Stackademy..."
     app_placeholder = models.CharField(default="Type something here...", max_length=255, blank=True, null=True)
 
@@ -231,11 +231,11 @@ class LLMClient(MetaDataWithOwnershipModel):
     app_info_url = models.URLField(default="https://smarter.sh", blank=True, null=True)
 
     #: The LLMClient UI configuration fields. URL to the app background image in the Smarter React LLMClient component.
-    #: Example: "https://cdn.smarter.sh/chat-ui/background.png"
+    #: Example: "https://cdn.smarter.sh/prompt-ui/background.png"
     app_background_image_url = models.URLField(blank=True, null=True)
 
     #: The LLMClient UI configuration fields. URL to the app logo image in the Smarter React LLMClient component.
-    #: Example: "https://cdn.smarter.sh/chat-ui/logo.png"
+    #: Example: "https://cdn.smarter.sh/prompt-ui/logo.png"
     app_logo_url = models.URLField(blank=True, null=True)
 
     #: The LLMClient UI configuration fields. Enables or disables file attachment feature in the Smarter React LLMClient component.
@@ -550,8 +550,8 @@ class LLMClient(MetaDataWithOwnershipModel):
         key, "url_llm_client". This url is consumed by React.js app for http
         requests on new prompts.
 
-        maps to "<int:llm_client_id>/chat/"
-        example: "http://localhost:9357/api/v1/llm-clients/5174/chat/"
+        maps to "<int:llm_client_id>/prompt/"
+        example: "http://localhost:9357/api/v1/llm-clients/5174/prompt/"
 
         :returns: URL for llm_client API
         :rtype: str
@@ -574,7 +574,7 @@ class LLMClient(MetaDataWithOwnershipModel):
     @property
     def url_chat_config(self) -> str:
         """
-        The Smarter Api url for the Chat config json dict.
+        The Smarter Api url for the Prompt config json dict.
 
         The React.js app requests this url during react app startup
         to retrieve the UI configuration for the llm_client.
@@ -604,7 +604,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         This url is used by the React.js app
         to load the ChatApp web page.
 
-        maps to "chat/"
+        maps to "prompt/"
         """
         warnings.warn(
             "LLMClient.url_chatapp is deprecated and will be removed in a future release.",

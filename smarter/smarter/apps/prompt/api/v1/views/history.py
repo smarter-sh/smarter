@@ -12,7 +12,7 @@ from smarter.apps.prompt.api.v1.serializers import (
     PromptToolCallSerializer,
 )
 from smarter.apps.prompt.models import (
-    Chat,
+    Prompt,
     PromptHistory,
     PromptPluginUsage,
     PromptToolCall,
@@ -50,7 +50,7 @@ class PluginUsageHistoryView(SmarterAuthenticatedAPIView):
 
 
 class ChatHistoryListView(SmarterAuthenticatedListAPIView):
-    queryset = Chat.objects.all()
+    queryset = Prompt.objects.all()
     serializer_class = PromptSerializer
 
 

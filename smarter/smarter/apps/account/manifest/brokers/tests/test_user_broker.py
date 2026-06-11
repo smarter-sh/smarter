@@ -25,12 +25,13 @@ logger = logging.getLogger(__name__)
 class TestSmarterUserBroker(TestSAMBrokerBaseClass):
     """
     Test the Smarter SAMUserBroker.
+
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
 
     def setUp(self):
-        """test-level setup."""
+        """Test-level setup."""
         super().setUp()
         self._broker_class = SAMUserBroker
         self._here = os.path.abspath(os.path.dirname(__file__))
@@ -101,9 +102,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         logger.info("%s.test_setup() SAMUserBroker initialized successfully for testing.", self.formatted_class_name)
 
     def test_is_valid(self):
-        """
-        Test that the is_valid property returns True.
-        """
+        """Test that the is_valid property returns True."""
         self.assertTrue(self.broker.is_valid)
 
     def test_broker_initialization(self):
@@ -206,7 +205,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_example_manifest(self):
         """
-        test example_manifest method.
+        Test example_manifest method.
         Verify that it returns a SmarterJournaledJsonResponse with expected structure
         {
             "data": {
@@ -247,7 +246,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_get(self):
         """
-        test get method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+        Test get method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
             {
             "data": {
                 "apiVersion": "smarter.sh/v1",
@@ -268,7 +267,6 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
                 "command": "get"
             }
             }
-
         """
         response = self.broker.get(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
@@ -279,7 +277,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_apply(self):
         """
-        test apply method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+        Test apply method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
             {
             "data": {
                 "ready": true,
@@ -442,7 +440,6 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
                 "command": "describe"
             }
             }
-
         """
         response = self.broker.describe(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
@@ -456,7 +453,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_deploy(self):
         """
-        test deploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+        Test deploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
             {
                 "message": "User test_admin_user_ec61fb424a68796a deployed successfully",
                 "api": "smarter.sh/v1",
@@ -474,7 +471,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_undeploy(self):
         """
-        test undeploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+        Test undeploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
             {
                 "message": "User test_admin_user_ec61fb424a68796a undeployed successfully",
                 "api": "smarter.sh/v1",
@@ -491,25 +488,20 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         logger.info("Undeploy response: %s", response.content.decode())
 
     def test_chat_not_implemented(self):
-        """test chat method raises not implemented."""
+        """Test prompt method raises not implemented."""
 
         with self.assertRaises(SAMBrokerErrorNotImplemented):
-            self.broker.chat(self.request, **self.kwargs)
+            self.broker.prompt(self.request, **self.kwargs)
 
     def test_delete_user_not_found(self):
-        """
-        test delete method raises not found for missing user.
-
-        """
+        """Test delete method raises not found for missing user."""
         self.request._body = None
         self._broker = self.SAMBrokerClass(self.request)
         with self.assertRaises(SAMBrokerErrorNotFound):
             self.broker.delete(self.request, {"name": "nonexistent-user"})
 
     def test_describe_user_not_found(self):
-        """
-        Test describe method raises not found for missing user.
-        """
+        """Test describe method raises not found for missing user."""
         self.request._body = None
         self._broker = self.SAMBrokerClass(self.request)
         # with self.assertRaises(SAMBrokerErrorNotFound):

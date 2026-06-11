@@ -362,7 +362,7 @@ def branding(request: "HttpRequest") -> dict[str, Any]:
                 "cdn_logo_url": urljoin(smarter_settings.smarter_project_cdn_url, "images/logo/smarter-crop.png"),
                 "login_url": urljoin(smarter_settings.environment_url, "/login/"),
                 "learn_url": smarter_settings.smarter_project_docs_url,
-                "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/chat/"),
+                "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/smarter/prompt/"),
             }
         }
         logger.debug("%s.branding() cached branding context: %s", logger_prefix, logging.formatted_json(context))

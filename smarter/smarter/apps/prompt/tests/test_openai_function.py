@@ -17,7 +17,7 @@ from smarter.apps.llm_client.models import LLMClient, LLMClientPlugin
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
-from smarter.apps.prompt.models import Chat, PromptHistory, PromptPluginUsage
+from smarter.apps.prompt.models import Prompt, PromptHistory, PromptPluginUsage
 from smarter.apps.prompt.signals import (
     chat_completion_response,
     chat_finished,
@@ -113,7 +113,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         self.client = Client()
         self.client.force_login(self.admin_user)
 
-        self.chat = Chat.objects.create(
+        self.prompt = Prompt.objects.create(
             session_key=secrets.token_hex(32),
             user_profile=self.user_profile,
             llm_client=self.llm_client,
@@ -124,7 +124,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        self.chat.delete()
+        self.prompt.delete()
         self.llm_client.delete()
         super().tearDown()
 
@@ -148,7 +148,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         return llm_client
 
     def check_response(self, response):
-        """Check response structure from api.v1.views.chat handler()."""
+        """Check response structure from api.v1.views.prompt handler()."""
         if response["statusCode"] != 200:
             print(f"response: {response}")
 
@@ -233,7 +233,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         true_assertion("everlasting gobstopper")
 
     def test_handler_gobstoppers(self):
-        """Test api.v1.views.chat handler() - Gobstoppers."""
+        """Test api.v1.views.prompt handler() - Gobstoppers."""
 
         # setup receivers for all signals to check if they are called
         plugin_selected.connect(self.plugin_selected_signal_handler)
@@ -247,7 +247,9 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
         try:
-            response = handler(chat=self.chat, data=event_about_gobstoppers, plugins=self.plugins, user=self.admin_user)
+            response = handler(
+                prompt=self.prompt, data=event_about_gobstoppers, plugins=self.plugins, user=self.admin_user
+            )
             sleep(1)
         except Exception as error:
             self.fail(f"handler() raised {error}")
@@ -262,20 +264,20 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
                 print("assertFalse key:", key, "value:", value)
                 # self.assertFalse(value)
 
-        # assert that Chat has one or more records for self.admin_user
-        chat_histories = Chat.objects.filter().first()
+        # assert that Prompt has one or more records for self.admin_user
+        chat_histories = Prompt.objects.filter().first()
         self.assertIsNotNone(chat_histories)
 
-        # test url api endpoint for chat history
+        # test url api endpoint for prompt history
         # TODO: THIS SELECTION CRITERIA IS PATHETIC.
-        chat = PromptHistory.objects.order_by("-id").first()
-        self.assertIsNotNone(chat)
-        url = reverse("prompt:api:v1:chathistory", kwargs={"pk": chat.id})
+        prompt = PromptHistory.objects.order_by("-id").first()
+        self.assertIsNotNone(prompt)
+        url = reverse("prompt:api:v1:chathistory", kwargs={"pk": prompt.id})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
 
-        # give celery time to process the chat completion
+        # give celery time to process the prompt completion
         time.sleep(CELERY_WAIT)  # Pause execution for 1 second
 
         # assert that PromptPluginUsage has one or more records for self.admin_user
@@ -286,23 +288,23 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
             print("No PromptPluginUsage records found.")
 
     def test_handler_weather(self):
-        """Test api.v1.views.chat handler() - weather."""
+        """Test api.v1.views.prompt handler() - weather."""
         response = None
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
         try:
-            response = handler(chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_weather)
+            response = handler(prompt=self.prompt, plugins=self.plugins, user=self.admin_user, data=event_about_weather)
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
 
     def test_handler_recipes(self):
-        """Test api.v1.views.chat handler() - recipes."""
+        """Test api.v1.views.prompt handler() - recipes."""
         response = None
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 
         try:
-            response = handler(chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_recipes)
+            response = handler(prompt=self.prompt, plugins=self.plugins, user=self.admin_user, data=event_about_recipes)
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)

@@ -1,5 +1,6 @@
 """
-This module contains passthrough views for interacting directly with the LLM
+This module contains passthrough views for interacting directly with the LLM.
+
 provider backend API.
 """
 
@@ -51,14 +52,15 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class OpenAIPassthroughClient(SmarterHelperMixin):
     """
-    A passthrough chat provider that is fully compatible with OpenAI's API.
+    A passthrough prompt provider that is fully compatible with OpenAI's API.
+
     This provider allows authenticated users to send arbitrary OpenAI-compatible
     prompt dicts directly to the underlying API. It handles authentication,
     request forwarding, and response handling.
 
     Smarter-specific features include:
 
-    - Emits signals for chat lifecycle events
+    - Emits signals for prompt lifecycle events
     - Logs interactions based on a waffle switch
     - Returns journaled JSON responses for integration with Smarter's journaling system
     - Manages history and charge records asynchronously via ChatDbMixin
@@ -68,7 +70,6 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         provider=PROVIDER_NAME
         base_url=BASE_URL
         api_key=smarter_settings.gemini_api_key.get_secret_value()
-
     """
 
     def __init__(self, *args, provider: str, base_url: str, api_key: str, **kwargs):

@@ -36,14 +36,14 @@ logger_verbose = logging.getSmarterLogger(
 )
 
 
-class Chat(MetaDataWithOwnershipModel):
-    """Chat model."""
+class Prompt(MetaDataWithOwnershipModel):
+    """Prompt model."""
 
     class Meta:
         verbose_name_plural = "Chats"
         unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
 
-    objects: MetaDataWithOwnershipModelManager["Chat"] = MetaDataWithOwnershipModelManager()
+    objects: MetaDataWithOwnershipModelManager["Prompt"] = MetaDataWithOwnershipModelManager()
 
     session_key = models.CharField(max_length=255, blank=False, null=False, unique=True)
     llm_client = models.ForeignKey(LLMClient, on_delete=models.CASCADE, blank=False, null=False)
@@ -67,7 +67,7 @@ class PromptHistory(TimestampedModel):
     class Meta:
         verbose_name_plural = "Prompt History"
 
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
+    prompt = models.ForeignKey(Prompt, on_delete=models.CASCADE)
     request = models.JSONField(
         blank=True,
         null=True,
@@ -85,11 +85,11 @@ class PromptHistory(TimestampedModel):
     )
 
     def __str__(self):
-        return f"{self.chat.id}"  # type: ignore[return]
+        return f"{self.prompt.id}"  # type: ignore[return]
 
     @property
-    def chat_history(self) -> list[dict]:
-        """Used by the Reactapp (via PromptConfigView) to display the chat history."""
+    def prompt_history(self) -> list[dict]:
+        """Used by the Reactapp (via PromptConfigView) to display the prompt history."""
         history = self.messages if self.messages else self.request.get("messages", []) if self.request else []
         # response = self.response.get("choices", []) if self.response else []
         # response = response[0] if response else {}
@@ -104,7 +104,7 @@ class PromptToolCall(TimestampedModel):
     class Meta:
         verbose_name_plural = "Prompt Tool Call History"
 
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
+    prompt = models.ForeignKey(Prompt, on_delete=models.CASCADE)
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE, blank=True, null=True)
     function_name = models.CharField(max_length=255, blank=True, null=True)
     function_args = models.CharField(max_length=255, blank=True, null=True)
@@ -142,9 +142,9 @@ class PromptToolCall(TimestampedModel):
 
     def __str__(self):
         if self.plugin:
-            name = f"{self.chat.id} - {self.plugin.name}"  # type: ignore[return]
+            name = f"{self.prompt.id} - {self.plugin.name}"  # type: ignore[return]
         else:
-            name = f"{self.chat.id} - {self.function_name}"  # type: ignore[return]
+            name = f"{self.prompt.id} - {self.function_name}"  # type: ignore[return]
         return name
 
 
@@ -154,12 +154,12 @@ class PromptPluginUsage(TimestampedModel):
     class Meta:
         verbose_name_plural = "Prompt Plugin Usage"
 
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
+    prompt = models.ForeignKey(Prompt, on_delete=models.CASCADE)
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
     input_text = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.chat.id} - {self.plugin.name}"  # type: ignore[return]
+        return f"{self.prompt.id} - {self.plugin.name}"  # type: ignore[return]
 
 
 # --------------------------------------------------------------------------------
@@ -167,14 +167,14 @@ class PromptPluginUsage(TimestampedModel):
 # --------------------------------------------------------------------------------
 class PromptSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Chat
+        model = Prompt
         fields = "__all__"
 
 
 class PromptToolCallSerializer(serializers.ModelSerializer):
     """Serializer for the PromptToolCall model."""
 
-    chat = PromptSerializer(read_only=True)
+    prompt = PromptSerializer(read_only=True)
 
     class Meta:
         model = PromptToolCall
@@ -184,7 +184,7 @@ class PromptToolCallSerializer(serializers.ModelSerializer):
 class PromptPluginUsageSerializer(serializers.ModelSerializer):
     """Serializer for the PromptPluginUsage model."""
 
-    chat = PromptSerializer(read_only=True)
+    prompt = PromptSerializer(read_only=True)
 
     class Meta:
         model = PromptPluginUsage
@@ -193,25 +193,25 @@ class PromptPluginUsageSerializer(serializers.ModelSerializer):
 
 class PromptHelper(SmarterRequestMixin):
     """
-    Helper class for working with :class:`Chat` objects.
+    Helper class for working with :class:`Prompt` objects.
 
-    This class provides methods for creating and retrieving :class:`Chat` objects,
-    as well as managing the cache for chat sessions. It is designed to simplify
-    the process of interacting with chat-related data and to ensure consistent
-    handling of chat sessions, llm_clients, and associated metadata.
+    This class provides methods for creating and retrieving :class:`Prompt` objects,
+    as well as managing the cache for prompt sessions. It is designed to simplify
+    the process of interacting with prompt-related data and to ensure consistent
+    handling of prompt sessions, llm_clients, and associated metadata.
 
     **Features**
 
-    - Abstracts the logic for creating and retrieving chat sessions.
-    - Manages caching of chat objects to improve performance and reduce database queries.
-    - Provides access to related chat history, tool calls, and plugin usage.
+    - Abstracts the logic for creating and retrieving prompt sessions.
+    - Manages caching of prompt objects to improve performance and reduce database queries.
+    - Provides access to related prompt history, tool calls, and plugin usage.
     - Integrates with Django's request and session handling.
-    - Ensures that chat sessions are always associated with a valid :class:`LLMClient` and :class:`Account`.
+    - Ensures that prompt sessions are always associated with a valid :class:`LLMClient` and :class:`Account`.
 
     **Usage**
 
     Typically, this class is instantiated with a Django :class:`HttpRequest` object and a session key.
-    Optionally, a :class:`LLMClient` instance can be provided to associate the chat session with a specific llm_client.
+    Optionally, a :class:`LLMClient` instance can be provided to associate the prompt session with a specific llm_client.
 
     Example
     -------
@@ -219,37 +219,37 @@ class PromptHelper(SmarterRequestMixin):
 
         helper = PromptHelper(request, session_key)
         if helper.ready:
-            chat = helper.chat
+            prompt = helper.prompt
             llm_client = helper.llm_client
             history = helper.history
 
     :param request: The Django HttpRequest object for the current session.
     :type request: django.http.HttpRequest
-    :param session_key: The session key identifying the chat session.
+    :param session_key: The session key identifying the prompt session.
     :type session_key: Optional[str]
-    :param llm_client: An optional LLMClient instance to associate with the chat session.
+    :param llm_client: An optional LLMClient instance to associate with the prompt session.
     :type llm_client: Optional[LLMClient]
     :param args: Additional positional arguments.
     :param kwargs: Additional keyword arguments.
 
     :raises SmarterValueError: If neither a session key nor a LLMClient instance is provided.
-    :raises SmarterConfigurationError: If there is an error creating a new Chat object.
+    :raises SmarterConfigurationError: If there is an error creating a new Prompt object.
 
     .. note::
         This class is intended for internal use within the Smarter platform and
         should not be used directly in user-facing code without proper validation.
 
     .. todo::
-        - Remove the session_key parameter and rely solely on the LLMClient instance for chat session management.
+        - Remove the session_key parameter and rely solely on the LLMClient instance for prompt session management.
 
     .. seealso::
         - :class:`smarter.apps.llm_client.models.LLMClient`
         - :class:`smarter.apps.account.models.Account`
-        - :class:`smarter.apps.chat.models.Chat`
+        - :class:`smarter.apps.prompt.models.Prompt`
         - :class:`smarter.lib.django.request.SmarterRequestMixin`
     """
 
-    _chat: Optional[Chat] = None
+    _chat: Optional[Prompt] = None
     _llm_client: Optional[LLMClient] = None
     _prompt_tool_call: Optional[Union[models.QuerySet, list]] = None
     _prompt_plugin_usage: Optional[Union[models.QuerySet, list]] = None
@@ -263,15 +263,15 @@ class PromptHelper(SmarterRequestMixin):
 
         :param request: The Django HttpRequest object for the current session.
         :type request: django.http.HttpRequest
-        :param session_key: The session key identifying the chat session.
+        :param session_key: The session key identifying the prompt session.
         :type session_key: Optional[str]
-        :param llm_client: An optional LLMClient instance to associate with the chat session.
+        :param llm_client: An optional LLMClient instance to associate with the prompt session.
         :type llm_client: Optional[LLMClient]
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
         :raises SmarterValueError: If neither a session key nor a LLMClient instance is provided.
-        :raises SmarterConfigurationError: If there is an error creating a new Chat object.
+        :raises SmarterConfigurationError: If there is an error creating a new Prompt object.
         """
         logger_verbose.debug(
             "%s.__init__() - received request: %s session_key: %s, llm_client: %s",
@@ -317,7 +317,7 @@ class PromptHelper(SmarterRequestMixin):
             self._chat = self.get_cached_chat()
 
         logger_verbose.debug(
-            "%s.__init__() - %s with session_key: %s, chat: %s",
+            "%s.__init__() - %s with session_key: %s, prompt: %s",
             self.formatted_class_name,
             "is ready" if self.ready else "is not ready",
             self.session_key,
@@ -332,9 +332,9 @@ class PromptHelper(SmarterRequestMixin):
         """
         Check if the PromptHelper is ready to use.
 
-        This property returns ``True`` if the chat instance is available and all required
+        This property returns ``True`` if the prompt instance is available and all required
         attributes are set, otherwise returns ``False``. It is useful for determining
-        whether the PromptHelper is fully initialized and ready for chat operations.
+        whether the PromptHelper is fully initialized and ready for prompt operations.
 
         :returns: ``True`` if the PromptHelper is ready to use, otherwise ``False``.
         :rtype: bool
@@ -346,7 +346,7 @@ class PromptHelper(SmarterRequestMixin):
         Convert the PromptHelper instance to a JSON serializable dictionary.
 
         This method returns a dictionary representation of the PromptHelper instance,
-        including key metadata and related objects such as the chat, llm_client, chat history,
+        including key metadata and related objects such as the prompt, llm_client, prompt history,
         and a unique client string.
 
         :returns: A dictionary containing the serialized state of the PromptHelper.
@@ -357,7 +357,7 @@ class PromptHelper(SmarterRequestMixin):
                 **super().to_json(),
                 "ready": self.ready,
                 "session_key": self.session_key,
-                "chat": self.chat.id if self.chat else None,  # type: ignore[return]
+                "prompt": self.prompt.id if self.prompt else None,  # type: ignore[return]
                 "llm_client": self.llm_client.id if self.llm_client else None,  # type: ignore[return]
                 "history": self.history,
                 "unique_client_string": self.unique_client_string,
@@ -390,12 +390,12 @@ class PromptHelper(SmarterRequestMixin):
         return self.formatted_text(class_name)
 
     @property
-    def chat(self):
+    def prompt(self):
         """
-        Get the chat instance for the current request.
+        Get the prompt instance for the current request.
 
-        :returns: The Chat instance associated with the current session.
-        :rtype: Chat
+        :returns: The Prompt instance associated with the current session.
+        :rtype: Prompt
         """
         return self._chat
 
@@ -417,58 +417,58 @@ class PromptHelper(SmarterRequestMixin):
         self._llm_client = get_cached_llm_client_by_request(request=self.smarter_request)
 
     @property
-    def chat_history(self) -> Union[models.QuerySet, list]:
+    def prompt_history(self) -> Union[models.QuerySet, list]:
         """
-        Get the most recent chat history for the current chat session.
+        Get the most recent prompt history for the current prompt session.
 
-        :returns: The most recent PromptHistory instance's chat_history field, or an empty list if none found.
+        :returns: The most recent PromptHistory instance's prompt_history field, or an empty list if none found.
         :rtype: Union[models.QuerySet, list]
         """
-        rec = PromptHistory.objects.filter(chat=self.chat).order_by("-created_at").first()
-        return rec.chat_history if rec else []
+        rec = PromptHistory.objects.filter(prompt=self.prompt).order_by("-created_at").first()
+        return rec.prompt_history if rec else []
 
     @property
     def prompt_tool_call(self) -> Union[models.QuerySet, list]:
         """
-        Get the most recent chat tool call history for the current chat session.
+        Get the most recent prompt tool call history for the current prompt session.
 
-        :returns: A queryset of PromptToolCall instances for the current chat session, ordered by creation date.
+        :returns: A queryset of PromptToolCall instances for the current prompt session, ordered by creation date.
         :rtype: Union[models.QuerySet, list]
         """
         if self._prompt_tool_call:
             return self._prompt_tool_call
-        self._prompt_tool_call = PromptToolCall.objects.filter(chat=self.chat).order_by("-created_at") or []
+        self._prompt_tool_call = PromptToolCall.objects.filter(prompt=self.prompt).order_by("-created_at") or []
         return self._prompt_tool_call
 
     @property
     def prompt_plugin_usage(self) -> Union[models.QuerySet, list]:
         """
-        Get the most recent chat plugin usage history for the current chat session.
+        Get the most recent prompt plugin usage history for the current prompt session.
 
-        :returns: A queryset of PromptPluginUsage instances for the current chat session, ordered by creation date.
+        :returns: A queryset of PromptPluginUsage instances for the current prompt session, ordered by creation date.
         :rtype: Union[models.QuerySet, list]
         """
         if self._prompt_plugin_usage:
             return self._prompt_plugin_usage
-        self._prompt_plugin_usage = PromptPluginUsage.objects.filter(chat=self.chat).order_by("-created_at") or []
+        self._prompt_plugin_usage = PromptPluginUsage.objects.filter(prompt=self.prompt).order_by("-created_at") or []
         return self._prompt_plugin_usage
 
     @property
     def history(self) -> dict:
         """
-        Serialize the most recent logged history output for the chat session.
+        Serialize the most recent logged history output for the prompt session.
 
-        :returns: A dictionary containing serialized chat, chat history, tool calls, and plugin usage.
+        :returns: A dictionary containing serialized prompt, prompt history, tool calls, and plugin usage.
         :rtype: dict
         """
         if self._history:
             return self._history
-        chat_serializer = PromptSerializer(self.chat)
+        chat_serializer = PromptSerializer(self.prompt)
         prompt_tool_call_serializer = PromptToolCallSerializer(self.prompt_tool_call, many=True)
         prompt_plugin_usage_serializer = PromptPluginUsageSerializer(self.prompt_plugin_usage, many=True)
         self._history = {
-            "chat": chat_serializer.data,
-            "chat_history": self.chat_history,
+            "prompt": chat_serializer.data,
+            "prompt_history": self.prompt_history,
             "prompt_tool_call_history": prompt_tool_call_serializer.data,
             "prompt_plugin_usage_history": prompt_plugin_usage_serializer.data,
             # these two will be added upstream.
@@ -476,45 +476,48 @@ class PromptHelper(SmarterRequestMixin):
         }
         return self._history
 
-    def get_cached_chat(self) -> Optional[Chat]:
+    def get_cached_chat(self) -> Optional[Prompt]:
         """
-        Get the chat instance for the current request.
+        Get the prompt instance for the current request.
 
-        This method retrieves the Chat instance associated with the current session key
-        from the cache. If the Chat instance is not found in the cache, it attempts to
-        retrieve it from the database. If it still cannot be found, a new Chat instance
+        This method retrieves the Prompt instance associated with the current session key
+        from the cache. If the Prompt instance is not found in the cache, it attempts to
+        retrieve it from the database. If it still cannot be found, a new Prompt instance
         is created using the provided LLMClient and request metadata.
 
-        :returns: The Chat instance associated with the current session, or ``None`` if not found.
-        :rtype: Optional[Chat]
+        :returns: The Prompt instance associated with the current session, or ``None`` if not found.
+        :rtype: Optional[Prompt]
         """
         if not self.smarter_request:
             logger.error("%s - request object is required for PromptHelper.", self.formatted_class_name)
             return None
 
-        chat: Chat = cache.get(self.session_key)  # type: ignore[assignment]
-        if chat:
+        prompt: Prompt = cache.get(self.session_key)  # type: ignore[assignment]
+        if prompt:
             logger_verbose.debug(
-                "%s - retrieved cached Chat: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
+                "%s - retrieved cached Prompt: %s session_key: %s",
+                self.formatted_class_name,
+                prompt,
+                prompt.session_key,
             )
-            return chat
+            return prompt
 
         if self.session_key:
             try:
-                chat = Chat.objects.get(session_key=self.session_key)
+                prompt = Prompt.objects.get(session_key=self.session_key)
                 logger_verbose.debug(
-                    "%s - retrieved Chat instance: %s session_key: %s",
+                    "%s - retrieved Prompt instance: %s session_key: %s",
                     self.formatted_class_name,
-                    chat,
-                    chat.session_key,
+                    prompt,
+                    prompt.session_key,
                 )
-            except Chat.DoesNotExist:
+            except Prompt.DoesNotExist:
                 pass
 
-        if not chat:
+        if not prompt:
             if not self.llm_client:
                 raise SmarterValueError(
-                    f"{self.formatted_class_name} LLMClient instance is required for creating a Chat object."
+                    f"{self.formatted_class_name} LLMClient instance is required for creating a Prompt object."
                 )
 
             try:
@@ -522,7 +525,7 @@ class PromptHelper(SmarterRequestMixin):
                 # to a more Django friendly URL.
                 django_friendly_url = self.url or ""
                 django_friendly_url = django_friendly_url.replace("http://testserver/", "http://testserver.local/")
-                chat = Chat.objects.create(
+                prompt = Prompt.objects.create(
                     session_key=self.session_key,
                     user_profile=self.user_profile,
                     llm_client=self.llm_client,
@@ -533,13 +536,13 @@ class PromptHelper(SmarterRequestMixin):
             except IntegrityError as e:
                 raise SmarterConfigurationError(f"{self.formatted_class_name} - IntegrityError: {str(e)}") from e
 
-        cache.set(key=self.session_key, value=chat, timeout=smarter_settings.chat_cache_expiration or 300)
+        cache.set(key=self.session_key, value=prompt, timeout=smarter_settings.chat_cache_expiration or 300)
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
             logger_verbose.debug(
-                "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
+                "%s - cached prompt instance: %s session_key: %s", self.formatted_class_name, prompt, prompt.session_key
             )
 
-        if not chat.llm_client:
-            raise ValueError(f"{self.formatted_class_name} LLMClient instance is required for Chat object.")
+        if not prompt.llm_client:
+            raise ValueError(f"{self.formatted_class_name} LLMClient instance is required for Prompt object.")
 
-        return chat
+        return prompt

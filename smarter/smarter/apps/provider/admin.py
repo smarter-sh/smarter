@@ -1,5 +1,5 @@
 # pylint: disable=W0212
-"""Django admin configuration for the chat app."""
+"""Django admin configuration for the prompt app."""
 
 from django.contrib import admin
 
@@ -18,9 +18,7 @@ from .models import (
 
 
 class ProviderModelVerificationAdmin(admin.StackedInline):
-    """
-    provider model verification admin.
-    """
+    """Provider model verification admin."""
 
     model = ProviderModelVerification
 
@@ -39,7 +37,7 @@ class ProviderModelVerificationAdmin(admin.StackedInline):
 
 
 class ProviderVerificationAdmin(admin.StackedInline):
-    """provider verification admin."""
+    """Provider verification admin."""
 
     model = ProviderVerification
 
@@ -60,7 +58,9 @@ class ProviderVerificationAdmin(admin.StackedInline):
 
 class ProviderAdmin(SmarterCustomerModelAdmin):
     """
-    Provider admin. This is a primary Smarter resource, that descends directly from
+    Provider admin.
+
+    This is a primary Smarter resource, that descends directly from
     MetaDataWithOwnershipModel. Visibility of Providers is granted to any
     authenticated user.
     """
@@ -76,9 +76,7 @@ class ProviderAdmin(SmarterCustomerModelAdmin):
     list_display = ["name", "status", "is_active", "user_profile", "created_at", "updated_at"]
 
     def get_queryset(self, request):
-        """
-        Visibility is granted to authenticated users.
-        """
+        """Visibility is granted to authenticated users."""
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if user.is_authenticated:
@@ -88,7 +86,9 @@ class ProviderAdmin(SmarterCustomerModelAdmin):
 
 class ProviderModelAdmin(SmarterCustomerModelAdmin):
     """
-    ProviderModel admin. This descends from Provider, so visibility
+    ProviderModel admin.
+
+    This descends from Provider, so visibility
     is determined by the parent Provider. Provider visibility is granted to any
     authenticated user.
     """
@@ -103,9 +103,7 @@ class ProviderModelAdmin(SmarterCustomerModelAdmin):
     list_display = ["provider", "name", "created_at", "is_active"]
 
     def get_queryset(self, request):
-        """
-        Visibility is granted to authenticated users.
-        """
+        """Visibility is granted to authenticated users."""
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if user.is_authenticated:

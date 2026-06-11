@@ -1,5 +1,6 @@
 """
-Mapping of exceptions to HTTP status codes and error types for chat providers.
+Mapping of exceptions to HTTP status codes and error types for prompt providers.
+
 This is used in the main try block of handler() to map exceptions to
 HTTP status codes and error types.
 """
@@ -29,7 +30,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 # 1.) EXCEPTION_MAP: A dictionary that maps exceptions to HTTP status codes and error types.
-# Base exception map for chat providers. This maps internally raised exceptions to HTTP status codes.
+# Base exception map for prompt providers. This maps internally raised exceptions to HTTP status codes.
 BASE_EXCEPTION_MAP = {
     SmarterValueError: (HTTPStatus.BAD_REQUEST.value, "BadRequest"),
     SmarterConfigurationError: (HTTPStatus.INTERNAL_SERVER_ERROR.value, "InternalServerError"),
@@ -57,8 +58,6 @@ EXCEPTION_MAP[openai.LengthFinishReasonError] = (HTTPStatus.REQUEST_ENTITY_TOO_L
 EXCEPTION_MAP[openai.UnprocessableEntityError] = (HTTPStatus.BAD_REQUEST.value, "BadRequestError")
 EXCEPTION_MAP[openai.APIResponseValidationError] = (HTTPStatus.BAD_REQUEST.value, "BadRequestError")
 EXCEPTION_MAP[openai.ContentFilterFinishReasonError] = (HTTPStatus.BAD_REQUEST.value, "BadRequestError")
-"""
-Used in the main try block of handler() to map exceptions to HTTP status codes and error types.
-"""
+"""Used in the main try block of handler() to map exceptions to HTTP status codes and error types."""
 
 __all__ = ["EXCEPTION_MAP"]

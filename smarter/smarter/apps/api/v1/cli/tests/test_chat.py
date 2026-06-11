@@ -1,4 +1,4 @@
-"""Test Api v1 CLI non-brokered chat command."""
+"""Test Api v1 CLI non-brokered prompt command."""
 
 from http import HTTPStatus
 from urllib.parse import urlencode
@@ -19,7 +19,7 @@ from .base_class import ApiV1CliTestBase
 
 class TestApiCliV1Chat(ApiV1CliTestBase):
     """
-    Test Api v1 CLI non-brokered chat command.
+    Test Api v1 CLI non-brokered prompt command.
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
@@ -73,10 +73,10 @@ class TestApiCliV1Chat(ApiV1CliTestBase):
             assert field in data.keys(), f"{field} not found in data keys: {data.keys()}"
 
     def test_chat(self) -> None:
-        """Test chat command."""
+        """Test prompt command."""
 
         data = {"prompt": "Hello, World!"}
-        path = reverse(self.namespace + ApiV1CliReverseViews.chat, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.prompt, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params, data=data)
         self.assertEqual(status, HTTPStatus.OK)

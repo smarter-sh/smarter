@@ -834,7 +834,7 @@ class SAMSecretBroker(AbstractBroker):
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def prompt(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         .. attention::
 
@@ -848,15 +848,15 @@ class SAMSecretBroker(AbstractBroker):
             Additional keyword arguments.
 
         :raises SAMBrokerErrorNotImplemented:
-            Always raised to indicate that chat functionality is not available for this manifest type.
+            Always raised to indicate that prompt functionality is not available for this manifest type.
 
         :returns: SmarterJournaledJsonResponse
             This method does not return a response; it always raises an error.
         """
-        logger.debug("%s.chat() called", self.formatted_class_name)
-        command = self.chat.__name__
+        logger.debug("%s.prompt() called", self.formatted_class_name)
+        command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

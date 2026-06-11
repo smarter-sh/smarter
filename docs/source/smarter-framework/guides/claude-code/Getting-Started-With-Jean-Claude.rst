@@ -144,7 +144,7 @@ and marks the provider active.
    variable *and* a manifest.
 
 LLMClient
-~~~~~~~
+~~~~~~~~~~~
 
 A **LLMClient** is a named resource that bundles a provider, a model, a system
 prompt, and optional data plugins. End users interact with llm_clients, not

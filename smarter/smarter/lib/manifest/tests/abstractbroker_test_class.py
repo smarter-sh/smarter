@@ -248,8 +248,8 @@ class SAMTestBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        return super().chat(request=request, kwargs=kwargs)
+    def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        return super().prompt(request=request, kwargs=kwargs)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         return super().describe(request=request, kwargs=kwargs)
