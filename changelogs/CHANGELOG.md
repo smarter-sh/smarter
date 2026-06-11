@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.0-alpha.60](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.59...v0.14.0-alpha.60) (2026-06-11)
+
+### Bug Fixes
+
+* rename prompt app models and views ([3dec181](https://github.com/smarter-sh/smarter/commit/3dec1813b4bde40b21177d4759510c9e10a3d317))
+
 ## [0.14.0-alpha.59](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.58...v0.14.0-alpha.59) (2026-06-09)
 
 ### Bug Fixes
