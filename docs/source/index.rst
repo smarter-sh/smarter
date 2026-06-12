@@ -8,29 +8,38 @@ The Smarter Project: |project_version| Documentation
    :target: https://smarter.sh
    :alt: Project Website
 
-.. image:: https://img.shields.io/badge/License-AGPL_v3-blue.svg
-   :target: https://www.gnu.org/licenses/agpl-3.0
-   :alt: AGPL-3 License
-
-.. image:: https://img.shields.io/badge/Made%20by-Contributors-blue
+.. image:: https://img.shields.io/badge/Community-20%2B%20Contributors-blue?logo=github
    :target: contributors.html
    :alt: Made with ❤️ by Contributors
 
-.. image:: https://img.shields.io/badge/Donate-GitHub_Sponsors-ff69b4
-   :target: https://github.com/sponsors/lpm0073
-   :alt: Donate
-
-.. image:: https://img.shields.io/badge/Forums-Discussion-blue
+.. image:: https://img.shields.io/badge/Community-Discussions-blue?logo=github
    :target: https://github.com/smarter-sh/smarter/discussions
    :alt: Forums
 
-.. image:: https://img.shields.io/docker/pulls/mcdaniel0073/smarter.svg?logo=docker&label=DockerHub
+.. image:: https://img.shields.io/badge/YouTube-Tutorials-red?logo=youtube
+   :target: https://www.youtube.com/@project-smarter
+   :alt: Video Tutorials
+
+.. image:: https://img.shields.io/docker/pulls/mcdaniel0073/smarter.svg?logo=docker&label=Docker
    :target: https://hub.docker.com/r/mcdaniel0073/smarter
    :alt: DockerHub
 
 .. image:: https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter
    :target: https://artifacthub.io/packages/search?repo=project-smarter
    :alt: ArtifactHub
+
+.. image:: https://img.shields.io/badge/Contribute-Good%20First%20Issues-success?logo=github
+   :target: https://github.com/smarter-sh/smarter/labels/good%20first%20issue
+   :alt: Contribute
+
+.. image:: https://img.shields.io/badge/Support-GitHub%20Sponsors-ff69b4?logo=githubsponsors
+   :target: https://github.com/sponsors/lpm0073
+   :alt: Donate
+
+.. image:: https://img.shields.io/badge/License-AGPL--3.0-blue?logo=gnu
+   :target: https://www.gnu.org/licenses/agpl-3.0
+   :alt: AGPL-3 License
+
 
 The Smarter Project is a cloud-native :doc:`platform <smarter-platform>` and
 :doc:`developer framework <smarter-framework>` for
