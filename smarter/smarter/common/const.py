@@ -83,6 +83,7 @@ def load_version() -> Dict[str, str]:
 
 
 VERSION = load_version()
+AUTHOR = "Lawrence P. McDaniel - https://lawrencemcdaniel.com"
 
 
 # pylint: disable=too-few-public-methods

@@ -15,42 +15,47 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 SMARTER_ROOT = os.path.abspath(os.path.join(HERE, "../../smarter"))
 sys.path.insert(0, SMARTER_ROOT)
 
-###############################################################################
-# Smarter setup
-###############################################################################
+import django
+from sphinxcontrib_django.docstrings import classes, field_utils
+
 from smarter.__version__ import __version__  # noqa: F401
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
+    AUTHOR,
     SMARTER_ORGANIZATION_WEBSITE_URL,
     SMARTER_PRODUCT_NAME,
     SMARTER_PROJECT_WEBSITE_URL,
 )
+from smarter.common.exceptions import SmarterConfigurationError
 
+###############################################################################
+# Smarter setup
+###############################################################################
 if not smarter_settings.environment:
-    raise RuntimeError("The 'smarter_settings.environment' variable is not set.")
+    # shouldn't ever happen, but just in case.
+    raise SmarterConfigurationError("The 'smarter_settings.environment' variable is not set.")
 
 ###############################################################################
 # Django setup
 ###############################################################################
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.local"
-
-import django
-from sphinxcontrib_django.docstrings import classes, field_utils
+contributors_github_token = os.environ.get("GITHUB_TOKEN")
 
 django.setup()
 
 
-_original_get_field_type = field_utils.get_field_type
-
-
 def safe_get_field_type(field, include_role=True):
+    """A safe wrapper around the original get_field_type function that returns.
+
+    "Unknown" if any exception occurs.
+    """
 
     try:
         rel = getattr(field, "remote_field", None)
         to = getattr(rel, "model", None) if rel else None
         if to is None:
             return "Unknown"
-        return _original_get_field_type(field, include_role=include_role)
+        return field_utils.get_field_type(field, include_role=include_role)
     # pylint: disable=broad-except
     except Exception:
         return "Unknown"
@@ -63,8 +68,8 @@ classes.get_field_type = safe_get_field_type
 project = "Smarter Documentation"
 
 # pylint: disable=redefined-builtin
-copyright = f"{datetime.now().year}"
-author = "Lawrence P. McDaniel - https://lawrencemcdaniel.com"
+copyright = f"2023 - {datetime.now().year}"
+author = AUTHOR
 release = __version__
 
 try:
@@ -93,6 +98,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinxcontrib_django",
     "sphinx.ext.viewcode",
+    "sphinx_contributors",
     "sphinx_copybutton",
     "sphinx_autodoc_typehints",
     "sphinx_design",
