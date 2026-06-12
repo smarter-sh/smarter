@@ -1,14 +1,20 @@
 .. Smarter documentation master file, created by
-   sphinx-quickstart on Mon Nov 24 20:56:57 2025.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+   sphinx-quickstart on 2025-Nov-24.
 
-Smarter |project_version| Documentation
-=========================================
+The Smarter Project: |project_version| Documentation
+======================================================
 
 .. image:: https://img.shields.io/badge/Website-smarter.sh-darkorange
    :target: https://smarter.sh
    :alt: Project Website
+
+.. image:: https://img.shields.io/badge/License-AGPL_v3-blue.svg
+   :target: https://www.gnu.org/licenses/agpl-3.0
+   :alt: AGPL-3 License
+
+.. image:: https://img.shields.io/badge/Made%20by-Contributors-blue
+   :target: contributors.html
+   :alt: Made with ❤️ by Contributors
 
 .. image:: https://img.shields.io/badge/Donate-GitHub_Sponsors-ff69b4
    :target: https://github.com/sponsors/lpm0073
@@ -25,10 +31,6 @@ Smarter |project_version| Documentation
 .. image:: https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter
    :target: https://artifacthub.io/packages/search?repo=project-smarter
    :alt: ArtifactHub
-
-.. image:: https://img.shields.io/badge/License-AGPL_v3-blue.svg
-   :target: https://www.gnu.org/licenses/agpl-3.0
-   :alt: AGPL-3 License
 
 The Smarter Project is a cloud-native :doc:`platform <smarter-platform>` and
 :doc:`developer framework <smarter-framework>` for
