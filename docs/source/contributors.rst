@@ -12,6 +12,8 @@ around open, community-driven AI infrastructure.
 Learn more about contributing to The Smarter Project :doc:`here <smarter-framework/guides/contributing>`,
 or check the project website, `https://smarter.sh <https://smarter.sh>`_.
 
+
+
 GitHub Repositories
 -------------------
 
@@ -37,11 +39,37 @@ and a shared investment in its long-term success. This designation reflects stew
 rather than seniority or commit volume, recognizing those who help strengthen
 both the platform and the community around it.
 
-.. contributors:: smarter-sh/smarter
-   :include: lpm0073, kentfuka, shoefish
-   :avatars:
-   :names:
-   :limit: 3
+.. raw:: html
+
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; text-align: center; margin: 2rem 0">
+    <div>
+      <a href="https://github.com/lpm0073">
+        <img src="https://github.com/lpm0073.png" alt="lpm0073" width="150px" height="150px" style="border-radius: 50%" />
+      </a>
+      <p>
+        <a href="https://github.com/lpm0073">Lawrence McDaniel</a>
+      </p>
+    </div>
+
+    <div>
+      <a href="https://github.com/kentfuka">
+        <img src="https://github.com/kentfuka.png" alt="kentfuka" width="150px" height="150px" style="border-radius: 50%" />
+      </a>
+      <p>
+        <a href="https://github.com/kentfuka">Kent Fuka</a>
+      </p>
+    </div>
+
+    <div>
+      <a href="https://github.com/shoefish">
+        <img src="https://github.com/shoefish.png" alt="shoefish" width="150px" height="150px" style="border-radius: 50%" />
+      </a>
+      <p>
+        <a href="https://github.com/shoefish">Mark Shoemaker</a>
+      </p>
+    </div>
+  </div>
+
 
 
 Community Contributors
@@ -50,7 +78,7 @@ Community Contributors
 .. contributors:: smarter-sh/smarter smarter-sh/smarter-python smarter-sh/smarter-vscode-yaml smarter-sh/smarter-infrastructure smarter-sh/smarter-cli smarter-sh/smarter-deploy smarter-sh/smarter-chat
    :avatars:
    :names:
-   :exclude: lpm0073, kentfuka, shoefish, actions-user, github-actions[bot], dependabot[bot], pre-commit-ci[bot]
+   :exclude: lpm0073, kentfuka, shoefish, actions-user, github-actions[bot], dependabot[bot], pre-commit-ci[bot], Semantic Release Bot
    :limit: 50
 
 .. Repository link substitutions
