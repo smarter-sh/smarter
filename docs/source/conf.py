@@ -13,10 +13,11 @@ from datetime import datetime
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 SMARTER_ROOT = os.path.abspath(os.path.join(HERE, "../../smarter"))
+REPO_ROOT = os.path.abspath(os.path.join(SMARTER_ROOT, "../"))
 sys.path.insert(0, SMARTER_ROOT)
 
 import django
-from sphinxcontrib_django.docstrings import classes, field_utils
+from dotenv import load_dotenv
 
 from smarter.__version__ import __version__  # noqa: F401
 from smarter.common.conf import smarter_settings
@@ -27,6 +28,11 @@ from smarter.common.const import (
     SMARTER_PROJECT_WEBSITE_URL,
 )
 from smarter.common.exceptions import SmarterConfigurationError
+
+# Load environment variables from .env file. This is necessary for the
+# sphinx_contributors extension to access the GitHub token and fetch contributor information.
+env_path = os.path.join(REPO_ROOT, ".env")
+load_dotenv(env_path)
 
 ###############################################################################
 # Smarter setup
@@ -42,6 +48,14 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.local"
 contributors_github_token = os.environ.get("GITHUB_TOKEN")
 
 django.setup()
+
+
+###############################################################################
+# Patch the get_field_type function in sphinxcontrib_django to be more robust
+# and return "Unknown" instead of raising an exception when it encounters
+# an issue.
+###############################################################################
+from sphinxcontrib_django.docstrings import classes, field_utils
 
 
 def safe_get_field_type(field, include_role=True):
