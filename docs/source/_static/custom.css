@@ -8,9 +8,7 @@ div[class^="literal-block-wrapper"],
 }
 
 /* Hides the signature for Settings class in Smarter Settings documentation */
-section#smarter-settings
-  dl.class
-  > dt#smarter\.common\.conf\.Settings.sig.sig-object.py {
+section#smarter-settings dl.class > dt#smarter\.common\.conf\.Settings.sig.sig-object.py {
   display: none;
 }
 
@@ -23,4 +21,11 @@ section#smarter-settings
 
 .img-bottom-margin {
   margin-bottom: 2em;
+}
+
+.sphinx-contributors img {
+  border-radius: 50%;
+}
+.sphinx-contributors--avatars .sphinx-contributors_list {
+  gap: 10px;
 }
