@@ -78,7 +78,7 @@ Community Contributors
 .. contributors:: smarter-sh/smarter smarter-sh/smarter-python smarter-sh/smarter-vscode-yaml smarter-sh/smarter-infrastructure smarter-sh/smarter-cli smarter-sh/smarter-deploy smarter-sh/smarter-chat
    :avatars:
    :names:
-   :exclude: lpm0073, kentfuka, shoefish, actions-user, github-actions[bot], dependabot[bot], pre-commit-ci[bot]
+   :exclude: lpm0073, kentfuka, shoefish, actions-user, github-actions[bot], dependabot[bot], pre-commit-ci[bot], Semantic Release Bot
    :limit: 50
 
 .. Repository link substitutions
