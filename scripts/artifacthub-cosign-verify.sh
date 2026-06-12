@@ -1,6 +1,8 @@
-# !/bin/bash
+#!/bin/bash
+###############################################################################
 # Script to verify the Helm chart signature for Artifact Hub using Cosign
 # Usage: ./artifacthub-cosign-verify.sh <version>
+###############################################################################
 
 if [ -z "$1" ]; then
   echo "Usage: $0 <version>"
