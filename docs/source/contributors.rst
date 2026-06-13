@@ -43,29 +43,29 @@ both the platform and the community around it.
 
   <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; text-align: center; margin: 2rem 0">
     <div>
-      <a href="https://github.com/lpm0073">
+      <a href="https://www.linkedin.com/in/lawrencemcdaniel/">
         <img src="https://github.com/lpm0073.png" alt="lpm0073" width="150px" height="150px" style="border-radius: 50%" />
       </a>
       <p>
-        <a href="https://github.com/lpm0073">Lawrence McDaniel</a>
+        <a href="https://www.linkedin.com/in/lawrencemcdaniel/">Lawrence McDaniel</a>
       </p>
     </div>
 
     <div>
-      <a href="https://github.com/kentfuka">
+      <a href="https://www.linkedin.com/in/kentfuka/">
         <img src="https://github.com/kentfuka.png" alt="kentfuka" width="150px" height="150px" style="border-radius: 50%" />
       </a>
       <p>
-        <a href="https://github.com/kentfuka">Kent Fuka</a>
+        <a href="https://www.linkedin.com/in/kentfuka/">Kent Fuka</a>
       </p>
     </div>
 
     <div>
-      <a href="https://github.com/shoefish">
+      <a href="https://www.linkedin.com/in/shoemakermark/">
         <img src="https://github.com/shoefish.png" alt="shoefish" width="150px" height="150px" style="border-radius: 50%" />
       </a>
       <p>
-        <a href="https://github.com/shoefish">Mark Shoemaker</a>
+        <a href="https://www.linkedin.com/in/shoemakermark/">Mark Shoemaker</a>
       </p>
     </div>
   </div>
