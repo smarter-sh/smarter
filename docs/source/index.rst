@@ -1,7 +1,7 @@
 .. Smarter documentation master file, created by
    sphinx-quickstart on 2025-Nov-24.
 
-The Smarter Project: |project_version| Documentation
+The Smarter Project |project_version| Documentation
 ======================================================
 
 .. image:: https://img.shields.io/badge/Website-smarter.sh-darkorange
