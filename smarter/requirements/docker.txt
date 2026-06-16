@@ -391,7 +391,7 @@ pydantic-settings==2.13.1
     # via
     #   -r smarter/requirements/in/base.in
     #   langchain-community
-pyjwt[crypto]==2.12.1
+pyjwt[crypto]==2.13.0
     # via
     #   pyjwt
     #   social-auth-core
