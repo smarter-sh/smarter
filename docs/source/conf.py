@@ -19,7 +19,6 @@ sys.path.insert(0, SMARTER_ROOT)
 import django
 from dotenv import load_dotenv
 
-from smarter.__version__ import __version__  # noqa: F401
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     AUTHOR,
@@ -84,7 +83,8 @@ project = "Smarter Documentation"
 # pylint: disable=redefined-builtin
 copyright = f"2023 - {datetime.now().year}"
 author = AUTHOR
-release = __version__
+release = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"], text=True).strip()
+
 
 try:
     commit = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("utf-8").strip()
@@ -121,13 +121,13 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinxcontrib.autodoc_pydantic",
     "sphinx_rtd_theme",
+    "sphinx_sitemap",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = []
 django_settings = "smarter.settings.prod"
 todo_include_todos = True
-
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "django": ("https://docs.djangoproject.com/en/5.2/", "https://docs.djangoproject.com/en/5.2/_objects/"),
@@ -161,3 +161,8 @@ autodoc_type_aliases = {
     "pydantic.types.JsonValue": "JsonValue",
     "JsonValue": "JsonValue",
 }
+
+# sitemap settings
+html_baseurl = f"https://docs.{smarter_settings.root_domain}/"
+sitemap_url_scheme = "{link}"
+sitemap_filename = "sitemap.xml"
