@@ -90,6 +90,8 @@ def main():
         sys.exit(1)
 
     new_version = sys.argv[1]
+    if new_version.startswith("v"):
+        new_version = new_version[1:]
     if not re.match(SEMANTIC_VERSION_REGEX, new_version):
         print("Error: Version must be in format ##.##.## or ##.##.##-label.n (e.g., 0.1.20 or 0.14.0-alpha.1)")
         sys.exit(1)
