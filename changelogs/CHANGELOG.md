@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.3...v0.14.4-alpha.1) (2026-06-17)
+
+### Bug Fixes
+
+* TypeError at /dashboard/ ([816e533](https://github.com/smarter-sh/smarter/commit/816e5337fd093bc9b71d87608c8f3b7d9daee510))
+
 ## [0.14.3](https://github.com/smarter-sh/smarter/compare/v0.14.2...v0.14.3) (2026-06-17)
 
 ### Bug Fixes

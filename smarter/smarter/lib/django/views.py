@@ -7,6 +7,7 @@ from http import HTTPStatus
 from bs4 import BeautifulSoup
 from django import template
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
@@ -394,6 +395,8 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         # code that might check it before we get to dispatch().
         request = self.set_is_internal_api_request(request, False)
         super().setup(request, *args, **kwargs)
+        if isinstance(user, AnonymousUser):
+            user = None
         SmarterRequestMixin.setup(self, *args, request=request, user=user, **kwargs)
         if super().ready:
             self._ready = True
