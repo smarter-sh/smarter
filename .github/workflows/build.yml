@@ -84,7 +84,7 @@ jobs:
         id: set-version
         shell: bash
         run: |
-          python smarter/scripts/bump_version.py $TAG --cicd
+          python scripts/bump_version.py $TAG --cicd
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
