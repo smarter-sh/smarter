@@ -40,12 +40,6 @@ module.exports = {
     ],
     "@semantic-release/github",
     [
-      "@semantic-release/exec",
-      {
-        prepareCmd: "python scripts/bump_version.py ${nextRelease.version}",
-      },
-    ],
-    [
       "@semantic-release/git",
       {
         assets: [
