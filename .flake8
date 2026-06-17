@@ -2,6 +2,6 @@
 ignore = D205,D413,D400,D401
 max-line-length =120
 max-complexity = 10
-exclude = "api/terraform/python/layer_genai/venv"
-extend-exclude = "*__init__.py,*__version__.py,venv,lambda_dist_pkg"
+exclude = "venv"
+extend-exclude = "*__init__.py,*__version__.py,venv"
 select = "C101"
