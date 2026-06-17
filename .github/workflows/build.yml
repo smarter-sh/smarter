@@ -27,7 +27,6 @@ env:
   REACT_FOLDER_HASH: "no-value"
   AWS_ECR_REPO: "no-value"
   DATESTAMP: "no-value"
-  TAG: "no-value"
   LATEST_RELEASE: "no-value"
   MAJOR_RELEASE: "0"
   MINOR_RELEASE: "0"
@@ -72,13 +71,8 @@ jobs:
         id: get-latest-version-tag
         shell: bash
         run: |
-          if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            VERSION_TAG=$(git describe --tags --abbrev=0)
-            TAG="$VERSION_TAG"
-          else
-            TAG="${GITHUB_REF_NAME}"
-          fi
-          echo "TAG=$TAG" >> $GITHUB_ENV
+          VERSION_TAG=$(git describe --tags --abbrev=0)
+          echo "TAG=$VERSION_TAG" >> $GITHUB_ENV
 
       - name: Set version
         id: set-version
