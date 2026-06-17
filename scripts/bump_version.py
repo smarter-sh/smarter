@@ -109,7 +109,6 @@ def main():
             new_version,
         )
         update_version_in_file("Dockerfile", new_version)
-        update_version_in_file(".github/actions/deploy/action.yml", new_version)
         update_version_in_file("helm/charts/smarter/values.yaml", new_version)
         update_version_in_file("helm/charts/smarter/Chart.yaml", new_version)
 
