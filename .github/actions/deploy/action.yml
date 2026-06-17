@@ -198,6 +198,9 @@ runs:
     - name: Checkout code
       id: checkout_code
       uses: actions/checkout@v6
+      with:
+        fetch-depth: 0 # Ensures all history and tags are fetched
+        fetch-tags: true
 
     - name: Get latest release version
       id: get-latest-version-tag
