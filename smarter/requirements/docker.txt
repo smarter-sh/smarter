@@ -98,7 +98,7 @@ click-repl==0.3.0
     # via celery
 cron-descriptor==1.4.5
     # via django-celery-beat
-cryptography==46.0.7
+cryptography==48.0.1
     # via
     #   google-auth
     #   paramiko
