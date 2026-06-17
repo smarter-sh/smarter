@@ -58,7 +58,7 @@ spec:
       containers:
         - name: "{{ .Values.global.appName }}"
           image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
-          command: ["uvicorn", "smarter.asgi:application", "--host", "0.0.0.0", "--port", "{{ .Values.deployment.containerPort }}", "--workers=2", "--timeout-keep-alive=60"]
+          command: ["uvicorn", "smarter.asgi:application", "--host", "0.0.0.0", "--port", "{{ .Values.deployment.containerPort }}", "--workers=2", "--timeout-keep-alive=15", "--timeout-graceful-shutdown=30"]
           imagePullPolicy: '{{ .Values.global.image.pullPolicy | default "Always" }}'
           resources:
             {{- toYaml .Values.app.resources | nindent 12 }}

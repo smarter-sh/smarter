@@ -19,6 +19,7 @@ env:
   PLATFORM_SUBDOMAIN: "ubc"
   DEBUG_MODE: "true"
   ENVIRONMENT: "alpha"
+  VERSION: "latest"
 
 jobs:
   deploy:
@@ -27,6 +28,9 @@ jobs:
       - name: Checkout code
         id: checkout_code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Ensures all history and tags are fetched
+          fetch-tags: true
 
       - name: Set environment variable
         id: setenv
@@ -50,7 +54,7 @@ jobs:
       - name: Get Version
         id: get_version
         run: |
-          VERSION=$(cat smarter/smarter/__version__.py | grep "__version__" | head -n 1 | sed 's/__version__ = \"\(.*\)\"/\1/')
+          VERSION=$(git describe --tags --abbrev=0)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Deploy
@@ -67,6 +71,7 @@ jobs:
           debug-mode: ${{ env.DEBUG_MODE }}
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-pat: ${{ secrets.DOCKERHUB_PAT }}
+          dockerhub-tag: ${{ env.VERSION }}
           fernet-encryption-key: ${{ secrets.FERNET_ENCRYPTION_KEY }}
           fireworks-api-key: ${{ secrets.FIREWORKS_API_KEY }}
           google-service-account-b64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}
