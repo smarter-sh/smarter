@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.4...v0.14.5-alpha.1) (2026-06-18)
+
+### Bug Fixes
+
+* example manifest provider name should be snake_case ([22e7fb4](https://github.com/smarter-sh/smarter/commit/22e7fb4e6ac82803922541d62c669cbc49f2195f))
+* mark AbstractBroker.is_ready_abstract_broker() True when path container example_manifest ([4a39af2](https://github.com/smarter-sh/smarter/commit/4a39af2f1da4546f9c4109ffd868050f7fae7de1))
+
+### Refactoring
+
+* cleanup class ready state initialization ([74b483c](https://github.com/smarter-sh/smarter/commit/74b483c7f1eb2a86e7b5ffb514143388dc5b9d43))
+* lazy name initialization ([dd637dd](https://github.com/smarter-sh/smarter/commit/dd637dda62f106d6eedf06c83134d4f26cbb2896))
+* lazy ready state ([031380b](https://github.com/smarter-sh/smarter/commit/031380b7ec87ecc346806388bcb22afd4061fc73))
+* lazy ready state ([7a822b8](https://github.com/smarter-sh/smarter/commit/7a822b873ae288bae25bc34068370ec289fa95d6))
+
 ## [0.14.4](https://github.com/smarter-sh/smarter/compare/v0.14.3...v0.14.4) (2026-06-17)
 
 ### Bug Fixes
