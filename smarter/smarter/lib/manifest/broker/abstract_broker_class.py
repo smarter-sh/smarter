@@ -670,7 +670,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             The name property is a critical identifier used throughout the broker to ensure correct
             mapping between manifest data and persistent application state.
         """
-        if self._name or self._ready:
+        if self._name:
             return self._name
         logger.debug("%s.name() name is not cached. Attempting to retrieve name.", self.abstract_broker_logger_prefix)
         if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
@@ -679,27 +679,24 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
             )
             return self._name
-        else:
-            logger.debug("%s.name() manifest is not set.", self.abstract_broker_logger_prefix)
+        if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
+            self._name = self._manifest.metadata.name
+            logger.debug(
+                "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
+            )
+            return self._name
         if self._loader:
             logger.debug(
                 "%s.name() found a SAMLoader. Attempting to initialize the manifest.",
                 self.abstract_broker_logger_prefix,
             )
-            if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
-                self._name = self._manifest.metadata.name
+            self._name = self._loader.manifest_metadata.get("name")
+            if self._name:
                 logger.debug(
-                    "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
+                    "%s.name() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
                 )
                 return self._name
-            else:
-                self._name = self._loader.manifest_metadata.get("name")
-                if self._name:
-                    logger.debug(
-                        "%s.name() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
-                    )
-                    return self._name
-                logger.debug("%s.name() loader metadata does not contain a name", self.abstract_broker_logger_prefix)
+            logger.warning("%s.name() loader metadata does not contain a name", self.abstract_broker_logger_prefix)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)
             if name_param:
