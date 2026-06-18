@@ -253,14 +253,14 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             try:
                 self._broker = BrokerClass(
                     request=self.smarter_request,
+                    user=self.user,
+                    account=self.user_profile.cached_account if self.user_profile else None,
+                    user_profile=self.user_profile,
                     api_version=SMARTER_API_VERSION,
                     name=self.manifest_name,
                     kind=self.manifest_kind,
                     loader=self.loader,
                     manifest=self.loader.json_data if self.loader else None,
-                    user=self.user,
-                    account=self.user_profile.cached_account if self.user_profile else None,
-                    user_profile=self.user_profile,
                 )
                 if self._broker:
                     logger.debug(
@@ -548,8 +548,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 f"{self.formatted_class_name} error during initialization: could not set request object."
             ) from e
 
-        logger.debug("hi mom")
-
         # Check if the request is authenticated. If not, raise an
         # authentication error. see SmarterTokenAuthentication for details
         # on how the token is validated.
@@ -657,7 +655,14 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         kind = kwargs.get("kind", None)
         if kind:
             self._manifest_kind = Brokers.get_broker_kind(kind)
-            if not self.manifest_kind:
+            if self.manifest_kind:
+                logger.debug(
+                    "%s.initial() - determined manifest kind from url kwargs: %s -> %s",
+                    self.logger_prefix,
+                    kind,
+                    self._manifest_kind,
+                )
+            else:
                 return SmarterJournaledJsonErrorResponse(
                     request=request,
                     thing=self.manifest_kind,
