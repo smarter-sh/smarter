@@ -8,12 +8,8 @@ from django.forms.models import model_to_dict
 
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.manifest.broker import AbstractBroker
 
 from .models import Account, Charge, DailyBillingRecord, User, UserProfile
-from .signals import (
-    broker_ready,
-)
 from .utils import get_cached_default_account
 
 logger = logging.getSmarterLogger(
@@ -27,6 +23,7 @@ module_prefix = f"{__name__}"
 def user_logged_in_receiver(sender, request, user: User, **kwargs):
     """
     Signal receiver for user login.
+
     - verify that a UserProfile record exists for the user.
       if not, create one with the default account.
     """
@@ -46,6 +43,7 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
 def user_post_save(sender: User, instance: User, created, **kwargs):
     """
     Signal receiver for created/saved of User model.
+
     Assumed to be called on all logins since Django's
     default behavior is to update the last_login field on
     each login, which triggers a save.
@@ -144,16 +142,4 @@ def daily_billing_record_post_save(sender: DailyBillingRecord, instance: DailyBi
         logging.formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
         daily_billing_record_json,
         created,
-    )
-
-
-@receiver(broker_ready)
-def broker_ready_receiver(sender, broker: AbstractBroker, **kwargs):
-    """Signal receiver for broker_ready signal."""
-    logger.info(
-        "%s %s %s for %s is ready.",
-        logging.formatted_text(f"{module_prefix}.broker_ready()"),
-        broker.kind,
-        str(broker),
-        broker.name,
     )
