@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.5-alpha.1...v0.14.5-alpha.2) (2026-06-18)
+
+### Bug Fixes
+
+* brokered json-schemas ([9c157b8](https://github.com/smarter-sh/smarter/commit/9c157b8f9e48d18d9fe6e4a9649622795edce069))
+
 ## [0.14.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.4...v0.14.5-alpha.1) (2026-06-18)
 
 ### Bug Fixes
