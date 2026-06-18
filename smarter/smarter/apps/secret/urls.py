@@ -60,5 +60,5 @@ urlpatterns = [
         SecretListApiRenameView.as_view(),
         name=SecretReverseNames.listview_api_rename,
     ),
-    path("secrets/<str:hashed_id>//", SecretDetailView.as_view(), name=SecretReverseNames.detailview),
+    path("secrets/<str:hashed_id>/", SecretDetailView.as_view(), name=SecretReverseNames.detailview),
 ]
