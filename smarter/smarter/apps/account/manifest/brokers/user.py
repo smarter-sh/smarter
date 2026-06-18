@@ -16,7 +16,6 @@ from smarter.apps.account.manifest.models.user.spec import (
 from smarter.apps.account.manifest.models.user.status import SAMUserStatus
 from smarter.apps.account.models import AccountContact, User, UserProfile
 from smarter.apps.account.serializers import UserSerializer
-from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import json, logging
@@ -158,34 +157,6 @@ class SAMUserBroker(AbstractBroker):
 
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         logger.info(msg)
-
-    @property
-    def ready(self) -> bool:
-        """
-        Check if the broker is ready for operations.
-
-        This property determines whether the broker has been properly initialized
-        and is ready to perform its functions. A broker is considered ready if
-        it has a valid manifest loaded, either from raw data, a loader, or
-        existing Django ORM models.
-
-        :returns: ``True`` if the broker is ready, ``False`` otherwise.
-        :rtype: bool
-        """
-        retval = super().ready
-        if not retval:
-            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
-            return False
-        retval = self.manifest is not None or self.brokered_user is not None
-        logger.debug(
-            "%s.ready() manifest presence indicates ready=%s for %s",
-            self.formatted_class_name,
-            retval,
-            self.kind,
-        )
-        if retval:
-            broker_ready.send(sender=self.__class__, broker=self)
-        return retval
 
     @property
     def brokered_user(self) -> Optional[User]:

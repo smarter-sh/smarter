@@ -17,7 +17,6 @@ from smarter.apps.account.manifest.models.account.spec import (
 )
 from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.signals import broker_ready
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -160,34 +159,6 @@ class SAMAccountBroker(AbstractBroker):
     ###########################################################################
     # Smarter abstract property implementations
     ###########################################################################
-    @property
-    def ready(self) -> bool:
-        """
-        Check if the broker is ready for operations.
-
-        This property determines whether the broker has been properly initialized
-        and is ready to perform its functions. A broker is considered ready if
-        it has a valid manifest loaded, either from raw data, a loader, or
-        existing Django ORM models.
-
-        :returns: ``True`` if the broker is ready, ``False`` otherwise.
-        :rtype: bool
-        """
-        retval = super().ready
-        if not retval:
-            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
-            return False
-        retval = self._manifest is not None or self.brokered_account is not None
-        logger.debug(
-            "%s.ready() manifest presence indicates ready=%s for %s",
-            self.formatted_class_name,
-            retval,
-            self.kind,
-        )
-        if retval:
-            broker_ready.send(sender=self.__class__, broker=self)
-        return retval
-
     @property
     def brokered_account(self) -> Optional[Account]:
         """

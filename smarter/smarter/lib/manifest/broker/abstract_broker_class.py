@@ -672,7 +672,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         if self._name:
             return self._name
-        logger.debug("%s.name() name is not cached. Attempting to retrieve name.", self.abstract_broker_logger_prefix)
         if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
             self._name = self._manifest.metadata.name
             logger.debug(
