@@ -412,6 +412,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # there are four possible ways for us to be ready.
         # ---------------------------------------------------------------------
         if self.request and "example_manifest" in self.request.path:
+            # 1.) if the request path indicates this is an example_manifest operation
             logger.debug(
                 "%s.is_ready_abstract_broker() request path indicates this is an example_manifest operation. Marking as ready.",
                 self.abstract_broker_logger_prefix,
@@ -419,18 +420,21 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self._is_ready_abstract_broker = True
             return self._is_ready_abstract_broker
         if bool(self._manifest):
+            # 2.) if we have a manifest.
             logger.debug(
                 "%s.is_ready_abstract_broker() manifest is loaded.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
         if bool(self.loader) and self.loader.ready:
+            # 3.) we have a loader and it's in a ready state.
             logger.debug(
                 "%s.is_ready_abstract_broker() loader is ready.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
         if bool(self.orm_meta_instance):
+            # 4.) we have an ORM meta instance.
             logger.debug(
                 "%s.is_ready_abstract_broker() %s instance is available.",
                 self.abstract_broker_logger_prefix,
@@ -502,7 +506,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: True if the broker is ready for operations.
         :rtype: bool
         """
-        logger.debug("%s.ready() called. Current ready state: %s", self.abstract_broker_logger_prefix, self._ready)
         if self._ready:
             return self._ready
         retval = super().ready
@@ -667,7 +670,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             The name property is a critical identifier used throughout the broker to ensure correct
             mapping between manifest data and persistent application state.
         """
-        if self._name:
+        if self._name or self._ready:
             return self._name
         logger.debug("%s.name() name is not cached. Attempting to retrieve name.", self.abstract_broker_logger_prefix)
         if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
@@ -819,7 +822,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The SAMLoader instance for this broker.
         :rtype: Optional[SAMLoader]
         """
-        if self._loader and self._loader.ready:
+        if (self._loader and self._loader.ready) or self._ready:
             return self._loader
         logger.debug(
             "%s.loader() getter - loader is not ready. Current loader state: %s",

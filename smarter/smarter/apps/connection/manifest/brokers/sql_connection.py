@@ -634,7 +634,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 else:
                     print("No connection found or could not be created.")
         """
-        if self._connection:
+        if self._connection or self._ready:
             return self._connection
 
         name = self.to_snake_case(self.name)  # type: ignore
