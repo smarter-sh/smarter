@@ -13,7 +13,6 @@ from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.manifest.broker import AbstractBroker
 
 from .models import (
     ApiConnection,
@@ -26,7 +25,6 @@ from .signals import (
     api_connection_query_failed,
     api_connection_query_success,
     api_connection_success,
-    broker_ready,
     sql_connection_attempted,
     sql_connection_failed,
     sql_connection_query_attempted,
@@ -281,17 +279,4 @@ def handle_sql_connection_pre_delete(sender, instance, **kwargs):
         "%s - %s deleting.",
         formatted_text(prefix + "SqlConnection().pre_delete()"),
         instance,
-    )
-
-
-@receiver(broker_ready, dispatch_uid="broker_ready")
-def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
-    """Handle broker ready signal."""
-
-    logger.info(
-        "%s %s %s for %s is ready.",
-        formatted_text(f"{prefix}broker_ready()"),
-        broker.kind,
-        str(broker),
-        broker.name,
     )
