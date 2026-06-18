@@ -13,7 +13,6 @@ from smarter.apps.connection.manifest.models.common.connection.status import (
     SAMConnectionCommonStatus,
 )
 from smarter.apps.connection.models import ConnectionBase
-from smarter.apps.connection.signals import broker_ready
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib import logging
@@ -89,34 +88,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
         """
         class_name = formatted_text(f"{__name__}.{SAMConnectionBaseBroker.__name__}[{id(self)}]")
         return self.formatted_text(class_name)
-
-    @property
-    def ready(self) -> bool:
-        """
-        Check if the broker is ready for operations.
-
-        This property determines whether the broker has been properly initialized
-        and is ready to perform its functions. A broker is considered ready if
-        it has a valid manifest loaded, either from raw data, a loader, or
-        existing Django ORM models.
-
-        :returns: ``True`` if the broker is ready, ``False`` otherwise.
-        :rtype: bool
-        """
-        retval = super().ready
-        if not retval:
-            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
-            return False
-        retval = self.manifest is not None or self.connection is not None
-        logger.debug(
-            "%s.ready() manifest presence indicates ready=%s for %s",
-            self.formatted_class_name,
-            retval,
-            self.kind,
-        )
-        if retval:
-            broker_ready.send(sender=self.__class__, broker=self)
-        return retval
 
     @property
     def ORMModelClass(self) -> Type[ConnectionBase]:

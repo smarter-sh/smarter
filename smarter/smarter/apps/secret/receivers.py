@@ -16,14 +16,12 @@ from smarter.apps.account.models import (
     User,
     UserProfile,
 )
-from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import get_cached_default_account
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.lib.manifest.broker import AbstractBroker
 
 from .manifest.transformers.secret import SecretTransformer
 from .models import Secret
@@ -54,6 +52,7 @@ module_prefix = f"{__name__}"
 def user_logged_in_receiver(sender, request, user: User, **kwargs):
     """
     Signal receiver for user login.
+
         Verify that a UserProfile record exists for the user.
         If not, create one with the default account.
     """
@@ -73,6 +72,7 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
 def user_post_save(sender: User, instance: User, created, **kwargs):
     """
     Signal receiver for created/saved of User model.
+
     Assumed to be called on all logins since Django's
     default behavior is to update the last_login field on
     each login, which triggers a save.
@@ -304,16 +304,4 @@ def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: Use
         user_profile,
         json_data,
         tags,
-    )
-
-
-@receiver(broker_ready)
-def broker_ready_receiver(sender, broker: AbstractBroker, **kwargs):
-    """Signal receiver for broker_ready signal."""
-    logger.info(
-        "%s %s %s for %s is ready.",
-        formatted_text(f"{module_prefix}.broker_ready()"),
-        broker.kind,
-        str(broker),
-        broker.name,
     )

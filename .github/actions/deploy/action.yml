@@ -36,6 +36,10 @@ inputs:
   dockerhub-pat:
     description: "The DockerHub personal access token"
     required: false
+  dockerhub-tag:
+    description: "The DockerHub tag to use for the Docker image"
+    required: false
+    default: "latest"
   environment:
     description: "The environment to deploy: alpha, beta, next, prod"
     required: true
@@ -269,7 +273,7 @@ runs:
       id: set-docker-image
       shell: bash
       run: |-
-        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
+        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ inputs.dockerhub-tag }}" >> $GITHUB_ENV
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
@@ -505,6 +509,7 @@ runs:
           --set mariadb.auth.password="${{ env.SMARTER_MYSQL_PASSWORD }}" \
           --set mariadb.auth.database="${{ env.SMARTER_MYSQL_DATABASE }}" \
           --set mariadb.auth.username="${{ env.SMARTER_MYSQL_USERNAME }}" \
+          --set global.image.pullPolicy="IfNotPresent" \
           --values /tmp/values.yaml
 
     # Clean up secrets file

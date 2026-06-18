@@ -273,6 +273,8 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :return: The manifest as a ``SAMApiConnection`` Pydantic model, or ``None`` if not initialized.
         :rtype: Optional[SAMApiConnection]
         """
+        if self._ready:
+            return self._manifest
         if self._manifest:
             if not isinstance(self._manifest, SAMApiConnection):
                 raise SAMConnectionBrokerError(
@@ -575,7 +577,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 connection.timeout = 60
                 connection.save()
         """
-        if self._connection:
+        if self._connection or self._ready:
             return self._connection
 
         name = str(self.to_snake_case(self.name))  # type: ignore

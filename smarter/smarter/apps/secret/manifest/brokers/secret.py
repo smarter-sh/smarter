@@ -14,7 +14,6 @@ from smarter.apps.account.manifest.enum import (
     SAMSecretMetadataKeys,
 )
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.signals import broker_ready
 from smarter.apps.secret.manifest.models.secret.const import MANIFEST_KIND
 from smarter.apps.secret.manifest.models.secret.metadata import SAMSecretMetadata
 from smarter.apps.secret.manifest.models.secret.model import SAMSecret
@@ -179,34 +178,6 @@ class SAMSecretBroker(AbstractBroker):
         """Initialize the secret transformer."""
         self._manifest = None
         self._secret_transformer = None
-
-    @property
-    def ready(self) -> bool:
-        """
-        Check if the broker is ready for operations.
-
-        This property determines whether the broker has been properly initialized
-        and is ready to perform its functions. A broker is considered ready if
-        it has a valid manifest loaded, either from raw data, a loader, or
-        existing Django ORM models.
-
-        :returns: ``True`` if the broker is ready, ``False`` otherwise.
-        :rtype: bool
-        """
-        retval = super().ready
-        if not retval:
-            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
-            return False
-        retval = self.manifest is not None or self.secret is not None
-        logger.debug(
-            "%s.ready() manifest presence indicates ready=%s for %s",
-            self.formatted_class_name,
-            retval,
-            self.kind,
-        )
-        if retval:
-            broker_ready.send(sender=self.__class__, broker=self)
-        return retval
 
     @property
     def secret_transformer(self) -> Optional[SecretTransformer]:

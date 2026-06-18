@@ -406,7 +406,7 @@ class SAMProviderBroker(AbstractBroker):
             ],
         )
         spec_provider = SAMProviderSpecProvider(
-            name="AcmeLLM",
+            name="acme_llm_company",
             description="Leading provider of innovative LLM solutions.",
             base_url="https://api.acme-llm.com",
             api_key="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
