@@ -409,8 +409,15 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self._is_ready_abstract_broker,
         )
         # ---------------------------------------------------------------------
-        # there are three possible ways for us to be ready.
+        # there are four possible ways for us to be ready.
         # ---------------------------------------------------------------------
+        if self.request and "example_manifest" in self.request.path:
+            logger.debug(
+                "%s.is_ready_abstract_broker() request path indicates this is an example_manifest operation. Marking as ready.",
+                self.abstract_broker_logger_prefix,
+            )
+            self._is_ready_abstract_broker = True
+            return self._is_ready_abstract_broker
         if bool(self._manifest):
             logger.debug(
                 "%s.is_ready_abstract_broker() manifest is loaded.",
@@ -671,19 +678,19 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return self._name
         else:
             logger.debug("%s.name() manifest is not set.", self.abstract_broker_logger_prefix)
-        if self.loader:
+        if self._loader:
             logger.debug(
                 "%s.name() found a SAMLoader. Attempting to initialize the manifest.",
                 self.abstract_broker_logger_prefix,
             )
-            if isinstance(self.manifest, AbstractSAMBase) and self.manifest.metadata and self.manifest.metadata.name:
-                self._name = self.manifest.metadata.name
+            if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
+                self._name = self._manifest.metadata.name
                 logger.debug(
                     "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
                 )
                 return self._name
             else:
-                self._name = self.loader.manifest_metadata.get("name")
+                self._name = self._loader.manifest_metadata.get("name")
                 if self._name:
                     logger.debug(
                         "%s.name() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
@@ -916,10 +923,16 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         logger.debug(
             "%s.orm_meta_instance_setter() called for %s %s owned by %s",
             self.abstract_broker_logger_prefix,
-            self.kind,
-            self.name,
-            self.user_profile,
+            self._kind,
+            self._name,
+            self._user_profile,
         )
+        if not self._name or not self._user_profile:
+            logger.debug(
+                "%s.orm_meta_instance_setter() cannot initialize ORM meta instance because name or user_profile is not set.",
+                self.abstract_broker_logger_prefix,
+            )
+            return
         if self.ORMMetaModelClass == self.ORMModelClass and self._orm_instance:
             logger.debug(
                 "%s.orm_meta_instance_setter() ORMMetaModelClass is the same as ORMModelClass and orm_instance is already set. Setting orm_meta_instance to orm_instance.",
@@ -928,14 +941,14 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self._orm_meta_instance = self._orm_instance
             return
 
-        if not self.name:
+        if not self._name:
             logger.debug(
                 "%s.orm_meta_instance_setter() cannot initialize %s meta instance because name is not set.",
                 self.abstract_broker_logger_prefix,
                 self.ORMMetaModelClass.__name__,
             )
             return
-        if not self.user_profile:
+        if not self._user_profile:
             logger.debug(
                 "%s.orm_meta_instance_setter() cannot initialize %s meta instance because user_profile is not set.",
                 self.abstract_broker_logger_prefix,
@@ -950,8 +963,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             "%s.orm_meta_instance_setter() - Attempting to initialize %s using %s owned by %s.",
             self.abstract_broker_logger_prefix,
             ModelClass.__name__,
-            self.name,
-            self.user_profile,
+            self._name,
+            self._user_profile,
         )
         try:
             self._orm_meta_instance = ModelClass.get_cached_object(name=self.name, user_profile=self.user_profile)  # type: ignore
