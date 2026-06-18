@@ -6,17 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
-## [0.14.4-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.4-alpha.2...v0.14.4-alpha.3) (2026-06-18)
+## [0.14.4](https://github.com/smarter-sh/smarter/compare/v0.14.3...v0.14.4) (2026-06-17)
 
 ### Bug Fixes
 
-* example manifest provider name should be snake_case ([22e7fb4](https://github.com/smarter-sh/smarter/commit/22e7fb4e6ac82803922541d62c669cbc49f2195f))
-
-## [0.14.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.4-alpha.1...v0.14.4-alpha.2) (2026-06-18)
-
-### Bug Fixes
-
-* mark AbstractBroker.is_ready_abstract_broker() True when path container example_manifest ([4a39af2](https://github.com/smarter-sh/smarter/commit/4a39af2f1da4546f9c4109ffd868050f7fae7de1))
+* TypeError at /dashboard/ ([816e533](https://github.com/smarter-sh/smarter/commit/816e5337fd093bc9b71d87608c8f3b7d9daee510))
 
 ## [0.14.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.3...v0.14.4-alpha.1) (2026-06-17)
 
