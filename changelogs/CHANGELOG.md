@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.5-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.5-alpha.2...v0.14.5-alpha.3) (2026-06-18)
+
+### Bug Fixes
+
+* remove trailing double // ([30eabcd](https://github.com/smarter-sh/smarter/commit/30eabcd171a2bf7ed773488d4adcc6b32a323e9a))
+
+### Refactoring
+
+* ready state ([a1e1fe1](https://github.com/smarter-sh/smarter/commit/a1e1fe10c6767c93048a65d64d23b9c0062df575))
+
 ## [0.14.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.5-alpha.1...v0.14.5-alpha.2) (2026-06-18)
 
 ### Bug Fixes
