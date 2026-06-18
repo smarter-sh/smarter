@@ -161,7 +161,9 @@ class DocsBaseView(SmarterAuthenticatedWebView):
                 request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr]
                 response.status_code if hasattr(response, "status_code") else "N/A",
             )
-            raise DocsError(f"Received non-200 response from brokered view: {response.status_code}")
+            raise DocsError(
+                f"Received non-200 response from brokered view: {response.status_code}: {response.content if hasattr(response, 'content') else 'N/A'}"
+            )
 
         try:
             json_response = json.loads(response.content.decode("utf-8"))
