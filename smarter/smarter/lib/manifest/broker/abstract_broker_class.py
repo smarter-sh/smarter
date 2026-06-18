@@ -1961,7 +1961,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         fields_and_types: list[dict[str, str]] = []
         for field_name, field in serializer.fields.items():
-            item = self.to_camel_case({"name": field_name, "type": type(field).__name__}, convert_values=True)
+            item = self.to_camel_case({"name": field_name, "type": type(field).__name__}, convert_values=False)
             if isinstance(item, dict) and all(isinstance(k, str) and isinstance(v, str) for k, v in item.items()):
                 fields_and_types.append(item)
             else:

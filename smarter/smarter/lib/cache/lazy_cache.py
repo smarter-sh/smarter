@@ -1,5 +1,5 @@
 """
-smarter.lib.cache.lazy_cache
+Smarter.lib.cache.lazy_cache
 =============================
 
 This module provides a lazy wrapper around Django's cache framework, ensuring
@@ -50,7 +50,8 @@ logger = logging.getLogger(__name__)
 # pylint: disable=C2801,E1102,W0613
 class LazyCache:
     """
-    A lazy wrapper around Django's cache framework that defers importing the cache
+    A lazy wrapper around Django's cache framework that defers importing the cache.
+
     until just before it is used for the first time.
     This helps avoid premature initialization issues. See https://docs.djangoproject.com/en/5.2/topics/cache/
 
@@ -67,7 +68,6 @@ class LazyCache:
     It is intended to be used as a singleton instance named `lazy_cache` (see below).
 
     It also checks for a Waffle switch to enable or disable cache logging.
-
     """
 
     _cache = None
@@ -78,6 +78,7 @@ class LazyCache:
     def cache(self):
         """
         Lazily import and return Django's cache framework.
+
         Performs diagnostics on first access to verify that the cache
         has initialized correctly (eg as expected, as per the Django settings).
 
@@ -93,11 +94,14 @@ class LazyCache:
         :rtype: django.core.cache.Cache
         """
         if self._cache is None:
+            from smarter.common.mixins.helper_mixin import SmarterReadyState
+
             logger_prefix = logging.formatted_text(f"{__name__}.{LazyCache.__name__}.cache()")
             if apps.ready:
                 logger.debug(
-                    "%s Django apps are ready. Proceeding to initialize django.core.cache.",
+                    "%s Django apps are %s. Proceeding to initialize django.core.cache.",
                     logger_prefix,
+                    SmarterReadyState.READY,
                 )
             else:
                 logger.warning(
@@ -116,9 +120,9 @@ class LazyCache:
                 cache.set("test_key", "test_value", timeout=5)
                 value = cache.get("test_key")
                 if value == "test_value":
-                    logger.debug("%s Django cache is up and reachable.", logger_prefix)
+                    logger.debug("%s Django cache is %s", logger_prefix, SmarterReadyState.READY)
                 else:
-                    logger.error("%s Django cache is not working as expected.", logger_prefix)
+                    logger.error("%s Django cache is %s", logger_prefix, SmarterReadyState.NOT_READY)
             # pylint: disable=broad-except
             except Exception as e:
                 logger.error("%s Error accessing Django cache: %s", logger_prefix, e)
@@ -135,11 +139,12 @@ class LazyCache:
     @property
     def waffle(self):
         """
-        Lazily import and return the Waffle module. Lookalike function api such as switch_is_active() with identical signatures.
+        Lazily import and return the Waffle module.
+
+        Lookalike function api such as switch_is_active() with identical signatures.
 
         Provides enhanced, managed Django-waffle wrapper with short-lived Redis-based
         caching and database readiness checks. Used for feature flagging.
-
 
         Features:
 
@@ -192,98 +197,77 @@ class LazyCache:
 
     def get(self, key: Any, default: Optional[Any] = None) -> Any:
         """
-        Fetch a given key from the cache. If the key does not exist, return default, which itself defaults to None.
+        Fetch a given key from the cache.
+
+        If the key does not exist, return default, which itself defaults to None.
         """
         return self.cache.get(key, default)  # type: ignore[return-value]
 
     def set(self, key: Any, value: Any, timeout: Optional[float] = None, version: Optional[int] = None) -> None:
         """
-        Set a value in the cache. If timeout is given, use that timeout for the key; otherwise use the default cache timeout.
+        Set a value in the cache.
+
+        If timeout is given, use that timeout for the key; otherwise use the default cache timeout.
         """
         return self.cache.set(key, value, timeout=timeout)  # type: ignore[return-value]
 
     def delete(self, key: Any) -> bool:
-        """
-        Delete a value from the cache.
-        """
+        """Delete a value from the cache."""
         return self.cache.delete(key)  # type: ignore[return-value]
 
     def incr(self, key: Any, delta: int = 1) -> int:
-        """
-        Increment a value in the cache.
-        """
+        """Increment a value in the cache."""
         return self.cache.incr(key, delta)  # type: ignore[return-value]
 
     def decr(self, key: Any, delta: int = 1) -> int:
-        """
-        Decrement a value in the cache.
-        """
+        """Decrement a value in the cache."""
         return self.cache.decr(key, delta)  # type: ignore[return-value]
 
     def clear(self) -> None:
-        """
-        Clear the entire cache.
-        """
+        """Clear the entire cache."""
         return self.cache.clear()  # type: ignore[return-value]
 
     def add(self, key: Any, value: Any, timeout: Optional[float] = None, version: Optional[int] = None) -> bool:
-        """
-        Add a value to the cache if the key does not already exist.
-        """
+        """Add a value to the cache if the key does not already exist."""
         return self.cache.add(key, value, timeout=timeout)  # type: ignore[return-value]
 
     def touch(self, key: Any, timeout: Optional[float] = None, version: Optional[int] = None) -> bool:
-        """
-        Update the timeout for a given key in the cache.
-        """
+        """Update the timeout for a given key in the cache."""
         return self.cache.touch(key, timeout=timeout)  # type: ignore[return-value]
 
     def has_key(self, key: Any, version: Optional[int] = None) -> bool:
-        """
-        Check if a key exists in the cache.
-        """
+        """Check if a key exists in the cache."""
         return self.cache.has_key(key)  # type: ignore[return-value]
 
     def get_many(self, keys: list, version: Optional[int] = None) -> dict:
-        """
-        Fetch multiple keys from the cache.
-        """
+        """Fetch multiple keys from the cache."""
         return self.cache.get_many(keys)  # type: ignore[return-value]
 
     def set_many(self, data: dict, timeout: Optional[float] = None, version: Optional[int] = None) -> list[Any]:
-        """
-        Set multiple values in the cache.
-        """
+        """Set multiple values in the cache."""
         return self.cache.set_many(data, timeout=timeout)  # type: ignore[return-value]
 
     def delete_many(self, keys: list, version: Optional[int] = None) -> None:
-        """
-        Delete multiple keys from the cache.
-        """
+        """Delete multiple keys from the cache."""
         return self.cache.delete_many(keys)  # type: ignore[return-value]
 
     def incr_version(self, key: Any, delta: int = 1, version: Optional[int] = None) -> int:
-        """
-        Increment the version of a key in the cache.
-        """
+        """Increment the version of a key in the cache."""
         return self.cache.incr_version(key, delta)  # type: ignore[return-value]
 
     def decr_version(self, key: Any, delta: int = 1, version: Optional[int] = None) -> int:
-        """
-        Decrement the version of a key in the cache.
-        """
+        """Decrement the version of a key in the cache."""
         return self.cache.decr_version(key, delta)  # type: ignore[return-value]
 
     def close(self, **kwargs) -> None:
-        """
-        Close the cache connection.
-        """
+        """Close the cache connection."""
         return self.cache.close(**kwargs)  # type: ignore[return-value]
 
 
 lazy_cache = LazyCache()
 """
-A singleton instance of LazyCache for accessing Django's cache framework
+A singleton instance of LazyCache for accessing Django's cache framework.
+
 without risking premature initialization, which can lead to issues
 where Django falls back to a default cache backend unexpectedly.
 When this happens, the fallback cache may not persist data as expected,
