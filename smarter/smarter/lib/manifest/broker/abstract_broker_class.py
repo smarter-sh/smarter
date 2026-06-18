@@ -409,32 +409,40 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self._is_ready_abstract_broker,
         )
         # ---------------------------------------------------------------------
-        # there are four possible ways for us to be ready.
+        # there are five possible ways for us to be ready.
         # ---------------------------------------------------------------------
-        if self.request and "example_manifest" in self.request.path:
-            # 1.) if the request path indicates this is an example_manifest operation
+        if self.request and "example-manifest" in self.request.path:
+            # 1.) if the request path indicates this is an example-manifest operation
             logger.debug(
-                "%s.is_ready_abstract_broker() request path indicates this is an example_manifest operation. Marking as ready.",
+                "%s.is_ready_abstract_broker() request path indicates this is an example-manifest operation. Marking as ready.",
+                self.abstract_broker_logger_prefix,
+            )
+            self._is_ready_abstract_broker = True
+            return self._is_ready_abstract_broker
+        if self.request and "json-schema" in self.request.path:
+            # 2.) if the request path indicates this is a json-schema operation
+            logger.debug(
+                "%s.is_ready_abstract_broker() request path indicates this is a json-schema operation. Marking as ready.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
             return self._is_ready_abstract_broker
         if bool(self._manifest):
-            # 2.) if we have a manifest.
+            # 3.) if we have a manifest.
             logger.debug(
                 "%s.is_ready_abstract_broker() manifest is loaded.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
         if bool(self.loader) and self.loader.ready:
-            # 3.) we have a loader and it's in a ready state.
+            # 4.) we have a loader and it's in a ready state.
             logger.debug(
                 "%s.is_ready_abstract_broker() loader is ready.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
         if bool(self.orm_meta_instance):
-            # 4.) we have an ORM meta instance.
+            # 5.) we have an ORM meta instance.
             logger.debug(
                 "%s.is_ready_abstract_broker() %s instance is available.",
                 self.abstract_broker_logger_prefix,

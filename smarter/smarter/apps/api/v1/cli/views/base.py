@@ -392,6 +392,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         match = re.search(r"/cli/([^/]+)/", self.url or "")
         if match:
             _command = match.group(1)
+            _command = self.to_snake_case(_command)
             return SmarterJournalCliCommands(_command)
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
