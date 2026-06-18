@@ -26,7 +26,7 @@ class DocsJsonSchemaBaseView(DocsBaseView):
     def get(self, request, *args, **kwargs):
         view = ApiV1CliSchemaApiView.as_view()
         json_response = self.get_brokered_json_response(
-            ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.schema, view, request, *args, **kwargs
+            ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.json_schema, view, request, *args, **kwargs
         )
         json_response = json.dumps(json_response)
         self.context["json_schema"] = json_response
