@@ -704,10 +704,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 logger.debug(
                     "%s.name() set name to %s from name url param", self.abstract_broker_logger_prefix, self._name
                 )
-            else:
-                logger.debug("%s.name() url params do not contain a name", self.abstract_broker_logger_prefix)
         if not self._name:
-            logger.warning("%s.name() could not determine name, returning None", self.abstract_broker_logger_prefix)
+            logger.warning("%s.name() unable to lazily set name.", self.abstract_broker_logger_prefix)
         return self._name
 
     @snake_case()
