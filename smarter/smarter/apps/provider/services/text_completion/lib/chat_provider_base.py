@@ -24,7 +24,7 @@ from smarter.apps.prompt.functions.function_weather import (
 )
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.signals import (
-    chat_provider_initialized,
+    llm_provider_initialized,
 )
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
@@ -273,7 +273,7 @@ class SmarterChatProviderBase(ChatDbMixin):
             else {}
         )
 
-        chat_provider_initialized.send(sender=self)
+        llm_provider_initialized.send(sender=self)
 
     def prune_empty_values(self, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """

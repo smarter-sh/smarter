@@ -20,20 +20,20 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import Prompt, PromptHistory, PromptPluginUsage, PromptToolCall
 from .signals import (
-    chat_completion_plugin_called,
-    chat_completion_request,
-    chat_completion_response,
-    chat_completion_tool_called,
-    chat_config_invoked,
-    chat_finished,
-    chat_handler_console_output,
-    chat_provider_initialized,
+    chat_plugin_called,
+    chat_request,
+    chat_response,
     chat_response_failure,
-    chat_session_invoked,
-    chat_started,
+    chat_tool_called,
+    llm_provider_initialized,
     llm_tool_presented,
     llm_tool_requested,
     llm_tool_responded,
+    prompt_config_invoked,
+    prompt_finished,
+    prompt_handler_console_output,
+    prompt_session_invoked,
+    prompt_started,
 )
 from .tasks import create_prompt_history
 from .views.detailviews import PromptConfigView, SmarterPromptSession
@@ -71,8 +71,8 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
     )
 
 
-# chat_session_invoked.send(sender=self.__class__, instance=self, request=request)
-@receiver(chat_session_invoked, dispatch_uid="chat_session_invoked")
+# prompt_session_invoked.send(sender=self.__class__, instance=self, request=request)
+@receiver(prompt_session_invoked, dispatch_uid="prompt_session_invoked")
 def handle_chat_session_invoked(sender, instance: SmarterPromptSession, request: ASGIRequest, *args, **kwargs):
     """Handle prompt session invoked signal."""
     if isinstance(request, ASGIRequest):
@@ -81,46 +81,46 @@ def handle_chat_session_invoked(sender, instance: SmarterPromptSession, request:
         url = "missing request object"
 
     logger.info(
-        "%s by %s %s - %s", formatted_text(f"{prefix}.chat_session_invoked"), get_sender_name(sender), instance, url
+        "%s by %s %s - %s", formatted_text(f"{prefix}.prompt_session_invoked"), get_sender_name(sender), instance, url
     )
 
 
-@receiver(chat_config_invoked, dispatch_uid="chat_config_invoked")
+@receiver(prompt_config_invoked, dispatch_uid="prompt_config_invoked")
 def handle_chat_config_invoked_(
     sender, instance: PromptConfigView, request: SmarterRequestType, data: dict, *args, **kwargs
 ):
     """
     Handle prompt config invoked signal.
 
-    chat_config_invoked.send(sender=self.__class__, instance=self, request=self.smarter_request, data=retval)
+    prompt_config_invoked.send(sender=self.__class__, instance=self, request=self.smarter_request, data=retval)
     """
     url: Optional[str] = instance.url
 
-    logger.info("%s by %s url=%s", formatted_text(f"{prefix}.chat_config_invoked"), get_sender_name(sender), url)
-    logger.debug("%s data: %s", formatted_text(f"{prefix}.chat_config_invoked"), formatted_json(data))
+    logger.info("%s by %s url=%s", formatted_text(f"{prefix}.prompt_config_invoked"), get_sender_name(sender), url)
+    logger.debug("%s data: %s", formatted_text(f"{prefix}.prompt_config_invoked"), formatted_json(data))
 
 
-@receiver(chat_started, dispatch_uid="chat_started")
+@receiver(prompt_started, dispatch_uid="prompt_started")
 def handle_chat_started(sender, prompt: Optional[Prompt] = None, data: Optional[dict] = None, **kwargs):
     """Handle prompt started signal."""
 
     sender_name = get_sender_name(sender)
     logger.info(
         "%s by %s for prompt %s",
-        formatted_text(f"{prefix}.chat_started"),
+        formatted_text(f"{prefix}.prompt_started"),
         sender_name,
         prompt,
     )
 
 
-@receiver(chat_completion_request, dispatch_uid="chat_completion_request")
+@receiver(chat_request, dispatch_uid="chat_request")
 def handle_chat_completion_request_sent(
     sender, prompt: Optional[Prompt] = None, iteration: int = 0, data: Optional[dict] = None, **kwargs
 ):
     """Handle prompt completion request sent signal."""
 
     sender_name = get_sender_name(sender)
-    this_prefix = formatted_text(f"{prefix}.chat_completion_request for iteration {iteration}")
+    this_prefix = formatted_text(f"{prefix}.chat_request for iteration {iteration}")
 
     logger.info(
         "%s by %s for prompt: %s ",
@@ -137,7 +137,7 @@ def handle_chat_completion_request_sent(
     )
 
 
-@receiver(chat_completion_response, dispatch_uid="chat_completion_response")
+@receiver(chat_response, dispatch_uid="chat_response")
 def handle_chat_completion_response_received(
     sender,
     prompt: Optional[Prompt] = None,
@@ -159,7 +159,7 @@ def handle_chat_completion_response_received(
     else:
         response_data = response
 
-    this_prefix = formatted_text(f"{prefix}.chat_completion_response for iteration {iteration}")
+    this_prefix = formatted_text(f"{prefix}.chat_response for iteration {iteration}")
     sender_name = get_sender_name(sender)
 
     logger.info(
@@ -172,7 +172,7 @@ def handle_chat_completion_response_received(
     )
 
 
-@receiver(chat_completion_plugin_called, dispatch_uid="chat_completion_plugin_called")
+@receiver(chat_plugin_called, dispatch_uid="chat_plugin_called")
 def handle_chat_completion_plugin_called(
     sender,
     prompt: Optional[Prompt] = None,
@@ -184,7 +184,7 @@ def handle_chat_completion_plugin_called(
 
     logger.info(
         "%s by %s for prompt %s, \nplugin: %s, \ninput_text: %s",
-        formatted_text(f"{prefix}.chat_completion_plugin_called"),
+        formatted_text(f"{prefix}.chat_plugin_called"),
         get_sender_name(sender),
         prompt,
         plugin,
@@ -192,7 +192,7 @@ def handle_chat_completion_plugin_called(
     )
 
 
-@receiver(chat_completion_tool_called, dispatch_uid="chat_completion_tool_called")
+@receiver(chat_tool_called, dispatch_uid="chat_tool_called")
 def handle_chat_completion_tool_called(
     sender,
     prompt: Optional[Prompt] = None,
@@ -209,7 +209,7 @@ def handle_chat_completion_tool_called(
 
     logger.info(
         "%s by %s %s %s for prompt: %s",
-        formatted_text(f"{prefix}.chat_completion_tool_called"),
+        formatted_text(f"{prefix}.chat_tool_called"),
         get_sender_name(sender),
         function_name,
         function_args,
@@ -218,7 +218,7 @@ def handle_chat_completion_tool_called(
 
 
 # pylint: disable=W0612
-@receiver(chat_finished, dispatch_uid="chat_finished")
+@receiver(prompt_finished, dispatch_uid="prompt_finished")
 def handle_chat_response_success(
     sender,
     prompt: Optional[Prompt] = None,
@@ -242,7 +242,7 @@ def handle_chat_response_success(
 
     logger.info(
         "%s for prompt %s, sent by %s \nrequest: %s, \nresponse: %s",
-        formatted_text(f"{prefix}.chat_finished"),
+        formatted_text(f"{prefix}.prompt_finished"),
         prompt,
         get_sender_name(sender),
         formatted_request_data,
@@ -252,7 +252,8 @@ def handle_chat_response_success(
         create_prompt_history.delay(prompt.id, request_data, response_data, messages)  # type: ignore
     else:
         logger.warning(
-            "%s No prompt object provided, skipping prompt history creation", formatted_text(f"{prefix}.chat_finished")
+            "%s No prompt object provided, skipping prompt history creation",
+            formatted_text(f"{prefix}.prompt_finished"),
         )
 
 
@@ -304,25 +305,25 @@ def handle_chat_response_failure(
 # ------------------------------------------------------------------------------
 # prompt provider receivers.
 # ------------------------------------------------------------------------------
-@receiver(chat_provider_initialized, dispatch_uid="chat_provider_initialized")
+@receiver(llm_provider_initialized, dispatch_uid="llm_provider_initialized")
 def handle_chat_provider_initialized(sender, **kwargs):
     """Handle prompt provider initialized signal."""
 
     logger.info(
         "%s with name: %s, base_url: %s",
-        formatted_text(f"{prefix}.chat_provider_initialized"),
+        formatted_text(f"{prefix}.llm_provider_initialized"),
         sender.provider,
         sender.base_url,
     )
 
 
-@receiver(chat_handler_console_output, dispatch_uid="chat_handler_console_output")
+@receiver(prompt_handler_console_output, dispatch_uid="prompt_handler_console_output")
 def handle_chat_handler_console_output(sender, message, json_obj, **kwargs):
     """Handle prompt handler() console output signal."""
 
     logger.info(
         "%s: %s\n%s",
-        formatted_text(f"{prefix}.chat_handler_console_output console output"),
+        formatted_text(f"{prefix}.prompt_handler_console_output console output"),
         message,
         formatted_json(json_obj),
     )
