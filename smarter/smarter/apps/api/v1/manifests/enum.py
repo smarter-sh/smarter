@@ -25,16 +25,7 @@ from smarter.apps.plugin.manifest.models.static_plugin.const import (
     MANIFEST_KIND as STATICPLUGIN_MANIFEST_KIND,
 )
 from smarter.apps.prompt.manifest.models.prompt.const import (
-    MANIFEST_KIND as CHAT_MANIFEST_KIND,
-)
-from smarter.apps.prompt.manifest.models.prompt_history.const import (
-    MANIFEST_KIND as CHAT_HISTORY_MANIFEST_KIND,
-)
-from smarter.apps.prompt.manifest.models.prompt_plugin_usage.const import (
-    MANIFEST_KIND as CHAT_PLUGIN_USAGE_MANIFEST_KIND,
-)
-from smarter.apps.prompt.manifest.models.prompt_tool_call.const import (
-    MANIFEST_KIND as CHAT_TOOL_CALL_MANIFEST_KIND,
+    MANIFEST_KIND as PROMPT_MANIFEST_KIND,
 )
 from smarter.apps.provider.manifest.models.provider.const import (
     MANIFEST_KIND as PROVIDER_MANIFEST_KIND,
@@ -77,10 +68,10 @@ class SAMKinds(SmarterEnumAbstract):
         AUTH_TOKEN: Represents an authentication token manifest kind.
         USER: Represents a user manifest kind.
         SECRET: Represents a secret manifest kind.
-        CHAT: Represents a prompt manifest kind.
-        CHAT_HISTORY: Represents a prompt history manifest kind.
-        CHAT_PLUGIN_USAGE: Represents a prompt plugin usage manifest kind.
-        CHAT_TOOL_CALL: Represents a prompt tool call manifest kind.
+        PROMPT: Represents a prompt manifest kind.
+        PROMPT_HISTORY: Represents a prompt history manifest kind.
+        PROMPT_PLUGIN_USAGE: Represents a prompt plugin usage manifest kind.
+        PROMPT_TOOL_CALL: Represents a prompt tool call manifest kind.
         LLM_CLIENT: Represents an llm_client manifest kind.
         PROVIDER: Represents a provider manifest kind.
 
@@ -117,10 +108,7 @@ class SAMKinds(SmarterEnumAbstract):
     SECRET = SECRET_MANIFEST_KIND
 
     # prompt resources
-    CHAT = CHAT_MANIFEST_KIND
-    CHAT_HISTORY = CHAT_HISTORY_MANIFEST_KIND
-    CHAT_PLUGIN_USAGE = CHAT_PLUGIN_USAGE_MANIFEST_KIND
-    CHAT_TOOL_CALL = CHAT_TOOL_CALL_MANIFEST_KIND
+    PROMPT = PROMPT_MANIFEST_KIND
     LLM_CLIENT = LLM_CLIENT_MANIFEST_KIND
 
     # provider resources

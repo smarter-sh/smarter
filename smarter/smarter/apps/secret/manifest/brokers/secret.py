@@ -126,51 +126,8 @@ class SAMSecretBroker(AbstractBroker):
     _pydantic_model: Type[SAMSecret] = SAMSecret
     _secret_transformer: Optional[SecretTransformer] = None
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize the SAMSecretBroker instance.
-
-        This constructor initializes the broker by calling the parent class's
-        constructor, which will attempt to bootstrap the class instance
-        with any combination of raw manifest data (in JSON or YAML format),
-        a manifest loader, or existing Django ORM models. If a manifest
-        loader is provided and its kind matches the expected kind for this broker,
-        the manifest is initialized using the loader's data.
-
-        This class can bootstrap itself in any of the following ways:
-
-        - request.body (yaml or json string)
-        - name + account (determined via authentication of the request object)
-        - SAMLoader instance
-        - manifest instance
-        - filepath to a manifest file
-
-        If raw manifest data is provided, whether as a string or a dictionary,
-        or a SAMLoader instance, the base class constructor will only goes as
-        far as initializing the loader. The actual manifest model initialization
-        is deferred to this constructor, which checks the loader's kind.
-
-        :param args: Positional arguments passed to the parent constructor.
-        :param kwargs: Keyword arguments passed to the parent constructor.
-
-        **Example:**
-
-        .. code-block:: python
-
-            broker = SAMSecretBroker(loader=loader, plugin_meta=plugin_meta)
-        """
-        logger.debug(
-            "%s.__init__() called with args=%s, kwargs=%s",
-            self.formatted_class_name,
-            args,
-            kwargs,
-        )
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        if self._manifest and not isinstance(self._manifest, SAMSecret):
-            raise SAMSecretBrokerError(
-                f"Manifest must be of type {SAMSecret.__name__}, got {type(self._manifest)}: {self._manifest}",
-                thing=self.kind,
-            )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         logger.info(msg)
 

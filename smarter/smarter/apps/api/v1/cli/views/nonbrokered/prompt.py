@@ -479,8 +479,8 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 e=e,
-                thing=SmarterJournalThings(SmarterJournalThings.CHAT),
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                thing=SmarterJournalThings(SmarterJournalThings.PROMPT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
                 stack_trace=traceback.format_exc(),
             )
@@ -495,8 +495,8 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         return SmarterJournaledJsonResponse(
             request=request,
             data=data,
-            thing=SmarterJournalThings(SmarterJournalThings.CHAT),
-            command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+            thing=SmarterJournalThings(SmarterJournalThings.PROMPT),
+            command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
         )
 
     def validate(self):
@@ -601,8 +601,8 @@ This is a Non-brokered operation.
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 e=e,
-                thing=SmarterJournalThings(SmarterJournalThings.CHAT),
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                thing=SmarterJournalThings(SmarterJournalThings.PROMPT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
                 status=HTTPStatus.NOT_FOUND,
                 stack_trace=traceback.format_exc(),
                 description=f"{self.formatted_class_name}.post() LLMClient {name} not found for account {self.account}",
@@ -616,8 +616,8 @@ This is a Non-brokered operation.
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 e=e,
-                thing=SmarterJournalThings(SmarterJournalThings.CHAT),
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                thing=SmarterJournalThings(SmarterJournalThings.PROMPT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
                 stack_trace=traceback.format_exc(),
             )

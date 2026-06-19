@@ -107,6 +107,11 @@ class SAMProviderBroker(AbstractBroker):
     _pydantic_model: Type[SAMProvider] = SAMProvider
     _provider: Optional[Provider] = None
 
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        logger.info(msg)
+
     @property
     def provider(self) -> Optional[Provider]:
         """

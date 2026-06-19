@@ -81,25 +81,7 @@ class DocsExampleManifestApiKeyView(DocsExampleManifestBaseView):
 class DocsExampleManifestChatView(DocsExampleManifestBaseView):
     """Prompt JSON Schema view."""
 
-    kind = SAMKinds(SAMKinds.CHAT)
-
-
-class DocsExampleManifestChatHistoryView(DocsExampleManifestBaseView):
-    """PromptHistory JSON Schema view."""
-
-    kind = SAMKinds(SAMKinds.CHAT_HISTORY)
-
-
-class DocsExampleManifestChatPluginUsageView(DocsExampleManifestBaseView):
-    """PromptPluginUsage JSON Schema view."""
-
-    kind = SAMKinds(SAMKinds.CHAT_PLUGIN_USAGE)
-
-
-class DocsExampleManifestChatToolCallView(DocsExampleManifestBaseView):
-    """PromptToolCall JSON Schema view."""
-
-    kind = SAMKinds(SAMKinds.CHAT_TOOL_CALL)
+    kind = SAMKinds(SAMKinds.PROMPT)
 
 
 class DocsExampleManifestLLMClientView(DocsExampleManifestBaseView):

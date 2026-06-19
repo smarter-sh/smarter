@@ -60,7 +60,7 @@ class TestApiCliV1Chat(ApiV1CliTestBase):
     def validate_response(self, response: dict) -> None:
         self.assertIsInstance(response, dict)
         self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
-        self.assertEqual(response[SmarterJournalApiResponseKeys.THING], SmarterJournalThings.CHAT.value)
+        self.assertEqual(response[SmarterJournalApiResponseKeys.THING], SmarterJournalThings.PROMPT.value)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
 
@@ -84,4 +84,4 @@ class TestApiCliV1Chat(ApiV1CliTestBase):
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.validate_data(data=data)
         metadata = response[SmarterJournalApiResponseKeys.METADATA]
-        metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.CHAT.value
+        metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.PROMPT.value

@@ -1,5 +1,5 @@
 """
-smarter.common.utils
+Smarter.common.utils
 ====================
 
 Utility functions for the Smarter framework.
@@ -14,6 +14,7 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 
 from .conversion import (
     ConvertibleCaseType,
+    search_replace,
     to_camel_case,
     to_snake_case,
 )
@@ -58,5 +59,6 @@ __all__ = [
     "RequestData",
     "uri",
     "to_camel_case",
+    "search_replace",
     "ConvertibleCaseType",
 ]

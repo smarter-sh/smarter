@@ -1,347 +1,531 @@
 {
-    "data": {
-        "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
-        "sandbox_mode": false,
-        "debug_mode": true,
-        "llm_client": {
-            "id": 9,
-            "url_llm_client": "http://localhost:9357/api/v1/llm-clients/9/chat/",
-            "account": {
-                "accountNumber": "3141-5926-5359"
-            },
-            "default_system_role": "The current date/time is Monday, 2025-12-08T13:37:43+0000\nYou are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n",
-            "created_at": "2025-11-21T03:20:13.143128Z",
-            "updated_at": "2025-11-21T03:20:13.176363Z",
-            "name": "stackademy_sql",
-            "description": "Stackademy University course catalogue inquiries using the Stackademy SQL plugin.",
-            "version": "1.0.0",
-            "deployed": false,
-            "provider": "openai",
-            "default_model": "gpt-4o-mini",
-            "default_temperature": 0.5,
-            "default_max_tokens": 1024,
-            "app_name": "Stackademy",
-            "app_assistant": "Stanley",
-            "app_welcome_message": "Welcome to Stackademy! How can I help you today?",
-            "app_example_prompts": [
-                "Do you offer any courses on AI?",
-                "My budget is $1,000. What courses can I take?",
-                "I want to study programming. What do you suggest?"
-            ],
-            "app_placeholder": "Ask me anything about Stackademy courses...",
-            "app_info_url": "https://stackademy.edu/online-courses",
-            "app_background_image_url": null,
-            "app_logo_url": null,
-            "app_file_attachment": null,
-            "dns_verification_status": "Not Verified",
-            "tls_certificate_issuance_status": "No Certificate",
-            "subdomain": null,
-            "custom_domain": null
+  "data": {
+    "session_key": "25b6ccf51e920b01b92868a7b2fc3ce8ba0f90d39738871ebdbfe2265c9656ca",
+    "sandbox_mode": true,
+    "debug_mode": true,
+    "chatbot": {
+      "id": 7,
+      "url_chatbot": "http://localhost:9357/api/v1/llm-clients/rMTAwMDAwNwx/prompt/",
+      "user_profile": {
+        "user": {
+          "username": "admin",
+          "email": "admin@smarter.sh"
         },
-        "history": {
-            "chat": {
-                "id": 6,
-                "created_at": "2025-12-08T13:37:26.056430Z",
-                "updated_at": "2025-12-08T13:37:26.056441Z",
-                "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
-                "ip_address": "172.66.0.243",
-                "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
-                "url": "http://localhost:9357/api/v1/llm-clients/9/config/",
-                "account": 1,
-                "llm_client": 9
-            },
-            "prompt_history": [
+        "account": {
+          "accountNumber": "3141-5926-5359"
+        }
+      },
+      "default_system_role": "The current date/time is Friday, 2026-06-19T21:16:47+0000\nYou are a helpful weather forecaster. You respond only to questions about the weather. You answer all weather questions using the get_current_weather function provided to you. You NEVER attempt to provide weather information yourself. If you are unable to provide the necessary parameters to the get_current_weather function, then you ask the user for clarification. If you are still unable to provide the necessary parameters, you inform the user that you are unable to help them at this time.",
+      "annotations": [
+        {
+          "smarter.sh/tests/focus_level": "low"
+        },
+        {
+          "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."
+        },
+        {
+          "smarter.sh/tests/last_updated": "2025-12-31"
+        },
+        {
+          "smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"
+        },
+        {
+          "smarter.sh/tests/owner": "Lawrence McDaniel"
+        }
+      ],
+      "created_at": "2026-06-19T20:06:44.809930Z",
+      "updated_at": "2026-06-19T20:06:44.935235Z",
+      "name": "weather",
+      "description": "an llm_client that predicts the weather.",
+      "version": "0.1.0",
+      "deployed": false,
+      "provider": "openai",
+      "default_model": "gpt-4o-mini",
+      "default_temperature": 0.5,
+      "default_max_tokens": 256,
+      "app_name": "Weather LLMClient",
+      "app_assistant": "Lawrence",
+      "app_welcome_message": "Welcome to the Weather LLMClient! How can I help you today?",
+      "app_example_prompts": [
+        "what_is_the_weather_in_san_francisco?",
+        "i_was_born_december_31,_1966._how_many_days_old_am_i?",
+        "what_courses_does_stackademy_offer_about_web_development?"
+      ],
+      "app_placeholder": "Ask me about the weather...",
+      "app_info_url": "https://smarter.sh",
+      "app_background_image_url": null,
+      "app_logo_url": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+      "app_file_attachment": false,
+      "dns_verification_status": "Not Verified",
+      "tls_certificate_issuance_status": "No Certificate",
+      "subdomain": null,
+      "custom_domain": null
+    },
+    "history": {
+      "prompt": {
+        "id": 2,
+        "created_at": "2026-06-19T20:18:48.611761Z",
+        "updated_at": "2026-06-19T20:18:48.611788Z",
+        "name": "",
+        "description": "",
+        "version": "1.0.0",
+        "annotations": [],
+        "session_key": "25b6ccf51e920b01b92868a7b2fc3ce8ba0f90d39738871ebdbfe2265c9656ca",
+        "ip_address": "192.168.65.1",
+        "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+        "url": "http://localhost:9357/workbench/llm-clients/rMTAwMDAwNwx/config/",
+        "user_profile": 1,
+        "chatbot": 7
+      },
+      "prompt_history": [
+        {
+          "role": "system",
+          "content": "The current date/time is Friday, 2026-06-19T20:18:48+0000\nYou are a helpful weather forecaster. You respond only to questions about the weather. You answer all weather questions using the get_current_weather function provided to you. You NEVER attempt to provide weather information yourself. If you are unable to provide the necessary parameters to the get_current_weather function, then you ask the user for clarification. If you are still unable to provide the necessary parameters, you inform the user that you are unable to help them at this time.",
+          "smarter_is_new": false
+        },
+        {
+          "role": "assistant",
+          "content": "Welcome to the Weather LLMClient! How can I help you today?",
+          "smarter_is_new": false
+        },
+        {
+          "role": "assistant",
+          "content": "Some example prompts to get you started:\r\n\r\nwhat_is_the_weather_in_san_francisco?\r\ni_was_born_december_31,_1966._how_many_days_old_am_i?\r\nwhat_courses_does_stackademy_offer_about_web_development?\r\n",
+          "smarter_is_new": false
+        },
+        {
+          "role": "user",
+          "content": "what's the weather in novia scotia",
+          "smarter_is_new": false
+        },
+        {
+          "role": "smarter",
+          "content": "Prompt configuration: llm=openai, url=https://api.openai.com/v1/prompt/completions api_key=****IAUA model=gpt-4o-mini, temperature=0.5, max_completion_tokens=256, tool_choice=auto.",
+          "smarter_is_new": false
+        },
+        {
+          "role": "smarter",
+          "content": "Tool presented: get_current_weather(location: The city and state, e.g. San Francisco, CA, unit: Unit system for weather data. Defaults to celsius if not provided.) - Get the current weather and 24-hour forecast for a given location. \n\nTool definition:\n--------------------\n{\n    \"type\": \"function\",\n    \"function\": {\n        \"name\": \"get_current_weather\",\n        \"description\": \"Get the current weather and 24-hour forecast for a given location.\",\n        \"parameters\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"location\": {\n                    \"type\": \"string\",\n                    \"description\": \"The city and state, e.g. San Francisco, CA\"\n                },\n                \"unit\": {\n                    \"type\": \"string\",\n                    \"enum\": [\n                        \"METRIC\",\n                        \"USCS\"\n                    ],\n                    \"description\": \"Unit system for weather data. Defaults to celsius if not provided.\"\n                }\n            },\n            \"required\": [\n                \"location\"\n            ],\n            \"additionalProperties\": false\n        }\n    }\n}",
+          "smarter_is_new": false
+        },
+        {
+          "role": "smarter",
+          "content": "openai prompt charges: 289 prompt tokens, 17 completion tokens = 306 total tokens charged.",
+          "smarter_is_new": false
+        },
+        {
+          "role": "assistant",
+          "audio": null,
+          "content": "Could you please specify a city or town in Nova Scotia for the weather information?",
+          "refusal": null,
+          "tool_calls": null,
+          "annotations": [],
+          "function_call": null,
+          "smarter_is_new": false
+        },
+        {
+          "role": "user",
+          "content": "whats the weather in dallas, tx",
+          "smarter_is_new": false
+        },
+        {
+          "role": "smarter",
+          "content": "Prompt configuration: llm=openai, url=https://api.openai.com/v1/prompt/completions api_key=****IAUA model=gpt-4o-mini, temperature=0.5, max_completion_tokens=256, tool_choice=auto.",
+          "smarter_is_new": true
+        },
+        {
+          "role": "smarter",
+          "content": "Tool presented: get_current_weather(location: The city and state, e.g. San Francisco, CA, unit: Unit system for weather data. Defaults to celsius if not provided.) - Get the current weather and 24-hour forecast for a given location. \n\nTool definition:\n--------------------\n{\n    \"type\": \"function\",\n    \"function\": {\n        \"name\": \"get_current_weather\",\n        \"description\": \"Get the current weather and 24-hour forecast for a given location.\",\n        \"parameters\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"location\": {\n                    \"type\": \"string\",\n                    \"description\": \"The city and state, e.g. San Francisco, CA\"\n                },\n                \"unit\": {\n                    \"type\": \"string\",\n                    \"enum\": [\n                        \"METRIC\",\n                        \"USCS\"\n                    ],\n                    \"description\": \"Unit system for weather data. Defaults to celsius if not provided.\"\n                }\n            },\n            \"required\": [\n                \"location\"\n            ],\n            \"additionalProperties\": false\n        }\n    }\n}",
+          "smarter_is_new": true
+        },
+        {
+          "role": "smarter",
+          "content": "openai prompt charges: 322 prompt tokens, 17 completion tokens = 339 total tokens charged.",
+          "smarter_is_new": true
+        },
+        {
+          "role": "assistant",
+          "audio": null,
+          "content": null,
+          "refusal": null,
+          "tool_calls": [
+            {
+              "id": "call_3ZW8D8JToFCgCtE28Kc2MfgG",
+              "type": "function",
+              "function": {
+                "name": "get_current_weather",
+                "arguments": "{\"location\":\"Dallas, TX\"}"
+              }
+            }
+          ],
+          "annotations": [],
+          "function_call": null,
+          "smarter_is_new": true
+        },
+        {
+          "role": "smarter",
+          "content": "openai called this tool: get_current_weather({\"location\":\"Dallas, TX\"})\n\nTool call:\n--------------------\n{\n    \"id\": \"call_3ZW8D8JToFCgCtE28Kc2MfgG\",\n    \"function\": {\n        \"arguments\": \"{\\\"location\\\":\\\"Dallas, TX\\\"}\",\n        \"name\": \"get_current_weather\"\n    },\n    \"type\": \"function\"\n}",
+          "smarter_is_new": true
+        },
+        {
+          "name": "get_current_weather",
+          "role": "tool",
+          "content": "[\n  {\n    \"location\": \"Dallas, TX, USA\",\n    \"latitude\": 32.7766642,\n    \"longitude\": -96.79698789999999,\n    \"unit\": \"METRIC\",\n    \"forecast\": [\n      {\n        \"date\": \"2026-06-19 00:00\",\n        \"temperature_2m\": 34.301998138427734,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 14.021525382995605,\n        \"winddirection_10m\": 131.87779235839844,\n        \"windgusts_10m\": 19.079999923706055,\n        \"cloudcover\": 6.0\n      },\n      {\n        \"date\": \"2026-06-19 01:00\",\n        \"temperature_2m\": 33.45199966430664,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 11.090103149414062,\n        \"winddirection_10m\": 125.75397491455078,\n        \"windgusts_10m\": 18.719999313354492,\n        \"cloudcover\": 45.0\n      },\n      {\n        \"date\": \"2026-06-19 02:00\",\n        \"temperature_2m\": 31.70199966430664,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 9.832679748535156,\n        \"winddirection_10m\": 113.74950408935547,\n        \"windgusts_10m\": 23.759998321533203,\n        \"cloudcover\": 0.0\n      },\n      {\n        \"date\": \"2026-06-19 03:00\",\n        \"temperature_2m\": 30.902000427246094,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 9.6932954788208,\n        \"winddirection_10m\": 105.06854248046875,\n        \"windgusts_10m\": 23.03999900817871,\n        \"cloudcover\": 1.0\n      },\n      {\n        \"date\": \"2026-06-19 04:00\",\n        \"temperature_2m\": 30.802000045776367,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 0.0,\n        \"windspeed_10m\": 8.55710220336914,\n        \"winddirection_10m\": 104.62091827392578,\n        \"windgusts_10m\": 19.440000534057617,\n        \"cloudcover\": 3.0\n      },\n      {\n        \"date\": \"2026-06-19 05:00\",\n        \"temperature_2m\": 29.601999282836914,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 12.015588760375977,\n        \"winddirection_10m\": 98.61557006835938,\n        \"windgusts_10m\": 26.280000686645508,\n        \"cloudcover\": 5.0\n      },\n      {\n        \"date\": \"2026-06-19 06:00\",\n        \"temperature_2m\": 27.601999282836914,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 12.261157989501953,\n        \"winddirection_10m\": 86.63361358642578,\n        \"windgusts_10m\": 27.719999313354492,\n        \"cloudcover\": 17.0\n      },\n      {\n        \"date\": \"2026-06-19 07:00\",\n        \"temperature_2m\": 28.45199966430664,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 11.92898941040039,\n        \"winddirection_10m\": 95.19434356689453,\n        \"windgusts_10m\": 22.68000030517578,\n        \"cloudcover\": 39.0\n      },\n      {\n        \"date\": \"2026-06-19 08:00\",\n        \"temperature_2m\": 28.851999282836914,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 11.901798248291016,\n        \"winddirection_10m\": 93.4681625366211,\n        \"windgusts_10m\": 33.119998931884766,\n        \"cloudcover\": 5.0\n      },\n      {\n        \"date\": \"2026-06-19 09:00\",\n        \"temperature_2m\": 27.851999282836914,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 11.770402908325195,\n        \"winddirection_10m\": 113.4287109375,\n        \"windgusts_10m\": 29.51999855041504,\n        \"cloudcover\": 10.0\n      },\n      {\n        \"date\": \"2026-06-19 10:00\",\n        \"temperature_2m\": 28.152000427246094,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 12.722829818725586,\n        \"winddirection_10m\": 115.11480712890625,\n        \"windgusts_10m\": 28.079999923706055,\n        \"cloudcover\": 99.0\n      },\n      {\n        \"date\": \"2026-06-19 11:00\",\n        \"temperature_2m\": 27.652000427246094,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 3.219938039779663,\n        \"winddirection_10m\": 153.4350128173828,\n        \"windgusts_10m\": 20.15999984741211,\n        \"cloudcover\": 100.0\n      },\n      {\n        \"date\": \"2026-06-19 12:00\",\n        \"temperature_2m\": 27.95199966430664,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 95.0,\n        \"windspeed_10m\": 16.595178604125977,\n        \"winddirection_10m\": 155.65892028808594,\n        \"windgusts_10m\": 17.639999389648438,\n        \"cloudcover\": 100.0\n      },\n      {\n        \"date\": \"2026-06-19 13:00\",\n        \"temperature_2m\": 22.45199966430664,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 45.0,\n        \"windspeed_10m\": 20.929595947265625,\n        \"winddirection_10m\": 3.94510817527771,\n        \"windgusts_10m\": 25.559999465942383,\n        \"cloudcover\": 100.0\n      },\n      {\n        \"date\": \"2026-06-19 14:00\",\n        \"temperature_2m\": 21.601999282836914,\n        \"precipitation\": 2.799999952316284,\n        \"snowfall\": 0.0,\n        \"weathercode\": 63.0,\n        \"windspeed_10m\": 16.299694061279297,\n        \"winddirection_10m\": 353.659912109375,\n        \"windgusts_10m\": 29.51999855041504,\n        \"cloudcover\": 100.0\n      },\n      {\n        \"date\": \"2026-06-19 15:00\",\n        \"temperature_2m\": 23.101999282836914,\n        \"precipitation\": 0.20000000298023224,\n        \"snowfall\": 0.0,\n        \"weathercode\": 51.0,\n        \"windspeed_10m\": 7.594208240509033,\n        \"winddirection_10m\": 121.42951965332031,\n        \"windgusts_10m\": 14.75999927520752,\n        \"cloudcover\": 100.0\n      },\n      {\n        \"date\": \"2026-06-19 16:00\",\n        \"temperature_2m\": 24.70199966430664,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 3.0,\n        \"windspeed_10m\": 8.287821769714355,\n        \"winddirection_10m\": 87.510498046875,\n        \"windgusts_10m\": 18.719999313354492,\n        \"cloudcover\": 100.0\n      },\n      {\n        \"date\": \"2026-06-19 17:00\",\n        \"temperature_2m\": 25.052000045776367,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 3.0,\n        \"windspeed_10m\": 4.680000305175781,\n        \"winddirection_10m\": 112.61991119384766,\n        \"windgusts_10m\": 8.279999732971191,\n        \"cloudcover\": 99.0\n      },\n      {\n        \"date\": \"2026-06-19 18:00\",\n        \"temperature_2m\": 25.402000427246094,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 3.0,\n        \"windspeed_10m\": 6.489992141723633,\n        \"winddirection_10m\": 109.44012451171875,\n        \"windgusts_10m\": 10.799999237060547,\n        \"cloudcover\": 100.0\n      },\n      {\n        \"date\": \"2026-06-19 19:00\",\n        \"temperature_2m\": 25.052000045776367,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 3.0,\n        \"windspeed_10m\": 13.698933601379395,\n        \"winddirection_10m\": 86.9872817993164,\n        \"windgusts_10m\": 18.35999870300293,\n        \"cloudcover\": 84.0\n      },\n      {\n        \"date\": \"2026-06-19 20:00\",\n        \"temperature_2m\": 25.601999282836914,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 3.0,\n        \"windspeed_10m\": 13.441070556640625,\n        \"winddirection_10m\": 110.37651824951172,\n        \"windgusts_10m\": 24.84000015258789,\n        \"cloudcover\": 100.0\n      },\n      {\n        \"date\": \"2026-06-19 21:00\",\n        \"temperature_2m\": 25.402000427246094,\n        \"precipitation\": 2.4000000953674316,\n        \"snowfall\": 0.0,\n        \"weathercode\": 80.0,\n        \"windspeed_10m\": 3.5638179779052734,\n        \"winddirection_10m\": 315.0000915527344,\n        \"windgusts_10m\": 7.199999809265137,\n        \"cloudcover\": 100.0\n      },\n      {\n        \"date\": \"2026-06-19 22:00\",\n        \"temperature_2m\": 25.70199966430664,\n        \"precipitation\": 0.7000000476837158,\n        \"snowfall\": 0.0,\n        \"weathercode\": 53.0,\n        \"windspeed_10m\": 15.815435409545898,\n        \"winddirection_10m\": 78.17853546142578,\n        \"windgusts_10m\": 32.76000213623047,\n        \"cloudcover\": 80.0\n      },\n      {\n        \"date\": \"2026-06-19 23:00\",\n        \"temperature_2m\": 26.50200080871582,\n        \"precipitation\": 0.0,\n        \"snowfall\": 0.0,\n        \"weathercode\": 3.0,\n        \"windspeed_10m\": 13.397611618041992,\n        \"winddirection_10m\": 96.17008209228516,\n        \"windgusts_10m\": 31.68000030517578,\n        \"cloudcover\": 100.0\n      }\n    ]\n  }\n]",
+          "tool_call_id": "call_3ZW8D8JToFCgCtE28Kc2MfgG",
+          "smarter_is_new": true
+        },
+        {
+          "role": "assistant",
+          "audio": null,
+          "content": "The current weather in Dallas, TX is as follows:\n\n- **Temperature**: 25.6\u00b0C\n- **Precipitation**: 0.0 mm\n- **Cloud Cover**: 100%\n- **Windspeed**: 13.4 km/h\n- **Wind Direction**: 110\u00b0\n\nIf you need more detailed information or a forecast, feel free to ask!",
+          "refusal": null,
+          "tool_calls": null,
+          "annotations": [],
+          "function_call": null,
+          "smarter_is_new": true
+        },
+        {
+          "role": "smarter",
+          "content": "openai prompt charges: 3437 prompt tokens, 82 completion tokens = 3519 total tokens charged.",
+          "smarter_is_new": true
+        }
+      ],
+      "prompt_tool_call_history": [
+        {
+          "id": 1,
+          "prompt": {
+            "id": 2,
+            "created_at": "2026-06-19T20:18:48.611761Z",
+            "updated_at": "2026-06-19T20:18:48.611788Z",
+            "name": "",
+            "description": "",
+            "version": "1.0.0",
+            "annotations": [],
+            "session_key": "25b6ccf51e920b01b92868a7b2fc3ce8ba0f90d39738871ebdbfe2265c9656ca",
+            "ip_address": "192.168.65.1",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+            "url": "http://localhost:9357/workbench/llm-clients/rMTAwMDAwNwx/config/",
+            "user_profile": 1,
+            "chatbot": 7
+          },
+          "created_at": "2026-06-19T20:33:26.611432Z",
+          "updated_at": "2026-06-19T20:33:26.611460Z",
+          "function_name": "get_current_weather",
+          "function_args": "{'location': 'Dallas, TX'}",
+          "request": [
+            {
+              "model": "gpt-4o-mini",
+              "tools": [
                 {
-                    "role": "system",
-                    "content": "The current date/time is Monday, 2025-12-08T13:37:26+0000\nYou are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n\n\nAnd also:\nYou are a helpful student advisor at the fictional Stackademy University that only offers computer science degrees programs. Whenever possible you should defer to the tool calls provided for additional information about the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University should be answered with \"I am sorry, but I can only provide information about the courses offered by Stackademy University.\"\n",
-                    "smarter_is_new": false
+                  "type": "function",
+                  "function": {
+                    "name": "get_current_weather",
+                    "parameters": {
+                      "type": "object",
+                      "required": [
+                        "location"
+                      ],
+                      "properties": {
+                        "unit": {
+                          "enum": [
+                            "metric",
+                            "uscs"
+                          ],
+                          "type": "string",
+                          "description": "Unit system for weather data. Defaults to celsius if not provided."
+                        },
+                        "location": {
+                          "type": "string",
+                          "description": "The city and state, e.g. San Francisco, CA"
+                        }
+                      },
+                      "additional_properties": false
+                    },
+                    "description": "Get the current weather and 24-hour forecast for a given location."
+                  }
+                }
+              ],
+              "api_key": "****IAUA",
+              "api_url": "https://api.openai.com/v1/",
+              "messages": [
+                {
+                  "role": "system",
+                  "content": "The current date/time is Friday, 2026-06-19T20:18:48+0000\nYou are a helpful weather forecaster. You respond only to questions about the weather. You answer all weather questions using the get_current_weather function provided to you. You NEVER attempt to provide weather information yourself. If you are unable to provide the necessary parameters to the get_current_weather function, then you ask the user for clarification. If you are still unable to provide the necessary parameters, you inform the user that you are unable to help them at this time."
                 },
                 {
-                    "role": "assistant",
-                    "content": "Welcome to Stackademy! How can I help you today?",
-                    "smarter_is_new": false
+                  "role": "assistant",
+                  "content": "Welcome to the Weather LLMClient! How can I help you today?"
                 },
                 {
-                    "role": "assistant",
-                    "content": "Some example prompts to get you started:\r\n\r\nDo you offer any courses on AI?\r\nMy budget is $1,000. What courses can I take?\r\nI want to study programming. What do you suggest?\r\n",
-                    "smarter_is_new": false
+                  "role": "assistant",
+                  "content": "Some example prompts to get you started:\r\n\r\nwhat_is_the_weather_in_san_francisco?\r\ni_was_born_december_31,_1966._how_many_days_old_am_i?\r\nwhat_courses_does_stackademy_offer_about_web_development?\r\n"
                 },
                 {
-                    "role": "user",
-                    "content": "Do you offer any courses on AI?",
-                    "smarter_is_new": false
+                  "role": "user",
+                  "content": "what's the weather in novia scotia"
                 },
                 {
-                    "role": "smarter",
-                    "content": "Smarter selected this plugin: stackademy_sql",
-                    "smarter_is_new": false
+                  "role": "assistant",
+                  "audio": null,
+                  "content": "Could you please specify a city or town in Nova Scotia for the weather information?",
+                  "refusal": null,
+                  "tool_calls": null,
+                  "annotations": [],
+                  "function_call": null
                 },
                 {
-                    "role": "smarter",
-                    "content": "Prompt configuration: llm=openai, model=gpt-4o-mini, temperature=0.5, max_completion_tokens=2048, tool_choice=auto.",
-                    "smarter_is_new": true
+                  "role": "user",
+                  "content": "whats the weather in dallas, tx"
+                }
+              ],
+              "temperature": 0.5,
+              "tool_choice": "auto",
+              "max_completion_tokens": 256
+            }
+          ],
+          "response": [
+            {
+              "id": "chatcmpl-DsaBwGFux78LFJe6qMrYK93CyrUth",
+              "model": "gpt-4o-mini-2024-07-18",
+              "usage": {
+                "total_tokens": 339,
+                "prompt_tokens": 322,
+                "completion_tokens": 17,
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
                 },
+                "completion_tokens_details": {
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "accepted_prediction_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                }
+              },
+              "object": "chat.completion",
+              "choices": [
                 {
-                    "role": "smarter",
-                    "content": "Tool presented: get_current_weather(location: The city and state, e.g. San Francisco, CA, unit: METRIC, USCS) - Get the current weather in a given location ",
-                    "smarter_is_new": true
-                },
-                {
-                    "role": "smarter",
-                    "content": "Tool presented: smarter_plugin_0000000011(max_cost: the maximum cost that a student is willing to pay for a course., description: areas of specialization for courses in the catalogue.) - returns up to 10 rows of course detail data, filtered by the maximum cost a student is willing to pay for a course and the area of specialization.\n ",
-                    "smarter_is_new": true
-                },
-                {
-                    "role": "smarter",
-                    "content": "openai prompt charges: 410 prompt tokens, 20 completion tokens = 430 total tokens charged.",
-                    "smarter_is_new": true
-                },
-                {
+                  "index": 0,
+                  "message": {
                     "role": "assistant",
                     "audio": null,
                     "content": null,
                     "refusal": null,
                     "tool_calls": [
-                        {
-                            "id": "call_Rvv0U5O2cLgOeYBVUMQSVfMn",
-                            "type": "function",
-                            "function": {
-                                "name": "smarter_plugin_0000000011",
-                                "arguments": "{\"description\":\"AI\"}"
-                            }
+                      {
+                        "id": "call_3ZW8D8JToFCgCtE28Kc2MfgG",
+                        "type": "function",
+                        "function": {
+                          "name": "get_current_weather",
+                          "arguments": "{\"location\":\"Dallas, TX\"}"
                         }
+                      }
                     ],
                     "annotations": [],
-                    "function_call": null,
-                    "smarter_is_new": true
-                },
-                {
-                    "role": "smarter",
-                    "content": "openai called this tool: smarter_plugin_0000000011({'description': 'AI'})",
-                    "smarter_is_new": true
-                },
-                {
-                    "name": "smarter_plugin_0000000011",
-                    "role": "tool",
-                    "content": "SqlPlugin stackademy_sql response: [\n  {\n    \"course_code\": \"CS210\",\n    \"course_name\": \"Artificial Intelligence\",\n    \"description\": \"Introduction to AI concepts and techniques.\",\n    \"cost\": \"700.00\",\n    \"prerequisite_course_code\": \"CS107\",\n    \"prerequisite_course_name\": \"Algorithms\"\n  },\n  {\n    \"course_code\": \"CS316\",\n    \"course_name\": \"AI for Robotics\",\n    \"description\": \"Applying AI techniques to robotics.\",\n    \"cost\": \"850.00\",\n    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\": \"Machine Learning\"\n  },\n  {\n    \"course_code\": \"CS319\",\n    \"course_name\": \"AI in Healthcare\",\n    \"description\": \"Applications of AI in healthcare.\",\n    \"cost\": \"800.00\",\n    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\": \"Machine Learning\"\n  },\n  {\n    \"course_code\": \"CS405\",\n    \"course_name\": \"AI Capstone Project\",\n    \"description\": \"Team-based AI project.\",\n    \"cost\": \"1000.00\",\n    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\": \"Machine Learning\"\n  }\n]",
-                    "tool_call_id": "call_Rvv0U5O2cLgOeYBVUMQSVfMn",
-                    "smarter_is_new": true
-                },
-                {
-                    "role": "assistant",
-                    "audio": null,
-                    "content": "Yes, Stackademy University offers several courses on Artificial Intelligence (AI). Here are some options:\n\n1. **Course Code:** CS210  \n   **Course Name:** Artificial Intelligence  \n   **Description:** Introduction to AI concepts and techniques.  \n   **Cost:** $700.00  \n   **Prerequisite:** CS107 - Algorithms  \n\n2. **Course Code:** CS316  \n   **Course Name:** AI for Robotics  \n   **Description:** Applying AI techniques to robotics.  \n   **Cost:** $850.00  \n   **Prerequisite:** CS301 - Machine Learning  \n\n3. **Course Code:** CS319  \n   **Course Name:** AI in Healthcare  \n   **Description:** Applications of AI in healthcare.  \n   **Cost:** $800.00  \n   **Prerequisite:** CS301 - Machine Learning  \n\n4. **Course Code:** CS405  \n   **Course Name:** AI Capstone Project  \n   **Description:** Team-based AI project.  \n   **Cost:** $1000.00  \n   **Prerequisite:** CS301 - Machine Learning  \n\nIf you're interested in any specific course or need more details, feel free to ask!",
-                    "refusal": null,
-                    "tool_calls": null,
-                    "annotations": [],
-                    "function_call": null,
-                    "smarter_is_new": true
-                },
-                {
-                    "role": "smarter",
-                    "content": "openai prompt charges: 559 prompt tokens, 233 completion tokens = 792 total tokens charged.",
-                    "smarter_is_new": true
+                    "function_call": null
+                  },
+                  "logprobs": null,
+                  "finish_reason": "tool_calls"
                 }
-            ],
-            "chat_tool_call_history": [],
-            "chat_plugin_usage_history": [
-                {
-                    "id": 3,
-                    "chat": {
-                        "id": 6,
-                        "created_at": "2025-12-08T13:37:26.056430Z",
-                        "updated_at": "2025-12-08T13:37:26.056441Z",
-                        "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
-                        "ip_address": "172.66.0.243",
-                        "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
-                        "url": "http://localhost:9357/api/v1/llm-clients/9/config/",
-                        "account": 1,
-                        "llm_client": 9
-                    },
-                    "created_at": "2025-12-08T13:37:37.279189Z",
-                    "updated_at": "2025-12-08T13:37:37.279217Z",
-                    "input_text": "Do you offer any courses on AI?",
-                    "plugin": 11
-                }
-            ],
-            "llm_client_request_history": [
-                {
-                    "id": 4,
-                    "created_at": "2025-12-08T13:37:33.303852Z",
-                    "updated_at": "2025-12-08T13:37:33.303874Z",
-                    "request": {
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": "The current date/time is Monday, 2025-12-08T13:37:26+0000\nYou are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n"
-                            },
-                            {
-                                "role": "assistant",
-                                "content": "Welcome to Stackademy! How can I help you today?"
-                            },
-                            {
-                                "role": "assistant",
-                                "content": "Some example prompts to get you started:\r\n\r\nDo you offer any courses on AI?\r\nMy budget is $1,000. What courses can I take?\r\nI want to study programming. What do you suggest?\r\n"
-                            },
-                            {
-                                "role": "user",
-                                "content": "Do you offer any courses on AI?"
-                            }
-                        ],
-                        "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7"
-                    },
-                    "is_aggregation": false
-                }
-            ],
-            "plugin_selector_history": []
-        },
-        "meta_data": {
-            "ready": true,
-            "name": "stackademy_sql",
-            "api_host": "api.localhost:9357",
-            "llm_client_id": null,
-            "llm_client_name": null,
-            "llm_client_custom_domain": null,
-            "environment_api_domain": "api.localhost:9357",
-            "err": "LLMClientHelper.__init__() not an llm_client. Quitting. http://localhost:9357/api/v1/llm-clients/9/chat/config/",
-            "is_custom_domain": false,
-            "is_deployed": false,
-            "is_valid": true,
-            "is_authentication_required": false,
-            "llm_client": {
-                "id": 9,
-                "created_at": "2025-11-21T03:20:13.143128Z",
-                "updated_at": "2025-11-21T03:20:13.176363Z",
-                "account": {
-                    "accountNumber": "3141-5926-5359"
-                },
-                "name": "stackademy_sql",
-                "description": "Stackademy University course catalogue inquiries using the Stackademy SQL plugin.",
-                "version": "1.0.0",
-                "subdomain": null,
-                "custom_domain": null,
-                "deployed": false,
-                "provider": "openai",
-                "default_model": "gpt-4o-mini",
-                "default_system_role": "You are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n",
-                "default_temperature": 0.5,
-                "default_max_tokens": 1024,
-                "app_name": "Stackademy",
-                "app_assistant": "Stanley",
-                "app_welcome_message": "Welcome to Stackademy! How can I help you today?",
-                "app_example_prompts": [
-                    "Do you offer any courses on AI?",
-                    "My budget is $1,000. What courses can I take?",
-                    "I want to study programming. What do you suggest?"
-                ],
-                "app_placeholder": "Ask me anything about Stackademy courses...",
-                "app_info_url": "https://stackademy.edu/online-courses",
-                "app_background_image_url": null,
-                "app_logo_url": null,
-                "app_file_attachment": null,
-                "dns_verification_status": "Not Verified",
-                "tls_certificate_issuance_status": "No Certificate",
-                "url_llm_client": "http://localhost:9357/api/v1/llm-clients/9/chat/"
-            },
-            "url": "http://localhost:9357/api/v1/llm-clients/9/chat/config/",
-            "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
-            "auth_header": "Bearer****",
-            "api_token": null,
-            "data": {
-                "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7"
-            },
-            "is_smarter_api": true,
-            "is_llm_client": false,
-            "is_llm_client_smarter_api_url": false,
-            "is_llm_client_named_url": false,
-            "is_llm_client_sandbox_url": false,
-            "is_llm_client_cli_api_url": false,
-            "is_default_domain": false,
-            "path": "/api/v1/llm-clients/9/chat/config/",
-            "root_domain": "localhost",
-            "subdomain": "",
-            "api_subdomain": null,
-            "domain": "localhost:9357",
-            "timestamp": "2025-12-08T13:37:43.051436",
-            "unique_client_string": "3141-5926-5359.http://localhost:9357/api/v1/llm-clients/9/chat/config/.Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36.172.66.0.243.2025-12-08T13:37:43.051436",
-            "client_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
-            "ip_address": "172.66.0.243",
-            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
-            "parsed_url": "ParseResult(scheme='http', netloc='localhost:9357', path='/api/v1/llm-clients/9/chat/config/', params='', query='session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7', fragment='')",
-            "request": true,
-            "qualified_request": true,
-            "url_path_parts": [
-                "api",
-                "v1",
-                "llm_clients",
-                "9",
-                "chat",
-                "config"
-            ],
-            "params": {
-                "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7"
-            },
-            "uid": null,
-            "cache_key": "024304946256a341bf7796262884d72a51478dceb0e8fcdf907e37886e52ab90",
-            "is_config": true,
-            "is_dashboard": false,
-            "is_workbench": false,
-            "is_environment_root_domain": false,
-            "account": {
-                "accountNumber": "3141-5926-5359"
-            },
-            "user": {
-                "username": "admin",
-                "email": "admin@smarter.sh"
-            },
-            "user_profile": {
-                "user": {
-                    "username": "admin",
-                    "email": "admin@smarter.sh"
-                },
-                "account": {
-                    "accountNumber": "3141-5926-5359"
-                }
-            },
-            "class_name": "LLMClientHelper"
-        },
-        "plugins": {
-            "meta_data": {
-                "total_plugins": 1,
-                "plugins_returned": 1
-            },
-            "plugins": [
-                {
-                    "id": 13,
-                    "pluginMeta": {
-                        "name": "stackademy_sql",
-                        "account": {
-                            "accountNumber": "3141-5926-5359"
-                        },
-                        "description": "Online course catalogue inquiries for fictional Stackademy University that only offers computer science degrees programs.",
-                        "pluginClass": "sql",
-                        "version": "0.1.0",
-                        "author": {
-                            "user": {
-                                "username": "admin",
-                                "email": "admin@smarter.sh"
-                            },
-                            "account": {
-                                "accountNumber": "3141-5926-5359"
-                            }
-                        },
-                        "tags": []
-                    },
-                    "createdAt": "2025-11-21T03:20:13.178700Z",
-                    "updatedAt": "2025-11-21T03:20:13.178708Z",
-                    "llm_client": 9
-                }
-            ]
+              ],
+              "created": 1781901204,
+              "service_tier": "default",
+              "system_fingerprint": "fp_21a6336ee1"
+            }
+          ],
+          "plugin": null
         }
+      ],
+      "prompt_plugin_usage_history": [],
+      "chatbot_request_history": [],
+      "plugin_selector_history": []
     },
-    "api": "smarter.sh/v1",
-    "thing": "ChatConfig",
-    "metadata": {
-        "command": "chat_config"
+    "meta_data": {
+      "account": {
+        "accountNumber": "3141-5926-5359"
+      },
+      "am_ready": true,
+      "api_host": "api.localhost:9357",
+      "api_subdomain": "localhost:9357",
+      "api_token": null,
+      "auth_header": "Bearer****",
+      "cache_key": "84acc9cddbaf2e3b1fd7831f5ccc07fc62dad8bc0f3f4d4215ab5bd2aec877e5",
+      "data": {
+        "session_key": "25b6ccf51e920b01b92868a7b2fc3ce8ba0f90d39738871ebdbfe2265c9656ca"
+      },
+      "domain": "localhost:9357",
+      "environment_api_domain": "api.localhost:9357",
+      "ip_address": "192.168.65.1",
+      "is_authentication_required": true,
+      "is_config": true,
+      "is_custom_domain": false,
+      "is_dashboard": false,
+      "is_default_domain": false,
+      "is_deployed": false,
+      "is_environment_root_domain": false,
+      "is_helper_ready": true,
+      "is_chatbot": true,
+      "is_chatbot_cli_api_url": false,
+      "is_chatbot_named_url": false,
+      "is_chatbot_sandbox_url": true,
+      "is_chatbot_smarter_api_url": false,
+      "is_smarter_api": false,
+      "is_workbench": false,
+      "chatbot": {
+        "id": 7,
+        "hashed_id": "rMTAwMDAwNwx",
+        "created_at": "2026-06-19T20:06:44.809930Z",
+        "updated_at": "2026-06-19T20:06:44.935235Z",
+        "name": "weather",
+        "description": "an llm_client that predicts the weather.",
+        "version": "0.1.0",
+        "tags": [
+          "talk_talk_talk",
+          "weather",
+          "forecast"
+        ],
+        "annotations": [
+          {
+            "smarter.sh/tests/focus_level": "low"
+          },
+          {
+            "smarter.sh/tests/purpose": "Provide an example configuration for OpenAI API Function Calling."
+          },
+          {
+            "smarter.sh/tests/last_updated": "2025-12-31"
+          },
+          {
+            "smarter.sh/tests/documentation": "https://docs.tests.edu/example-function-calling"
+          },
+          {
+            "smarter.sh/tests/owner": "Lawrence McDaniel"
+          }
+        ],
+        "user_profile": {
+          "user": {
+            "username": "admin",
+            "email": "admin@smarter.sh"
+          },
+          "account": {
+            "accountNumber": "3141-5926-5359"
+          }
+        },
+        "functions": [
+          {
+            "id": 3,
+            "created_at": "2026-06-19T20:06:44.845330Z",
+            "updated_at": "2026-06-19T20:06:44.845340Z",
+            "name": "get_current_weather",
+            "chatbot": 7
+          }
+        ],
+        "plugins": [],
+        "custom_domains": [],
+        "api_keys": [],
+        "rfc1034_compliant_name": "weather",
+        "default_system_role": "The current date/time is Friday, 2026-06-19T21:16:47+0000\nYou are a helpful weather forecaster. You respond only to questions about the weather. You answer all weather questions using the get_current_weather function provided to you. You NEVER attempt to provide weather information yourself. If you are unable to provide the necessary parameters to the get_current_weather function, then you ask the user for clarification. If you are still unable to provide the necessary parameters, you inform the user that you are unable to help them at this time.",
+        "base_api_domain": "api.local.smarter.sh",
+        "base_default_host": "3141-5926-5359.api.local.smarter.sh",
+        "default_host": "weather.3141-5926-5359.api.local.smarter.sh",
+        "default_url": "http://weather.3141-5926-5359.api.local.smarter.sh/",
+        "custom_host": null,
+        "custom_url": null,
+        "sandbox_host": "localhost:9357",
+        "sandbox_url": "http://localhost:9357/workbench/llm-clients/rMTAwMDAwNwx/",
+        "manifest_url": "http://localhost:9357/workbench/llm-clients/rMTAwMDAwNwx/manifest/",
+        "hostname": "localhost:9357",
+        "url": "http://localhost:9357/workbench/llm-clients/rMTAwMDAwNwx/",
+        "url_chatbot": "http://localhost:9357/api/v1/llm-clients/rMTAwMDAwNwx/prompt/",
+        "url_chat_config": "http://localhost:9357/api/v1/llm-clients/rMTAwMDAwNwx/config/",
+        "url_chatapp": "http://localhost:9357/workbench/llm-clients/rMTAwMDAwNwx/prompt/",
+        "ready": true,
+        "is_authentication_required": false,
+        "deployed": false,
+        "provider": "openai",
+        "default_model": "gpt-4o-mini",
+        "default_temperature": 0.5,
+        "default_max_tokens": 256,
+        "app_name": "Weather LLMClient",
+        "app_assistant": "Lawrence",
+        "app_welcome_message": "Welcome to the Weather LLMClient! How can I help you today?",
+        "app_example_prompts": [
+          "what_is_the_weather_in_san_francisco?",
+          "i_was_born_december_31,_1966._how_many_days_old_am_i?",
+          "what_courses_does_stackademy_offer_about_web_development?"
+        ],
+        "app_placeholder": "Ask me about the weather...",
+        "app_info_url": "https://smarter.sh",
+        "app_background_image_url": null,
+        "app_logo_url": "https://cdn.smarter.sh/images/logo/smarter-crop.png",
+        "app_file_attachment": false,
+        "dns_verification_status": "Not Verified",
+        "tls_certificate_issuance_status": "No Certificate",
+        "subdomain": null,
+        "custom_domain": null
+      },
+      "chatbot_custom_domain": null,
+      "chatbot_id": 7,
+      "chatbot_name": "llm",
+      "name": "weather",
+      "params": {
+        "session_key": "25b6ccf51e920b01b92868a7b2fc3ce8ba0f90d39738871ebdbfe2265c9656ca"
+      },
+      "parsed_url": "ParseResult(scheme='http', netloc='localhost:9357', path='/workbench/llm-clients/rMTAwMDAwNwx/config/', params='', query='session_key=25b6ccf51e920b01b92868a7b2fc3ce8ba0f90d39738871ebdbfe2265c9656ca', fragment='')",
+      "path": "/workbench/llm-clients/rMTAwMDAwNwx/config/",
+      "qualified_request": true,
+      "ready": true,
+      "request": true,
+      "rfc1034_compliant_name": "weather",
+      "root_domain": "localhost",
+      "session_key": "25b6ccf51e920b01b92868a7b2fc3ce8ba0f90d39738871ebdbfe2265c9656ca",
+      "srm_ready": true,
+      "subdomain": null,
+      "timestamp": "2026-06-19T21:16:47.843307",
+      "uid": null,
+      "unique_client_string": "3141-5926-5359http://localhost:9357/workbench/llm-clients/rMTAwMDAwNwx/config/?session_key=25b6ccf51e920b01b92868a7b2fc3ce8ba0f90d39738871ebdbfe2265c9656caMozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36192.168.65.1",
+      "url": "http://localhost:9357/workbench/llm-clients/rMTAwMDAwNwx/config/?session_key=25b6ccf51e920b01b92868a7b2fc3ce8ba0f90d39738871ebdbfe2265c9656ca",
+      "url_path_parts": [
+        "workbench",
+        "llm_clients",
+        "r_mt_aw_md_aw_nwx",
+        "config"
+      ],
+      "user": {
+        "username": "admin",
+        "email": "admin@smarter.sh"
+      },
+      "user_profile": {
+        "user": {
+          "username": "admin",
+          "email": "admin@smarter.sh"
+        },
+        "account": {
+          "accountNumber": "3141-5926-5359"
+        }
+      },
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+    },
+    "plugins": {
+      "meta_data": {
+        "total_plugins": 0,
+        "plugins_returned": 0
+      },
+      "plugins": []
+    },
+    "functions": {
+      "meta_data": {
+        "total_functions": 1,
+        "functions_returned": 1
+      },
+      "functions": [
+        {
+          "id": 3,
+          "created_at": "2026-06-19T20:06:44.845330Z",
+          "updated_at": "2026-06-19T20:06:44.845340Z",
+          "name": "get_current_weather",
+          "chatbot": 7
+        }
+      ]
     }
+  }
 }

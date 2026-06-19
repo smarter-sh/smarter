@@ -2,4 +2,4 @@
 
 from smarter.lib.journal.enum import SmarterJournalThings
 
-MANIFEST_KIND = SmarterJournalThings.CHAT.value
+MANIFEST_KIND = SmarterJournalThings.PROMPT.value
