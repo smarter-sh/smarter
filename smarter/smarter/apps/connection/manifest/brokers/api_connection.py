@@ -273,8 +273,6 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :return: The manifest as a ``SAMApiConnection`` Pydantic model, or ``None`` if not initialized.
         :rtype: Optional[SAMApiConnection]
         """
-        if self._ready:
-            return self._manifest
         if self._manifest:
             if not isinstance(self._manifest, SAMApiConnection):
                 raise SAMConnectionBrokerError(
@@ -577,11 +575,15 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 connection.timeout = 60
                 connection.save()
         """
-        if self._connection or self._ready:
+        if self._connection:
             return self._connection
 
         name = str(self.to_snake_case(self.name))  # type: ignore
         if not name:
+            logger.warning(
+                "%s.connection() name is missing. Cannot retrieve or create ApiConnection.",
+                self.formatted_class_name,
+            )
             return None
         self._connection = ApiConnection.objects.filter(name=name).with_read_permission_for(user=self.user).first()  # type: ignore
         if self._connection:
@@ -633,7 +635,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     self.name or "(name is missing)",
                     self.account or "(account is missing)",
                 )
-
+        if not self._connection:
+            logger.warning(
+                "%s.connection() could not retrieve or create ApiConnection %s for account %s",
+                self.formatted_class_name,
+                self.name or "(name is missing)",
+                self.user_profile or "(user profile is missing)",
+            )
         return self._connection
 
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -830,7 +838,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             {
                 "apiVersion": "smarter.sh/v1",          # read only
                 "kind": "ApiConnection",                # read only
-                "metadata": {                           # updated in super().apply()
+                "metadata": {
                     "name": "testf232a0619cb19da0",
                     "description": "new description",
                     "version": "1.0.0"
@@ -866,14 +874,15 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :raises SAMConnectionBrokerError: If an error occurs during update or save.
         """
         logger.debug(
-            "%s.apply() called for %s %s args: %s kwargs: %s",
+            "%s.apply() called for %s %s args: %s kwargs: %s. Loader: %s, Manifest: %s",
             self.formatted_class_name,
             self.kind,
             self.name,
             args,
             kwargs,
+            self.loader.manifest_metadata.get("name") if self.loader and self.loader.manifest_metadata else None,
+            self.manifest.metadata.name if self.manifest and self.manifest.metadata else None,
         )
-        super().apply(request, kwargs)
         updated = False
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
@@ -882,6 +891,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         if not self.user or not self.user.is_staff:
             raise SAMConnectionBrokerError(
                 message="Only account admins can apply api connection manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
+        if self.connection is None:
+            raise SAMBrokerErrorNotReady(
+                message="No connection found. Cannot apply manifest.",
                 thing=self.kind,
                 command=command,
             )

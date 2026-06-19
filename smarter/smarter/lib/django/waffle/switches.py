@@ -194,7 +194,7 @@ class SmarterWaffleSwitches:
         CACHE_LOGGING: SmarterWaffleSwitch(
             name=CACHE_LOGGING,
             comment="Enables detailed logging for caching operations including cache hits, misses, and errors.",
-            default=True,
+            default=False,
         ),
         PROMPT_LOGGING: SmarterWaffleSwitch(
             name=PROMPT_LOGGING,
@@ -229,7 +229,7 @@ class SmarterWaffleSwitches:
         LLM_CLIENT_HELPER_LOGGING: SmarterWaffleSwitch(
             name=LLM_CLIENT_HELPER_LOGGING,
             comment="Enables logging within the smarter.apps.llm_client.model.LLMClientHelper class.",
-            default=True,
+            default=False,
         ),
         CSRF_SUPPRESS_FOR_LLM_CLIENTS: SmarterWaffleSwitch(
             name=CSRF_SUPPRESS_FOR_LLM_CLIENTS,
@@ -274,12 +274,12 @@ class SmarterWaffleSwitches:
         ENABLE_MIDDLEWARE_SENSITIVE_FILES: SmarterWaffleSwitch(
             name=ENABLE_MIDDLEWARE_SENSITIVE_FILES,
             comment="Enables SmarterBlockSensitiveFilesMiddleware",
-            default=False,
+            default=True,
         ),
         ENABLE_MIDDLEWARE_EXCESSIVE_404: SmarterWaffleSwitch(
             name=ENABLE_MIDDLEWARE_EXCESSIVE_404,
             comment="Enables SmarterBlockExcessive404Middleware",
-            default=False,
+            default=True,
         ),
         ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH: SmarterWaffleSwitch(
             name=ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH,
@@ -314,12 +314,12 @@ class SmarterWaffleSwitches:
         ENABLE_MIDDLEWARE_SECURITY: SmarterWaffleSwitch(
             name=ENABLE_MIDDLEWARE_SECURITY,
             comment="Enables SmarterSecurityMiddleware",
-            default=False,
+            default=True,
         ),
         ENABLE_REACTAPP_DEBUG_MODE: SmarterWaffleSwitch(
             name=ENABLE_REACTAPP_DEBUG_MODE,
             comment="Enables React app debug mode within the Smarter React Prompt component.",
-            default=True,
+            default=False,
         ),
         ENABLE_NEW_USER_PASSWORD_EMAIL: SmarterWaffleSwitch(
             name=ENABLE_NEW_USER_PASSWORD_EMAIL,

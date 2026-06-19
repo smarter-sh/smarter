@@ -60,28 +60,28 @@ class LLMClientApiV1ReverseViews:
 
     # reverse() by hashed_id
     # --------------------------------------------------------------------------
-    llm_client_view_by_hashed_id = to_snake_case(LLMClientView) + BY_HASHED_ID
-    chat_config_view_by_hashed_id = to_snake_case(PromptConfigView) + BY_HASHED_ID
-    default_llm_client_api_view_by_hashed_id = to_snake_case(DefaultLLMClientApiView) + BY_HASHED_ID
+    llm_client_view_by_hashed_id = to_snake_case(LLMClientView.__name__) + BY_HASHED_ID
+    chat_config_view_by_hashed_id = to_snake_case(PromptConfigView.__name__) + BY_HASHED_ID
+    default_llm_client_api_view_by_hashed_id = to_snake_case(DefaultLLMClientApiView.__name__) + BY_HASHED_ID
 
     # legacy reverse() references by llm_client_id
     # --------------------------------------------------------------------------
-    chat_config_view_by_id = to_snake_case(PromptConfigView)
-    default_llm_client_api_view_by_id = to_snake_case(DefaultLLMClientApiView)
+    chat_config_view_by_id = to_snake_case(PromptConfigView.__name__)
+    default_llm_client_api_view_by_id = to_snake_case(DefaultLLMClientApiView.__name__)
 
     # currently no reverse() references to these named views.
     # --------------------------------------------------------------------------
-    llm_client_list_view = to_snake_case(LLMClientListView)
-    llm_client_view_by_id = to_snake_case(LLMClientView) + BY_ID
-    llm_client_plugin_list_view_by_id = to_snake_case(LLMClientPluginListView) + BY_ID
-    llm_client_plugin_view_by_id = to_snake_case(LLMClientPluginView) + BY_ID
-    llm_client_api_key_list_view_by_id = to_snake_case(LLMClientAPIKeyListView) + BY_ID
-    llm_client_api_key_view_by_id = to_snake_case(LLMClientAPIKeyView) + BY_ID
-    llm_client_custom_domain_list_view_by_id = to_snake_case(LLMClientCustomDomainListView) + BY_ID
-    llm_client_custom_domain_view_by_id = to_snake_case(LLMClientCustomDomainView) + BY_ID
-    llm_client_api_functions_by_id = to_snake_case(LLMClientFunctionsListView) + BY_ID
-    llm_client_functions_view_by_id = to_snake_case(LLMClientFunctionsView) + BY_ID
-    llm_client_function_plugin_list_view_by_id = to_snake_case(LLMClientPluginListView) + BY_ID
+    llm_client_list_view = to_snake_case(LLMClientListView.__name__)
+    llm_client_view_by_id = to_snake_case(LLMClientView.__name__) + BY_ID
+    llm_client_plugin_list_view_by_id = to_snake_case(LLMClientPluginListView.__name__) + BY_ID
+    llm_client_plugin_view_by_id = to_snake_case(LLMClientPluginView.__name__) + BY_ID
+    llm_client_api_key_list_view_by_id = to_snake_case(LLMClientAPIKeyListView.__name__) + BY_ID
+    llm_client_api_key_view_by_id = to_snake_case(LLMClientAPIKeyView.__name__) + BY_ID
+    llm_client_custom_domain_list_view_by_id = to_snake_case(LLMClientCustomDomainListView.__name__) + BY_ID
+    llm_client_custom_domain_view_by_id = to_snake_case(LLMClientCustomDomainView.__name__) + BY_ID
+    llm_client_api_functions_by_id = to_snake_case(LLMClientFunctionsListView.__name__) + BY_ID
+    llm_client_functions_view_by_id = to_snake_case(LLMClientFunctionsView.__name__) + BY_ID
+    llm_client_function_plugin_list_view_by_id = to_snake_case(LLMClientPluginListView.__name__) + BY_ID
 
 
 urlpatterns = [

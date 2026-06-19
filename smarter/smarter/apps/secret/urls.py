@@ -24,15 +24,15 @@ class SecretReverseNames:
 
     namespace = namespace
 
-    listview = to_snake_case(SecretListApiView)
-    detailview = to_snake_case(SecretDetailView)
+    listview = to_snake_case(SecretListApiView.__name__)
+    detailview = to_snake_case(SecretDetailView.__name__)
 
-    listview = to_snake_case(SecretListView)
-    listview_api = to_snake_case(SecretListApiView)
-    listview_api_all = to_snake_case(SecretListApiView) + "_all"
-    listview_api_clone = to_snake_case(SecretListApiCloneView)
-    listview_api_delete = to_snake_case(SecretListApiDeleteView)
-    listview_api_rename = to_snake_case(SecretListApiRenameView)
+    listview = to_snake_case(SecretListView.__name__)
+    listview_api = to_snake_case(SecretListApiView.__name__)
+    listview_api_all = to_snake_case(SecretListApiView.__name__) + "_all"
+    listview_api_clone = to_snake_case(SecretListApiCloneView.__name__)
+    listview_api_delete = to_snake_case(SecretListApiDeleteView.__name__)
+    listview_api_rename = to_snake_case(SecretListApiRenameView.__name__)
 
 
 app_name = namespace
@@ -60,5 +60,5 @@ urlpatterns = [
         SecretListApiRenameView.as_view(),
         name=SecretReverseNames.listview_api_rename,
     ),
-    path("secrets/<str:hashed_id>//", SecretDetailView.as_view(), name=SecretReverseNames.detailview),
+    path("secrets/<str:hashed_id>/", SecretDetailView.as_view(), name=SecretReverseNames.detailview),
 ]

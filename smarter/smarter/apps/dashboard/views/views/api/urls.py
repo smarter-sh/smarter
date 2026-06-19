@@ -15,14 +15,12 @@ app_name = namespace
 
 
 class DashboardApiReverseNames:
-    """
-    A class to hold the names of the dashboard views for easy reference throughout the codebase.
-    """
+    """A class to hold the names of the dashboard views for easy reference throughout the codebase."""
 
     namespace = namespace
 
-    my_resources = to_snake_case(MyResourcesView)
-    service_health = to_snake_case(ServiceHealthView)
+    my_resources = to_snake_case(MyResourcesView.__name__)
+    service_health = to_snake_case(ServiceHealthView.__name__)
 
 
 urlpatterns = [
