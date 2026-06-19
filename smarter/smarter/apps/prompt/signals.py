@@ -3,10 +3,6 @@
 
 from django.dispatch import Signal
 
-# prompt signals
-prompt_started = Signal()
-prompt_finished = Signal()
-
 # chat completion (aka text completion) signals
 chat_request = Signal()
 chat_response = Signal()
@@ -19,6 +15,9 @@ llm_tool_presented = Signal()
 llm_tool_requested = Signal()
 llm_tool_responded = Signal()
 
+# prompt signals
+prompt_started = Signal()
+prompt_finished = Signal()
 prompt_handler_console_output = Signal()
 prompt_session_invoked = Signal()
 prompt_config_invoked = Signal()
