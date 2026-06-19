@@ -1468,7 +1468,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: SmarterJournaledJsonResponse
         """
         raise SAMBrokerErrorNotImplemented(
-            message="prompt() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
+            message="prompt() not implemented", thing=self.thing, command=SmarterJournalCliCommands.PROMPT
         )
 
     @abstractmethod

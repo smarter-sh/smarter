@@ -609,7 +609,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 ),
                 safe=False,
                 thing=SmarterJournalThings(SmarterJournalThings.LLM_CLIENT),
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
                 status=HTTPStatus.NOT_FOUND.value,
                 stack_trace=traceback.format_exc(),
             )
@@ -624,7 +624,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 ),
                 safe=False,
                 thing=SmarterJournalThings(SmarterJournalThings.LLM_CLIENT),
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
                 status=HTTPStatus.NOT_FOUND.value,
                 stack_trace=traceback.format_exc(),
             )
@@ -659,7 +659,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         response = SmarterJournaledJsonResponse(
             request=request,
             data=response,
-            command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+            command=SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT),
             thing=SmarterJournalThings(SmarterJournalThings.LLM_CLIENT),
             status=HTTPStatus.OK.value,
             safe=False,
