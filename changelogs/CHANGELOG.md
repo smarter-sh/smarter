@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.6-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.6-alpha.1...v0.14.6-alpha.2) (2026-06-19)
+
+### Bug Fixes
+
+* self.manifest has to try to lazy-load the ORM model if it exists. otherwise we cannot describe() ([1fa9520](https://github.com/smarter-sh/smarter/commit/1fa9520133d587eacac1ab669f69f0f2c64bc3d7))
+
 ## [0.14.6-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.5...v0.14.6-alpha.1) (2026-06-19)
 
 ### Bug Fixes
