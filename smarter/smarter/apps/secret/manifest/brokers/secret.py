@@ -713,7 +713,7 @@ class SAMSecretBroker(AbstractBroker):
         """
         Apply the manifest by copying its data to the Django ORM model and saving it to the database.
 
-        This method ensures the manifest is loaded and validated before persisting it. Non-editable fields defined in `readonly_fields` are excluded from the ORM model prior to saving.
+        This method copies the manifest data to the corresponding Django ORM model and saves the model instance. Logging is performed to record the invocation and parameters.
 
         .. note::
 
@@ -746,7 +746,6 @@ class SAMSecretBroker(AbstractBroker):
            :meth:`django_orm_to_manifest_dict`
         """
         logger.debug("%s.apply() called", self.formatted_class_name)
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 

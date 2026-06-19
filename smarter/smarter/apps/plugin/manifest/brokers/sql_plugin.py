@@ -752,7 +752,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             args,
             kwargs,
         )
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 

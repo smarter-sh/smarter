@@ -824,13 +824,14 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The SAMLoader instance for this broker.
         :rtype: Optional[SAMLoader]
         """
-        if (self._loader and self._loader.ready) or self._ready:
+        if isinstance(self._loader, SAMLoader) and self._loader.ready:
             return self._loader
-        logger.debug(
-            "%s.loader() getter - loader is not ready. Current loader state: %s",
-            self.abstract_broker_logger_prefix,
-            self._loader,
-        )
+        if self._loader:
+            logger.warning(
+                "%s.loader() getter - loader is set but is not in a ready state.",
+                self.abstract_broker_logger_prefix,
+            )
+
         return None
 
     @loader.setter
@@ -1417,10 +1418,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # unpredictable downstream behavior.
         cache_invalidate.send(sender=self.__class__, user_profile=self.user_profile)
 
-    # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
+    @abstractmethod
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
         Apply a manifest, which works like an upsert operation.
+
+        This abstract method should be implemented by subclasses to provide
+        the logic for applying a manifest to create or update a resource.
 
         Designed
         around the Kubernetes ``kubectl apply`` command.
@@ -1444,14 +1448,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         .. todo:: Research why this is not an abstract method.
         """
-        logger.debug(
-            "%s.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
-            self.abstract_broker_logger_prefix,
-            request,
-            args,
-            kwargs,
-            self.account,
-            self.user,
+        raise SAMBrokerErrorNotImplemented(
+            message="apply() not implemented", thing=self.thing, command=SmarterJournalCliCommands.APPLY
         )
 
     @abstractmethod

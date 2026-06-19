@@ -832,7 +832,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.apply() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 

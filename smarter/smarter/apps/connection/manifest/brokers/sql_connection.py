@@ -634,11 +634,15 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 else:
                     print("No connection found or could not be created.")
         """
-        if self._connection or self._ready:
+        if self._connection:
             return self._connection
 
         name = self.to_snake_case(self.name)  # type: ignore
         if not name:
+            logger.warning(
+                "%s.connection() name is missing. Cannot retrieve or create connection.",
+                self.formatted_class_name,
+            )
             return None
 
         self._connection = SqlConnection.objects.filter(name=name).with_read_permission_for(self.user).first()  # type: ignore
@@ -650,8 +654,6 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 self._connection.user_profile,
             )
             return self._connection
-
-        from smarter.common.helpers.console_helpers import formatted_json
 
         if not self._connection:
             logger.warning(
@@ -672,7 +674,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 "%s.connection() model_dump for %s: %s",
                 self.formatted_class_name,
                 self.name or "(name is missing)",
-                formatted_json(model_dump),
+                self.formatted_json(model_dump),
             )
             if not isinstance(model_dump, dict):
                 model_dump = json.loads(json.dumps(model_dump))
@@ -990,15 +992,16 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 print(response.data)
         """
         logger.debug(
-            "%s.apply() called for %s %s %s args: %s kwargs: %s",
+            "%s.apply() called for %s %s %s args: %s kwargs: %s. Loader: %s, Manifest: %s",
             self.formatted_class_name,
             self.kind,
             self.name,
             self.user_profile,
             args,
             kwargs,
+            self._loader.manifest_metadata.get("name") if self._loader else None,
+            self.manifest.metadata.name if self.manifest else None,
         )
-        super().apply(request, args, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at", "tags"]
@@ -1009,6 +1012,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 thing=self.kind,
                 command=command,
             )
+
         try:
             password_name = self.to_snake_case(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
             proxy_password_name = self.to_snake_case(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)

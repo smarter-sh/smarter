@@ -917,7 +917,7 @@ class SAMPluginBaseBroker(AbstractBroker):
         """
         Apply the manifest to the Django ORM model and persist changes to the database.
 
-        This method orchestrates the application of manifest data by first invoking the superclass's `apply()` to ensure the manifest is loaded and validated. It then copies the manifest data to the corresponding Django ORM model and saves the model instance. Logging is performed to record the invocation and parameters.
+        This method copies the manifest data to the corresponding Django ORM model and saves the model instance. Logging is performed to record the invocation and parameters.
 
         :param request: The HTTP request initiating the manifest application.
         :type request: HttpRequest
@@ -930,7 +930,6 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         .. attention::
 
-            - Always call `super().apply()` to guarantee manifest validation before applying changes to the ORM model.
             - Any error during manifest application, such as validation failure or database error, will be logged and may raise a `SAMPluginBrokerError`.
 
         .. seealso::
@@ -945,7 +944,6 @@ class SAMPluginBaseBroker(AbstractBroker):
             if response:
                 print(response.status, response.data)
         """
-        super().apply(request, kwargs)
         logger.debug("%s.apply() called %s with args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
 
         if request.user != self.user:

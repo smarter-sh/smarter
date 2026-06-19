@@ -223,7 +223,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        super().apply(request, kwargs)
 
         if not self.user.is_staff:
             raise SAMBrokerError(

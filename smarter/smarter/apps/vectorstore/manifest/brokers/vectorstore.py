@@ -808,10 +808,6 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         :returns: A `SmarterJournaledJsonResponse` containing the updated user manifest.
 
-        .. note::
-
-           This method first calls ``super().apply()`` to ensure the manifest is loaded and validated before applying changes.
-
         .. attention::
 
            Fields in the manifest that are not editable (e.g., ``id``, ``date_joined``, ``last_login``, ``username``, ``is_superuser``) are removed before saving to the ORM model.
@@ -831,7 +827,6 @@ class SAMVectorstoreBroker(AbstractBroker):
            - :class:`smarter.apps.vectorstore.models.Vectorstore`
            - :class:`SAMVectorstoreBrokerError`
         """
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
