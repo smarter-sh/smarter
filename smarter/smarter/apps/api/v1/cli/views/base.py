@@ -640,9 +640,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # if the command is 'prompt', then the raw prompt text
         # or the encoded file attachment data will be in the request body.
         # otherwise, the request body should contain manifest text.
-        if self.command == SmarterJournalCliCommands.CHAT:
+        if self.command == SmarterJournalCliCommands.PROMPT:
             self._prompt = self.data if isinstance(self.data, str) else None
-            self._manifest_kind = SAMKinds.CHAT.value
+            self._manifest_kind = SAMKinds.PROMPT.value
         else:
             self._manifest_data = self.data if isinstance(self.data, dict) else None
 

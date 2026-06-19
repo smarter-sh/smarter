@@ -67,7 +67,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
     def validate_response(self, response: dict) -> None:
         self.assertIsInstance(response, dict)
         self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
-        self.assertEqual(response[SmarterJournalApiResponseKeys.THING], SmarterJournalThings.CHAT_CONFIG.value)
+        self.assertEqual(response[SmarterJournalApiResponseKeys.THING], SmarterJournalThings.PROMPT_CONFIG.value)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
 
@@ -266,10 +266,10 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
         self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
-        self.assertEqual(response[SmarterJournalApiResponseKeys.THING], SmarterJournalThings.CHAT_CONFIG.value)
+        self.assertEqual(response[SmarterJournalApiResponseKeys.THING], SmarterJournalThings.PROMPT_CONFIG.value)
 
         metadata = response[SmarterJournalApiResponseKeys.METADATA]
-        metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.CHAT_CONFIG.value
+        metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.PROMPT_CONFIG.value
 
         # re-request the config to verify that we have a sticky session.
         # the session_key should be the same as the first request.

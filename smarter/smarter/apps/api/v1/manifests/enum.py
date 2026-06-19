@@ -68,10 +68,10 @@ class SAMKinds(SmarterEnumAbstract):
         AUTH_TOKEN: Represents an authentication token manifest kind.
         USER: Represents a user manifest kind.
         SECRET: Represents a secret manifest kind.
-        CHAT: Represents a prompt manifest kind.
-        CHAT_HISTORY: Represents a prompt history manifest kind.
-        CHAT_PLUGIN_USAGE: Represents a prompt plugin usage manifest kind.
-        CHAT_TOOL_CALL: Represents a prompt tool call manifest kind.
+        PROMPT: Represents a prompt manifest kind.
+        PROMPT_HISTORY: Represents a prompt history manifest kind.
+        PROMPT_PLUGIN_USAGE: Represents a prompt plugin usage manifest kind.
+        PROMPT_TOOL_CALL: Represents a prompt tool call manifest kind.
         LLM_CLIENT: Represents an llm_client manifest kind.
         PROVIDER: Represents a provider manifest kind.
 
@@ -108,7 +108,7 @@ class SAMKinds(SmarterEnumAbstract):
     SECRET = SECRET_MANIFEST_KIND
 
     # prompt resources
-    CHAT = PROMPT_MANIFEST_KIND
+    PROMPT = PROMPT_MANIFEST_KIND
     LLM_CLIENT = LLM_CLIENT_MANIFEST_KIND
 
     # provider resources

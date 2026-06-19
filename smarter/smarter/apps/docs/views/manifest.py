@@ -81,7 +81,7 @@ class DocsExampleManifestApiKeyView(DocsExampleManifestBaseView):
 class DocsExampleManifestChatView(DocsExampleManifestBaseView):
     """Prompt JSON Schema view."""
 
-    kind = SAMKinds(SAMKinds.CHAT)
+    kind = SAMKinds(SAMKinds.PROMPT)
 
 
 class DocsExampleManifestLLMClientView(DocsExampleManifestBaseView):

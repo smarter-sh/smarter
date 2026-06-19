@@ -502,8 +502,8 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
         if not self.llm_client:
             return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
 
-        self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
-        self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
+        self.thing = SmarterJournalThings(SmarterJournalThings.PROMPT_CONFIG)
+        self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.PROMPT_CONFIG)
 
         verbose_logger.debug(
             "%s.dispatch() completed with llm_client=%s, session_key=%s",

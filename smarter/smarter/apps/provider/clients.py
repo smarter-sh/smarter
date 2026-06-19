@@ -154,8 +154,8 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 e=e,
-                thing=SmarterJournalThings.CHAT,
-                command=SmarterJournalCliCommands.CHAT,
+                thing=SmarterJournalThings.PROMPT,
+                command=SmarterJournalCliCommands.PROMPT,
                 status=HTTPStatus.BAD_REQUEST,
                 error_message=str(e),
                 description=str(e),
@@ -171,5 +171,8 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
 
         logger.debug("%s returning response: %s", logger_prefix, formatted_json(response_dict))
         return SmarterJournaledJsonResponse(
-            request=request, data=response_dict, thing=SmarterJournalThings.CHAT, command=SmarterJournalCliCommands.CHAT
+            request=request,
+            data=response_dict,
+            thing=SmarterJournalThings.PROMPT,
+            command=SmarterJournalCliCommands.PROMPT,
         )

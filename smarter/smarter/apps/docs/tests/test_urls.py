@@ -145,22 +145,22 @@ class TestDocsUrls(SmarterTestBase):
 
     def test_url_json_schema_chat(self) -> None:
         """Test url for prompt JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT.value)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.PROMPT.value)}")
         self.process_url(url)
 
     def test_url_json_schema_chat_history(self) -> None:
         """Test url for prompt history JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_HISTORY.value)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.PROMPT_HISTORY.value)}")
         self.process_url(url)
 
     def test_url_json_schema_chat_plugin_usage(self) -> None:
         """Test url for prompt plugin usage JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_PLUGIN_USAGE.value)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.PROMPT_PLUGIN_USAGE.value)}")
         self.process_url(url)
 
     def test_url_json_schema_chat_tool_call(self) -> None:
         """Test url for prompt tool call JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_TOOL_CALL.value)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.PROMPT_TOOL_CALL.value)}")
         self.process_url(url)
 
     def test_url_json_schema_llm_client(self) -> None:
@@ -218,22 +218,22 @@ class TestDocsUrls(SmarterTestBase):
 
     def test_url_manifest_chat(self) -> None:
         """Test url for prompt manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT.value)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.PROMPT.value)}")
         self.process_url(url)
 
     def test_url_manifest_chat_history(self) -> None:
         """Test url for prompt history manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_HISTORY.value)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.PROMPT_HISTORY.value)}")
         self.process_url(url)
 
     def test_url_manifest_chat_plugin_usage(self) -> None:
         """Test url for prompt plugin usage manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_PLUGIN_USAGE.value)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.PROMPT_PLUGIN_USAGE.value)}")
         self.process_url(url)
 
     def test_url_manifest_chat_tool_call(self) -> None:
         """Test url for prompt tool call manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_TOOL_CALL.value)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.PROMPT_TOOL_CALL.value)}")
         self.process_url(url)
 
     def test_url_manifest_llm_client(self) -> None:
