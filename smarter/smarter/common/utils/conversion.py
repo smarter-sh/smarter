@@ -221,10 +221,10 @@ def search_replace(
     data: Union[dict[str, Any], list[Any]], replace_str: str, with_str: str
 ) -> Union[dict[str, Any], list[Any]]:
     """
-    Recursively search through a dictionary and replace all occurrences of a specified string with another string.
+    Recursively search through a dictionary or list and replace all occurrences of a specified string with another string.
 
     Args:
-        data (dict): The input dictionary to search through.
+        data (dict or list): The input dictionary or list to search through.
         replace_str (str): The string to search for in the dictionary keys and values.
         with_str (str): The string to replace the found string with.
 
