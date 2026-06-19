@@ -42,13 +42,11 @@ logger = logging.getLogger(__name__)
 
 
 class PassthroughReverseNames:
-    """
-    A class to hold the namespace for the passthrough views in the dashboard app.
-    """
+    """A class to hold the namespace for the passthrough views in the dashboard app."""
 
     namespace = namespace
 
-    view = to_snake_case(PromptPassthroughView)
+    view = to_snake_case(PromptPassthroughView.__name__)
 
 
 urlpatterns = []
@@ -60,10 +58,10 @@ if smarter_settings.enable_dashboard_passthrough_prompt:
     ]
     logger.info(
         "%s passthrough prompt views enabled. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'true' to enable.",
-        logging.formatted_text(__file__),
+        logging.formatted_text(__name__),
     )
 else:
     logger.info(
         "%s passthrough prompt views disabled. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'false' to disable.",
-        logging.formatted_text(__file__),
+        logging.formatted_text(__name__),
     )

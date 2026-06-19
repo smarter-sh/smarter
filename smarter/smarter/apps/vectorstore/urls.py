@@ -1,6 +1,4 @@
-"""
-URL configuration for the vectorstore app.
-"""
+"""URL configuration for the vectorstore app."""
 
 import logging
 
@@ -24,6 +22,7 @@ app_name = namespace
 class VectorstoreReverseNames:
     """
     Holds named URL patterns for the vectorstore app.
+
     This class provides constants for all named URL patterns used in the vectorstore views.
     The names follow the convention: 'vectorstore_<view_name>'.
     These are referenced in Django templates as 'reverse' or 'url' tags.
@@ -33,13 +32,12 @@ class VectorstoreReverseNames:
       .. html::
 
       <a href="{% url 'vectorstore:list_view' %}">Go to Vectorstore List View</a>
-
     """
 
     namespace = namespace
 
-    list_view = to_snake_case(VectorstoreListView)
-    manifest_view = to_snake_case(VectorstoreManifestView)
+    list_view = to_snake_case(VectorstoreListView.__name__)
+    manifest_view = to_snake_case(VectorstoreManifestView.__name__)
 
 
 urlpatterns = []

@@ -1,6 +1,4 @@
-"""
-URLs for the passthrough API views in the dashboard app.
-"""
+"""URLs for the passthrough API views in the dashboard app."""
 
 from django.urls import path
 
@@ -13,13 +11,11 @@ app_name = namespace
 
 
 class PassthroughApiReverseNames:
-    """
-    A class to hold the namespace for the passthrough API views in the dashboard app.
-    """
+    """A class to hold the namespace for the passthrough API views in the dashboard app."""
 
     namespace = namespace
 
-    api_providers = to_snake_case(ProviderApiView)
+    api_providers = to_snake_case(ProviderApiView.__name__)
 
 
 urlpatterns = [

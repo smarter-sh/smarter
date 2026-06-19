@@ -85,21 +85,21 @@ class ApiV1CliReverseViews:
 
     namespace = f"api:v1:{namespace}:"
 
-    manifest = to_snake_case(ApiV1CliManifestApiView)
-    apply = to_snake_case(ApiV1CliApplyApiView)
-    prompt = to_snake_case(ApiV1CliPromptApiView)
-    chat_config = to_snake_case(ApiV1CliPromptConfigApiView)
-    delete = to_snake_case(ApiV1CliDeleteApiView)
-    deploy = to_snake_case(ApiV1CliDeployApiView)
-    undeploy = to_snake_case(ApiV1CliUndeployApiView)
-    describe = to_snake_case(ApiV1CliDescribeApiView)
-    get = to_snake_case(ApiV1CliGetApiView)
-    logs = to_snake_case(ApiV1CliLogsApiView)
-    example_manifest = to_snake_case(ApiV1CliManifestApiView)
-    status = to_snake_case(ApiV1CliStatusApiView)
-    json_schema = to_snake_case(ApiV1CliSchemaApiView)
-    version = to_snake_case(ApiV1CliVersionApiView)
-    whoami = to_snake_case(ApiV1CliWhoamiApiView)
+    manifest = to_snake_case(ApiV1CliManifestApiView.__name__)
+    apply = to_snake_case(ApiV1CliApplyApiView.__name__)
+    prompt = to_snake_case(ApiV1CliPromptApiView.__name__)
+    chat_config = to_snake_case(ApiV1CliPromptConfigApiView.__name__)
+    delete = to_snake_case(ApiV1CliDeleteApiView.__name__)
+    deploy = to_snake_case(ApiV1CliDeployApiView.__name__)
+    undeploy = to_snake_case(ApiV1CliUndeployApiView.__name__)
+    describe = to_snake_case(ApiV1CliDescribeApiView.__name__)
+    get = to_snake_case(ApiV1CliGetApiView.__name__)
+    logs = to_snake_case(ApiV1CliLogsApiView.__name__)
+    example_manifest = to_snake_case(ApiV1CliManifestApiView.__name__)
+    status = to_snake_case(ApiV1CliStatusApiView.__name__)
+    json_schema = to_snake_case(ApiV1CliSchemaApiView.__name__)
+    version = to_snake_case(ApiV1CliVersionApiView.__name__)
+    whoami = to_snake_case(ApiV1CliWhoamiApiView.__name__)
 
 
 urlpatterns = [

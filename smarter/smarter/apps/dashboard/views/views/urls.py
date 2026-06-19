@@ -22,18 +22,16 @@ logger = logging.getLogger(__name__)
 
 
 class DashboardReverseNames:
-    """
-    A class to hold the names of the dashboard views for easy reference throughout the codebase.
-    """
+    """A class to hold the names of the dashboard views for easy reference throughout the codebase."""
 
     namespace = namespace
 
     dashboard = namespace
-    notifications = to_snake_case(NotificationsView)
-    changelog = to_snake_case(ChangeLogView)
-    email_added = to_snake_case(EmailAdded)
-    api_my_resources = to_snake_case(MyResourcesView)
-    api_service_health = to_snake_case(ServiceHealthView)
+    notifications = to_snake_case(NotificationsView.__name__)
+    changelog = to_snake_case(ChangeLogView.__name__)
+    email_added = to_snake_case(EmailAdded.__name__)
+    api_my_resources = to_snake_case(MyResourcesView.__name__)
+    api_service_health = to_snake_case(ServiceHealthView.__name__)
 
 
 urlpatterns = [

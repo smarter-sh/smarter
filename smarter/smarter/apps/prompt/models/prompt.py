@@ -20,7 +20,7 @@ class Prompt(MetaDataWithOwnershipModel):
 
     # pylint: disable=C0115
     class Meta:
-        verbose_name_plural = "Chats"
+        verbose_name_plural = "Prompts"
         unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
 
     objects: MetaDataWithOwnershipModelManager["Prompt"] = MetaDataWithOwnershipModelManager()

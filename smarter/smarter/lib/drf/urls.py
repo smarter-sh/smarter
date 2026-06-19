@@ -24,15 +24,15 @@ class AuthTokenReverseNames:
 
     namespace = namespace
 
-    listview = to_snake_case(AuthTokenListApiView)
-    detailview = to_snake_case(AuthTokenDetailView)
+    listview = to_snake_case(AuthTokenListApiView.__name__)
+    detailview = to_snake_case(AuthTokenDetailView.__name__)
 
-    listview = to_snake_case(AuthTokenListView)
-    listview_api = to_snake_case(AuthTokenListApiView)
-    listview_api_all = to_snake_case(AuthTokenListApiView) + "_all"
-    listview_api_clone = to_snake_case(AuthTokenListApiCloneView)
-    listview_api_delete = to_snake_case(AuthTokenListApiDeleteView)
-    listview_api_rename = to_snake_case(AuthTokenListApiRenameView)
+    listview = to_snake_case(AuthTokenListView.__name__)
+    listview_api = to_snake_case(AuthTokenListApiView.__name__)
+    listview_api_all = to_snake_case(AuthTokenListApiView.__name__) + "_all"
+    listview_api_clone = to_snake_case(AuthTokenListApiCloneView.__name__)
+    listview_api_delete = to_snake_case(AuthTokenListApiDeleteView.__name__)
+    listview_api_rename = to_snake_case(AuthTokenListApiRenameView.__name__)
 
 
 app_name = namespace
