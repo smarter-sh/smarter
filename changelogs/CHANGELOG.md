@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.6](https://github.com/smarter-sh/smarter/compare/v0.14.5...v0.14.6) (2026-06-19)
+
+### Bug Fixes
+
+* brokered json-schemas ([9c157b8](https://github.com/smarter-sh/smarter/commit/9c157b8f9e48d18d9fe6e4a9649622795edce069))
+* remove trailing double // ([30eabcd](https://github.com/smarter-sh/smarter/commit/30eabcd171a2bf7ed773488d4adcc6b32a323e9a))
+
+### Refactoring
+
+* casing of example-manifest and json-schema paths ([4cefe1d](https://github.com/smarter-sh/smarter/commit/4cefe1d5505b1f40d7d615ad037085e7244b565b))
+* make AbstractBroker.apply() abstract like all the other brokered methods ([c647823](https://github.com/smarter-sh/smarter/commit/c647823f1a3c67ea382165a5575aeb25d8df0cc6))
+* ready state ([a1e1fe1](https://github.com/smarter-sh/smarter/commit/a1e1fe10c6767c93048a65d64d23b9c0062df575))
+* to_camel_case() and to_snake_case() ([84b08b6](https://github.com/smarter-sh/smarter/commit/84b08b6ee6b34a11385959f1769aca7d31bca126))
+
 ## [0.14.5](https://github.com/smarter-sh/smarter/compare/v0.14.4...v0.14.5) (2026-06-18)
 
 ### Bug Fixes
