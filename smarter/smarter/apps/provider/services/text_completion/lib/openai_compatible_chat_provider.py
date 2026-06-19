@@ -47,11 +47,11 @@ from smarter.apps.prompt.receivers import (
     llm_tool_responded,
 )
 from smarter.apps.prompt.signals import (
-    chat_completion_plugin_called,
-    chat_completion_request,
-    chat_completion_response,
-    chat_completion_tool_called,
+    chat_plugin_called,
+    chat_request,
+    chat_response,
     chat_response_failure,
+    chat_tool_called,
     prompt_finished,
     prompt_started,
 )
@@ -312,7 +312,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         # send a prompt completion request signal. this triggers a variety of db records to be created
         # asynchronously in the background via Celery tasks.
-        chat_completion_request.send(
+        chat_request.send(
             sender=self.handler,
             prompt=self.prompt,
             iteration=self.iteration,
@@ -340,7 +340,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             _InternalKeys.MODEL_KEY: self.model,
             _InternalKeys.MESSAGES_KEY: self.openai_messages,
         }
-        chat_completion_request.send(
+        chat_request.send(
             sender=self.handler,
             prompt=self.prompt,
             iteration=self.iteration,
@@ -496,7 +496,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             else self.second_iteration[_InternalKeys.RESPONSE_KEY] if self.second_iteration else None
         )
 
-        chat_completion_response.send(
+        chat_response.send(
             sender=self.handler,
             prompt=self.prompt,
             iteration=self.iteration,
@@ -522,7 +522,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         logger.debug("%s.handle_tool_called() - %s", self.formatted_class_name, function_name)
         request = (self.first_iteration[_InternalKeys.REQUEST_KEY],)
         response = (self.first_iteration[_InternalKeys.RESPONSE_KEY],)
-        chat_completion_tool_called.send(
+        chat_tool_called.send(
             sender=self.handler,
             prompt=self.prompt,
             plugin=None,
@@ -549,7 +549,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :rtype: None
         """
         logger.debug("%s.handle_plugin_called() - %s", self.formatted_class_name, plugin.name)
-        chat_completion_plugin_called.send(
+        chat_plugin_called.send(
             sender=self.handler,
             prompt=self.prompt,
             plugin=plugin,

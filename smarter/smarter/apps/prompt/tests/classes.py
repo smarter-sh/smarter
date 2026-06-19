@@ -28,7 +28,7 @@ from smarter.apps.prompt.models import (
     PromptToolCall,
 )
 from smarter.apps.prompt.signals import (
-    chat_completion_response,
+    chat_response,
     chat_response_failure,
     prompt_finished,
     prompt_started,
@@ -144,7 +144,7 @@ class ProviderBaseClass(TestAccountMixin):
             "plugin_called": self._plugin_called,
             "plugin_selected": self._plugin_selected,
             "prompt_started": self._chat_invoked,
-            "chat_completion_response": self._chat_completion_response_received,
+            "chat_response": self._chat_completion_response_received,
             "prompt_finished": self._chat_completion_returned,
             "chat_response_failure": self._chat_completion_failed,
         }
@@ -339,7 +339,7 @@ class ProviderBaseClass(TestAccountMixin):
         plugin_selected.connect(self.plugin_selected_signal_handler)
         plugin_called.connect(self.plugin_called_signal_handler)
         prompt_started.connect(self.chat_invoked_signal_handler)
-        chat_completion_response.connect(self.chat_completion_response_received_signal_handler)
+        chat_response.connect(self.chat_completion_response_received_signal_handler)
         prompt_finished.connect(self.chat_completion_returned_signal_handler)
         chat_response_failure.connect(self.chat_completion_failed_signal_handler)
 

@@ -20,11 +20,11 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import Prompt, PromptHistory, PromptPluginUsage, PromptToolCall
 from .signals import (
-    chat_completion_plugin_called,
-    chat_completion_request,
-    chat_completion_response,
-    chat_completion_tool_called,
+    chat_plugin_called,
+    chat_request,
+    chat_response,
     chat_response_failure,
+    chat_tool_called,
     llm_provider_initialized,
     llm_tool_presented,
     llm_tool_requested,
@@ -113,14 +113,14 @@ def handle_chat_started(sender, prompt: Optional[Prompt] = None, data: Optional[
     )
 
 
-@receiver(chat_completion_request, dispatch_uid="chat_completion_request")
+@receiver(chat_request, dispatch_uid="chat_request")
 def handle_chat_completion_request_sent(
     sender, prompt: Optional[Prompt] = None, iteration: int = 0, data: Optional[dict] = None, **kwargs
 ):
     """Handle prompt completion request sent signal."""
 
     sender_name = get_sender_name(sender)
-    this_prefix = formatted_text(f"{prefix}.chat_completion_request for iteration {iteration}")
+    this_prefix = formatted_text(f"{prefix}.chat_request for iteration {iteration}")
 
     logger.info(
         "%s by %s for prompt: %s ",
@@ -137,7 +137,7 @@ def handle_chat_completion_request_sent(
     )
 
 
-@receiver(chat_completion_response, dispatch_uid="chat_completion_response")
+@receiver(chat_response, dispatch_uid="chat_response")
 def handle_chat_completion_response_received(
     sender,
     prompt: Optional[Prompt] = None,
@@ -159,7 +159,7 @@ def handle_chat_completion_response_received(
     else:
         response_data = response
 
-    this_prefix = formatted_text(f"{prefix}.chat_completion_response for iteration {iteration}")
+    this_prefix = formatted_text(f"{prefix}.chat_response for iteration {iteration}")
     sender_name = get_sender_name(sender)
 
     logger.info(
@@ -172,7 +172,7 @@ def handle_chat_completion_response_received(
     )
 
 
-@receiver(chat_completion_plugin_called, dispatch_uid="chat_completion_plugin_called")
+@receiver(chat_plugin_called, dispatch_uid="chat_plugin_called")
 def handle_chat_completion_plugin_called(
     sender,
     prompt: Optional[Prompt] = None,
@@ -184,7 +184,7 @@ def handle_chat_completion_plugin_called(
 
     logger.info(
         "%s by %s for prompt %s, \nplugin: %s, \ninput_text: %s",
-        formatted_text(f"{prefix}.chat_completion_plugin_called"),
+        formatted_text(f"{prefix}.chat_plugin_called"),
         get_sender_name(sender),
         prompt,
         plugin,
@@ -192,7 +192,7 @@ def handle_chat_completion_plugin_called(
     )
 
 
-@receiver(chat_completion_tool_called, dispatch_uid="chat_completion_tool_called")
+@receiver(chat_tool_called, dispatch_uid="chat_tool_called")
 def handle_chat_completion_tool_called(
     sender,
     prompt: Optional[Prompt] = None,
@@ -209,7 +209,7 @@ def handle_chat_completion_tool_called(
 
     logger.info(
         "%s by %s %s %s for prompt: %s",
-        formatted_text(f"{prefix}.chat_completion_tool_called"),
+        formatted_text(f"{prefix}.chat_tool_called"),
         get_sender_name(sender),
         function_name,
         function_args,
