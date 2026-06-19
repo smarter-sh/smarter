@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.6-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.6-alpha.2...v0.14.6-alpha.3) (2026-06-19)
+
+### Bug Fixes
+
+* handle_tool_called() should handle both functions as well as plugins ([c482765](https://github.com/smarter-sh/smarter/commit/c482765eec8623daabc0ea94db78e70e1af0e74b))
+
+### Refactoring
+
+* homogenize __init__() for all children of AbstractBroker ([cb3233e](https://github.com/smarter-sh/smarter/commit/cb3233e6035b36077cf53ec458f5b2060057386e))
+* homogenize __init__() for all children of AbstractBroker ([0d60e63](https://github.com/smarter-sh/smarter/commit/0d60e63990fef672df62b0a78074780b44686f1e))
+* remove deprecated SAMKinds ([8e2069b](https://github.com/smarter-sh/smarter/commit/8e2069bf963705621dbefe644f859896ec3d29f7))
+
 ## [0.14.6-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.6-alpha.1...v0.14.6-alpha.2) (2026-06-19)
 
 ### Bug Fixes
