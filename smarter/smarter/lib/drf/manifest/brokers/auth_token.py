@@ -523,16 +523,12 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         """
         Apply the manifest.
 
-        copy the manifest data to the Django ORM model and
-        save the model to the database. Call super().apply() to ensure that the
-        manifest is loaded and validated before applying the manifest to the
-        Django ORM model.
-        Note that there are fields included in the manifest that are not editable
+        This method copies the manifest data to the Django ORM model and
+        saves the model to the database. Note that there are fields included in the manifest that are not editable
         and are therefore removed from the Django ORM model dict prior to attempting
         the save() command. These fields are defined in the readonly_fields list.
         """
         logger.debug("%s.apply() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         readonly_fields = [

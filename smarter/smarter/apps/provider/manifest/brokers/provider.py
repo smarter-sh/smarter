@@ -535,7 +535,7 @@ class SAMProviderBroker(AbstractBroker):
 
         .. note::
 
-           This method first calls ``super().apply()`` to ensure the manifest is loaded and validated before applying changes.
+           This method copies the manifest data to the corresponding Django ORM model and saves the model instance. Logging is performed to record the invocation and parameters.
 
         .. attention::
 
@@ -557,7 +557,6 @@ class SAMProviderBroker(AbstractBroker):
            - :class:`smarter.apps.provider.models.Provider`
            - :class:`SAMProviderBrokerError`
         """
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         if not self.user:
