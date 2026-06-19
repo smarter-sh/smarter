@@ -83,17 +83,13 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     _token_key: Optional[str]
     _orm_instance: Optional[SmarterAuthToken]
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize the SAMSmarterAuthTokenBroker with the given arguments.
-
-        The constructor initializes the parent class and sets up the manifest
-        and user attributes.
-        """
+    def __init__(self, *args, **kwargs) -> None:
         self._smarter_auth_token = None
         self._token_key = None
         self._created = False
         super().__init__(*args, **kwargs)
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        logger.info(msg)
 
     @property
     def formatted_class_name(self) -> str:

@@ -119,83 +119,8 @@ class SAMLLMClientBroker(AbstractBroker):
     _name: Optional[str] = None
     _ready: bool = False
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize the SAMLLMClientBroker instance.
-
-        This constructor initializes the broker by calling the parent class's
-        constructor, which will attempt to bootstrap the class instance
-        with any combination of raw manifest data (in JSON or YAML format),
-        a manifest loader, or existing Django ORM models. If a manifest
-        loader is provided and its kind matches the expected kind for this broker,
-        the manifest is initialized using the loader's data.
-
-        This class can bootstrap itself in any of the following ways:
-
-        - request.body (yaml or json string)
-        - name + account (determined via authentication of the request object)
-        - SAMLoader instance
-        - manifest instance
-        - filepath to a manifest file
-
-        If raw manifest data is provided, whether as a string or a dictionary,
-        or a SAMLoader instance, the base class constructor will only goes as
-        far as initializing the loader. The actual manifest model initialization
-        is deferred to this constructor, which checks the loader's kind.
-
-        :param args: Positional arguments passed to the parent constructor.
-        :param kwargs: Keyword arguments passed to the parent constructor.
-
-        **Example:**
-
-        .. code-block:: python
-
-            broker = SAMLLMClientBroker(loader=loader, plugin_meta=plugin_meta)
-        .. seealso::
-            - `SAMPluginBaseBroker.__init__`
-        """
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        logger.debug(
-            "%s.__init__() called with args=%s, kwargs=%s",
-            self.formatted_class_name,
-            args,
-            kwargs,
-        )
-        self._llm_client = kwargs.get("llm_client")
-        if self._llm_client:
-            logger.debug(
-                "%s.__init__() initialized with existing LLMClient instance: %s",
-                self.formatted_class_name,
-                self._llm_client,
-            )
-        if not self.ready:
-            if not self.loader and not self.manifest and not self.llm_client:
-                logger.warning(
-                    "%s.__init__() No loader nor existing LLMClient provided for %s broker. Cannot initialize.",
-                    self.formatted_class_name,
-                    self.kind,
-                )
-                return
-            if self.loader and self.loader.manifest_kind != self.kind:
-                raise SAMBrokerErrorNotReady(
-                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
-                    thing=self.kind,
-                )
-
-            if self.loader:
-                self._manifest = SAMLLMClient(
-                    apiVersion=self.loader.manifest_api_version,
-                    kind=self.loader.manifest_kind,
-                    metadata=SAMLLMClientMetadata(**self.loader.manifest_metadata),
-                    spec=SAMLLMClientSpec(**self.loader.manifest_spec),
-                )
-            if self._manifest:
-                logger.debug(
-                    "%s.__init__() initialized manifest from loader for %s %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    self.manifest.metadata.name if self.manifest and self.manifest.metadata else None,
-                )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         logger.info(msg)
 
