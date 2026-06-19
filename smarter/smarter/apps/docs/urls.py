@@ -23,9 +23,6 @@ from .views.json_schema import (
     DocsJsonSchemaApiConnectionView,
     DocsJsonSchemaApiKeyView,
     DocsJsonSchemaApiView,
-    DocsJsonSchemaChatHistoryView,
-    DocsJsonSchemaChatPluginUsageView,
-    DocsJsonSchemaChatToolCallView,
     DocsJsonSchemaChatView,
     DocsJsonSchemaLLMClientView,
     DocsJsonSchemaPluginView,
@@ -41,9 +38,6 @@ from .views.manifest import (
     DocsExampleManifestApiConnectionView,
     DocsExampleManifestApiKeyView,
     DocsExampleManifestApiView,
-    DocsExampleManifestChatHistoryView,
-    DocsExampleManifestChatPluginUsageView,
-    DocsExampleManifestChatToolCallView,
     DocsExampleManifestChatView,
     DocsExampleManifestLLMClientView,
     DocsExampleManifestPluginView,
@@ -104,21 +98,6 @@ urlpatterns = [
         json_schema_path(SAMKinds.CHAT.value),
         DocsJsonSchemaChatView.as_view(),
         name=json_schema_name(SAMKinds.CHAT.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.CHAT_HISTORY.value),
-        DocsJsonSchemaChatHistoryView.as_view(),
-        name=json_schema_name(SAMKinds.CHAT_HISTORY.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.CHAT_PLUGIN_USAGE.value),
-        DocsJsonSchemaChatPluginUsageView.as_view(),
-        name=json_schema_name(SAMKinds.CHAT_PLUGIN_USAGE.value),
-    ),
-    path(
-        json_schema_path(SAMKinds.CHAT_TOOL_CALL.value),
-        DocsJsonSchemaChatToolCallView.as_view(),
-        name=json_schema_name(SAMKinds.CHAT_TOOL_CALL.value),
     ),
     path(
         json_schema_path(SAMKinds.LLM_CLIENT.value),
@@ -187,21 +166,6 @@ urlpatterns = [
         manifest_path(SAMKinds.CHAT.value),
         DocsExampleManifestChatView.as_view(),
         name=manifest_name(SAMKinds.CHAT.value),
-    ),
-    path(
-        manifest_path(SAMKinds.CHAT_HISTORY.value),
-        DocsExampleManifestChatHistoryView.as_view(),
-        name=manifest_name(SAMKinds.CHAT_HISTORY.value),
-    ),
-    path(
-        manifest_path(SAMKinds.CHAT_PLUGIN_USAGE.value),
-        DocsExampleManifestChatPluginUsageView.as_view(),
-        name=manifest_name(SAMKinds.CHAT_PLUGIN_USAGE.value),
-    ),
-    path(
-        manifest_path(SAMKinds.CHAT_TOOL_CALL.value),
-        DocsExampleManifestChatToolCallView.as_view(),
-        name=manifest_name(SAMKinds.CHAT_TOOL_CALL.value),
     ),
     path(
         manifest_path(SAMKinds.LLM_CLIENT.value),
