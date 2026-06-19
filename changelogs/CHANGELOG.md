@@ -6,35 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
-## [0.14.6-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.14.6-alpha.3...v0.14.6-alpha.4) (2026-06-19)
-
-### Bug Fixes
-
-* prompt_history should be chat_history for legacy chat app ([dcab36f](https://github.com/smarter-sh/smarter/commit/dcab36f78dc447494713efcbdcc12b5ad426d928))
-
-### Refactoring
-
-* thing names ([f261315](https://github.com/smarter-sh/smarter/commit/f26131520014a8ec1e44b3bd1fe0e52a61c4c85f))
-
-## [0.14.6-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.6-alpha.2...v0.14.6-alpha.3) (2026-06-19)
-
-### Bug Fixes
-
-* handle_tool_called() should handle both functions as well as plugins ([c482765](https://github.com/smarter-sh/smarter/commit/c482765eec8623daabc0ea94db78e70e1af0e74b))
-
-### Refactoring
-
-* homogenize __init__() for all children of AbstractBroker ([cb3233e](https://github.com/smarter-sh/smarter/commit/cb3233e6035b36077cf53ec458f5b2060057386e))
-* homogenize __init__() for all children of AbstractBroker ([0d60e63](https://github.com/smarter-sh/smarter/commit/0d60e63990fef672df62b0a78074780b44686f1e))
-* remove deprecated SAMKinds ([8e2069b](https://github.com/smarter-sh/smarter/commit/8e2069bf963705621dbefe644f859896ec3d29f7))
-
-## [0.14.6-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.6-alpha.1...v0.14.6-alpha.2) (2026-06-19)
-
-### Bug Fixes
-
-* self.manifest has to try to lazy-load the ORM model if it exists. otherwise we cannot describe() ([1fa9520](https://github.com/smarter-sh/smarter/commit/1fa9520133d587eacac1ab669f69f0f2c64bc3d7))
-
-## [0.14.6-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.5...v0.14.6-alpha.1) (2026-06-19)
+## [0.14.6](https://github.com/smarter-sh/smarter/compare/v0.14.5...v0.14.6) (2026-06-19)
 
 ### Bug Fixes
 
