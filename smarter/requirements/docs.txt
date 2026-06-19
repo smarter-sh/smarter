@@ -300,7 +300,7 @@ markupsafe==3.0.3
     # via jinja2
 more-itertools==11.1.0
     # via inflect
-msgpack==1.1.2
+msgpack==1.2.1
     # via channels-redis
 multidict==6.7.1
     # via

@@ -289,7 +289,7 @@ marshmallow==3.26.2
     # via dataclasses-json
 more-itertools==11.0.2
     # via inflect
-msgpack==1.1.2
+msgpack==1.2.1
     # via channels-redis
 multidict==6.7.1
     # via
