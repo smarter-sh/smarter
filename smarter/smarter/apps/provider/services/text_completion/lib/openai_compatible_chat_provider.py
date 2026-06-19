@@ -51,9 +51,9 @@ from smarter.apps.prompt.signals import (
     chat_completion_request,
     chat_completion_response,
     chat_completion_tool_called,
-    chat_finished,
     chat_response_failure,
-    chat_started,
+    prompt_finished,
+    prompt_started,
 )
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.apps.provider.services.text_completion.lib.protocols import (
@@ -881,7 +881,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.plugins = plugins
         self.functions = functions
 
-        chat_started.send(sender=self.handler, prompt=self.prompt, data=self.data)
+        prompt_started.send(sender=self.handler, prompt=self.prompt, data=self.data)
         self.iteration = 1
         openai.api_key = self.api_key
         openai.base_url = self.base_url
@@ -1050,7 +1050,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         # display the error message in the prompt engineers workbench.
         response = self.handle_completion()
 
-        chat_finished.send(
+        prompt_finished.send(
             sender=self.handler,
             prompt=self.prompt,
             request=self.first_iteration.get(_InternalKeys.REQUEST_KEY),
