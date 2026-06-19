@@ -597,7 +597,6 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         function_response = None
         if function_name in [get_current_weather.__name__, date_calculator.__name__, calculator.__name__]:
             function_response = function_to_call(tool_call=tool_call)
-            self.handle_tool_called(function_name=function_name, function_args=function_args)
 
         elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
             plugin_id = int(function_name[-4:])
@@ -655,6 +654,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 f"{self.formatted_class_name}: serialized_tool_calls must be a list, got {type(self.serialized_tool_calls)}"
             )
         self.serialized_tool_calls.append(serialized_tool_call)
+        self.handle_tool_called(function_name=function_name, function_args=function_args)
         llm_tool_responded.send(
             sender=self.process_tool_call, tool_call=tool_call.model_dump(), tool_response=function_response
         )
