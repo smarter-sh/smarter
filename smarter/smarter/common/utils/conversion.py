@@ -28,12 +28,13 @@ import re
 from functools import lru_cache
 from typing import Any, Union
 
-from smarter.common.exceptions import SmarterValueError
-
-LRU_MAXSIZE = 32  # Default max size for LRU caches in this module
+LRU_MAXSIZE = 128  # Default max size for LRU caches in this module
 SNAKE_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
+ACRONYM_PATTERN = re.compile(r"([A-Z]+)([A-Z][a-z])")
+CAMEL_PATTERN = re.compile(r"([a-z0-9])([A-Z])")
 
-ConvertibleCaseType = Union[str, dict[str, object], list[object], object]
+
+ConvertibleCaseType = Union[str, dict[str, Any], list[Any]]
 """
 A type alias representing data that can be converted between different case.
 
@@ -49,7 +50,7 @@ def _convert_snake_to_camel(name: str) -> str:
 
 
 # pylint: disable=W0613
-def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = False) -> Any:
+def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = True) -> Any:
     """
     Convert snake_case strings, dictionary keys, or lists to camelCase format.
 
@@ -68,9 +69,6 @@ def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
         - For dictionaries, only keys are converted by default. If ``convert_values`` is True, string values are also converted.
         - Nested dictionaries and lists are processed recursively.
         - If the input is not a string, dictionary, or list, the original value is returned.
-
-    Raises:
-        SmarterValueError: If the input is not a string, dictionary, or list, and cannot be converted.
 
     Examples:
         >>> from smarter.common.utils import to_camel_case
@@ -102,22 +100,30 @@ def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
     if isinstance(data, str):
         return _convert_snake_to_camel(data)
     elif isinstance(data, list):
-        return [to_camel_case(item, convert_values=convert_values, is_recursive=True) for item in data]
+        return [
+            (
+                to_camel_case(item, convert_values=convert_values, is_recursive=is_recursive)
+                if isinstance(item, (dict, list)) and is_recursive
+                else _convert_snake_to_camel(item) if isinstance(item, str) and convert_values else item
+            )
+            for item in data
+        ]
     elif isinstance(data, dict):
-        # For dictionaries, convert keys and optionally the values as well
         retval = {}
         for key, value in data.items():
-            key = _convert_snake_to_camel(key)
-            if convert_values:
-                value = to_camel_case(value, convert_values=convert_values, is_recursive=True)
+            key = _convert_snake_to_camel(key) if isinstance(key, str) else key
+            if isinstance(value, dict) and is_recursive:
+                value = to_camel_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
+            elif isinstance(value, list) and is_recursive:
+                value = [
+                    to_camel_case(item, convert_values=convert_values, is_recursive=is_recursive) for item in value
+                ]
+            elif convert_values and isinstance(value, str):
+                value = _convert_snake_to_camel(value)
             retval[key] = value
         return retval
     else:
-        try:
-            data_str = data.__name__ if hasattr(data, "__name__") else str(data)  # type: ignore
-            return to_camel_case(data_str, convert_values=convert_values)
-        except Exception as e:
-            raise SmarterValueError(f"Received an unsupported type: {type(data)}") from e
+        return data  # Return the original data if it's not a string, dict, or list, without raising an error.
 
 
 @lru_cache(maxsize=LRU_MAXSIZE)
@@ -125,12 +131,12 @@ def _convert_camel_to_snake(name: str):
     name = name.replace(" ", "_").replace("-", "_")
 
     # Split acronym boundaries such as `LLMClient` -> `LLM_Client` before the general camelCase split.
-    name = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", "_", name)
-    name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", name).lower()
+    name = re.sub(ACRONYM_PATTERN, r"\1_\2", name)
+    name = re.sub(CAMEL_PATTERN, r"\1_\2", name).lower()
     return re.sub(r"_+", "_", name)
 
 
-def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False) -> Any:
+def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = True) -> Any:
     """
     Convert camelCase or PascalCase strings, dictionary keys, or lists to snake_case format.
 
@@ -150,10 +156,7 @@ def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False) -> An
         - Spaces in keys are replaced with underscores.
         - Multiple consecutive underscores are collapsed into a single underscore.
         - Nested dictionaries and lists are processed recursively.
-        - If the input is not a string, dictionary, or list, the function attempts to convert its string representation.
-
-    Raises:
-        SmarterValueError: If the input is not a string, dictionary, or list, and cannot be converted.
+        - If the input is not a string, dictionary, or list, the original value is returned.
 
     Examples:
         >>> from smarter.common.utils import to_snake_case
@@ -176,31 +179,42 @@ def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False) -> An
         # Convert a list of strings
         >>> to_snake_case(["firstName", "lastName"])
         ['first_name', 'last_name']
+
+    .. caution::
+
+        key collisions may occur when converting from camelCase to snake_case.
+        For example, "userName" and "user_name" would both convert to "user_name".
+        In such cases, the last key processed will overwrite previous keys in the
+        resulting dictionary.
     """
 
     if isinstance(data, str):
         return _convert_camel_to_snake(data)
     elif isinstance(data, list):
         return [
-            to_snake_case(item, convert_values=convert_values) if isinstance(item, (dict, list)) else item
+            (
+                to_snake_case(item, convert_values=convert_values, is_recursive=is_recursive)
+                if isinstance(item, (dict, list)) and is_recursive
+                else _convert_camel_to_snake(item) if isinstance(item, str) and convert_values else item
+            )
             for item in data
         ]
     elif isinstance(data, dict):
         retval = {}
         for key, value in data.items():
-            key = _convert_camel_to_snake(key)
-            if isinstance(value, dict) and convert_values:
-                value = to_snake_case(data=value, convert_values=convert_values)
-            elif isinstance(value, list) and convert_values:
-                value = [to_snake_case(item, convert_values=convert_values) for item in value]
+            key = _convert_camel_to_snake(key) if isinstance(key, str) else key
+            if isinstance(value, dict) and is_recursive:
+                value = to_snake_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
+            elif isinstance(value, list) and is_recursive:
+                value = [
+                    to_snake_case(item, convert_values=convert_values, is_recursive=is_recursive) for item in value
+                ]
+            elif convert_values and isinstance(value, str):
+                value = _convert_camel_to_snake(value)
             retval[key] = value
         return retval
     else:
-        try:
-            data_str = data.__name__ if hasattr(data, "__name__") else str(data)  # type: ignore
-            return to_snake_case(data_str, convert_values=convert_values)
-        except Exception as e:
-            raise SmarterValueError(f"Received an unsupported type: {type(data)}") from e
+        return data  # Return the original data if it's not a string, dict, or list, without raising an error.
 
 
 __all__ = [

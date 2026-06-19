@@ -11,14 +11,12 @@ app_name = namespace
 
 
 class ProfileReverseNames:
-    """
-    A class to hold the names of the profile views for easy reference throughout the codebase.
-    """
+    """A class to hold the names of the profile views for easy reference throughout the codebase."""
 
     namespace = namespace
 
-    profile_view = to_snake_case(ProfileView)
-    language_view = to_snake_case(ProfileLanguageView)
+    profile_view = to_snake_case(ProfileView.__name__)
+    language_view = to_snake_case(ProfileLanguageView.__name__)
 
 
 urlpatterns = [

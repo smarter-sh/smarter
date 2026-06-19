@@ -362,7 +362,7 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
         # Legacy support for older versions of the React app that expect
         # 'chatbot' instead of 'llm_client'
         # ---------------------------------------------------------------------
-        retval = self.to_snake_case(retval, convert_values=True)
+        retval = self.to_snake_case(retval)
         retval = self.legacy_config(retval, replace_str="llm_client", with_str="chatbot")
         retval = self.legacy_config(retval, replace_str="account_number", with_str="accountNumber")
         chat_config_invoked.send(sender=self.__class__, instance=self, request=self.smarter_request, data=retval)
