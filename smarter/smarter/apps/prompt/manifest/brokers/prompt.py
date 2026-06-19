@@ -89,6 +89,11 @@ class SAMPromptBroker(AbstractBroker):
     _pydantic_model: typing.Type[SAMPrompt] = SAMPrompt
     _chat: typing.Optional[Prompt] = None
 
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        logger.info(msg)
+
     @property
     def chat_object(self) -> typing.Optional[Prompt]:
         if self._chat:
