@@ -19,10 +19,10 @@ from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.apps.prompt.models import Prompt, PromptHistory, PromptPluginUsage
 from smarter.apps.prompt.signals import (
-    chat_completion_response,
-    chat_finished,
+    chat_response,
     chat_response_failure,
-    chat_started,
+    prompt_finished,
+    prompt_started,
 )
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.apps.provider.services.text_completion.providers import (
@@ -85,9 +85,9 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         return {
             "plugin_called": self._plugin_called,
             "plugin_selected": self._plugin_selected,
-            "chat_started": self._chat_invoked,
-            "chat_completion_response": self._chat_completion_response_received,
-            "chat_finished": self._chat_completion_returned,
+            "prompt_started": self._chat_invoked,
+            "chat_response": self._chat_completion_response_received,
+            "prompt_finished": self._chat_completion_returned,
             "chat_response_failure": self._chat_completion_failed,
         }
 
@@ -238,9 +238,9 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         # setup receivers for all signals to check if they are called
         plugin_selected.connect(self.plugin_selected_signal_handler)
         plugin_called.connect(self.plugin_called_signal_handler)
-        chat_started.connect(self.chat_invoked_signal_handler)
-        chat_completion_response.connect(self.chat_completion_response_received_signal_handler)
-        chat_finished.connect(self.chat_completion_returned_signal_handler)
+        prompt_started.connect(self.chat_invoked_signal_handler)
+        chat_response.connect(self.chat_completion_response_received_signal_handler)
+        prompt_finished.connect(self.chat_completion_returned_signal_handler)
         chat_response_failure.connect(self.chat_completion_failed_signal_handler)
 
         response = None

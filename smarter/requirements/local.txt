@@ -361,7 +361,7 @@ lxml==6.1.0
 mailchimp-marketing==3.0.80
     # via -r smarter/requirements/in/base.in
 mariadb==1.1.14
-    # via -r smarter/requirements/in/base.in
+    # via -r smarter/requirements/in/mariadb.in
 markdown==3.10.2
     # via -r smarter/requirements/in/base.in
 markdown-it-py==4.2.0
@@ -626,6 +626,7 @@ requests==2.34.2
     #   retry-requests
     #   social-auth-core
     #   sphinx
+    #   sphinx-contributors
     #   tiktoken
     #   tldextract
 requests-cache==1.3.2
@@ -667,18 +668,26 @@ sphinx==9.1.0
     #   -r smarter/requirements/in/local.in
     #   autodoc-pydantic
     #   sphinx-autodoc-typehints
+    #   sphinx-contributors
     #   sphinx-copybutton
     #   sphinx-design
+    #   sphinx-last-updated-by-git
     #   sphinx-rtd-theme
     #   sphinxcontrib-django
     #   sphinxcontrib-jquery
 sphinx-autodoc-typehints==3.10.2
     # via -r smarter/requirements/in/local.in
+sphinx-contributors==0.3.0
+    # via -r smarter/requirements/in/local.in
 sphinx-copybutton==0.5.2
     # via -r smarter/requirements/in/local.in
 sphinx-design==0.7.0
     # via -r smarter/requirements/in/local.in
+sphinx-last-updated-by-git==0.3.8
+    # via sphinx-sitemap
 sphinx-rtd-theme==3.1.0
+    # via -r smarter/requirements/in/local.in
+sphinx-sitemap==2.9.0
     # via -r smarter/requirements/in/local.in
 sphinxcontrib-applehelp==2.0.0
     # via sphinx

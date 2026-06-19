@@ -15,11 +15,11 @@ from rest_framework.request import Request
 
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.prompt.signals import (
-    chat_completion_request,
-    chat_completion_response,
-    chat_finished,
+    chat_request,
+    chat_response,
     chat_response_failure,
-    chat_started,
+    prompt_finished,
+    prompt_started,
 )
 from smarter.apps.provider.models import Provider
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
@@ -132,8 +132,8 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             )
             return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
 
-        chat_started.send(sender=self.handler, request=request, data=data)
-        chat_completion_request.send(sender=self.handler, data=data)
+        prompt_started.send(sender=self.handler, request=request, data=data)
+        chat_request.send(sender=self.handler, data=data)
 
         try:
             logger.debug("%s sending request to %s with data: %s", logger_prefix, openai.base_url, formatted_json(data))
@@ -162,8 +162,8 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
                 stack_trace=stack_trace,
             )
 
-        chat_completion_response.send(sender=self.handler, request=request, response=response)
-        chat_finished.send(sender=self.handler, request=request, response=response)
+        chat_response.send(sender=self.handler, request=request, response=response)
+        prompt_finished.send(sender=self.handler, request=request, response=response)
 
         response_dict: dict = {"message": "Response is not a ChatCompletion object"}
         if isinstance(response, ChatCompletion):
