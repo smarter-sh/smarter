@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.8](https://github.com/smarter-sh/smarter/compare/v0.14.7...v0.14.8) (2026-06-19)
+
+### Bug Fixes
+
+* force a new release ([d07247f](https://github.com/smarter-sh/smarter/commit/d07247f084de98788e38f7f6a386dbe163961628))
+
+### Refactoring
+
+* signal names ([051d0eb](https://github.com/smarter-sh/smarter/commit/051d0eb064e93bff441777ddc476cf7977a17fab))
+* signal names ([031021e](https://github.com/smarter-sh/smarter/commit/031021e4898397f5708d392db4b934fc5e9a9ac4))
+* signal names ([1226c5b](https://github.com/smarter-sh/smarter/commit/1226c5b0b4e3fd51426527c466d5d87d45d2aaa1))
+
 ## [0.14.7](https://github.com/smarter-sh/smarter/compare/v0.14.6...v0.14.7) (2026-06-19)
 
 ### Bug Fixes
