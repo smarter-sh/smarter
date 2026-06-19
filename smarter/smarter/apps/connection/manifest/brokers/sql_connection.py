@@ -331,8 +331,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
             )
         # 2.) next, (and only if a loader is not available) try to initialize
-        #     from existing Account model if available
-        elif self._connection:
+        #     from existing SqlConnection model if available
+        elif self.connection:
             metadata = self.sam_connection_metadata()
             if not metadata:
                 raise SAMBrokerErrorNotImplemented(
@@ -1120,7 +1120,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         if self.manifest is None:
             raise SAMBrokerErrorNotReady(
-                message="Manifest is not set. Cannot describe.",
+                message="Neither manifest nor connection are set. Cannot describe.",
                 thing=self.kind,
                 command=command,
             )
