@@ -217,8 +217,48 @@ def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
         return data  # Return the original data if it's not a string, dict, or list, without raising an error.
 
 
+def search_replace(
+    data: Union[dict[str, Any], list[Any]], replace_str: str, with_str: str
+) -> Union[dict[str, Any], list[Any]]:
+    """
+    Recursively search through a dictionary and replace all occurrences of a specified string with another string.
+
+    Args:
+        data (dict): The input dictionary to search through.
+        replace_str (str): The string to search for in the dictionary keys and values.
+        with_str (str): The string to replace the found string with.
+
+    Returns:
+        Union[dict[str, Any], list[Any]]: A new dictionary or list with the specified replacements made.
+
+    Notes:
+        - This function will recursively search through nested dictionaries and lists within the input dictionary.
+        - Only string keys and string values will be checked for replacements. Non-string types will be left unchanged.
+        - This is particularly useful for handling legacy datauration formats where certain keys or values need to be updated for compatibility reasons, such as replacing 'chatbot' with 'llm_client' in prompt datauration dictionaries to maintain
+    ·     compatibility with older versions of the React app that expect 'chatbot' instead of 'llm_client'.
+    """
+    if isinstance(data, dict):
+        retval = {}
+        for key, value in data.items():
+            if isinstance(value, (dict, list)):
+                value = search_replace(value, replace_str, with_str)
+            if replace_str in key:
+                key = key.replace(replace_str, with_str)
+            if key.lower().replace("_", "") == replace_str.lower().replace("_", ""):
+                key = with_str
+            retval[key] = value
+    elif isinstance(data, list):
+        retval = [
+            search_replace(item, replace_str, with_str) if isinstance(item, (dict, list)) else item for item in data
+        ]
+    else:
+        raise ValueError("Input data must be a dictionary or a list.")
+    return retval
+
+
 __all__ = [
     "to_snake_case",
     "to_camel_case",
+    "search_replace",
     "ConvertibleCaseType",
 ]

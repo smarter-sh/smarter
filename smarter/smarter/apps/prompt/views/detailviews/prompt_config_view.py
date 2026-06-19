@@ -45,7 +45,7 @@ from smarter.common.const import (
     SmarterHttpMethods,
 )
 from smarter.common.helpers.url_helpers import clean_url
-from smarter.common.utils import is_authenticated_request
+from smarter.common.utils import is_authenticated_request, search_replace
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
@@ -182,6 +182,17 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
                 user=self.user,
                 user_profile=self.user_profile,
             )
+        if self._llm_client_helper:
+            logger.debug(
+                "%s.llm_client_helper property - instantiated LLMClientHelper with llm_client=%s, name=%s",
+                self.formatted_class_name,
+                self._llm_client_helper.llm_client,
+                self._llm_client_helper.name,
+            )
+        else:
+            logger.warning(
+                "%s.llm_client_helper property - could not instantiate LLMClientHelper", self.formatted_class_name
+            )
         return self._llm_client_helper
 
     @llm_client_helper.setter
@@ -212,23 +223,9 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
 
         support of older versions of the React app that expect 'chatbot' instead of 'llm_client'.
         """
-        if isinstance(config, dict):
-            retval = {}
-            for key, value in config.items():
-                if isinstance(value, (dict, list)):
-                    value = self.legacy_config(value, replace_str, with_str)
-                if replace_str in key:
-                    key = key.replace(replace_str, with_str)
-                if key.lower().replace("_", "") == replace_str.lower().replace("_", ""):
-                    key = with_str
-                retval[key] = value
-        elif isinstance(config, list):
-            retval = [
-                self.legacy_config(item, replace_str, with_str) if isinstance(item, (dict, list)) else item
-                for item in config
-            ]
-        else:
-            return config
+        retval = search_replace(config, replace_str="llm_client", with_str="chatbot")
+        retval = search_replace(retval, replace_str="account_number", with_str="accountNumber")
+        retval = search_replace(retval, replace_str="prompt_history", with_str="chat_history")
         return retval
 
     def config(self) -> dict[str, Any]:
@@ -526,7 +523,6 @@ class PromptConfigView(SmarterAuthenticatedNeverCachedWebView):
     # pylint: disable=unused-argument
     def get(self, request: HttpRequest, *args, **kwargs) -> Union[SmarterJournaledJsonResponse, HttpResponseNotAllowed]:
         """Get the llm_client configuration."""
-        return self.post(request, *args, **kwargs)
         logger.warning(
             "%s - get() %s should be invoked via POST instead of GET.", self.formatted_class_name, request.path
         )
