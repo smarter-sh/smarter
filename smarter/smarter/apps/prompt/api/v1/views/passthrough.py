@@ -69,10 +69,10 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
     :rtype: SmarterJournaledJsonResponse | SmarterJournaledJsonErrorResponse | SmarterHttpResponseBadRequest | SmarterHttpResponseForbidden | SmarterHttpResponseNotFound
 
     :signals:
-        - ``chat_started``: Sent before the prompt completion request is made.
+        - ``prompt_started``: Sent before the prompt completion request is made.
         - ``chat_completion_request``: Sent with the prompt data before calling the provider.
         - ``chat_completion_response``: Sent after a successful response from the provider.
-        - ``chat_finished``: Sent after the prompt completion process is finished.
+        - ``prompt_finished``: Sent after the prompt completion process is finished.
         - ``chat_response_failure``: Sent if an exception occurs during the provider call.
 
     :raises SmarterHttpResponseForbidden: If the user is not authenticated.

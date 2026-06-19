@@ -25,7 +25,7 @@ from smarter.apps.llm_client.models import (
     get_cached_llm_client_by_request,
 )
 from smarter.apps.prompt.models import Prompt, PromptHelper
-from smarter.apps.prompt.signals import chat_session_invoked
+from smarter.apps.prompt.signals import prompt_session_invoked
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
@@ -118,7 +118,7 @@ class SmarterPromptSession(SmarterHelperMixin):
 
         verbose_logger.debug("%s - session established: %s", self.formatted_class_name, self.session_key)
 
-        chat_session_invoked.send(sender=self.__class__, instance=self, request=request)
+        prompt_session_invoked.send(sender=self.__class__, instance=self, request=request)
 
     def __str__(self):
         return (
