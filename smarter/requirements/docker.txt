@@ -282,7 +282,7 @@ lxml==6.0.4
 mailchimp-marketing==3.0.80
     # via -r smarter/requirements/in/base.in
 mariadb==1.1.14
-    # via -r smarter/requirements/in/base.in
+    # via -r smarter/requirements/in/mariadb.in
 markdown==3.10.2
     # via -r smarter/requirements/in/base.in
 marshmallow==3.26.2
