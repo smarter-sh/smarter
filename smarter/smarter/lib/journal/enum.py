@@ -70,38 +70,14 @@ class SmarterJournalThings(SmarterEnumAbstract):
         assert thing == SmarterJournalThings.STATIC_PLUGIN
     """
 
-    STATIC_PLUGIN = "Plugin"
-    """Smarter Static Plugin AI resource.
+    ACCOUNT = "Account"
+    """Smarter Account resource.
 
-    A collection of Django ORM model instances.
+    A Django ORM model instance.
     """
 
     API_PLUGIN = "ApiPlugin"
     """Smarter API Plugin AI resource.
-
-    A Django ORM model instance.
-    """
-
-    SQL_PLUGIN = "SqlPlugin"
-    """Smarter SQL Plugin AI resource.
-
-    A Django ORM model instance.
-    """
-
-    API_CONNECTION = "ApiConnection"
-    """Smarter API Connection resource.
-
-    A Django ORM model instance.
-    """
-
-    SQL_CONNECTION = "SqlConnection"
-    """Smarter SQL Connection resource.
-
-    A Django ORM model instance.
-    """
-
-    ACCOUNT = "Account"
-    """Smarter Account resource.
 
     A Django ORM model instance.
     """
@@ -112,46 +88,46 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django DRF Knox subclass ORM model instance.
     """
 
-    USER = "User"
-    """Smarter User resource.
-
-    A Django Auth User model instance.
-    """
-
-    CHAT = "Prompt"
-    """Smarter Prompt resource.
+    API_CONNECTION = "ApiConnection"
+    """Smarter API Connection resource.
 
     A Django ORM model instance.
-    """
-
-    CHAT_CONFIG = "ChatConfig"
-    """Smarter ChatConfig resource.
-
-    A JSON dictionary generated real-time
-    """
-
-    CHAT_HISTORY = "PromptHistory"
-    """Smarter PromptHistory resource.
-
-    A list of Django ORM model instances.
-    """
-
-    CHAT_PLUGIN_USAGE = "PromptPluginUsage"
-    """Smarter PromptPluginUsage resource.
-
-    A list of Django ORM model instances.
-    """
-
-    CHAT_TOOL_CALL = "PromptToolCall"
-    """Smarter PromptToolCall resource.
-
-    A list of Django ORM model instances.
     """
 
     LLM_CLIENT = "LLMClient"
     """Smarter LLMClient resource.
 
     A Django ORM model instance.
+    """
+
+    PROMPT = "Prompt"
+    """Smarter Prompt resource.
+
+    A Django ORM model instance.
+    """
+
+    PROMPT_CONFIG = "ChatConfig"
+    """Smarter ChatConfig resource.
+
+    A JSON dictionary generated real-time
+    """
+
+    PROMPT_HISTORY = "PromptHistory"
+    """Smarter PromptHistory resource.
+
+    A list of Django ORM model instances.
+    """
+
+    PROMPT_PLUGIN_USAGE = "PromptPluginUsage"
+    """Smarter PromptPluginUsage resource.
+
+    A list of Django ORM model instances.
+    """
+
+    PROMPT_TOOL_CALL = "PromptToolCall"
+    """Smarter PromptToolCall resource.
+
+    A list of Django ORM model instances.
     """
 
     PROVIDER = "Provider"
@@ -166,6 +142,30 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django ORM model instance.
     """
 
+    SQL_CONNECTION = "SqlConnection"
+    """Smarter SQL Connection resource.
+
+    A Django ORM model instance.
+    """
+
+    SQL_PLUGIN = "SqlPlugin"
+    """Smarter SQL Plugin AI resource.
+
+    A Django ORM model instance.
+    """
+
+    STATIC_PLUGIN = "Plugin"
+    """Smarter Static Plugin AI resource.
+
+    A collection of Django ORM model instances.
+    """
+
+    USER = "User"
+    """Smarter User resource.
+
+    A Django Auth User model instance.
+    """
+
     VECTORSTORE = "Vectorstore"
     """Smarter Vectorstore resource.
 
@@ -176,22 +176,22 @@ class SmarterJournalThings(SmarterEnumAbstract):
     def choices(cls) -> list[tuple[str, str]]:
         """Django model choices for SmarterJournalThings."""
         return [
-            (cls.STATIC_PLUGIN.value, cls.STATIC_PLUGIN.value),
-            (cls.API_PLUGIN.value, cls.API_PLUGIN.value),
-            (cls.SQL_PLUGIN.value, cls.SQL_PLUGIN.value),
-            (cls.API_CONNECTION.value, cls.API_CONNECTION.value),
-            (cls.SQL_CONNECTION.value, cls.SQL_CONNECTION.value),
             (cls.ACCOUNT.value, cls.ACCOUNT.value),
+            (cls.API_CONNECTION.value, cls.API_CONNECTION.value),
+            (cls.API_PLUGIN.value, cls.API_PLUGIN.value),
             (cls.AUTH_TOKEN.value, cls.AUTH_TOKEN.value),
-            (cls.USER.value, cls.USER.value),
-            (cls.CHAT.value, cls.CHAT.value),
-            (cls.CHAT_CONFIG.value, cls.CHAT_CONFIG.value),
-            (cls.CHAT_HISTORY.value, cls.CHAT_HISTORY.value),
-            (cls.CHAT_PLUGIN_USAGE.value, cls.CHAT_PLUGIN_USAGE.value),
-            (cls.CHAT_TOOL_CALL.value, cls.CHAT_TOOL_CALL.value),
+            (cls.PROMPT_HISTORY.value, cls.PROMPT_HISTORY.value),
+            (cls.PROMPT_PLUGIN_USAGE.value, cls.PROMPT_PLUGIN_USAGE.value),
+            (cls.PROMPT_TOOL_CALL.value, cls.PROMPT_TOOL_CALL.value),
             (cls.LLM_CLIENT.value, cls.LLM_CLIENT.value),
+            (cls.PROMPT.value, cls.PROMPT.value),
+            (cls.PROMPT_CONFIG.value, cls.PROMPT_CONFIG.value),
             (cls.PROVIDER.value, cls.PROVIDER.value),
             (cls.SECRET.value, cls.SECRET.value),
+            (cls.SQL_CONNECTION.value, cls.SQL_CONNECTION.value),
+            (cls.SQL_PLUGIN.value, cls.SQL_PLUGIN.value),
+            (cls.STATIC_PLUGIN.value, cls.STATIC_PLUGIN.value),
+            (cls.USER.value, cls.USER.value),
             (cls.VECTORSTORE.value, cls.VECTORSTORE.value),
         ]
 
@@ -213,19 +213,19 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     """
 
     APPLY = "apply"
-    CHAT = "prompt"
-    CHAT_CONFIG = "chat_config"
     DELETE = "delete"
     DEPLOY = "deploy"
     DESCRIBE = "describe"
-    GET = "get"
     ENABLE_JOURNAL = "journal"  # FIXNOTE: THIS IS AMBIGUOUS
+    GET = "get"
+    JSON_SCHEMA = "json_schema"
     LOGS = "logs"  # FIXNOTE: THIS IS AMBIGUOUS
     MANIFEST_EXAMPLE = "example_manifest"
+    PROMPT = "prompt"
+    PROMPT_CONFIG = "chat_config"
     STATUS = "status"
-    JSON_SCHEMA = "json_schema"
-    VERSION = "version"
     UNDEPLOY = "undeploy"
+    VERSION = "version"
     WHOAMI = "whoami"
 
     @classmethod
@@ -233,8 +233,8 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
         """Django model choices for SmarterJournalCliCommands."""
         return [
             (cls.APPLY.value, cls.APPLY.value),
-            (cls.CHAT.value, cls.CHAT.value),
-            (cls.CHAT_CONFIG.value, cls.CHAT_CONFIG.value),
+            (cls.PROMPT.value, cls.PROMPT.value),
+            (cls.PROMPT_CONFIG.value, cls.PROMPT_CONFIG.value),
             (cls.DELETE.value, cls.DELETE.value),
             (cls.DEPLOY.value, cls.DEPLOY.value),
             (cls.DESCRIBE.value, cls.DESCRIBE.value),
@@ -254,8 +254,8 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
         """Return the past tense of the command."""
         return {
             cls.APPLY.value: "applied",
-            cls.CHAT.value: "prompted",
-            cls.CHAT_CONFIG.value: "fetched chat_config",
+            cls.PROMPT.value: "prompted",
+            cls.PROMPT_CONFIG.value: "fetched chat_config",
             cls.DELETE.value: "deleted",
             cls.DEPLOY.value: "deployed",
             cls.DESCRIBE.value: "described",

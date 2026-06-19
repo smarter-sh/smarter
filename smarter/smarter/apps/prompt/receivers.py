@@ -14,6 +14,7 @@ from smarter.apps.plugin.signals import plugin_deleting
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.utils import request_to_json
 from smarter.lib.django import waffle
+from smarter.lib.django.request import SmarterRequestType
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -85,11 +86,18 @@ def handle_chat_session_invoked(sender, instance: SmarterPromptSession, request:
 
 
 @receiver(chat_config_invoked, dispatch_uid="chat_config_invoked")
-def handle_chat_config_invoked_(sender, instance: PromptConfigView, request, data: dict, *args, **kwargs):
-    """Handle prompt config invoked signal."""
+def handle_chat_config_invoked_(
+    sender, instance: PromptConfigView, request: SmarterRequestType, data: dict, *args, **kwargs
+):
+    """
+    Handle prompt config invoked signal.
+
+    chat_config_invoked.send(sender=self.__class__, instance=self, request=self.smarter_request, data=retval)
+    """
     url: Optional[str] = instance.url
 
     logger.info("%s by %s url=%s", formatted_text(f"{prefix}.chat_config_invoked"), get_sender_name(sender), url)
+    logger.debug("%s data: %s", formatted_text(f"{prefix}.chat_config_invoked"), formatted_json(data))
 
 
 @receiver(chat_started, dispatch_uid="chat_started")

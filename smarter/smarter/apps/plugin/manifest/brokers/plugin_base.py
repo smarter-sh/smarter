@@ -334,13 +334,13 @@ class SAMPluginBaseBroker(AbstractBroker):
             raise SAMBrokerError(
                 message="No user set for the broker",
                 thing=self.thing,
-                command=SmarterJournalCliCommands.CHAT,
+                command=SmarterJournalCliCommands.PROMPT,
             )
         if not self.user_profile:
             raise SAMBrokerError(
                 message="No user profile set for the broker",
                 thing=self.thing,
-                command=SmarterJournalCliCommands.CHAT,
+                command=SmarterJournalCliCommands.PROMPT,
             )
         if not self._manifest:
             if self.loader:

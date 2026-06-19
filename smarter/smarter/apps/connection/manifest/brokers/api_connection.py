@@ -83,39 +83,6 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        if not self.ready:
-            if not self.loader and not self.manifest and not self.connection:
-                logger.warning(
-                    "%s.__init__() No loader nor existing Connection provided for %s broker. Cannot initialize.",
-                    self.formatted_class_name,
-                    self.kind,
-                )
-                return
-            if self.loader and self.loader.manifest_kind != self.kind:
-                raise SAMBrokerErrorNotReady(
-                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
-                    thing=self.kind,
-                )
-
-            if self.loader:
-                self._manifest = SAMApiConnection(
-                    apiVersion=self.loader.manifest_api_version,
-                    kind=self.loader.manifest_kind,
-                    metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
-                    spec=SAMApiConnectionSpec(**self.loader.manifest_spec),
-                    status=(
-                        SAMConnectionCommonStatus(**self.loader.manifest_status)
-                        if self.loader and self.loader.manifest_status
-                        else None
-                    ),
-                )
-            if self._manifest:
-                logger.info(
-                    "%s.__init__() initialized manifest from loader for %s %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    self._manifest.metadata.name,
-                )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         logger.info(msg)
 
@@ -297,7 +264,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             )
             logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
         # 2.) next, (and only if a loader is not available) try to initialize
-        #     from existing Account model if available
+        #     from existing ApiConnection model if available
         elif self.connection:
             metadata = self.sam_connection_metadata()
             if not metadata:

@@ -171,8 +171,8 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
                 request=request,
                 e=e,
                 error_message=str(e),
-                command=SmarterJournalCliCommands.CHAT,
-                thing=SmarterJournalThings.CHAT,
+                command=SmarterJournalCliCommands.PROMPT,
+                thing=SmarterJournalThings.PROMPT,
                 status=HTTPStatus.BAD_REQUEST,
             )
 
@@ -183,8 +183,8 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
             return SmarterJournaledJsonResponse(
                 request=request,
                 data=retval.model_dump(),
-                command=SmarterJournalCliCommands.CHAT,
-                thing=SmarterJournalThings.CHAT,
+                command=SmarterJournalCliCommands.PROMPT,
+                thing=SmarterJournalThings.PROMPT,
                 status=HTTPStatus.OK,
             )
 

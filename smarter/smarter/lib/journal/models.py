@@ -24,7 +24,7 @@ class SAMJournal(models.Model):
 
         entry = SAMJournal(
             user=request.user,
-            thing=SmarterJournalThings.CHAT.value,
+            thing=SmarterJournalThings.PROMPT.value,
             command=SmarterJournalCliCommands.CREATE.value,
             request={"data": "example"},
             response={"result": "success"},
@@ -46,13 +46,13 @@ class SAMJournal(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True, db_index=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True, db_index=True)
     thing = models.CharField(
-        max_length=24, choices=SmarterJournalThings.choices(), default=SmarterJournalThings.CHAT.value, blank=True
+        max_length=24, choices=SmarterJournalThings.choices(), default=SmarterJournalThings.PROMPT.value, blank=True
     )
     command = models.CharField(
         max_length=24,
         choices=SmarterJournalCliCommands.choices(),
         blank=True,
-        default=SmarterJournalCliCommands.CHAT.value,
+        default=SmarterJournalCliCommands.PROMPT.value,
     )
     request = models.JSONField(
         encoder=SmarterJSONEncoder,
