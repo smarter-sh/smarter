@@ -66,24 +66,6 @@ class DocsJsonSchemaChatView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.CHAT)
 
 
-class DocsJsonSchemaChatHistoryView(DocsJsonSchemaBaseView):
-    """PromptHistory JSON Schema view."""
-
-    kind = SAMKinds(SAMKinds.CHAT_HISTORY)
-
-
-class DocsJsonSchemaChatPluginUsageView(DocsJsonSchemaBaseView):
-    """PromptPluginUsage JSON Schema view."""
-
-    kind = SAMKinds(SAMKinds.CHAT_PLUGIN_USAGE)
-
-
-class DocsJsonSchemaChatToolCallView(DocsJsonSchemaBaseView):
-    """PromptToolCall JSON Schema view."""
-
-    kind = SAMKinds(SAMKinds.CHAT_TOOL_CALL)
-
-
 class DocsJsonSchemaLLMClientView(DocsJsonSchemaBaseView):
     """LLMClient JSON Schema view."""
 
