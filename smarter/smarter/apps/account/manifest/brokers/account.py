@@ -731,10 +731,6 @@ class SAMAccountBroker(AbstractBroker):
         :raises SAMBrokerErrorNotReady: If the broker's account is not set.
         :raises SAMBrokerError: If an error occurs during the apply process.
 
-        .. important::
-
-            Calls ``super().apply()`` to ensure the manifest is loaded and validated before applying changes.
-
         .. caution::
 
             Fields that are not editable (such as ``id``, ``created_at``, ``updated_at``, and ``account_number``) are removed from the data before saving.
@@ -750,7 +746,6 @@ class SAMAccountBroker(AbstractBroker):
             - :meth:`django_orm_to_manifest_dict`
         """
         logger.debug("%s.apply() called", self.formatted_class_name)
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 

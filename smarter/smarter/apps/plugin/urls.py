@@ -21,15 +21,15 @@ class PluginReverseNames:
     """Reverse view names for the plugin app."""
 
     namespace = namespace
-    listview = to_snake_case(PluginListView)
-    detailview = to_snake_case(PluginDetailView)
+    listview = to_snake_case(PluginListView.__name__)
+    detailview = to_snake_case(PluginDetailView.__name__)
 
-    listview = to_snake_case(PluginListView)
-    listview_api = to_snake_case(PluginListApiView)
-    listview_api_all = to_snake_case(PluginListApiView) + "_all"
-    listview_api_clone = to_snake_case(PluginListApiCloneView)
-    listview_api_delete = to_snake_case(PluginListApiDeleteView)
-    listview_api_rename = to_snake_case(PluginListApiRenameView)
+    listview = to_snake_case(PluginListView.__name__)
+    listview_api = to_snake_case(PluginListApiView.__name__)
+    listview_api_all = to_snake_case(PluginListApiView.__name__) + "_all"
+    listview_api_clone = to_snake_case(PluginListApiCloneView.__name__)
+    listview_api_delete = to_snake_case(PluginListApiDeleteView.__name__)
+    listview_api_rename = to_snake_case(PluginListApiRenameView.__name__)
 
 
 urlpatterns = [

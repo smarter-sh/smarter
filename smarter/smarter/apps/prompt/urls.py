@@ -67,17 +67,17 @@ class PromptReverseNames:
 
     namespace = namespace
 
-    manifest_by_hashed_id = to_snake_case(LLMClientDetailView)
-    chat_by_hashed_id = to_snake_case(PromptWorkbenchView)
-    config_by_hashed_id = to_snake_case(PromptConfigView)
-    sandbox_by_hashed_id = to_snake_case(PromptSandboxView)
+    manifest_by_hashed_id = to_snake_case(LLMClientDetailView.__name__)
+    chat_by_hashed_id = to_snake_case(PromptWorkbenchView.__name__)
+    config_by_hashed_id = to_snake_case(PromptConfigView.__name__)
+    sandbox_by_hashed_id = to_snake_case(PromptSandboxView.__name__)
 
-    listview = to_snake_case(PromptListView)
-    listview_api = to_snake_case(PromptListApiView)
-    listview_api_all = to_snake_case(PromptListApiView) + "_all"
-    listview_api_clone = to_snake_case(PromptListApiCloneView)
-    listview_api_delete = to_snake_case(PromptListApiDeleteView)
-    listview_api_rename = to_snake_case(PromptListApiRenameView)
+    listview = to_snake_case(PromptListView.__name__)
+    listview_api = to_snake_case(PromptListApiView.__name__)
+    listview_api_all = to_snake_case(PromptListApiView.__name__) + "_all"
+    listview_api_clone = to_snake_case(PromptListApiCloneView.__name__)
+    listview_api_delete = to_snake_case(PromptListApiDeleteView.__name__)
+    listview_api_rename = to_snake_case(PromptListApiRenameView.__name__)
 
 
 urlpatterns = [

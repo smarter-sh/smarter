@@ -32,15 +32,15 @@ class ProviderReverseNames:
 
     namespace = namespace
 
-    listview = to_snake_case(ProviderListApiView)
-    detailview = to_snake_case(ProviderDetailView)
+    listview = to_snake_case(ProviderListApiView.__name__)
+    detailview = to_snake_case(ProviderDetailView.__name__)
 
-    listview = to_snake_case(ProviderListView)
-    listview_api = to_snake_case(ProviderListApiView)
-    listview_api_all = to_snake_case(ProviderListApiView) + "_all"
-    listview_api_clone = to_snake_case(ProviderListApiCloneView)
-    listview_api_delete = to_snake_case(ProviderListApiDeleteView)
-    listview_api_rename = to_snake_case(ProviderListApiRenameView)
+    listview = to_snake_case(ProviderListView.__name__)
+    listview_api = to_snake_case(ProviderListApiView.__name__)
+    listview_api_all = to_snake_case(ProviderListApiView.__name__) + "_all"
+    listview_api_clone = to_snake_case(ProviderListApiCloneView.__name__)
+    listview_api_delete = to_snake_case(ProviderListApiDeleteView.__name__)
+    listview_api_rename = to_snake_case(ProviderListApiRenameView.__name__)
 
 
 urlpatterns = [

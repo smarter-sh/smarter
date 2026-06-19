@@ -25,16 +25,16 @@ class ConnectionReverseNames:
 
     namespace = namespace
 
-    listview = to_snake_case(ConnectionListApiView)
-    sql_detailview = to_snake_case(SqlConnectionDetailView)
-    api_detailview = to_snake_case(ApiConnectionDetailView)
+    listview = to_snake_case(ConnectionListApiView.__name__)
+    sql_detailview = to_snake_case(SqlConnectionDetailView.__name__)
+    api_detailview = to_snake_case(ApiConnectionDetailView.__name__)
 
-    listview = to_snake_case(ConnectionListView)
-    listview_api = to_snake_case(ConnectionListApiView)
-    listview_api_all = to_snake_case(ConnectionListApiView) + "_all"
-    listview_api_clone = to_snake_case(ConnectionListApiCloneView)
-    listview_api_delete = to_snake_case(ConnectionListApiDeleteView)
-    listview_api_rename = to_snake_case(ConnectionListApiRenameView)
+    listview = to_snake_case(ConnectionListView.__name__)
+    listview_api = to_snake_case(ConnectionListApiView.__name__)
+    listview_api_all = to_snake_case(ConnectionListApiView.__name__) + "_all"
+    listview_api_clone = to_snake_case(ConnectionListApiCloneView.__name__)
+    listview_api_delete = to_snake_case(ConnectionListApiDeleteView.__name__)
+    listview_api_rename = to_snake_case(ConnectionListApiRenameView.__name__)
 
 
 urlpatterns = [

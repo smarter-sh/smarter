@@ -409,32 +409,40 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self._is_ready_abstract_broker,
         )
         # ---------------------------------------------------------------------
-        # there are four possible ways for us to be ready.
+        # there are five possible ways for us to be ready.
         # ---------------------------------------------------------------------
-        if self.request and "example_manifest" in self.request.path:
-            # 1.) if the request path indicates this is an example_manifest operation
+        if self.request and "example-manifest" in self.request.path:
+            # 1.) if the request path indicates this is an example-manifest operation
             logger.debug(
-                "%s.is_ready_abstract_broker() request path indicates this is an example_manifest operation. Marking as ready.",
+                "%s.is_ready_abstract_broker() request path indicates this is an example-manifest operation. Marking as ready.",
+                self.abstract_broker_logger_prefix,
+            )
+            self._is_ready_abstract_broker = True
+            return self._is_ready_abstract_broker
+        if self.request and "json-schema" in self.request.path:
+            # 2.) if the request path indicates this is a json-schema operation
+            logger.debug(
+                "%s.is_ready_abstract_broker() request path indicates this is a json-schema operation. Marking as ready.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
             return self._is_ready_abstract_broker
         if bool(self._manifest):
-            # 2.) if we have a manifest.
+            # 3.) if we have a manifest.
             logger.debug(
                 "%s.is_ready_abstract_broker() manifest is loaded.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
         if bool(self.loader) and self.loader.ready:
-            # 3.) we have a loader and it's in a ready state.
+            # 4.) we have a loader and it's in a ready state.
             logger.debug(
                 "%s.is_ready_abstract_broker() loader is ready.",
                 self.abstract_broker_logger_prefix,
             )
             self._is_ready_abstract_broker = True
         if bool(self.orm_meta_instance):
-            # 4.) we have an ORM meta instance.
+            # 5.) we have an ORM meta instance.
             logger.debug(
                 "%s.is_ready_abstract_broker() %s instance is available.",
                 self.abstract_broker_logger_prefix,
@@ -816,13 +824,14 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The SAMLoader instance for this broker.
         :rtype: Optional[SAMLoader]
         """
-        if (self._loader and self._loader.ready) or self._ready:
+        if isinstance(self._loader, SAMLoader) and self._loader.ready:
             return self._loader
-        logger.debug(
-            "%s.loader() getter - loader is not ready. Current loader state: %s",
-            self.abstract_broker_logger_prefix,
-            self._loader,
-        )
+        if self._loader:
+            logger.warning(
+                "%s.loader() getter - loader is set but is not in a ready state.",
+                self.abstract_broker_logger_prefix,
+            )
+
         return None
 
     @loader.setter
@@ -1409,10 +1418,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # unpredictable downstream behavior.
         cache_invalidate.send(sender=self.__class__, user_profile=self.user_profile)
 
-    # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
+    @abstractmethod
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
         Apply a manifest, which works like an upsert operation.
+
+        This abstract method should be implemented by subclasses to provide
+        the logic for applying a manifest to create or update a resource.
 
         Designed
         around the Kubernetes ``kubectl apply`` command.
@@ -1436,14 +1448,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         .. todo:: Research why this is not an abstract method.
         """
-        logger.debug(
-            "%s.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
-            self.abstract_broker_logger_prefix,
-            request,
-            args,
-            kwargs,
-            self.account,
-            self.user,
+        raise SAMBrokerErrorNotImplemented(
+            message="apply() not implemented", thing=self.thing, command=SmarterJournalCliCommands.APPLY
         )
 
     @abstractmethod
@@ -1953,7 +1959,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         fields_and_types: list[dict[str, str]] = []
         for field_name, field in serializer.fields.items():
-            item = self.to_camel_case({"name": field_name, "type": type(field).__name__}, convert_values=True)
+            item = self.to_camel_case({"name": field_name, "type": type(field).__name__}, convert_values=False)
             if isinstance(item, dict) and all(isinstance(k, str) and isinstance(v, str) for k, v in item.items()):
                 fields_and_types.append(item)
             else:

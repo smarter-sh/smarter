@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API Manifest handler"""
+"""Smarter API Manifest handler."""
 
 from smarter.lib.manifest.broker import SAMBrokerError
 
@@ -9,4 +9,4 @@ class SAMConnectionBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
-        return "Smarter API Connection Manifest Broker Error"
+        return "Smarter Connection Manifest Broker Error"
