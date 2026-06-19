@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.6-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.14.6-alpha.3...v0.14.6-alpha.4) (2026-06-19)
+
+### Bug Fixes
+
+* prompt_history should be chat_history for legacy chat app ([dcab36f](https://github.com/smarter-sh/smarter/commit/dcab36f78dc447494713efcbdcc12b5ad426d928))
+
+### Refactoring
+
+* thing names ([f261315](https://github.com/smarter-sh/smarter/commit/f26131520014a8ec1e44b3bd1fe0e52a61c4c85f))
+
 ## [0.14.6-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.6-alpha.2...v0.14.6-alpha.3) (2026-06-19)
 
 ### Bug Fixes
