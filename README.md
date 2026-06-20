@@ -17,6 +17,7 @@ integrations using YAML manifests, then deploy them through a web UI, CLI, API,
 or Kubernetes.
 
 ![Smarter Manifest](https://cdn.smarter.sh/docs/smarter-framework/smarter-manifest.png)
+![Smarter Web Console](https://cdn.smarter.sh/github.com/smarter-sh/react/dashboard-screenshot.png)
 
 ## Why Smarter?
 
