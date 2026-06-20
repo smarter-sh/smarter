@@ -79,7 +79,7 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     """
     from smarter.apps.dashboard.context_processors import cache_invalidations
 
-    logger.info(
+    logger.debug(
         "%s User post_save: %s, created: %s",
         formatted_text(f"{module_prefix}.user_post_save()"),
         instance,
@@ -109,7 +109,7 @@ def user_post_delete(sender: User, instance: User, **kwargs):
 @receiver(post_save, sender=UserProfile)
 def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, **kwargs):
     """Signal receiver for created/saved of UserProfile model."""
-    logger.info(
+    logger.debug(
         "%s UserProfile post_save: %s, created: %s",
         formatted_text(f"{module_prefix}.user_profile_post_save()"),
         instance,
@@ -136,8 +136,8 @@ def account_post_save(sender: Account, instance: Account, created, **kwargs):
     if created:
         logger.info("%s Account created: %s", model_prefix, account_json)
     else:
-        logger.info("%s Account updated: %s", model_prefix, account_json)
-        logger.info(
+        logger.debug("%s Account updated: %s", model_prefix, account_json)
+        logger.debug(
             "%s invalidating cache for Account: %s", formatted_text(f"{module_prefix}.account_post_save()"), instance
         )
 
@@ -169,7 +169,7 @@ def charge_post_save(sender: Charge, instance: Charge, created, **kwargs):
 def daily_billing_record_post_save(sender: DailyBillingRecord, instance: DailyBillingRecord, created, **kwargs):
     """Signal receiver for created/saved of DailyBillingRecord model."""
     daily_billing_record_json = json.dumps(model_to_dict(instance))
-    logger.info(
+    logger.debug(
         "%s DailyBillingRecord: %s, created: %s",
         formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
         daily_billing_record_json,
@@ -181,7 +181,7 @@ def daily_billing_record_post_save(sender: DailyBillingRecord, instance: DailyBi
 def secret_post_save(sender: Secret, instance: Secret, created, **kwargs):
     """Signal receiver for created/saved of Secret model."""
     secret_json = json.dumps(model_to_dict(instance))
-    logger.info(
+    logger.debug(
         "%s Secret: %s, id: %s created: %s, user_profile: %s",
         formatted_text(f"{module_prefix}.secret_post_save()"),
         secret_json,

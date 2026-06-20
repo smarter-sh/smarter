@@ -11,6 +11,7 @@ from requests import Response
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -36,7 +37,7 @@ from .signals import (
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-prefix = formatted_text(__name__)
+prefix = formatted_text(__name__) + "."
 
 
 # ------------------------------------------------------------------------------
@@ -105,9 +106,10 @@ def handle_sql_connection_success(sender, connection: SqlConnection, **kwargs):
     """Handle SQL connection success signal."""
 
     logger.info(
-        "%s - %s",
+        "%s - %s is %s",
         formatted_text(prefix + "sql_connection_success()"),
         connection.get_connection_string(),
+        SmarterReadyState.READY,
     )
 
 
@@ -127,9 +129,10 @@ def handle_sql_connection_failed(sender, connection: SqlConnection, error: str, 
     """Handle SQL connection failed signal."""
 
     logger.error(
-        "%s - %s - error: %s",
+        "%s - %s is %s - error: %s",
         formatted_text(prefix + "sql_connection_failed()"),
         connection.get_connection_string(masked=not smarter_settings.debug_mode),
+        SmarterReadyState.NOT_READY,
         error,
     )
 
@@ -198,9 +201,10 @@ def handle_api_connection_success(sender, connection: ApiConnection, **kwargs):
     """Handle API connection success signal."""
 
     logger.info(
-        "%s - %s",
+        "%s - %s is %s",
         formatted_text(prefix + "api_connection_success()"),
         connection.get_connection_string(),
+        SmarterReadyState.READY,
     )
 
 
@@ -209,9 +213,10 @@ def handle_api_connection_failed(sender, connection: ApiConnection, error: Optio
     """Handle API connection failed signal."""
 
     logger.info(
-        "%s - %s",
+        "%s - %s is %s",
         formatted_text(prefix + "api_connection_failed()"),
         connection.get_connection_string(),
+        SmarterReadyState.NOT_READY,
     )
 
 
