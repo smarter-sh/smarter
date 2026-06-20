@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.10](https://github.com/smarter-sh/smarter/compare/v0.14.9...v0.14.10) (2026-06-20)
+
+### Bug Fixes
+
+* keep isLoading false if we get a cache hit ([77a6a9b](https://github.com/smarter-sh/smarter/commit/77a6a9bb3ea6f628e9204c10cc264f9f25f55817))
+
 ## [0.14.9](https://github.com/smarter-sh/smarter/compare/v0.14.8...v0.14.9) (2026-06-20)
 
 ### Bug Fixes
