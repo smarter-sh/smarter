@@ -9,16 +9,19 @@
 [![License: GNU AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)<br>
 
 Smarter is used as an instructional tool at [University of British Columbia](https://www.ubc.ca/)
-for teaching AI. It is an open-source platform for building, deploying, and governing
-enterprise AI applications without writing custom orchestration code. Define
-agents, prompts, tools, APIs, and data integrations declaratively using
-YAML manifests, then deploy them through a web console, CLI, REST API, or Kubernetes.
+for teaching AI.
+
+Smarter is an open-source platform for building and running enterprise AI systems.
+Instead of writing orchestration code, you define agents, prompts, tools, and
+integrations using YAML manifests, then deploy them through a web UI, CLI, API,
+or Kubernetes.
+
+![Smarter Manifest](https://cdn.smarter.sh/docs/smarter-framework/smarter-manifest.png)
 
 ## Why Smarter?
 
-Building, testing, deploying and governing AI resources is complicated.
-Smarter simplifies this with a declarative approach to defining,
-testing, and operating enterprise AI resources consistently across environments.
+Smarter replaces scattered AI orchestration code with a single declarative
+system for defining, testing, and running AI workflows across environments.
 
 ## At a Glance
 
