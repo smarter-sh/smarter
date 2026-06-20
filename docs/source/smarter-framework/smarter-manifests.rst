@@ -7,6 +7,10 @@ written in YAML format and provide a structured way to declare resources, settin
 Smarter Manifests enable developers to easily manage and deploy configurations in a consistent manner across different
 environments.
 
+.. image:: https://cdn.smarter.sh/docs/smarter-framework/smarter-manifest.png
+  :alt: Example of a Smarter API Manifest
+  :width: 100%
+
 Smarter manifests are utf-8 text documents, formatted as either yaml or json, inspired by Kubernetes’ kubectl, itself modeled on the
 `OpenAPI Specification v3.x <https://spec.openapis.org/oas/latest.html>`__. The actual
 implementation of this specification is located `here <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/api>`__. The Smarter API can
@@ -17,7 +21,7 @@ based on the declarations found in Smarter Manifests. SAM manifests provide you 
 layer of abstraction that enables you to focus on achieving the desired state of your AI resources rather than
 on the low-level implementation details of how to get there.
 
-The basic stsructure of a Smarter API Manifest (SAM) YAML document includes the following key sections:
+The basic structure of a Smarter API Manifest (SAM) YAML document includes the following key sections:
 
 - **apiVersion**: Specifies the version of the API schema that the manifest adheres to.
 - **kind**: Indicates the type of resource being defined (e.g., Account, Plugin, LLMClient).
