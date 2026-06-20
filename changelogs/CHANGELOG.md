@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.14.9](https://github.com/smarter-sh/smarter/compare/v0.14.8...v0.14.9) (2026-06-20)
+
+### Bug Fixes
+
+* port remaining code to @smarter/common ([a16069e](https://github.com/smarter-sh/smarter/commit/a16069e854715d66a0e34659a7f151772afc3e96))
+
 ## [0.14.8](https://github.com/smarter-sh/smarter/compare/v0.14.7...v0.14.8) (2026-06-19)
 
 ### Bug Fixes
