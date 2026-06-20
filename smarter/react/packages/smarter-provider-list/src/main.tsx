@@ -10,11 +10,10 @@
  *
  */
 import { createRoot } from "react-dom/client";
+import type { SessionContext } from "@smarter/common";
+
 import { loggerPrefix } from "./lib/const";
 import App from "@/App";
-
-
-import type { SessionContext } from "@smarter/common";
 
 const rootEl = document.getElementById("smarter-provider-list-root");
 if (!rootEl) throw new Error("Root element not found");

@@ -217,7 +217,6 @@ const meta: Meta<typeof ListView> = {
   },
   args: {
     isLoading: false,
-    ghostRows: 5,
     sessionContext,
     objects: sampleObjects,
     onRequery: () => {},
@@ -234,7 +233,6 @@ export const Loading: Story = {
   args: {
     isLoading: true,
     objects: [],
-    ghostRows: 6,
   },
 };
 

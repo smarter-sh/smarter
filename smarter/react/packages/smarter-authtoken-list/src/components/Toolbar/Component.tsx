@@ -21,11 +21,13 @@
  * This component is intended to be embedded in each authtoken row or card in ListView and CardView.
  */
 import { useState } from "react";
-import { loggerPrefix } from "@/lib/const";
+
 import type { SessionContext } from "@smarter/common";
-import type { AuthToken } from "@/lib/Types";
 import { Modal } from "@smarter/common";
 import { fetchDjangoUrl } from "@smarter/common";
+
+import { loggerPrefix } from "@/lib/const";
+import type { AuthToken } from "@/lib/Types";
 
 interface ToolbarProps {
   sessionContext: SessionContext;

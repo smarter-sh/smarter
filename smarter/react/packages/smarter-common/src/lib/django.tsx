@@ -33,7 +33,7 @@ export default async function fetchDjangoUrl(
     "User-Agent": userAgent,
   };
 
-  console.debug(loggerPrefix, `Sending POST request to ${url}`, "with body:", requestJson);
+  console.debug(`${loggerPrefix} fetchDjangoUrl() Sending POST request to ${url}`, "with body:", requestJson);
 
   const res = await fetch(url, {
     method: "POST",
@@ -41,7 +41,7 @@ export default async function fetchDjangoUrl(
     body: requestJson,
   });
 
-  console.debug(loggerPrefix, `Received response from ${url}:`, res);
+  console.debug(`${loggerPrefix} fetchDjangoUrl() Received response from ${url}:`, res);
 
   return res;
 }
