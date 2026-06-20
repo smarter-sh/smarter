@@ -2,38 +2,42 @@
 
 [![Latest Release](https://img.shields.io/github/v/release/smarter-sh/smarter?label=release)](https://github.com/smarter-sh/smarter/releases)
 ![Build Status](https://github.com/smarter-sh/smarter/actions/workflows/build.yml/badge.svg?branch=main)
-![Release Status](https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main)
-[![Docker Pulls](https://img.shields.io/docker/pulls/mcdaniel0073/smarter.svg?logo=docker&label=DockerHub)](https://hub.docker.com/r/mcdaniel0073/smarter)
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)<br>[![Docs](https://img.shields.io/badge/Read%20the%20Docs-smarter.sh-blue?logo=readthedocs)](https://docs.smarter.sh/en/latest/)
+[![Docs](https://img.shields.io/badge/Read%20the%20Docs-smarter.sh-blue?logo=readthedocs)](https://docs.smarter.sh/en/latest/)
 [![Website](https://img.shields.io/badge/official%20web%20site-smarter.sh-blue?logo=google-chrome)](https://smarter.sh)
-[![License: GNU AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)<br>[![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python)](https://www.python.org/)
-[![Django](https://img.shields.io/badge/Django-6.0-green?logo=django)](https://www.djangoproject.com/)
-[![Pydantic](https://img.shields.io/badge/Pydantic-2.13-blue?logo=pydantic)](https://docs.pydantic.dev/)
-[![Django Rest Framework](https://img.shields.io/badge/Django%20Rest%20Framework-3.17-3a3a3a?logo=django)](https://www.django-rest-framework.org/)<br>[![hack.d Lawrence McDaniel](https://img.shields.io/badge/Author-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
+[![Docker Pulls](https://img.shields.io/docker/pulls/mcdaniel0073/smarter.svg?logo=docker&label=DockerHub)](https://hub.docker.com/r/mcdaniel0073/smarter)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)
+[![License: GNU AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)<br>
 
-This repo contains source code for the Smarter REST API and the web based
-authoring platform.
+Smarter is used as an instructional tool at [University of British Columbia](https://www.ubc.ca/)
+for teaching AI.
 
-Smarter is a declarative extensible AI authoring and resource management system.
-It is used as an instructional tool at [University of British Columbia](https://www.ubc.ca/)
-for teaching cloud computing at scale, and generative AI prompt engineering
-techniques including advanced use of LLM tool calling involving secure
-integrations to remote data sources like Sql databases and remote APIs.
+Smarter is an open-source platform for building and running enterprise AI systems.
+Instead of writing orchestration code, you define agents, prompts, tools, and
+integrations using YAML manifests, then deploy them through a web UI, CLI, API,
+or Kubernetes.
+
+![Smarter Manifest](https://cdn.smarter.sh/docs/smarter-framework/smarter-manifest.png)
+
+## Why Smarter?
+
+Smarter replaces scattered AI orchestration code with a single declarative
+system for defining, testing, and running AI workflows across environments.
 
 ## At a Glance
 
 - [1-click Quickstart](https://github.com/smarter-sh/smarter-deploy) deployment
   with Docker.
-- declarative manifest based resource management
-- no-code LLM tool call extensibility that facilitates integrations to remote
-  data sources like Sql databases and remote APIs
+- Define AI resources declaratively using YAML manifests.
+- Connect LLMs to APIs and SQL databases without writing custom orchestration code.
 - [command-line interface](https://smarter.sh/cli) for Windows, macOS, Linux
   and Docker
 - [rest api](https://platform.smarter.sh/docs/swagger/)
 - web console / prompt engineer workbench
-- robust developer ecosystem: [PyPi](https://github.com/smarter-sh/smarter-python)
-  , [NPM](https://www.npmjs.com/package/@smarter.sh/ui-chat), [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest)
-  and more
+- [SDKs](https://github.com/smarter-sh/smarter-python),
+  [UI components](https://www.npmjs.com/package/@smarter.sh/ui-chat),
+  [CLI tools](https://smarter.sh/cli),
+  and [IDE integrations](https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest)
+  for building on Smarter
 - publicly accessible [online documentation](https://platform.smarter.sh/docs/)
   and self onboarding resources
 - open source UI components for jump starting projects
