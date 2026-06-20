@@ -18,23 +18,12 @@
  * Usage:
  *   Import these types to ensure type safety and consistency across components and API calls.
  */
-import type { Annotations, Tags } from "@smarter/common";
+import type { SessionContext, Annotations, Tags, UserProfile } from "@smarter/common";
 export type TabKey = "user" | "shared";
 
 export type Plugin = {
   id: number;
   name: string;
-};
-
-export type User = {
-  username: string;
-  email: string;
-};
-export type UserProfile = {
-  user: User;
-  account?: {
-    accountNumber: string;
-  };
 };
 
 export type Function = {
@@ -97,3 +86,20 @@ export type LLMClient = {
   subdomain: string | null;
   customDomain: string | null;
 };
+
+// ----------------------------------------------------------------------------
+// Component Props Interfaces
+// ----------------------------------------------------------------------------
+export interface LLMClientCardViewProps {
+  sessionContext: SessionContext;
+  objects: LLMClient[];
+  onRequery: () => void;
+}
+
+export interface LLMClientListViewProps {
+  isLoading: boolean;
+  ghostRows: number;
+  sessionContext: SessionContext;
+  objects: LLMClient[];
+  onRequery: () => void;
+}

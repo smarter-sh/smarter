@@ -1,7 +1,7 @@
 {
   "name": "@smarter/secret-list",
   "description": "A React component library for displaying a list of Secrets on the Smarter web console.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "config": {
     "cdnDeploy": false,

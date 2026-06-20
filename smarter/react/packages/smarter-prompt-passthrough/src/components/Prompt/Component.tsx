@@ -21,6 +21,8 @@
 import { useEffect, useState } from "react";
 import type * as monaco from "monaco-editor";
 
+import { fetchDjangoUrl } from "@smarter/common";
+
 import { loggerPrefix } from "@/const";
 import getPromptTemplate from "./templates";
 import LLMProviderMetaData from "@/components/LLMProviderMetaData";
@@ -28,7 +30,6 @@ import LLMProviders, { type LLMProvider } from "@/components/LLMProviders";
 import LLMProviderPassthroughResponse from "@/components/LLMProviderPassthroughResponse";
 import LLMProviderPassthroughRequest from "@/components/LLMProviderPassthroughRequest";
 
-import fetchDjangoUrl from "@/lib/django";
 
 import "./styles.css";
 

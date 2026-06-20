@@ -22,10 +22,10 @@
  */
 import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
+import { fetchDjangoUrl, Modal } from "@smarter/common";
+
 import { loggerPrefix } from "@/const";
 import type { LLMClient } from "@/lib/Types";
-import { Modal } from "@/lib/modalDialogue";
-import fetchDjangoUrl from "@/lib/django";
 
 interface ToolbarProps {
   sessionContext: SessionContext;

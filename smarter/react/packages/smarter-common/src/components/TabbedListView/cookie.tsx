@@ -22,16 +22,16 @@ export const getUrlPath = (url: string): string => {
  * @param llm_clientCount - The number of llm_clients to store.
  * @param days - Number of days until the cookie expires.
  */
-export const setCookie = (url: string, llm_clientCount: number, days: number) => {
+export const setCookieForUrl = (url: string, llm_clientCount: number, days: number) => {
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
   const expires = new Date(Date.now() + days * MS_PER_DAY).toUTCString();
   const cookieName = `${COOKIE_NAME_PREFIX}_${getUrlPath(url)}`;
   const cookieValue = `${cookieName}=${llm_clientCount}; path=/; expires=${expires};`;
   try {
     document.cookie = cookieValue;
-    console.debug(loggerPrefix, `setCookie(): ${cookieValue}`);
+    console.debug(loggerPrefix, `setCookieForUrl(): ${cookieValue}`);
   } catch (e) {
-    console.warn(loggerPrefix, "setCookie(): Unable to set llm_client count cookie", e);
+    console.warn(loggerPrefix, "setCookieForUrl(): Unable to set llm_client count cookie", e);
   }
 };
 
@@ -41,7 +41,7 @@ export const setCookie = (url: string, llm_clientCount: number, days: number) =>
  * @param url - The unique identifier for the llm_client group.
  * @returns The number of llm_clients stored in the cookie, or undefined if not found or invalid.
  */
-export const getCookie = (url: string): number | undefined => {
+export const getCookieForUrl = (url: string): number | undefined => {
   const cookieName = `${COOKIE_NAME_PREFIX}_${getUrlPath(url)}`;
   const cookies = document.cookie.split(";").map((c) => c.trim());
   for (const cookie of cookies) {
@@ -49,13 +49,13 @@ export const getCookie = (url: string): number | undefined => {
       const strVal = cookie.substring(cookieName.length + 1);
       const numVal = parseInt(strVal, 10);
       const retVal = isNaN(numVal) ? undefined : numVal;
-      console.debug(loggerPrefix, `getCookie(): Retrieved cookie for ${cookieName}:`, retVal);
+      console.debug(loggerPrefix, `getCookieForUrl(): Retrieved cookie for ${cookieName}:`, retVal);
       return retVal;
     }
   }
   console.warn(
     loggerPrefix,
-    `getCookie(): Cookie for ${cookieName} not found. If you are not under /, it may not be visible due to cookie path restrictions.`,
+    `getCookieForUrl(): Cookie for ${cookieName} not found. If you are not under /, it may not be visible due to cookie path restrictions.`,
   );
   return undefined;
 };

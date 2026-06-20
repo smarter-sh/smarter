@@ -28,11 +28,10 @@
  */
 import React, { useState, useEffect } from "react";
 
-import { Loading } from "@smarter/common";
+import { formatDateTime, Loading } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import type { Secret, SecretListViewProps } from "@/lib/Types";
-import { formatDateTime } from "@smarter/common";
 import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 import { loggerPrefix } from "@/lib/const";
@@ -233,7 +232,7 @@ function ChunkedRows({
  */
 export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequery }: SecretListViewProps) {
   console.debug(
-    `${loggerPrefix} Rendering ListView - {isLoading: ${isLoading}, ghostRows: ${ghostRows}, objects length: ${Array.isArray(objects) ? objects.length : "N/A"}}`,
+    `${loggerPrefix} ListView() Rendering ListView - {isLoading: ${isLoading}, ghostRows: ${ghostRows}, objects length: ${Array.isArray(objects) ? objects.length : "N/A"}}`,
   );
   return (
     <div className="table-responsive secret-list-table-wrap ps-3 pe-3">

@@ -21,11 +21,11 @@
  * This component is intended to be embedded in each secret row or card in ListView and CardView.
  */
 import { useState } from "react";
-import { loggerPrefix } from "@/lib/const";
 import type { SessionContext } from "@smarter/common";
+import { fetchDjangoUrl, Modal } from "@smarter/common";
+
+import { loggerPrefix } from "@/lib/const";
 import type { Secret } from "@/lib/Types";
-import { Modal } from "@smarter/common";
-import { fetchDjangoUrl } from "@smarter/common";
 
 interface ToolbarProps {
   sessionContext: SessionContext;

@@ -4,7 +4,8 @@
  * Stores plugin objects in sessionStorage using a key scoped by API URL and slug,
  * with a one-week TTL and automatic cleanup of expired entries.
  */
-import { packageName, packageVersion } from "../../lib/const";
+import { loggerPrefix } from "./const";
+import { packageName, packageVersion } from "./const";
 
 const CACHE_PREFIX = `${packageName}_v${packageVersion}_objects_v1`;
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -40,16 +41,23 @@ export const makeCacheKey = (apiUrl: string, slug: string) => {
 export const readCache = (key: string): any[] | null => {
   try {
     const raw = sessionStorage.getItem(key);
-    if (!raw) return null;
+    if (!raw) {
+      console.debug(`${loggerPrefix} readCache() cache miss for`, key);
+      return null;
+    }
 
     const parsed = JSON.parse(raw) as CacheEntry;
-    if (!parsed || typeof parsed.ts !== "number" || !Array.isArray(parsed.objects)) return null;
+    if (!parsed || typeof parsed.ts !== "number" || !Array.isArray(parsed.objects)) {
+      console.debug(`${loggerPrefix} readCache() cache invalid for`, key);
+      return null;
+    }
 
     if (Date.now() - parsed.ts > CACHE_TTL_MS) {
+      console.debug(`${loggerPrefix} readCache() cache expired for`, key);
       sessionStorage.removeItem(key);
       return null;
     }
-    console.debug("cache hit for", key);
+    console.debug(`${loggerPrefix} readCache() cache hit for`, key, "with", parsed.objects);
     return parsed.objects;
   } catch {
     return null;
@@ -67,6 +75,7 @@ export const readCache = (key: string): any[] | null => {
  */
 export const writeCache = (key: string, objects: any[]) => {
   try {
+    console.debug(`${loggerPrefix} writeCache() writing sessionStorage cache for`, key, "with", objects.length, "objects");
     const payload: CacheEntry = { ts: Date.now(), objects };
     sessionStorage.setItem(key, JSON.stringify(payload));
   } catch {

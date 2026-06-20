@@ -1,7 +1,7 @@
-import { loggerPrefix } from "../../lib/const";
-import type { SessionContext } from "../../lib/Types";
-import fetchDjangoUrl from "../../lib/django";
-import { setCookie } from "./cookie";
+import { loggerPrefix } from "./const";
+import type { SessionContext } from "./Types";
+import fetchDjangoUrl from "./django";
+import { setCookieForUrl } from "../components/TabbedListView/cookie";
 
 type LoadApiResponse<TObject> = {
   objects: TObject[];
@@ -96,7 +96,7 @@ export const load = async <TObject,>(
     }
 
     const payload = responseBody as LoadApiResponse<TObject>;
-    setCookie(sessionContext.ApiUrl + urlSlug + "/", payload.objects.length, 7);
+    setCookieForUrl(sessionContext.ApiUrl + urlSlug + "/", payload.objects.length, 7);
     return payload.objects;
   } catch (error) {
     console.error(loggerPrefix, "load(): Error loading objects:", error);

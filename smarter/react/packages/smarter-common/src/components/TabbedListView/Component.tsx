@@ -52,14 +52,17 @@
  * <TabbedListView sessionContext={sessionContext} />
  */
 import { useEffect, useRef, useState } from "react";
+
+import type { SessionContext, TabbedViewContext, TabKey } from "../../lib/Types";
+import { load } from "../../lib/load";
+import { loggerPrefix } from "../../lib/const";
+import { makeCacheKey, readCache, writeCache } from "../../lib/cache";
+
 import ToggleButton from "../ToggleButton";
 import type { ViewMode } from "../ToggleButton";
 
-import type { SessionContext, TabbedViewContext, TabKey } from "../../lib/Types";
-import { getCookie } from "./cookie";
+import { getCookieForUrl } from "./cookie";
 import { TabNav } from "./TabNavigation";
-import { load } from "./load";
-import { makeCacheKey, readCache, writeCache } from "./cache";
 
 type TabbedListViewProps<TObject> = {
   sessionContext: SessionContext;
@@ -102,12 +105,15 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   // for sizing the skeleton loaders that are rendered while data is loading
   const maxGhostRows = 25;
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
-  const userGhostCount = clamp(getCookie(sessionContext.ApiUrl + "owned/") || 6, 0, maxGhostRows);
-  const sharedGhostCount = clamp(getCookie(sessionContext.ApiUrl + "shared/") || 6, 0, maxGhostRows);
+  const userGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "owned/") || 6, 0, maxGhostRows);
+  const sharedGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "shared/") || 6, 0, maxGhostRows);
 
   // initiate load of both owned and shared llm_client lists on component mount and whenever session context changes
   const handleLoad = async () => {
+    console.debug(`${loggerPrefix} handleLoad() Loading owned and shared objects with invalidateCacheFlag=${invalidateCacheFlag}`);
+
     const ownedObjects = await load<TObject>(sessionContext, invalidateCacheFlag, setIsLoadingOwned, "owned", setErrorMessage);
+    console.debug(`${loggerPrefix} handleLoad() received owned objects, calling setUserListObjects() and writeCache():`, ownedObjects);
     setUserListObjects(ownedObjects);
     writeCache(ownedListCacheKey, ownedObjects);
 
@@ -118,11 +124,13 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
       "shared",
       setErrorMessage,
     );
+    console.debug(`${loggerPrefix} handleLoad() received shared objects, calling setSharedListObjects() and writeCache():`, sharedObjects);
     setSharedListObjects(sharedObjects);
     writeCache(sharedListCacheKey, sharedObjects);
   };
 
   const onRequery = () => {
+    console.debug(`${loggerPrefix} onRequery() called, setting invalidateCacheFlag to true and reloading data`);
     setInvalidateCacheFlag(true);
     if (isLoadingOwned || isLoadingShared) {
       return;
@@ -139,11 +147,19 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   };
 
   useEffect(() => {
+    console.debug(`${loggerPrefix} useEffect() triggered on mount/sessionContext change, checking cache and loading data with handleLoad()`);
+
     const ownedCached = readCache(ownedListCacheKey);
-    if (ownedCached) setUserListObjects(ownedCached);
+    if (ownedCached) {
+      console.debug(`${loggerPrefix} useEffect() found cached owned objects, calling setUserListObjects():`, ownedCached);
+      setUserListObjects(ownedCached);
+    }
 
     const sharedCached = readCache(sharedListCacheKey);
-    if (sharedCached) setSharedListObjects(sharedCached);
+    if (sharedCached) {
+      console.debug(`${loggerPrefix} useEffect() found cached shared objects, calling setSharedListObjects():`, sharedCached);
+      setSharedListObjects(sharedCached);
+    }
 
     void handleLoad();
   }, [sessionContext]);

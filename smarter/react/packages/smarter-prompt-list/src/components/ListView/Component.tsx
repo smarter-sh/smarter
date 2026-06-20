@@ -240,7 +240,6 @@ function ChunkedRows({
 
 export interface ListViewProps {
   isLoading: boolean;
-  ghostRows: number;
   sessionContext: SessionContext;
   objects: LLMClient[];
   onRequery: () => void;
@@ -254,14 +253,13 @@ export interface ListViewProps {
  * Handles loading state with skeleton rows and incremental rendering for large lists.
  *
  * @param isLoading - Whether the llm_client data is loading (shows skeleton rows if true).
- * @param ghostRows - Number of skeleton rows to display while loading.
  * @param sessionContext - Authentication and API context for actions.
  * @param llm_clients - Array of llm_client objects to display.
  * @param onRequery - Callback to refresh llm_client data.
  */
-export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequery }: ListViewProps) {
+export function ListView({ isLoading, sessionContext, objects, onRequery }: ListViewProps) {
   console.debug(
-    `${loggerPrefix} Rendering ListView - {isLoading: ${isLoading}, ghostRows: ${ghostRows}, objects length: ${Array.isArray(objects) ? objects.length : "N/A"}}`,
+    `${loggerPrefix} ListView() Rendering ListView - {isLoading: ${isLoading}, objects length: ${Array.isArray(objects) ? objects.length : "N/A"}}`,
   );
   return (
     <div className="table-responsive prompt-list-table-wrap ps-3 pe-3">
@@ -269,7 +267,7 @@ export function ListView({ isLoading, ghostRows, sessionContext, objects, onRequ
         <TableHeader />
         <tbody>
           {isLoading && (!objects || objects.length === 0) ? (
-            <LLMClientRowGhosts count={ghostRows} />
+            <LLMClientRowGhosts count={5} />
           ) : (
             <ChunkedRows llm_clients={objects} sessionContext={sessionContext} onRequery={onRequery} />
           )}
