@@ -4,155 +4,153 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-
-
-## [0.14.8-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.7...v0.14.8-alpha.1) (2026-06-19)
+## [0.14.8](https://github.com/smarter-sh/smarter/compare/v0.14.7...v0.14.8) (2026-06-19)
 
 ### Bug Fixes
 
-* force a new release ([d07247f](https://github.com/smarter-sh/smarter/commit/d07247f084de98788e38f7f6a386dbe163961628))
+- force a new release ([d07247f](https://github.com/smarter-sh/smarter/commit/d07247f084de98788e38f7f6a386dbe163961628))
 
 ### Refactoring
 
-* signal names ([051d0eb](https://github.com/smarter-sh/smarter/commit/051d0eb064e93bff441777ddc476cf7977a17fab))
-* signal names ([031021e](https://github.com/smarter-sh/smarter/commit/031021e4898397f5708d392db4b934fc5e9a9ac4))
-* signal names ([1226c5b](https://github.com/smarter-sh/smarter/commit/1226c5b0b4e3fd51426527c466d5d87d45d2aaa1))
+- signal names ([051d0eb](https://github.com/smarter-sh/smarter/commit/051d0eb064e93bff441777ddc476cf7977a17fab))
+- signal names ([031021e](https://github.com/smarter-sh/smarter/commit/031021e4898397f5708d392db4b934fc5e9a9ac4))
+- signal names ([1226c5b](https://github.com/smarter-sh/smarter/commit/1226c5b0b4e3fd51426527c466d5d87d45d2aaa1))
 
 ## [0.14.7](https://github.com/smarter-sh/smarter/compare/v0.14.6...v0.14.7) (2026-06-19)
 
 ### Bug Fixes
 
-* handle_tool_called() should handle both functions as well as plugins ([c482765](https://github.com/smarter-sh/smarter/commit/c482765eec8623daabc0ea94db78e70e1af0e74b))
-* prompt_history should be chat_history for legacy chat app ([dcab36f](https://github.com/smarter-sh/smarter/commit/dcab36f78dc447494713efcbdcc12b5ad426d928))
-* self.manifest has to try to lazy-load the ORM model if it exists. otherwise we cannot describe() ([1fa9520](https://github.com/smarter-sh/smarter/commit/1fa9520133d587eacac1ab669f69f0f2c64bc3d7))
+- handle_tool_called() should handle both functions as well as plugins ([c482765](https://github.com/smarter-sh/smarter/commit/c482765eec8623daabc0ea94db78e70e1af0e74b))
+- prompt_history should be chat_history for legacy chat app ([dcab36f](https://github.com/smarter-sh/smarter/commit/dcab36f78dc447494713efcbdcc12b5ad426d928))
+- self.manifest has to try to lazy-load the ORM model if it exists. otherwise we cannot describe() ([1fa9520](https://github.com/smarter-sh/smarter/commit/1fa9520133d587eacac1ab669f69f0f2c64bc3d7))
 
 ### Refactoring
 
-* homogenize __init__() for all children of AbstractBroker ([cb3233e](https://github.com/smarter-sh/smarter/commit/cb3233e6035b36077cf53ec458f5b2060057386e))
-* homogenize __init__() for all children of AbstractBroker ([0d60e63](https://github.com/smarter-sh/smarter/commit/0d60e63990fef672df62b0a78074780b44686f1e))
-* remove deprecated SAMKinds ([8e2069b](https://github.com/smarter-sh/smarter/commit/8e2069bf963705621dbefe644f859896ec3d29f7))
-* thing names ([f261315](https://github.com/smarter-sh/smarter/commit/f26131520014a8ec1e44b3bd1fe0e52a61c4c85f))
+- homogenize **init**() for all children of AbstractBroker ([cb3233e](https://github.com/smarter-sh/smarter/commit/cb3233e6035b36077cf53ec458f5b2060057386e))
+- homogenize **init**() for all children of AbstractBroker ([0d60e63](https://github.com/smarter-sh/smarter/commit/0d60e63990fef672df62b0a78074780b44686f1e))
+- remove deprecated SAMKinds ([8e2069b](https://github.com/smarter-sh/smarter/commit/8e2069bf963705621dbefe644f859896ec3d29f7))
+- thing names ([f261315](https://github.com/smarter-sh/smarter/commit/f26131520014a8ec1e44b3bd1fe0e52a61c4c85f))
 
 ## [0.14.6](https://github.com/smarter-sh/smarter/compare/v0.14.5...v0.14.6) (2026-06-19)
 
 ### Bug Fixes
 
-* brokered json-schemas ([9c157b8](https://github.com/smarter-sh/smarter/commit/9c157b8f9e48d18d9fe6e4a9649622795edce069))
-* remove trailing double // ([30eabcd](https://github.com/smarter-sh/smarter/commit/30eabcd171a2bf7ed773488d4adcc6b32a323e9a))
+- brokered json-schemas ([9c157b8](https://github.com/smarter-sh/smarter/commit/9c157b8f9e48d18d9fe6e4a9649622795edce069))
+- remove trailing double // ([30eabcd](https://github.com/smarter-sh/smarter/commit/30eabcd171a2bf7ed773488d4adcc6b32a323e9a))
 
 ### Refactoring
 
-* casing of example-manifest and json-schema paths ([4cefe1d](https://github.com/smarter-sh/smarter/commit/4cefe1d5505b1f40d7d615ad037085e7244b565b))
-* make AbstractBroker.apply() abstract like all the other brokered methods ([c647823](https://github.com/smarter-sh/smarter/commit/c647823f1a3c67ea382165a5575aeb25d8df0cc6))
-* ready state ([a1e1fe1](https://github.com/smarter-sh/smarter/commit/a1e1fe10c6767c93048a65d64d23b9c0062df575))
-* to_camel_case() and to_snake_case() ([84b08b6](https://github.com/smarter-sh/smarter/commit/84b08b6ee6b34a11385959f1769aca7d31bca126))
+- casing of example-manifest and json-schema paths ([4cefe1d](https://github.com/smarter-sh/smarter/commit/4cefe1d5505b1f40d7d615ad037085e7244b565b))
+- make AbstractBroker.apply() abstract like all the other brokered methods ([c647823](https://github.com/smarter-sh/smarter/commit/c647823f1a3c67ea382165a5575aeb25d8df0cc6))
+- ready state ([a1e1fe1](https://github.com/smarter-sh/smarter/commit/a1e1fe10c6767c93048a65d64d23b9c0062df575))
+- to_camel_case() and to_snake_case() ([84b08b6](https://github.com/smarter-sh/smarter/commit/84b08b6ee6b34a11385959f1769aca7d31bca126))
 
 ## [0.14.5](https://github.com/smarter-sh/smarter/compare/v0.14.4...v0.14.5) (2026-06-18)
 
 ### Bug Fixes
 
-* example manifest provider name should be snake_case ([22e7fb4](https://github.com/smarter-sh/smarter/commit/22e7fb4e6ac82803922541d62c669cbc49f2195f))
-* mark AbstractBroker.is_ready_abstract_broker() True when path container example_manifest ([4a39af2](https://github.com/smarter-sh/smarter/commit/4a39af2f1da4546f9c4109ffd868050f7fae7de1))
+- example manifest provider name should be snake_case ([22e7fb4](https://github.com/smarter-sh/smarter/commit/22e7fb4e6ac82803922541d62c669cbc49f2195f))
+- mark AbstractBroker.is_ready_abstract_broker() True when path container example_manifest ([4a39af2](https://github.com/smarter-sh/smarter/commit/4a39af2f1da4546f9c4109ffd868050f7fae7de1))
 
 ### Refactoring
 
-* cleanup class ready state initialization ([74b483c](https://github.com/smarter-sh/smarter/commit/74b483c7f1eb2a86e7b5ffb514143388dc5b9d43))
-* lazy name initialization ([dd637dd](https://github.com/smarter-sh/smarter/commit/dd637dda62f106d6eedf06c83134d4f26cbb2896))
-* lazy ready state ([031380b](https://github.com/smarter-sh/smarter/commit/031380b7ec87ecc346806388bcb22afd4061fc73))
-* lazy ready state ([7a822b8](https://github.com/smarter-sh/smarter/commit/7a822b873ae288bae25bc34068370ec289fa95d6))
+- cleanup class ready state initialization ([74b483c](https://github.com/smarter-sh/smarter/commit/74b483c7f1eb2a86e7b5ffb514143388dc5b9d43))
+- lazy name initialization ([dd637dd](https://github.com/smarter-sh/smarter/commit/dd637dda62f106d6eedf06c83134d4f26cbb2896))
+- lazy ready state ([031380b](https://github.com/smarter-sh/smarter/commit/031380b7ec87ecc346806388bcb22afd4061fc73))
+- lazy ready state ([7a822b8](https://github.com/smarter-sh/smarter/commit/7a822b873ae288bae25bc34068370ec289fa95d6))
 
 ## [0.14.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.4...v0.14.5-alpha.1) (2026-06-18)
 
 ### Bug Fixes
 
-* example manifest provider name should be snake_case ([22e7fb4](https://github.com/smarter-sh/smarter/commit/22e7fb4e6ac82803922541d62c669cbc49f2195f))
-* mark AbstractBroker.is_ready_abstract_broker() True when path container example_manifest ([4a39af2](https://github.com/smarter-sh/smarter/commit/4a39af2f1da4546f9c4109ffd868050f7fae7de1))
+- example manifest provider name should be snake_case ([22e7fb4](https://github.com/smarter-sh/smarter/commit/22e7fb4e6ac82803922541d62c669cbc49f2195f))
+- mark AbstractBroker.is_ready_abstract_broker() True when path container example_manifest ([4a39af2](https://github.com/smarter-sh/smarter/commit/4a39af2f1da4546f9c4109ffd868050f7fae7de1))
 
 ### Refactoring
 
-* cleanup class ready state initialization ([74b483c](https://github.com/smarter-sh/smarter/commit/74b483c7f1eb2a86e7b5ffb514143388dc5b9d43))
-* lazy name initialization ([dd637dd](https://github.com/smarter-sh/smarter/commit/dd637dda62f106d6eedf06c83134d4f26cbb2896))
-* lazy ready state ([031380b](https://github.com/smarter-sh/smarter/commit/031380b7ec87ecc346806388bcb22afd4061fc73))
-* lazy ready state ([7a822b8](https://github.com/smarter-sh/smarter/commit/7a822b873ae288bae25bc34068370ec289fa95d6))
+- cleanup class ready state initialization ([74b483c](https://github.com/smarter-sh/smarter/commit/74b483c7f1eb2a86e7b5ffb514143388dc5b9d43))
+- lazy name initialization ([dd637dd](https://github.com/smarter-sh/smarter/commit/dd637dda62f106d6eedf06c83134d4f26cbb2896))
+- lazy ready state ([031380b](https://github.com/smarter-sh/smarter/commit/031380b7ec87ecc346806388bcb22afd4061fc73))
+- lazy ready state ([7a822b8](https://github.com/smarter-sh/smarter/commit/7a822b873ae288bae25bc34068370ec289fa95d6))
 
 ## [0.14.4](https://github.com/smarter-sh/smarter/compare/v0.14.3...v0.14.4) (2026-06-17)
 
 ### Bug Fixes
 
-* TypeError at /dashboard/ ([816e533](https://github.com/smarter-sh/smarter/commit/816e5337fd093bc9b71d87608c8f3b7d9daee510))
+- TypeError at /dashboard/ ([816e533](https://github.com/smarter-sh/smarter/commit/816e5337fd093bc9b71d87608c8f3b7d9daee510))
 
 ## [0.14.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.3...v0.14.4-alpha.1) (2026-06-17)
 
 ### Bug Fixes
 
-* TypeError at /dashboard/ ([816e533](https://github.com/smarter-sh/smarter/commit/816e5337fd093bc9b71d87608c8f3b7d9daee510))
+- TypeError at /dashboard/ ([816e533](https://github.com/smarter-sh/smarter/commit/816e5337fd093bc9b71d87608c8f3b7d9daee510))
 
 ## [0.14.3](https://github.com/smarter-sh/smarter/compare/v0.14.2...v0.14.3) (2026-06-17)
 
 ### Bug Fixes
 
-* force a new release ([26d7736](https://github.com/smarter-sh/smarter/commit/26d7736b0617cc90c3662ad9a4b6f9f3afb0b049))
+- force a new release ([26d7736](https://github.com/smarter-sh/smarter/commit/26d7736b0617cc90c3662ad9a4b6f9f3afb0b049))
 
 ### Refactoring
 
-* version management, to reduce excessive commits ([3d25c88](https://github.com/smarter-sh/smarter/commit/3d25c88756131672e19a2faa5614d52d1a8feda9))
+- version management, to reduce excessive commits ([3d25c88](https://github.com/smarter-sh/smarter/commit/3d25c88756131672e19a2faa5614d52d1a8feda9))
 
 ## [0.14.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.2...v0.14.3-alpha.1) (2026-06-17)
 
 ### Bug Fixes
 
-* force a new release ([26d7736](https://github.com/smarter-sh/smarter/commit/26d7736b0617cc90c3662ad9a4b6f9f3afb0b049))
+- force a new release ([26d7736](https://github.com/smarter-sh/smarter/commit/26d7736b0617cc90c3662ad9a4b6f9f3afb0b049))
 
 ### Refactoring
 
-* version management, to reduce excessive commits ([3d25c88](https://github.com/smarter-sh/smarter/commit/3d25c88756131672e19a2faa5614d52d1a8feda9))
+- version management, to reduce excessive commits ([3d25c88](https://github.com/smarter-sh/smarter/commit/3d25c88756131672e19a2faa5614d52d1a8feda9))
 
 ## [0.14.2](https://github.com/smarter-sh/smarter/compare/v0.14.1...v0.14.2) (2026-06-12)
 
 ### Bug Fixes
 
-* force a new release ([cfc029a](https://github.com/smarter-sh/smarter/commit/cfc029a023832a993c4b8de4a75a53a2d234b1c7))
+- force a new release ([cfc029a](https://github.com/smarter-sh/smarter/commit/cfc029a023832a993c4b8de4a75a53a2d234b1c7))
 
 ## [0.14.1](https://github.com/smarter-sh/smarter/compare/v0.14.0...v0.14.1) (2026-06-11)
 
 ### Bug Fixes
 
-* force a new release ([b7d2ccd](https://github.com/smarter-sh/smarter/commit/b7d2ccda203e97e4a0d33f22c4c4f6de9e7131ae))
-* rename prompt app models and views ([3dec181](https://github.com/smarter-sh/smarter/commit/3dec1813b4bde40b21177d4759510c9e10a3d317))
+- force a new release ([b7d2ccd](https://github.com/smarter-sh/smarter/commit/b7d2ccda203e97e4a0d33f22c4c4f6de9e7131ae))
+- rename prompt app models and views ([3dec181](https://github.com/smarter-sh/smarter/commit/3dec1813b4bde40b21177d4759510c9e10a3d317))
 
 ### Refactoring
 
-* logger class name prefix and class ready status ([06998ff](https://github.com/smarter-sh/smarter/commit/06998ffbe143c210b2c58e386eab25190a21e8dc))
-* logger class name prefix and class ready status ([7d7c3d2](https://github.com/smarter-sh/smarter/commit/7d7c3d2d6db2408a9b225b85861e49023fa8442b))
-* logger class name prefix and class ready status ([b272ced](https://github.com/smarter-sh/smarter/commit/b272ced4dccf20a035c87776937281469b4669c8))
-* logger class name prefix and class ready status ([afd57d7](https://github.com/smarter-sh/smarter/commit/afd57d7efdcabd3e9d1aa2134126681e88496771))
-* logger class name prefix and class ready status ([e1e0b5b](https://github.com/smarter-sh/smarter/commit/e1e0b5bddadaac2735fc99d0089d2eac788dcf41))
-* logger class name prefix and class ready status ([3705d14](https://github.com/smarter-sh/smarter/commit/3705d146fffcd78ac931305e7c6c23b62d4aa689))
-* rename prompt.models.Chat to prompt.models.Prompt ([58edba7](https://github.com/smarter-sh/smarter/commit/58edba7e3047cf034f5a9db444a29c219b6c98e4))
-* split out prompt models ([46bf615](https://github.com/smarter-sh/smarter/commit/46bf6158fe0580f3d89f5fabff7f38828e053aac))
+- logger class name prefix and class ready status ([06998ff](https://github.com/smarter-sh/smarter/commit/06998ffbe143c210b2c58e386eab25190a21e8dc))
+- logger class name prefix and class ready status ([7d7c3d2](https://github.com/smarter-sh/smarter/commit/7d7c3d2d6db2408a9b225b85861e49023fa8442b))
+- logger class name prefix and class ready status ([b272ced](https://github.com/smarter-sh/smarter/commit/b272ced4dccf20a035c87776937281469b4669c8))
+- logger class name prefix and class ready status ([afd57d7](https://github.com/smarter-sh/smarter/commit/afd57d7efdcabd3e9d1aa2134126681e88496771))
+- logger class name prefix and class ready status ([e1e0b5b](https://github.com/smarter-sh/smarter/commit/e1e0b5bddadaac2735fc99d0089d2eac788dcf41))
+- logger class name prefix and class ready status ([3705d14](https://github.com/smarter-sh/smarter/commit/3705d146fffcd78ac931305e7c6c23b62d4aa689))
+- rename prompt.models.Chat to prompt.models.Prompt ([58edba7](https://github.com/smarter-sh/smarter/commit/58edba7e3047cf034f5a9db444a29c219b6c98e4))
+- split out prompt models ([46bf615](https://github.com/smarter-sh/smarter/commit/46bf6158fe0580f3d89f5fabff7f38828e053aac))
 
 ## [0.14.1-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.1-alpha.1...v0.14.1-alpha.2) (2026-06-11)
 
 ### Bug Fixes
 
-* force a new release ([b7d2ccd](https://github.com/smarter-sh/smarter/commit/b7d2ccda203e97e4a0d33f22c4c4f6de9e7131ae))
+- force a new release ([b7d2ccd](https://github.com/smarter-sh/smarter/commit/b7d2ccda203e97e4a0d33f22c4c4f6de9e7131ae))
 
 ## [0.14.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.0...v0.14.1-alpha.1) (2026-06-11)
 
 ### Bug Fixes
 
-* rename prompt app models and views ([3dec181](https://github.com/smarter-sh/smarter/commit/3dec1813b4bde40b21177d4759510c9e10a3d317))
+- rename prompt app models and views ([3dec181](https://github.com/smarter-sh/smarter/commit/3dec1813b4bde40b21177d4759510c9e10a3d317))
 
 ### Refactoring
 
-* logger class name prefix and class ready status ([06998ff](https://github.com/smarter-sh/smarter/commit/06998ffbe143c210b2c58e386eab25190a21e8dc))
-* logger class name prefix and class ready status ([7d7c3d2](https://github.com/smarter-sh/smarter/commit/7d7c3d2d6db2408a9b225b85861e49023fa8442b))
-* logger class name prefix and class ready status ([b272ced](https://github.com/smarter-sh/smarter/commit/b272ced4dccf20a035c87776937281469b4669c8))
-* logger class name prefix and class ready status ([afd57d7](https://github.com/smarter-sh/smarter/commit/afd57d7efdcabd3e9d1aa2134126681e88496771))
-* logger class name prefix and class ready status ([e1e0b5b](https://github.com/smarter-sh/smarter/commit/e1e0b5bddadaac2735fc99d0089d2eac788dcf41))
-* logger class name prefix and class ready status ([3705d14](https://github.com/smarter-sh/smarter/commit/3705d146fffcd78ac931305e7c6c23b62d4aa689))
-* rename prompt.models.Chat to prompt.models.Prompt ([58edba7](https://github.com/smarter-sh/smarter/commit/58edba7e3047cf034f5a9db444a29c219b6c98e4))
-* split out prompt models ([46bf615](https://github.com/smarter-sh/smarter/commit/46bf6158fe0580f3d89f5fabff7f38828e053aac))
+- logger class name prefix and class ready status ([06998ff](https://github.com/smarter-sh/smarter/commit/06998ffbe143c210b2c58e386eab25190a21e8dc))
+- logger class name prefix and class ready status ([7d7c3d2](https://github.com/smarter-sh/smarter/commit/7d7c3d2d6db2408a9b225b85861e49023fa8442b))
+- logger class name prefix and class ready status ([b272ced](https://github.com/smarter-sh/smarter/commit/b272ced4dccf20a035c87776937281469b4669c8))
+- logger class name prefix and class ready status ([afd57d7](https://github.com/smarter-sh/smarter/commit/afd57d7efdcabd3e9d1aa2134126681e88496771))
+- logger class name prefix and class ready status ([e1e0b5b](https://github.com/smarter-sh/smarter/commit/e1e0b5bddadaac2735fc99d0089d2eac788dcf41))
+- logger class name prefix and class ready status ([3705d14](https://github.com/smarter-sh/smarter/commit/3705d146fffcd78ac931305e7c6c23b62d4aa689))
+- rename prompt.models.Chat to prompt.models.Prompt ([58edba7](https://github.com/smarter-sh/smarter/commit/58edba7e3047cf034f5a9db444a29c219b6c98e4))
+- split out prompt models ([46bf615](https://github.com/smarter-sh/smarter/commit/46bf6158fe0580f3d89f5fabff7f38828e053aac))
 
 ## [0.14.0](https://github.com/smarter-sh/smarter/compare/v0.13.223...v0.14.0) (2026-06-09)
 
