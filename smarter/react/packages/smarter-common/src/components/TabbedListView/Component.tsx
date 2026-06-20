@@ -112,21 +112,24 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   const handleLoad = async () => {
     console.debug(`${loggerPrefix} handleLoad() Loading owned and shared objects with invalidateCacheFlag=${invalidateCacheFlag}`);
 
-    const ownedObjects = await load<TObject>(sessionContext, invalidateCacheFlag, setIsLoadingOwned, "owned", setErrorMessage);
+    const ownedObjects = await load<TObject>(sessionContext, invalidateCacheFlag, "owned", setErrorMessage);
     console.debug(`${loggerPrefix} handleLoad() received owned objects, calling setUserListObjects() and writeCache():`, ownedObjects);
     setUserListObjects(ownedObjects);
     writeCache(ownedListCacheKey, ownedObjects);
+    console.debug(`${loggerPrefix} handleLoad() setting isLoadingOwned to false`);
+    setIsLoadingOwned(false);
 
     const sharedObjects = await load<TObject>(
       sessionContext,
       invalidateCacheFlag,
-      setIsLoadingShared,
       "shared",
       setErrorMessage,
     );
     console.debug(`${loggerPrefix} handleLoad() received shared objects, calling setSharedListObjects() and writeCache():`, sharedObjects);
     setSharedListObjects(sharedObjects);
     writeCache(sharedListCacheKey, sharedObjects);
+    console.debug(`${loggerPrefix} handleLoad() setting isLoadingShared to false`);
+    setIsLoadingShared(false);
   };
 
   const onRequery = () => {
@@ -141,8 +144,6 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
       return;
     }
     requeryRef.current = now;
-    setIsLoadingOwned(true);
-    setIsLoadingShared(true);
     handleLoad();
   };
 
@@ -151,14 +152,23 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
 
     const ownedCached = readCache(ownedListCacheKey);
     if (ownedCached) {
-      console.debug(`${loggerPrefix} useEffect() found cached owned objects, calling setUserListObjects():`, ownedCached);
+      console.debug(`${loggerPrefix} useEffect() found cached owned objects, calling setUserListObjects(), setting isLoadingOwned to false:`, ownedCached);
       setUserListObjects(ownedCached);
+      setIsLoadingOwned(false);
+    } else {
+      console.debug(`${loggerPrefix} useEffect() did not find cached owned objects, setting isLoadingOwned to true`);
+      setIsLoadingOwned(true);
     }
+
 
     const sharedCached = readCache(sharedListCacheKey);
     if (sharedCached) {
-      console.debug(`${loggerPrefix} useEffect() found cached shared objects, calling setSharedListObjects():`, sharedCached);
+      console.debug(`${loggerPrefix} useEffect() found cached shared objects, calling setSharedListObjects(), setting isLoadingShared to false:`, sharedCached);
       setSharedListObjects(sharedCached);
+      setIsLoadingShared(false);
+    } else {
+      console.debug(`${loggerPrefix} useEffect() did not find cached shared objects, setting isLoadingShared to true`);
+      setIsLoadingShared(true);
     }
 
     void handleLoad();
