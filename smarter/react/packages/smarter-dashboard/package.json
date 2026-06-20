@@ -9,7 +9,7 @@
     "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "NODE_ENV=dev && vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
