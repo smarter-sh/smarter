@@ -63,11 +63,9 @@ const getErrorMessage = (status: number, responseBody: unknown): string => {
 export const load = async <TObject,>(
   sessionContext: SessionContext,
   invalidateCacheFlag: boolean,
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   urlSlug: string,
   onError: (error: string | null) => void,
 ): Promise<TObject[]> => {
-  setLoading(true);
   onError(null);
 
   try {
@@ -102,7 +100,5 @@ export const load = async <TObject,>(
     console.error(loggerPrefix, "load(): Error loading objects:", error);
     onError(error instanceof Error ? error.message : "Unable to load objects.");
     return [];
-  } finally {
-    setLoading(false);
   }
 };
