@@ -4,7 +4,7 @@ import "./styles.css";
 
 interface LLMProviderSelectorProps {
   providersJson: LLMProvider[];
-  value: string;
+  value: number;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
@@ -25,7 +25,7 @@ function LLMProviderSelector({
         <option value="">No providers available</option>
       )}
       {providersJson.map((provider) => (
-        <option key={provider.id} value={String(provider.id)}>
+        <option key={provider.id} value={provider.id}>
           {provider.name}
         </option>
       ))}

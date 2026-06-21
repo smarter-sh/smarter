@@ -172,11 +172,9 @@ export const Toolbar = ({ sessionContext, llm_client, onRequery }: ToolbarProps)
     const url = sessionContext.ApiUrl + "clone/" + llm_client.id + "/" + new_name + "/";
     handleCloseModal();
     fetchDjangoUrl(
-      JSON.stringify({}),
+      sessionContext,
       url,
-      sessionContext.djangoSessionCookieName,
-      sessionContext.csrfCookieName,
-      sessionContext.cookieDomain,
+      JSON.stringify({}),
     )
       .then((response) => {
         if (!response.ok) {
@@ -213,11 +211,9 @@ export const Toolbar = ({ sessionContext, llm_client, onRequery }: ToolbarProps)
     const url = sessionContext.ApiUrl + "rename/" + llm_client.id + "/" + newName + "/";
 
     fetchDjangoUrl(
-      JSON.stringify({}),
+      sessionContext,
       url,
-      sessionContext.djangoSessionCookieName,
-      sessionContext.csrfCookieName,
-      sessionContext.cookieDomain,
+      JSON.stringify({}),
     )
       .then((response) => {
         if (!response.ok) {
@@ -252,11 +248,9 @@ export const Toolbar = ({ sessionContext, llm_client, onRequery }: ToolbarProps)
     handleCloseModal();
     const url = sessionContext.ApiUrl + "delete/" + llm_client.id + "/";
     fetchDjangoUrl(
-      JSON.stringify({}),
+      sessionContext,
       url,
-      sessionContext.djangoSessionCookieName,
-      sessionContext.csrfCookieName,
-      sessionContext.cookieDomain,
+      JSON.stringify({}),
     )
       .then((response) => {
         if (!response.ok) {
