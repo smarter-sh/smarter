@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.13](https://github.com/smarter-sh/smarter/compare/v0.14.12...v0.14.13) (2026-06-21)
+
+### Bug Fixes
+
+* force a new release ([0c20a66](https://github.com/smarter-sh/smarter/commit/0c20a66c2f017ad2c2c00b7863539c32d2cf081a))
+
+### Refactoring
+
+* smooth out component initialization to eliminate screen flicker on cached loads ([1df75b2](https://github.com/smarter-sh/smarter/commit/1df75b29509f3510fb70cf3b0c231703bf708e91))
+
 ## [0.14.12](https://github.com/smarter-sh/smarter/compare/v0.14.11...v0.14.12) (2026-06-21)
 
 ### Bug Fixes
