@@ -94,7 +94,7 @@ except Exception:
 
 
 last_updated = datetime.now().strftime("%B-%Y")
-
+html_extra_path = ["robots.txt", "llms.txt"]
 # custom context variables to be used in Sphinx templates, presumably in
 # the ./_templates/footer.html template override.
 html_context = {
