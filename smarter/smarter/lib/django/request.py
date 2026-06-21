@@ -15,6 +15,7 @@ known url patterns for Smarter llm_clients. key features include:
 import hashlib
 import inspect
 import re
+import uuid
 from datetime import datetime
 from functools import cached_property
 from typing import Any, Optional, Union
@@ -2352,3 +2353,7 @@ class SmarterRequestMixin(AccountMixin):
             and self.smarter_request.user.is_authenticated
             else False
         )
+
+    def smarter_request_id(self) -> str:
+        """Generates a unique identifier for the request."""
+        return uuid.uuid4().hex

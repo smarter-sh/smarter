@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import type { SessionContext } from "@smarter/common";
 
-import { loggerPrefix } from "@/const.tsx";
+import { loggerPrefix, projectName, projectVersion } from "@/const.tsx";
 import App from "./App.tsx";
 
 const rootEl = document.getElementById("smarter-prompt-passthrough-root");
@@ -17,6 +17,10 @@ const llmProviderId = parseInt(rootEl.getAttribute("smarter-llm-provider-id") ||
 const templateId = parseInt(rootEl.getAttribute("smarter-template-id") || "1", 10);
 const providerApiUrl = rootEl.getAttribute("smarter-provider-api-url") || "";
 const debugMode = rootEl.getAttribute("react-debug-mode")?.toLowerCase() === "true";
+const smarterRequestId = rootEl.getAttribute("smarter-request-id") || "";
+
+const smarterClient = projectName;
+const smarterClientVersion = projectVersion;
 
 if (!ApiUrl) throw new Error("API URL not found in root element attributes");
 if (!csrfCookieName) throw new Error("CSRF token not found in root element attributes");
@@ -25,6 +29,7 @@ if (!cookieDomain) throw new Error("Cookie domain not found in root element attr
 if (!llmProviderId) throw new Error("LLM provider ID not found in root element attributes");
 if (!templateId) throw new Error("Template ID not found in root element attributes");
 if (!providerApiUrl) throw new Error("Provider API URL not found in root element attributes");
+if (!smarterRequestId) throw new Error("Smarter request ID not found in root element attributes");
 
 const sessionContext: SessionContext = {
   ApiUrl,
@@ -32,6 +37,9 @@ const sessionContext: SessionContext = {
   djangoSessionCookieName,
   cookieDomain,
   debugMode,
+  smarterClient,
+  smarterClientVersion,
+  smarterRequestId,
 };
 
 console.debug(`${loggerPrefix} Session context initialized with:`, sessionContext);

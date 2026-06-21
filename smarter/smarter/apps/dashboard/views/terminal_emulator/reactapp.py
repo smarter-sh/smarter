@@ -115,6 +115,7 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
                     DashboardLogsApiReverseNames.stream,
                 ),  # the WebSocket endpoint with the log data stream.
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
+                "smarter_request_id": self.smarter_request_id(),
             }
         }
         self.template_path = "react/terminal-emulator.html"

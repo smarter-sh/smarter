@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
+import type { SessionContext } from "@smarter/common";
 
-import { loggerPrefix } from "@/const";
+import { loggerPrefix, projectName, projectVersion } from "@/const";
 import App from "./App.tsx";
 
 const rootEl = document.getElementById("smarter-dashboard-root");
@@ -13,29 +14,38 @@ const cookieDomain = rootEl.getAttribute("smarter-cookie-domain") || window.loca
 const myResourcesApiUrl = rootEl.getAttribute("smarter-my-resources-api-url");
 const serviceHealthApiUrl = rootEl.getAttribute("smarter-service-health-api-url");
 const debugMode = rootEl.getAttribute("react-debug-mode")?.toLowerCase() === "true";
+const smarterRequestId = rootEl.getAttribute("smarter-request-id") || "";
+
+const smarterClient = projectName;
+const smarterClientVersion = projectVersion;
 
 if (!myResourcesApiUrl) throw new Error("My Resources API URL not found in root element attributes");
 if (!serviceHealthApiUrl) throw new Error("Service Health API URL not found in root element attributes");
 if (!csrfCookieName) throw new Error("CSRF token not found in root element attributes");
 if (!djangoSessionCookieName) throw new Error("Django session cookie name not found in root element attributes");
 if (!cookieDomain) throw new Error("Cookie domain not found in root element attributes");
+if (!smarterRequestId) throw new Error("Smarter request ID not found in root element attributes");
 
+const sessionContext: SessionContext = {
+    ApiUrl: myResourcesApiUrl,
+    csrfCookieName,
+    djangoSessionCookieName,
+    cookieDomain,
+    debugMode,
+    smarterClient,
+    smarterClientVersion,
+    smarterRequestId,
+};
 export interface AppContextInterface {
+  sessionContext: SessionContext;
   myResourcesApiUrl: string;
   serviceHealthApiUrl: string;
-  csrfCookieName: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
-  debugMode: boolean;
 }
 
 const appContext: AppContextInterface = {
+  sessionContext,
   myResourcesApiUrl,
   serviceHealthApiUrl,
-  csrfCookieName,
-  djangoSessionCookieName,
-  cookieDomain,
-  debugMode,
 };
 console.debug(loggerPrefix, "appContext initialized with values:", appContext);
 createRoot(rootEl).render(<App appContext={appContext} />);
