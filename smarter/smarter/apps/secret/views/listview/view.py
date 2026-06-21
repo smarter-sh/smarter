@@ -56,7 +56,7 @@ class SecretListView(SmarterAuthenticatedNeverCachedWebView):
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "secret_list_api_url": reverse(SecretReverseNames.namespace, SecretReverseNames.listview_api_all),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.smarter_request_id(),
+                "smarter_request_id": self.generate_smarter_request_id(),
             }
         }
 

@@ -400,6 +400,17 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         SmarterRequestMixin.setup(self, *args, request=request, user=user, **kwargs)
         if super().ready:
             self._ready = True
+        if self.smarter_client:
+            verbose_logger.debug(
+                "%s.setup() smarter client: %s, version: %s, type: %s, request_id: %s, capabilities: %s, url: %s",
+                self.formatted_class_name,
+                self.smarter_client,
+                self.smarter_client_version,
+                self.smarter_client_type,
+                self.smarter_request_id,
+                self.smarter_capabilities,
+                self.url,
+            )
         self.log_ready_status()
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
