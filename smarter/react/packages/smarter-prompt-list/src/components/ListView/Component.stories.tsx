@@ -10,6 +10,7 @@ const sessionContext: SessionContext = {
   csrfCookieName: "csrftoken",
   djangoSessionCookieName: "sessionid",
   cookieDomain: "localhost",
+  debugMode: false,
 };
 
 const exampleLLMClientObject =     {

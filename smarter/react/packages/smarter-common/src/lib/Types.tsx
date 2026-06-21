@@ -58,6 +58,7 @@ export type SessionContext = {
   csrfCookieName: string;
   djangoSessionCookieName: string;
   cookieDomain: string;
+  debugMode: boolean;
 };
 
 export type TabbedViewContext<TObject> = {

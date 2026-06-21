@@ -13,6 +13,7 @@ const cookieDomain = rootEl.getAttribute("smarter-cookie-domain") || window.loca
 const llmProviderId = rootEl.getAttribute("smarter-llm-provider-id") || "1";
 const templateId = rootEl.getAttribute("smarter-template-id") || "1";
 const providerApiUrl = rootEl.getAttribute("smarter-provider-api-url") || "";
+const debugMode = rootEl.getAttribute("react-debug-mode") === "true";
 
 if (!apiUrl) throw new Error("API URL not found in root element attributes");
 if (!csrfCookieName) throw new Error("CSRF token not found in root element attributes");
@@ -30,6 +31,7 @@ export type SessionContextType = {
   llmProviderId: string;
   templateId: string;
   providerApiUrl: string;
+  debugMode: boolean;
 };
 
 const sessionContext: SessionContextType = {
@@ -40,6 +42,7 @@ const sessionContext: SessionContextType = {
   llmProviderId,
   templateId,
   providerApiUrl,
+  debugMode,
 };
 console.debug(`${loggerPrefix} Session context initialized with:`, sessionContext);
 

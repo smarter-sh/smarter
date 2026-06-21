@@ -24,6 +24,7 @@ if (!rootEl) throw new Error("Root element not found");
 const csrfCookieName = rootEl.getAttribute("django-csrf-cookie-name");
 const djangoSessionCookieName = rootEl.getAttribute("django-session-cookie-name");
 const cookieDomain = rootEl.getAttribute("django-cookie-domain") || window.location.hostname;
+const debugMode = rootEl.getAttribute("react-debug-mode") === "true";
 
 const ApiUrl = rootEl.getAttribute("smarter-authtoken-list-api-url");
 
@@ -37,6 +38,7 @@ const sessionContext: SessionContext = {
   csrfCookieName,
   djangoSessionCookieName,
   cookieDomain,
+  debugMode,
 };
 console.debug(`${loggerPrefix} Session context initialized:`, sessionContext);
 createRoot(rootEl).render(<App sessionContext={sessionContext} />);

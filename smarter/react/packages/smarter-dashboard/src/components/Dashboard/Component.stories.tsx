@@ -18,6 +18,7 @@ const meta: Meta<typeof Dashboard> = {
       csrftoken: "dummy-csrf-token",
       djangoSessionCookieName: "sessionid",
       cookieDomain: "localhost",
+      debugMode: false,
     } as AppContextInterface,
   },
 };
@@ -40,6 +41,7 @@ export const WithCustomCookies: Story = {
       csrftoken: "custom-token",
       djangoSessionCookieName: "customsessionid",
       cookieDomain: "localhost",
+      debugMode: false,
     } as AppContextInterface,
   },
 };

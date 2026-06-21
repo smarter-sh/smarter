@@ -12,7 +12,7 @@ from django.shortcuts import render
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
-from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 from smarter.lib.drf.models import SmarterAuthToken as AuthToken
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING])
@@ -57,6 +57,7 @@ class AuthTokenListView(SmarterAuthenticatedNeverCachedWebView):
                 "authtoken_list_api_url": reverse(
                     AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview_api_all
                 ),
+                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
             }
         }
 
