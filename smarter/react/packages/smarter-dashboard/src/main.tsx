@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+
 import { loggerPrefix } from "@/const";
 import App from "./App.tsx";
 
@@ -11,6 +12,7 @@ const cookieDomain = rootEl.getAttribute("smarter-cookie-domain") || window.loca
 
 const myResourcesApiUrl = rootEl.getAttribute("smarter-my-resources-api-url");
 const serviceHealthApiUrl = rootEl.getAttribute("smarter-service-health-api-url");
+const debugMode = rootEl.getAttribute("react-debug-mode") === "true";
 
 if (!myResourcesApiUrl) throw new Error("My Resources API URL not found in root element attributes");
 if (!serviceHealthApiUrl) throw new Error("Service Health API URL not found in root element attributes");
@@ -24,6 +26,7 @@ export interface AppContextInterface {
   csrfCookieName: string;
   djangoSessionCookieName: string;
   cookieDomain: string;
+  debugMode: boolean;
 }
 
 const appContext: AppContextInterface = {
@@ -32,6 +35,7 @@ const appContext: AppContextInterface = {
   csrfCookieName,
   djangoSessionCookieName,
   cookieDomain,
+  debugMode,
 };
 console.debug(loggerPrefix, "appContext initialized with values:", appContext);
 createRoot(rootEl).render(<App appContext={appContext} />);

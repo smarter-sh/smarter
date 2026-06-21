@@ -16,7 +16,7 @@ Key points:
   standardized across packages.
 - Build artifacts are written into Django static paths and then collected by Django.
 
-## Build For Productino
+## Build For Production
 
 Use the convenvience commands in Makefile to build all packages and integrate
 to Django.

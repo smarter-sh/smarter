@@ -38,6 +38,7 @@ from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
 )
+from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +132,7 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
                 "llm_provider_id": "1",  # default value for the provider_id. The React component will set the user-selected provider_id here and use it when making requests to the api_url.
                 "template_id": "1",  # default value for the template_id. The React component will set the user-selected template_id here and use it when making requests to the api_url.
                 "provider_api_url": provider_api_url,  # list of providers (openai, googleai, anthropic, etc.) and their details (capabilities, pricing, etc.
+                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
             }
         }
         self.template_path = "react/prompt-passthrough.html"

@@ -34,6 +34,7 @@ from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedNeverCachedWebView,
 )
+from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +114,7 @@ class TerminalEmulatorLogView(SmarterAuthenticatedNeverCachedWebView):
                     DashboardLogsApiReverseNames.namespace,
                     DashboardLogsApiReverseNames.stream,
                 ),  # the WebSocket endpoint with the log data stream.
+                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
             }
         }
         self.template_path = "react/terminal-emulator.html"
