@@ -70,18 +70,33 @@ type TabbedListViewProps<TObject> = {
 };
 
 export default function TabbedListView<TObject>({ sessionContext, tabbedListViewContext }: TabbedListViewProps<TObject>) {
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // list state management for owned/shared object lists.
-  const [isLoadingOwned, setIsLoadingOwned] = useState<boolean>(true);
-  const [isLoadingShared, setIsLoadingShared] = useState<boolean>(true);
-  const [userListObjects, setUserListObjects] = useState<TObject[]>([]);
-  const [sharedListObjects, setSharedListObjects] = useState<TObject[]>([]);
 
   // cache keys for session-based local caching of owned/shared lists
   // to improve perceived load times on repeat visits
   const sharedListCacheKey = makeCacheKey(sessionContext.ApiUrl, "shared");
   const ownedListCacheKey = makeCacheKey(sessionContext.ApiUrl, "owned");
+
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // list state management for owned/shared object lists.
+  //
+  // We'll be optimistic, and hope that cached data is available to populate
+  // these before the async load completes. If not, then we'll show loading
+  // skeletons until the load finishes and populates these states. Note that
+  // the skeletons make use of cookie-backed counts to size themselves to whatever
+  // they'd most recently been, which should help prevent jarring resizing when
+  // the real data loads.
+  const [isLoadingOwned, setIsLoadingOwned] = useState<boolean>(false);
+  const [isLoadingShared, setIsLoadingShared] = useState<boolean>(false);
+  const [userListObjects, setUserListObjects] = useState<TObject[]>(readCache(ownedListCacheKey) || []);
+  const [sharedListObjects, setSharedListObjects] = useState<TObject[]>(readCache(sharedListCacheKey) || []);
+
+  // for sizing the skeleton loaders that are rendered if no cached data is available
+  const maxGhostRows = 25;
+  const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
+  const userGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "owned/") || 6, 0, maxGhostRows);
+  const sharedGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "shared/") || 6, 0, maxGhostRows);
+
 
   // controls whether to invalidate backend (Django-Redis) cache on next load
   // toggled by requery action.
@@ -101,12 +116,6 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   // throttle duration for requerying to prevent excessive backend requests
   const REQUERY_THROTTLE_MS = 2000;
   const requeryRef = useRef<number | null>(null);
-
-  // for sizing the skeleton loaders that are rendered while data is loading
-  const maxGhostRows = 25;
-  const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
-  const userGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "owned/") || 6, 0, maxGhostRows);
-  const sharedGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "shared/") || 6, 0, maxGhostRows);
 
   // initiate load of both owned and shared lists on component mount and whenever session context changes
   const handleLoad = async () => {
