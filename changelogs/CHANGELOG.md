@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.12-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.11...v0.14.12-alpha.1) (2026-06-21)
+
+### Bug Fixes
+
+* add request mixin properties for smarter client diagnostics headers ([1a4c2b5](https://github.com/smarter-sh/smarter/commit/1a4c2b5945951d30047f9d5c8780b5233a1fc4ca))
+
 ## [0.14.11](https://github.com/smarter-sh/smarter/compare/v0.14.10...v0.14.11) (2026-06-21)
 
 ### Bug Fixes
