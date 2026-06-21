@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.11](https://github.com/smarter-sh/smarter/compare/v0.14.10...v0.14.11) (2026-06-21)
+
+### Bug Fixes
+
+* add client diagnostics headers ([cc5ded3](https://github.com/smarter-sh/smarter/commit/cc5ded3cc157ed81a973422952ee9daa86dab21c))
+
+### Refactoring
+
+* pass waffle react-debug-mode to react component ([8f507e4](https://github.com/smarter-sh/smarter/commit/8f507e431f829e98fb5b8b1d02a157e8fd47d679))
+* use SessionContext when possible ([e08b5fb](https://github.com/smarter-sh/smarter/commit/e08b5fba9ec2956592bd25a73825b4dc8e78a821))
+
 ## [0.14.11-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.10...v0.14.11-alpha.1) (2026-06-21)
 
 ### Bug Fixes
