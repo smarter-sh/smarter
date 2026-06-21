@@ -12,7 +12,7 @@ const cookieDomain = rootEl.getAttribute("smarter-cookie-domain") || window.loca
 
 const myResourcesApiUrl = rootEl.getAttribute("smarter-my-resources-api-url");
 const serviceHealthApiUrl = rootEl.getAttribute("smarter-service-health-api-url");
-const debugMode = rootEl.getAttribute("react-debug-mode") === "true";
+const debugMode = rootEl.getAttribute("react-debug-mode")?.toLowerCase() === "true";
 
 if (!myResourcesApiUrl) throw new Error("My Resources API URL not found in root element attributes");
 if (!serviceHealthApiUrl) throw new Error("Service Health API URL not found in root element attributes");

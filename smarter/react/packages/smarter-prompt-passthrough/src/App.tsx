@@ -5,26 +5,26 @@
  */
 import Hero from "./components/Hero";
 import Prompt from "./components/Prompt";
+import type { SessionContext } from "@smarter/common";
 
-import type { SessionContextType } from "@/main";
 
 interface AppProps {
-  sessionContext: SessionContextType;
+  sessionContext: SessionContext;
+  defaultLLMProviderId: number;
+  defaultTemplateId: number;
+  providerApiUrl: string;
 }
 
-function App({ sessionContext }: AppProps) {
+function App({ sessionContext, defaultLLMProviderId, defaultTemplateId, providerApiUrl }: AppProps) {
   return (
     <>
       <section className="mt-5 container" id="prompt-passthrough">
         <Hero />
         <Prompt
-          apiUrl={sessionContext.apiUrl}
-          csrfCookieName={sessionContext.csrfCookieName}
-          djangoSessionCookieName={sessionContext.djangoSessionCookieName}
-          cookieDomain={sessionContext.cookieDomain}
-          defaultLLMProviderId={sessionContext.llmProviderId}
-          defaultTemplateId={sessionContext.templateId}
-          providerApiUrl={sessionContext.providerApiUrl}
+          sessionContext={sessionContext}
+          defaultLLMProviderId={defaultLLMProviderId}
+          defaultTemplateId={defaultTemplateId}
+          providerApiUrl={providerApiUrl}
         />
       </section>
     </>
