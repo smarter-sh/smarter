@@ -21,7 +21,7 @@ from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )
-from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])
 
@@ -59,6 +59,8 @@ class PromptListView(SmarterAuthenticatedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "prompt_list_api_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview_api_all),
+                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
+                "smarter_request_id": self.smarter_request_id(),
             }
         }
 

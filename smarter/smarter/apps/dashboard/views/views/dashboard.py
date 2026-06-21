@@ -36,6 +36,7 @@ from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 logger = logging.getLogger(__name__)
 DASHBOARD_CACHE_TIMEOUT = 10  # 10 seconds. keeps the dashboard snappy while avoiding appearing stale.
@@ -105,6 +106,8 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
                     DashboardApiReverseNames.namespace,
                     DashboardApiReverseNames.service_health,
                 ),
+                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
+                "smarter_request_id": self.smarter_request_id(),
             }
         }
         self.template_path = "react/dashboard.html"

@@ -1,7 +1,7 @@
 {
   "name": "@smarter/dashboard",
   "description": "React-based dashboard for the Smarter web console.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "type": "module",
   "config": {
     "cdnDeploy": false,

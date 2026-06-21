@@ -66,7 +66,7 @@ const functionCallPrompt = {
   ],
 };
 
-export default function getPromptTemplate(templateId: string, defaultModel: string) {
+export default function getPromptTemplate(templateId: number, defaultModel: string) {
   if (!templateId) {
     throw new Error("templateId is required to get a prompt template");
     }
@@ -75,13 +75,13 @@ export default function getPromptTemplate(templateId: string, defaultModel: stri
   }
   let template;
     switch (templateId) {
-      case "1":
+      case 1:
         template = helloWorld;
         break;
-      case "2":
+      case 2:
         template = messageRoles;
         break;
-      case "3":
+      case 3:
         template = functionCallPrompt;
         break;
       default:
