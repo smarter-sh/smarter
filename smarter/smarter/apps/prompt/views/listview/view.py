@@ -60,7 +60,7 @@ class PromptListView(SmarterAuthenticatedWebView):
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "prompt_list_api_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview_api_all),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.smarter_request_id(),
+                "smarter_request_id": self.generate_smarter_request_id(),
             }
         }
 

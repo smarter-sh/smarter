@@ -107,7 +107,7 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
                     DashboardApiReverseNames.service_health,
                 ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.smarter_request_id(),
+                "smarter_request_id": self.generate_smarter_request_id(),
             }
         }
         self.template_path = "react/dashboard.html"
