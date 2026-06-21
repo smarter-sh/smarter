@@ -58,6 +58,11 @@ export type SessionContext = {
   csrfCookieName: string;
   djangoSessionCookieName: string;
   cookieDomain: string;
+  debugMode: boolean;
+  smarterClient: string;
+  smarterClientVersion: string;
+  smarterRequestId: string;
+  smarterCapabilities?: string[];
 };
 
 export type TabbedViewContext<TObject> = {

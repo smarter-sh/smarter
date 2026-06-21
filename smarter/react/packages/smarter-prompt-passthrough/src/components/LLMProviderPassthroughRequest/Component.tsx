@@ -11,9 +11,9 @@ import "./styles.css";
 
 export interface ProviderPassthroughRequestProps {
   providersJson: LLMProvider[];
-  llmProviderId: string;
+  llmProviderId: number;
   connectivityTestPath: string;
-  templateId: string;
+  templateId: number;
   providerBaseUrl: string;
   isSending: boolean;
   editor: monaco.IStandaloneCodeEditor | null;

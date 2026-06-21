@@ -108,7 +108,7 @@ export default function TabbedListView<TObject>({ sessionContext, tabbedListView
   const userGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "owned/") || 6, 0, maxGhostRows);
   const sharedGhostCount = clamp(getCookieForUrl(sessionContext.ApiUrl + "shared/") || 6, 0, maxGhostRows);
 
-  // initiate load of both owned and shared llm_client lists on component mount and whenever session context changes
+  // initiate load of both owned and shared lists on component mount and whenever session context changes
   const handleLoad = async () => {
     console.debug(`${loggerPrefix} handleLoad() Loading owned and shared objects with invalidateCacheFlag=${invalidateCacheFlag}`);
 

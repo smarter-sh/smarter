@@ -10,6 +10,10 @@ const sessionContext: SessionContext = {
   csrfCookieName: "csrftoken",
   djangoSessionCookieName: "sessionid",
   cookieDomain: "localhost",
+  debugMode: false,
+  smarterClient: "@smarter/prompt-list",
+  smarterClientVersion: "0.1.0",
+  smarterRequestId: "storybook-session",
 };
 
 const exampleLLMClientObject =     {

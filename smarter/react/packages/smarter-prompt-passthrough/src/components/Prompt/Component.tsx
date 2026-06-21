@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import type * as monaco from "monaco-editor";
 
 import { fetchDjangoUrl } from "@smarter/common";
+import type { SessionContext } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
 import getPromptTemplate from "./templates";
@@ -34,20 +35,14 @@ import LLMProviderPassthroughRequest from "@/components/LLMProviderPassthroughRe
 import "./styles.css";
 
 interface PromptProps {
-  apiUrl: string;
-  csrfCookieName: string;
-  djangoSessionCookieName: string;
-  cookieDomain: string;
-  defaultLLMProviderId: string;
-  defaultTemplateId: string;
+  sessionContext: SessionContext;
+  defaultLLMProviderId: number;
+  defaultTemplateId: number;
   providerApiUrl: string;
 }
 
 function Prompt({
-  apiUrl,
-  csrfCookieName,
-  djangoSessionCookieName,
-  cookieDomain,
+  sessionContext,
   defaultLLMProviderId,
   defaultTemplateId,
   providerApiUrl,
@@ -63,8 +58,8 @@ function Prompt({
   // LLM provider and template state
   const [providersJson, setProviders] = useState<LLMProvider[]>([]);
   const [selectedProviderJson, setSelectedProviderJson] = useState<LLMProvider | null>(null);
-  const [templateId, setTemplateId] = useState(defaultTemplateId ?? "1");
-  const [llmProviderId, setLLMProvider] = useState(defaultLLMProviderId ?? "1");
+  const [templateId, setTemplateId] = useState(defaultTemplateId ?? 1);
+  const [llmProviderId, setLLMProvider] = useState(defaultLLMProviderId ?? 1);
 
   // Derived state, from llmProviderId
   const [defaultModel, setDefaultModel] = useState("");
@@ -95,7 +90,7 @@ function Prompt({
         // initialize all state that depends on the provider list
         // and default provider.
         setDefaultModel(default_provider.defaultModel);
-        setLLMProvider(default_provider.id.toString());
+        setLLMProvider(default_provider.id);
 
         // lastly, generate the initial request JSON based on the default
         // provider and template.
@@ -111,7 +106,7 @@ function Prompt({
   }, [providerApiUrl]);
 
   useEffect(() => {
-    const provider = providersJson.find((p) => String(p.id) === llmProviderId);
+    const provider = providersJson.find((p) => p.id === llmProviderId);
     if (provider) {
       setSelectedProviderJson(provider);
       setProviderBaseUrl(provider.baseUrl);
@@ -125,9 +120,9 @@ function Prompt({
     setEditor(editorInstance);
   };
   const handleLLMProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newId = e.target.value;
+    const newId = parseInt(e.target.value, 10);
     setLLMProvider(newId);
-    const provider = providersJson.find((p) => String(p.id) === newId);
+    const provider = providersJson.find((p) => p.id === newId);
     if (provider) {
       setSelectedProviderJson(provider);
       setProviderBaseUrl(provider.baseUrl);
@@ -139,8 +134,9 @@ function Prompt({
     }
   };
   const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTemplateId(e.target.value);
-    const templateJson = getPromptTemplate(e.target.value, defaultModel ?? "");
+    const newTemplateId = parseInt(e.target.value, 10);
+    setTemplateId(newTemplateId);
+    const templateJson = getPromptTemplate(newTemplateId, defaultModel ?? "");
     setRequestJson(templateJson);
   };
 
@@ -151,13 +147,11 @@ function Prompt({
 
     setIsSending(true);
     try {
-      const url = new URL(providerSlug + "/", apiUrl).toString();
+      const url = new URL(providerSlug + "/", sessionContext.ApiUrl).toString();
       const res = await fetchDjangoUrl(
-        requestJson,
+        sessionContext,
         url,
-        djangoSessionCookieName,
-        csrfCookieName,
-        cookieDomain,
+        requestJson,
       );
       const data = await res.json();
       console.debug(loggerPrefix, `fetched response from ${url}:`, data);
