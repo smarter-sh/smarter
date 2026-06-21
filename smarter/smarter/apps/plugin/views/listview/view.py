@@ -56,6 +56,7 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "plugin_list_api_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview_api_all),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
+                "smarter_request_id": self.smarter_request_id(),
             }
         }
 

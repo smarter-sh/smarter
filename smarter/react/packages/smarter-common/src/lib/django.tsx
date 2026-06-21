@@ -15,22 +15,27 @@ export default async function fetchDjangoUrl(
   url: string,
   requestJson: string,
 ) {
-  const userAgent = "SmarterChat/1.0";
   const applicationJson = "application/json";
-  const authToken =
+  const djangoSessionTokenValue =
     getCookie({ name: sessionContext.djangoSessionCookieName, expiration: null, domain: sessionContext.cookieDomain, value: null }, "") || "";
-  const csrftokenFromCookie =
+  const csrftokenValue =
     getCookie({ name: sessionContext.csrfCookieName, expiration: null, domain: sessionContext.cookieDomain, value: null }, "") || "";
+
+  const capabilities = sessionContext.smarterCapabilities ? sessionContext.smarterCapabilities.join(",") : "listview,cardview";
+
   const requestHeaders = {
     Accept: applicationJson,
     "Content-Type": applicationJson,
-    "X-CSRFToken": csrftokenFromCookie,
-    Origin: window.location.origin,
-    Authorization: `Bearer ${authToken}`,
-    "User-Agent": userAgent,
+    "X-CSRFToken": csrftokenValue,
+    "X-Smarter-Client": sessionContext.smarterClient,
+    "X-Smarter-Client-Version": sessionContext.smarterClientVersion,
+    "X-Smarter-SDK": "react",
+    "X-Request-ID": sessionContext.smarterRequestId,
+    "X-Smarter-Capabilities": capabilities,
+    Authorization: `Bearer ${djangoSessionTokenValue}`,
   };
 
-  console.debug(`${loggerPrefix} fetchDjangoUrl() Sending POST request to ${url}`, "with body:", requestJson);
+  console.debug(`${loggerPrefix} fetchDjangoUrl() Sending POST request to ${url}`, "with headers:", requestHeaders, "with body:", requestJson);
 
   const res = await fetch(url, {
     method: "POST",

@@ -1,7 +1,7 @@
 {
   "name": "@smarter/prompt-passthrough",
   "description": "A React component library for working directly with LLM provider APIs in the Smarter web console.",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "type": "module",
   "config": {
     "cdnDeploy": false,
