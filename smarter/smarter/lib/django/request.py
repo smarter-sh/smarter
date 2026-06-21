@@ -521,6 +521,110 @@ class SmarterRequestMixin(AccountMixin):
         return self._smarter_request_user
 
     @property
+    def smarter_client(self) -> Optional[str]:
+        """
+        Get the smarter client name from the request.
+
+        This property checks for the "X-Smarter-Client" header in the request headers or in the Django META dictionary.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            client_name = request_mixin.smarter_client
+
+        :return: The value of the "X-Smarter-Client" header as a string, or None if not present.
+        """
+        return (
+            self._smarter_request.headers.get("X-Smarter-Client")
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
+            else None
+        )
+
+    @property
+    def smarter_client_version(self) -> Optional[str]:
+        """
+        Get the smarter client version from the request.
+
+        This property checks for the "X-Smarter-Client-Version" header in the request headers or in the Django META dictionary.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            client_version = request_mixin.smarter_client_version
+
+        :return: The value of the "X-Smarter-Client-Version" header as a string, or None if not present.
+        """
+        return (
+            self._smarter_request.headers.get("X-Smarter-Client-Version")
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
+            else None
+        )
+
+    @property
+    def smarter_client_type(self) -> Optional[str]:
+        """
+        Get the smarter client type from the request.
+
+        This property checks for the "X-Smarter-Client-Type" header in the request headers or in the Django META dictionary.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            client_type = request_mixin.smarter_client_type
+
+        :return: The value of the "X-Smarter-Client-Type" header as a string, or None if not present.
+        """
+        return (
+            self._smarter_request.headers.get("X-Smarter-Client-Type")
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
+            else None
+        )
+
+    @property
+    def smarter_request_id(self) -> Optional[str]:
+        """
+        Get the smarter request ID from the request.
+
+        This property checks for the "X-Smarter-Request-ID" header in the request headers or in the Django META dictionary.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            request_id = request_mixin.smarter_request_id
+
+        :return: The value of the "X-Smarter-Request-ID" header as a string, or None if not present.
+        """
+        return (
+            self._smarter_request.headers.get("X-Smarter-Request-ID")
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
+            else None
+        )
+
+    def generate_smarter_request_id(self) -> str:
+        """Generates a unique identifier for the request."""
+        return uuid.uuid4().hex
+
+    @property
+    def smarter_capabilities(self) -> Optional[str]:
+        """
+        Get the smarter capabilities from the request.
+
+        This property checks for the "X-Smarter-Capabilities" header in the request headers or in the Django META dictionary.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            capabilities = request_mixin.smarter_capabilities
+
+        :return: The value of the "X-Smarter-Capabilities" header as a string, or None if not present.
+        """
+        return (
+            self._smarter_request.headers.get("X-Smarter-Capabilities")
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
+            else None
+        )
+
+    @property
     def auth_header(self) -> Optional[str]:
         """
         Get the Authorization header from the request.
@@ -2353,7 +2457,3 @@ class SmarterRequestMixin(AccountMixin):
             and self.smarter_request.user.is_authenticated
             else False
         )
-
-    def smarter_request_id(self) -> str:
-        """Generates a unique identifier for the request."""
-        return uuid.uuid4().hex

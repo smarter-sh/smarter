@@ -29,8 +29,8 @@ export default async function fetchDjangoUrl(
     "X-CSRFToken": csrftokenValue,
     "X-Smarter-Client": sessionContext.smarterClient,
     "X-Smarter-Client-Version": sessionContext.smarterClientVersion,
-    "X-Smarter-SDK": "react",
-    "X-Request-ID": sessionContext.smarterRequestId,
+    "X-Smarter-Client-Type": "react",
+    "X-Smarter-Request-ID": sessionContext.smarterRequestId,
     "X-Smarter-Capabilities": capabilities,
     Authorization: `Bearer ${djangoSessionTokenValue}`,
   };
