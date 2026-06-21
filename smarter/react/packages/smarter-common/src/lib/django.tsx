@@ -25,6 +25,7 @@ export default async function fetchDjangoUrl(
 
   const requestHeaders = {
     Accept: applicationJson,
+    Authorization: `Bearer ${djangoSessionTokenValue}`,
     "Content-Type": applicationJson,
     "X-CSRFToken": csrftokenValue,
     "X-Smarter-Client": sessionContext.smarterClient,
@@ -32,7 +33,6 @@ export default async function fetchDjangoUrl(
     "X-Smarter-Client-Type": "react",
     "X-Smarter-Request-ID": sessionContext.smarterRequestId,
     "X-Smarter-Capabilities": capabilities,
-    Authorization: `Bearer ${djangoSessionTokenValue}`,
   };
 
   console.debug(`${loggerPrefix} fetchDjangoUrl() Sending POST request to ${url}`, "with headers:", requestHeaders, "with body:", requestJson);
