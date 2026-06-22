@@ -4,63 +4,61 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-
-
 ## [0.14.13](https://github.com/smarter-sh/smarter/compare/v0.14.12...v0.14.13) (2026-06-21)
 
 ### Bug Fixes
 
-* force a new release ([0c20a66](https://github.com/smarter-sh/smarter/commit/0c20a66c2f017ad2c2c00b7863539c32d2cf081a))
+- force a new release ([0c20a66](https://github.com/smarter-sh/smarter/commit/0c20a66c2f017ad2c2c00b7863539c32d2cf081a))
 
 ### Refactoring
 
-* smooth out component initialization to eliminate screen flicker on cached loads ([1df75b2](https://github.com/smarter-sh/smarter/commit/1df75b29509f3510fb70cf3b0c231703bf708e91))
+- smooth out component initialization to eliminate screen flicker on cached loads ([1df75b2](https://github.com/smarter-sh/smarter/commit/1df75b29509f3510fb70cf3b0c231703bf708e91))
 
 ## [0.14.12](https://github.com/smarter-sh/smarter/compare/v0.14.11...v0.14.12) (2026-06-21)
 
 ### Bug Fixes
 
-* add request mixin properties for smarter client diagnostics headers ([1a4c2b5](https://github.com/smarter-sh/smarter/commit/1a4c2b5945951d30047f9d5c8780b5233a1fc4ca))
+- add request mixin properties for smarter client diagnostics headers ([1a4c2b5](https://github.com/smarter-sh/smarter/commit/1a4c2b5945951d30047f9d5c8780b5233a1fc4ca))
 
 ## [0.14.12-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.11...v0.14.12-alpha.1) (2026-06-21)
 
 ### Bug Fixes
 
-* add request mixin properties for smarter client diagnostics headers ([1a4c2b5](https://github.com/smarter-sh/smarter/commit/1a4c2b5945951d30047f9d5c8780b5233a1fc4ca))
+- add request mixin properties for smarter client diagnostics headers ([1a4c2b5](https://github.com/smarter-sh/smarter/commit/1a4c2b5945951d30047f9d5c8780b5233a1fc4ca))
 
 ## [0.14.11](https://github.com/smarter-sh/smarter/compare/v0.14.10...v0.14.11) (2026-06-21)
 
 ### Bug Fixes
 
-* add client diagnostics headers ([cc5ded3](https://github.com/smarter-sh/smarter/commit/cc5ded3cc157ed81a973422952ee9daa86dab21c))
+- add client diagnostics headers ([cc5ded3](https://github.com/smarter-sh/smarter/commit/cc5ded3cc157ed81a973422952ee9daa86dab21c))
 
 ### Refactoring
 
-* pass waffle react-debug-mode to react component ([8f507e4](https://github.com/smarter-sh/smarter/commit/8f507e431f829e98fb5b8b1d02a157e8fd47d679))
-* use SessionContext when possible ([e08b5fb](https://github.com/smarter-sh/smarter/commit/e08b5fba9ec2956592bd25a73825b4dc8e78a821))
+- pass waffle react-debug-mode to react component ([8f507e4](https://github.com/smarter-sh/smarter/commit/8f507e431f829e98fb5b8b1d02a157e8fd47d679))
+- use SessionContext when possible ([e08b5fb](https://github.com/smarter-sh/smarter/commit/e08b5fba9ec2956592bd25a73825b4dc8e78a821))
 
 ## [0.14.11-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.10...v0.14.11-alpha.1) (2026-06-21)
 
 ### Bug Fixes
 
-* add client diagnostics headers ([cc5ded3](https://github.com/smarter-sh/smarter/commit/cc5ded3cc157ed81a973422952ee9daa86dab21c))
+- add client diagnostics headers ([cc5ded3](https://github.com/smarter-sh/smarter/commit/cc5ded3cc157ed81a973422952ee9daa86dab21c))
 
 ### Refactoring
 
-* pass waffle react-debug-mode to react component ([8f507e4](https://github.com/smarter-sh/smarter/commit/8f507e431f829e98fb5b8b1d02a157e8fd47d679))
-* use SessionContext when possible ([e08b5fb](https://github.com/smarter-sh/smarter/commit/e08b5fba9ec2956592bd25a73825b4dc8e78a821))
+- pass waffle react-debug-mode to react component ([8f507e4](https://github.com/smarter-sh/smarter/commit/8f507e431f829e98fb5b8b1d02a157e8fd47d679))
+- use SessionContext when possible ([e08b5fb](https://github.com/smarter-sh/smarter/commit/e08b5fba9ec2956592bd25a73825b4dc8e78a821))
 
 ## [0.14.10](https://github.com/smarter-sh/smarter/compare/v0.14.9...v0.14.10) (2026-06-20)
 
 ### Bug Fixes
 
-* keep isLoading false if we get a cache hit ([77a6a9b](https://github.com/smarter-sh/smarter/commit/77a6a9bb3ea6f628e9204c10cc264f9f25f55817))
+- keep isLoading false if we get a cache hit ([77a6a9b](https://github.com/smarter-sh/smarter/commit/77a6a9bb3ea6f628e9204c10cc264f9f25f55817))
 
 ## [0.14.9](https://github.com/smarter-sh/smarter/compare/v0.14.8...v0.14.9) (2026-06-20)
 
 ### Bug Fixes
 
-* port remaining code to @smarter/common ([a16069e](https://github.com/smarter-sh/smarter/commit/a16069e854715d66a0e34659a7f151772afc3e96))
+- port remaining code to @smarter/common ([a16069e](https://github.com/smarter-sh/smarter/commit/a16069e854715d66a0e34659a7f151772afc3e96))
 
 ## [0.14.8](https://github.com/smarter-sh/smarter/compare/v0.14.7...v0.14.8) (2026-06-19)
 

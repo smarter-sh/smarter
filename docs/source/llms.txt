@@ -1,0 +1,56 @@
+# Smarter
+
+Smarter is an open-source framework for authoring and managing AI resources.
+
+Official website: https://smarter.sh/
+
+## Primary Documentation
+
+- https://docs.smarter.sh/
+
+- https://docs.smarter.sh/smarter-platform/installation.html
+
+- https://docs.smarter.sh/smarter-framework.html
+
+- https://docs.smarter.sh/smarter-resources.html
+
+- https://docs.smarter.sh/contributors.html
+
+
+## Developer Resources
+
+- https://smarter.sh/developers
+
+- https://smarter.sh/cli
+
+- https://hub.docker.com/r/mcdaniel0073/smarter
+
+- https://github.com/smarter-sh/smarter-python
+
+- https://pypi.org/project/smarter-api/
+
+- https://www.npmjs.com/package/@smarter.sh/ui-chat
+
+- https://www.youtube.com/@project-smarter
+
+
+
+## Source Code
+
+- https://github.com/smarter-sh/smarter
+
+- https://github.com/smarter-sh/smarter-infrastructure
+
+- https://github.com/smarter-sh/smarter-deploy
+
+- https://github.com/smarter-sh/smarter-chat
+
+## Blog
+
+- https://blog.smarter.sh/
+
+## Legal
+
+- https://smarter.sh/privacy
+
+- https://smarter.sh/tos
