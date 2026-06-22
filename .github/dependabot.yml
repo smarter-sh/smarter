@@ -1,5 +1,18 @@
 version: 2
 updates:
+  - package-ecosystem: "python"
+    directory: "smarter/requirements/in"
+    labels:
+      - "dependencies"
+      - "python"
+      - "automated pr"
+    schedule:
+      interval: "annually"
+    target-branch: "alpha"
+    assignees:
+      - "lpm0073"
+    reviewers:
+      - "lpm0073"
   - package-ecosystem: "npm"
     directory: "/"
     labels:
