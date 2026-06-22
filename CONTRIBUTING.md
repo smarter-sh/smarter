@@ -1,6 +1,12 @@
 # Developer Setup Guide
 
-Thank you for considering contributing to this project! You should be able to work unencumbered in any of Linux, macOS or Windows. There are various technology-specific resources that you'll need to initialize in your development environment. See setup instructions below for each technology.
+Thank you for considering contributing to this project! Please
+See the [Contributing Guide](https://docs.smarter.sh/smarter-framework/guides/contributing.html)
+in the official documentation site.
+
+You should be able to work unencumbered in any of Linux, macOS or Windows. There are various
+technology-specific resources that you'll need to initialize in your
+development environment. See setup instructions below for each technology.
 
 ## How to Contribute
 
@@ -30,7 +36,10 @@ Please see our [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
 
 ## Quick Start
 
-Smarter follows opinionated code style policies for most of the technologies in this repo. With that in mind, following is how to correctly setup your local development environment. Before attempting to setup this project you should ensure that the following prerequisites are installed in your local environment:
+Smarter follows opinionated code style policies for most of the technologies
+in this repo. With that in mind, following is how to correctly setup your local
+development environment. Before attempting to setup this project you should
+ensure that the following prerequisites are installed in your local environment:
 
 - Docker CE 25x or later
 - Docker Compose
@@ -60,7 +69,11 @@ make build   # builds and configures all docker containers
 make run     # runs all docker containers and starts a local web server on port 8000
 ```
 
-To preserve your own sanity, don't spend time formatting your Python, Terraform, JS or any other source code because pre-commit invokes automatic code formatting utilities such as black, flake8 and prettier, on all local commits, and these will reformat the code in your commit based on policy configuration files found in the root of this repo.
+To preserve your own sanity, don't spend time formatting your Python,
+Terraform, JS or any other source code because pre-commit invokes automatic
+code formatting utilities such as black, flake8 and prettier, on all local
+commits, and these will reformat the code in your commit based on policy
+configuration files found in the root of this repo.
 
 Running `docker ps` you should see output similar to the following.
 
@@ -75,21 +88,44 @@ f3bf3acbd087   smarter        "bash -c 'watchmedo …"   About a minute ago   Up
 
 ## Good Coding Best Practices
 
-This project demonstrates a wide variety of good coding best practices for managing mission-critical cloud-based micro services in a team environment, namely its adherence to [12-Factor Methodology](./docs/legacy/12-FACTOR.md). Please see this [Code Management Best Practices](https://docs.smarter.sh/en/latest/developers/developer-guidelines.html) for additional details.
+This project demonstrates a wide variety of good coding best practices for
+managing mission-critical cloud-based micro services in a team environment,
+namely its adherence to [12-Factor Methodology](./docs/legacy/12-FACTOR.md).
+Please see this [Code Management Best Practices](https://docs.smarter.sh/en/latest/developers/developer-guidelines.html)
+for additional details.
 
-We want to make this project more accessible to students and learners as an instructional tool while not adding undue code review workloads to anyone with merge authority for the project. To this end we've also added several pre-commit code linting and code style enforcement tools, as well as automated procedures for version maintenance of package dependencies, pull request evaluations, and semantic releases.
+We want to make this project more accessible to students and learners as an
+instructional tool while not adding undue code review workloads to anyone with
+merge authority for the project. To this end we've also added several pre-commit
+code linting and code style enforcement tools, as well as automated procedures
+for version maintenance of package dependencies, pull request evaluations, and
+semantic releases.
 
 ## Repository Setup
 
 ### .env setup
 
-Smarter uses a **LOT** of configuration data. You'll find a pre-formatted quick-start sample .env [here](./example-dot-env) to help you get started, noting however that simply running `make` from the root of this repo will scaffold this exact file for you.
+Smarter uses a **LOT** of configuration data. You'll find a pre-formatted
+quick-start sample .env [here](./example-dot-env) to help you get started,
+noting however that simply running `make` from the root of this repo will
+scaffold this exact file for you.
 
 ### pre-commit setup
 
-This project uses pre-commit as a first-pass automated code review / QC process. pre-commit runs a multitude of utilities and checks for code formatting, linting, syntax checking, and ensuring that you don't accidentally push something to GitHub which you'd later regret. Broadly speaking, these checks are aimed at minimizing the extent of commits that contain various kinds of defects and stylistic imperfections that don't belong on the main branch of the project.
+This project uses pre-commit as a first-pass automated code review / QC process.
+pre-commit runs a multitude of utilities and checks for code formatting,
+linting, syntax checking, and ensuring that you don't accidentally push
+something to GitHub which you'd later regret. Broadly speaking, these checks
+are aimed at minimizing the extent of commits that contain various kinds of
+defects and stylistic imperfections that don't belong on the main branch of
+the project.
 
-Note that many of the pre-commit commands are actually executed by Python which in turn is calling pip-installed packages listed in smarter/requirements/local.txt located in the root of the repo. It therefore is important that you first create the Python virtual environment using `make pre-commit`. It also is a good idea to do a complete 'dry run' of pre-commit, to ensure that your developer environment is correctly setup:
+Note that many of the pre-commit commands are actually executed by Python
+which in turn is calling pip-installed packages listed in
+smarter/requirements/local.txt located in the root of the repo. It therefore
+is important that you first create the Python virtual environment using
+`make pre-commit`. It also is a good idea to do a complete 'dry run' of
+pre-commit, to ensure that your developer environment is correctly setup:
 
 ```console
 make pre-commit
