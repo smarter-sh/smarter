@@ -65,6 +65,9 @@ class SmarterWaffleSwitches:
     PROMPT_LOGGING = "log_prompt"
     """Enables logging throughout the smarter.app.prompt namespace."""
 
+    PROXY_LOGGING = "log_proxy"
+    """Enables logging throughout the smarter.app.proxy namespace."""
+
     CHATAPP_LOGGING = "log_chatapp"
     """For the React Prompt UI component.
 
@@ -199,6 +202,11 @@ class SmarterWaffleSwitches:
         PROMPT_LOGGING: SmarterWaffleSwitch(
             name=PROMPT_LOGGING,
             comment="Enables logging throughout the smarter.app.prompt namespace.",
+            default=True,
+        ),
+        PROXY_LOGGING: SmarterWaffleSwitch(
+            name=PROXY_LOGGING,
+            comment="Enables logging throughout the smarter.app.proxy namespace.",
             default=True,
         ),
         CHATAPP_LOGGING: SmarterWaffleSwitch(

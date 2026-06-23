@@ -41,6 +41,8 @@ from smarter.apps.prompt.api.v1 import urls as prompt_urls
 from smarter.apps.prompt.const import namespace as prompt_namespace
 from smarter.apps.provider.api.v1 import urls as provider_urls
 from smarter.apps.provider.const import namespace as provider_namespace
+from smarter.apps.proxy.api.v1 import urls as proxy_urls
+from smarter.apps.proxy.const import namespace as proxy_namespace
 from smarter.apps.secret.api.v1 import urls as secret_urls
 from smarter.apps.secret.const import namespace as secret_namespace
 from smarter.apps.vectorstore.api.v1 import urls as vectorstore_urls
@@ -73,6 +75,17 @@ urlpatterns = [
     path("tests/", include(tests_urls, namespace="tests")),
 ]
 
+if smarter_settings.enable_proxy:
+    urlpatterns += [
+        path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
+    ]
+    logger.info("%s Proxy API endpoints are %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
+else:
+    logger.info(
+        "%s Proxy API endpoints are %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
+        logging.formatted_text(__name__),
+        SmarterReadyState.NOT_READY,
+    )
 if smarter_settings.enable_vectorstore:
     urlpatterns += [
         path("vectorstores/", include(vectorstore_urls, namespace="vectorstore")),

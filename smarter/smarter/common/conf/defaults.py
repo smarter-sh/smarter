@@ -167,6 +167,7 @@ class SettingsDefaults:
     ENABLE_DASHBOARD_APPLY: bool = bool_environment_variable("ENABLE_DASHBOARD_APPLY", True)
     ENABLE_DASHBOARD_SERVER_LOGS: bool = bool_environment_variable("ENABLE_DASHBOARD_SERVER_LOGS", True)
     ENABLE_DASHBOARD_PASSTHROUGH_PROMPT: bool = bool_environment_variable("ENABLE_DASHBOARD_PASSTHROUGH_PROMPT", True)
+    ENABLE_PROXY: bool = bool_environment_variable("ENABLE_PROXY", True)
 
     fernet = get_env("FERNET_ENCRYPTION_KEY", default=None, is_secret=True)
     if fernet is None:

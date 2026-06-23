@@ -208,7 +208,31 @@
               </a>
               <!--end:Menu link-->
             </div>
-            <!--end:Menu item-->
+            <!--end:Menu item Providers -->
+
+            <!--begin:Menu item Proxies -->
+            {% if dashboard.is_proxy_enabled %}
+            <div class="menu-item">
+              <!--begin:Menu link-->
+              <a
+                class="menu-link"
+                href="{{ sidebar.proxies }}"
+                target="_self"
+              >
+                <span class="menu-icon">
+                  <i class="ki-duotone ki-data fs-2">
+                    <span class="path1"></span>
+                    <span class="path2"></span>
+                    <span class="path3"></span>
+                  </i>
+                </span>
+                <span class="menu-title">Proxies</span>
+              </a>
+              <!--end:Menu link-->
+            </div>
+            {% endif %}
+            <!--end:Menu item Proxies -->
+
 
             <!--begin:Menu item Plugins-->
             <div class="menu-item">

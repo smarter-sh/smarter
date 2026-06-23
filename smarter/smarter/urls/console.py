@@ -56,6 +56,8 @@ from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views.detailviews import PromptConfigView
 from smarter.apps.provider import urls as provider_urls
 from smarter.apps.provider.const import namespace as provider_namespace
+from smarter.apps.proxy import urls as proxy_urls
+from smarter.apps.proxy.const import namespace as proxy_namespace
 from smarter.apps.secret import urls as secret_urls
 from smarter.apps.secret.const import namespace as secret_namespace
 from smarter.apps.vectorstore import urls as vectorstore_urls
@@ -172,7 +174,6 @@ urlpatterns = [
     path("session-test/", session_test_view, name="session_test"),
     path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     path("secret/", include(secret_urls, namespace=secret_namespace)),
-    path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
     # -----------------------------------
     # LLMClients.
     # mcdaniel: 2026-01-31: are these even reachable anymore?
@@ -223,6 +224,14 @@ urlpatterns = [
     path("social-auth/", include(social_django_urls, namespace="social_auth")),
 ]
 
+if smarter_settings.enable_proxy:
+    urlpatterns += [
+        path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
+    ]
+if smarter_settings.enable_vectorstore:
+    urlpatterns += [
+        path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
+    ]
 
 # mcdaniel 2026-01-20: converting static() to list(static(...)) to fix
 # Sphinx doc build error: 'TypeError: can only concatenate list (not "static") to list
