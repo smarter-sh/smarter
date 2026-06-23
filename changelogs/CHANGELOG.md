@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.15-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.14...v0.14.15-alpha.1) (2026-06-23)
+
+### Bug Fixes
+
+* scaffold budget ORM ([270c6f6](https://github.com/smarter-sh/smarter/commit/270c6f6a5f7138cf3789a0f60a027ce0b90fb763))
+
 ## [0.14.14](https://github.com/smarter-sh/smarter/compare/v0.14.13...v0.14.14) (2026-06-23)
 
 ### Bug Fixes
