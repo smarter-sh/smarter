@@ -21,6 +21,7 @@ const smarterRequestId = rootEl.getAttribute("smarter-request-id") || "";
 
 const smarterClient = projectName;
 const smarterClientVersion = projectVersion;
+const smarterCapabilities = ["custom"];
 
 if (!ApiUrl) throw new Error("API URL not found in root element attributes");
 if (!csrfCookieName) throw new Error("CSRF token not found in root element attributes");
@@ -40,6 +41,7 @@ const sessionContext: SessionContext = {
   smarterClient,
   smarterClientVersion,
   smarterRequestId,
+  smarterCapabilities,
 };
 
 console.debug(`${loggerPrefix} Session context initialized with:`, sessionContext);

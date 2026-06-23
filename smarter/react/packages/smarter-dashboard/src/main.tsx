@@ -18,6 +18,7 @@ const smarterRequestId = rootEl.getAttribute("smarter-request-id") || "";
 
 const smarterClient = projectName;
 const smarterClientVersion = projectVersion;
+const smarterCapabilities = ["custom"];
 
 if (!myResourcesApiUrl) throw new Error("My Resources API URL not found in root element attributes");
 if (!serviceHealthApiUrl) throw new Error("Service Health API URL not found in root element attributes");
@@ -35,6 +36,7 @@ const sessionContext: SessionContext = {
     smarterClient,
     smarterClientVersion,
     smarterRequestId,
+    smarterCapabilities,
 };
 export interface AppContextInterface {
   sessionContext: SessionContext;
