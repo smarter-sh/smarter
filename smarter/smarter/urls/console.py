@@ -1,6 +1,5 @@
 """URLs for Smarter web console."""
 
-import logging
 import sys
 
 from django.apps import apps
@@ -65,6 +64,8 @@ from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.logger_helpers import formatted_text
+from smarter.common.mixins.helper_mixin import SmarterReadyState
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterSwitchAdmin
 from smarter.lib.drf import urls as drf_urls
 from smarter.lib.drf.const import namespace as drf_namespace
@@ -228,10 +229,24 @@ if smarter_settings.enable_proxy:
     urlpatterns += [
         path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
     ]
+    logger.info("%s Proxy web console access is %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
+else:
+    logger.info(
+        "%s Proxy web console access is %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
+        logging.formatted_text(__name__),
+        SmarterReadyState.NOT_READY,
+    )
 if smarter_settings.enable_vectorstore:
     urlpatterns += [
         path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
     ]
+    logger.info("%s Vectorstore web console access is %s.", logging.formatted_text(__name__), SmarterReadyState.READY)
+else:
+    logger.info(
+        "%s Vectorstore web console access is %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
+        logging.formatted_text(__name__),
+        SmarterReadyState.NOT_READY,
+    )
 
 # mcdaniel 2026-01-20: converting static() to list(static(...)) to fix
 # Sphinx doc build error: 'TypeError: can only concatenate list (not "static") to list
