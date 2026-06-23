@@ -92,6 +92,7 @@ from smarter.apps.plugin.models import (
 from smarter.apps.plugin.urls import PluginReverseNames
 from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.provider.urls import ProviderReverseNames
+from smarter.apps.proxy.urls import ProxyReverseNames
 from smarter.apps.secret.urls import SecretReverseNames
 from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 from smarter.common.conf import smarter_settings
@@ -152,6 +153,7 @@ def sidebar_context() -> dict[str, Any]:
             "vectorstores": reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.list_view),
             "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
             "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
+            "proxies": reverse(ProxyReverseNames.namespace, ProxyReverseNames.listview),
             "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
             "swagger_docs": reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
             "redoc": reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),
@@ -260,6 +262,7 @@ def base(request: "HttpRequest") -> dict[str, Any]:
                 "username": username,
                 "is_superuser": is_superuser,
                 "is_staff": is_staff,
+                "is_proxy_enabled": smarter_settings.enable_proxy,
                 "is_vectorstore_enabled": smarter_settings.enable_vectorstore,
                 "is_file_drop_zone_enabled": smarter_settings.enable_dashboard_apply,
                 "is_enabled_server_logs": smarter_settings.enable_dashboard_server_logs,

@@ -24,4 +24,4 @@ class DrfConfig(AppConfig, SmarterHelperMixin):
         from . import receivers  # noqa: F401
         from . import signals  # noqa: F401
 
-        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", self.formatted_state_ready)
+        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.upper()}", self.formatted_state_ready)

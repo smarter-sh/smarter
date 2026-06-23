@@ -1962,6 +1962,17 @@ class Settings(BaseSettings):
         bool: True if the vectorstore is enabled, False otherwise.
     """
 
+    enable_proxy: bool = Field(
+        settings_defaults.ENABLE_PROXY,
+        description="True if the proxy feature is enabled based on the current environment.",
+        title="Enable Proxy",
+    )
+    """Determines if the proxy feature is enabled based on the current environment.
+
+    Returns:
+        bool: True if the proxy is enabled, False otherwise.
+    """
+
     @before_field_validator("enable_vectorstore")
     def parse_enable_vectorstore(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'enable_vectorstore' field.

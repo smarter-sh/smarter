@@ -30,6 +30,9 @@ from smarter.apps.prompt.manifest.models.prompt.const import (
 from smarter.apps.provider.manifest.models.provider.const import (
     MANIFEST_KIND as PROVIDER_MANIFEST_KIND,
 )
+from smarter.apps.proxy.manifest.models.proxy.const import (
+    MANIFEST_KIND as PROXY_MANIFEST_KIND,
+)
 from smarter.apps.secret.manifest.models.secret.const import (
     MANIFEST_KIND as SECRET_MANIFEST_KIND,
 )
@@ -69,9 +72,7 @@ class SAMKinds(SmarterEnumAbstract):
         USER: Represents a user manifest kind.
         SECRET: Represents a secret manifest kind.
         PROMPT: Represents a prompt manifest kind.
-        PROMPT_HISTORY: Represents a prompt history manifest kind.
-        PROMPT_PLUGIN_USAGE: Represents a prompt plugin usage manifest kind.
-        PROMPT_TOOL_CALL: Represents a prompt tool call manifest kind.
+        PROXY: Represents a proxy manifest kind.
         LLM_CLIENT: Represents an llm_client manifest kind.
         PROVIDER: Represents a provider manifest kind.
 
@@ -113,6 +114,9 @@ class SAMKinds(SmarterEnumAbstract):
 
     # provider resources
     PROVIDER = PROVIDER_MANIFEST_KIND
+
+    # proxy resources
+    PROXY = PROXY_MANIFEST_KIND
 
     # vectorstore resources
     VECTORSTORE = VECTORSTORE_MANIFEST_KIND

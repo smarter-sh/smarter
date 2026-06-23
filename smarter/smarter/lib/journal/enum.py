@@ -112,26 +112,14 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A JSON dictionary generated real-time
     """
 
-    PROMPT_HISTORY = "PromptHistory"
-    """Smarter PromptHistory resource.
-
-    A list of Django ORM model instances.
-    """
-
-    PROMPT_PLUGIN_USAGE = "PromptPluginUsage"
-    """Smarter PromptPluginUsage resource.
-
-    A list of Django ORM model instances.
-    """
-
-    PROMPT_TOOL_CALL = "PromptToolCall"
-    """Smarter PromptToolCall resource.
-
-    A list of Django ORM model instances.
-    """
-
     PROVIDER = "Provider"
     """Smarter Provider resource.
+
+    A Django ORM model instance.
+    """
+
+    PROXY = "Proxy"
+    """Smarter Proxy resource.
 
     A Django ORM model instance.
     """
@@ -180,12 +168,10 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.API_CONNECTION.value, cls.API_CONNECTION.value),
             (cls.API_PLUGIN.value, cls.API_PLUGIN.value),
             (cls.AUTH_TOKEN.value, cls.AUTH_TOKEN.value),
-            (cls.PROMPT_HISTORY.value, cls.PROMPT_HISTORY.value),
-            (cls.PROMPT_PLUGIN_USAGE.value, cls.PROMPT_PLUGIN_USAGE.value),
-            (cls.PROMPT_TOOL_CALL.value, cls.PROMPT_TOOL_CALL.value),
             (cls.LLM_CLIENT.value, cls.LLM_CLIENT.value),
             (cls.PROMPT.value, cls.PROMPT.value),
             (cls.PROMPT_CONFIG.value, cls.PROMPT_CONFIG.value),
+            (cls.PROXY.value, cls.PROXY.value),
             (cls.PROVIDER.value, cls.PROVIDER.value),
             (cls.SECRET.value, cls.SECRET.value),
             (cls.SQL_CONNECTION.value, cls.SQL_CONNECTION.value),
