@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.14.14](https://github.com/smarter-sh/smarter/compare/v0.14.13...v0.14.14) (2026-06-23)
+
+### Bug Fixes
+
+* scaffold proxy app ([53d3ed7](https://github.com/smarter-sh/smarter/commit/53d3ed7feb15886c3067fb4c7e63ffbd4b9a41e3))
+* scaffold proxy app ([49f9ec2](https://github.com/smarter-sh/smarter/commit/49f9ec2101db9f03a54f284b9b8857b9d1b27782))
+
 ## [0.14.13](https://github.com/smarter-sh/smarter/compare/v0.14.12...v0.14.13) (2026-06-21)
 
 ### Bug Fixes
