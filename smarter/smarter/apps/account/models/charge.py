@@ -127,7 +127,7 @@ class Charge(TimestampedModel):
         return f"""{self.resource_locator} - {self.charge_type} - {self.total_tokens} - {self.total_cost}"""
 
 
-class AggregatedCharges(Charge):
+class AggregatedCharges(TimestampedModel):
     """
     AggregatedCharges model for tracking aggregated account billing events.
 
@@ -143,6 +143,20 @@ class AggregatedCharges(Charge):
     month = models.SmallIntegerField()
     day = models.SmallIntegerField()
     hour = models.SmallIntegerField()
+    resource_locator = models.CharField(
+        max_length=255,
+        db_index=True,
+        help_text="The TimestampedModel.resource_locator of the resource that this lock is associated with.",
+    )
+    charge_type = models.CharField(
+        max_length=20,
+        choices=CHARGE_TYPES,
+        default=CHARGE_TYPE_PROMPT_COMPLETION,
+    )
+    prompt_tokens = models.IntegerField()
+    completion_tokens = models.IntegerField()
+    total_tokens = models.IntegerField()
+    total_cost = models.DecimalField(max_digits=10, decimal_places=5, default=Decimal("0"))
 
 
 @transaction.atomic
@@ -168,7 +182,7 @@ def aggregate_charges() -> int:
             prompt_tokens=Sum("prompt_tokens"),
             completion_tokens=Sum("completion_tokens"),
             total_tokens=Sum("total_tokens"),
-            total_cost=Sum("total_cost"),
+            total_cost=Sum("item_cost"),
         )
     )
 
