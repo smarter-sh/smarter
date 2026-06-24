@@ -758,7 +758,7 @@ class ChatDbMixin(AccountMixin):
             raise SmarterValueError("Prompt is required to create a charge record.")
 
         org_resources = [self.user_profile.record_locator, self.user_profile.account.record_locator]
-        charge_authorization(org_resources)
+        charge_authorization(org_resources, charge_type)  # type: ignore
         create_charge.delay(
             resource_locator=self.user_profile.record_locator,
             charge_type=charge_type,
@@ -775,7 +775,7 @@ class ChatDbMixin(AccountMixin):
             total_tokens=total_tokens,
         )
 
-        charge_authorization(resource_locators)
+        charge_authorization(resource_locators, charge_type)  # type: ignore
         for resource_locator in resource_locators:
             create_charge.delay(
                 resource_locator=resource_locator,

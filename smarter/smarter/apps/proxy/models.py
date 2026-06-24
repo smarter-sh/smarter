@@ -44,6 +44,19 @@ class Proxy(MetaDataWithOwnershipModel):
         help_text="The secret containing the API key for this proxy.",
     )
 
+    @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return True
+
 
 __all__ = [
     "Proxy",

@@ -268,6 +268,19 @@ class LLMClient(MetaDataWithOwnershipModel):
         return self.url if self.url else "undefined"
 
     @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return True
+
+    @property
     def rfc1034_compliant_name(self) -> str:
         """
         Returns a RFC 1034 compliant name for the LLMClient.
@@ -656,6 +669,7 @@ class LLMClient(MetaDataWithOwnershipModel):
             logger.warning("LLMClient %s is not ready. It is not deployed.", self.rfc1034_compliant_name)
             return False
 
+        self.authorize()  # type: ignore
         return True
 
     @cached_property
