@@ -167,10 +167,10 @@ def aggregate_charges() -> int:
 
     aggregates = (
         charges.annotate(
-            year=ExtractYear("created"),
-            month=ExtractMonth("created"),
-            day=ExtractDay("created"),
-            hour=ExtractHour("created"),
+            year=ExtractYear("created_at"),
+            month=ExtractMonth("created_at"),
+            day=ExtractDay("created_at"),
+            hour=ExtractHour("created_at"),
         )
         .values(
             "resource_locator",
@@ -185,7 +185,7 @@ def aggregate_charges() -> int:
             prompt_tokens=Sum("prompt_tokens"),
             completion_tokens=Sum("completion_tokens"),
             total_tokens=Sum("total_tokens"),
-            total_cost=Sum("item_cost"),
+            total_cost=Sum("total_cost"),
         )
     )
 
