@@ -66,10 +66,6 @@ CHARGE_TYPES = [
     (CHARGE_TYPE_TOOL, "Tool"),
 ]
 
-PROVIDER_OPENAI = "openai"
-PROVIDER_METAAI = "metaai"
-PROVIDER_GOOGLEAI = "googleai"
-
 
 class Charge(TimestampedModel):
     """

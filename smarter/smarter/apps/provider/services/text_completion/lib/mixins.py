@@ -701,7 +701,12 @@ class ChatDbMixin(AccountMixin):
         create_prompt_plugin_usage.delay(chat_id=chat_id, plugin_id=plugin_id, input_text=input_text)
 
     def db_insert_charge(
-        self, provider: Provider, charge_type: str, completion_tokens: int, prompt_tokens: int, total_tokens: int
+        self,
+        resource_locators: list[str],
+        charge_type: str,
+        completion_tokens: int,
+        prompt_tokens: int,
+        total_tokens: int,
     ):
         """
         Insert a new charge record for the current account and prompt session.
@@ -710,8 +715,8 @@ class ChatDbMixin(AccountMixin):
 
         Parameters
         ----------
-        provider : str
-            The name of the provider (e.g., "openai", "anthropic").
+        resource_locators : list[str]
+            A list of resource locators associated with the charge (e.g., provider, user profile).
         charge_type : str
             The type of charge (e.g., "completion", "plugin").
         completion_tokens : int
@@ -735,7 +740,7 @@ class ChatDbMixin(AccountMixin):
         .. code-block:: python
 
             provider.db_insert_charge(
-                provider="openai",
+                resource_locators=["provider-xyz", "user-profile-abc"],
                 charge_type="completion",
                 completion_tokens=42,
                 prompt_tokens=58,
@@ -746,18 +751,19 @@ class ChatDbMixin(AccountMixin):
         """
         if not isinstance(self.user_profile, UserProfile):
             raise SmarterValueError("Account is required to create a charge record.")
-        if not isinstance(provider, Provider):
-            raise SmarterValueError("Provider is required to create a charge record.")
+        if not resource_locators:
+            raise SmarterValueError("Resource locators are required to create a charge record.")
         if not self.prompt:
             raise SmarterValueError("Prompt is required to create a charge record.")
 
-        create_charge.delay(
-            resource_locator=provider.record_locator,
-            charge_type=charge_type,
-            prompt_tokens=prompt_tokens,
-            completion_tokens=completion_tokens,
-            total_tokens=total_tokens,
-        )
+        for resource_locator in resource_locators:
+            create_charge.delay(
+                resource_locator=resource_locator,
+                charge_type=charge_type,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                total_tokens=total_tokens,
+            )
 
         create_charge.delay(
             resource_locator=self.user_profile.record_locator,

@@ -58,7 +58,7 @@ spec:
       containers:
         - name: "{{ .Values.global.appName }}-beat"
           image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
-          command: ["celery", "-A", "smarter.workers.celery.app", "beat", "--loglevel=info"]
+          command: ["celery", "-A", "smarter.workers.celerybeat", "beat", "--loglevel=info"]
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
           resources:
             {{- toYaml .Values.beat.resources | nindent 12 }}
