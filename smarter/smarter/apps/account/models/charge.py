@@ -38,7 +38,7 @@ Example
 from decimal import Decimal
 
 from django.db import models, transaction
-from django.db.models import Sum
+from django.db.models import Count, Sum
 from django.db.models.functions import (
     ExtractDay,
     ExtractHour,
@@ -95,7 +95,7 @@ class Charge(TimestampedModel):
     resource_locator = models.CharField(
         max_length=255,
         db_index=True,
-        help_text="The TimestampedModel.resource_locator of the resource that this lock is associated with.",
+        help_text="The TimestampedModel.resource_locator of the resource that this charge is associated with.",
     )
     charge_type = models.CharField(
         max_length=20,
@@ -142,13 +142,14 @@ class AggregatedCharges(TimestampedModel):
     resource_locator = models.CharField(
         max_length=255,
         db_index=True,
-        help_text="The TimestampedModel.resource_locator of the resource that this lock is associated with.",
+        help_text="The TimestampedModel.resource_locator of the resource that this charge is associated with.",
     )
     charge_type = models.CharField(
         max_length=20,
         choices=CHARGE_TYPES,
         default=CHARGE_TYPE_PROMPT_COMPLETION,
     )
+    records = models.IntegerField()
     prompt_tokens = models.IntegerField()
     completion_tokens = models.IntegerField()
     total_tokens = models.IntegerField()
@@ -175,6 +176,7 @@ def aggregate_charges() -> int:
             "hour",
         )
         .annotate(
+            records=Count("id"),
             prompt_tokens=Sum("prompt_tokens"),
             completion_tokens=Sum("completion_tokens"),
             total_tokens=Sum("total_tokens"),
@@ -187,6 +189,7 @@ def aggregate_charges() -> int:
             AggregatedCharges(
                 resource_locator=row["resource_locator"],
                 charge_type=row["charge_type"],
+                records=row["records"],
                 prompt_tokens=row["prompt_tokens"],
                 completion_tokens=row["completion_tokens"],
                 total_tokens=row["total_tokens"],

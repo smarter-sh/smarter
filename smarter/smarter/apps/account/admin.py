@@ -22,6 +22,7 @@ from smarter.lib import logging
 from .models import (
     Account,
     AccountContact,
+    AggregatedCharges,
     Budget,
     Charge,
     ResourceConstraint,
@@ -277,6 +278,39 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
         )
 
 
+class AggregatedChargesAdmin(SmarterCustomerModelAdmin):
+    """AggregatedCharges model admin."""
+
+    model = AggregatedCharges
+
+    def get_readonly_fields(self, request, obj=None):
+        # pylint: disable=protected-access
+        return [field.name for field in self.model._meta.fields]
+
+    list_display = (
+        "year",
+        "month",
+        "day",
+        "hour",
+        "resource_locator",
+        "charge_type",
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+        "total_cost",
+    )
+
+    def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        return smarter_filter_queryset_for_user_profile(
+            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
+            qs=qs,
+            account_filter="account",
+            user_profile_filter=None,
+        )
+
+
 class RestrictedUserAdmin(UserAdmin):
     """
     Custom User admin that restricts access to users based on their account.
@@ -427,5 +461,6 @@ smarter_restricted_admin_site.register(Budget, BudgetAdmin)
 smarter_restricted_admin_site.register(ResourceConstraint, ResourceConstraintAdmin)
 smarter_restricted_admin_site.register(ResourceLock, ResourceLockAdmin)
 smarter_restricted_admin_site.register(Charge, ChargeAdmin)
+smarter_restricted_admin_site.register(AggregatedCharges, AggregatedChargesAdmin)
 smarter_restricted_admin_site.register(UserProfile, RestrictedUserProfileAdmin)
 smarter_restricted_admin_site.register(User, RestrictedUserAdmin)
