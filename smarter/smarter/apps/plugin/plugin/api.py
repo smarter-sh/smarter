@@ -490,6 +490,7 @@ class ApiPlugin(PluginBase):
                     f"{self.formatted_class_name}.plugin_data_django_model() error: ApiConnection {connection_name} does not exist for account {account}."
                 )
 
+            plugin_data_apiconnection.authorize()
             api_data["connection"] = plugin_data_apiconnection
 
         # recast the Pydantic model's parameters field

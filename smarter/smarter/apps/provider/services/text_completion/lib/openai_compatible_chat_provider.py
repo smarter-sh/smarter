@@ -562,6 +562,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
         resource_locators.append(self.prompt.llm_client.record_locator)  # type: ignore[union-attr]
         resource_locators.append(plugin.plugin_meta.record_locator)  # type: ignore[union-attr]
+        if plugin.plugin_data and hasattr(plugin.plugin_data, "connection"):
+            resource_locators.append(plugin.plugin_data.connection.record_locator)  # type: ignore[union-attr]
+
         self._insert_charge_by_type(resource_locators, CHARGE_TYPE_PLUGIN)
         self.db_insert_chat_plugin_usage(prompt=self.prompt, plugin=plugin, input_text=self.input_text)
 
