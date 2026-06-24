@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.15-alpha.8](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.7...v0.14.15-alpha.8) (2026-06-24)
+
+### Bug Fixes
+
+* add manage.py aggregate_charges ([3e76302](https://github.com/smarter-sh/smarter/commit/3e76302ecdd7b83a3916a025f0f470bc00ca3cac))
+
 ## [0.14.15-alpha.7](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.6...v0.14.15-alpha.7) (2026-06-24)
 
 ### Bug Fixes
