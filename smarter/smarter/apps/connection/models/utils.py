@@ -1,6 +1,4 @@
-"""
-Connection models utils
-"""
+"""Connection models utils."""
 
 from typing import Union
 
@@ -70,6 +68,7 @@ def get_cached_connection_detail_view_and_kind(
                 account_id,
                 name,
             )
+            retval.authorize()
             return retval
         except SqlConnection.DoesNotExist:
             return None
@@ -88,6 +87,7 @@ def get_cached_connection_detail_view_and_kind(
                 account_id,
                 name,
             )
+            retval.authorize()
             return retval
         except ApiConnection.DoesNotExist:
             return None
