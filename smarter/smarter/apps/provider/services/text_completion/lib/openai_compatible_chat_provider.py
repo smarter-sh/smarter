@@ -462,7 +462,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.total_tokens = response.usage.total_tokens
         self.reference = response.system_fingerprint
 
-        resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
+        resource_locators = [self.provider.record_locator, self.prompt.llm_client.record_locator]  # type: ignore[assignment]
         self._insert_charge_by_type(resource_locators, CHARGE_TYPE_PROMPT_COMPLETION)
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
@@ -532,7 +532,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             request=request,
             response=response,
         )
-        resource_locators = [self.provider.record_locator, function_name]  # type: ignore[assignment]
+        resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
+        if isinstance(self.prompt, Prompt) and self.prompt.llm_client:
+            resource_locators.append(self.prompt.llm_client.record_locator)
         self._insert_charge_by_type(resource_locators, CHARGE_TYPE_TOOL)
         self.db_insert_chat_tool_call(
             function_name=function_name, function_args=function_args, request=request, response=response
@@ -558,9 +560,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             input_text=self.input_text,
         )
         resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
-        if self.plugins:
-            for record_locator in [plugin.plugin_meta.record_locator for plugin in self.plugins]:  # type: ignore[union-attr]
-                resource_locators.append(record_locator)
+        resource_locators.append(self.prompt.llm_client.record_locator)  # type: ignore[union-attr]
+        resource_locators.append(plugin.plugin_meta.record_locator)  # type: ignore[union-attr]
         self._insert_charge_by_type(resource_locators, CHARGE_TYPE_PLUGIN)
         self.db_insert_chat_plugin_usage(prompt=self.prompt, plugin=plugin, input_text=self.input_text)
 

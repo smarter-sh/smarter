@@ -261,6 +261,7 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
 
     list_display = (
         "created_at",
+        "resource_locator",
         "charge_type",
         "prompt_tokens",
         "completion_tokens",
