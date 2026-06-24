@@ -33,7 +33,7 @@ Example
     )
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 from django.db import models, transaction
@@ -176,7 +176,11 @@ class AggregatedCharges(TimestampedModel):
 
 @transaction.atomic
 def aggregate_charges() -> int:
-    """Aggregates charges and creates corresponding AggregatedCharges entries."""
+    """
+    Aggregates charges and creates corresponding AggregatedCharges entries.
+
+    Runs hourly from Celery Beat.
+    """
 
     def aggregate_open_charges():
         """Aggregates open charges and creates corresponding AggregatedCharges entries."""
@@ -234,7 +238,8 @@ def aggregate_charges() -> int:
         Aggregates charges from the previous month and creates corresponding AggregatedCharges entries.
 
         Ensures that all charges from the previous month are captured and stored in
-        the AggregatedCharges model for reporting and analysis, rolled up to the last day of the month.
+        the AggregatedCharges model for reporting and analysis, rolled up to the
+        year, month, and last day of the month.
         """
         start_of_this_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_of_last_month = start_of_this_month - timedelta(microseconds=1)
@@ -249,13 +254,7 @@ def aggregate_charges() -> int:
                 created_month=ExtractMonth("created_at"),
                 created_day=ExtractDay("created_at"),
             )
-            .values(
-                "resource_locator",
-                "charge_type",
-                "created_year",
-                "created_month",
-                "created_day",
-            )
+            .values("resource_locator", "charge_type", "created_year", "created_month", "created_day")
             .annotate(
                 records=Count("id"),
                 prompt_tokens=Sum("prompt_tokens"),

@@ -1,0 +1,52 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_dropzone %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the dropzone
+  see: smarter.apps.dashboard.templatetags.react_dropzone.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% dropzone_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/drop-zone/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dropzone_content %}
+  {{ block.super }}
+
+  <!--
+  context variables originate from
+  smarter.apps.dashboard.views.views.dashboard.DropzoneView
+  -->
+  <div
+    id="{{ react_dropzone.root_id }}"
+    smarter-csrf-cookie-name="{{ react_dropzone.csrf_cookie_name }}"
+    smarter-django-session-cookie-name="{{ react_dropzone.django_session_cookie_name }}"
+    smarter-cookie-domain="{{ react_dropzone.cookie_domain }}"
+    react-debug-mode="{{ react_dropzone.react_debug_mode }}"
+    smarter-request-id="{{ react_dropzone.smarter_request_id }}"
+    smarter-api-url="{{ react_dropzone.smarter_api_url }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the dropzone
+  see: smarter.apps.dashboard.templatetags.react_dropzone.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% dropzone_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/drop-zone/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

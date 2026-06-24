@@ -8,6 +8,7 @@ from smarter.apps.dashboard.const import namespace
 from smarter.apps.dashboard.views.views import (
     ChangeLogView,
     DashboardView,
+    DropzoneView,
     EmailAdded,
     NotificationsView,
 )
@@ -15,6 +16,7 @@ from smarter.apps.dashboard.views.views.api import urls as dashboard_api_urls
 from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
 from smarter.apps.dashboard.views.views.api.service_health import ServiceHealthView
 from smarter.apps.plugin import urls as plugin_urls
+from smarter.common.conf import smarter_settings
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
@@ -32,6 +34,7 @@ class DashboardReverseNames:
     email_added = to_snake_case(EmailAdded.__name__)
     api_my_resources = to_snake_case(MyResourcesView.__name__)
     api_service_health = to_snake_case(ServiceHealthView.__name__)
+    manifest_drop_zone = to_snake_case(DropzoneView.__name__)
 
 
 urlpatterns = [
@@ -45,3 +48,15 @@ urlpatterns = [
     path("notifications/", NotificationsView.as_view(), name=DashboardReverseNames.notifications),
     path("email-added/", EmailAdded.as_view(), name=DashboardReverseNames.email_added),
 ]
+
+if smarter_settings.enable_dashboard_apply:
+    urlpatterns.append(path("drop-zone/", DropzoneView.as_view(), name=DashboardReverseNames.manifest_drop_zone))
+    logger.info(
+        "%s manifest drop zone enabled. Set env ENABLE_DASHBOARD_APPLY=false to disable.",
+        logging.formatted_text(__name__),
+    )
+else:
+    logger.info(
+        "%s manifest drop zone disabled. Set env ENABLE_DASHBOARD_APPLY=true to enable.",
+        logging.formatted_text(__name__),
+    )

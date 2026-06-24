@@ -78,7 +78,6 @@ from smarter.apps.account.models import (
     get_resolved_user,
 )
 from smarter.apps.connection.urls import ConnectionReverseNames
-from smarter.apps.dashboard.views.apply_manifest.urls import ApplyManifestReverseNames
 from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
 from smarter.apps.dashboard.views.terminal_emulator.names import (
     DashboardLogsReverseNames,
@@ -133,10 +132,9 @@ def sidebar_context() -> dict[str, Any]:
         "sidebar": {
             "dashboard": reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
             "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
-            "apply_manifest": reverse(
+            "manifest_drop_zone": reverse(
                 DashboardReverseNames.namespace,
-                ApplyManifestReverseNames.namespace,
-                ApplyManifestReverseNames.manifest_drop_zone,
+                DashboardReverseNames.manifest_drop_zone,
             ),
             "prompt_passthrough": reverse(
                 DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
