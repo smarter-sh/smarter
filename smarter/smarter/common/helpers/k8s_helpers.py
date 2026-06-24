@@ -2,7 +2,6 @@
 
 # pylint: disable=W0613
 
-import logging
 import os
 import subprocess
 import time
@@ -11,16 +10,12 @@ from typing import Optional, Tuple, Union
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.aws_helpers import aws_helper
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-    formatted_text_red,
-)
 from smarter.common.mixins import Singleton, SmarterHelperMixin
 from smarter.common.utils import get_readonly_yaml_file
-from smarter.lib import json
+from smarter.lib import json, logging
 
 logger = logging.getLogger(__name__)
-module_prefix = formatted_text(f"{__name__}.KubernetesHelper")
+module_prefix = logging.formatted_text(f"{__name__}.KubernetesHelper")
 
 
 class KubernetesHelperException(SmarterException):
@@ -49,7 +44,6 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         The kubeconfig dictionary to use. If not provided, a default is used.
     configured : bool, optional
         Whether the helper is already configured.
-
     """
 
     _kubeconfig: Optional[dict] = None
@@ -67,11 +61,19 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             self._kubeconfig,
             self._configured,
         )
+        if self.ready:
+            msg = f"{module_prefix}.ready() - {self.formatted_state_ready}."
+            logger.info(msg)
+        else:
+            msg = f"{module_prefix}.ready() - {self.formatted_state_not_ready}"
+            logger.error(msg)
 
     @property
     def ready(self) -> bool:
         """
-        Return whether the Kubernetes helper is ready for use. Returns True
+        Return whether the Kubernetes helper is ready for use.
+
+        Returns True
         if Kubernetes is configured, AND, the Kubernetes namespace exists.
 
         :return: True if ready, False otherwise.
@@ -80,29 +82,26 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         smarter_settings.environment_namespace
         """
         if not aws_helper.ready:
-            msg = f"{module_prefix}.ready() {formatted_text_red('AWS not ready, cannot configure KubernetesHelper')}"
+            msg = (
+                f"{module_prefix}.ready() {self.formatted_text_red('AWS not ready, cannot configure KubernetesHelper')}"
+            )
             logger.warning(msg)
             return False
 
         if not self.configured:
-            msg = f"{module_prefix}.ready() {formatted_text_red('KubernetesHelper not configured')}"
+            msg = f"{module_prefix}.ready() {self.formatted_text_red('KubernetesHelper not configured')}"
             logger.warning(msg)
             return False
 
         if not self.namespace_verified:
-            msg = f"{module_prefix}.ready() {formatted_text_red(f'KubernetesHelper namespace {smarter_settings.environment_namespace} does not exist')}"
+            msg = f"{module_prefix}.ready() {self.formatted_text_red(f'KubernetesHelper namespace {smarter_settings.environment_namespace} does not exist')}"
             logger.warning(msg)
             return False
 
         is_ready = self.configured and self.namespace_verified
 
         if is_ready:
-            msg = f"{module_prefix}.ready() - {self.formatted_state_ready}."
-            logger.info(msg)
             return True
-
-        msg = f"{module_prefix}.ready() - {self.formatted_state_not_ready}"
-        logger.error(msg)
         return False
 
     @property
@@ -191,7 +190,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             return True
         except subprocess.CalledProcessError as e:
             self._configured = False
-            msg = f"{module_prefix}.update_kubeconfig() {formatted_text_red('Failed to update kubeconfig')}: {e}"
+            msg = f"{module_prefix}.update_kubeconfig() {self.formatted_text_red('Failed to update kubeconfig')}: {e}"
             logger.error(msg)
             return False
 
@@ -220,7 +219,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         ) as process:
             _, stderr = process.communicate(input=manifest.encode())
             if process.returncode != 0:
-                msg = f"{module_prefix}.apply_manifest() {formatted_text_red('Failed to apply manifest')}: {stderr.decode()}"
+                msg = f"{module_prefix}.apply_manifest() {self.formatted_text_red('Failed to apply manifest')}: {stderr.decode()}"
                 logger.error(msg)
                 raise KubernetesHelperException(f"Failed to apply manifest: {stderr.decode()}")
 
@@ -250,13 +249,16 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             logger.warning("%s did not find namespace resource %s", module_prefix, namespace)
             return False
         except json.JSONDecodeError as e:
-            logger.exception("%s failed to parse namespace resource: %s", module_prefix, e)
+            logger.exception(
+                "%s failed to parse namespace resource: %s", module_prefix, self.formatted_text_red(str(e))
+            )
             return False
         return True
 
     def verify_ingress_resources(self, hostname: str, namespace: str) -> Tuple[bool, bool, bool]:
         """
-        Verify that an ingress and all child resources exist in the
+        Verify that an ingress and all child resources exist in the.
+
         cluster.
 
         commands:
@@ -270,7 +272,6 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         :type namespace: str
         :return: A tuple of booleans indicating whether the ingress, certificate, and secret were verified.
         :rtype: Tuple[bool, bool, bool]
-
         """
         logger.debug(
             "%s.verify_ingress_resources() verifying ingress resources in cluster %s, hostname %s, namespace %s",
@@ -343,13 +344,14 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             logger.warning("%s did not find ingress resource %s %s", module_prefix, name, namespace)
             return False
         except json.JSONDecodeError as e:
-            logger.exception("%s failed to parse ingress resource: %s", module_prefix, e)
+            logger.exception("%s failed to parse ingress resource: %s", module_prefix, self.formatted_text_red(str(e)))
             return False
         return True
 
     def verify_certificate(self, name: str, namespace: str) -> bool:
         """
-        Verify that a cert-manager certificate resource exists in the cluster
+        Verify that a cert-manager certificate resource exists in the cluster.
+
         and is in a ready state.
 
         command:
@@ -384,7 +386,9 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
                 certificate_info = json.loads(output)
                 logger.debug("%s parsed json certificate data %s %s", module_prefix, name, namespace)
             except json.JSONDecodeError as e:
-                logger.exception("%s Failed to parse certificate resource: %s", module_prefix, e)
+                logger.exception(
+                    "%s Failed to parse certificate resource: %s", module_prefix, self.formatted_text_red(str(e))
+                )
                 return False
 
             # try to parse the json data and check if the certificate is ready.
@@ -400,24 +404,30 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
                 )
                 certificate_issued = str(ready_status).lower() == "true"
                 if certificate_issued:
-                    logger.debug(
-                        "%s Certificate %s in namespace %s is issued and in a ready state.",
+                    logger.info(
+                        "%s Certificate %s in namespace %s is issued and %s.",
                         module_prefix,
                         name,
                         namespace,
+                        self.formatted_state_ready,
                     )
                 else:
                     logger.warning(
-                        "%s Certificate %s in namespace %s is not ready. Status: %s",
+                        "%s Certificate %s in namespace %s is not %s. Status: %s",
                         module_prefix,
                         name,
                         namespace,
+                        self.formatted_state_not_ready,
                         ready_status,
                     )
                     return False
             except KeyError as e:
                 logger.exception(
-                    "%s Could not parse certificate json data for %s %s: %s", module_prefix, name, namespace, e
+                    "%s Could not parse certificate json data for %s %s: %s",
+                    module_prefix,
+                    name,
+                    namespace,
+                    self.formatted_text_red(str(e)),
                 )
                 return False
         except subprocess.CalledProcessError as e:
@@ -428,6 +438,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
     def verify_secret(self, name: str, namespace: str) -> bool:
         """
         Verify that a secret resource exists in the cluster.
+
         command:
         - kubectl get secret smarter.3141-5926-5359.api.example.com-tls -n smarter-platform-prod -o json
 
@@ -452,19 +463,22 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         try:
             output = subprocess.check_output(command)
             json.loads(output)
-            logger.debug("%s secret %s in namespace %s is ready", module_prefix, name, namespace)
+            logger.debug(
+                "%s secret %s in namespace %s is %s", module_prefix, name, namespace, self.formatted_state_ready
+            )
             return True
         except subprocess.CalledProcessError:
             logger.error("%s Failed to verify secret resource %s %s", module_prefix, name, namespace)
             return False
         except json.JSONDecodeError as e:
-            logger.exception("%s Failed to parse secret resource: %s", module_prefix, e)
+            logger.exception("%s Failed to parse secret resource: %s", module_prefix, self.formatted_text_red(str(e)))
             return False
         return True
 
     def delete_ingress_resources(self, hostname: str, namespace: str) -> Tuple[bool, bool, bool]:
         """
         Delete an ingress and all child resources from the cluster.
+
         commands:
         - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod
         - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
@@ -499,6 +513,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
     def delete_ingress(self, ingress_name: str, namespace: str) -> bool:
         """
         Delete an Ingress resource from the cluster.
+
         command:
         - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod
 
@@ -529,6 +544,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
     def delete_certificate(self, certificate_name: str, namespace: str) -> bool:
         """
         Delete a cert-manager certificate resource from the cluster.
+
         command:
         - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
 
@@ -559,6 +575,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
     def delete_secret(self, secret_name: str, namespace: str) -> bool:
         """
         Delete a secret resource from the cluster.
+
         commands:
         - kubectl delete secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
 
