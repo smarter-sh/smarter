@@ -9,8 +9,7 @@ Classes & Constants
 -------------------
 
 - :class:`Charge`: Represents a single billing event for a user profile, including provider, charge type, token usage, and references.
-- :data:`CHARGE_TYPES`: List of available charge types (completion, plugin, tool).
-- :data:`CHARGE_TYPE_PROMPT_COMPLETION`, :data:`CHARGE_TYPE_PLUGIN`, :data:`CHARGE_TYPE_TOOL`: Charge type constants.
+- :data:`ChargeTypes`: List of available charge types (completion, plugin, tool).
 
 Key Features
 ------------
@@ -34,7 +33,7 @@ Example
     )
 """
 
-# django stuff
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.db import models, transaction
@@ -45,25 +44,39 @@ from django.db.models.functions import (
     ExtractMonth,
     ExtractYear,
 )
+from django.utils import timezone
 
 from smarter.apps.account.signals import new_charge_created
-
-# our stuff
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.manifest.enum import SmarterEnumAbstract
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
 
 
-CHARGE_TYPE_PROMPT_COMPLETION = "completion"
-CHARGE_TYPE_PLUGIN = "plugin"
-CHARGE_TYPE_TOOL = "tool"
+class ChargeTypes(SmarterEnumAbstract):
+    """
+    Charge types enumeration.
+
+    This enumeration defines the different types of charges that can be associated with user profiles.
+    Each charge type corresponds to a specific billing event, such as prompt completion, plugin usage, or tool usage.
+
+    Attributes:
+        PROMPT_COMPLETION: Represents a prompt completion charge type.
+        PLUGIN: Represents a plugin charge type.
+        TOOL: Represents a tool charge type.
+    """
+
+    PROMPT_COMPLETION = "completion"
+    PLUGIN = "plugin"
+    TOOL = "tool"
+
 
 CHARGE_TYPES = [
-    (CHARGE_TYPE_PROMPT_COMPLETION, "Prompt Completion"),
-    (CHARGE_TYPE_PLUGIN, "Plugin"),
-    (CHARGE_TYPE_TOOL, "Tool"),
+    (ChargeTypes.PROMPT_COMPLETION.value, "Prompt Completion"),
+    (ChargeTypes.PLUGIN.value, "Plugin"),
+    (ChargeTypes.TOOL.value, "Tool"),
 ]
 
 
@@ -100,7 +113,7 @@ class Charge(TimestampedModel):
     charge_type = models.CharField(
         max_length=20,
         choices=CHARGE_TYPES,
-        default=CHARGE_TYPE_PROMPT_COMPLETION,
+        default=ChargeTypes.PROMPT_COMPLETION.value,
     )
     prompt_tokens = models.IntegerField()
     completion_tokens = models.IntegerField()
@@ -152,7 +165,7 @@ class AggregatedCharges(TimestampedModel):
     charge_type = models.CharField(
         max_length=20,
         choices=CHARGE_TYPES,
-        default=CHARGE_TYPE_PROMPT_COMPLETION,
+        default=ChargeTypes.PROMPT_COMPLETION.value,
     )
     records = models.IntegerField()
     prompt_tokens = models.IntegerField()
@@ -163,61 +176,120 @@ class AggregatedCharges(TimestampedModel):
 
 @transaction.atomic
 def aggregate_charges() -> int:
-    charges = Charge.objects.all()
+    """Aggregates charges and creates corresponding AggregatedCharges entries."""
 
-    aggregates = (
-        charges.annotate(
-            year=ExtractYear("created_at"),
-            month=ExtractMonth("created_at"),
-            day=ExtractDay("created_at"),
-            hour=ExtractHour("created_at"),
-        )
-        .values(
-            "resource_locator",
-            "charge_type",
-            "year",
-            "month",
-            "day",
-            "hour",
-        )
-        .annotate(
-            records=Count("id"),
-            prompt_tokens=Sum("prompt_tokens"),
-            completion_tokens=Sum("completion_tokens"),
-            total_tokens=Sum("total_tokens"),
-            total_cost=Sum("total_cost"),
-        )
-    )
+    def aggregate_open_charges():
+        """Aggregates open charges and creates corresponding AggregatedCharges entries."""
+        charges = Charge.objects.all()
 
-    AggregatedCharges.objects.bulk_create(
-        [
-            AggregatedCharges(
-                resource_locator=row["resource_locator"],
-                charge_type=row["charge_type"],
-                records=row["records"],
-                prompt_tokens=row["prompt_tokens"],
-                completion_tokens=row["completion_tokens"],
-                total_tokens=row["total_tokens"],
-                total_cost=row["total_cost"],
-                year=row["year"],
-                month=row["month"],
-                day=row["day"],
-                hour=row["hour"],
+        aggregates = (
+            charges.annotate(
+                year=ExtractYear("created_at"),
+                month=ExtractMonth("created_at"),
+                day=ExtractDay("created_at"),
+                hour=ExtractHour("created_at"),
             )
-            for row in aggregates
-        ]
-    )
+            .values(
+                "resource_locator",
+                "charge_type",
+                "year",
+                "month",
+                "day",
+                "hour",
+            )
+            .annotate(
+                records=Count("id"),
+                prompt_tokens=Sum("prompt_tokens"),
+                completion_tokens=Sum("completion_tokens"),
+                total_tokens=Sum("total_tokens"),
+                total_cost=Sum("total_cost"),
+            )
+        )
 
-    retval = charges.count()
-    charges.delete()
+        AggregatedCharges.objects.bulk_create(
+            [
+                AggregatedCharges(
+                    resource_locator=row["resource_locator"],
+                    charge_type=row["charge_type"],
+                    records=row["records"],
+                    prompt_tokens=row["prompt_tokens"],
+                    completion_tokens=row["completion_tokens"],
+                    total_tokens=row["total_tokens"],
+                    total_cost=row["total_cost"],
+                    year=row["year"],
+                    month=row["month"],
+                    day=row["day"],
+                    hour=row["hour"],
+                )
+                for row in aggregates
+            ]
+        )
+
+        retval = charges.count()
+        charges.delete()
+        return retval
+
+    def aggregate_month_end_charges():
+        """
+        Aggregates charges from the previous month and creates corresponding AggregatedCharges entries.
+
+        Ensures that all charges from the previous month are captured and stored in
+        the AggregatedCharges model for reporting and analysis, rolled up to the last day of the month.
+        """
+        start_of_this_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end_of_last_month = start_of_this_month - timedelta(microseconds=1)
+        start_of_last_month = end_of_last_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        aggregated_charges = AggregatedCharges.objects.filter(
+            created_at__gte=start_of_last_month, created_at__lt=end_of_last_month
+        )
+
+        aggregates = (
+            aggregated_charges.annotate(
+                created_year=ExtractYear("created_at"),
+                created_month=ExtractMonth("created_at"),
+                created_day=ExtractDay("created_at"),
+            )
+            .values(
+                "resource_locator",
+                "charge_type",
+                "created_year",
+                "created_month",
+                "created_day",
+            )
+            .annotate(
+                records=Count("id"),
+                prompt_tokens=Sum("prompt_tokens"),
+                completion_tokens=Sum("completion_tokens"),
+                total_tokens=Sum("total_tokens"),
+                total_cost=Sum("total_cost"),
+            )
+        )
+        AggregatedCharges.objects.bulk_create(
+            [
+                AggregatedCharges(
+                    resource_locator=row["resource_locator"],
+                    charge_type=row["charge_type"],
+                    records=row["records"],
+                    prompt_tokens=row["prompt_tokens"],
+                    completion_tokens=row["completion_tokens"],
+                    total_tokens=row["total_tokens"],
+                    total_cost=row["total_cost"],
+                    year=row["created_year"],
+                    month=row["created_month"],
+                    day=row["created_day"],
+                )
+                for row in aggregates
+            ]
+        )
+        aggregated_charges.delete()
+
+    retval = aggregate_open_charges()
+    aggregate_month_end_charges()
     return retval
 
 
 __all__ = [
     "Charge",
     "AggregatedCharges",
-    "CHARGE_TYPES",
-    "CHARGE_TYPE_PROMPT_COMPLETION",
-    "CHARGE_TYPE_PLUGIN",
-    "CHARGE_TYPE_TOOL",
+    "ChargeTypes",
 ]
