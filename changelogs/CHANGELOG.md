@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.15-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.3...v0.14.15-alpha.4) (2026-06-24)
+
+### Bug Fixes
+
+* scaffold charge_authorization() ([c39b493](https://github.com/smarter-sh/smarter/commit/c39b493dc6eb56a56c1fdb680d90446a2971f106))
+
 ## [0.14.15-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.2...v0.14.15-alpha.3) (2026-06-24)
 
 ### Bug Fixes
