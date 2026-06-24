@@ -93,14 +93,11 @@ class DropzoneView(SmarterAuthenticatedNeverCachedWebView):
 
         context = {
             "react_dropzone": {
-                "root_id": "smarter-dropzone-root",
+                "root_id": "smarter-drop-zone-root",
                 "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "smarter_api_url": reverse(
-                    ApiV1CliReverseViews.namespace,
-                    ApiV1CliReverseViews.apply,
-                ),
+                "smarter_api_url": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
                 "my_resources_api_url": reverse(
                     DashboardReverseNames.namespace,
                     DashboardApiReverseNames.namespace,
