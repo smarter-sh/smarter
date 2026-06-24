@@ -28,19 +28,16 @@ Example
     from smarter.apps.account.models import Charge
 
     charge = Charge.objects.create(
-        user_profile=user_profile,
-        provider="openai",
         charge_type="completion",
         prompt_tokens=100,
         completion_tokens=200,
         total_tokens=300,
-        model="gpt-4",
-        reference="invoice-123"
     )
-
 """
 
 # django stuff
+from decimal import Decimal
+
 from django.db import models
 
 from smarter.apps.account.signals import new_charge_created
@@ -49,8 +46,6 @@ from smarter.apps.account.signals import new_charge_created
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-
-from . import user_profile
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
 
@@ -80,48 +75,31 @@ class Charge(TimestampedModel):
     """
     Charge model for tracking periodic account billing events.
 
-    Represents a single billing event for a UserProfile, including provider, charge type, token usage, and reference details.
+    A signal is emitted when a new charge is created, enabling downstream billing and analytics workflows.
 
-    :param user_profile: ForeignKey to :class:`UserProfile`. The user profile associated with the charge.
-    :param session_key: String. Optional session identifier for the charge.
-    :param provider: String. The LLM provider (e.g., OpenAI).
+    Represents a single billing event for a resource.
+
+    :param resource_locator: String. The TimestampedModel.resource_locator of the resource that this charge is associated with.
     :param charge_type: String. The type of charge (e.g., completion, plugin, tool).
     :param prompt_tokens: Integer. Number of prompt tokens used.
     :param completion_tokens: Integer. Number of completion tokens used.
     :param total_tokens: Integer. Total tokens used.
-    :param model: String. The model name.
-    :param reference: String. Reference identifier for the charge.
-
-    .. note::
-
-        A signal is emitted when a new charge is created, enabling downstream billing and analytics workflows.
 
     **Example usage**::
 
         charge = Charge.objects.create(
-            user_profile=user_profile,
-            provider="openai",
+            resource_locator=resource_locator,
             charge_type="completion",
             prompt_tokens=100,
             completion_tokens=200,
             total_tokens=300,
-            model="gpt-4",
-            reference="invoice-123"
         )
-
-    .. seealso::
-
-        :class:`UserProfile`, :class:`LLMPrices`
     """
 
-    user_profile = models.ForeignKey(
-        user_profile.UserProfile, on_delete=models.CASCADE, related_name="charge", null=True, blank=True
-    )
-    session_key = models.CharField(max_length=255, null=True, blank=True)
-    provider = models.CharField(
+    resource_locator = models.CharField(
         max_length=255,
-        choices=PROVIDERS,
-        default=PROVIDER_OPENAI,
+        db_index=True,
+        help_text="The TimestampedModel.resource_locator of the resource that this lock is associated with.",
     )
     charge_type = models.CharField(
         max_length=20,
@@ -131,8 +109,7 @@ class Charge(TimestampedModel):
     prompt_tokens = models.IntegerField()
     completion_tokens = models.IntegerField()
     total_tokens = models.IntegerField()
-    model = models.CharField(max_length=255)
-    reference = models.CharField(max_length=255)
+    total_cost = models.DecimalField(max_digits=10, decimal_places=8, default=Decimal("0"))
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -140,14 +117,14 @@ class Charge(TimestampedModel):
         super().save(*args, **kwargs)
         if is_new:
             logger.debug(
-                "%s.save() New user charge created for %s. Sending signal.",
+                "%s.save() New user charge created for %s.",
                 logging.formatted_text(__name__ + ".Charge()"),
-                self.user_profile,
+                self.resource_locator,
             )
             new_charge_created.send(sender=self.__class__, charge=self)
 
     def __str__(self):
-        return f"""{self.user_profile} - {self.provider} - {self.charge_type} - {self.total_tokens}"""
+        return f"""{self.resource_locator} - {self.charge_type} - {self.total_tokens} - {self.total_cost}"""
 
 
 __all__ = [

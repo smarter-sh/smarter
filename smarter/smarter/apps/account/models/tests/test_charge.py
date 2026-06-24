@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestCharge(TestAccountMixin):
-    """Test Charge model"""
+    """Test Charge model."""
 
     logger_prefix = logging.formatted_text(f"{__name__}.TestCharge()")
 
@@ -34,46 +34,30 @@ class TestCharge(TestAccountMixin):
         logger.debug("%s Tear down complete.", cls.logger_prefix)
 
     def test_crud(self):
-        """
-        Test that we can do all crud operations.
-        """
+        """Test that we can do all crud operations."""
 
         Charge.objects.create(
-            user_profile=self.user_profile,
-            session_key="test_session_key",
-            provider=self.provider.name,
             charge_type=CHARGE_TYPES[0][0],
             prompt_tokens=10,
             completion_tokens=20,
             total_tokens=30,
-            model="test_model",
-            reference="test_reference",
         )
 
         charge = Charge.objects.get(user_profile=self.user_profile, session_key="test_session_key")
-        self.assertEqual(charge.provider, self.provider.name)
         self.assertEqual(charge.charge_type, CHARGE_TYPES[0][0])
         self.assertEqual(charge.prompt_tokens, 10)
         self.assertEqual(charge.completion_tokens, 20)
         self.assertEqual(charge.total_tokens, 30)
-        self.assertEqual(charge.model, "test_model")
-        self.assertEqual(charge.reference, "test_reference")
 
-        charge.session_key = "updated_session_key"
         charge.charge_type = CHARGE_TYPES[1][0]
         charge.prompt_tokens = 15
         charge.completion_tokens = 25
         charge.total_tokens = 40
-        charge.model = "updated_test_model"
-        charge.reference = "updated_reference"
         charge.save()
 
-        self.assertEqual(charge.session_key, "updated_session_key")
         self.assertEqual(charge.charge_type, CHARGE_TYPES[1][0])
         self.assertEqual(charge.prompt_tokens, 15)
         self.assertEqual(charge.completion_tokens, 25)
         self.assertEqual(charge.total_tokens, 40)
-        self.assertEqual(charge.model, "updated_test_model")
-        self.assertEqual(charge.reference, "updated_reference")
 
         charge.delete()

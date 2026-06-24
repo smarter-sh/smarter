@@ -262,10 +262,9 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
 
     list_display = (
         "created_at",
-        "user_profile",
-        "provider",
-        "model",
         "charge_type",
+        "prompt_tokens",
+        "completion_tokens",
         "total_tokens",
     )
 

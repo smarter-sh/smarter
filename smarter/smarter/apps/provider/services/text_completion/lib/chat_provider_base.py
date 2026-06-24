@@ -664,14 +664,18 @@ class SmarterChatProviderBase(ChatDbMixin):
         :returns: None
         :rtype: None
         """
+        if not isinstance(self.provider, Provider):
+            raise SmarterValueError(f"{self.formatted_class_name}: provider must be a Provider instance")
+        if self.completion_tokens is None or self.prompt_tokens is None or self.total_tokens is None:
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: completion_tokens, prompt_tokens, and total_tokens must be set before inserting a charge."
+            )
         self.db_insert_charge(
             provider=self.provider,
             charge_type=charge_type,
             completion_tokens=self.completion_tokens,
             prompt_tokens=self.prompt_tokens,
             total_tokens=self.total_tokens,
-            model=self.model,
-            reference=self.reference or "SmarterChatProviderBase._insert_charge_by_type()",
         )
 
 
