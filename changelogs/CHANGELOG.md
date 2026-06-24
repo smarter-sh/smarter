@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.15-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.2...v0.14.15-alpha.3) (2026-06-24)
+
+### Bug Fixes
+
+* celerybeat configuration ([9b77973](https://github.com/smarter-sh/smarter/commit/9b779734d9152669a2cd5627c7468e2cbd6eb3e0))
+
+### Refactoring
+
+* AggregatedCharges ([ef753dc](https://github.com/smarter-sh/smarter/commit/ef753dcd806a027c8f35b917d63da943dc80356e))
+* AggregatedCharges ([1f0e77d](https://github.com/smarter-sh/smarter/commit/1f0e77d4f0eb9da484d82559f6278f5d8bb24247))
+
 ## [0.14.15-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.1...v0.14.15-alpha.2) (2026-06-24)
 
 ### Bug Fixes
