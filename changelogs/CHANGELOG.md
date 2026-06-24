@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.15-alpha.9](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.8...v0.14.15-alpha.9) (2026-06-24)
+
+### Bug Fixes
+
+* scaffold drop-zone react app ([38465bb](https://github.com/smarter-sh/smarter/commit/38465bb4d47349bbdbbe23350be53e0aeb1b3a65))
+
+### Refactoring
+
+* aggregate_charges ([e0834ba](https://github.com/smarter-sh/smarter/commit/e0834bacdece7b322eec1683b936765f72092959))
+
 ## [0.14.15-alpha.8](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.7...v0.14.15-alpha.8) (2026-06-24)
 
 ### Bug Fixes
