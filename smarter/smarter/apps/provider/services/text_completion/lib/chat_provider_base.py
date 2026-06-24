@@ -10,6 +10,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
 )
 from pydantic import SecretStr
 
+from smarter.apps.account.models import charge_authorization
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.functions.calculator import (
     calculator,
@@ -205,6 +206,8 @@ class SmarterChatProviderBase(ChatDbMixin):
             provider_name=provider_name,
             **kwargs,
         )
+
+        charge_authorization(self.user_profile.record_locator, self.__class__.__name__)  # type: ignore
 
         # constructor arguments
         self._default_model = None

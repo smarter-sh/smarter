@@ -38,3 +38,28 @@ Example::
 
     cache_invalidate.send(sender=self.__class__)
 """
+
+charge_authorized = Signal()
+"""
+Signal sent when a charge is authorized.
+
+Arguments:
+    record_locator (str): The record locator associated with the charge.
+    charge (Charge): The charge instance that has been authorized.
+
+Example::
+    charge_authorized.send(sender=self.__class__, record_locator=self.record_locator, charge=self)
+"""
+
+charge_declined = Signal()
+"""
+Signal sent when a charge is declined.
+
+Arguments:
+    record_locator (str): The record locator associated with the charge.
+    charge (Charge): The charge instance that has been declined.
+
+Example::
+
+    charge_declined.send(sender=self.__class__, record_locator=self.record_locator, charge=self)
+"""
