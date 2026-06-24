@@ -12,12 +12,9 @@ from .account import (
 from .account_contact import AccountContact
 from .budget import Budget, ResourceConstraint, ResourceLock, charge_authorization
 from .charge import (
-    CHARGE_TYPE_PLUGIN,
-    CHARGE_TYPE_PROMPT_COMPLETION,
-    CHARGE_TYPE_TOOL,
-    CHARGE_TYPES,
     AggregatedCharges,
     Charge,
+    ChargeTypes,
 )
 from .llm_prices import LLMPrices
 from .metadata_with_ownership import (
@@ -36,10 +33,7 @@ __all__ = [
     "charge_authorization",
     "Charge",
     "AggregatedCharges",
-    "CHARGE_TYPES",
-    "CHARGE_TYPE_PROMPT_COMPLETION",
-    "CHARGE_TYPE_PLUGIN",
-    "CHARGE_TYPE_TOOL",
+    "ChargeTypes",
     "get_resolved_user",
     "is_authenticated_user",
     "UserProfile",

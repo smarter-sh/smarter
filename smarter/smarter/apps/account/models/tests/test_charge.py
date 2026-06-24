@@ -1,7 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test Charge model."""
 
-from smarter.apps.account.models import CHARGE_TYPES, Charge
+from smarter.apps.account.models import Charge, ChargeTypes
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider
 
@@ -37,25 +37,25 @@ class TestCharge(TestAccountMixin):
         """Test that we can do all crud operations."""
 
         Charge.objects.create(
-            charge_type=CHARGE_TYPES[0][0],
+            charge_type=ChargeTypes.PROMPT_COMPLETION.value,
             prompt_tokens=10,
             completion_tokens=20,
             total_tokens=30,
         )
 
         charge = Charge.objects.get(user_profile=self.user_profile, session_key="test_session_key")
-        self.assertEqual(charge.charge_type, CHARGE_TYPES[0][0])
+        self.assertEqual(charge.charge_type, ChargeTypes.PROMPT_COMPLETION.value)
         self.assertEqual(charge.prompt_tokens, 10)
         self.assertEqual(charge.completion_tokens, 20)
         self.assertEqual(charge.total_tokens, 30)
 
-        charge.charge_type = CHARGE_TYPES[1][0]
+        charge.charge_type = ChargeTypes.PLUGIN.value
         charge.prompt_tokens = 15
         charge.completion_tokens = 25
         charge.total_tokens = 40
         charge.save()
 
-        self.assertEqual(charge.charge_type, CHARGE_TYPES[1][0])
+        self.assertEqual(charge.charge_type, ChargeTypes.PLUGIN.value)
         self.assertEqual(charge.prompt_tokens, 15)
         self.assertEqual(charge.completion_tokens, 25)
         self.assertEqual(charge.total_tokens, 40)
