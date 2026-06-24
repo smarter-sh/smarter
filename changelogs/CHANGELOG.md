@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.15-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.5...v0.14.15-alpha.6) (2026-06-24)
+
+### Bug Fixes
+
+* ensure all resource types get charge records ([29a886c](https://github.com/smarter-sh/smarter/commit/29a886cd3528f65def59631f0269db49cf5a6362))
+
 ## [0.14.15-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.4...v0.14.15-alpha.5) (2026-06-24)
 
 ### Bug Fixes
