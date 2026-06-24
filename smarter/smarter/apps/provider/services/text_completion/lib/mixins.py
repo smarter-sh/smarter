@@ -8,6 +8,7 @@ from django.db.models.query import QuerySet
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Charge, UserProfile
+from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.account.tasks import create_charge
 from smarter.apps.prompt.models import (
     Prompt,
@@ -756,15 +757,8 @@ class ChatDbMixin(AccountMixin):
         if not self.prompt:
             raise SmarterValueError("Prompt is required to create a charge record.")
 
-        for resource_locator in resource_locators:
-            create_charge.delay(
-                resource_locator=resource_locator,
-                charge_type=charge_type,
-                prompt_tokens=prompt_tokens,
-                completion_tokens=completion_tokens,
-                total_tokens=total_tokens,
-            )
-
+        org_resources = [self.user_profile.record_locator, self.user_profile.account.record_locator]
+        charge_authorization(org_resources)
         create_charge.delay(
             resource_locator=self.user_profile.record_locator,
             charge_type=charge_type,
@@ -780,6 +774,16 @@ class ChatDbMixin(AccountMixin):
             completion_tokens=completion_tokens,
             total_tokens=total_tokens,
         )
+
+        charge_authorization(resource_locators)
+        for resource_locator in resource_locators:
+            create_charge.delay(
+                resource_locator=resource_locator,
+                charge_type=charge_type,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                total_tokens=total_tokens,
+            )
 
 
 __all__ = ["ChatDbMixin"]

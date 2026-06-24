@@ -593,7 +593,7 @@ This is a Non-brokered operation.
     @csrf_exempt
     def post(self, request, name, *args, **kwargs):
 
-        # validate the llm_client name, as this is the most likely point of failure
+        # validate the llm_client name, as this is the next most likely point of failure
         try:
             if not LLMClient.objects.filter(name=name).with_read_permission_for(self.request.user).exists():  # type: ignore
                 raise LLMClient.DoesNotExist()

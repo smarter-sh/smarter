@@ -12,7 +12,7 @@ from typing import Any
 from django.core.handlers.asgi import ASGIRequest
 from openai.types.chat.chat_completion import ChatCompletion
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import UserProfile, charge_authorization
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.lib.protocols import (
     OpenAICompatiblePassthroughProtocol,
@@ -128,6 +128,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         provider API access.
         """
+        charge_authorization(self.user_profile.record_locator, self.__class__.__name__)  # type: ignore
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.post()")
         kwargs.pop("provider_name")
         logger.debug("%s called with request: %s, args: %s, kwargs: %s", logger_prefix, request, args, kwargs)

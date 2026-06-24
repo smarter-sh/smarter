@@ -5,10 +5,18 @@ Assumed to be always been under the control of
 superusers, so no ownership nor permissions are implemented.
 """
 
+from typing import Optional, Union
+
 from django.db import models
 
+from smarter.apps.account.signals import charge_authorized, charge_declined
+from smarter.common.exceptions import SmarterException
 from smarter.lib.cache import cache_results
 from smarter.lib.django.models import MetaDataModel, TimestampedModel
+
+
+class SmarterChargeAuthorizationFailed(SmarterException):
+    """Exception raised when a charge authorization fails."""
 
 
 class Budget(MetaDataModel):
@@ -104,11 +112,12 @@ class ResourceLock(TimestampedModel):
     )
 
 
-def charge_authorization(resource_locator: list[str]) -> bool:
+def charge_authorization(resource_locator: Union[list[str], str], on_behalf_of: Optional[str] = None) -> bool:
     """
     Check if a charge is authorized for the given list of resource locators.
 
-    :param resource_locator: A list of resource locators that may be used by the custom implementation.
+    :param resource_locator: A list of resource locators or a single resource locator that may be used by the custom implementation.
+    :param on_behalf_of: An optional object representing the entity on whose behalf the charge is being authorized.
     :return: True if the charge is authorized, False otherwise.
     """
 
@@ -118,9 +127,14 @@ def charge_authorization(resource_locator: list[str]) -> bool:
             return False
         return True
 
+    if isinstance(resource_locator, str):
+        resource_locator = [resource_locator]
+
     for resource in resource_locator:
         if not _check_authorization(resource):
-            return False
+            charge_declined.send(sender=charge_authorization, record_locator=resource, charge=on_behalf_of)
+            raise SmarterChargeAuthorizationFailed(f"Charge authorization failed for resource locator: {resource}")
+    charge_authorized.send(sender=charge_authorization, record_locator=",".join(resource_locator), charge=on_behalf_of)
     return True
 
 
