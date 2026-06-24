@@ -293,6 +293,7 @@ class AggregatedChargesAdmin(SmarterCustomerModelAdmin):
         "day",
         "hour",
         "resource_locator",
+        "records",
         "charge_type",
         "prompt_tokens",
         "completion_tokens",
