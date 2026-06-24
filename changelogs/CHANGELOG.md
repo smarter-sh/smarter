@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.15-alpha.10](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.9...v0.14.15-alpha.10) (2026-06-24)
+
+### Bug Fixes
+
+* scaffold drop-zone react app ([9cbd420](https://github.com/smarter-sh/smarter/commit/9cbd4208de313a2599921862ebe80e0fbce151ed))
+
 ## [0.14.15-alpha.9](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.8...v0.14.15-alpha.9) (2026-06-24)
 
 ### Bug Fixes
