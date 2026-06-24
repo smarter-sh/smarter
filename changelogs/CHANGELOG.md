@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.15-alpha.7](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.6...v0.14.15-alpha.7) (2026-06-24)
+
+### Bug Fixes
+
+* add connection charges ([f759c10](https://github.com/smarter-sh/smarter/commit/f759c100a085fb27eec7dc9b449373d00483b68a))
+
 ## [0.14.15-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.5...v0.14.15-alpha.6) (2026-06-24)
 
 ### Bug Fixes
