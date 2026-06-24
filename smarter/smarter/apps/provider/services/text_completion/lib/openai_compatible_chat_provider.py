@@ -462,7 +462,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.total_tokens = response.usage.total_tokens
         self.reference = response.system_fingerprint
 
-        self._insert_charge_by_type(CHARGE_TYPE_PROMPT_COMPLETION)
+        resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
+        self._insert_charge_by_type(resource_locators, CHARGE_TYPE_PROMPT_COMPLETION)
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
             content=f"{self.provider_name} prompt charges: {self.prompt_tokens} prompt tokens, {self.completion_tokens} completion tokens = {self.total_tokens} total tokens charged.",
@@ -531,7 +532,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             request=request,
             response=response,
         )
-        self._insert_charge_by_type(CHARGE_TYPE_TOOL)
+        resource_locators = [self.provider.record_locator, function_name]  # type: ignore[assignment]
+        self._insert_charge_by_type(resource_locators, CHARGE_TYPE_TOOL)
         self.db_insert_chat_tool_call(
             function_name=function_name, function_args=function_args, request=request, response=response
         )
@@ -555,7 +557,11 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             plugin=plugin,
             input_text=self.input_text,
         )
-        self._insert_charge_by_type(CHARGE_TYPE_PLUGIN)
+        resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
+        if self.plugins:
+            for record_locator in [plugin.plugin_meta.record_locator for plugin in self.plugins]:  # type: ignore[union-attr]
+                resource_locators.append(record_locator)
+        self._insert_charge_by_type(resource_locators, CHARGE_TYPE_PLUGIN)
         self.db_insert_chat_plugin_usage(prompt=self.prompt, plugin=plugin, input_text=self.input_text)
 
     def process_tool_call(self, tool_call: ChatCompletionMessageToolCallUnion):

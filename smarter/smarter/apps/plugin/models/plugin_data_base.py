@@ -6,7 +6,6 @@ from typing import Any, Optional, Union
 from django.db import models
 
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import json
 from smarter.lib.django.models import (
     TimestampedModel,
@@ -16,7 +15,7 @@ from .plugin_meta import PluginMeta
 from .validators import validate_openai_parameters_dict
 
 
-class PluginDataBase(TimestampedModel, SmarterHelperMixin):
+class PluginDataBase(TimestampedModel):
     """
     Abstract base class for all plugin data configuration models in the Smarter platform.
 
@@ -69,7 +68,9 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
         encoder=json.SmarterJSONEncoder,
     )
     """
-    A JSON dict containing parameter names and data types. Example: {'required': [], 'properties': {'max_cost': {'type': 'float', 'description': 'the maximum cost that a student is willing to pay for a course.'}, 'description': {'enum': ['AI', 'mobile', 'web', 'database', 'network', 'neural networks'], 'type': 'string', 'description': 'areas of specialization for courses in the catalogue.'}}}
+    A JSON dict containing parameter names and data types.
+
+    Example: {'required': [], 'properties': {'max_cost': {'type': 'float', 'description': 'the maximum cost that a student is willing to pay for a course.'}, 'description': {'enum': ['AI', 'mobile', 'web', 'database', 'network', 'neural networks'], 'type': 'string', 'description': 'areas of specialization for courses in the catalogue.'}}}
     """
 
     test_values = models.JSONField(
@@ -79,7 +80,9 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
         encoder=json.SmarterJSONEncoder,
     )
     """
-    A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}
+    A JSON dict containing test values for each parameter.
+
+    Example: {'city': 'San Francisco'}
     """
 
     @abstractmethod
