@@ -7,7 +7,7 @@ from django.db.models import Sum
 from django.db.models.query import QuerySet
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Charge
+from smarter.apps.account.models import Charge, UserProfile
 from smarter.apps.account.tasks import create_charge
 from smarter.apps.prompt.models import (
     Prompt,
@@ -700,7 +700,9 @@ class ChatDbMixin(AccountMixin):
         input_text = kwargs.get("input_text", None)
         create_prompt_plugin_usage.delay(chat_id=chat_id, plugin_id=plugin_id, input_text=input_text)
 
-    def db_insert_charge(self, provider, charge_type, completion_tokens, prompt_tokens, total_tokens, model, reference):
+    def db_insert_charge(
+        self, provider: Provider, charge_type: str, completion_tokens: int, prompt_tokens: int, total_tokens: int
+    ):
         """
         Insert a new charge record for the current account and prompt session.
 
@@ -742,25 +744,35 @@ class ChatDbMixin(AccountMixin):
                 reference="req-12345"
             )
         """
-        if not self.account:
+        if not isinstance(self.user_profile, UserProfile):
             raise SmarterValueError("Account is required to create a charge record.")
+        if not isinstance(provider, Provider):
+            raise SmarterValueError("Provider is required to create a charge record.")
         if not self.prompt:
             raise SmarterValueError("Prompt is required to create a charge record.")
-        if not self.provider:
-            raise SmarterValueError("Provider is required to create a charge record.")
-        if not self.user:
-            logger.warning("Creating a charge record with no User.")
 
         create_charge.delay(
-            user_profile_id=self.user_profile.id if self.user_profile else None,  # type: ignore
-            session_key=self.prompt.session_key,
-            provider_id=provider.id,  # type: ignore
+            resource_locator=provider.record_locator,
             charge_type=charge_type,
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
             total_tokens=total_tokens,
-            model=model,
-            reference=reference,
+        )
+
+        create_charge.delay(
+            resource_locator=self.user_profile.record_locator,
+            charge_type=charge_type,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
+        )
+
+        create_charge.delay(
+            resource_locator=self.user_profile.account.record_locator,
+            charge_type=charge_type,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
         )
 
 

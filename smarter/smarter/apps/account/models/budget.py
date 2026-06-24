@@ -104,7 +104,6 @@ class ResourceLock(TimestampedModel):
     )
 
 
-# pylint: disable=W0613
 def charge_authorization(resource_locator: list[str]) -> bool:
     """
     Check if a charge is authorized for the given list of resource locators.

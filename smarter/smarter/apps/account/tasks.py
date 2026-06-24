@@ -14,10 +14,7 @@ import datetime
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Sum
 
-from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
-from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -43,63 +40,44 @@ def create_charge(*args, **kwargs):
     """
     Create a charge record for a user or account.
 
-    :param user_profile_id: Integer, optional. The ID of the user_profile for whom the charge is created.
-    :param session_key: String, optional. The session key associated with the charge.
-    :param provider: String, optional. The provider for the charge.
+    This task is automatically retried on failure, with backoff and maximum retries configured via Celery settings.
+
+    :param resource_locator: String. The TimestampedModel.resource_locator of the resource that this charge is associated with.
     :param charge_type: String, optional. The type of charge (e.g., usage, subscription).
     :param prompt_tokens: Integer, optional. Number of prompt tokens used.
     :param completion_tokens: Integer, optional. Number of completion tokens used.
     :param total_tokens: Integer, optional. Total number of tokens used.
-    :param model: String, optional. The model used for the charge.
-    :param reference: String, optional. Reference information for the charge.
-
-    .. note::
-
-           - This task is automatically retried on failure, with backoff and maximum retries configured via Celery settings.
 
     **Example usage**::
 
         # Create a charge for a user profile
-        create_charge.delay(user_profile_id=123, charge_type="usage", prompt_tokens=100, completion_tokens=50)
+        create_charge.delay(resource_locator="record_123", charge_type="usage", prompt_tokens=100, completion_tokens=50, total_tokens=150)
     """
 
-    user_profile_id = kwargs.get("user_profile_id")
-    user_profile: UserProfile
-    try:
-        user_profile = UserProfile.objects.get(id=user_profile_id)
-    except UserProfile.DoesNotExist as e:
-        raise SmarterValueError(f"user_profile_id {user_profile_id} does not exist, cannot create charge.") from e
-    session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
-    provider_id = kwargs.get("provider_id")
+    resource_locator = kwargs.get("resource_locator")
     charge_type = kwargs.get("charge_type")
     prompt_tokens = kwargs.get("prompt_tokens")
     completion_tokens = kwargs.get("completion_tokens")
     total_tokens = kwargs.get("total_tokens")
-    model = kwargs.get("model")
-    reference = kwargs.get("reference")
     prefix = logging.formatted_text(module_prefix + "create_charge()")
 
-    provider = Provider.objects.get(id=provider_id) if provider_id else None
-
     logger.info(
-        "%s. user_profile_id %s, charge_type %s, reference %s",
+        "%s. resource_locator %s, charge_type %s, prompt_tokens %s, completion_tokens %s, total_tokens %s",
         prefix,
-        user_profile,
+        resource_locator,
         charge_type,
-        reference,
+        prompt_tokens,
+        completion_tokens,
+        total_tokens,
     )
 
     try:
         Charge.objects.create(
-            user_profile=user_profile,
-            session_key=session_key,
-            provider=provider,
+            resource_locator=resource_locator,
             charge_type=charge_type,
             completion_tokens=completion_tokens,
             prompt_tokens=prompt_tokens,
             total_tokens=total_tokens,
-            model=model,
-            reference=reference or "undefined charge reference",
         )
     # pylint: disable=W0703
     except Exception as e:
