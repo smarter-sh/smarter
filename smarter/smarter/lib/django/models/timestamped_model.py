@@ -127,6 +127,29 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             cls._hash_regex = re.compile(f"{cls.HASH_PREFIX}[A-Za-z0-9_-]+{cls.HASH_SUFFIX}")
         return cls._hash_regex
 
+    @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return False
+
+    @cached_property
+    def ready(self) -> bool:
+        """
+        Check if the model instance is ready for use.
+
+        :returns: True if the instance is ready, False otherwise.
+        :rtype: bool
+        """
+        return self.pk is not None
+
     @cached_property
     def hashed_id(self) -> str:
         """

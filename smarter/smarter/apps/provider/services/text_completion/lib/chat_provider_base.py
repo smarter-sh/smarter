@@ -207,8 +207,6 @@ class SmarterChatProviderBase(ChatDbMixin):
             **kwargs,
         )
 
-        charge_authorization(self.user_profile.record_locator, self.__class__.__name__)  # type: ignore
-
         # constructor arguments
         self._default_model = None
         self._default_system_role = None
@@ -343,7 +341,10 @@ class SmarterChatProviderBase(ChatDbMixin):
         :returns: True if the prompt provider_name is ready, False otherwise.
         :rtype: bool
         """
-        return bool(self.prompt) and bool(self.data) and bool(self.account)
+        retval = bool(self.prompt) and bool(self.data) and bool(self.account)
+        if retval:
+            charge_authorization(self.user_profile.record_locator, self.__class__.__name__)  # type: ignore
+        return retval
 
     @property
     def messages(self) -> Optional[List[Dict[str, str]]]:

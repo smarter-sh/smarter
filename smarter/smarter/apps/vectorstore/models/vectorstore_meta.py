@@ -1,6 +1,4 @@
-"""
-Models for the vectorstore app.
-"""
+"""Models for the vectorstore app."""
 
 import logging
 from typing import Optional
@@ -32,9 +30,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class VectorstoreBackendKind(models.TextChoices):
-    """
-    Enum representing the supported backend kinds for the vector database.
-    """
+    """Enum representing the supported backend kinds for the vector database."""
 
     QDRANT = (SmarterVectorStoreBackends.QDRANT.value, SmarterVectorStoreBackends.QDRANT.value)
     WEAVIATE = (SmarterVectorStoreBackends.WEAVIATE.value, SmarterVectorStoreBackends.WEAVIATE.value)
@@ -42,9 +38,7 @@ class VectorstoreBackendKind(models.TextChoices):
 
 
 class VectorstoreStatus(models.TextChoices):
-    """
-    Enum representing the possible statuses of the vector database.
-    """
+    """Enum representing the possible statuses of the vector database."""
 
     PROVISIONING = ("provisioning", "Provisioning")
     READY = ("ready", "Ready")
@@ -53,9 +47,7 @@ class VectorstoreStatus(models.TextChoices):
 
 
 class VectorestoreMeta(MetaDataWithOwnershipModel):
-    """
-    Model representing a vector database.
-    """
+    """Model representing a vector database."""
 
     # pylint: disable=C0115
     class Meta:
@@ -94,10 +86,24 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
         null=False,
     )
 
+    @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return True
+
     @classmethod
     def get_cached_object(cls, *args, backend: Optional[str] = None, **kwargs) -> "VectorestoreMeta":
         """
         Retrieve a cached VectorestoreMeta object based on the provided name and backend.
+
         This method is used to optimize backend retrieval by caching database objects.
 
         Args:
@@ -110,6 +116,7 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
         def _get_object_by_name_and_backend(name: str, backend: str) -> "VectorestoreMeta":
             """
             Internal method to retrieve a model instance by primary key with caching.
+
             Prefetches related tags and selects related user profile, account, and
             user for optimal access. Handles most common SAM pk retrieval scenarios.
 

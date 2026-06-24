@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 
+from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.llm_client.exceptions import SmarterLLMClientException
 from smarter.apps.llm_client.models import (
@@ -327,7 +328,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             args,
             kwargs,
         )
-        return super().setup(request, *args, **kwargs)
+        super().setup(request, *args, **kwargs)
 
     def dispatch(self, request: ASGIRequest, *args, name: Optional[str] = None, **kwargs):
         """
@@ -464,6 +465,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 logger.debug("%s.dispatch(): chat_helper=%s", self.formatted_class_name, self.chat_helper)
 
         if self.llm_client_helper.is_llm_client and self.chat_helper:
+            charge_authorization(self.llm_client.record_locator, self.__class__.__name__)  # type: ignore
             llm_client_called.send(
                 sender=self.__class__,
                 llm_client=self.llm_client,

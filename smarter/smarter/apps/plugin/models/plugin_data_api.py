@@ -1,6 +1,4 @@
-"""
-PluginDataApi model for storing API-based plugin data configuration.
-"""
+"""PluginDataApi model for storing API-based plugin data configuration."""
 
 import re
 from typing import Optional, Union
@@ -11,6 +9,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from pydantic import ValidationError
 
+from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.plugin.manifest.models.common import (
     RequestHeader,
@@ -212,7 +211,9 @@ class PluginDataApi(PluginDataBase):
 
     def validate_body(self) -> None:
         """
-        Validate the body format. Currently nothing to do here.
+        Validate the body format.
+
+        Currently nothing to do here.
         """
         if self.body is None:
             return None
@@ -237,9 +238,7 @@ class PluginDataApi(PluginDataBase):
                 ) from e
 
     def validate_all_placeholders_in_parameters(self) -> None:
-        """
-        Validate that all placeholders in the SQL query string are present in the parameters.
-        """
+        """Validate that all placeholders in the SQL query string are present in the parameters."""
         placeholders = re.findall(r"{(.*?)}", self.endpoint) or []
         parameters = self.parameters or {}
         properties = parameters.get("properties", {})
@@ -318,7 +317,8 @@ class PluginDataApi(PluginDataBase):
         **kwargs,
     ) -> Optional["PluginDataBase"]:
         """
-        Retrieve a model instance by primary key, using caching to
+        Retrieve a model instance by primary key, using caching to.
+
         optimize performance. This method is selectively overridden in
         models that inherit from MetaDataModel to provide class-specific
         function parameters.
@@ -375,8 +375,13 @@ class PluginDataApi(PluginDataBase):
         if invalidate and plugin:
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
 
+        retval: PluginDataBase
         if pk:
-            return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
+            retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
+            charge_authorization(retval.record_locator, cls.__name__)
 
         if plugin:
-            return _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
+            retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
+            charge_authorization(retval.record_locator, cls.__name__)
+
+        return retval

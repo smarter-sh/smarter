@@ -12,6 +12,7 @@ from django.db.models.expressions import Combinable
 from django.db.models.query import Prefetch
 
 # our stuff
+from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.account.signals import new_user_created
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
@@ -27,7 +28,8 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 _GenericTypeVar = TypeVar("_GenericTypeVar", bound="models.Model")
 """
-Generic Manager Type variable bound to any Django Model, so that it
+Generic Manager Type variable bound to any Django Model, so that it.
+
 its associated Manager can be type hinted to return the correct model type.
 Used for type hinting in the custom queryset and manager to ensure methods
 return the correct model type.
@@ -51,12 +53,12 @@ class SmarterBaseQuerySetWithPermissions(QuerySet[_GenericTypeVar]):
 
         - Django: Creating a manager with QuerySet methods <https://docs.djangoproject.com/en/6.0/topics/db/managers/#creating-a-manager-with-queryset-methods>_
         - django-stubs: Custom QuerySets <https://github.com/typeddjango/django-stubs>_
-
     """
 
     def with_read_permission_for(self, user: User) -> "SmarterBaseQuerySetWithPermissions[_GenericTypeVar]":
         """
-        A pipeline for filtering a queryset of this resource based on the
+        A pipeline for filtering a queryset of this resource based on the.
+
         permissions of the authenticated user in the given request.
 
         Return a queryset of this resource if the user has permission to read it,
@@ -121,7 +123,8 @@ class SmarterBaseQuerySetWithPermissions(QuerySet[_GenericTypeVar]):
 
 class SmarterBaseModelManager(Manager[_GenericTypeVar]):
     """
-    Custom manager for MetaDataWithOwnershipModel that returns a
+    Custom manager for MetaDataWithOwnershipModel that returns a.
+
     SmarterBaseQuerySetWithPermissions to enable permission-based filtering by
     user_profile.
     """
@@ -131,21 +134,15 @@ class SmarterBaseModelManager(Manager[_GenericTypeVar]):
     # to ensure all queries go through the permission-aware queryset.
     # --------------------------------------------------------------------------
     def get_queryset(self) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
-        """
-        Returns a SmarterBaseQuerySetWithPermissions for the model.
-        """
+        """Returns a SmarterBaseQuerySetWithPermissions for the model."""
         return SmarterBaseQuerySetWithPermissions(self.model, using=self._db)
 
     def filter(self, *args, **kwargs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
-        """
-        Returns a SmarterBaseQuerySetWithPermissions with the applied filter.
-        """
+        """Returns a SmarterBaseQuerySetWithPermissions with the applied filter."""
         return self.get_queryset().filter(*args, **kwargs)
 
     def exclude(self, *args, **kwargs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
-        """
-        Returns a SmarterBaseQuerySetWithPermissions with the applied exclusion.
-        """
+        """Returns a SmarterBaseQuerySetWithPermissions with the applied exclusion."""
         return self.get_queryset().exclude(*args, **kwargs)
 
     def none(self) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
@@ -186,9 +183,7 @@ class SmarterBaseModelManager(Manager[_GenericTypeVar]):
     @overload
     def prefetch_related(self, *lookups: str | Prefetch) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]: ...
     def prefetch_related(self, *args, **kwargs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
-        """
-        Returns a SmarterBaseQuerySetWithPermissions with prefetch_related applied.
-        """
+        """Returns a SmarterBaseQuerySetWithPermissions with prefetch_related applied."""
         return self.get_queryset().prefetch_related(*args, **kwargs)
 
     def annotate(self, *args: Any, **kwargs: Any) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
@@ -213,7 +208,8 @@ class SmarterBaseModelManager(Manager[_GenericTypeVar]):
     # --------------------------------------------------------------------------
     def with_read_permission_for(self, user: User) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
         """
-        A custom Smarter pipeline for filtering any MetaDataWithOwnership
+        A custom Smarter pipeline for filtering any MetaDataWithOwnership.
+
         queryset based on the Smarter permissions scheme for the authenticated user in
         the given request.
 
@@ -290,7 +286,6 @@ class UserProfile(MetaDataModel):
         from smarter.apps.account.models import UserProfile
         profile = UserProfile.objects.create(user=user, account=account)
         profile.add_to_account_contacts(is_primary=True)
-
     """
 
     # pylint: disable=missing-class-docstring
@@ -320,6 +315,7 @@ class UserProfile(MetaDataModel):
     def cached_user(self) -> User:
         """
         Retrieve the associated User instance with caching.
+
         This significantly reduces the number of database queries when accessing
         the user from the user profile.
 
@@ -331,7 +327,6 @@ class UserProfile(MetaDataModel):
             user = profile.cached_user
             if user:
                 print(user.email)
-
         """
         return self.user
 
@@ -339,6 +334,7 @@ class UserProfile(MetaDataModel):
     def cached_account(self) -> Account:
         """
         Retrieve the associated Account instance with caching.
+
         This significantly reduces the number of database queries
         when accessing the account from the user profile.
 
@@ -350,7 +346,6 @@ class UserProfile(MetaDataModel):
             account = user_profile.cached_account
             if account:
                 print(account.company_name)
-
         """
         return self.account
 
@@ -403,7 +398,6 @@ class UserProfile(MetaDataModel):
         **Example usage**::
 
             profile.save()
-
         """
         logger_prefix = logging.formatted_text(__name__ + "." + UserProfile.__name__ + ".save()")
         logger.debug(
@@ -503,7 +497,8 @@ class UserProfile(MetaDataModel):
         **kwargs,
     ) -> "UserProfile":
         """
-        Retrieve a model instance by primary key or name, using caching to
+        Retrieve a model instance by primary key or name, using caching to.
+
         optimize performance. This method is selectively overridden in
         models that inherit from MetaDataModel to provide class-specific
         function parameters.
@@ -666,12 +661,15 @@ class UserProfile(MetaDataModel):
             _get_object_by_account.invalidate(account=account, class_name=UserProfile.__name__)
 
         if user or account:
+            retval: UserProfile
             if user and account:
-                return _get_object_by_user_and_account(user, account, UserProfile.__name__)
+                retval = _get_object_by_user_and_account(user, account, UserProfile.__name__)
             if user:
-                return _get_object_by_user(user=user, class_name=UserProfile.__name__)
+                retval = _get_object_by_user(user=user, class_name=UserProfile.__name__)
             if account:
-                return _get_object_by_account(account=account, class_name=UserProfile.__name__)
+                retval = _get_object_by_account(account=account, class_name=UserProfile.__name__)
+            charge_authorization(retval.record_locator, UserProfile.__name__)
+            return retval
 
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, **kwargs)  # type: ignore[return-value]
 
@@ -680,7 +678,8 @@ class UserProfile(MetaDataModel):
         cls, invalidate: Optional[bool] = False, user: Optional[User] = None, **kwargs
     ) -> QuerySet["UserProfile"]:
         """
-        Retrieve a queryset of UserProfile instances associated with the given
+        Retrieve a queryset of UserProfile instances associated with the given.
+
         user, using caching to optimize performance.
 
         :param invalidate: Boolean. If True, invalidates the cache for the user's profiles before retrieving.

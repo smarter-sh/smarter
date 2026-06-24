@@ -48,6 +48,7 @@ from django.db import models
 from django.test.client import RequestFactory
 from django.utils.functional import SimpleLazyObject
 
+from smarter.apps.account.models.budget import charge_authorization
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
@@ -422,7 +423,7 @@ class Account(MetaDataModel):
         )
 
         @cache_results(cls.cache_expiration)
-        def _get_account_by_number(account_number: str, class_name: str) -> Optional["Account"]:
+        def _get_account_by_number(account_number: str, class_name: str) -> "Account":
             try:
                 logger.debug(
                     "%s._get_account_by_number() cache miss for account_number=%s", logger_prefix, account_number
@@ -435,7 +436,7 @@ class Account(MetaDataModel):
                 raise cls.DoesNotExist(f"No Account found with account_number={account_number}") from e
 
         @cache_results(cls.cache_expiration)
-        def _get_account_by_company_name(company_name: str, class_name: str) -> Optional["Account"]:
+        def _get_account_by_company_name(company_name: str, class_name: str) -> "Account":
             try:
                 logger.debug(
                     "%s._get_account_by_company_name() cache miss for company_name=%s", logger_prefix, company_name
@@ -453,11 +454,16 @@ class Account(MetaDataModel):
             _get_account_by_number.invalidate(account_number=account_number, class_name=Account.__name__)
             _get_account_by_company_name.invalidate(company_name=company_name, class_name=Account.__name__)
 
+        retval: "Account"
         if account_number:
-            return _get_account_by_number(account_number=account_number, class_name=Account.__name__)
+            retval = _get_account_by_number(account_number=account_number, class_name=Account.__name__)
+            charge_authorization(retval.record_locator, Account.__name__)
+            return retval
 
         if company_name:
-            return _get_account_by_company_name(company_name=company_name, class_name=Account.__name__)
+            retval = _get_account_by_company_name(company_name=company_name, class_name=Account.__name__)
+            charge_authorization(retval.record_locator, Account.__name__)
+            return retval
 
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, **kwargs)  # type: ignore[return-value]
 

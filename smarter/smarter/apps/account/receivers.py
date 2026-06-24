@@ -50,7 +50,7 @@ def new_charge_created_receiver(sender, charge: Charge, **kwargs):
     """
     logger.info(
         "%s New charge created: %s, id: %s",
-        logging.formatted_text(f"{module_prefix}.new_charge_created_receiver()"),
+        logging.formatted_text(f"{module_prefix}.new_charge_created()"),
         charge,
         charge.id,  # type: ignore
     )
@@ -65,12 +65,12 @@ def cache_invalidate_receiver(sender, **kwargs):
     """
     logger.info(
         "%s Cache invalidation triggered.",
-        logging.formatted_text(f"{module_prefix}.cache_invalidate_receiver()"),
+        logging.formatted_text(f"{module_prefix}.cache_invalidate()"),
     )
 
 
 @receiver(charge_authorized)
-def charge_authorized_receiver(sender, record_locator: str, charge: Charge, **kwargs):
+def charge_authorized_receiver(sender, record_locator: str, charge: str, **kwargs):
     """
     Signal receiver for charge_authorized signal.
 
@@ -78,14 +78,14 @@ def charge_authorized_receiver(sender, record_locator: str, charge: Charge, **kw
     """
     logger.info(
         "%s Charge authorized: record_locator: %s, charge: %s",
-        logging.formatted_text(f"{module_prefix}.charge_authorized_receiver()"),
+        logging.formatted_text(f"{module_prefix}.charge_authorized()"),
         record_locator,
         charge,
     )
 
 
 @receiver(charge_declined)
-def charge_declined_receiver(sender, record_locator: str, charge: Charge, **kwargs):
+def charge_declined_receiver(sender, record_locator: str, charge: str, **kwargs):
     """
     Signal receiver for charge_declined signal.
 
@@ -93,7 +93,7 @@ def charge_declined_receiver(sender, record_locator: str, charge: Charge, **kwar
     """
     logger.error(
         "%s Charge declined: record_locator: %s, charge: %s",
-        logging.formatted_text(f"{module_prefix}.charge_declined_receiver()"),
+        logging.formatted_text(f"{module_prefix}.charge_declined()"),
         record_locator,
         charge,
     )

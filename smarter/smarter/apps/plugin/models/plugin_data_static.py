@@ -1,12 +1,11 @@
-"""
-PluginDataStatic model for storing static plugin data configuration.
-"""
+"""PluginDataStatic model for storing static plugin data configuration."""
 
 from functools import lru_cache
 from typing import Any, Optional, Union
 
 from django.db import models
 
+from smarter.apps.account.models.budget import charge_authorization
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.logger_helpers import formatted_text
@@ -28,7 +27,8 @@ logger_prefix = formatted_text(f"{__name__}")
 
 class PluginDataStatic(PluginDataBase):
     """
-    Stores the configuration and static data set for a Smarter plugin
+    Stores the configuration and static data set for a Smarter plugin.
+
     which is based on static data.
 
     This model is used for plugins that return static (predefined) data to the LLM.
@@ -63,9 +63,7 @@ class PluginDataStatic(PluginDataBase):
         default=dict,
         encoder=json.SmarterJSONEncoder,
     )
-    """
-    The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.
-    """
+    """The JSON data that this plugin returns to OpenAI API when invoked by the user prompt."""
 
     def sanitized_return_data(self, params: Optional[dict] = None) -> Optional[Union[dict, list]]:
         """
@@ -155,6 +153,7 @@ class PluginDataStatic(PluginDataBase):
     def data(self, params: Optional[dict] = None) -> Optional[dict]:
         """
         Return the static data as a dictionary.
+
         This method attempts to parse and return the ``static_data`` field as a dictionary.
 
         :param params: Optional parameters for future extensibility (currently unused).
@@ -219,7 +218,8 @@ class PluginDataStatic(PluginDataBase):
         **kwargs,
     ) -> Optional["PluginDataBase"]:
         """
-        Retrieve a model instance by primary key, using caching to
+        Retrieve a model instance by primary key, using caching to.
+
         optimize performance. This method is selectively overridden in
         models that inherit from MetaDataModel to provide class-specific
         function parameters.
@@ -276,8 +276,13 @@ class PluginDataStatic(PluginDataBase):
         if invalidate and plugin:
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
 
+        retval: "PluginDataStatic"
         if pk:
-            return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
+            retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
+            charge_authorization(retval.record_locator, cls.__name__)
 
         if plugin:
-            return _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
+            retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
+            charge_authorization(retval.record_locator, cls.__name__)
+
+        return retval

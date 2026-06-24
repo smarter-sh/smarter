@@ -17,6 +17,7 @@ from smarter.lib.drf.token_authentication import (
 )
 
 from .models import Account, User, UserProfile
+from .models.budget import charge_authorization
 from .serializers import (
     AccountMiniSerializer,
     UserMiniSerializer,
@@ -793,6 +794,8 @@ class AccountMixin(SmarterHelperMixin):
                     self._am_formatted_class_name,
                 )
                 self._account = self.user_profile.cached_account
+            charge_authorization(self.user_profile.record_locator, self.__class__.__name__)
+            charge_authorization(self.user_profile.account.record_locator, self.__class__.__name__)
             self._am_ready = True
             self._am_log_ready_status()
             return self._am_ready

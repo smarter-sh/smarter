@@ -178,6 +178,11 @@ class PromptHelper(SmarterRequestMixin):
             self._account = llm_client.user_profile.account
             self._user = llm_client.user_profile.user
 
+            # rerun the ready status check to ensure that the account is authorized and ready.
+            self._am_ready = False
+            # pylint: disable=W0104
+            self.am_ready
+
         if session_key:
             self._session_key = session_key
             logger_verbose.debug(

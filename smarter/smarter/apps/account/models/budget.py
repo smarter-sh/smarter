@@ -125,6 +125,7 @@ def charge_authorization(resource_locator: Union[list[str], str], on_behalf_of: 
     def _check_authorization(resource_locator: str) -> bool:
         if ResourceLock.objects.filter(resource_locator=resource_locator).exists():
             return False
+        charge_authorized.send(sender=charge_authorization, record_locator=resource, charge=on_behalf_of)
         return True
 
     if isinstance(resource_locator, str):
@@ -134,7 +135,6 @@ def charge_authorization(resource_locator: Union[list[str], str], on_behalf_of: 
         if not _check_authorization(resource):
             charge_declined.send(sender=charge_authorization, record_locator=resource, charge=on_behalf_of)
             raise SmarterChargeAuthorizationFailed(f"Charge authorization failed for resource locator: {resource}")
-    charge_authorized.send(sender=charge_authorization, record_locator=",".join(resource_locator), charge=on_behalf_of)
     return True
 
 
