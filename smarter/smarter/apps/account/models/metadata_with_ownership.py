@@ -598,7 +598,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
-        def _get_object_by_pk(pk: int, class_name: str = cls.__name__) -> Optional["MetaDataWithOwnershipModel"]:
+        def _get_object_by_pk(pk: int, class_name: str = cls.__name__) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by primary key with caching.
 
@@ -608,8 +608,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :param pk: The primary key of the model instance to retrieve.
             :param class_name: The name of the class for logging purposes.
             :class_name: The name of the class for cache key purposes.
-            :returns: The model instance if found, otherwise None.
-            :rtype: Optional["MetaDataWithOwnershipModel"]
+            :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
+            :rtype: models.Model
             """
             logger.debug(
                 "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
@@ -625,37 +625,28 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 raise SmarterValueError(
                     f"{logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()")} invalid pk value: {pk}. Expected an integer."
                 )
-            try:
-                if taggit:
-                    retval = (
-                        cls.objects.prefetch_related("tags")
-                        .select_related("user_profile", "user_profile__account", "user_profile__user")
-                        .get(pk=pk)
-                    )
-                else:
-                    retval = cls.objects.select_related(
-                        "user_profile", "user_profile__account", "user_profile__user"
-                    ).get(pk=pk)
-                logger.debug(
-                    "%s._get_object_by_pk() fetched %s - %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
-                    type(retval).__name__,
-                    str(retval),
+            if taggit:
+                retval = (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(pk=pk)
                 )
-                return retval
-            except cls.DoesNotExist:
-                logger.debug(
-                    "%s._get_object_by_pk() no %s object found for pk: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
-                    cls.__name__,
-                    pk,
+            else:
+                retval = cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
+                    pk=pk
                 )
-                return None
+            logger.debug(
+                "%s._get_object_by_pk() fetched %s - %s",
+                logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                type(retval).__name__,
+                str(retval),
+            )
+            return retval
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_user_profile(
             name: str, user_profile: UserProfile, class_name: str = cls.__name__
-        ) -> Optional["MetaDataWithOwnershipModel"]:
+        ) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by name and user.
 
@@ -667,8 +658,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :param user_profile: The user profile associated with the model instance.
             :param class_name: The name of the class for cache key purposes.
 
-            :returns: The model instance if found, otherwise None.
-            :rtype: Optional["MetaDataWithOwnershipModel"]
+            :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
+            :rtype: models.Model
             """
             logger.debug(
                 "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
@@ -699,15 +690,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     user_profile,
                 )
                 return retval
-            except cls.DoesNotExist:
-                logger.debug(
-                    "%s._get_object_by_name_and_user_profile() no %s found for name: %s and user_profile: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
-                    cls.__name__,
-                    name,
-                    user_profile,
-                )
-                return None
             except cls.MultipleObjectsReturned as e:
                 raise SmarterValueError(
                     f"Multiple {class_name} objects found for name '{name}' and user profile '{user_profile}'. This should not happen as there should be a unique constraint on name and user profile."
@@ -716,7 +698,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_account(
             name: str, account: Account, class_name: str = cls.__name__
-        ) -> Optional["MetaDataWithOwnershipModel"]:
+        ) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by name and account with.
 
@@ -728,8 +710,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :param account: The account associated with the model instance.
             :param class_name: The name of the class for cache key purposes.
 
-            :returns: The model instance if found, otherwise None.
-            :rtype: Optional["MetaDataWithOwnershipModel"]
+            :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
+            :rtype: models.Model
             """
             logger.debug(
                 "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
@@ -760,15 +742,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     account,
                 )
                 return retval
-            except cls.DoesNotExist:
-                logger.debug(
-                    "%s._get_object_by_name_and_account() no %s found for name: %s and account: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
-                    cls.__name__,
-                    name,
-                    account,
-                )
-                return None
             except cls.MultipleObjectsReturned as e:
                 raise SmarterValueError(
                     f"Multiple {class_name} objects found for name '{name}' and account '{account}'. This should not happen as there should be a unique constraint on name and account."
@@ -777,7 +750,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_object_by_session_key(
             session_key: str, class_name: str = cls.__name__
-        ) -> Optional["MetaDataWithOwnershipModel"]:
+        ) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by session key with caching.
 
@@ -787,8 +760,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :param session_key: The session key associated with the model instance.
             :param class_name: The name of the class for cache key purposes.
 
-            :returns: The model instance if found, otherwise None.
-            :rtype: Optional["MetaDataWithOwnershipModel"]
+            :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
+            :rtype: models.Model
             """
             logger.debug(
                 "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
@@ -818,14 +791,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     session_key,
                 )
                 return retval
-            except cls.DoesNotExist:
-                logger.debug(
-                    "%s._get_object_by_session_key() no %s found for session_key: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
-                    cls.__name__,
-                    session_key,
-                )
-                return None
             except cls.MultipleObjectsReturned as e:
                 raise SmarterValueError(
                     f"Multiple {class_name} objects found for session_key '{session_key}'. This should not happen as session keys should be unique to a user session."
