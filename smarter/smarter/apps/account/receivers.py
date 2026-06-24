@@ -9,7 +9,7 @@ from django.forms.models import model_to_dict
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from .models import Account, Charge, DailyBillingRecord, User, UserProfile
+from .models import Account, Charge, User, UserProfile
 from .utils import get_cached_default_account
 
 logger = logging.getSmarterLogger(
@@ -129,17 +129,5 @@ def charge_post_save(sender: Charge, instance: Charge, created, **kwargs):
         "%s Charge post_save: %s, created: %s",
         logging.formatted_text(f"{module_prefix}.charge_post_save()"),
         charge_json,
-        created,
-    )
-
-
-@receiver(post_save, sender=DailyBillingRecord)
-def daily_billing_record_post_save(sender: DailyBillingRecord, instance: DailyBillingRecord, created, **kwargs):
-    """Signal receiver for created/saved of DailyBillingRecord model."""
-    daily_billing_record_json = json.dumps(model_to_dict(instance))
-    logger.info(
-        "%s DailyBillingRecord: %s, created: %s",
-        logging.formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
-        daily_billing_record_json,
         created,
     )

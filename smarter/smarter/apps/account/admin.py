@@ -24,7 +24,6 @@ from .models import (
     AccountContact,
     Budget,
     Charge,
-    DailyBillingRecord,
     ResourceConstraint,
     ResourceLock,
     UserProfile,
@@ -277,33 +276,6 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
         )
 
 
-class DailyBillingRecordAdmin(SmarterCustomerModelAdmin):
-    """DailyBillingRecord model admin."""
-
-    model = DailyBillingRecord
-
-    def get_readonly_fields(self, request: HttpRequest, obj=None):
-        return [field.name for field in self.model._meta.fields]
-
-    list_display = (
-        "created_at",
-        "account",
-        "user",
-        "provider",
-        "model",
-        "charge_type",
-        "total_tokens",
-    )
-
-    def get_queryset(self, request: HttpRequest):
-        user = get_resolved_user(request.user)  # type: ignore
-        qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user_profile(
-            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
-            qs=qs,
-        )
-
-
 class RestrictedUserAdmin(UserAdmin):
     """
     Custom User admin that restricts access to users based on their account.
@@ -454,6 +426,5 @@ smarter_restricted_admin_site.register(Budget, BudgetAdmin)
 smarter_restricted_admin_site.register(ResourceConstraint, ResourceConstraintAdmin)
 smarter_restricted_admin_site.register(ResourceLock, ResourceLockAdmin)
 smarter_restricted_admin_site.register(Charge, ChargeAdmin)
-smarter_restricted_admin_site.register(DailyBillingRecord, DailyBillingRecordAdmin)
 smarter_restricted_admin_site.register(UserProfile, RestrictedUserProfileAdmin)
 smarter_restricted_admin_site.register(User, RestrictedUserAdmin)

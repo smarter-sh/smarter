@@ -5,7 +5,6 @@ from typing import ClassVar, List, Optional
 
 from pydantic import Field
 
-from smarter.apps.account.models import PROVIDERS
 from smarter.apps.llm_client.manifest.models.llm_client.const import MANIFEST_KIND
 from smarter.common.conf import settings_defaults
 from smarter.lib.manifest.models import AbstractSAMSpecBase
@@ -13,7 +12,6 @@ from smarter.lib.manifest.models import AbstractSAMSpecBase
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
-providers_list = ", ".join(item[0] for item in PROVIDERS)
 
 
 class SAMLLMClientCustomDomain(AbstractSAMSpecBase):
@@ -56,7 +54,7 @@ class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
     )
     provider: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.provider[str]. Optional. The provider to use for the llm_client. Options: {providers_list}. Default: openai.",
+        description=f"{class_identifier}.provider[str]. Optional. The provider to use for the llm_client.",
     )
     defaultModel: Optional[str] = Field(
         None,

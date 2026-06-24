@@ -10,7 +10,6 @@ Classes & Constants
 
 - :class:`Charge`: Represents a single billing event for a user profile, including provider, charge type, token usage, and references.
 - :data:`CHARGE_TYPES`: List of available charge types (completion, plugin, tool).
-- :data:`PROVIDERS`: List of supported LLM providers (OpenAI, Meta AI, Google AI).
 - :data:`CHARGE_TYPE_PROMPT_COMPLETION`, :data:`CHARGE_TYPE_PLUGIN`, :data:`CHARGE_TYPE_TOOL`: Charge type constants.
 
 Key Features
@@ -38,7 +37,14 @@ Example
 # django stuff
 from decimal import Decimal
 
-from django.db import models
+from django.db import models, transaction
+from django.db.models import Sum
+from django.db.models.functions import (
+    ExtractDay,
+    ExtractHour,
+    ExtractMonth,
+    ExtractYear,
+)
 
 from smarter.apps.account.signals import new_charge_created
 
@@ -63,12 +69,6 @@ CHARGE_TYPES = [
 PROVIDER_OPENAI = "openai"
 PROVIDER_METAAI = "metaai"
 PROVIDER_GOOGLEAI = "googleai"
-
-PROVIDERS = [
-    (PROVIDER_OPENAI, "OpenAI"),
-    (PROVIDER_METAAI, "Meta AI"),
-    (PROVIDER_GOOGLEAI, "Google AI"),
-]
 
 
 class Charge(TimestampedModel):
@@ -127,10 +127,78 @@ class Charge(TimestampedModel):
         return f"""{self.resource_locator} - {self.charge_type} - {self.total_tokens} - {self.total_cost}"""
 
 
+class AggregatedCharges(Charge):
+    """
+    AggregatedCharges model for tracking aggregated account billing events.
+
+    Represents aggregated billing data for a specific time period.
+
+    :param year: Integer. The year of the aggregated data.
+    :param month: Integer. The month of the aggregated data.
+    :param day: Integer. The day of the aggregated data.
+    :param hour: Integer. The hour of the aggregated data.
+    """
+
+    year = models.SmallIntegerField()
+    month = models.SmallIntegerField()
+    day = models.SmallIntegerField()
+    hour = models.SmallIntegerField()
+
+
+@transaction.atomic
+def aggregate_charges() -> int:
+    charges = Charge.objects.all()
+
+    aggregates = (
+        charges.annotate(
+            year=ExtractYear("created"),
+            month=ExtractMonth("created"),
+            day=ExtractDay("created"),
+            hour=ExtractHour("created"),
+        )
+        .values(
+            "resource_locator",
+            "charge_type",
+            "year",
+            "month",
+            "day",
+            "hour",
+        )
+        .annotate(
+            prompt_tokens=Sum("prompt_tokens"),
+            completion_tokens=Sum("completion_tokens"),
+            total_tokens=Sum("total_tokens"),
+            total_cost=Sum("total_cost"),
+        )
+    )
+
+    AggregatedCharges.objects.bulk_create(
+        [
+            AggregatedCharges(
+                resource_locator=row["resource_locator"],
+                charge_type=row["charge_type"],
+                prompt_tokens=row["prompt_tokens"],
+                completion_tokens=row["completion_tokens"],
+                total_tokens=row["total_tokens"],
+                total_cost=row["total_cost"],
+                year=row["year"],
+                month=row["month"],
+                day=row["day"],
+                hour=row["hour"],
+            )
+            for row in aggregates
+        ]
+    )
+
+    retval = charges.count()
+    charges.delete()
+    return retval
+
+
 __all__ = [
     "Charge",
+    "AggregatedCharges",
     "CHARGE_TYPES",
-    "PROVIDERS",
     "CHARGE_TYPE_PROMPT_COMPLETION",
     "CHARGE_TYPE_PLUGIN",
     "CHARGE_TYPE_TOOL",
