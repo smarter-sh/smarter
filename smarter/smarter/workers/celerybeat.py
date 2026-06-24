@@ -23,7 +23,7 @@ app.conf.beat_schedule = {
         "options": {"queue": "beat_tasks"},
     },
     "aggregate-charges": {
-        "task": "smarter.apps.account.tasks.aggregate_charges",
+        "task": "smarter.apps.account.tasks.aggregate_records",
         "schedule": timedelta(hours=1),
         "options": {"queue": "beat_tasks"},
     },
