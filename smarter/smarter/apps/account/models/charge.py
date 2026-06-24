@@ -135,6 +135,11 @@ class AggregatedCharges(TimestampedModel):
     :param hour: Integer. The hour of the aggregated data.
     """
 
+    # pylint: disable=C0115
+    class Meta:
+        verbose_name = "Aggregated Charges"
+        verbose_name_plural = "Aggregated Charges"
+
     year = models.SmallIntegerField()
     month = models.SmallIntegerField()
     day = models.SmallIntegerField()
