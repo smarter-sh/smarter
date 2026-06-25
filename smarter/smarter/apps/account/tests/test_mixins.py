@@ -18,9 +18,7 @@ logger = logging.getSmarterLogger(__name__)
 
 
 class TestAccountMixinInit(TestAccountMixin):
-    """
-    Test initialization and property resolution of AccountMixin.
-    """
+    """Test initialization and property resolution of AccountMixin."""
 
     def test_init_with_user(self):
         mixin = AccountMixin(user=self.admin_user)
@@ -54,9 +52,7 @@ class TestAccountMixinInit(TestAccountMixin):
 
 
 class TestAccountMixinProperties(TestAccountMixin):
-    """
-    Test property setters and getters for AccountMixin.
-    """
+    """Test property setters and getters for AccountMixin."""
 
     def setUp(self):
         super().setUp()
@@ -99,9 +95,9 @@ class TestAccountMixinProperties(TestAccountMixin):
             self.mixin.user_profile = None
 
     def test_is_accountmixin_ready(self):
-        self.assertTrue(self.mixin.is_accountmixin_ready)
+        self.assertTrue(self.mixin.ready)
         mixin = AccountMixin()
-        self.assertFalse(mixin.is_accountmixin_ready)
+        self.assertFalse(mixin.ready)
 
     def test_ready_and_ready_state(self):
         self.assertTrue(self.mixin.ready)
@@ -118,9 +114,7 @@ class TestAccountMixinProperties(TestAccountMixin):
 
 
 class TestAccountMixinMethods(TestAccountMixin):
-    """
-    Test methods of AccountMixin.
-    """
+    """Test methods of AccountMixin."""
 
     def setUp(self):
         super().setUp()

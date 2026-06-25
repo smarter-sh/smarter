@@ -5,7 +5,7 @@ at [http://localhost:9357/drop-zone/](http://localhost:9357/drop-zone/).
 
 This component is served by Django in production. See:
 
-- builds are distributed from s3://smarter.sh/react/smarter-drop-zone/ and gathered
+- builds are distributed from s3://smarter.sh/react/smarter-manifest-dropzone/ and gathered
   by Dockerfile during builds into Django's static asset folder.
 - [smarter.apps.drop-zone.views.views.drop-zone.DashboardView](../../smarter/apps/drop-zone/views/views/drop-zone.py)
 - [smarter.apps.drop-zone.templatetags.react_dashboard.dashboard_react_assets](../../smarter/apps/drop-zone/templatetags/react_dashboard.py)
@@ -27,7 +27,7 @@ npm run build
 npm run dev
 ```
 
-Build artifacts are persisted to smarter/smarter/static/react/smarter-drop-zone/.
+Build artifacts are persisted to smarter/smarter/static/react/smarter-manifest-dropzone/.
 
 ### Running Locally From Django
 
@@ -40,15 +40,15 @@ from http://localhost:9357/
 export NODE_ENV=production
 
 # Move to this source code on your local file system.
-cd smarter/react/smarter-drop-zone
+cd smarter/react/smarter-manifest-dropzone
 
-# build to smarter/smarter/static/react/smarter-drop-zone/
+# build to smarter/smarter/static/react/smarter-manifest-dropzone/
 # on your local file system.
 npm run build
 
-# Copy smarter/smarter/static/react/smarter-drop-zone/ to
+# Copy smarter/smarter/static/react/smarter-manifest-dropzone/ to
 # Django's static file server location on your local file system.
-  smarter/staticfiles/react/smarter-drop-zone/
+  smarter/staticfiles/react/smarter-manifest-dropzone/
 make collectstatic
 
 # Build Docker container
@@ -56,7 +56,7 @@ make build
 
 # Start the Django app container.
 # From inside the running Docker container you'll find your build artifacts at
-# /home/smarter_user/smarter/staticfiles/react/smarter-drop-zone/
+# /home/smarter_user/smarter/staticfiles/react/smarter-manifest-dropzone/
 make run
 ```
 
@@ -76,7 +76,7 @@ speed up the build process in the expected case where React source code has
 not changed.
 
 Note that the manifest.json file includes meta data that can be used for
-trouble shooting purposes. http://example.com/static/react/smarter-drop-zone/manifest.json
+trouble shooting purposes. http://example.com/static/react/smarter-manifest-dropzone/manifest.json
 
 ```json
 {
@@ -92,7 +92,7 @@ trouble shooting purposes. http://example.com/static/react/smarter-drop-zone/man
     "version": "0.2.2",
     "config": {
       "cdnDeploy": false,
-      "s3BucketPath": "s3://smarter.sh/react/smarter-drop-zone/",
+      "s3BucketPath": "s3://smarter.sh/react/smarter-manifest-dropzone/",
       "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
     },
     "buildEnv": "production"
@@ -112,7 +112,7 @@ npm run storybook
 
 ## Screen Shot
 
-![DropZone Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/smarter-drop-zone-screenshot.png)
+![DropZone Screenshot](https://cdn.smarter.sh/github.com/smarter-sh/react/smarter-manifest-dropzone-screenshot.png)
 
 ## Developer Notes
 

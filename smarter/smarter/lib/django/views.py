@@ -364,8 +364,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
 
     def log_ready_status(self):
         """Logs the ready status of the view."""
-        msg = f"{self.formatted_class_name} is {self.ready_state}"
-        logger.info(msg)
+        logger.debug("%s is %s", self.formatted_class_name, self.ready_state)
 
     def setup(self, request: HttpRequest, *args, **kwargs):
         """
