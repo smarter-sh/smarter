@@ -545,17 +545,17 @@ class SmarterRequestMixin(AccountMixin):
         """
         Get the smarter client version from the request.
 
-        This property checks for the "X-Smarter-Client-Version" header in the request headers or in the Django META dictionary.
+        This property checks for the "X-Smarter-ClientVersion" header in the request headers or in the Django META dictionary.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             client_version = request_mixin.smarter_client_version
 
-        :return: The value of the "X-Smarter-Client-Version" header as a string, or None if not present.
+        :return: The value of the "X-Smarter-ClientVersion" header as a string, or None if not present.
         """
         return (
-            self._smarter_request.headers.get("X-Smarter-Client-Version")
+            self._smarter_request.headers.get("X-Smarter-ClientVersion")
             if self._smarter_request and hasattr(self._smarter_request, "headers")
             else None
         )
@@ -565,17 +565,17 @@ class SmarterRequestMixin(AccountMixin):
         """
         Get the smarter client type from the request.
 
-        This property checks for the "X-Smarter-Client-Type" header in the request headers or in the Django META dictionary.
+        This property checks for the "X-Smarter-ClientType" header in the request headers or in the Django META dictionary.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             client_type = request_mixin.smarter_client_type
 
-        :return: The value of the "X-Smarter-Client-Type" header as a string, or None if not present.
+        :return: The value of the "X-Smarter-ClientType" header as a string, or None if not present.
         """
         return (
-            self._smarter_request.headers.get("X-Smarter-Client-Type")
+            self._smarter_request.headers.get("X-Smarter-ClientType")
             if self._smarter_request and hasattr(self._smarter_request, "headers")
             else None
         )
@@ -585,17 +585,17 @@ class SmarterRequestMixin(AccountMixin):
         """
         Get the smarter request ID from the request.
 
-        This property checks for the "X-Smarter-Request-ID" header in the request headers or in the Django META dictionary.
+        This property checks for the "X-Smarter-RequestId" header in the request headers or in the Django META dictionary.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             request_id = request_mixin.smarter_request_id
 
-        :return: The value of the "X-Smarter-Request-ID" header as a string, or None if not present.
+        :return: The value of the "X-Smarter-RequestId" header as a string, or None if not present.
         """
         return (
-            self._smarter_request.headers.get("X-Smarter-Request-ID")
+            self._smarter_request.headers.get("X-Smarter-RequestId")
             if self._smarter_request and hasattr(self._smarter_request, "headers")
             else None
         )

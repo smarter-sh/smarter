@@ -147,9 +147,9 @@ See `React Integration <https://docs.smarter.sh/en/latest/developers/architectur
 # Smarter React common custom headers. See smarter/react/packages/smarter-common/src/lib/django.tsx
 CORS_ALLOW_HEADERS += [
     "x-smarter-client",
-    "x-smarter-client-version",
-    "x-smarter-client-type",
-    "x-smarter-request-id",
+    "x-smarter-clientversion",
+    "x-smarter-clienttype",
+    "x-smarter-requestid",
     "x-smarter-capabilities",
 ]
 

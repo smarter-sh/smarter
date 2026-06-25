@@ -33,9 +33,9 @@ export default async function fetchDjangoUrl(
     "Content-Type": applicationJson,
     "X-CSRFToken": csrftokenValue,
     "X-Smarter-Client": sessionContext.smarterClient,
-    "X-Smarter-Client-Version": sessionContext.smarterClientVersion,
-    "X-Smarter-Client-Type": "react",
-    "X-Smarter-Request-ID": sessionContext.smarterRequestId,
+    "X-Smarter-ClientVersion": sessionContext.smarterClientVersion,
+    "X-Smarter-ClientType": "react",
+    "X-Smarter-RequestId": sessionContext.smarterRequestId,
     "X-Smarter-Capabilities": capabilities,
   };
 
