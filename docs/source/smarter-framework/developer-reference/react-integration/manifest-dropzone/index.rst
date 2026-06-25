@@ -1,0 +1,50 @@
+Example index.html
+====================
+
+
+.. code-block:: html
+
+  <!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Drop Zone</title>
+
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+
+      <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
+      <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
+      <link href="/drop-zone/assets/index.css" rel="stylesheet" type="text/css" />
+      <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+      <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+      <link href="/common-styles.css" rel="stylesheet" type="text/css" />
+
+    </head>
+    <body>
+      <!--
+      only used for development via 'npm run dev'. In production, this file is rendered
+      by Django.
+
+      See:
+      - smarter.apps.drop-zone.views.views.drop-zone.DashboardView
+      - templates/react/drop-zone.html
+      -->
+      <div
+        id="smarter-drop-zone-root"
+        smarter-cookie-domain="localhost"
+        smarter-csrf-cookie-name="csrftoken"
+        smarter-django-session-cookie-name="sessionid"
+        smarter-request-id="abcd1234"
+        react-debug-mode="true"
+        smarter-api-url="http://localhost:9357/api/v1/cli/apply/"
+        >
+      </div>
+      <script type="module" src="/src/main.tsx"></script>
+    </body>
+    <script src="/assets/plugins/global/plugins.bundle.js"></script>
+    <script src="/assets/js/scripts.bundle.js"></script>
+
+  </html>
