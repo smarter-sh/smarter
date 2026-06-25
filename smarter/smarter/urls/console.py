@@ -63,7 +63,6 @@ from smarter.apps.vectorstore import urls as vectorstore_urls
 from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
-from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterSwitchAdmin
@@ -173,8 +172,8 @@ urlpatterns = [
     path("provider/", include(provider_urls, namespace=provider_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
     path("session-test/", session_test_view, name="session_test"),
-    path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     path("secret/", include(secret_urls, namespace=secret_namespace)),
+    path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     # -----------------------------------
     # LLMClients.
     # mcdaniel: 2026-01-31: are these even reachable anymore?
@@ -254,23 +253,15 @@ else:
 urlpatterns += list(static(settings.STATIC_URL, document_root=settings.STATIC_ROOT))
 
 if smarter_settings.environment == SmarterEnvironments.LOCAL and smarter_settings.debug_mode and not "test" in sys.argv:
-    # we need to limit this to local because the debug toolbar is only installed on the local build
-    # debug_model == True does not not guarantee that the debug toolbar is actually installed
-    try:
-        import debug_toolbar
+    import debug_toolbar
 
-        urlpatterns += [
-            path("__debug__/", include(debug_toolbar.urls)),
-        ]
-        logger.debug(
-            "%s Debug mode is enabled, and debug_toolbar is installed. Added debug_toolbar URLs to urlpatterns.",
-            formatted_text(__name__),
-        )
-    except ImportError:
-        logger.warning(
-            "%s Debug mode is enabled, but debug_toolbar is not installed. Install debug_toolbar to use the Django Debug Toolbar.",
-            formatted_text(__name__),
-        )
+    urlpatterns += [
+        path("__debug__/", include(debug_toolbar.urls)),
+    ]
+    logger.debug(
+        "%s added debug_toolbar URLs to urlpatterns.",
+        logging.formatted_text(__name__),
+    )
 
 
 __all__ = ["urlpatterns"]

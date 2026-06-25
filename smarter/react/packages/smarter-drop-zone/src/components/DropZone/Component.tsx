@@ -28,7 +28,7 @@ type DropZoneProps = {
 
 export default function DropZone({ sessionContext }: DropZoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDragActive, setIsDragActive] = useState(true);
+  const [isDragActive, setIsDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   const openFileDialog = () => {
@@ -166,17 +166,14 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
                     </button>
                   </div>
                 </div>
-
-                {isDragActive && (
-                  <div
-                    id="drop-zone-overlay"
-                    className="manifest-drop-zone drop-zone--hover d-flex justify-content-center align-items-center"
-                    onDragOver={handleOverlayDragOver}
-                    onDrop={handleDrop}
-                  >
-                    <span>{isUploading ? "Uploading..." : "Drop Manifest Here"}</span>
-                  </div>
-                )}
+                <div
+                  id="drop-zone-overlay"
+                  className={`manifest-drop-zone d-flex justify-content-center align-items-center ${isDragActive ? "drop-zone--hover" : ""}`}
+                  onDragOver={handleOverlayDragOver}
+                  onDrop={handleDrop}
+                >
+                  <span>{isUploading ? "Uploading..." : "Drop Zone"}</span>
+                </div>
               </div>
             </div>
           </div>

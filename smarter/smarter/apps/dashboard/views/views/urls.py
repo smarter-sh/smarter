@@ -49,11 +49,11 @@ urlpatterns = [
 
 if smarter_settings.enable_dropzone_manifest_apply:
     logger.info(
-        "%s manifest drop zone enabled. Set env ENABLE_DASHBOARD_APPLY=false to disable.",
+        "%s manifest drop zone enabled. Set env ENABLE_MANIFEST_DROPZONE=false to disable.",
         logging.formatted_text(__name__),
     )
 else:
     logger.info(
-        "%s manifest drop zone disabled. Set env ENABLE_DASHBOARD_APPLY=true to enable.",
+        "%s manifest drop zone disabled. Set env ENABLE_MANIFEST_DROPZONE=true to enable.",
         logging.formatted_text(__name__),
     )

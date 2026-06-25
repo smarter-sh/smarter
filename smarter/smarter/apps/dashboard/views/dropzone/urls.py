@@ -49,11 +49,11 @@ if smarter_settings.enable_dropzone_manifest_apply:
         path("api/", include(api_urls, api_urls.namespace)),
     ]
     logger.info(
-        "%s dropzone apply views enabled. Set env 'ENABLE_DASHBOARD_APPLY' to 'true' to enable.",
+        "%s dropzone apply views enabled. Set env 'ENABLE_MANIFEST_DROPZONE' to 'true' to enable.",
         logging.formatted_text(__name__),
     )
 else:
     logger.info(
-        "%s dropzone apply views disabled. Set env 'ENABLE_DASHBOARD_APPLY' to 'false' to disable.",
+        "%s dropzone apply views disabled. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
         logging.formatted_text(__name__),
     )

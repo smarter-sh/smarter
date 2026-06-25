@@ -1923,7 +1923,7 @@ class Settings(BaseSettings):
         return v
 
     enable_dropzone_manifest_apply: bool = Field(
-        settings_defaults.ENABLE_DASHBOARD_APPLY,
+        settings_defaults.ENABLE_MANIFEST_DROPZONE,
         description="True if the file drop zone feature is enabled based on the current environment.",
         title="Enable File Drop Zone",
     )
@@ -1945,7 +1945,7 @@ class Settings(BaseSettings):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.ENABLE_DASHBOARD_APPLY
+            return settings_defaults.ENABLE_MANIFEST_DROPZONE
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 

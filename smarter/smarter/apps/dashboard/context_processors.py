@@ -125,9 +125,7 @@ def static_version(request):
     }
 
 
-cache_results()
-
-
+@cache_results()
 def sidebar_context() -> dict[str, Any]:
     return {
         "sidebar": {
@@ -240,37 +238,30 @@ def base(request: "HttpRequest") -> dict[str, Any]:
         :return: A dictionary containing the dashboard context variables for the user.
         :rtype: dict
         """
-        current_year = datetime.now().year
         user_email = "anonymous@mail.edu"
         username = "anonymous"
-        is_superuser = False
-        is_staff = False
         if user_profile and user_profile.user.is_authenticated:
             try:
                 user_email = user_profile.user.email
                 username = user_profile.user.username
-                is_superuser = user_profile.user.is_superuser
-                is_staff = user_profile.user.is_staff
             except AttributeError:
                 # technically, this is supposed to be impossible due to the is_authenticated check
                 pass
 
         cached_context = {
             "dashboard": {
-                "debug_mode": smarter_settings.debug_mode,
                 "user_email": user_email,
                 "username": username,
+                "is_proxy_enabled": smarter_settings.enable_proxy,
+                "is_vectorstore_enabled": smarter_settings.enable_vectorstore,
+                "is_file_drop_zone_enabled": smarter_settings.enable_dropzone_manifest_apply,
+                "is_enabled_server_logs": smarter_settings.enable_dashboard_server_logs,
                 "profile_image_url": (
                     user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
                 ),
                 "first_name": (user_profile.user.first_name if user_profile and user_profile.user.first_name else ""),
                 "last_name": (user_profile.user.last_name if user_profile and user_profile.user.last_name else ""),
                 "product_name": SMARTER_PRODUCT_NAME,
-                "company_name": smarter_settings.root_domain,
-                "smarter_version": "v" + __version__,
-                "python_version": smarter_settings.python_version,
-                "django_version": smarter_settings.django_version,
-                "current_year": current_year,
             }
         }
         logger.debug(
