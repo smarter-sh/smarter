@@ -3,7 +3,6 @@
 from .change_log import ChangeLogView
 from .coming_soon import ComingSoon
 from .dashboard import DashboardView
-from .dropzone import DropzoneView
 from .email_added import EmailAdded
 from .notifications import NotificationsView
 
@@ -12,6 +11,5 @@ __all__ = [
     "ComingSoon",
     "EmailAdded",
     "DashboardView",
-    "DropzoneView",
     "NotificationsView",
 ]
