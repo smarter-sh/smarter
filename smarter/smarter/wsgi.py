@@ -1,4 +1,8 @@
-"""WSGI config for smarter project."""
+"""
+WSGI config for smarter project.
+
+mcdaniel: deprecated. we now use asgi.py
+"""
 
 # wsgi.py
 import os
