@@ -597,8 +597,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 auth_header = request.headers.get("Authorization")
                 if auth_header:
                     logger.error(
-                        "%s.initial() - Authorization header contains an invalid, inactive or malformed token: %s",
+                        "%s.initial() - Authorization header '%s' seems to be invalid. The following exception was raised: %s",
                         self.logger_prefix,
+                        auth_header,
                         e,
                     )
                 else:
