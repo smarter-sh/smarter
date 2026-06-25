@@ -26,68 +26,198 @@ type DropZoneProps = {
   sessionContext: SessionContext;
 };
 
+type Manifest = Record<string, any>;
+
+type ModalState = {
+  open: boolean;
+  title: string;
+  message: string;
+  data?: any;
+  isError?: boolean;
+};
+
+type DropZoneModalProps = ModalState & {
+  onClose: () => void;
+  redirectRules: { thing: string; path: string }[];
+  thing?: string;
+};
+
+function DropZoneModal({
+  open,
+  title,
+  message,
+  data,
+  isError = false,
+  onClose,
+  redirectRules,
+  thing,
+}: DropZoneModalProps) {
+  if (!open) return null;
+
+  const color = isError ? "#dc3545" : "#28a745";
+
+  const handleClose = () => {
+    onClose();
+
+    if (thing) {
+      const rule = redirectRules.find((r) => r.thing === thing);
+      if (rule) window.location.href = rule.path;
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.4)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 9999,
+      }}
+    >
+      <div
+        style={{
+          background: "#fff",
+          padding: 20,
+          borderRadius: 8,
+          maxWidth: 500,
+          width: "90%",
+          position: "relative",
+        }}
+      >
+        <button
+          onClick={handleClose}
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 12,
+            fontSize: 18,
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          ×
+        </button>
+
+        <div style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>{title}</div>
+
+        <div style={{ color, marginBottom: 10 }}>{message}</div>
+
+        {data && (
+          <pre
+            style={{
+              maxHeight: 200,
+              overflow: "auto",
+              background: "#f8f8f8",
+              padding: 10,
+              borderRadius: 4,
+              fontSize: 12,
+            }}
+          >
+            {JSON.stringify(data, null, 2)}
+          </pre>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function DropZone({ sessionContext }: DropZoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [isDragActive, setIsDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  const openFileDialog = () => {
-    fileInputRef.current?.click();
+  const [manifestMeta, setManifestMeta] = useState({
+    name: "",
+    version: "",
+    kind: "",
+  });
+
+  const [modal, setModal] = useState<ModalState>({
+    open: false,
+    title: "",
+    message: "",
+    data: null,
+    isError: false,
+  });
+
+  const openFileDialog = () => fileInputRef.current?.click();
+
+  const showModal = (title: string, message: string, data: any, isError = false) => {
+    setModal({
+      open: true,
+      title,
+      message,
+      data,
+      isError,
+    });
   };
 
   useEffect(() => {
-    const handleWindowDragOver = (event: DragEvent) => {
-      event.preventDefault();
-
-      if (!isDragActive) {
-        setIsDragActive(true);
-      }
+    const onDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      setIsDragActive(true);
     };
 
-    const handleWindowDragLeave = (event: DragEvent) => {
-      event.preventDefault();
-
-      if (event.clientX === 0 && event.clientY === 0) {
+    const onDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      if (e.clientX === 0 && e.clientY === 0) {
         setIsDragActive(false);
       }
     };
 
-    const handleWindowDrop = (event: DragEvent) => {
-      event.preventDefault();
+    const onDrop = (e: DragEvent) => {
+      e.preventDefault();
       setIsDragActive(false);
     };
 
-    window.addEventListener("dragover", handleWindowDragOver);
-    window.addEventListener("dragleave", handleWindowDragLeave);
-    window.addEventListener("drop", handleWindowDrop);
+    window.addEventListener("dragover", onDragOver);
+    window.addEventListener("dragleave", onDragLeave);
+    window.addEventListener("drop", onDrop);
 
     return () => {
-      window.removeEventListener("dragover", handleWindowDragOver);
-      window.removeEventListener("dragleave", handleWindowDragLeave);
-      window.removeEventListener("drop", handleWindowDrop);
+      window.removeEventListener("dragover", onDragOver);
+      window.removeEventListener("dragleave", onDragLeave);
+      window.removeEventListener("drop", onDrop);
     };
-  }, [isDragActive]);
+  }, []);
 
-  async function validateAndReadManifest(file: File): Promise<string> {
-    if (!/\.(yaml|yml)$/i.test(file.name)) {
-      throw new Error("Please select a Smarter YAML manifest file (.yaml or .yml)");
+  function validateManifest(manifest: Manifest) {
+    if (!manifest || typeof manifest !== "object") {
+      throw new Error("Manifest is not a valid object");
     }
 
-    const content = await file.text();
+    if (!manifest.metadata?.name) {
+      throw new Error("Missing metadata.name");
+    }
 
-    try {
-      const obj = load(content);
-      const json = JSON.stringify(obj);
-      return json;
-    } catch (error) {
-      throw new Error(`Invalid YAML syntax: ${error instanceof Error ? error.message : String(error)}`);
+    if (!manifest.apiVersion) {
+      throw new Error("Missing apiVersion");
+    }
+
+    if (!manifest.apiVersion.startsWith("smarter.sh/v")) {
+      throw new Error("Invalid apiVersion");
+    }
+
+    if (!manifest.kind) {
+      throw new Error("Missing kind");
     }
   }
 
-  async function applyManifest(manifest: string) {
-    const response = await fetchDjangoUrl(sessionContext, sessionContext.ApiUrl, manifest);
+  async function parseManifest(file: File): Promise<Manifest> {
+    const content = await file.text();
+    const obj = load(content);
+    return JSON.parse(JSON.stringify(obj)) as Manifest;
+  }
+
+  async function applyManifest(manifest: Manifest) {
+    const response = await fetchDjangoUrl(sessionContext, sessionContext.ApiUrl, JSON.stringify(manifest));
+
     const data = await response.json();
-    console.debug(loggerPrefix, `fetched response from ${sessionContext.ApiUrl}:`, data);
 
     if (!response.ok) {
       throw new Error(`Manifest apply failed (${response.status})`);
@@ -100,8 +230,23 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
     setIsUploading(true);
 
     try {
-      const manifest = await validateAndReadManifest(file);
-      await applyManifest(manifest);
+      const manifest = await parseManifest(file);
+
+      validateManifest(manifest);
+
+      setManifestMeta({
+        name: manifest.metadata.name,
+        version: manifest.apiVersion,
+        kind: manifest.kind,
+      });
+
+      const result = await applyManifest(manifest);
+
+      showModal("Manifest Applied", "The manifest was successfully applied.", result, false);
+    } catch (error) {
+      console.error(loggerPrefix, error);
+
+      showModal("Manifest Apply Failed", error instanceof Error ? error.message : "Unknown error", null, true);
     } finally {
       setIsUploading(false);
     }
@@ -111,11 +256,7 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
     const file = event.target.files?.[0];
 
     try {
-      if (file) {
-        await processFile(file);
-      }
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to process manifest");
+      if (file) await processFile(file);
     } finally {
       event.target.value = "";
     }
@@ -123,60 +264,53 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-
     setIsDragActive(false);
 
     const file = event.dataTransfer.files?.[0];
 
     try {
-      if (file) {
-        await processFile(file);
-      }
+      if (file) await processFile(file);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to process manifest");
+      showModal("Error", error instanceof Error ? error.message : "Failed", null, true);
     }
-  };
-
-  const handleOverlayDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
   };
 
   return (
     <section id="manifest-apply">
-      <div id="kt_app_content" className="app-content flex-column-fluid">
-        <div id="kt_app_content_container" className="app-container container-xxl">
-          <div className="row g-5 g-xl-10">
-            <div className="col-xl-8 mb-5 mb-xl-10">
-              <div className="g-5 g-xl-10 mb-l-10">
-                <h3 className="pt-5">Apply Smarter YAML Manifest</h3>
+      <div className="app-content flex-column-fluid">
+        <div className="app-container container-xxl">
+          <h3 className="pt-5">Apply Smarter YAML Manifest</h3>
 
-                <div className="file-open-command-button mt-5 mb-5">
-                  <div className="col-10" />
+          <input ref={fileInputRef} type="file" accept=".yaml,.yml" hidden onChange={handleFileSelected} />
 
-                  <div className="col-2">
-                    <input ref={fileInputRef} type="file" accept=".yaml,.yml" hidden onChange={handleFileSelected} />
+          <button type="button" className="btn btn-sm btn-primary" disabled={isUploading} onClick={openFileDialog}>
+            {isUploading ? "Uploading..." : "File Open"}
+          </button>
 
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-primary"
-                      disabled={isUploading}
-                      onClick={openFileDialog}
-                    >
-                      {isUploading ? "Uploading..." : "File Open"}
-                    </button>
-                  </div>
-                </div>
-                <div
-                  id="drop-zone-overlay"
-                  className={`manifest-drop-zone d-flex justify-content-center align-items-center ${isDragActive ? "drop-zone--hover" : ""}`}
-                  onDragOver={handleOverlayDragOver}
-                  onDrop={handleDrop}
-                >
-                  <span>{isUploading ? "Uploading..." : "Drop Zone"}</span>
-                </div>
-              </div>
-            </div>
+          <div
+            className={`manifest-drop-zone d-flex justify-content-center align-items-center ${
+              isDragActive ? "drop-zone--hover" : ""
+            }`}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+          >
+            <span>{isUploading ? "Uploading..." : "Drop Zone"}</span>
           </div>
+
+          <DropZoneModal
+            {...modal}
+            thing={(modal.data as any)?.thing}
+            redirectRules={[
+              { thing: "SqlPlugin", path: window.pluginListPath },
+              { thing: "ApiPlugin", path: window.pluginListPath },
+              { thing: "StaticPlugin", path: window.pluginListPath },
+              { thing: "SqlConnection", path: window.connectionListPath },
+              { thing: "ApiConnection", path: window.connectionListPath },
+              { thing: "Provider", path: window.providerListPath },
+              { thing: "LLMClient", path: window.workbenchListPath },
+            ]}
+            onClose={() => setModal((m) => ({ ...m, open: false }))}
+          />
         </div>
       </div>
     </section>
