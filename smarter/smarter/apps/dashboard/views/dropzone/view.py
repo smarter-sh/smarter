@@ -84,12 +84,6 @@ class DropzoneView(SmarterAuthenticatedNeverCachedWebView):
 
         # pylint: disable=C0415
         from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-        from smarter.apps.dashboard.views.views.api.urls import (
-            DashboardApiReverseNames,
-        )
-        from smarter.apps.dashboard.views.views.urls import (
-            DashboardReverseNames,  # avoid circular import
-        )
 
         context = {
             "react_dropzone": {
@@ -98,16 +92,6 @@ class DropzoneView(SmarterAuthenticatedNeverCachedWebView):
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
                 "smarter_api_url": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
-                "my_resources_api_url": reverse(
-                    DashboardReverseNames.namespace,
-                    DashboardApiReverseNames.namespace,
-                    DashboardApiReverseNames.my_resources,
-                ),
-                "service_health_api_url": reverse(
-                    DashboardReverseNames.namespace,
-                    DashboardApiReverseNames.namespace,
-                    DashboardApiReverseNames.service_health,
-                ),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }

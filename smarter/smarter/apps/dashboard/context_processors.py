@@ -260,12 +260,6 @@ def base(request: "HttpRequest") -> dict[str, Any]:
                 "debug_mode": smarter_settings.debug_mode,
                 "user_email": user_email,
                 "username": username,
-                "is_superuser": is_superuser,
-                "is_staff": is_staff,
-                "is_proxy_enabled": smarter_settings.enable_proxy,
-                "is_vectorstore_enabled": smarter_settings.enable_vectorstore,
-                "is_file_drop_zone_enabled": smarter_settings.enable_dropzone_manifest_apply,
-                "is_enabled_server_logs": smarter_settings.enable_dashboard_server_logs,
                 "profile_image_url": (
                     user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"
                 ),

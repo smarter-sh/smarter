@@ -41,10 +41,6 @@ from smarter.common.const import (
     SMARTER_IS_INTERNAL_API_REQUEST,
 )
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-    formatted_text_green,
-)
 from smarter.common.helpers.url_helpers import session_key_from_url
 from smarter.common.utils import (
     hash_factory,
@@ -178,7 +174,7 @@ class SmarterRequestMixin(AccountMixin):
         verbose_logger.debug(
             "%s.__init__() - called by %s with request=%s, args=%s, kwargs=%s",
             self.srm_formatted_class_name,
-            formatted_text(module_name),
+            self.formatted_text(module_name),
             request,
             args,
             kwargs,
@@ -269,7 +265,7 @@ class SmarterRequestMixin(AccountMixin):
         :return: A string describing the instance.
         :rtype: str
         """
-        return f"{formatted_text(SmarterRequestMixin.__name__)}[{id(self)}](request={self.smarter_request}, user_profile={self.user_profile})"
+        return f"{self.formatted_text(SmarterRequestMixin.__name__)}[{id(self)}](request={self.smarter_request}, user_profile={self.user_profile})"
 
     def __repr__(self) -> str:
         """
@@ -741,12 +737,16 @@ class SmarterRequestMixin(AccountMixin):
 
         if self.url_path_parts and self.url_path_parts[0] == "admin":
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}.qualified_request() - request path starts with /admin/. Not a qualified request: {self.url}"
+                "%s.qualified_request() - request path starts with /admin/. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
             )
             return False
         if self.url_path_parts and self.url_path_parts[0] == "docs":
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}.qualified_request() - request path starts with /docs/. Not a qualified request: {self.url}"
+                "%s.qualified_request() - request path starts with /docs/. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
             )
             return False
 
@@ -766,7 +766,9 @@ class SmarterRequestMixin(AccountMixin):
         ]
         if isinstance(path, str) and any(path.replace("/", "").endswith(ext) for ext in static_extensions):
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}.qualified_request() - request path ends with a static file extension. Not a qualified request: {self.url}"
+                "%s.qualified_request() - request path ends with a static file extension. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
             )
             # static asset requests are not llm_client requests.
             return False
@@ -2220,7 +2222,9 @@ class SmarterRequestMixin(AccountMixin):
             SmarterValidator.validate_session_key(session_key)
 
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}{formatted_text_green(".find_session_key() - initialized from url: ")}{session_key}",
+                "%s.find_session_key() - initialized from url: %s",
+                self.srm_formatted_class_name,
+                session_key,
             )
             return session_key
 
@@ -2232,7 +2236,9 @@ class SmarterRequestMixin(AccountMixin):
                 session_key = session_key.rstrip("/")
                 SmarterValidator.validate_session_key(session_key)
                 verbose_logger.debug(
-                    f"{self.srm_formatted_class_name}{formatted_text_green(".find_session_key() - initialized from request body: ")}{session_key}",
+                    "%s.find_session_key() - initialized from request body: %s",
+                    self.srm_formatted_class_name,
+                    session_key,
                 )
                 return session_key
 
@@ -2243,7 +2249,9 @@ class SmarterRequestMixin(AccountMixin):
             session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}{formatted_text_green(".find_session_key() - initialized from cookie data of the request object: ")}{session_key}",
+                "%s.find_session_key() - initialized from cookie data of the request object: %s",
+                self.srm_formatted_class_name,
+                session_key,
             )
             return session_key
 
@@ -2254,12 +2262,15 @@ class SmarterRequestMixin(AccountMixin):
             session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}{formatted_text_green(".find_session_key() - initialized from the get() parameters of the request object: ")}{session_key}",
+                "%s.find_session_key() - initialized from the get() parameters of the request object: %s",
+                self.srm_formatted_class_name,
+                session_key,
             )
             return session_key
 
         verbose_logger.debug(
-            f"{self.srm_formatted_class_name}.find_session_key() - session key not found in url, request body, cookies, or get parameters.",
+            "%s.find_session_key() - session key not found in url, request body, cookies, or get parameters.",
+            self.srm_formatted_class_name,
         )
         return None
 
