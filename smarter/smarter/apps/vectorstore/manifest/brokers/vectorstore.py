@@ -32,8 +32,8 @@ from smarter.apps.vectorstore.manifest.models.vectorstore.status import (
 from smarter.apps.vectorstore.models import (
     EmbeddingsInterface,
     IndexModelInterface,
-    VectorestoreMeta,
     VectorstoreInterface,
+    VectorstoreMeta,
 )
 from smarter.apps.vectorstore.serializers import VectorstoreSerializer
 from smarter.common.conf.settings import smarter_settings
@@ -126,7 +126,7 @@ class SAMVectorstoreBroker(AbstractBroker):
     _pydantic_model: Type[SAMVectorstore] = SAMVectorstore
 
     # our ORM models.
-    _vectorstore_meta: Optional[VectorestoreMeta] = None
+    _vectorstore_meta: Optional[VectorstoreMeta] = None
     _index_model_interface: Optional[IndexModelInterface] = None
     _vectorstore_interface: Optional[VectorstoreInterface] = None
     _embeddings_interface: Optional[EmbeddingsInterface] = None
@@ -137,11 +137,11 @@ class SAMVectorstoreBroker(AbstractBroker):
         logger.info(msg)
 
     @property
-    def vectorstore_meta(self) -> Optional[VectorestoreMeta]:
+    def vectorstore_meta(self) -> Optional[VectorstoreMeta]:
         """
-        Return the VectorestoreMeta associated with this broker, if available.
+        Return the VectorstoreMeta associated with this broker, if available.
 
-        :returns: The `VectorestoreMeta` instance, or `None` if not set.
+        :returns: The `VectorstoreMeta` instance, or `None` if not set.
 
         **Example usage:**
 
@@ -149,18 +149,18 @@ class SAMVectorstoreBroker(AbstractBroker):
 
            vectorstore_meta = broker.vectorstore_meta
            if vectorstore_meta:
-               print(f"VectorestoreMeta name: {vectorstore_meta.name}")
+               print(f"VectorstoreMeta name: {vectorstore_meta.name}")
 
         See Also:
 
-           - :class:`smarter.apps.vectorstore.models.VectorestoreMeta`
+           - :class:`smarter.apps.vectorstore.models.VectorstoreMeta`
         """
         name = self._manifest.metadata.name if self._manifest else self._name
         if not self._vectorstore_meta and (isinstance(name, str) and isinstance(self.user_profile, UserProfile)):
             with transaction.atomic():
                 try:
-                    self._vectorstore_meta = VectorestoreMeta.objects.get(user_profile=self.user_profile, name=name)
-                except VectorestoreMeta.DoesNotExist:
+                    self._vectorstore_meta = VectorstoreMeta.objects.get(user_profile=self.user_profile, name=name)
+                except VectorstoreMeta.DoesNotExist:
                     # It's possible the manifest exists but the corresponding database entry does not, so we return None in that case
                     return self._vectorstore_meta
 
@@ -269,12 +269,12 @@ class SAMVectorstoreBroker(AbstractBroker):
 
     def django_meta_orm_to_manifest(self) -> SAMVectorstoreMetadata:
         """
-        Convert the Django ORM `VectorestoreMeta` model instance into a.
+        Convert the Django ORM `VectorstoreMeta` model instance into a.
 
         `SAMVectorstoreMetadata` Pydantic model for manifest serialization.
 
         :raises: :class:`SAMVectorstoreBrokerError`
-              If `self.vectorstore_meta` is not set or is not an instance of `VectorestoreMeta`.
+              If `self.vectorstore_meta` is not set or is not an instance of `VectorstoreMeta`.
 
         :returns: A `SAMVectorstoreMetadata` instance representing the manifest metadata.
 
@@ -286,9 +286,9 @@ class SAMVectorstoreBroker(AbstractBroker):
             print(metadata.name, metadata.description)
         """
 
-        if not isinstance(self.vectorstore_meta, VectorestoreMeta):
+        if not isinstance(self.vectorstore_meta, VectorstoreMeta):
             raise SAMVectorstoreBrokerError(
-                f"Expected type VectorestoreMeta but got {type(self.vectorstore_meta)}", thing=self.kind
+                f"Expected type VectorstoreMeta but got {type(self.vectorstore_meta)}", thing=self.kind
             )
 
         return SAMVectorstoreMetadata(
@@ -456,9 +456,9 @@ class SAMVectorstoreBroker(AbstractBroker):
             "%s.django_orm_to_manifest() called for %s %s", self.formatted_class_name, self.name, self.user_profile
         )
 
-        if not isinstance(self.vectorstore_meta, VectorestoreMeta):
+        if not isinstance(self.vectorstore_meta, VectorstoreMeta):
             raise SAMVectorstoreBrokerError(
-                f"Expected type VectorestoreMeta but got {type(self.vectorstore_meta)}", thing=self.kind
+                f"Expected type VectorstoreMeta but got {type(self.vectorstore_meta)}", thing=self.kind
             )
 
         if not isinstance(self.vectorstore_meta.connection, ApiConnection):
@@ -585,21 +585,21 @@ class SAMVectorstoreBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def ORMMetaModelClass(self) -> Type[VectorestoreMeta]:
+    def ORMMetaModelClass(self) -> Type[VectorstoreMeta]:
         """
         Return the Django ORM meta model class for the broker.
 
         :return: The Django ORM meta model class definition for the broker.
-        :rtype: Type[VectorestoreMeta]
+        :rtype: Type[VectorstoreMeta]
         """
-        return VectorestoreMeta
+        return VectorstoreMeta
 
     @property
-    def ORMModelClass(self) -> Type[VectorestoreMeta]:
+    def ORMModelClass(self) -> Type[VectorstoreMeta]:
         """
         Return the model class associated with the Smarter API Vectorstore.
 
-        :returns: The `VectorestoreMeta` model class.
+        :returns: The `VectorstoreMeta` model class.
 
         **Example usage:**
 
@@ -610,15 +610,15 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         .. seealso::
 
-           - :class:`smarter.apps.vectorstore.models.VectorestoreMeta`
+           - :class:`smarter.apps.vectorstore.models.VectorstoreMeta`
         """
-        return VectorestoreMeta
+        return VectorstoreMeta
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return the Django model class associated with the Smarter API Vectorstore manifest.
 
-        :returns: The Django `VectorestoreMeta` model class.
+        :returns: The Django `VectorstoreMeta` model class.
 
         **Example usage:**
 
@@ -629,7 +629,7 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         .. seealso::
 
-           - :class:`smarter.apps.account.models.VectorestoreMeta`
+           - :class:`smarter.apps.account.models.VectorstoreMeta`
            - :meth:`django_orm_to_manifest`
            - :class:`smarter.apps.SamKeys`
            - :class:`SAMMetadataKeys`
@@ -765,11 +765,11 @@ class SAMVectorstoreBroker(AbstractBroker):
             raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
 
         if name:
-            vectorstores = VectorestoreMeta.objects.filter(name=name).with_read_permission_for(self.user_profile.user)[
+            vectorstores = VectorstoreMeta.objects.filter(name=name).with_read_permission_for(self.user_profile.user)[
                 :MAX_RESULTS
             ]
         else:
-            vectorstores = VectorestoreMeta.objects.with_read_permission_for(self.user_profile.user)[:MAX_RESULTS]
+            vectorstores = VectorstoreMeta.objects.with_read_permission_for(self.user_profile.user)[:MAX_RESULTS]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for vectorstore in vectorstores:
@@ -863,7 +863,7 @@ class SAMVectorstoreBroker(AbstractBroker):
         logger.debug("%s.apply() called with manifest: %s %s", self.formatted_class_name, name, self.user_profile)
 
         def _map_fields(
-            data: dict, instance: VectorestoreMeta, exclusions: Optional[list[str]] = None
+            data: dict, instance: VectorstoreMeta, exclusions: Optional[list[str]] = None
         ) -> TimestampedModel:
             """
             Map fields from a dictionary to a Django ORM model instance, excluding read-only fields and any additional specified exclusions.
@@ -894,7 +894,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                     command=command,
                 )
             try:
-                self._vectorstore_meta, created = VectorestoreMeta.objects.get_or_create(
+                self._vectorstore_meta, created = VectorstoreMeta.objects.get_or_create(
                     user_profile=self.user_profile, name=self._manifest.metadata.name
                 )
                 if created:
@@ -916,7 +916,7 @@ class SAMVectorstoreBroker(AbstractBroker):
 
                 tags = data.get("tags", [])
                 self._vectorstore_meta = _map_fields(data, self._vectorstore_meta)  # type: ignore
-                if not isinstance(self.vectorstore_meta, VectorestoreMeta):
+                if not isinstance(self.vectorstore_meta, VectorstoreMeta):
                     raise SAMVectorstoreBrokerError(
                         f"Vectorstore is not set for {self.kind} {name}", thing=self.kind, command=command
                     )
@@ -1141,7 +1141,7 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         logger.debug("%s.describe() called with name: %s %s", self.formatted_class_name, self.name, self.user_profile)
 
-        if not isinstance(self.vectorstore_meta, VectorestoreMeta) or self.vectorstore_meta.name != self.name:
+        if not isinstance(self.vectorstore_meta, VectorstoreMeta) or self.vectorstore_meta.name != self.name:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {self.name}. Not found or not associated with account",
                 thing=self.kind,
@@ -1194,7 +1194,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                 command=command,
             )
 
-        if not isinstance(self.vectorstore_meta, VectorestoreMeta):
+        if not isinstance(self.vectorstore_meta, VectorstoreMeta):
             raise SAMBrokerErrorNotFound(
                 f"Failed to delete {self.kind} {self.name} {self.user_profile}. Not found or not associated with account",
                 thing=self.kind,
@@ -1236,7 +1236,7 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         if not isinstance(self.user_profile, UserProfile):
             raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
-        if not isinstance(self.vectorstore_meta, VectorestoreMeta):
+        if not isinstance(self.vectorstore_meta, VectorstoreMeta):
             raise SAMBrokerErrorNotFound(
                 f"Failed to deploy {self.kind} {self.name} {self.user_profile}. Not found or not associated with account",
                 thing=self.kind,
@@ -1271,7 +1271,7 @@ class SAMVectorstoreBroker(AbstractBroker):
 
         if not isinstance(self.user_profile, UserProfile):
             raise SAMVectorstoreBrokerError("User profile is not set or invalid", thing=self.kind, command=command)
-        if not isinstance(self.vectorstore_meta, VectorestoreMeta):
+        if not isinstance(self.vectorstore_meta, VectorstoreMeta):
             raise SAMBrokerErrorNotFound(
                 f"Failed to undeploy {self.kind} {self.name} {self.user_profile}. Not found or not associated with account",
                 thing=self.kind,

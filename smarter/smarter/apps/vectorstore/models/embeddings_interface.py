@@ -1,6 +1,4 @@
-"""
-Models for the vectorstore app.
-"""
+"""Models for the vectorstore app."""
 
 import logging
 
@@ -13,7 +11,7 @@ from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .vectorstore_meta import VectorestoreMeta
+from .vectorstore_meta import VectorstoreMeta
 
 
 # pylint: disable=unused-argument
@@ -27,13 +25,11 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class EmbeddingsInterface(TimestampedModel):
-    """
-    Model representing the SAMEmbeddingsInterface configuration for a vector database.
-    """
+    """Model representing the SAMEmbeddingsInterface configuration for a vector database."""
 
-    vectorestore_meta = models.OneToOneField(
-        VectorestoreMeta,
-        help_text="The associated VectorestoreMeta object for this EmbeddingsInterface configuration.",
+    vectorstore_meta = models.OneToOneField(
+        VectorstoreMeta,
+        help_text="The associated VectorstoreMeta object for this EmbeddingsInterface configuration.",
         on_delete=models.CASCADE,
         related_name="embeddings_interface",
     )
@@ -208,7 +204,8 @@ class EmbeddingsInterface(TimestampedModel):
 
     def save(self, *args, **kwargs):
         """
-        Override the save method to include validation for the embeddings provider model's
+        Override the save method to include validation for the embeddings provider model's.
+
         embedding support.
         """
 

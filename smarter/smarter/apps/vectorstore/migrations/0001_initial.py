@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="VectorestoreMeta",
+            name="VectorstoreMeta",
             fields=[
                 (
                     "id",
@@ -232,12 +232,12 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "vectorestore_meta",
+                    "vectorstore_meta",
                     models.OneToOneField(
-                        help_text="The associated VectorestoreMeta object for this IndexModelInterface configuration.",
+                        help_text="The associated VectorstoreMeta object for this IndexModelInterface configuration.",
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="index_model_interface",
-                        to="vectorstore.vectorestoremeta",
+                        to="vectorstore.vectorstoremeta",
                     ),
                 ),
             ],
@@ -520,12 +520,12 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "vectorestore_meta",
+                    "vectorstore_meta",
                     models.OneToOneField(
-                        help_text="The associated VectorestoreMeta object for this EmbeddingsInterface configuration.",
+                        help_text="The associated VectorstoreMeta object for this EmbeddingsInterface configuration.",
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="embeddings_interface",
-                        to="vectorstore.vectorestoremeta",
+                        to="vectorstore.vectorstoremeta",
                     ),
                 ),
             ],
@@ -582,12 +582,12 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "vectorestore_meta",
+                    "vectorstore_meta",
                     models.OneToOneField(
-                        help_text="The associated VectorestoreMeta object for this VectorstoreInterface configuration.",
+                        help_text="The associated VectorstoreMeta object for this VectorstoreInterface configuration.",
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="vectorstore_interface",
-                        to="vectorstore.vectorestoremeta",
+                        to="vectorstore.vectorstoremeta",
                     ),
                 ),
             ],

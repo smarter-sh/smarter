@@ -148,7 +148,7 @@ def sidebar_context() -> dict[str, Any]:
             "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
             "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
             "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
-            "vectorstores": reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.list_view),
+            "vectorstores": reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview),
             "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
             "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
             "proxies": reverse(ProxyReverseNames.namespace, ProxyReverseNames.listview),
