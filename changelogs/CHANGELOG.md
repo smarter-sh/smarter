@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.15-alpha.11](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.10...v0.14.15-alpha.11) (2026-06-25)
+
+### Bug Fixes
+
+* react authenticated fetch to Django ([cfcd4c4](https://github.com/smarter-sh/smarter/commit/cfcd4c48b4ef8bcd707b3d2e686cd6f10ea5918d))
+
+### Refactoring
+
+* allow custom react headers with CORS ([6a6b9b6](https://github.com/smarter-sh/smarter/commit/6a6b9b69202c3f1a670bffb3ec7337fc36355210))
+* better name ([eaca05c](https://github.com/smarter-sh/smarter/commit/eaca05c838e7878bf40680435193503a27048bf5))
+* cache contexts ([c8e0543](https://github.com/smarter-sh/smarter/commit/c8e054332523e999531cbce9d530fc2defb97bb9))
+* dropzone view file structure ([f08356b](https://github.com/smarter-sh/smarter/commit/f08356b88727eb5bcefea4dc39963c1ca5b7a80c))
+* PascalCase the custom smarter http request headers ([26641dd](https://github.com/smarter-sh/smarter/commit/26641dd33d5f9b75829d2e96a21bd762c66b5443))
+* port django template html and styling. port file open dialogue ([f63fb2c](https://github.com/smarter-sh/smarter/commit/f63fb2cc20817d81cd5d0295158a191aa6ddab81))
+* port manifest handler to react ([def5a00](https://github.com/smarter-sh/smarter/commit/def5a00fb698977a2c490b69bb3561c0f7bd9e96))
+* port vectorstore UI to react ([f6faf58](https://github.com/smarter-sh/smarter/commit/f6faf587f7e7a5d9d89238b0246e1561401725f1))
+
 ## [0.14.15-alpha.10](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.9...v0.14.15-alpha.10) (2026-06-24)
 
 ### Bug Fixes
