@@ -78,6 +78,7 @@ from smarter.apps.account.models import (
     get_resolved_user,
 )
 from smarter.apps.connection.urls import ConnectionReverseNames
+from smarter.apps.dashboard.views.dropzone.urls import DropzoneReverseNames
 from smarter.apps.dashboard.views.passthrough.urls import PassthroughReverseNames
 from smarter.apps.dashboard.views.terminal_emulator.names import (
     DashboardLogsReverseNames,
@@ -134,7 +135,8 @@ def sidebar_context() -> dict[str, Any]:
             "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
             "manifest_drop_zone": reverse(
                 DashboardReverseNames.namespace,
-                DashboardReverseNames.manifest_drop_zone,
+                DropzoneReverseNames.namespace,
+                DropzoneReverseNames.dropzone,
             ),
             "prompt_passthrough": reverse(
                 DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
@@ -262,7 +264,7 @@ def base(request: "HttpRequest") -> dict[str, Any]:
                 "is_staff": is_staff,
                 "is_proxy_enabled": smarter_settings.enable_proxy,
                 "is_vectorstore_enabled": smarter_settings.enable_vectorstore,
-                "is_file_drop_zone_enabled": smarter_settings.enable_dashboard_apply,
+                "is_file_drop_zone_enabled": smarter_settings.enable_dropzone_manifest_apply,
                 "is_enabled_server_logs": smarter_settings.enable_dashboard_server_logs,
                 "profile_image_url": (
                     user_profile.profile_image_url if user_profile and user_profile.profile_image_url else "#"

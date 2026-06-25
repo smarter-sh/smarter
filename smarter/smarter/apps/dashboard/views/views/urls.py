@@ -8,7 +8,6 @@ from smarter.apps.dashboard.const import namespace
 from smarter.apps.dashboard.views.views import (
     ChangeLogView,
     DashboardView,
-    DropzoneView,
     EmailAdded,
     NotificationsView,
 )
@@ -34,7 +33,6 @@ class DashboardReverseNames:
     email_added = to_snake_case(EmailAdded.__name__)
     api_my_resources = to_snake_case(MyResourcesView.__name__)
     api_service_health = to_snake_case(ServiceHealthView.__name__)
-    manifest_drop_zone = to_snake_case(DropzoneView.__name__)
 
 
 urlpatterns = [
@@ -49,8 +47,7 @@ urlpatterns = [
     path("email-added/", EmailAdded.as_view(), name=DashboardReverseNames.email_added),
 ]
 
-if smarter_settings.enable_dashboard_apply:
-    urlpatterns.append(path("drop-zone/", DropzoneView.as_view(), name=DashboardReverseNames.manifest_drop_zone))
+if smarter_settings.enable_dropzone_manifest_apply:
     logger.info(
         "%s manifest drop zone enabled. Set env ENABLE_DASHBOARD_APPLY=false to disable.",
         logging.formatted_text(__name__),

@@ -22,6 +22,7 @@ Example:
 from django.urls import include, path
 
 from smarter.apps.dashboard.const import namespace
+from smarter.apps.dashboard.views.dropzone import urls as dropzone_urls
 from smarter.apps.dashboard.views.passthrough import urls as passthrough_urls
 from smarter.apps.dashboard.views.profile import urls as profile_urls
 from smarter.apps.dashboard.views.terminal_emulator import urls as logs_urls
@@ -38,4 +39,5 @@ urlpatterns = [
     path("logs/", include(logs_urls, namespace=logs_urls.app_name)),
     path("passthrough/", include(passthrough_urls, namespace=passthrough_urls.app_name)),
     path("profile/", include(profile_urls, namespace=profile_urls.app_name)),
+    path("dropzone/", include(dropzone_urls, namespace=dropzone_urls.app_name)),
 ]
