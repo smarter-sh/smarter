@@ -346,9 +346,10 @@ class MyResourcesView(SmarterAuthenticatedWebView):
         user = get_resolved_user(request.user)
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
 
+        @cache_results()
         @snake_case()
         def _get_resources() -> dict[str, object]:
-            return {
+            retval = {
                 "pending_deployments": get_pending_deployments(user_profile=user_profile),
                 "llm_clients_qty": get_llm_clients(user_profile=user_profile),
                 "llm_clients_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
@@ -359,7 +360,9 @@ class MyResourcesView(SmarterAuthenticatedWebView):
                 "providers_qty": get_providers(user_profile=user_profile),
                 "providers_url": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
             }
+            logger.debug("%s.post() cached context %s", self.formatted_class_name, logging.formatted_json(retval))
+            return retval
 
         retval = _get_resources()
-        logger.debug("%s.post() returning: %s", self.formatted_class_name, logging.formatted_json(retval))
+        logger.debug("%s.post()", self.formatted_class_name)
         return JsonResponse(retval, status=HTTPStatus.OK)
