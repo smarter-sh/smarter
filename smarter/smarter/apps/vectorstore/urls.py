@@ -8,8 +8,6 @@ from smarter.apps.vectorstore.views import (
     VectorstoreListView,
     VectorstoreManifestView,
 )
-from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import to_snake_case
 
 from .const import namespace
@@ -40,19 +38,11 @@ class VectorstoreReverseNames:
     manifest_view = to_snake_case(VectorstoreManifestView.__name__)
 
 
-urlpatterns = []
-if smarter_settings.enable_vectorstore:
-    urlpatterns = [
-        path("", VectorstoreListView.as_view(), name=VectorstoreReverseNames.list_view),
-        path(
-            "vectorstores/<str:backend>/<str:name>/manifest/",
-            VectorstoreManifestView.as_view(),
-            name=VectorstoreReverseNames.manifest_view,
-        ),
-    ]
-    logger.info("%s Vectorstore API endpoints enabled.", formatted_text(__name__))
-else:
-    logger.info(
-        "%s Vectorstore API endpoints have been disabled. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
-        formatted_text(__name__),
-    )
+urlpatterns = [
+    path("", VectorstoreListView.as_view(), name=VectorstoreReverseNames.list_view),
+    path(
+        "vectorstores/<str:backend>/<str:name>/manifest/",
+        VectorstoreManifestView.as_view(),
+        name=VectorstoreReverseNames.manifest_view,
+    ),
+]
