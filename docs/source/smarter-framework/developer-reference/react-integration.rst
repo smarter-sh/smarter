@@ -571,6 +571,20 @@ Note that CORS is switch-enabled, meaning that this switch must be enabled
 in order for the any React component to be able to make API requests to the
 Django backend.
 
+.. code-block:: typescript
+
+    const requestHeaders = {
+    Accept: applicationJson,
+    Authorization: `Bearer ${djangoSessionTokenValue}`,
+    "Content-Type": applicationJson,
+    "X-CSRFToken": csrftokenValue,
+    "X-Smarter-Client": sessionContext.smarterClient,
+    "X-Smarter-ClientVersion": sessionContext.smarterClientVersion,
+    "X-Smarter-ClientType": "react",
+    "X-Smarter-RequestId": sessionContext.smarterRequestId,
+    "X-Smarter-Capabilities": capabilities,
+  };
+
 
 
 Operational Considerations
