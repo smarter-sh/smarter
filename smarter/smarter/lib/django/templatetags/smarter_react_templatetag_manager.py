@@ -1,5 +1,6 @@
 """
-Vite-generated React manifest.json loader and asset collector base class for Django
+Vite-generated React manifest.json loader and asset collector base class for Django.
+
 templatetags.
 
 This module provides a reusable base class and supporting types for
@@ -92,7 +93,8 @@ ManifestType = dict[str, ManifestValues]
 
 class AssetDict(TypedDict):
     """
-    TypedDict representing the structure of assets returned for a
+    TypedDict representing the structure of assets returned for a.
+
     manifest.json entry point.
 
     Attributes
@@ -109,7 +111,8 @@ class AssetDict(TypedDict):
 
 class SmarterReactTemplateTagManager(SmarterHelperMixin):
     """
-    Base class for per-React-app singleton managers that load
+    Base class for per-React-app singleton managers that load.
+
     and analyze Vite-generated React manifest.json files in order
     to generate ordered lists of JS and CSS assets.
 
@@ -144,8 +147,8 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         self.app_name = app_name
         self.templatetag_name = templatetag_name
         self.entry_key = self.find_entry_key()
-        logger.debug(
-            "%s[%s] registered %s Template Tag for React app '%s'",
+        logger.info(
+            "%s[%s] %s is registered to React app '%s'",
             self.formatted_class_name,
             id(self),
             self.templatetag_name,
@@ -165,7 +168,8 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
 
         def _load_manifest() -> ManifestType:
             """
-            Load the manifest.json from the static files directory and
+            Load the manifest.json from the static files directory and.
+
             cache the result.
             """
             manifest_path = os.path.join(settings.STATIC_ROOT, f"react/{self.app_name}/manifest.json")
@@ -218,7 +222,8 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         self, manifest: ManifestType, key: str, asset_type: str, seen: set[str] | None = None
     ) -> list[str]:
         """
-        Recursively collect assets from a manifest entry and its imports,
+        Recursively collect assets from a manifest entry and its imports,.
+
         preserving dependency order.
 
         Assets are collected in the order required for correct script or style
@@ -269,6 +274,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
     def find_entry_key(self) -> str:
         """
         Locate the top-level key and dict in the manifest where the dict contains the key 'isEntry'.
+
         Returns the key if found, else raises an error.
 
         Example entry dict:
@@ -300,7 +306,8 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
     @cached_property
     def reactapp_build_assets(self) -> AssetDict:
         """
-        Load CSS and JS files for a Vite-generated React manifest.json entry
+        Load CSS and JS files for a Vite-generated React manifest.json entry.
+
         point from the manifest, including all dependencies, cache and return
         them as an ordered dictionary.
 
