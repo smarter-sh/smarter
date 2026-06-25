@@ -562,6 +562,17 @@ throughout this guide:
   applications can be developed, versioned, tested, and rebuilt independently
   while still integrating seamlessly into Django’s deployment pipeline.
 
+CORS
+~~~~~~
+
+@smarter/common includes a set of custom HTTP headers in all API requests. These
+are included in smarter.settings.base.py as part of the CORS_ALLOW_HEADERS list.
+Note that CORS is switch-enabled, meaning that this switch must be enabled
+in order for the any React component to be able to make API requests to the
+Django backend.
+
+
+
 Operational Considerations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
