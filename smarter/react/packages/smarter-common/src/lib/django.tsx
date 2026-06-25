@@ -16,12 +16,13 @@ export default async function fetchDjangoUrl(
   requestJson: string,
 ) {
   const applicationJson = "application/json";
-  const djangoSessionTokenValue =
-    getCookie({ name: sessionContext.djangoSessionCookieName, expiration: null, domain: sessionContext.cookieDomain, value: null }, "") || "";
   const csrftokenValue =
-    getCookie({ name: sessionContext.csrfCookieName, expiration: null, domain: sessionContext.cookieDomain, value: null }, "") || "";
-
+    getCookie({ name: sessionContext.csrfCookieName, domain: sessionContext.cookieDomain });
   const capabilities = sessionContext.smarterCapabilities ? sessionContext.smarterCapabilities.join(",") : "listview,cardview";
+
+  if (!csrftokenValue) {
+    console.error(`${loggerPrefix} fetchDjangoUrl() No CSRF token found for cookie name ${sessionContext.csrfCookieName} in domain ${sessionContext.cookieDomain}.`);
+  }
 
   /*
    * note that any custom headers that are added here must also be added to the Django
@@ -29,9 +30,8 @@ export default async function fetchDjangoUrl(
    */
   const requestHeaders = {
     Accept: applicationJson,
-    Authorization: `Bearer ${djangoSessionTokenValue}`,
+    "X-CSRFToken": csrftokenValue!,
     "Content-Type": applicationJson,
-    "X-CSRFToken": csrftokenValue,
     "X-Smarter-Client": sessionContext.smarterClient,
     "X-Smarter-ClientVersion": sessionContext.smarterClientVersion,
     "X-Smarter-ClientType": "react",
@@ -43,6 +43,7 @@ export default async function fetchDjangoUrl(
 
   const res = await fetch(url, {
     method: "POST",
+    credentials: "include",
     headers: requestHeaders,
     body: requestJson,
   });

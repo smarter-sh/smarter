@@ -445,10 +445,9 @@ class SmarterRequestMixin(AccountMixin):
         self._smarter_request = request
         self._data = None
         verbose_logger.debug(
-            "%s.smarter_request setter - request set to: %s, user: %s",
+            "%s.smarter_request setter - request set to: %s",
             self.srm_formatted_class_name,
             request,
-            request.user if self.is_authenticated else "Anonymous",  # type: ignore[union-attr],
         )
         if request is not None:
             url = smarter_build_absolute_uri(request) if request else None
@@ -2450,21 +2449,16 @@ class SmarterRequestMixin(AccountMixin):
     def is_authenticated(self) -> bool:
         """Returns True if the request is authenticated, False otherwise."""
 
-        # Django Rest Framework's Request object
-        # pylint: disable=W0212
-        if (
-            hasattr(self.smarter_request, "_user")
-            and self.smarter_request._user  # type: ignore
-            and hasattr(self.smarter_request._user, "is_authenticated")  # type: ignore
-            and self.smarter_request._user.is_authenticated  # type: ignore
-        ):
-            return True
+        try:
+            return self.smarter_request.user.is_authenticated  # type: ignore
+        except AttributeError:
+            return False
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.warning(
+                "%s.is_authenticated() - unexpected error while checking authentication: %s",
+                self.srm_formatted_class_name,
+                str(e),
+            )
 
-        return (
-            True
-            if self.smarter_request
-            and hasattr(self.smarter_request, "user")
-            and self.smarter_request.user
-            and self.smarter_request.user.is_authenticated
-            else False
-        )
+        return False

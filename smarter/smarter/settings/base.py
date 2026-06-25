@@ -424,7 +424,7 @@ See:
 - https://docs.djangoproject.com/en/5.0/ref/settings/#session-cookie-path
 """
 
-SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = False
 """
 A boolean that determines whether the session cookie should be marked as "HttpOnly".
 

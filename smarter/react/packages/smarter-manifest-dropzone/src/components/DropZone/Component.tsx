@@ -76,12 +76,12 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
     const content = await file.text();
 
     try {
-      load(content);
+      const obj = load(content);
+      const json = JSON.stringify(obj);
+      return json;
     } catch (error) {
       throw new Error(`Invalid YAML syntax: ${error instanceof Error ? error.message : String(error)}`);
     }
-
-    return content;
   }
 
   async function applyManifest(manifest: string) {
@@ -93,7 +93,7 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
       throw new Error(`Manifest apply failed (${response.status})`);
     }
 
-    return response.json();
+    return data;
   }
 
   async function processFile(file: File) {
