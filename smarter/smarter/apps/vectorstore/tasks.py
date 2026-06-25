@@ -3,7 +3,7 @@
 import logging
 import os
 
-from smarter.apps.vectorstore.models import VectorestoreMeta
+from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
@@ -42,7 +42,7 @@ def embed_and_load_pdf(self) -> bool:
     token = user_id_context.set(job_id)
 
     try:
-        db = VectorestoreMeta.objects.first()
+        db = VectorstoreMeta.objects.first()
         if not db:
             logger.error(f"{logger_prefix} No vector database found.")
             return False

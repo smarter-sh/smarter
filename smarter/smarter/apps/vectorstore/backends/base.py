@@ -16,7 +16,7 @@ from langchain_core.documents import Document
 from langchain_core.embeddings.embeddings import Embeddings
 from langchain_core.vectorstores import VectorStore
 
-from smarter.apps.vectorstore.models import VectorestoreMeta
+from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.signals import connected
 from smarter.common.exceptions import SmarterException
 from smarter.common.mixins import SmarterHelperMixin
@@ -36,35 +36,25 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class VectorStoreBackendError(SmarterException):
-    """
-    Exception raised when there is an error with the vector store backend.
-    """
+    """Exception raised when there is an error with the vector store backend."""
 
 
 class VectorStoreBackendConnectionError(SmarterException):
-    """
-    Exception raised when there is an error with the vector store backend connection.
-    """
+    """Exception raised when there is an error with the vector store backend connection."""
 
 
 class VectorStoreBackendConnection(SmarterHelperMixin):
-    """
-    Represents a connection to a vector store backend.
-    """
+    """Represents a connection to a vector store backend."""
 
     _connection: Optional[object]
 
     @property
     def ready(self) -> bool:
-        """
-        Check if the connection is ready for operations.
-        """
+        """Check if the connection is ready for operations."""
         return super().ready
 
     def connect(self):
-        """
-        Establish the connection to the vector store backend.
-        """
+        """Establish the connection to the vector store backend."""
         connected.send(sender=self.__class__, instance=self, connection=self._connection)
 
 
@@ -79,7 +69,7 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
 
     Parameters
     ----------
-    db : VectorestoreMeta
+    db : VectorstoreMeta
         The vector database instance to use.
     embeddings : Optional[Embeddings], optional
         The embeddings model to use for vectorization (default is None).
@@ -128,12 +118,12 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
     _embeddings: Optional[Embeddings] = None
     _vector_store: Optional[VectorStore] = None
 
-    db: VectorestoreMeta
+    db: VectorstoreMeta
 
     def __init__(
         self,
         *args,
-        db: VectorestoreMeta,
+        db: VectorstoreMeta,
         embeddings: Optional[Embeddings] = None,
         vector_store: Optional[VectorStore] = None,
         **kwargs,
@@ -148,16 +138,12 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
 
     @property
     def index_stats(self) -> str:
-        """
-        Get statistics about the vector database in the backend.
-        """
+        """Get statistics about the vector database in the backend."""
         raise NotImplementedError("Index stats method not implemented for this backend")
 
     @property
     def vector_store(self) -> object:
-        """
-        Get the vector store object for the backend.
-        """
+        """Get the vector store object for the backend."""
         if self._vector_store is None:
             raise NotImplementedError("Vector store property not implemented for this backend")
         return self._vector_store
@@ -172,7 +158,8 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
     @property
     def connection(self) -> VectorStoreBackendConnection:
         """
-        Get the connection to the vector database in the backend, establishing
+        Get the connection to the vector database in the backend, establishing.
+
         it if it doesn't already exist.
         """
         if self._connection is None:
@@ -181,16 +168,12 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
 
     @property
     def is_connected(self) -> bool:
-        """
-        Check if there is an active connection to the vector database in the backend.
-        """
+        """Check if there is an active connection to the vector database in the backend."""
         return self._connection is not None and self._connection.ready
 
     @property
     def ready(self) -> bool:
-        """
-        Check if the backend is ready for operations.
-        """
+        """Check if the backend is ready for operations."""
         return super().ready and self.is_connected
 
     ###########################################################################
@@ -198,49 +181,35 @@ class SmarterVectorstoreBackend(ABC, SmarterHelperMixin):
     ###########################################################################
     @abstractmethod
     def add_documents(self, documents: list[Document], embeddings: list[Any]) -> bool:
-        """
-        Add documents with their corresponding embeddings to the vector store.
-        """
+        """Add documents with their corresponding embeddings to the vector store."""
         raise NotImplementedError("Add documents method not implemented for this backend")
 
     @abstractmethod
     def connect(self) -> VectorStoreBackendConnection:
-        """
-        Establish a connection to the vector database in the backend.
-        """
+        """Establish a connection to the vector database in the backend."""
         raise NotImplementedError("Connect method not implemented for this backend")
 
     @abstractmethod
     def create(self):
-        """
-        Provision a new vector database in the backend.
-        """
+        """Provision a new vector database in the backend."""
         raise NotImplementedError("Create method not implemented for this backend")
 
     @abstractmethod
     def delete(self):
-        """
-        Delete the vector database from the backend.
-        """
+        """Delete the vector database from the backend."""
         raise NotImplementedError("Delete method not implemented for this backend")
 
     @abstractmethod
     def disconnect(self) -> None:
-        """
-        Disconnect from the vector database in the backend.
-        """
+        """Disconnect from the vector database in the backend."""
         raise NotImplementedError("Disconnect method not implemented for this backend")
 
     @abstractmethod
     def initialize(self):
-        """
-        Initialize the backend, setting up any necessary connections or configurations.
-        """
+        """Initialize the backend, setting up any necessary connections or configurations."""
         raise NotImplementedError("Initialize method not implemented for this backend")
 
     @abstractmethod
     def query(self, query_vector: Any, top_k: int = 10):
-        """
-        Query the vector database in the backend.
-        """
+        """Query the vector database in the backend."""
         raise NotImplementedError("Query method not implemented for this backend")

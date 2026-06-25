@@ -1,7 +1,5 @@
 # pylint: disable=W0212
-"""
-Admin configuration for the vectorstore app.
-"""
+"""Admin configuration for the vectorstore app."""
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
@@ -9,17 +7,19 @@ from smarter.apps.dashboard.admin import (
     smarter_restricted_admin_site,
 )
 
-from .models import VectorestoreMeta
+from .models import VectorstoreMeta
 
 
 class VectorDatabaseAdmin(SmarterCustomerModelAdmin):
     """
-    VectorestoreMeta model admin. This is a primary
+    VectorstoreMeta model admin.
+
+    This is a primary
     Smarter resource, that descends directly from MetaDataWithOwnershipModel.
     Visibility of VectorDatabases is determined by ownership and role.
     """
 
-    model = VectorestoreMeta
+    model = VectorstoreMeta
 
     readonly_fields = (
         "created_at",
@@ -56,7 +56,7 @@ class VectorDatabaseAdmin(SmarterCustomerModelAdmin):
         if not isinstance(user, User):
             return qs.none()
 
-        return VectorestoreMeta.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return VectorstoreMeta.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
 
 
-smarter_restricted_admin_site.register(VectorestoreMeta, VectorDatabaseAdmin)
+smarter_restricted_admin_site.register(VectorstoreMeta, VectorDatabaseAdmin)

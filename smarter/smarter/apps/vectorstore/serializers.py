@@ -1,7 +1,5 @@
 # pylint: disable=C0115
-"""
-Serializer classes for the Vectorstore app.
-"""
+"""Serializer classes for the Vectorstore app."""
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.serializers import (
@@ -15,7 +13,7 @@ from smarter.apps.provider.serializers import (
 )
 from smarter.apps.secret.serializers import SecretSerializer
 
-from .models import VectorestoreMeta
+from .models import VectorstoreMeta
 
 
 class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
@@ -28,7 +26,7 @@ class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
     provider_model = ProviderModelSerializer(read_only=True)
 
     class Meta:
-        model = VectorestoreMeta
+        model = VectorstoreMeta
         fields = "__all__"
         read_only_fields = ["created_at", "updated_at", "owner", "account"]
 
@@ -38,5 +36,5 @@ class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
         user = self.request.user if hasattr(self.request, "user") else None  # type: ignore
         if name and isinstance(user, User) and user.is_authenticated:
             user_profile = UserProfile.get_cached_object(user=user)
-            return VectorestoreMeta.get_cached_object(name=name, user_profile=user_profile, backend=backend)
-        return VectorestoreMeta.objects.none()
+            return VectorstoreMeta.get_cached_object(name=name, user_profile=user_profile, backend=backend)
+        return VectorstoreMeta.objects.none()

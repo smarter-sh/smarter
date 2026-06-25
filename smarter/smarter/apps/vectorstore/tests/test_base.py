@@ -8,8 +8,8 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.apps.secret.models import Secret
 from smarter.apps.vectorstore.models import (
-    VectorestoreMeta,
     VectorstoreBackendKind,
+    VectorstoreMeta,
     VectorstoreStatus,
 )
 from smarter.apps.vectorstore.service import VectorstoreService
@@ -22,22 +22,23 @@ logger_prefix = formatted_text(f"{__name__}.VectorstoreTestBase()")
 
 
 class VectorstoreTestBase(TestAccountMixin):
-    """Base test class for Vectorstore"""
+    """Base test class for Vectorstore."""
 
     password: Secret
     provider: Provider
     provider_model: ProviderModel
-    vector_database: VectorestoreMeta
+    vector_database: VectorstoreMeta
     vectorstore_service: VectorstoreService
 
     @classmethod
     def setUpClass(cls):
         """
         Setup the test class with common resources for all unit tests:
-        - test VectorestoreMeta instance with Pinecone backend
+
+        - test VectorstoreMeta instance with Pinecone backend
         - test Secret instance for the vector database password
         - active OpenAI provider and a random active LLM with embedding support
-        - VectorstoreService instance using the test VectorestoreMeta
+        - VectorstoreService instance using the test VectorstoreMeta
         - connect the VectorstoreService backend to ensure it's ready for testing
         """
         super().setUpClass()
@@ -74,7 +75,7 @@ class VectorstoreTestBase(TestAccountMixin):
 
         logger.debug("%s.setUpClass() Created test password secret: %s", logger_prefix, cls.password)
 
-        cls.vector_database = VectorestoreMeta.objects.create(
+        cls.vector_database = VectorstoreMeta.objects.create(
             name="test_vector_database",
             description="A test vector database",
             user_profile=cls.user_profile,
@@ -108,9 +109,7 @@ class VectorstoreTestBase(TestAccountMixin):
 
     @classmethod
     def tearDownClass(cls):
-        """
-        Prune the vector database and password secret created for testing.
-        """
+        """Prune the vector database and password secret created for testing."""
         try:
             cls.vector_database.delete()
         # pylint: disable=broad-except
