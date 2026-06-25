@@ -5,7 +5,7 @@
   "type": "module",
   "config": {
     "cdnDeploy": false,
-    "s3BucketPath": "s3://smarter.sh/react/smarter-drop-zone/",
+    "s3BucketPath": "s3://smarter.sh/react/smarter-manifest-dropzone/",
     "cloudfrontDistributionId": "E2NUOFBC8HY0W9"
   },
   "scripts": {

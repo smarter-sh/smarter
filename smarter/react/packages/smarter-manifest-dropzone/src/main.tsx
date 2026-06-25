@@ -4,7 +4,7 @@ import type { SessionContext } from "@smarter/common";
 import { loggerPrefix, projectName, projectVersion } from "@/const";
 import App from "./App.tsx";
 
-const rootEl = document.getElementById("smarter-drop-zone-root");
+const rootEl = document.getElementById("smarter-manifest-dropzone-root");
 if (!rootEl) throw new Error("Root element not found");
 
 const csrfCookieName = rootEl.getAttribute("smarter-csrf-cookie-name");

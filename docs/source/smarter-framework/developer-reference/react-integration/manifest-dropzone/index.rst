@@ -33,7 +33,7 @@ Example index.html
       - templates/react/drop-zone.html
       -->
       <div
-        id="smarter-drop-zone-root"
+        id="smarter-manifest-dropzone-root"
         smarter-cookie-domain="localhost"
         smarter-csrf-cookie-name="csrftoken"
         smarter-django-session-cookie-name="sessionid"
