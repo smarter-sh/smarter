@@ -10,18 +10,15 @@
  *
  * :example:
  *
- *     <DropZone
- *       apiUrl="https://customer.smarter.sh/drop-zone/api/my-resources"
- *       csrfCookieName="csrftoken"
- *       csrftoken="token-value"
- *       djangoSessionCookieName="sessionid"
- *       cookieDomain=".smarter.sh"
- *     />
+ *     <DropZone sessionContext={sessionContext} />
  */
 import { useEffect, useRef, useState } from "react";
 import { load } from "js-yaml";
 
+import { fetchDjangoUrl } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
+
+import { loggerPrefix } from "@/const";
 
 import "./styles.css";
 
@@ -31,7 +28,6 @@ type DropZoneProps = {
 
 export default function DropZone({ sessionContext }: DropZoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [isDragActive, setIsDragActive] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -89,13 +85,9 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
   }
 
   async function applyManifest(manifest: string) {
-    const response = await fetch(sessionContext.ApiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain",
-      },
-      body: manifest,
-    });
+    const response = await fetchDjangoUrl(sessionContext, sessionContext.ApiUrl, manifest);
+    const data = await response.json();
+    console.debug(loggerPrefix, `fetched response from ${sessionContext.ApiUrl}:`, data);
 
     if (!response.ok) {
       throw new Error(`Manifest apply failed (${response.status})`);

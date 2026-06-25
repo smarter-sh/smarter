@@ -220,6 +220,7 @@ class SettingsDefaults:
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]
     LOCAL_HOSTS += [host + f":{SMARTER_LOCAL_PORT}" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS.append("localhost:5173")  # for react dev server
     LOCAL_HOSTS.append("testserver")
 
     LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
