@@ -626,10 +626,11 @@ pipelines and advanced React development workflows.
   :caption: Technical Reference
 
   react-integration/dashboard
+  react-integration/manifest-dropzone
   react-integration/prompt-list
-  react-integration/terminal-application
   react-integration/prompt-passthrough
   react-integration/smarter-chat
+  react-integration/terminal-application
   lib/django/templatetags
 
 .. toctree::

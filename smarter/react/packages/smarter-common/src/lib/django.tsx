@@ -23,6 +23,10 @@ export default async function fetchDjangoUrl(
 
   const capabilities = sessionContext.smarterCapabilities ? sessionContext.smarterCapabilities.join(",") : "listview,cardview";
 
+  /*
+   * note that any custom headers that are added here must also be added to the Django
+   * backend's CORS_ALLOW_HEADERS setting in smarter.settings.base.py.
+   */
   const requestHeaders = {
     Accept: applicationJson,
     Authorization: `Bearer ${djangoSessionTokenValue}`,
