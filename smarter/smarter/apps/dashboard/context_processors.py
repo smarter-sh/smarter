@@ -127,31 +127,19 @@ def static_version(request):
 
 @cache_results()
 def sidebar_context() -> dict[str, Any]:
-    return {
+    context = {
         "sidebar": {
             "dashboard": reverse(DashboardReverseNames.namespace, DashboardReverseNames.dashboard),
             "workbench": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
-            "manifest_drop_zone": reverse(
-                DashboardReverseNames.namespace,
-                DropzoneReverseNames.namespace,
-                DropzoneReverseNames.dropzone,
-            ),
             "prompt_passthrough": reverse(
                 DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
-            ),
-            "server_logs": reverse(
-                DashboardReverseNames.namespace,
-                DashboardLogsReverseNames.namespace,
-                DashboardLogsReverseNames.terminal_emulator_view,
             ),
             "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
             "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
             "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
             "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
-            "vectorstores": reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview),
             "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
             "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
-            "proxies": reverse(ProxyReverseNames.namespace, ProxyReverseNames.listview),
             "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
             "swagger_docs": reverse(DocsReverseNames.namespace, DocsReverseNames.swagger_docs),
             "redoc": reverse(DocsReverseNames.namespace, DocsReverseNames.redoc),
@@ -160,6 +148,25 @@ def sidebar_context() -> dict[str, Any]:
             "admin": "/admin/",  # FIX ME
         }
     }
+    if smarter_settings.enable_proxy:
+        context["sidebar"]["proxies"] = reverse(ProxyReverseNames.namespace, ProxyReverseNames.listview)
+    if smarter_settings.enable_vectorstore:
+        context["sidebar"]["vectorstores"] = reverse(
+            VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview
+        )
+    if smarter_settings.enable_dropzone_manifest_apply:
+        context["sidebar"]["manifest_drop_zone"] = reverse(
+            DashboardReverseNames.namespace,
+            DropzoneReverseNames.namespace,
+            DropzoneReverseNames.dropzone,
+        )
+    if smarter_settings.enable_dashboard_server_logs:
+        context["sidebar"]["server_logs"] = reverse(
+            DashboardReverseNames.namespace,
+            DashboardLogsReverseNames.namespace,
+            DashboardLogsReverseNames.terminal_emulator_view,
+        )
+    return context
 
 
 def sidebar(request: "HttpRequest") -> dict[str, Any]:
