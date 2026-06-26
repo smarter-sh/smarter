@@ -193,6 +193,12 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             msg = f"{module_prefix}.update_kubeconfig() {self.formatted_text_red('Failed to update kubeconfig')}: {e}"
             logger.error(msg)
             return False
+        # pylint: disable=broad-except
+        except Exception as e:
+            self._configured = False
+            msg = f"{module_prefix}.update_kubeconfig() {self.formatted_text_red('Unexpected error while updating kubeconfig')}: {e}"
+            logger.exception(msg)
+            return False
 
     def apply_manifest(self, manifest: str):
         """
@@ -539,6 +545,10 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         except subprocess.CalledProcessError as error:
             logger.error("Failed to delete ingress resource: %s", error)
             return False
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.exception("Unexpected error while deleting ingress resource: %s", e)
+            return False
         return True
 
     def delete_certificate(self, certificate_name: str, namespace: str) -> bool:
@@ -570,6 +580,10 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         except subprocess.CalledProcessError as error:
             logger.error("Failed to delete certificate resource: %s", error)
             return False
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.exception("Unexpected error while deleting certificate resource: %s", e)
+            return False
         return True
 
     def delete_secret(self, secret_name: str, namespace: str) -> bool:
@@ -600,6 +614,10 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             subprocess.check_call(command)
         except subprocess.CalledProcessError as error:
             logger.error("Failed to delete secret resource: %s", error)
+            return False
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.exception("Unexpected error while deleting secret resource: %s", e)
             return False
         return True
 
