@@ -503,6 +503,7 @@ class SqlPlugin(PluginBase):
                     f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for account {account}."
                 )
 
+            plugin_data_sqlconnection.authorize()
             sql_data["connection"] = plugin_data_sqlconnection
 
         # recast the Pydantic model's parameters field

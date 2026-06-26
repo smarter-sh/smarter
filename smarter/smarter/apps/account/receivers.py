@@ -9,7 +9,14 @@ from django.forms.models import model_to_dict
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-from .models import Account, Charge, DailyBillingRecord, User, UserProfile
+from .models import Account, Charge, User, UserProfile
+from .signals import (
+    cache_invalidate,
+    charge_authorized,
+    charge_declined,
+    new_charge_created,
+    new_user_created,
+)
 from .utils import get_cached_default_account
 
 logger = logging.getSmarterLogger(
@@ -17,6 +24,79 @@ logger = logging.getSmarterLogger(
 )
 
 module_prefix = f"{__name__}"
+
+
+@receiver(new_user_created)
+def new_user_created_receiver(sender, user_profile: UserProfile, **kwargs):
+    """
+    Signal receiver for new_user_created signal.
+
+    - log the creation of a new user profile.
+    """
+    logger.info(
+        "%s New user created: %s, id: %s",
+        logging.formatted_text(f"{module_prefix}.new_user_created_receiver()"),
+        user_profile,
+        user_profile.id,  # type: ignore
+    )
+
+
+@receiver(new_charge_created)
+def new_charge_created_receiver(sender, charge: Charge, **kwargs):
+    """
+    Signal receiver for new_charge_created signal.
+
+    - log the creation of a new charge.
+    """
+    logger.info(
+        "%s New charge created: %s, id: %s",
+        logging.formatted_text(f"{module_prefix}.new_charge_created()"),
+        charge,
+        charge.id,  # type: ignore
+    )
+
+
+@receiver(cache_invalidate)
+def cache_invalidate_receiver(sender, **kwargs):
+    """
+    Signal receiver for cache_invalidate signal.
+
+    - log the cache invalidation event.
+    """
+    logger.info(
+        "%s Cache invalidation triggered.",
+        logging.formatted_text(f"{module_prefix}.cache_invalidate()"),
+    )
+
+
+@receiver(charge_authorized)
+def charge_authorized_receiver(sender, record_locator: str, charge: str, **kwargs):
+    """
+    Signal receiver for charge_authorized signal.
+
+    - log the authorization of a charge.
+    """
+    logger.info(
+        "%s Charge authorized: record_locator: %s, charge: %s",
+        logging.formatted_text(f"{module_prefix}.charge_authorized()"),
+        record_locator,
+        charge,
+    )
+
+
+@receiver(charge_declined)
+def charge_declined_receiver(sender, record_locator: str, charge: str, **kwargs):
+    """
+    Signal receiver for charge_declined signal.
+
+    - log the decline of a charge.
+    """
+    logger.error(
+        "%s Charge declined: record_locator: %s, charge: %s",
+        logging.formatted_text(f"{module_prefix}.charge_declined()"),
+        record_locator,
+        charge,
+    )
 
 
 @receiver(user_logged_in)
@@ -129,17 +209,5 @@ def charge_post_save(sender: Charge, instance: Charge, created, **kwargs):
         "%s Charge post_save: %s, created: %s",
         logging.formatted_text(f"{module_prefix}.charge_post_save()"),
         charge_json,
-        created,
-    )
-
-
-@receiver(post_save, sender=DailyBillingRecord)
-def daily_billing_record_post_save(sender: DailyBillingRecord, instance: DailyBillingRecord, created, **kwargs):
-    """Signal receiver for created/saved of DailyBillingRecord model."""
-    daily_billing_record_json = json.dumps(model_to_dict(instance))
-    logger.info(
-        "%s DailyBillingRecord: %s, created: %s",
-        logging.formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
-        daily_billing_record_json,
         created,
     )

@@ -10,6 +10,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
 )
 from pydantic import SecretStr
 
+from smarter.apps.account.models import charge_authorization
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.functions.calculator import (
     calculator,
@@ -340,7 +341,10 @@ class SmarterChatProviderBase(ChatDbMixin):
         :returns: True if the prompt provider_name is ready, False otherwise.
         :rtype: bool
         """
-        return bool(self.prompt) and bool(self.data) and bool(self.account)
+        retval = bool(self.prompt) and bool(self.data) and bool(self.account)
+        if retval:
+            charge_authorization(self.user_profile.record_locator, self.__class__.__name__)  # type: ignore
+        return retval
 
     @property
     def messages(self) -> Optional[List[Dict[str, str]]]:
@@ -650,7 +654,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         content = f"LLM responded with the following error: {error_message}"
         self.append_message(role=OpenAIMessageKeys.SMARTER_ERROR_KEY, content=content)
 
-    def _insert_charge_by_type(self, charge_type: str) -> None:
+    def _insert_charge_by_type(self, resource_locators: list[str], charge_type: str) -> None:
         """
         Insert a charge record based on the charge type.
 
@@ -664,14 +668,18 @@ class SmarterChatProviderBase(ChatDbMixin):
         :returns: None
         :rtype: None
         """
+        if not resource_locators:
+            raise SmarterValueError(f"{self.formatted_class_name}: resource_locators must be provided")
+        if self.completion_tokens is None or self.prompt_tokens is None or self.total_tokens is None:
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: completion_tokens, prompt_tokens, and total_tokens must be set before inserting a charge."
+            )
         self.db_insert_charge(
-            provider=self.provider,
+            resource_locators=resource_locators,
             charge_type=charge_type,
             completion_tokens=self.completion_tokens,
             prompt_tokens=self.prompt_tokens,
             total_tokens=self.total_tokens,
-            model=self.model,
-            reference=self.reference or "SmarterChatProviderBase._insert_charge_by_type()",
         )
 
 

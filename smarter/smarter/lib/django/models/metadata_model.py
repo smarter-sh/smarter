@@ -131,6 +131,16 @@ class MetaDataModel(TimestampedModel):
         return self
 
     @cached_property
+    def ready(self) -> bool:
+        """
+        Check if the model instance is ready for use.
+
+        :returns: True if the instance is ready, False otherwise.
+        :rtype: bool
+        """
+        return super().ready and self.name is not None
+
+    @cached_property
     def rfc1034_compliant_name(self) -> Optional[str]:
         """
         Returns a URL-friendly name for the llm_client.

@@ -19,9 +19,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
 from openai.types.completion_usage import CompletionUsage
 
 from smarter.apps.account.models import (
-    CHARGE_TYPE_PLUGIN,
-    CHARGE_TYPE_PROMPT_COMPLETION,
-    CHARGE_TYPE_TOOL,
+    ChargeTypes,
     UserProfile,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
@@ -462,7 +460,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.total_tokens = response.usage.total_tokens
         self.reference = response.system_fingerprint
 
-        self._insert_charge_by_type(CHARGE_TYPE_PROMPT_COMPLETION)
+        resource_locators = [self.provider.record_locator, self.prompt.llm_client.record_locator]  # type: ignore[assignment]
+        self._insert_charge_by_type(resource_locators, ChargeTypes.PROMPT_COMPLETION.value)
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
             content=f"{self.provider_name} prompt charges: {self.prompt_tokens} prompt tokens, {self.completion_tokens} completion tokens = {self.total_tokens} total tokens charged.",
@@ -531,7 +530,10 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             request=request,
             response=response,
         )
-        self._insert_charge_by_type(CHARGE_TYPE_TOOL)
+        resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
+        if isinstance(self.prompt, Prompt) and self.prompt.llm_client:
+            resource_locators.append(self.prompt.llm_client.record_locator)
+        self._insert_charge_by_type(resource_locators, ChargeTypes.TOOL.value)
         self.db_insert_chat_tool_call(
             function_name=function_name, function_args=function_args, request=request, response=response
         )
@@ -555,7 +557,13 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             plugin=plugin,
             input_text=self.input_text,
         )
-        self._insert_charge_by_type(CHARGE_TYPE_PLUGIN)
+        resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
+        resource_locators.append(self.prompt.llm_client.record_locator)  # type: ignore[union-attr]
+        resource_locators.append(plugin.plugin_meta.record_locator)  # type: ignore[union-attr]
+        if plugin.plugin_data and hasattr(plugin.plugin_data, "connection"):
+            resource_locators.append(plugin.plugin_data.connection.record_locator)  # type: ignore[union-attr]
+
+        self._insert_charge_by_type(resource_locators, ChargeTypes.PLUGIN.value)
         self.db_insert_chat_plugin_usage(prompt=self.prompt, plugin=plugin, input_text=self.input_text)
 
     def process_tool_call(self, tool_call: ChatCompletionMessageToolCallUnion):

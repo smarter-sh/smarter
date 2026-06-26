@@ -62,6 +62,19 @@ class ConnectionBase(MetaDataWithOwnershipModel):
     )
 
     @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return True
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Returns the class name formatted for logging.

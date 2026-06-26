@@ -1,20 +1,18 @@
-"""URL configuration for the vectorstore app."""
+"""URL configuration for vectorstore app."""
 
-import logging
+from django.urls import path, re_path
 
-from django.urls import path
-
-from smarter.apps.vectorstore.views import (
-    VectorstoreListView,
-    VectorstoreManifestView,
+from smarter.apps.vectorstore.views.detailview import VectorstoreDetailView
+from smarter.apps.vectorstore.views.listview.api import (
+    VectorstoreListApiCloneView,
+    VectorstoreListApiDeleteView,
+    VectorstoreListApiRenameView,
+    VectorstoreListApiView,
 )
-from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import to_snake_case
+from smarter.apps.vectorstore.views.listview.view import VectorstoreListView
+from smarter.common.utils.conversion import to_snake_case
 
 from .const import namespace
-
-logger = logging.getLogger(__name__)
 
 app_name = namespace
 
@@ -23,36 +21,47 @@ class VectorstoreReverseNames:
     """
     Holds named URL patterns for the vectorstore app.
 
-    This class provides constants for all named URL patterns used in the vectorstore views.
-    The names follow the convention: 'vectorstore_<view_name>'.
-    These are referenced in Django templates as 'reverse' or 'url' tags.
-
-    .. usage-example::
-
-      .. html::
-
-      <a href="{% url 'vectorstore:list_view' %}">Go to Vectorstore List View</a>
+    This class provides constants for all named URL patterns used in the vectorstore app views.
     """
 
     namespace = namespace
 
-    list_view = to_snake_case(VectorstoreListView.__name__)
-    manifest_view = to_snake_case(VectorstoreManifestView.__name__)
+    detailview = to_snake_case(VectorstoreDetailView.__name__)
+
+    listview = to_snake_case(VectorstoreListView.__name__)
+    listview_api = to_snake_case(VectorstoreListApiView.__name__)
+    listview_api_all = to_snake_case(VectorstoreListApiView.__name__) + "_all"
+    listview_api_clone = to_snake_case(VectorstoreListApiCloneView.__name__)
+    listview_api_delete = to_snake_case(VectorstoreListApiDeleteView.__name__)
+    listview_api_rename = to_snake_case(VectorstoreListApiRenameView.__name__)
 
 
-urlpatterns = []
-if smarter_settings.enable_vectorstore:
-    urlpatterns = [
-        path("", VectorstoreListView.as_view(), name=VectorstoreReverseNames.list_view),
-        path(
-            "vectorstores/<str:backend>/<str:name>/manifest/",
-            VectorstoreManifestView.as_view(),
-            name=VectorstoreReverseNames.manifest_view,
-        ),
-    ]
-    logger.info("%s Vectorstore API endpoints enabled.", formatted_text(__name__))
-else:
-    logger.info(
-        "%s Vectorstore API endpoints have been disabled. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
-        formatted_text(__name__),
-    )
+urlpatterns = [
+    path("", VectorstoreListView.as_view(), name=VectorstoreReverseNames.listview),
+    path(
+        "react-integration/api/listview/",
+        VectorstoreListApiView.as_view(),
+        name=VectorstoreReverseNames.listview_api_all,
+    ),
+    re_path(
+        r"^react-integration/api/listview/(?:(?P<ownership_filter>owned|shared|all)/)?$",
+        VectorstoreListApiView.as_view(),
+        name=VectorstoreReverseNames.listview_api,
+    ),
+    path(
+        "react-integration/api/clone/<int:vectorstore_id>/<str:new_name>/",
+        VectorstoreListApiCloneView.as_view(),
+        name=VectorstoreReverseNames.listview_api_clone,
+    ),
+    path(
+        "react-integration/api/delete/<int:vectorstore_id>/",
+        VectorstoreListApiDeleteView.as_view(),
+        name=VectorstoreReverseNames.listview_api_delete,
+    ),
+    path(
+        "react-integration/api/rename/<int:vectorstore_id>/<str:new_name>/",
+        VectorstoreListApiRenameView.as_view(),
+        name=VectorstoreReverseNames.listview_api_rename,
+    ),
+    path("vectors/<str:hashed_id>/", VectorstoreDetailView.as_view(), name=VectorstoreReverseNames.detailview),
+]

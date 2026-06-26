@@ -17,6 +17,7 @@ from smarter.lib.drf.token_authentication import (
 )
 
 from .models import Account, User, UserProfile
+from .models.budget import charge_authorization
 from .serializers import (
     AccountMiniSerializer,
     UserMiniSerializer,
@@ -793,6 +794,8 @@ class AccountMixin(SmarterHelperMixin):
                     self._am_formatted_class_name,
                 )
                 self._account = self.user_profile.cached_account
+            charge_authorization(self.user_profile.record_locator, self.__class__.__name__)
+            charge_authorization(self.user_profile.account.record_locator, self.__class__.__name__)
             self._am_ready = True
             self._am_log_ready_status()
             return self._am_ready
@@ -872,6 +875,21 @@ class AccountMixin(SmarterHelperMixin):
             self._am_formatted_class_name,
             mask_string(api_token.decode()),
         )
+        if self.is_authenticated:
+            logger.debug(
+                "%s.authenticate(): user %s is already authenticated with account %s. Skipping authentication.",
+                self._am_formatted_class_name,
+                self.user,
+                self.account,
+            )
+            return True
+        if not isinstance(api_token, bytes):
+            logger.warning(
+                "%s.authenticate(): invalid api_token type: %s. Expected bytes.",
+                self._am_formatted_class_name,
+                type(api_token),
+            )
+            return False
         try:
             user, _ = SmarterTokenAuthentication().authenticate_credentials(api_token)
             self._user = user

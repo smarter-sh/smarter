@@ -13,6 +13,7 @@ import openai
 from openai.types.chat.chat_completion import ChatCompletion
 from rest_framework.request import Request
 
+from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.prompt.signals import (
     chat_request,
@@ -86,6 +87,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         data: dict[str, Any],
         **kwargs,
     ):
+        charge_authorization(user_profile.record_locator, self.__class__.__name__)
         logger_prefix = formatted_text(f"{__name__}.{self.formatted_class_name}.handler()")
         response: Optional[ChatCompletion] = None
         provider: Optional[Provider] = None

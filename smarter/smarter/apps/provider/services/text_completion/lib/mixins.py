@@ -7,7 +7,8 @@ from django.db.models import Sum
 from django.db.models.query import QuerySet
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Charge
+from smarter.apps.account.models import Charge, UserProfile
+from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.account.tasks import create_charge
 from smarter.apps.prompt.models import (
     Prompt,
@@ -700,7 +701,14 @@ class ChatDbMixin(AccountMixin):
         input_text = kwargs.get("input_text", None)
         create_prompt_plugin_usage.delay(chat_id=chat_id, plugin_id=plugin_id, input_text=input_text)
 
-    def db_insert_charge(self, provider, charge_type, completion_tokens, prompt_tokens, total_tokens, model, reference):
+    def db_insert_charge(
+        self,
+        resource_locators: list[str],
+        charge_type: str,
+        completion_tokens: int,
+        prompt_tokens: int,
+        total_tokens: int,
+    ):
         """
         Insert a new charge record for the current account and prompt session.
 
@@ -708,8 +716,8 @@ class ChatDbMixin(AccountMixin):
 
         Parameters
         ----------
-        provider : str
-            The name of the provider (e.g., "openai", "anthropic").
+        resource_locators : list[str]
+            A list of resource locators associated with the charge (e.g., provider, user profile).
         charge_type : str
             The type of charge (e.g., "completion", "plugin").
         completion_tokens : int
@@ -733,7 +741,7 @@ class ChatDbMixin(AccountMixin):
         .. code-block:: python
 
             provider.db_insert_charge(
-                provider="openai",
+                resource_locators=["provider-xyz", "user-profile-abc"],
                 charge_type="completion",
                 completion_tokens=42,
                 prompt_tokens=58,
@@ -742,26 +750,25 @@ class ChatDbMixin(AccountMixin):
                 reference="req-12345"
             )
         """
-        if not self.account:
+        if not isinstance(self.user_profile, UserProfile):
             raise SmarterValueError("Account is required to create a charge record.")
+        if not resource_locators:
+            raise SmarterValueError("Resource locators are required to create a charge record.")
         if not self.prompt:
             raise SmarterValueError("Prompt is required to create a charge record.")
-        if not self.provider:
-            raise SmarterValueError("Provider is required to create a charge record.")
-        if not self.user:
-            logger.warning("Creating a charge record with no User.")
 
-        create_charge.delay(
-            user_profile_id=self.user_profile.id if self.user_profile else None,  # type: ignore
-            session_key=self.prompt.session_key,
-            provider_id=provider.id,  # type: ignore
-            charge_type=charge_type,
-            prompt_tokens=prompt_tokens,
-            completion_tokens=completion_tokens,
-            total_tokens=total_tokens,
-            model=model,
-            reference=reference,
-        )
+        resource_locators.append(self.user_profile.record_locator)
+        resource_locators.append(self.user_profile.account.record_locator)
+
+        for resource_locator in resource_locators:
+            create_charge.delay(
+                resource_locator=resource_locator,
+                charge_type=charge_type,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                total_tokens=total_tokens,
+            )
+        charge_authorization(resource_locators, charge_type)  # type: ignore
 
 
 __all__ = ["ChatDbMixin"]

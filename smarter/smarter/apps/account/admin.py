@@ -22,8 +22,11 @@ from smarter.lib import logging
 from .models import (
     Account,
     AccountContact,
+    AggregatedCharges,
+    Budget,
     Charge,
-    DailyBillingRecord,
+    ResourceConstraint,
+    ResourceLock,
     UserProfile,
 )
 
@@ -188,7 +191,66 @@ class AccountContactAdmin(SmarterStaffOnlyModelAdmin):
         )
 
 
-# @admin.register(Charge)
+class BudgetAdmin(SmarterSuperUserOnlyModelAdmin):
+    """Budget model admin."""
+
+    model = Budget
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = ("name", "duration", "periodic_limit", "absolute_limit")
+
+    def get_queryset(self, request: HttpRequest):
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        return smarter_filter_queryset_for_user_profile(
+            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
+            qs=qs,
+        )
+
+
+class ResourceConstraintAdmin(SmarterSuperUserOnlyModelAdmin):
+    """ResourceConstraint model admin."""
+
+    model = ResourceConstraint
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = ("resource_locator", "duration", "periodic_limit", "absolute_limit")
+
+    def get_queryset(self, request: HttpRequest):
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        return smarter_filter_queryset_for_user_profile(
+            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
+            qs=qs,
+        )
+
+
+class ResourceLockAdmin(SmarterSuperUserOnlyModelAdmin):
+    """ResourceLock model admin."""
+
+    model = ResourceLock
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = ("resource_locator", "resource_constraint", "expiration_date")
+
+    def get_queryset(self, request: HttpRequest):
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        return smarter_filter_queryset_for_user_profile(
+            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
+            qs=qs,
+        )
+
+
 class ChargeAdmin(SmarterCustomerModelAdmin):
     """Charge model admin."""
 
@@ -198,12 +260,21 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
         # pylint: disable=protected-access
         return [field.name for field in self.model._meta.fields]
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     list_display = (
         "created_at",
-        "user_profile",
-        "provider",
-        "model",
+        "resource_locator",
         "charge_type",
+        "prompt_tokens",
+        "completion_tokens",
         "total_tokens",
     )
 
@@ -216,31 +287,46 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
         )
 
 
-# @admin.register(DailyBillingRecord)
-class DailyBillingRecordAdmin(SmarterCustomerModelAdmin):
-    """DailyBillingRecord model admin."""
+class AggregatedChargesAdmin(SmarterCustomerModelAdmin):
+    """AggregatedCharges model admin."""
 
-    model = DailyBillingRecord
+    model = AggregatedCharges
 
-    def get_readonly_fields(self, request: HttpRequest, obj=None):
+    def get_readonly_fields(self, request, obj=None):
+        # pylint: disable=protected-access
         return [field.name for field in self.model._meta.fields]
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     list_display = (
-        "created_at",
-        "account",
-        "user",
-        "provider",
-        "model",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "resource_locator",
+        "records",
         "charge_type",
+        "prompt_tokens",
+        "completion_tokens",
         "total_tokens",
+        "total_cost",
     )
 
-    def get_queryset(self, request: HttpRequest):
+    def get_queryset(self, request):
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         return smarter_filter_queryset_for_user_profile(
             user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
             qs=qs,
+            account_filter="account",
+            user_profile_filter=None,
         )
 
 
@@ -318,7 +404,7 @@ class RestrictedUserAdmin(UserAdmin):
         return False
 
     def has_module_permission(self, request: HttpRequest) -> bool:
-        return smarter_is_staff(request)
+        return smarter_is_staff(request)  # type: ignore
 
     def profile_account(self, obj) -> Optional[Account]:
         """Custom method to display the account associated with the user's profile."""
@@ -333,7 +419,7 @@ class RestrictedUserAdmin(UserAdmin):
         """Customize the queryset based on whether the user is_staff or is_superuser."""
         qs = super().get_queryset(request)
         user = get_resolved_user(request.user)
-        if not smarter_is_staff(request):
+        if not smarter_is_staff(request):  # type: ignore
             return qs.none()
         if not user:
             return qs.none()
@@ -390,7 +476,10 @@ class RestrictedUserProfileAdmin(SmarterSuperUserOnlyModelAdmin):
 
 smarter_restricted_admin_site.register(Account, AccountAdmin)
 smarter_restricted_admin_site.register(AccountContact, AccountContactAdmin)
+smarter_restricted_admin_site.register(Budget, BudgetAdmin)
+smarter_restricted_admin_site.register(ResourceConstraint, ResourceConstraintAdmin)
+smarter_restricted_admin_site.register(ResourceLock, ResourceLockAdmin)
 smarter_restricted_admin_site.register(Charge, ChargeAdmin)
-smarter_restricted_admin_site.register(DailyBillingRecord, DailyBillingRecordAdmin)
+smarter_restricted_admin_site.register(AggregatedCharges, AggregatedChargesAdmin)
 smarter_restricted_admin_site.register(UserProfile, RestrictedUserProfileAdmin)
 smarter_restricted_admin_site.register(User, RestrictedUserAdmin)

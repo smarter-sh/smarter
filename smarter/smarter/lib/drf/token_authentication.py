@@ -28,6 +28,7 @@ from .signals import (
 CACHE_TIMEOUT = 60 * 60 * 24  # 24 hours
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)

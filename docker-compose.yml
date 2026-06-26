@@ -130,7 +130,7 @@ services:
         DOCKER_REACT_REMOTE_CACHE_BUSTER: ${DOCKER_REACT_REMOTE_CACHE_BUSTER}
         DOCKER_REACT_REMOTE_CDN_URL: ${DOCKER_REACT_REMOTE_CDN_URL}
     image: smarter
-    command: celery -A smarter.workers.celerybeat.app beat --loglevel=info
+    command: celery -A smarter.workers.celerybeat beat --loglevel=info
     depends_on:
       - smarter-mysql
       - smarter-redis
@@ -146,7 +146,7 @@ services:
     #     target: /smarter
     #     consistency: cached
     healthcheck:
-      test: ["CMD", "celery", "-A", "smarter.workers.celerybeat.app", "inspect", "ping"]
+      test: ["CMD", "celery", "-A", "smarter.workers.celerybeat", "inspect", "ping"]
       interval: 30s
       timeout: 30s
       retries: 3

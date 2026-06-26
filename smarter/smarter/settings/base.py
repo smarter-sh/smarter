@@ -144,6 +144,15 @@ Prompt frontends pass the Smarter API key in the 'x-api-key' header.
 See `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
+# Smarter React common custom headers. See smarter/react/packages/smarter-common/src/lib/django.tsx
+CORS_ALLOW_HEADERS += [
+    "x-smarter-client",
+    "x-smarter-clientversion",
+    "x-smarter-clienttype",
+    "x-smarter-requestid",
+    "x-smarter-capabilities",
+]
+
 CORS_ALLOW_CREDENTIALS = True
 """
 A boolean that determines whether to allow cookies to be included in cross-site HTTP requests.
@@ -415,7 +424,7 @@ See:
 - https://docs.djangoproject.com/en/5.0/ref/settings/#session-cookie-path
 """
 
-SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = False
 """
 A boolean that determines whether the session cookie should be marked as "HttpOnly".
 

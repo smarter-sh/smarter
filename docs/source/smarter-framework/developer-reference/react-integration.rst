@@ -562,6 +562,31 @@ throughout this guide:
   applications can be developed, versioned, tested, and rebuilt independently
   while still integrating seamlessly into Django’s deployment pipeline.
 
+CORS
+~~~~~~
+
+@smarter/common includes a set of custom HTTP headers in all API requests. These
+are included in smarter.settings.base.py as part of the CORS_ALLOW_HEADERS list.
+Note that CORS is switch-enabled, meaning that this switch must be enabled
+in order for the any React component to be able to make API requests to the
+Django backend.
+
+.. code-block:: typescript
+
+    const requestHeaders = {
+    Accept: applicationJson,
+    Authorization: `Bearer ${djangoSessionTokenValue}`,
+    "Content-Type": applicationJson,
+    "X-CSRFToken": csrftokenValue,
+    "X-Smarter-Client": sessionContext.smarterClient,
+    "X-Smarter-ClientVersion": sessionContext.smarterClientVersion,
+    "X-Smarter-ClientType": "react",
+    "X-Smarter-RequestId": sessionContext.smarterRequestId,
+    "X-Smarter-Capabilities": capabilities,
+  };
+
+
+
 Operational Considerations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -615,10 +640,11 @@ pipelines and advanced React development workflows.
   :caption: Technical Reference
 
   react-integration/dashboard
+  react-integration/manifest-dropzone
   react-integration/prompt-list
-  react-integration/terminal-application
   react-integration/prompt-passthrough
   react-integration/smarter-chat
+  react-integration/terminal-application
   lib/django/templatetags
 
 .. toctree::
