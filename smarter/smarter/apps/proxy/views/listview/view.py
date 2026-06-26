@@ -20,9 +20,9 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 class ProxyListView(SmarterAuthenticatedNeverCachedWebView):
     """
-    Render the secret list view for the Smarter Workbench web console.
+    Render the proxy list view for the Smarter Workbench web console.
 
-    This view displays all secrets available to the authenticated user as cards, providing a quick overview and access to secret details.
+    This view displays all proxies available to the authenticated user as cards, providing a quick overview and access to proxy details.
 
     :param request: Django HTTP request object.
     :type request: ASGIRequest
@@ -31,12 +31,12 @@ class ProxyListView(SmarterAuthenticatedNeverCachedWebView):
     :param kwargs: Additional keyword arguments.
     :type kwargs: dict
 
-    :returns: Rendered HTML page with a card for each secret, or a 404 error page if the user is not authenticated.
+    :returns: Rendered HTML page with a card for each proxy, or a 404 error page if the user is not authenticated.
     :rtype: HttpResponse
     """
 
-    template_path = "react/secret-list.html"
-    secrets: list[Proxy]
+    template_path = "react/proxy-list.html"
+    proxies: list[Proxy]
 
     @property
     def formatted_class_name(self) -> str:
@@ -49,12 +49,12 @@ class ProxyListView(SmarterAuthenticatedNeverCachedWebView):
         from smarter.apps.proxy.urls import ProxyReverseNames
 
         context = {
-            "secret_list": {
-                "root_id": "smarter-secret-list-root",
+            "proxy_list": {
+                "root_id": "smarter-proxy-list-root",
                 "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
                 "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
                 "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "secret_list_api_url": reverse(ProxyReverseNames.namespace, ProxyReverseNames.listview_api_all),
+                "proxy_list_api_url": reverse(ProxyReverseNames.namespace, ProxyReverseNames.listview_api_all),
                 "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                 "smarter_request_id": self.generate_smarter_request_id(),
             }

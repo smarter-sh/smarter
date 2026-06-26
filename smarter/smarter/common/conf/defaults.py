@@ -164,7 +164,7 @@ class SettingsDefaults:
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
     ENABLE_VECTORSTORE: bool = bool_environment_variable("ENABLE_VECTORSTORE", True)
-    ENABLE_DASHBOARD_APPLY: bool = bool_environment_variable("ENABLE_DASHBOARD_APPLY", True)
+    ENABLE_MANIFEST_DROPZONE: bool = bool_environment_variable("ENABLE_MANIFEST_DROPZONE", True)
     ENABLE_DASHBOARD_SERVER_LOGS: bool = bool_environment_variable("ENABLE_DASHBOARD_SERVER_LOGS", True)
     ENABLE_DASHBOARD_PASSTHROUGH_PROMPT: bool = bool_environment_variable("ENABLE_DASHBOARD_PASSTHROUGH_PROMPT", True)
     ENABLE_PROXY: bool = bool_environment_variable("ENABLE_PROXY", True)
@@ -220,6 +220,7 @@ class SettingsDefaults:
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]
     LOCAL_HOSTS += [host + f":{SMARTER_LOCAL_PORT}" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS.append("localhost:5173")  # for react dev server
     LOCAL_HOSTS.append("testserver")
 
     LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO

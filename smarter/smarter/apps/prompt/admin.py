@@ -57,8 +57,8 @@ class ChatHistoryAdmin(SmarterCustomerModelAdmin):
         qs = super().get_queryset(request)
         if not isinstance(user, User):
             return qs.none()
-        chats = Prompt.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
-        return PromptHistory.objects.filter(chat__in=chats)
+        prompts = Prompt.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return PromptHistory.objects.filter(prompt__in=prompts)
 
 
 class ChatPluginUsageAdmin(SmarterCustomerModelAdmin):
@@ -77,8 +77,8 @@ class ChatPluginUsageAdmin(SmarterCustomerModelAdmin):
         qs = super().get_queryset(request)
         if not isinstance(user, User):
             return qs.none()
-        chats = Prompt.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
-        return PromptPluginUsage.objects.filter(chat__in=chats)
+        prompts = Prompt.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return PromptPluginUsage.objects.filter(prompt__in=prompts)
 
 
 class ChatToolCallHistoryAdmin(SmarterCustomerModelAdmin):
@@ -97,8 +97,8 @@ class ChatToolCallHistoryAdmin(SmarterCustomerModelAdmin):
         qs = super().get_queryset(request)
         if not isinstance(user, User):
             return qs.none()
-        chats = Prompt.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
-        return PromptToolCall.objects.filter(chat__in=chats)
+        prompts = Prompt.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
+        return PromptToolCall.objects.filter(prompt__in=prompts)
 
 
 smarter_restricted_admin_site.register(Prompt, ChatAdmin)

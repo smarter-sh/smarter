@@ -15,6 +15,7 @@ from smarter.apps.dashboard.views.views.api import urls as dashboard_api_urls
 from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
 from smarter.apps.dashboard.views.views.api.service_health import ServiceHealthView
 from smarter.apps.plugin import urls as plugin_urls
+from smarter.common.conf import smarter_settings
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
@@ -45,3 +46,14 @@ urlpatterns = [
     path("notifications/", NotificationsView.as_view(), name=DashboardReverseNames.notifications),
     path("email-added/", EmailAdded.as_view(), name=DashboardReverseNames.email_added),
 ]
+
+if smarter_settings.enable_dropzone_manifest_apply:
+    logger.info(
+        "%s manifest drop zone enabled. Set env ENABLE_MANIFEST_DROPZONE=false to disable.",
+        logging.formatted_text(__name__),
+    )
+else:
+    logger.info(
+        "%s manifest drop zone disabled. Set env ENABLE_MANIFEST_DROPZONE=true to enable.",
+        logging.formatted_text(__name__),
+    )

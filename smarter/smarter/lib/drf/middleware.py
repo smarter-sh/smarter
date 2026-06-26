@@ -255,6 +255,10 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
     @staticmethod
     def authenticate_request(request: Request):
 
+        logger.debug(
+            "%s.authenticate_request() called", logging.formatted_text(SmarterTokenAuthenticationMiddleware.__name__)
+        )
+
         request.auth = SmarterTokenAuthentication()
 
         user_auth_tuple = request.auth.authenticate(request)

@@ -1,6 +1,4 @@
-"""
-Models for the vectorstore app.
-"""
+"""Models for the vectorstore app."""
 
 import logging
 from typing import Optional
@@ -32,9 +30,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class VectorstoreBackendKind(models.TextChoices):
-    """
-    Enum representing the supported backend kinds for the vector database.
-    """
+    """Enum representing the supported backend kinds for the vector database."""
 
     QDRANT = (SmarterVectorStoreBackends.QDRANT.value, SmarterVectorStoreBackends.QDRANT.value)
     WEAVIATE = (SmarterVectorStoreBackends.WEAVIATE.value, SmarterVectorStoreBackends.WEAVIATE.value)
@@ -42,9 +38,7 @@ class VectorstoreBackendKind(models.TextChoices):
 
 
 class VectorstoreStatus(models.TextChoices):
-    """
-    Enum representing the possible statuses of the vector database.
-    """
+    """Enum representing the possible statuses of the vector database."""
 
     PROVISIONING = ("provisioning", "Provisioning")
     READY = ("ready", "Ready")
@@ -52,17 +46,15 @@ class VectorstoreStatus(models.TextChoices):
     DELETING = ("deleting", "Deleting")
 
 
-class VectorestoreMeta(MetaDataWithOwnershipModel):
-    """
-    Model representing a vector database.
-    """
+class VectorstoreMeta(MetaDataWithOwnershipModel):
+    """Model representing a vector database."""
 
     # pylint: disable=C0115
     class Meta:
         verbose_name = "Vectorstore Metadata"
         verbose_name_plural = "Vectorstore Metadata"
 
-    objects: MetaDataWithOwnershipModelManager["VectorestoreMeta"] = MetaDataWithOwnershipModelManager()
+    objects: MetaDataWithOwnershipModelManager["VectorstoreMeta"] = MetaDataWithOwnershipModelManager()
 
     connection = models.ForeignKey(
         ApiConnection,
@@ -94,22 +86,37 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
         null=False,
     )
 
-    @classmethod
-    def get_cached_object(cls, *args, backend: Optional[str] = None, **kwargs) -> "VectorestoreMeta":
+    @property
+    def is_billable_resource(self) -> bool:
         """
-        Retrieve a cached VectorestoreMeta object based on the provided name and backend.
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return True
+
+    @classmethod
+    def get_cached_object(cls, *args, backend: Optional[str] = None, **kwargs) -> "VectorstoreMeta":
+        """
+        Retrieve a cached VectorstoreMeta object based on the provided name and backend.
+
         This method is used to optimize backend retrieval by caching database objects.
 
         Args:
             backend (str): The backend kind of the vector database.
         Returns:
-            VectorestoreMeta: The cached VectorestoreMeta object matching the name and backend.
+            VectorstoreMeta: The cached VectorstoreMeta object matching the name and backend.
         """
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_name_and_backend(name: str, backend: str) -> "VectorestoreMeta":
+        def _get_object_by_name_and_backend(name: str, backend: str) -> "VectorstoreMeta":
             """
             Internal method to retrieve a model instance by primary key with caching.
+
             Prefetches related tags and selects related user profile, account, and
             user for optimal access. Handles most common SAM pk retrieval scenarios.
 
@@ -117,7 +124,7 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
             :param backend: The backend kind of the vector database.
 
             :returns: The model instance if found, otherwise None.
-            :rtype: Optional["VectorestoreMeta"]
+            :rtype: Optional["VectorstoreMeta"]
             """
             try:
                 retval = (
@@ -127,7 +134,7 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
                 )
                 logger.debug(
                     "%s._get_object_by_pk() fetched %s - %s",
-                    formatted_text(VectorestoreMeta.__name__ + ".get_cached_object()"),
+                    formatted_text(VectorstoreMeta.__name__ + ".get_cached_object()"),
                     type(retval).__name__,
                     str(retval),
                 )
@@ -135,7 +142,7 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
             except cls.DoesNotExist:
                 logger.debug(
                     "%s._get_object_by_name_and_backend() no %s object found for name: %s and backend: %s",
-                    formatted_text(VectorestoreMeta.__name__ + ".get_cached_object()"),
+                    formatted_text(VectorstoreMeta.__name__ + ".get_cached_object()"),
                     cls.__name__,
                     name,
                     backend,
@@ -152,9 +159,9 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
         return super().get_cached_object(*args, **kwargs)  # type: ignore
 
     @classmethod
-    def get_cached_vectorstores_for_user(cls, user: User, invalidate: bool = False) -> list["VectorestoreMeta"]:
+    def get_cached_vectorstores_for_user(cls, user: User, invalidate: bool = False) -> list["VectorstoreMeta"]:
         """
-        Return a list of all instances of :class:`VectorestoreMeta`.
+        Return a list of all instances of :class:`VectorstoreMeta`.
 
         This method retrieves all vector store objects associated with the user's account.
         It is useful for enumerating all available vector stores for a given user.
@@ -162,20 +169,20 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
         :param user: The user whose vector stores should be retrieved.
         :type user: User
         :return: A list of all vector store instances for the user's account.
-        :rtype: list[VectorestoreMeta]
+        :rtype: list[VectorstoreMeta]
 
         **Example:**
 
         .. code-block:: python
 
-            vectorstores = VectorestoreMeta.get_cached_vectorstores_for_user(user)
-            # returns [<VectorestoreMeta ...>, <VectorestoreMeta ...>, ...]
+            vectorstores = VectorstoreMeta.get_cached_vectorstores_for_user(user)
+            # returns [<VectorstoreMeta ...>, <VectorstoreMeta ...>, ...]
 
         See also:
 
         - :func:`smarter.apps.account.utils.get_cached_account_for_user`
         """
-        logger_prefix = formatted_text(f"{__name__}.{VectorestoreMeta.__name__}.get_cached_vectorstores_for_user()")
+        logger_prefix = formatted_text(f"{__name__}.{VectorstoreMeta.__name__}.get_cached_vectorstores_for_user()")
         logger.debug("%s called with user: %s and invalidate: %s", logger_prefix, user, invalidate)
 
         if user is None:
@@ -183,13 +190,13 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
             return []
 
         @cache_results()
-        def get_cached_vectorstores_for_user_id(user_id: int) -> list["VectorestoreMeta"]:
+        def get_cached_vectorstores_for_user_id(user_id: int) -> list["VectorstoreMeta"]:
             logger.debug(
                 "%s.get_cached_vectorstores_for_user_id() fetching vector stores for user: %s",
                 logger_prefix,
                 user,
             )
-            retval = VectorestoreMeta.objects.with_read_permission_for(user)
+            retval = VectorstoreMeta.objects.with_read_permission_for(user)
             return list(retval)
 
         if invalidate:
@@ -200,4 +207,4 @@ class VectorestoreMeta(MetaDataWithOwnershipModel):
         return f"{self.id}: {self.name}({self.backend}) - {self.user_profile}"  # type: ignore
 
 
-__all__ = ["VectorestoreMeta", "VectorstoreBackendKind", "VectorstoreStatus"]
+__all__ = ["VectorstoreMeta", "VectorstoreBackendKind", "VectorstoreStatus"]

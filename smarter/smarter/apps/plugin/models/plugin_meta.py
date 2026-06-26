@@ -108,6 +108,19 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             raise SmarterValueError("PluginMeta.save(): name is required after save.")
 
     @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return True
+
+    @property
     def kind(self) -> SAMKinds:
         """
         Return the kind of the plugin based on its class.
@@ -192,7 +205,10 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :return: True if the plugin is ready, False otherwise.
         :rtype: bool
         """
-        return super().ready  # type: ignore[return-value]
+        retval = super().ready  # type: ignore[return-value]
+        if retval and self.is_billable_resource:
+            self.authorize()
+        return retval
 
     # pylint: disable=W0221
     @classmethod

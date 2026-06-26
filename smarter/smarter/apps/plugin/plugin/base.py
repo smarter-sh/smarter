@@ -512,7 +512,6 @@ class PluginBase(ABC, AccountMixin):
 
             foo = MyPlugin()
             assert foo.plugin_data_class == MyPluginData
-
         """
         raise NotImplementedError()
 
@@ -639,6 +638,7 @@ class PluginBase(ABC, AccountMixin):
     def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
         """
         Return an example manifest for the plugin.
+
         Must be implemented by subclasses.
 
         :param kwargs: Optional keyword arguments to customize the example manifest.
@@ -664,8 +664,7 @@ class PluginBase(ABC, AccountMixin):
     @property
     def metadata_class(self) -> Optional[str]:
         """
-        Return the metadata class, PluginMeta.plugin_class
-
+        Return the metadata class, PluginMeta.plugin_class.
 
         :return: The metadata class name.
         :rtype: Optional[str]
@@ -820,14 +819,27 @@ class PluginBase(ABC, AccountMixin):
             This property will attempt to load the PluginMeta from the database
             if it has not already been set and if the UserProfile and manifest
             are available.
-
         """
         if self._plugin_meta:
             return self._plugin_meta
         if self.user_profile and self._manifest:
-            self._plugin_meta = PluginMeta.get_cached_object(
-                invalidate=True, account=self.user_profile.cached_account, name=self.manifest.metadata.name
-            )
+            try:
+                self._plugin_meta = PluginMeta.get_cached_object(
+                    invalidate=True, account=self.user_profile.cached_account, name=self.manifest.metadata.name
+                )
+                logger.debug(
+                    "%s.plugin_meta() PluginMeta found for plugin %s %s.",
+                    self.formatted_pluginbase_class_name,
+                    self.manifest.metadata.name,
+                    self.user_profile,
+                )
+            except PluginMeta.DoesNotExist:
+                logger.debug(
+                    "%s.plugin_meta() PluginMeta does not exist for plugin %s %s.",
+                    self.formatted_pluginbase_class_name,
+                    self.manifest.metadata.name,
+                    self.user_profile,
+                )
 
         return self._plugin_meta
 
@@ -1011,7 +1023,6 @@ class PluginBase(ABC, AccountMixin):
 
         :return: The plugin prompt definition as a dictionary.
         :rtype: Optional[dict[str, Any]]
-
         """
         if not self._plugin_prompt_django_model:
             if self._manifest:
@@ -1058,7 +1069,6 @@ class PluginBase(ABC, AccountMixin):
         :rtype: bool
 
         :raises SmarterPluginError: If the UserProfile is not set or if any of the plugin components are not of the expected type.
-
         """
 
         if not self.user_profile:
@@ -1210,7 +1220,6 @@ class PluginBase(ABC, AccountMixin):
 
             This method requires the plugin to be ready. If the plugin is not ready, it will return False.
             The method also updates the internal ``_selected`` state when a match is found.
-
         """
 
         if not self.ready:
@@ -1338,6 +1347,7 @@ class PluginBase(ABC, AccountMixin):
     def function_parameters(self) -> Optional[dict[str, Any]]:
         """
         Fetch the function parameters from the Django model.
+
         Return the function parameters in a dictionary
         formatted according to the OpenAI function calling schema.
 
@@ -1698,7 +1708,6 @@ class PluginBase(ABC, AccountMixin):
         :type default: Optional[Any]
         :return: A dictionary representing the parameter.
         :rtype: dict[str, Any]
-
         """
         retval = {
             "name": name,

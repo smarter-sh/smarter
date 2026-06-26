@@ -1,7 +1,5 @@
 # pylint: disable=import-outside-toplevel
-"""
-vectorstore backends.
-"""
+"""Vectorstore backends."""
 
 import logging
 from typing import Dict, Optional, Type
@@ -11,7 +9,7 @@ from langchain_core.embeddings.embeddings import Embeddings
 from langchain_core.vectorstores import VectorStore
 
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
-from smarter.apps.vectorstore.models import VectorestoreMeta
+from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -70,7 +68,6 @@ class Backends:
     >>> broker_cls = Backends.get_backend("Account")
     >>> backend = broker_cls()
     >>> backend.describe(...)
-
     """
 
     _backends: Dict[str, Type[SmarterVectorstoreBackend]] = {
@@ -92,7 +89,7 @@ class Backends:
         if backend not in SmarterVectorStoreBackends.all():
             raise SmarterValueError(f"Unsupported backend backend: {backend}")
         BackendClass = cls._backends[backend]
-        db = VectorestoreMeta.get_cached_object(name=name, backend=backend)
+        db = VectorstoreMeta.get_cached_object(name=name, backend=backend)
         return BackendClass(db, embeddings=embeddings, vector_store=vector_store)  # type: ignore
 
     @classmethod
@@ -103,7 +100,9 @@ class Backends:
     @classmethod
     def get_backend_kind(cls, backend: str) -> Optional[str]:
         """
-        Case insensitive backend backend getter. Returns the original SmarterVectorStoreBackends
+        Case insensitive backend backend getter.
+
+        Returns the original SmarterVectorStoreBackends
         key string from cls._backends for the given backend.
         """
         if not backend:
@@ -131,7 +130,9 @@ class Backends:
     @classmethod
     def from_url(cls, url) -> Optional[str]:
         """
-        Returns the backend of backend from the given URL. This is used to
+        Returns the backend of backend from the given URL.
+
+        This is used to
         determine the backend to use when the backend is not provided in the
         request.
 

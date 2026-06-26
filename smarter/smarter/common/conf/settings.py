@@ -1922,8 +1922,8 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"email_admin is not a valid EmailStr: {v}")
         return v
 
-    enable_dashboard_apply: bool = Field(
-        settings_defaults.ENABLE_DASHBOARD_APPLY,
+    enable_dropzone_manifest_apply: bool = Field(
+        settings_defaults.ENABLE_MANIFEST_DROPZONE,
         description="True if the file drop zone feature is enabled based on the current environment.",
         title="Enable File Drop Zone",
     )
@@ -1933,23 +1933,23 @@ class Settings(BaseSettings):
         bool: True if the file drop zone is enabled, False otherwise.
     """
 
-    @before_field_validator("enable_dashboard_apply")
+    @before_field_validator("enable_dropzone_manifest_apply")
     def parse_enable_dashboard_apply(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'enable_dashboard_apply' field.
+        """Validates the 'enable_dropzone_manifest_apply' field.
 
         Args:
-            v (Optional[Union[bool, str]]): the enable_dashboard_apply value to validate
+            v (Optional[Union[bool, str]]): the enable_dropzone_manifest_apply value to validate
         Returns:
-            bool: The validated enable_dashboard_apply.
+            bool: The validated enable_dropzone_manifest_apply.
         """
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.ENABLE_DASHBOARD_APPLY
+            return settings_defaults.ENABLE_MANIFEST_DROPZONE
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate enable_dashboard_apply: {v}")
+        raise SmarterConfigurationError(f"could not validate enable_dropzone_manifest_apply: {v}")
 
     enable_vectorstore: bool = Field(
         settings_defaults.ENABLE_VECTORSTORE,

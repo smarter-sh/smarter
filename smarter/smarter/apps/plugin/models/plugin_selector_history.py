@@ -1,11 +1,8 @@
-"""
-PluginSelectorHistory model for tracking plugin selector activations.
-"""
+"""PluginSelectorHistory model for tracking plugin selector activations."""
 
 from django.db import models
 from rest_framework import serializers
 
-from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import json
 from smarter.lib.django.models import (
     TimestampedModel,
@@ -14,7 +11,7 @@ from smarter.lib.django.models import (
 from .plugin_selector import PluginSelector, PluginSelectorSerializer
 
 
-class PluginSelectorHistory(TimestampedModel, SmarterHelperMixin):
+class PluginSelectorHistory(TimestampedModel):
     """
     Stores the history of plugin selector activations for auditing and analytics.
 

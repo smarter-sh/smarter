@@ -8,7 +8,6 @@ from django.conf import settings
 from django.db import migrations, models
 
 import smarter.common.mixins
-import smarter.lib.django.models.timestamped_model
 import smarter.lib.django.validators
 import smarter.lib.json
 
@@ -340,22 +339,6 @@ class Migration(migrations.Migration):
                     models.DateTimeField(auto_now=True, db_index=True, null=True),
                 ),
                 (
-                    "session_key",
-                    models.CharField(blank=True, max_length=255, null=True),
-                ),
-                (
-                    "provider",
-                    models.CharField(
-                        choices=[
-                            ("openai", "OpenAI"),
-                            ("metaai", "Meta AI"),
-                            ("googleai", "Google AI"),
-                        ],
-                        default="openai",
-                        max_length=255,
-                    ),
-                ),
-                (
                     "charge_type",
                     models.CharField(
                         choices=[
@@ -370,18 +353,6 @@ class Migration(migrations.Migration):
                 ("prompt_tokens", models.IntegerField()),
                 ("completion_tokens", models.IntegerField()),
                 ("total_tokens", models.IntegerField()),
-                ("model", models.CharField(max_length=255)),
-                ("reference", models.CharField(max_length=255)),
-                (
-                    "user_profile",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="charge",
-                        to="account.userprofile",
-                    ),
-                ),
             ],
             options={
                 "abstract": False,

@@ -38,9 +38,9 @@ ownership and permission logic. Do not instantiate MetaDataWithOwnershipModel di
 
     class MyResource(MetaDataWithOwnershipModel):
         # Define additional fields here
-
 """
 
+from functools import cached_property
 from typing import Any, Optional, TypeVar, overload
 
 # django stuff
@@ -50,6 +50,7 @@ from django.db.models.expressions import Combinable
 from django.db.models.query import Prefetch
 
 # our stuff
+from smarter.apps.account.models.budget import charge_authorization
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
@@ -68,7 +69,9 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 _MT = TypeVar("_MT", bound="MetaDataWithOwnershipModel")
 """
-Type variable for MetaDataWithOwnershipModel. Used for type hinting in the
+Type variable for MetaDataWithOwnershipModel.
+
+Used for type hinting in the
 custom queryset and manager to ensure methods return the correct model type.
 
 .. seealso::
@@ -87,7 +90,6 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
         - Django: Creating a manager with QuerySet methods <https://docs.djangoproject.com/en/6.0/topics/db/managers/#creating-a-manager-with-queryset-methods>_
         - django-stubs: Custom QuerySets <https://github.com/typeddjango/django-stubs>_
-
     """
 
     def owned_by(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
@@ -114,7 +116,8 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
     def with_read_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
         """
-        Returns a queryset of resources that the authenticated user in the
+        Returns a queryset of resources that the authenticated user in the.
+
         given request has read permission for.
 
         This method supports users with multiple UserProfiles. For each profile,
@@ -221,7 +224,8 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
     def with_ownership_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
         """
-        Returns a queryset of resources that the authenticated user in the
+        Returns a queryset of resources that the authenticated user in the.
+
         given request has full management (ownership) permission for.
 
         This method supports users with multiple UserProfiles. For each profile,
@@ -326,7 +330,8 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
 class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
     """
-    Custom manager for MetaDataWithOwnershipModel that returns a
+    Custom manager for MetaDataWithOwnershipModel that returns a.
+
     SmarterQuerySetWithPermissions to enable permission-based filtering by
     user_profile.
     """
@@ -336,21 +341,15 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
     # to ensure all queries go through the permission-aware queryset.
     # --------------------------------------------------------------------------
     def get_queryset(self) -> SmarterQuerySetWithPermissions[_MT]:
-        """
-        Returns a SmarterQuerySetWithPermissions for the model.
-        """
+        """Returns a SmarterQuerySetWithPermissions for the model."""
         return SmarterQuerySetWithPermissions(self.model, using=self._db)
 
     def filter(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
-        """
-        Returns a SmarterQuerySetWithPermissions with the applied filter.
-        """
+        """Returns a SmarterQuerySetWithPermissions with the applied filter."""
         return self.get_queryset().filter(*args, **kwargs)
 
     def exclude(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
-        """
-        Returns a SmarterQuerySetWithPermissions with the applied exclusion.
-        """
+        """Returns a SmarterQuerySetWithPermissions with the applied exclusion."""
         return self.get_queryset().exclude(*args, **kwargs)
 
     def none(self) -> SmarterQuerySetWithPermissions[_MT]:
@@ -391,9 +390,7 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
     @overload
     def prefetch_related(self, *lookups: str | Prefetch) -> SmarterQuerySetWithPermissions[_MT]: ...
     def prefetch_related(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
-        """
-        Returns a SmarterQuerySetWithPermissions with prefetch_related applied.
-        """
+        """Returns a SmarterQuerySetWithPermissions with prefetch_related applied."""
         return self.get_queryset().prefetch_related(*args, **kwargs)
 
     def annotate(self, *args: Any, **kwargs: Any) -> SmarterQuerySetWithPermissions[_MT]:
@@ -440,7 +437,8 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
 
     def with_read_permission_for(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
         """
-        A custom Smarter pipeline for filtering any MetaDataWithOwnership
+        A custom Smarter pipeline for filtering any MetaDataWithOwnership.
+
         queryset based on the Smarter permissions scheme for the authenticated user in
         the given request.
 
@@ -490,7 +488,8 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
 
 class MetaDataWithOwnershipModel(MetaDataModel):
     """
-    Abstract Django ORM base model that adds Account and
+    Abstract Django ORM base model that adds Account and.
+
     User ownership to a SAM Metadata model.
 
     This model extends `MetaDataModel` to include a foreign key
@@ -516,6 +515,32 @@ class MetaDataWithOwnershipModel(MetaDataModel):
     objects: MetaDataWithOwnershipModelManager = MetaDataWithOwnershipModelManager()
 
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+
+    def authorize(self) -> None:
+        """
+        Authorizes the resource for use by checking if it is ready and if the user profile is valid.
+
+        Raises a :class:`SmarterValueError` if the resource is not ready or if the user profile is invalid.
+        """
+        if not self.is_billable_resource:
+            return None
+        charge_authorization(self.record_locator, self.__class__.__name__)  # type: ignore
+
+    @cached_property
+    def ready(self) -> bool:
+        """
+        Returns True if the resource is ready for use, False otherwise.
+
+        A resource is considered ready if it has been fully initialized and is in a usable state.
+        This property can be overridden in subclasses to implement custom readiness checks.
+
+        :returns: True if the resource is ready, False otherwise.
+        :rtype: bool
+        """
+        retval = super().ready and self.user_profile is not None
+        if retval and self.is_billable_resource:
+            self.authorize()
+        return retval
 
     # pylint: disable=W0221
     @classmethod
@@ -573,17 +598,18 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
-        def _get_object_by_pk(pk: int, class_name: str = cls.__name__) -> Optional["MetaDataWithOwnershipModel"]:
+        def _get_object_by_pk(pk: int, class_name: str = cls.__name__) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by primary key with caching.
+
             Prefetches related tags and selects related user profile, account, and
             user for optimal access. Handles most common SAM pk retrieval scenarios.
 
             :param pk: The primary key of the model instance to retrieve.
             :param class_name: The name of the class for logging purposes.
             :class_name: The name of the class for cache key purposes.
-            :returns: The model instance if found, otherwise None.
-            :rtype: Optional["MetaDataWithOwnershipModel"]
+            :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
+            :rtype: models.Model
             """
             logger.debug(
                 "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
@@ -599,39 +625,31 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 raise SmarterValueError(
                     f"{logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()")} invalid pk value: {pk}. Expected an integer."
                 )
-            try:
-                if taggit:
-                    retval = (
-                        cls.objects.prefetch_related("tags")
-                        .select_related("user_profile", "user_profile__account", "user_profile__user")
-                        .get(pk=pk)
-                    )
-                else:
-                    retval = cls.objects.select_related(
-                        "user_profile", "user_profile__account", "user_profile__user"
-                    ).get(pk=pk)
-                logger.debug(
-                    "%s._get_object_by_pk() fetched %s - %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
-                    type(retval).__name__,
-                    str(retval),
+            if taggit:
+                retval = (
+                    cls.objects.prefetch_related("tags")
+                    .select_related("user_profile", "user_profile__account", "user_profile__user")
+                    .get(pk=pk)
                 )
-                return retval
-            except cls.DoesNotExist:
-                logger.debug(
-                    "%s._get_object_by_pk() no %s object found for pk: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
-                    cls.__name__,
-                    pk,
+            else:
+                retval = cls.objects.select_related("user_profile", "user_profile__account", "user_profile__user").get(
+                    pk=pk
                 )
-                return None
+            logger.debug(
+                "%s._get_object_by_pk() fetched %s - %s",
+                logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
+                type(retval).__name__,
+                str(retval),
+            )
+            return retval
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_user_profile(
             name: str, user_profile: UserProfile, class_name: str = cls.__name__
-        ) -> Optional["MetaDataWithOwnershipModel"]:
+        ) -> "MetaDataWithOwnershipModel":
             """
-            Internal method to retrieve a model instance by name and user
+            Internal method to retrieve a model instance by name and user.
+
             profile with caching. Prefetches related tags and selects
             related user profile, account, and user for optimal access.
             Handles common SAM retrieval patterns for name/user.
@@ -640,8 +658,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :param user_profile: The user profile associated with the model instance.
             :param class_name: The name of the class for cache key purposes.
 
-            :returns: The model instance if found, otherwise None.
-            :rtype: Optional["MetaDataWithOwnershipModel"]
+            :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
+            :rtype: models.Model
             """
             logger.debug(
                 "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
@@ -672,15 +690,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     user_profile,
                 )
                 return retval
-            except cls.DoesNotExist:
-                logger.debug(
-                    "%s._get_object_by_name_and_user_profile() no %s found for name: %s and user_profile: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
-                    cls.__name__,
-                    name,
-                    user_profile,
-                )
-                return None
             except cls.MultipleObjectsReturned as e:
                 raise SmarterValueError(
                     f"Multiple {class_name} objects found for name '{name}' and user profile '{user_profile}'. This should not happen as there should be a unique constraint on name and user profile."
@@ -689,9 +698,10 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_account(
             name: str, account: Account, class_name: str = cls.__name__
-        ) -> Optional["MetaDataWithOwnershipModel"]:
+        ) -> "MetaDataWithOwnershipModel":
             """
-            Internal method to retrieve a model instance by name and account with
+            Internal method to retrieve a model instance by name and account with.
+
             caching. Prefetches related tags and selects related user profile,
             account, and user for optimal access. Handles common SAM retrieval
             patterns for name/account.
@@ -700,8 +710,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :param account: The account associated with the model instance.
             :param class_name: The name of the class for cache key purposes.
 
-            :returns: The model instance if found, otherwise None.
-            :rtype: Optional["MetaDataWithOwnershipModel"]
+            :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
+            :rtype: models.Model
             """
             logger.debug(
                 "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
@@ -732,15 +742,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     account,
                 )
                 return retval
-            except cls.DoesNotExist:
-                logger.debug(
-                    "%s._get_object_by_name_and_account() no %s found for name: %s and account: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
-                    cls.__name__,
-                    name,
-                    account,
-                )
-                return None
             except cls.MultipleObjectsReturned as e:
                 raise SmarterValueError(
                     f"Multiple {class_name} objects found for name '{name}' and account '{account}'. This should not happen as there should be a unique constraint on name and account."
@@ -749,17 +750,18 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_object_by_session_key(
             session_key: str, class_name: str = cls.__name__
-        ) -> Optional["MetaDataWithOwnershipModel"]:
+        ) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by session key with caching.
+
             Prefetches related tags and selects related user profile, account, and
             user for optimal access.
 
             :param session_key: The session key associated with the model instance.
             :param class_name: The name of the class for cache key purposes.
 
-            :returns: The model instance if found, otherwise None.
-            :rtype: Optional["MetaDataWithOwnershipModel"]
+            :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
+            :rtype: models.Model
             """
             logger.debug(
                 "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
@@ -789,14 +791,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     session_key,
                 )
                 return retval
-            except cls.DoesNotExist:
-                logger.debug(
-                    "%s._get_object_by_session_key() no %s found for session_key: %s",
-                    logging.formatted_text(MetaDataWithOwnershipModel.__name__ + ".get_cached_object()"),
-                    cls.__name__,
-                    session_key,
-                )
-                return None
             except cls.MultipleObjectsReturned as e:
                 raise SmarterValueError(
                     f"Multiple {class_name} objects found for session_key '{session_key}'. This should not happen as session keys should be unique to a user session."
@@ -810,10 +804,14 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             _get_object_by_name_and_account.invalidate(name=name, account=account, class_name=cls.__name__)
 
         if pk:
-            return _get_object_by_pk(pk=pk, class_name=cls.__name__)
+            retval = _get_object_by_pk(pk=pk, class_name=cls.__name__)
+            retval.authorize()
+            return retval
 
         if session_key:
-            return _get_object_by_session_key(session_key=session_key, class_name=cls.__name__)
+            retval = _get_object_by_session_key(session_key=session_key, class_name=cls.__name__)
+            retval.authorize()
+            return retval
 
         try:
             user_profile = user_profile or UserProfile.get_cached_object(user=user, account=account)
@@ -837,9 +835,13 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         if user_profile:
             # call this regardless of whether name is provided.
-            return _get_object_by_name_and_user_profile(name=name, user_profile=user_profile, class_name=cls.__name__)
+            retval = _get_object_by_name_and_user_profile(name=name, user_profile=user_profile, class_name=cls.__name__)
+            retval.authorize()
+            return retval
         elif account:
-            return _get_object_by_name_and_account(name=name, account=account, class_name=cls.__name__)
+            retval = _get_object_by_name_and_account(name=name, account=account, class_name=cls.__name__)
+            retval.authorize()
+            return retval
 
         # no ownership info provided, so fall back to the super().
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, **kwargs)  # type: ignore[return-value]
@@ -865,7 +867,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile.
         :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
-
         """
         logger_prefix = logging.formatted_text(
             __name__ + f".{MetaDataWithOwnershipModel.__name__}.get_cached_objects()"
@@ -877,7 +878,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             user_profile_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["MetaDataWithOwnershipModel"]:
             """
-            Internal method to retrieve MetaDataWithOwnershipModel instances for
+            Internal method to retrieve MetaDataWithOwnershipModel instances for.
+
             a given user profile ID with caching.
 
             :param user_profile_id: The ID of the user profile for which to retrieve MetaDataWithOwnershipModel instances.

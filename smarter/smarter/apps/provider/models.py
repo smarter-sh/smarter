@@ -2,7 +2,6 @@
 """All models for the Provider app."""
 
 import datetime
-import logging
 import os
 import urllib.parse
 from collections.abc import Sequence
@@ -20,7 +19,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.utils import (
     get_cached_account_for_user,
-    get_cached_smarter_admin_user_profile,
+    smarter_cached_objects,
 )
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import (
@@ -28,8 +27,8 @@ from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterValueError,
 )
-from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.utils import rfc1034_compliant_str
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
@@ -231,6 +230,19 @@ class Provider(MetaDataWithOwnershipModel):
     )
 
     @property
+    def is_billable_resource(self) -> bool:
+        """
+        Indicates whether the model instance is considered a billable resource.
+
+        This property can be overridden in subclasses to specify which models are billable.
+        By default, it returns False, indicating that the base TimestampedModel is not billable.
+
+        :returns: True if the instance is billable, False otherwise.
+        :rtype: bool
+        """
+        return True
+
+    @property
     def manifest_url(self) -> Optional[str]:
         """
         Returns the URL to the plugin's manifest.
@@ -258,8 +270,7 @@ class Provider(MetaDataWithOwnershipModel):
     @property
     def is_official_provider(self) -> bool:
         """Check if the provider is an official provider."""
-        smarter_admin = get_cached_smarter_admin_user_profile()
-        return self.user_profile == smarter_admin.user
+        return self.user_profile == smarter_cached_objects.smarter_admin_user_profile
 
     @property
     def tos_accepted(self) -> bool:
@@ -488,7 +499,7 @@ class Provider(MetaDataWithOwnershipModel):
     ) -> Optional["Provider"]:
         """Get a cached provider by account ID and name."""
 
-        logger_prefix = formatted_text(
+        logger_prefix = logging.formatted_text(
             __name__ + "." + Provider.__name__ + ".get_cached_provider_by_account_id_and_name()"
         )
 
@@ -529,7 +540,7 @@ class Provider(MetaDataWithOwnershipModel):
         cls, invalidate: Optional[bool] = False, user: Optional[User] = None
     ) -> Sequence["Provider"]:
         """Get cached providers for a user."""
-        logger_prefix = formatted_text(__name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()")
+        logger_prefix = logging.formatted_text(__name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()")
 
         @cache_results()
         def cached_providers_by_user_id(user_id: int) -> Sequence["Provider"]:

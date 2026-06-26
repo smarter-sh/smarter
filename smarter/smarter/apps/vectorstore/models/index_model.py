@@ -1,6 +1,4 @@
-"""
-Models for the vectorstore app.
-"""
+"""Models for the vectorstore app."""
 
 import logging
 
@@ -11,7 +9,7 @@ from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .vectorstore_meta import VectorestoreMeta
+from .vectorstore_meta import VectorstoreMeta
 
 
 # pylint: disable=unused-argument
@@ -25,18 +23,16 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class IndexModelInterface(TimestampedModel):
-    """
-    Model representing the SAMIndexModelInterface configuration for a vector database.
-    """
+    """Model representing the SAMIndexModelInterface configuration for a vector database."""
 
     # pylint: disable=C0115
     class Meta:
         verbose_name = "Index Model Interface"
         verbose_name_plural = "Index Model Interfaces"
 
-    vectorestore_meta = models.OneToOneField(
-        VectorestoreMeta,
-        help_text="The associated VectorestoreMeta object for this IndexModelInterface configuration.",
+    vectorstore_meta = models.OneToOneField(
+        VectorstoreMeta,
+        help_text="The associated VectorstoreMeta object for this IndexModelInterface configuration.",
         on_delete=models.CASCADE,
         related_name="index_model_interface",
     )

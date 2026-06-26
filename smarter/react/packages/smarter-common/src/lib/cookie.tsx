@@ -14,25 +14,27 @@
  * @returns The cookie value, or `defaultValue` if not found.
  */
 export function getCookie(
-  cookie: { name: string; expiration: number | null; domain: string; value: string | null },
-  defaultValue: string | null = null,
+  cookie: { name: string; domain: string },
+  defaultValue: string | null = "",
 ) {
-  if (cookie.value !== null) {
-    return cookie.value;
-  }
   let cookieValue = null;
+
+  console.debug(`getCookie() Looking for cookie ${cookie.name} in domain ${cookie.domain}. Current hostname: ${window.location.hostname}`);
 
   if (window.location.hostname.endsWith(cookie.domain) && document.cookie && document.cookie !== "") {
     const cookies = document.cookie.split(";").map((cookie) => cookie.trim());
     for (let i = 0; i < cookies.length; i++) {
       const thisCookie = cookies[i];
-      if (thisCookie.startsWith(`${cookie.name}=`)) {
+      if (thisCookie && thisCookie.startsWith && thisCookie.startsWith(`${cookie.name}=`)) {
+        console.debug(`getCookie() Found cookie ${cookie.name} in domain ${cookie.domain}:`, thisCookie);
         cookieValue = decodeURIComponent(thisCookie.substring(cookie.name.length + 1));
         break;
       }
     }
   }
-
+  if (cookieValue === null) {
+    console.debug(`getCookie() Cookie ${cookie.name} not found in domain ${cookie.domain}. Returning default value:`, defaultValue);
+  }
   return cookieValue || defaultValue;
 }
 
@@ -61,12 +63,14 @@ export function setCookie(
     const expires = expirationDate.toUTCString();
     const cookieData = `${cookie.name}=${value}; path=${currentPath}; SameSite=Lax; expires=${expires}`;
     document.cookie = cookieData;
+    console.debug(`setCookie() Set cookie ${cookie.name} in domain ${cookie.domain}:`, cookieData);
   } else {
     // Unset the cookie by setting its expiration date to the past
     const expirationDate = new Date(0);
     const expires = expirationDate.toUTCString();
     const cookieData = `${cookie.name}=; path=${currentPath}; SameSite=Lax; expires=${expires}`;
     document.cookie = cookieData;
+    console.debug(`setCookie() Unset cookie ${cookie.name} in domain ${cookie.domain}:`, cookieData);
   }
 }
 

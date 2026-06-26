@@ -11,8 +11,6 @@ from django.forms.models import model_to_dict
 
 from smarter.apps.account.models import (
     Account,
-    Charge,
-    DailyBillingRecord,
     User,
     UserProfile,
 )
@@ -150,30 +148,6 @@ def account_post_delete(sender: Account, instance: Account, **kwargs):
         formatted_text(f"{module_prefix}.account_post_delete()"),
         instance,
         instance.id,  # type: ignore
-    )
-
-
-@receiver(post_save, sender=Charge)
-def charge_post_save(sender: Charge, instance: Charge, created, **kwargs):
-    """Signal receiver for created/saved of Charge model."""
-    charge_json = json.dumps(model_to_dict(instance))
-    logger.info(
-        "%s Charge post_save: %s, created: %s",
-        formatted_text(f"{module_prefix}.charge_post_save()"),
-        charge_json,
-        created,
-    )
-
-
-@receiver(post_save, sender=DailyBillingRecord)
-def daily_billing_record_post_save(sender: DailyBillingRecord, instance: DailyBillingRecord, created, **kwargs):
-    """Signal receiver for created/saved of DailyBillingRecord model."""
-    daily_billing_record_json = json.dumps(model_to_dict(instance))
-    logger.debug(
-        "%s DailyBillingRecord: %s, created: %s",
-        formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
-        daily_billing_record_json,
-        created,
     )
 
 

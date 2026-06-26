@@ -24,6 +24,7 @@ from urllib.parse import ParseResult, urlparse
 
 import tldextract
 import yaml
+from django.contrib.auth.models import AnonymousUser
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest, QueryDict
 from django.http.request import RawPostDataException
@@ -41,10 +42,6 @@ from smarter.common.const import (
     SMARTER_IS_INTERNAL_API_REQUEST,
 )
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-    formatted_text_green,
-)
 from smarter.common.helpers.url_helpers import session_key_from_url
 from smarter.common.utils import (
     hash_factory,
@@ -178,7 +175,7 @@ class SmarterRequestMixin(AccountMixin):
         verbose_logger.debug(
             "%s.__init__() - called by %s with request=%s, args=%s, kwargs=%s",
             self.srm_formatted_class_name,
-            formatted_text(module_name),
+            self.formatted_text(module_name),
             request,
             args,
             kwargs,
@@ -269,7 +266,7 @@ class SmarterRequestMixin(AccountMixin):
         :return: A string describing the instance.
         :rtype: str
         """
-        return f"{formatted_text(SmarterRequestMixin.__name__)}[{id(self)}](request={self.smarter_request}, user_profile={self.user_profile})"
+        return f"{self.formatted_text(SmarterRequestMixin.__name__)}[{id(self)}](request={self.smarter_request}, user_profile={self.user_profile})"
 
     def __repr__(self) -> str:
         """
@@ -449,10 +446,9 @@ class SmarterRequestMixin(AccountMixin):
         self._smarter_request = request
         self._data = None
         verbose_logger.debug(
-            "%s.smarter_request setter - request set to: %s, user: %s",
+            "%s.smarter_request setter - request set to: %s",
             self.srm_formatted_class_name,
             request,
-            request.user if self.is_authenticated else "Anonymous",  # type: ignore[union-attr],
         )
         if request is not None:
             url = smarter_build_absolute_uri(request) if request else None
@@ -478,7 +474,7 @@ class SmarterRequestMixin(AccountMixin):
                     )
                     self.user = self._smarter_request_user
                 else:
-                    if self.user != request.user:
+                    if (self.user != request.user) and not isinstance(self.user, AnonymousUser):
                         raise SmarterValueError(
                             f"{self.srm_formatted_class_name}.smarter_request setter - user mismatch: existing user: {self.user}, request user: {request.user}"
                         )
@@ -545,17 +541,17 @@ class SmarterRequestMixin(AccountMixin):
         """
         Get the smarter client version from the request.
 
-        This property checks for the "X-Smarter-Client-Version" header in the request headers or in the Django META dictionary.
+        This property checks for the "X-Smarter-ClientVersion" header in the request headers or in the Django META dictionary.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             client_version = request_mixin.smarter_client_version
 
-        :return: The value of the "X-Smarter-Client-Version" header as a string, or None if not present.
+        :return: The value of the "X-Smarter-ClientVersion" header as a string, or None if not present.
         """
         return (
-            self._smarter_request.headers.get("X-Smarter-Client-Version")
+            self._smarter_request.headers.get("X-Smarter-ClientVersion")
             if self._smarter_request and hasattr(self._smarter_request, "headers")
             else None
         )
@@ -565,17 +561,17 @@ class SmarterRequestMixin(AccountMixin):
         """
         Get the smarter client type from the request.
 
-        This property checks for the "X-Smarter-Client-Type" header in the request headers or in the Django META dictionary.
+        This property checks for the "X-Smarter-ClientType" header in the request headers or in the Django META dictionary.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             client_type = request_mixin.smarter_client_type
 
-        :return: The value of the "X-Smarter-Client-Type" header as a string, or None if not present.
+        :return: The value of the "X-Smarter-ClientType" header as a string, or None if not present.
         """
         return (
-            self._smarter_request.headers.get("X-Smarter-Client-Type")
+            self._smarter_request.headers.get("X-Smarter-ClientType")
             if self._smarter_request and hasattr(self._smarter_request, "headers")
             else None
         )
@@ -585,17 +581,17 @@ class SmarterRequestMixin(AccountMixin):
         """
         Get the smarter request ID from the request.
 
-        This property checks for the "X-Smarter-Request-ID" header in the request headers or in the Django META dictionary.
+        This property checks for the "X-Smarter-RequestId" header in the request headers or in the Django META dictionary.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             request_id = request_mixin.smarter_request_id
 
-        :return: The value of the "X-Smarter-Request-ID" header as a string, or None if not present.
+        :return: The value of the "X-Smarter-RequestId" header as a string, or None if not present.
         """
         return (
-            self._smarter_request.headers.get("X-Smarter-Request-ID")
+            self._smarter_request.headers.get("X-Smarter-RequestId")
             if self._smarter_request and hasattr(self._smarter_request, "headers")
             else None
         )
@@ -741,12 +737,16 @@ class SmarterRequestMixin(AccountMixin):
 
         if self.url_path_parts and self.url_path_parts[0] == "admin":
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}.qualified_request() - request path starts with /admin/. Not a qualified request: {self.url}"
+                "%s.qualified_request() - request path starts with /admin/. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
             )
             return False
         if self.url_path_parts and self.url_path_parts[0] == "docs":
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}.qualified_request() - request path starts with /docs/. Not a qualified request: {self.url}"
+                "%s.qualified_request() - request path starts with /docs/. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
             )
             return False
 
@@ -766,7 +766,9 @@ class SmarterRequestMixin(AccountMixin):
         ]
         if isinstance(path, str) and any(path.replace("/", "").endswith(ext) for ext in static_extensions):
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}.qualified_request() - request path ends with a static file extension. Not a qualified request: {self.url}"
+                "%s.qualified_request() - request path ends with a static file extension. Not a qualified request: %s",
+                self.srm_formatted_class_name,
+                self.url,
             )
             # static asset requests are not llm_client requests.
             return False
@@ -2220,7 +2222,9 @@ class SmarterRequestMixin(AccountMixin):
             SmarterValidator.validate_session_key(session_key)
 
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}{formatted_text_green(".find_session_key() - initialized from url: ")}{session_key}",
+                "%s.find_session_key() - initialized from url: %s",
+                self.srm_formatted_class_name,
+                session_key,
             )
             return session_key
 
@@ -2232,7 +2236,9 @@ class SmarterRequestMixin(AccountMixin):
                 session_key = session_key.rstrip("/")
                 SmarterValidator.validate_session_key(session_key)
                 verbose_logger.debug(
-                    f"{self.srm_formatted_class_name}{formatted_text_green(".find_session_key() - initialized from request body: ")}{session_key}",
+                    "%s.find_session_key() - initialized from request body: %s",
+                    self.srm_formatted_class_name,
+                    session_key,
                 )
                 return session_key
 
@@ -2243,7 +2249,9 @@ class SmarterRequestMixin(AccountMixin):
             session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}{formatted_text_green(".find_session_key() - initialized from cookie data of the request object: ")}{session_key}",
+                "%s.find_session_key() - initialized from cookie data of the request object: %s",
+                self.srm_formatted_class_name,
+                session_key,
             )
             return session_key
 
@@ -2254,12 +2262,15 @@ class SmarterRequestMixin(AccountMixin):
             session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
             verbose_logger.debug(
-                f"{self.srm_formatted_class_name}{formatted_text_green(".find_session_key() - initialized from the get() parameters of the request object: ")}{session_key}",
+                "%s.find_session_key() - initialized from the get() parameters of the request object: %s",
+                self.srm_formatted_class_name,
+                session_key,
             )
             return session_key
 
         verbose_logger.debug(
-            f"{self.srm_formatted_class_name}.find_session_key() - session key not found in url, request body, cookies, or get parameters.",
+            "%s.find_session_key() - session key not found in url, request body, cookies, or get parameters.",
+            self.srm_formatted_class_name,
         )
         return None
 
@@ -2439,21 +2450,20 @@ class SmarterRequestMixin(AccountMixin):
     def is_authenticated(self) -> bool:
         """Returns True if the request is authenticated, False otherwise."""
 
-        # Django Rest Framework's Request object
-        # pylint: disable=W0212
-        if (
-            hasattr(self.smarter_request, "_user")
-            and self.smarter_request._user  # type: ignore
-            and hasattr(self.smarter_request._user, "is_authenticated")  # type: ignore
-            and self.smarter_request._user.is_authenticated  # type: ignore
-        ):
-            return True
+        try:
+            return self.smarter_request.user.is_authenticated  # type: ignore
+        except AttributeError:
+            logger.debug(
+                "%s.is_authenticated() - request.user is not set or does not have is_authenticated attribute.",
+                self.srm_formatted_class_name,
+            )
+            return False
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.warning(
+                "%s.is_authenticated() - unexpected error while checking authentication: %s",
+                self.srm_formatted_class_name,
+                str(e),
+            )
 
-        return (
-            True
-            if self.smarter_request
-            and hasattr(self.smarter_request, "user")
-            and self.smarter_request.user
-            and self.smarter_request.user.is_authenticated
-            else False
-        )
+        return False

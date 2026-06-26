@@ -22,6 +22,7 @@ Use the convenvience commands in Makefile to build all packages and integrate
 to Django.
 
 ```console
+make react-install
 make react-build
 make collectstatic
 make build

@@ -1,3 +1,5 @@
+"""This module contains the view classes for the dashboard application."""
+
 from .change_log import ChangeLogView
 from .coming_soon import ComingSoon
 from .dashboard import DashboardView

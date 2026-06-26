@@ -1,6 +1,4 @@
-"""
-PluginPrompt model for storing LLM prompt configuration for Smarter plugins.
-"""
+"""PluginPrompt model for storing LLM prompt configuration for Smarter plugins."""
 
 from typing import Union
 
@@ -8,7 +6,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from smarter.common.conf import settings_defaults
-from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.models import (
@@ -21,7 +18,7 @@ from .plugin_meta import PluginMeta
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 
 
-class PluginPrompt(TimestampedModel, SmarterHelperMixin):
+class PluginPrompt(TimestampedModel):
     """
     Stores LLM prompt model configuration for a Smarter plugin.
 

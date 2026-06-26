@@ -1,0 +1,42 @@
+/* This desaturates the command button colors in the button group */
+.btn-group .btn {
+  filter: saturate(0.8);
+}
+
+.card-view {
+  display: block;
+}
+
+.vectorstore-card > .card-header {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.smarter-vectorstore-card {
+}
+
+.user-vectorstore-card {
+}
+
+.card-body > p {
+  margin-bottom: 2px !important;
+}
+
+.vectorstore-list-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.vectorstore-list-card-header {
+  position: relative;
+}
+
+.vectorstore-list-card-title {
+  border-bottom: 1px solid red;
+  padding-bottom: 6px;
+}
+
+.vectorstore-list-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
