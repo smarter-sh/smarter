@@ -255,7 +255,7 @@ langchain-text-splitters==1.1.1
     #   langchain-classic
 langgraph==1.1.6
     # via langchain
-langgraph-checkpoint==4.0.1
+langgraph-checkpoint==4.1.1
     # via
     #   langgraph
     #   langgraph-prebuilt
