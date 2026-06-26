@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.16-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.15...v0.14.16-alpha.1) (2026-06-26)
+
+### Bug Fixes
+
+* only include reverse() names on enabled optional modules ([37f351c](https://github.com/smarter-sh/smarter/commit/37f351c68662885d2025975410355a6dae96f6d2))
+
 ## [0.14.15](https://github.com/smarter-sh/smarter/compare/v0.14.14...v0.14.15) (2026-06-26)
 
 ### Bug Fixes
