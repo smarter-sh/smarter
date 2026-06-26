@@ -9,8 +9,8 @@ Technical References
 
 - Class Reference: :py:class:`smarter.apps.plugin.plugin.api.ApiPlugin`
 - Django ORM Model: :py:class:`smarter.apps.plugin.models.PluginDataApi`
-- :doc:`SAM Broker <../manifest/brokers/api-plugin>`
-- :doc:`SAM Pydantic Class Reference <../manifest/models/api-plugin>`
+- :doc:`SAM Broker <../sam/brokers/api-plugin>`
+- :doc:`SAM Pydantic Class Reference <../sam/models/api-plugin>`
 
 .. automodule:: smarter.apps.plugin.plugin.api
    :members:

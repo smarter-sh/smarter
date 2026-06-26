@@ -17,5 +17,5 @@ Technical References
 --------------------
 
 - Django ORM Model: :py:class:`smarter.apps.account.models.Account`
-- :doc:`SAM Broker <../manifest/brokers/account>`
-- :doc:`SAM Pydantic Class Reference <../manifest/models/account>`
+- :doc:`SAM Broker <../sam/brokers/account>`
+- :doc:`SAM Pydantic Class Reference <../sam/models/account>`

@@ -88,7 +88,7 @@ Related API endpoints
 Manifest Spec
 -------------
 
-See :doc:`Smarter Manifest Specification <developer-reference/lib/def/manifest>`
+See :doc:`Smarter Manifest Specification <developer-reference/lib/drf/manifest>`
 
 
 Kind
