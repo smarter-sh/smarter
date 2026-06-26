@@ -6,6 +6,40 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.15](https://github.com/smarter-sh/smarter/compare/v0.14.14...v0.14.15) (2026-06-26)
+
+### Bug Fixes
+
+* add charge_authorization() ([3ea8c58](https://github.com/smarter-sh/smarter/commit/3ea8c58865d491db0eb5dcf29eba8f4b20988e03))
+* add connection charges ([f759c10](https://github.com/smarter-sh/smarter/commit/f759c100a085fb27eec7dc9b449373d00483b68a))
+* add manage.py aggregate_charges ([3e76302](https://github.com/smarter-sh/smarter/commit/3e76302ecdd7b83a3916a025f0f470bc00ca3cac))
+* celerybeat configuration ([9b77973](https://github.com/smarter-sh/smarter/commit/9b779734d9152669a2cd5627c7468e2cbd6eb3e0))
+* ensure all resource types get charge records ([29a886c](https://github.com/smarter-sh/smarter/commit/29a886cd3528f65def59631f0269db49cf5a6362))
+* react authenticated fetch to Django ([cfcd4c4](https://github.com/smarter-sh/smarter/commit/cfcd4c48b4ef8bcd707b3d2e686cd6f10ea5918d))
+* scaffold budget models ([a6e9c11](https://github.com/smarter-sh/smarter/commit/a6e9c11247b573d8abccb9f5609325733f83f76f))
+* scaffold budget ORM ([270c6f6](https://github.com/smarter-sh/smarter/commit/270c6f6a5f7138cf3789a0f60a027ce0b90fb763))
+* scaffold charge_authorization() ([c39b493](https://github.com/smarter-sh/smarter/commit/c39b493dc6eb56a56c1fdb680d90446a2971f106))
+* scaffold drop-zone react app ([9cbd420](https://github.com/smarter-sh/smarter/commit/9cbd4208de313a2599921862ebe80e0fbce151ed))
+* scaffold drop-zone react app ([38465bb](https://github.com/smarter-sh/smarter/commit/38465bb4d47349bbdbbe23350be53e0aeb1b3a65))
+
+### Refactoring
+
+* add yaml validations and results modal ([49d7745](https://github.com/smarter-sh/smarter/commit/49d77457a83904310da95fa1cf435513fa8b7a88))
+* aggregate_charges ([e0834ba](https://github.com/smarter-sh/smarter/commit/e0834bacdece7b322eec1683b936765f72092959))
+* AggregatedCharges ([ef753dc](https://github.com/smarter-sh/smarter/commit/ef753dcd806a027c8f35b917d63da943dc80356e))
+* AggregatedCharges ([1f0e77d](https://github.com/smarter-sh/smarter/commit/1f0e77d4f0eb9da484d82559f6278f5d8bb24247))
+* allow custom react headers with CORS ([6a6b9b6](https://github.com/smarter-sh/smarter/commit/6a6b9b69202c3f1a670bffb3ec7337fc36355210))
+* avoid authentication collisions between Django session vs drf ([4a7a89c](https://github.com/smarter-sh/smarter/commit/4a7a89c74649ca524d7be5dd0886de54a06fa6a2))
+* better name ([eaca05c](https://github.com/smarter-sh/smarter/commit/eaca05c838e7878bf40680435193503a27048bf5))
+* cache contexts ([c8e0543](https://github.com/smarter-sh/smarter/commit/c8e054332523e999531cbce9d530fc2defb97bb9))
+* dropzone view file structure ([f08356b](https://github.com/smarter-sh/smarter/commit/f08356b88727eb5bcefea4dc39963c1ca5b7a80c))
+* function names ([52a4b29](https://github.com/smarter-sh/smarter/commit/52a4b291b5cbcc9fdb4f278e8351adda9f193d95))
+* improve the success modal UX ([b2a5ba2](https://github.com/smarter-sh/smarter/commit/b2a5ba24c85a905a8f73536fa31302d68ec8f18a))
+* PascalCase the custom smarter http request headers ([26641dd](https://github.com/smarter-sh/smarter/commit/26641dd33d5f9b75829d2e96a21bd762c66b5443))
+* port django template html and styling. port file open dialogue ([f63fb2c](https://github.com/smarter-sh/smarter/commit/f63fb2cc20817d81cd5d0295158a191aa6ddab81))
+* port manifest handler to react ([def5a00](https://github.com/smarter-sh/smarter/commit/def5a00fb698977a2c490b69bb3561c0f7bd9e96))
+* port vectorstore UI to react ([f6faf58](https://github.com/smarter-sh/smarter/commit/f6faf587f7e7a5d9d89238b0246e1561401725f1))
+
 ## [0.14.15-alpha.11](https://github.com/smarter-sh/smarter/compare/v0.14.15-alpha.10...v0.14.15-alpha.11) (2026-06-25)
 
 ### Bug Fixes
