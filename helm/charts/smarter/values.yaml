@@ -75,8 +75,8 @@ env:
   SMARTER_EMAIL_ADMIN: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_ENABLE_DASHBOARD_SERVER_LOGS: true
   SMARTER_ENABLE_MANIFEST_DROPZONE: true
-  SMARTER_ENABLE_PROXY: false
-  SMARTER_ENABLE_VECTORSTORE: false
+  SMARTER_ENABLE_PROXY: true
+  SMARTER_ENABLE_VECTORSTORE: true
   SMARTER_FERNET_ENCRYPTION_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_FIREWORKS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_GEMINI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
