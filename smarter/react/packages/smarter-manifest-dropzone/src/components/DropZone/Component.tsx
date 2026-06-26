@@ -19,6 +19,7 @@ import { fetchDjangoUrl } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
 import { loggerPrefix } from "@/const";
+import DropZoneModal from "@/components/Modal";
 
 import "./styles.css";
 
@@ -31,99 +32,10 @@ type Manifest = Record<string, any>;
 type ModalState = {
   open: boolean;
   title: string;
-  message: string;
   data?: any;
   isError?: boolean;
 };
 
-type DropZoneModalProps = ModalState & {
-  onClose: () => void;
-  redirectRules: { thing: string; path: string }[];
-  thing?: string;
-};
-
-function DropZoneModal({
-  open,
-  title,
-  message,
-  data,
-  isError = false,
-  onClose,
-  redirectRules,
-  thing,
-}: DropZoneModalProps) {
-  if (!open) return null;
-
-  const color = isError ? "#dc3545" : "#28a745";
-
-  const handleClose = () => {
-    onClose();
-
-    if (thing) {
-      const rule = redirectRules.find((r) => r.thing === thing);
-      if (rule) window.location.href = rule.path;
-    }
-  };
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.4)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 9999,
-      }}
-    >
-      <div
-        style={{
-          background: "#fff",
-          padding: 20,
-          borderRadius: 8,
-          maxWidth: 500,
-          width: "90%",
-          position: "relative",
-        }}
-      >
-        <button
-          onClick={handleClose}
-          style={{
-            position: "absolute",
-            top: 8,
-            right: 12,
-            fontSize: 18,
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          ×
-        </button>
-
-        <div style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>{title}</div>
-
-        <div style={{ color, marginBottom: 10 }}>{message}</div>
-
-        {data && (
-          <pre
-            style={{
-              maxHeight: 200,
-              overflow: "auto",
-              background: "#f8f8f8",
-              padding: 10,
-              borderRadius: 4,
-              fontSize: 12,
-            }}
-          >
-            {JSON.stringify(data, null, 2)}
-          </pre>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function DropZone({ sessionContext }: DropZoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -131,27 +43,19 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  const [manifestMeta, setManifestMeta] = useState({
-    name: "",
-    version: "",
-    kind: "",
-  });
-
   const [modal, setModal] = useState<ModalState>({
     open: false,
     title: "",
-    message: "",
     data: null,
     isError: false,
   });
 
   const openFileDialog = () => fileInputRef.current?.click();
 
-  const showModal = (title: string, message: string, data: any, isError = false) => {
+  const showModal = (title: string, data: any, isError = false) => {
     setModal({
       open: true,
       title,
-      message,
       data,
       isError,
     });
@@ -233,20 +137,13 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
       const manifest = await parseManifest(file);
 
       validateManifest(manifest);
-
-      setManifestMeta({
-        name: manifest.metadata.name,
-        version: manifest.apiVersion,
-        kind: manifest.kind,
-      });
-
       const result = await applyManifest(manifest);
 
-      showModal("Manifest Applied", "The manifest was successfully applied.", result, false);
+      showModal("Manifest Applied", result, false);
     } catch (error) {
       console.error(loggerPrefix, error);
 
-      showModal("Manifest Apply Failed", error instanceof Error ? error.message : "Unknown error", null, true);
+      showModal("Manifest Apply Failed", error instanceof Error ? error.message : "Unknown error", true);
     } finally {
       setIsUploading(false);
     }
@@ -271,7 +168,7 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
     try {
       if (file) await processFile(file);
     } catch (error) {
-      showModal("Error", error instanceof Error ? error.message : "Failed", null, true);
+      showModal("Error", error instanceof Error ? error.message : "Failed", true);
     }
   };
 
@@ -299,16 +196,6 @@ export default function DropZone({ sessionContext }: DropZoneProps) {
 
           <DropZoneModal
             {...modal}
-            thing={(modal.data as any)?.thing}
-            redirectRules={[
-              { thing: "SqlPlugin", path: window.pluginListPath },
-              { thing: "ApiPlugin", path: window.pluginListPath },
-              { thing: "StaticPlugin", path: window.pluginListPath },
-              { thing: "SqlConnection", path: window.connectionListPath },
-              { thing: "ApiConnection", path: window.connectionListPath },
-              { thing: "Provider", path: window.providerListPath },
-              { thing: "LLMClient", path: window.workbenchListPath },
-            ]}
             onClose={() => setModal((m) => ({ ...m, open: false }))}
           />
         </div>
