@@ -387,14 +387,15 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         if self._llm_client_id:
             kwargs.pop("llm_client_id")
         if self.llm_client and self.llm_client.user_profile:
-            self._user_profile = self.llm_client.user_profile
-            self._account = self.llm_client.user_profile.account
-            self._user = self.llm_client.user_profile.user
-            logger.debug(
-                "%s.dispatch() - reinitializing user, account, and user_profile from llm_client.user_profile: %s",
-                self.formatted_class_name,
-                self.llm_client.user_profile,
-            )
+            if self._user_profile != self.llm_client.user_profile:
+                self._user_profile = self.llm_client.user_profile
+                self._account = self.llm_client.user_profile.account
+                self._user = self.llm_client.user_profile.user
+                logger.debug(
+                    "%s.dispatch() - reinitializing user, account, and user_profile from llm_client.user_profile: %s",
+                    self.formatted_class_name,
+                    self.llm_client.user_profile,
+                )
         else:
             self._name = self._name or name
         if not self.llm_client:

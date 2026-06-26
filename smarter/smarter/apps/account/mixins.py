@@ -875,6 +875,21 @@ class AccountMixin(SmarterHelperMixin):
             self._am_formatted_class_name,
             mask_string(api_token.decode()),
         )
+        if self.is_authenticated:
+            logger.debug(
+                "%s.authenticate(): user %s is already authenticated with account %s. Skipping authentication.",
+                self._am_formatted_class_name,
+                self.user,
+                self.account,
+            )
+            return True
+        if not isinstance(api_token, bytes):
+            logger.warning(
+                "%s.authenticate(): invalid api_token type: %s. Expected bytes.",
+                self._am_formatted_class_name,
+                type(api_token),
+            )
+            return False
         try:
             user, _ = SmarterTokenAuthentication().authenticate_credentials(api_token)
             self._user = user

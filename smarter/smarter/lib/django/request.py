@@ -24,6 +24,7 @@ from urllib.parse import ParseResult, urlparse
 
 import tldextract
 import yaml
+from django.contrib.auth.models import AnonymousUser
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest, QueryDict
 from django.http.request import RawPostDataException
@@ -473,7 +474,7 @@ class SmarterRequestMixin(AccountMixin):
                     )
                     self.user = self._smarter_request_user
                 else:
-                    if self.user != request.user:
+                    if (self.user != request.user) and not isinstance(self.user, AnonymousUser):
                         raise SmarterValueError(
                             f"{self.srm_formatted_class_name}.smarter_request setter - user mismatch: existing user: {self.user}, request user: {request.user}"
                         )
@@ -2452,6 +2453,10 @@ class SmarterRequestMixin(AccountMixin):
         try:
             return self.smarter_request.user.is_authenticated  # type: ignore
         except AttributeError:
+            logger.debug(
+                "%s.is_authenticated() - request.user is not set or does not have is_authenticated attribute.",
+                self.srm_formatted_class_name,
+            )
             return False
         # pylint: disable=broad-except
         except Exception as e:
