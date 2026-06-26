@@ -40,21 +40,21 @@ module_prefix = "smarter.apps.prompt.tasks."
     max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
     queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
-def create_prompt_history(chat_id, request, response, messages):
-    logger.info("%s chat_id: %s", formatted_text(module_prefix + "create_prompt_history()"), chat_id)
+def create_prompt_history(prompt_id, request, response, messages):
+    logger.info("%s prompt_id: %s", formatted_text(module_prefix + "create_prompt_history()"), prompt_id)
     try:
-        prompt = Prompt.objects.get(id=chat_id)
+        prompt = Prompt.objects.get(id=prompt_id)
     except Prompt.DoesNotExist:
         logger.error(
-            "%s chat_id: %s does not exist", formatted_text(module_prefix + "create_prompt_history()"), chat_id
+            "%s prompt_id: %s does not exist", formatted_text(module_prefix + "create_prompt_history()"), prompt_id
         )
         return
     PromptHistory.objects.create(prompt=prompt, request=request, response=response, messages=messages)
 
 
-def aggregate_chat_history():
+def aggregate_prompt_history():
     """Summarize detail llm_client history into aggregate records."""
-    logger.info("%s", formatted_text(module_prefix + "aggregate_chat_history()"))
+    logger.info("%s", formatted_text(module_prefix + "aggregate_prompt_history()"))
 
 
 @app.task(
@@ -79,16 +79,16 @@ def create_prompt(session_key, llm_client_id):
     max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
     queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
-def create_prompt_tool_call_history(chat_id, plugin_meta_id, function_name, function_args, request, response):
+def create_prompt_tool_call_history(prompt_id, plugin_meta_id, function_name, function_args, request, response):
     """Create prompt tool call history record."""
     logger.info("%s", formatted_text(module_prefix + "create_prompt_tool_call_history()"))
     prompt = None
     plugin_meta = None
 
     try:
-        prompt = Prompt.objects.get(id=chat_id)
+        prompt = Prompt.objects.get(id=prompt_id)
     except Prompt.DoesNotExist as e:
-        raise SmarterValueError(f"Prompt with id {chat_id} does not exist") from e
+        raise SmarterValueError(f"Prompt with id {prompt_id} does not exist") from e
 
     try:
         if plugin_meta_id:
@@ -114,14 +114,14 @@ def create_prompt_tool_call_history(chat_id, plugin_meta_id, function_name, func
 )
 def create_prompt_plugin_usage(*args, **kwargs):
     """Create plugin usage record."""
-    chat_id = kwargs.get("chat_id", None)
+    prompt_id = kwargs.get("prompt_id", None)
     plugin_id = kwargs.get("plugin_id", None)
 
     logger.info(
-        "%s chat_id=%s, plugin_id=%s", formatted_text(module_prefix + "create_plugin_usage()"), chat_id, plugin_id
+        "%s prompt_id=%s, plugin_id=%s", formatted_text(module_prefix + "create_plugin_usage()"), prompt_id, plugin_id
     )
-    if chat_id is None:
-        raise SmarterValueError("chat_id is required")
+    if prompt_id is None:
+        raise SmarterValueError("prompt_id is required")
 
     if plugin_id is None:
         raise SmarterValueError("plugin_id is required")
@@ -130,9 +130,9 @@ def create_prompt_plugin_usage(*args, **kwargs):
     if input_text is None:
         raise SmarterValueError("input_text is required")
     try:
-        prompt = Prompt.objects.get(id=chat_id)
+        prompt = Prompt.objects.get(id=prompt_id)
     except Prompt.DoesNotExist as e:
-        raise SmarterValueError(f"Prompt with id {chat_id} does not exist") from e
+        raise SmarterValueError(f"Prompt with id {prompt_id} does not exist") from e
 
     try:
         plugin_meta = PluginMeta.objects.get(id=plugin_id)
