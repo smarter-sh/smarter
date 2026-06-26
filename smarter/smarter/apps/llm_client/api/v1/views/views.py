@@ -90,7 +90,7 @@ class LLMClientView(ViewBase):
 
         if self.llm_client_id:
             self.llm_client = get_object_or_404(LLMClient, pk=self.llm_client_id)
-            if self.llm_client.user_profile:
+            if self.llm_client.user_profile and self._user_profile != self.llm_client.user_profile:
                 self._user_profile = self.llm_client.user_profile
                 self._account = self.llm_client.user_profile.account
                 self._user = self.llm_client.user_profile.user

@@ -14,9 +14,8 @@ from smarter.common.utils import is_authenticated_request, smarter_build_absolut
 from smarter.lib import logging
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.drf.views.helpers import SmarterAuthenticatedPermissionClass
-
-from ..token_authentication import SmarterTokenAuthentication
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
 
@@ -41,6 +40,12 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
 
     def __init__(self, *args, **kwargs):
         """Initialize the SmarterAuthenticatedAPIView."""
+        logger.debug(
+            "%s.__init__() - called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
         super().__init__(*args, **kwargs)
         self.request = kwargs.pop("request", None)
         user = kwargs.pop("user", None)
@@ -102,7 +107,7 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
         Args:
             request (HttpRequest): The incoming HTTP request.
         """
-        if not self.is_requestmixin_ready:
+        if not self.srm_ready:
             logger.debug(
                 "%s.initial() - completing initialization of SmarterRequestMixin with request: %s",
                 self.formatted_class_name,
@@ -159,6 +164,7 @@ class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
 # Admin API Views
 # ------------------------------------------------------------------------------
 class SmarterAdminAPIMixin(SmarterRequestMixin):
+    """Mixin for admin API views that require superuser or staff authentication."""
 
     request: Any
 
