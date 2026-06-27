@@ -11,6 +11,7 @@ from openai.types.chat.chat_completion import ChatCompletion
 
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import plugin_deleting
+from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.utils import request_to_json
 from smarter.lib.django import waffle
@@ -149,7 +150,12 @@ def handle_chat_completion_response_received(
     messages: Optional[list] = None,
     **kwargs,
 ):
-    """Handle prompt completion called signal."""
+    """
+    Handle prompt completion called signal.
+
+    This is the primary
+    source data for the web console dashboard server logs.
+    """
     this_prefix = formatted_text(f"{prefix}.chat_response for iteration {iteration}")
     sender_name = get_sender_name(sender)
 
@@ -159,7 +165,7 @@ def handle_chat_completion_response_received(
         sender_name,
         prompt,
     )
-    if logger_level == logging.DEBUG:
+    if smarter_settings.enable_dashboard_server_logs or (logger_level == logging.DEBUG):
         request_data = request_to_json(request) if request else None
         if isinstance(request_data, (dict, list)):
             formatted_request_data = formatted_json(
@@ -172,7 +178,7 @@ def handle_chat_completion_response_received(
             response_data = response.model_dump()
         else:
             response_data = response
-        logger.debug(
+        logger.info(
             "%s from %s for prompt %s, \nrequest: %s, \nresponse: %s",
             this_prefix,
             sender_name,
