@@ -48,7 +48,7 @@ def new_charge_created_receiver(sender, charge: Charge, **kwargs):
 
     - log the creation of a new charge.
     """
-    logger.info(
+    logger.debug(
         "%s New charge created: %s, id: %s",
         logging.formatted_text(f"{module_prefix}.new_charge_created()"),
         charge,
@@ -63,7 +63,7 @@ def cache_invalidate_receiver(sender, **kwargs):
 
     - log the cache invalidation event.
     """
-    logger.info(
+    logger.debug(
         "%s Cache invalidation triggered.",
         logging.formatted_text(f"{module_prefix}.cache_invalidate()"),
     )
@@ -128,6 +128,7 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     default behavior is to update the last_login field on
     each login, which triggers a save.
     """
+    # pylint: disable=C0415
     from smarter.apps.dashboard.context_processors import cache_invalidations
 
     logger.info(
@@ -205,7 +206,7 @@ def account_post_delete(sender: Account, instance: Account, **kwargs):
 def charge_post_save(sender: Charge, instance: Charge, created, **kwargs):
     """Signal receiver for created/saved of Charge model."""
     charge_json = json.dumps(model_to_dict(instance))
-    logger.info(
+    logger.debug(
         "%s Charge post_save: %s, created: %s",
         logging.formatted_text(f"{module_prefix}.charge_post_save()"),
         charge_json,

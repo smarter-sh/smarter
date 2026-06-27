@@ -1,5 +1,5 @@
 """
-smarter.lib.logging.waffle_switched_logger
+Smarter.lib.logging.waffle_switched_logger
 ==========================================
 
 Conditional logger wrapper for the Smarter application.
@@ -104,6 +104,10 @@ class WaffleSwitchedLoggerWrapper:
     def set_condition(self, condition_func: Callable):
         """Update the condition function."""
         self._condition_func = condition_func
+
+    def getEffectiveLevel(self) -> int:
+        """Get the effective logging level of the underlying logger."""
+        return self._logger.getEffectiveLevel()
 
 
 __all__ = [

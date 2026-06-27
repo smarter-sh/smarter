@@ -46,6 +46,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_level = logger.getEffectiveLevel()
 prefix = "smarter.apps.prompt.receivers"
 
 
@@ -123,18 +124,19 @@ def handle_chat_completion_request_sent(
     this_prefix = formatted_text(f"{prefix}.chat_request for iteration {iteration}")
 
     logger.info(
-        "%s by %s for prompt: %s ",
+        "%s by %s for prompt %s",
         this_prefix,
         sender_name,
         prompt,
     )
-
-    logger.info(
-        "%s for prompt %s, \nrequest: %s",
-        this_prefix,
-        prompt,
-        formatted_json(data) if data else None,
-    )
+    if logger_level == logging.DEBUG:
+        logger.debug(
+            "%s by %s for prompt %s, \nrequest: %s",
+            this_prefix,
+            sender_name,
+            prompt,
+            formatted_json(data) if data else None,
+        )
 
 
 @receiver(chat_response, dispatch_uid="chat_response")
@@ -148,28 +150,36 @@ def handle_chat_completion_response_received(
     **kwargs,
 ):
     """Handle prompt completion called signal."""
-    request_data = request_to_json(request) if request else None
-    if isinstance(request_data, (dict, list)):
-        formatted_request_data = formatted_json(dict(request_data) if isinstance(request_data, dict) else request_data)
-    else:
-        formatted_request_data = str(request_data)
-
-    if isinstance(response, ChatCompletion):
-        response_data = response.model_dump()
-    else:
-        response_data = response
-
     this_prefix = formatted_text(f"{prefix}.chat_response for iteration {iteration}")
     sender_name = get_sender_name(sender)
 
     logger.info(
-        "%s from %s for prompt %s, \nrequest: %s, \nresponse: %s",
+        "%s from %s for prompt %s",
         this_prefix,
         sender_name,
         prompt,
-        formatted_request_data,
-        formatted_json(response_data) if response_data else None,
     )
+    if logger_level == logging.DEBUG:
+        request_data = request_to_json(request) if request else None
+        if isinstance(request_data, (dict, list)):
+            formatted_request_data = formatted_json(
+                dict(request_data) if isinstance(request_data, dict) else request_data
+            )
+        else:
+            formatted_request_data = str(request_data)
+
+        if isinstance(response, ChatCompletion):
+            response_data = response.model_dump()
+        else:
+            response_data = response
+        logger.debug(
+            "%s from %s for prompt %s, \nrequest: %s, \nresponse: %s",
+            this_prefix,
+            sender_name,
+            prompt,
+            formatted_request_data,
+            formatted_json(response_data) if response_data else None,
+        )
 
 
 @receiver(chat_plugin_called, dispatch_uid="chat_plugin_called")
@@ -230,23 +240,16 @@ def handle_chat_response_success(
     """Handle prompt completion returned signal."""
 
     request_data = request_to_json(request) if request else None
-    if isinstance(request_data, (dict, list)):
-        formatted_request_data = formatted_json(dict(request_data) if isinstance(request_data, dict) else request_data)
-    else:
-        formatted_request_data = str(request_data)
-
     if isinstance(response, ChatCompletion):
         response_data = response.model_dump()
     else:
         response_data = response
 
     logger.info(
-        "%s for prompt %s, sent by %s \nrequest: %s, \nresponse: %s",
+        "%s for prompt %s, sent by %s",
         formatted_text(f"{prefix}.prompt_finished"),
         prompt,
         get_sender_name(sender),
-        formatted_request_data,
-        formatted_json(response_data) if response_data else None,
     )
     if prompt:
         create_prompt_history.delay(prompt.id, request_data, response_data, messages)  # type: ignore
@@ -254,6 +257,23 @@ def handle_chat_response_success(
         logger.warning(
             "%s No prompt object provided, skipping prompt history creation",
             formatted_text(f"{prefix}.prompt_finished"),
+        )
+
+    if logger_level == logging.DEBUG:
+        if isinstance(request_data, (dict, list)):
+            formatted_request_data = formatted_json(
+                dict(request_data) if isinstance(request_data, dict) else request_data
+            )
+        else:
+            formatted_request_data = str(request_data)
+
+        logger.debug(
+            "%s for prompt %s, sent by %s \nrequest: %s, \nresponse: %s",
+            formatted_text(f"{prefix}.prompt_finished"),
+            prompt,
+            get_sender_name(sender),
+            formatted_request_data,
+            formatted_json(response_data) if response_data else None,
         )
 
 
@@ -309,7 +329,7 @@ def handle_chat_response_failure(
 def handle_chat_provider_initialized(sender, **kwargs):
     """Handle prompt provider initialized signal."""
 
-    logger.info(
+    logger.debug(
         "%s with name: %s, base_url: %s",
         formatted_text(f"{prefix}.llm_provider_initialized"),
         sender.provider,
@@ -384,36 +404,36 @@ def handle_llm_tool_responded(sender, tool_call: dict, tool_response: dict, **kw
 def handle_chat_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text(prefix + ".Prompt() record created."))
+        logger.debug("%s", formatted_text(prefix + ".Prompt() record created."))
     else:
-        logger.info("%s", formatted_text(prefix + ".Prompt() record updated."))
+        logger.debug("%s", formatted_text(prefix + ".Prompt() record updated."))
 
 
 @receiver(post_save, sender=PromptHistory)
 def handle_chat_history_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text(prefix + ".PromptHistory() record created."))
+        logger.debug("%s", formatted_text(prefix + ".PromptHistory() record created."))
     else:
-        logger.info("%s", formatted_text(prefix + ".PromptHistory() record updated."))
+        logger.debug("%s", formatted_text(prefix + ".PromptHistory() record updated."))
 
 
 @receiver(post_save, sender=PromptToolCall)
 def handle_chat_tool_call_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text(prefix + ".PromptToolCall() record created."))
+        logger.debug("%s", formatted_text(prefix + ".PromptToolCall() record created."))
     else:
-        logger.info("%s", formatted_text(prefix + ".PromptToolCall() record updated."))
+        logger.debug("%s", formatted_text(prefix + ".PromptToolCall() record updated."))
 
 
 @receiver(post_save, sender=PromptPluginUsage)
 def handle_chat_plugin_usage_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text(prefix + ".PromptPluginUsage() record created."))
+        logger.debug("%s", formatted_text(prefix + ".PromptPluginUsage() record created."))
     else:
-        logger.info("%s", formatted_text(prefix + ".PromptPluginUsage() record updated."))
+        logger.debug("%s", formatted_text(prefix + ".PromptPluginUsage() record updated."))
 
 
 @receiver(pre_delete, sender=PromptToolCall)
