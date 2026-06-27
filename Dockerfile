@@ -448,7 +448,7 @@ ENV DOCKER_COLLECT_STATIC_FILES=${DOCKER_COLLECT_STATIC_FILES}
 
 RUN if [ "$DOCKER_COLLECT_STATIC_FILES" = "true" ]; then \
       if [ ! -d "smarter/static/react" ] || [ -z "$(ls -A smarter/static/react)" ]; then \
-        echo "Error: smarter/static/react is missing or empty" >&2; exit 1; \
+        echo "Error: smarter/static/react is missing or empty" >&2; ls -lha smarter/static; exit 1; \
       fi; \
       python manage.py collectstatic --noinput; \
     else \

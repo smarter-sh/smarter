@@ -652,14 +652,14 @@ class ChatDbMixin(AccountMixin):
         )
         if not self.prompt:
             return
-        chat_id = self.prompt.id  # type: ignore
+        prompt_id = self.prompt.id  # type: ignore
         plugin = kwargs.get("plugin", None)
         plugin_id = plugin.id if plugin else None
         function_name = kwargs.get("function_name", None)
         function_args = kwargs.get("function_args", None)
         request = kwargs.get("request", None)
         response = kwargs.get("response", None)
-        create_prompt_tool_call_history.delay(chat_id, plugin_id, function_name, function_args, request, response)
+        create_prompt_tool_call_history.delay(prompt_id, plugin_id, function_name, function_args, request, response)
 
     def db_insert_chat_plugin_usage(self, *args, **kwargs):
         """
@@ -695,11 +695,11 @@ class ChatDbMixin(AccountMixin):
         if not prompt:
             logger.warning("db_insert_chat_plugin_usage() Prompt is required to create a prompt plugin usage record.")
             return
-        chat_id = prompt.id  # type: ignore
+        prompt_id = prompt.id  # type: ignore
         plugin = kwargs.get("plugin", None)
         plugin_id = plugin.id if plugin else None
         input_text = kwargs.get("input_text", None)
-        create_prompt_plugin_usage.delay(chat_id=chat_id, plugin_id=plugin_id, input_text=input_text)
+        create_prompt_plugin_usage.delay(prompt_id=prompt_id, plugin_id=plugin_id, input_text=input_text)
 
     def db_insert_charge(
         self,
@@ -750,6 +750,15 @@ class ChatDbMixin(AccountMixin):
                 reference="req-12345"
             )
         """
+        logger.debug(
+            "%s.db_insert_charge() called with resource_locators: %s, charge_type: %s, completion_tokens: %d, prompt_tokens: %d, total_tokens: %d",
+            self.formatted_class_name,
+            resource_locators,
+            charge_type,
+            completion_tokens,
+            prompt_tokens,
+            total_tokens,
+        )
         if not isinstance(self.user_profile, UserProfile):
             raise SmarterValueError("Account is required to create a charge record.")
         if not resource_locators:
