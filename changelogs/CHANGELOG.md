@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.16-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.16-alpha.1...v0.14.16-alpha.2) (2026-06-27)
+
+### Bug Fixes
+
+* add migration. deploy 2 workers. chat_id is now prompt_id ([235455f](https://github.com/smarter-sh/smarter/commit/235455f6deab39465d09868ec7826ff6ba9828ba))
+
+## [0.14.16-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.15...v0.14.16-alpha.1) (2026-06-26)
+
+### Bug Fixes
+
+* only include reverse() names on enabled optional modules ([37f351c](https://github.com/smarter-sh/smarter/commit/37f351c68662885d2025975410355a6dae96f6d2))
+
 ## [0.14.15](https://github.com/smarter-sh/smarter/compare/v0.14.14...v0.14.15) (2026-06-26)
 
 ### Bug Fixes
