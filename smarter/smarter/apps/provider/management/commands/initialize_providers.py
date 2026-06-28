@@ -33,8 +33,21 @@ class Command(SmarterCommand):
     """
     Django manage.py initialize_providers.py command.
 
-    This command is used to create/update the principal
-    Providers that are preloaded on all platforms.
+    Used to create/update the principal
+    Providers that are preloaded on all platforms. Creates/updates the API key Secret,
+    the Provider, and the ProviderModels for each provider.
+    The following providers are initialized:
+
+    - Anthropic
+    - Cohere
+    - Fireworks
+    - Google Service Account
+    - Google AI
+    - Google Maps
+    - Meta AI
+    - Mistral
+    - OpenAI
+    - TogetherIA
 
     This is called indirectly by initialize_platform and runs during automated deployment.
     """
