@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.17](https://github.com/smarter-sh/smarter/compare/v0.14.16...v0.14.17) (2026-06-28)
+
+### Bug Fixes
+
+* add anthropic, cohere, fireworks, mistral, pinecone, togherai ([9dde2f4](https://github.com/smarter-sh/smarter/commit/9dde2f4d5ef9db6665d63c1fc6ffd8c60121ce1c))
+
+### Refactoring
+
+* allow detail log entry when smarter_settings.enable_dashboard_server_logs == True ([f257ad4](https://github.com/smarter-sh/smarter/commit/f257ad4c95bdddb9a715ede81e0bee09441e30ed))
+* demote from logger.info to logger.debug ([40bb695](https://github.com/smarter-sh/smarter/commit/40bb695bd13e73fab92d75fb5ea79b1996f7e071))
+* detach from smarter_settings ([913e028](https://github.com/smarter-sh/smarter/commit/913e0288dea48f29c3ab9fdb841a65b6d26e5785))
+* generalize common defaults ([15cfbd6](https://github.com/smarter-sh/smarter/commit/15cfbd6bc8762b2d628ca730ec64d2d298ae904b))
+* generalize initialization procedure ([7985903](https://github.com/smarter-sh/smarter/commit/79859036a5705bcfbfa0a8140f10e5292c026e56))
+* move all api keys to Secret instances ([f4fc353](https://github.com/smarter-sh/smarter/commit/f4fc353a0e2fb36fc5bbeaf0540c8eb4527b4fd6))
+* move all api keys to Secret instances ([429d67c](https://github.com/smarter-sh/smarter/commit/429d67cd730e38c54e5d337c61da9d707596e503))
+
 ## [0.14.17-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.16...v0.14.17-alpha.1) (2026-06-28)
 
 ### Bug Fixes
