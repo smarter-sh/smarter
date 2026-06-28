@@ -42,6 +42,7 @@ init:
 	make check-python							# verify Python 3.13 is installed
 	make docker-check							# verify Docker is installed and running
 	make python-init							# create/replace Python virtual environment and install dependencies
+	make react-install							# install npm dependencies for React frontend apps
 	make react-build							# build React frontend apps and collect static files
 	make collectstatic							# collect static files for the Django admin interface and other components
 	make docker-build 			                # build the Smarter containers, including building the React frontend components
