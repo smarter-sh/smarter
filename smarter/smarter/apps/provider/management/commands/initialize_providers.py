@@ -1,22 +1,23 @@
 """This module is used to generate seed records for the prompt history models."""
 
+import base64
 import logging
 from http import HTTPStatus
 from pathlib import Path
 from urllib.parse import urljoin
 
-import google.auth.transport.requests
 import requests
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from google.auth.exceptions import GoogleAuthError
-from google.oauth2 import service_account
+from pydantic import SecretStr
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
+from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.provider.const import GOOGLE_SERVICE_ACCOUNT_SECRET_NAME
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
+from smarter.apps.provider.utils import get_google_service_account_bearer_token
 from smarter.apps.secret.models import Secret
-from smarter.common.conf import smarter_settings
+from smarter.common.conf.const import get_env
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
@@ -24,18 +25,6 @@ from smarter.lib.django.management.base import SmarterCommand
 logger = logging.getLogger(__name__)
 
 HERE = Path(__file__).resolve().parent
-
-OPENAI_API = "openai"
-OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
-OPENAI_API_KEY_NAME = "openai_api_key"
-
-GOOGLE_API = "googleai"
-GOOGLE_DEFAULT_MODEL = "gemini-flash-latest"
-GOOGLE_API_KEY_NAME = "googleai_api_key"
-
-META_API = "metaai"
-META_DEFAULT_MODEL = "llama3.2-3b"
-META_API_KEY_NAME = "metaai_api_key"
 
 
 class Command(SmarterCommand):
@@ -48,7 +37,32 @@ class Command(SmarterCommand):
     This runs during deployment.
     """
 
-    user_profile: UserProfile | None = None
+    user_profile: UserProfile
+
+    def initialize_google_service_account(self):
+        """Initialize Google service account credentials."""
+        try:
+            svc_acct_b64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True, is_required=True)
+            secret_string = SecretStr(json.loads(base64.b64decode(svc_acct_b64).decode("utf-8")))
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            logger.error("Failed to load Google service account: %s", e)
+            logger.error(
+                "See https://console.cloud.google.com/projectselector2/iam-admin/serviceaccounts?supportedpurview=project"
+            )
+            return
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("Unexpected error loading Google service account: %s", e)
+            return
+
+        Secret.objects.update_or_create(
+            name=GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
+            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
+            defaults={
+                "description": "Google service account credentials.",
+                "user_profile": self.user_profile,
+            },
+        )
 
     def initialize_provider_models(self, provider: Provider, bearer_token: str, default_model: str):
         """
@@ -132,22 +146,36 @@ class Command(SmarterCommand):
 
     def initialize_openai(self):
         """Initialize OpenAI provider and its models."""
+        NAME = "openai"
+        DEFAULT_MODEL = "gpt-4o-mini"
+        API_KEY_NAME = "secret"
+
         logger.info("initialize_openai")
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR("initialize_openai: User profile is not set."))
             return
 
-        openai_api_key, _ = Secret.objects.update_or_create(
-            name=OPENAI_API_KEY_NAME,
+        secret_string = SecretStr(get_env("OPENAI_API_KEY", is_secret=True, is_required=True))
+        if not secret_string or not secret_string.get_secret_value():
+            self.stdout.write(
+                self.style.WARNING(
+                    "initialize_openai: OPENAI_API_KEY is not set. Cannot initialize OpenAI provider."
+                    "Get your API key from https://platform.openai.com/api-keys and add it to your .env file as SMARTER_OPENAI_API_KEY."
+                )
+            )
+            return
+
+        secret, _ = Secret.objects.update_or_create(
+            name=API_KEY_NAME,
             defaults={
                 "description": "API key for OpenAI services.",
                 "user_profile": self.user_profile,
-                "encrypted_value": Secret.encrypt(smarter_settings.openai_api_key.get_secret_value()),
+                "encrypted_value": Secret.encrypt(secret_string.get_secret_value()),
             },
         )
 
         provider, _ = Provider.objects.update_or_create(
-            name=OPENAI_API,
+            name=NAME,
             defaults={
                 "description": "OpenAI provides advanced AI models and APIs.",
                 "user_profile": self.user_profile,
@@ -158,8 +186,8 @@ class Command(SmarterCommand):
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://api.openai.com/v1/",
-                "api_key": openai_api_key,
-                "default_model": OPENAI_DEFAULT_MODEL,
+                "api_key": secret,
+                "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "prompt/completions",
                 "website_url": "https://www.openai.com/",
                 "contact_email": SMARTER_CONTACT_EMAIL,
@@ -180,55 +208,41 @@ class Command(SmarterCommand):
 
         self.initialize_provider_models(
             provider=provider,
-            bearer_token=smarter_settings.openai_api_key.get_secret_value(),
-            default_model=OPENAI_DEFAULT_MODEL,
+            bearer_token=secret_string.get_secret_value(),
+            default_model=DEFAULT_MODEL,
         )
 
     def initialize_googleai(self):
         """Initialize Google AI provider and its models."""
+        NAME = "googleai"
+        DEFAULT_MODEL = "gemini-flash-latest"
+        API_KEY_NAME = "googleai_api_key"
         logger.info("initialize_googleai")
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR("initialize_googleai: User profile is not set."))
             return
 
-        googleai_api_key, _ = Secret.objects.update_or_create(
-            name=GOOGLE_API_KEY_NAME,
+        secret_string = SecretStr(get_env("GEMINI_API_KEY", is_secret=True, is_required=True))
+        if not secret_string or not secret_string.get_secret_value():
+            self.stdout.write(
+                self.style.WARNING(
+                    "initialize_googleai: GEMINI_API_KEY is not set. Cannot initialize Google AI provider."
+                    "Get your API key from https://aistudio.google.com/app/apikey and add it to your .env file as SMARTER_GEMINI_API_KEY."
+                )
+            )
+            return
+
+        secret, _ = Secret.objects.update_or_create(
+            name=API_KEY_NAME,
             defaults={
                 "description": "API key for Google AI services.",
                 "user_profile": self.user_profile,
-                "encrypted_value": Secret.encrypt(smarter_settings.gemini_api_key.get_secret_value()),
+                "encrypted_value": Secret.encrypt(secret_string.get_secret_value()),
             },
         )
 
-        SCOPES = [
-            "https://www.googleapis.com/auth/cloud-platform",
-            "https://www.googleapis.com/auth/generative-language.retriever",
-            "https://www.googleapis.com/auth/generative-language",
-        ]
-
-        try:
-            svc_account = smarter_settings.google_service_account.get_secret_value()
-            if isinstance(svc_account, str):
-                svc_account_dict = json.loads(svc_account)
-            else:
-                svc_account_dict = svc_account
-            credentials = service_account.Credentials.from_service_account_info(svc_account_dict, scopes=SCOPES)
-            auth_req = google.auth.transport.requests.Request()
-        except json.JSONDecodeError as e:
-            self.stdout.write(self.style.ERROR(f"initialize_googleai: Error decoding Google service account JSON: {e}"))
-            return
-        except GoogleAuthError as e:
-            self.stdout.write(self.style.ERROR(f"initialize_googleai: Error loading Google credentials: {e}"))
-
-        # pylint: disable=broad-except
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"initialize_googleai: Unexpected error: {e}"))
-            return
-        credentials.refresh(auth_req)
-        bearer_token = credentials.token
-
         provider, _ = Provider.objects.update_or_create(
-            name=GOOGLE_API,
+            name=NAME,
             defaults={
                 "description": "Google AI provides a range of AI and machine learning services.",
                 "user_profile": self.user_profile,
@@ -239,8 +253,8 @@ class Command(SmarterCommand):
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://generativelanguage.googleapis.com/v1beta/",
-                "api_key": googleai_api_key,
-                "default_model": GOOGLE_DEFAULT_MODEL,
+                "api_key": secret,
+                "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "prompt/completions",
                 "website_url": "https://ai.google.com/",
                 "contact_email": SMARTER_CONTACT_EMAIL,
@@ -259,28 +273,48 @@ class Command(SmarterCommand):
         with open(google_logo, "rb") as logo_file:
             provider.logo.save(filename, ContentFile(logo_file.read()), save=True)
 
-        self.initialize_provider_models(
-            provider=provider, bearer_token=bearer_token, default_model=GOOGLE_DEFAULT_MODEL
-        )
+        bearer_token = get_google_service_account_bearer_token()
+        if not bearer_token:
+            self.stdout.write(
+                self.style.ERROR(
+                    "initialize_googleai: Failed to obtain Google service account bearer token. Cannot initialize Google AI provider models."
+                )
+            )
+            return
+        self.initialize_provider_models(provider=provider, bearer_token=bearer_token, default_model=DEFAULT_MODEL)
 
     def initialize_metaai(self):
         """Initialize Meta AI provider and its models."""
+        NAME = "metaai"
+        DEFAULT_MODEL = "llama3.2-3b"
+        API_KEY_NAME = "secret"
+
         logger.info("initialize_metaai")
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
             return
 
-        metaai_api_key, _ = Secret.objects.update_or_create(
-            name=META_API_KEY_NAME,
+        secret_string = SecretStr(get_env("LLAMA_API_KEY", is_secret=True, is_required=True))
+        if not secret_string or not secret_string.get_secret_value():
+            self.stdout.write(
+                self.style.WARNING(
+                    "initialize_metaai: LLAMA_API_KEY is not set. Cannot initialize Meta AI provider."
+                    "Get your API key from https://llama.developer.meta.com/ and add it to your .env file as SMARTER_LLAMA_API_KEY."
+                )
+            )
+            return
+
+        secret, _ = Secret.objects.update_or_create(
+            name=API_KEY_NAME,
             defaults={
                 "description": "API key for Meta AI services.",
                 "user_profile": self.user_profile,
-                "encrypted_value": Secret.encrypt(smarter_settings.llama_api_key.get_secret_value()),
+                "encrypted_value": Secret.encrypt(secret_string.get_secret_value()),
             },
         )
 
         provider, _ = Provider.objects.update_or_create(
-            name=META_API,
+            name=NAME,
             defaults={
                 "description": "Meta AI provides a range of AI and machine learning services.",
                 "user_profile": self.user_profile,
@@ -291,8 +325,8 @@ class Command(SmarterCommand):
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://metaai.com/api/",
-                "api_key": metaai_api_key,
-                "default_model": META_DEFAULT_MODEL,
+                "api_key": secret,
+                "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "prompt/completions",
                 "website_url": "https://ai.meta.com/",
                 "contact_email": SMARTER_CONTACT_EMAIL,
@@ -314,8 +348,8 @@ class Command(SmarterCommand):
 
         self.initialize_provider_models(
             provider=provider,
-            bearer_token=smarter_settings.llama_api_key.get_secret_value(),
-            default_model=META_DEFAULT_MODEL,
+            bearer_token=secret_string.get_secret_value(),
+            default_model=DEFAULT_MODEL,
         )
 
     def handle(self, *args, **options):
@@ -323,7 +357,8 @@ class Command(SmarterCommand):
         self.handle_begin()
 
         try:
-            self.user_profile = get_cached_smarter_admin_user_profile()
+            self.user_profile = smarter_cached_objects.smarter_admin_user_profile
+            self.initialize_google_service_account()
             self.initialize_openai()
             self.initialize_googleai()
             self.initialize_metaai()

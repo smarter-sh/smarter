@@ -301,7 +301,7 @@ class Secret(MetaDataWithOwnershipModel):
         user_profile: Optional[UserProfile] = None,
         account: Optional[Account] = None,
         **kwargs,
-    ) -> Optional["Secret"]:
+    ) -> "Secret":
         """
         Retrieve a model instance using caching to optimize performance.
 
@@ -325,7 +325,7 @@ class Secret(MetaDataWithOwnershipModel):
         :param account: The account associated with the model instance.
 
         :returns: The model instance if found, otherwise None.
-        :rtype: Optional[Secret]
+        :rtype: Secret
         """
         logger_prefix = formatted_text(__name__ + "." + Secret.__name__ + ".get_cached_object()")
         logger.debug(
@@ -352,11 +352,13 @@ class Secret(MetaDataWithOwnershipModel):
         if isinstance(retval, Secret):
             return retval
         logger.debug(
-            "%s super().get_cached_object() did not return a Secret instance. Got: %s. Returning None.",
+            "%s super().get_cached_object() did not return a Secret instance. Got: %s. Raising DoesNotExist.",
             logger_prefix,
             type(retval),
         )
-        return None
+        raise Secret.DoesNotExist(
+            f"Secret with pk={pk}, name={name}, user_profile={user_profile}, account={account} does not exist."
+        )
 
 
 __all__ = ["Secret"]
