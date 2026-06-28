@@ -18,7 +18,7 @@ from smarter.apps.provider.const import (
     GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
 )
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
-from smarter.apps.secret.models import Secret
+from smarter.apps.provider.utils import initialize_secret
 from smarter.common.conf.const import get_env
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.lib import json
@@ -53,25 +53,6 @@ class Command(SmarterCommand):
     """
 
     user_profile: UserProfile
-
-    def initialize_secret(self, secret_string: str, secret_name: str, description: str) -> Secret:
-        """
-        Initialize a secret from an environment variable.
-
-        Args:
-            env_var (str): The name of the environment variable containing the secret value.
-            secret_name (str): The name to assign to the created/updated Secret object.
-            description (str): A description for the Secret object.
-        """
-        secret, _ = Secret.objects.update_or_create(
-            name=secret_name,
-            user_profile=self.user_profile,
-            defaults={
-                "description": description,
-                "encrypted_value": Secret.encrypt(secret_string),
-            },
-        )
-        return secret
 
     def initialize_google_service_account(self):
         """
@@ -117,10 +98,11 @@ class Command(SmarterCommand):
             logger.error("Unexpected error loading Google service account: %s", e)
             return
 
-        self.initialize_secret(
+        initialize_secret(
             secret_string=secret_string.get_secret_value(),
             secret_name=GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
             description="Google service account credentials.",
+            user_profile=self.user_profile,
         )
 
     def initialize_generic_provider(
@@ -166,15 +148,21 @@ class Command(SmarterCommand):
             def _initialize_provider_model(provider: Provider, model_name: str, is_default: bool = False):
                 """Helper function to initialize a single provider model."""
 
-                ProviderModel.objects.update_or_create(
-                    provider=provider,
-                    name=model_name,
-                    defaults={
-                        "description": f"{model_name} model for {provider.name}.",
-                        "is_active": True,
-                        "is_default": is_default,
-                    },
-                )
+                try:
+                    ProviderModel.objects.update_or_create(
+                        provider=provider,
+                        name=model_name,
+                        defaults={
+                            "description": f"{model_name} model for {provider.name}.",
+                            "is_active": True,
+                            "is_default": is_default,
+                        },
+                    )
+                # pylint: disable=broad-except
+                except Exception as e:
+                    self.stdout.write(
+                        self.style.ERROR(f"{log_prefix} Failed to initialize provider model {model_name}. Error: {e}")
+                    )
 
             try:
                 self.stdout.write(f"{log_prefix} Fetching provider models from {url}")
@@ -219,6 +207,7 @@ class Command(SmarterCommand):
                 self.style.SUCCESS(f"{log_prefix} provider models initialized {len(models)} models successfully.")
             )
 
+        self.echo_banner(name)
         logger.info("initialize_%s", name)
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR(f"initialize_{name}: User profile is not set."))
@@ -249,19 +238,30 @@ class Command(SmarterCommand):
             )
             return
 
-        secret = self.initialize_secret(
+        secret = initialize_secret(
             secret_string=secret_string.get_secret_value(),
             secret_name=api_key_env_var.lower(),
             description=f"API key for {name} services.",
+            user_profile=self.user_profile,
         )
-        provider, _ = Provider.objects.update_or_create(
-            name=name,
-            defaults={
-                **COMMON_DEFAULTS,
-                **provider_configuration,
-                "api_key": secret,
-            },
-        )
+        if not secret:
+            self.stdout.write(self.style.ERROR(f"initialize_{name}: Failed to initialize secret for {name} provider."))
+            return
+
+        try:
+            provider, _ = Provider.objects.update_or_create(
+                name=name,
+                defaults={
+                    **COMMON_DEFAULTS,
+                    **provider_configuration,
+                    "api_key": secret,
+                },
+            )
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"initialize_{name}: Failed to create/update provider. Error: {e}"))
+            return
+
         logo_path = HERE / "data" / "logos" / name / logo_filename
         with open(logo_path, "rb") as logo_file:
             provider.logo.save(logo_filename, ContentFile(logo_file.read()), save=True)
@@ -360,7 +360,7 @@ class Command(SmarterCommand):
                 "privacy_policy_url": "https://policies.google.com/privacy",
                 "docs_url": "https://developers.generativeai.google/learn/api",
             },
-            logo_filename="google-ai.svg",
+            logo_filename="google-ai.png",
             provider_api_url="https://aistudio.google.com/app/apikey",
         )
 
@@ -372,10 +372,11 @@ class Command(SmarterCommand):
 
         secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
 
-        self.initialize_secret(
+        initialize_secret(
             secret_string=secret_string.get_secret_value(),
             secret_name=API_KEY_NAME,
             description=f"API key for {NAME} services.",
+            user_profile=self.user_profile,
         )
 
     def initialize_metaai(self):
@@ -470,6 +471,12 @@ class Command(SmarterCommand):
             logo_filename="together-logo.svg",
             provider_api_url="https://platform.together.ai/api-keys",
         )
+
+    def echo_banner(self, name: str):
+        """Echo a banner to the console."""
+        self.stdout.write(self.style.SUCCESS("-" * 40))
+        self.stdout.write(self.style.SUCCESS(f"Initializing {name} provider..."))
+        self.stdout.write(self.style.SUCCESS("-" * 40))
 
     def handle(self, *args, **options):
         """Initialize all built-in providers."""

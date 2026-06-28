@@ -78,30 +78,19 @@ openmeteo_api_client = openmeteo_requests.Client(session=cached_session_with_ret
 
 # Google Maps API key and client
 # -----------------------------------------------------------------------------
-google_maps_api_key = get_google_maps_api_key()
-google_maps_client = None
-if not google_maps_api_key:
-    try:
-        raise SmarterInvalidApiKeyError(
-            f"{logger_prefix} Google Maps API key is not set. Please set GOOGLE_MAPS_API_KEY in your .env file."
-        )
-    except SmarterInvalidApiKeyError as invalid_key_error:
-        logger.warning(str(invalid_key_error))
+def get_google_maps_client() -> googlemaps.Client:
+    """Returns an authenticated Google Maps client instance, or None if initialization failed."""
 
-try:
-    google_maps_client = googlemaps.Client(key=google_maps_api_key)
-# pylint: disable=broad-except
-except ValueError as e:
-    try:
-        raise SmarterInvalidApiKeyError(
-            f"{logger_prefix} Invalid Google Maps API key. Please check your GOOGLE_MAPS_API_KEY in your .env file: {e}"
-        ) from e
-    except SmarterInvalidApiKeyError as invalid_key_error:
-        logger.warning(str(invalid_key_error))
-except Exception as value_error:
-    logger.warning(
-        f"{logger_prefix} Could not initialize Google Maps API. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview. Add your GOOGLE_MAPS_API_KEY to .env: {value_error}"
-    )
+    google_maps_api_key = get_google_maps_api_key()
+    if not google_maps_api_key:
+        try:
+            raise SmarterInvalidApiKeyError(
+                f"{logger_prefix} Google Maps API key is not set. Please set GOOGLE_MAPS_API_KEY in your .env file."
+            )
+        except SmarterInvalidApiKeyError as invalid_key_error:
+            logger.warning(str(invalid_key_error))
+
+    return googlemaps.Client(key=google_maps_api_key)
 
 
-__all__ = ["google_maps_client", "should_log", "openmeteo_api_client"]
+__all__ = ["get_google_maps_client", "should_log", "openmeteo_api_client"]

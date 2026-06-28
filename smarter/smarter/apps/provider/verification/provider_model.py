@@ -216,9 +216,8 @@ def verify_model_audio_input(provider_model: ProviderModel, **kwargs) -> bool:
         openai.base_url = provider_model.provider.base_url
 
         # Try transcription (you can also try translation if needed)
-        openai.audio.transcriptions.create(
-            model=provider_model.name, file=buffer, filename="test.wav", mime_type="audio/wav"
-        )
+        openai.audio.transcriptions.create(model="gpt-4o-transcribe", file=buffer)
+
         success = True
     except Exception:
         logger.error(
