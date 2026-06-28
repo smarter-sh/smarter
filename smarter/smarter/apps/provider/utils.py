@@ -173,3 +173,21 @@ def get_google_service_account_bearer_token() -> str | None:
     credentials.refresh(auth_req)
     bearer_token = credentials.token
     return bearer_token
+
+
+def get_google_maps_api_key() -> str | None:
+    """Get the Google Maps API key from the secret store."""
+    try:
+        secret = Secret.get_cached_object("google_maps_api_key")
+        api_key = secret.get_secret()
+        if not api_key:
+            logger.error("Google Maps API key secret is empty.")
+            return None
+        return api_key
+    except Secret.DoesNotExist:
+        logger.error("Google Maps API key secret not found.")
+        return None
+    # pylint: disable=broad-except
+    except Exception as e:
+        logger.error("Unexpected error retrieving Google Maps API key: %s", e)
+        return None
