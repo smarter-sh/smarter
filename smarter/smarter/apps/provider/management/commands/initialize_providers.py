@@ -65,6 +65,7 @@ class Command(SmarterCommand):
         """
         secret, _ = Secret.objects.update_or_create(
             name=secret_name,
+            user_profile=self.user_profile,
             defaults={
                 "description": description,
                 "encrypted_value": Secret.encrypt(secret_string),

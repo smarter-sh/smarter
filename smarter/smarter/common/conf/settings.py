@@ -2072,41 +2072,6 @@ class Settings(BaseSettings):
 
         return v
 
-    google_service_account: SecretStr = Field(
-        settings_defaults.GOOGLE_SERVICE_ACCOUNT,
-        description="The Google service account credentials as a dictionary. Used for Google Cloud services integration.",
-        examples=[{"type": "service_account", "project_id": "my-project", "...": "..."}],
-        title="Google Service Account Credentials",
-    )
-    """
-    The Google service account credentials as a dictionary.
-
-    Used for Google Cloud services integration.
-    This setting contains the credentials for a Google service account in JSON format.
-    It is used to authenticate and authorize access to Google Cloud services on behalf
-    of the platform.
-
-    :type: dict
-    :default: Value from ``settings_defaults.GOOGLE_SERVICE_ACCOUNT``
-    :raises SmarterConfigurationError: If the value is not a valid service account JSON.
-    """
-
-    @before_field_validator("google_service_account")
-    def validate_google_service_account(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
-        """Validates the `google_service_account` field.
-
-        Args:
-            v (Optional[SecretStr]): The Google service account value to validate.
-        Returns:
-            SecretStr: The validated Google service account.
-        """
-        if v is None:
-            return settings_defaults.GOOGLE_SERVICE_ACCOUNT
-
-        if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError(f"google_service_account of type {type(v)} is not a SecretStr.")
-        return v
-
     internal_ip_prefixes: List[str] = Field(
         settings_defaults.INTERNAL_IP_PREFIXES,
         description="A list of internal IP prefixes used for security and middleware features.",
