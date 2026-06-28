@@ -13,7 +13,7 @@ from smarter.apps.vectorstore.models import (
     VectorstoreStatus,
 )
 from smarter.apps.vectorstore.service import VectorstoreService
-from smarter.common.conf.settings import smarter_settings
+from smarter.apps.vectorstore.utils import get_pinecone_api_key
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.logger_helpers import formatted_text
 
@@ -65,11 +65,16 @@ class VectorstoreTestBase(TestAccountMixin):
                 "Active OpenAI provider model with embedding support not found. Cannot setup vectorstore tests."
             ) from e
 
+        pinecone_api_key = get_pinecone_api_key()
+        if not pinecone_api_key:
+            raise SmarterConfigurationError(
+                "Pinecone API key not found in Secret model. Cannot setup vectorstore tests."
+            )
         cls.password = Secret.objects.create(
             name="test_password",
             description="A test password",
             user_profile=cls.user_profile,
-            value=smarter_settings.pinecone_api_key.get_secret_value(),
+            value=pinecone_api_key,
             is_active=True,
         )
 

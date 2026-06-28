@@ -13,7 +13,10 @@ from pydantic import SecretStr
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.provider.const import GOOGLE_SERVICE_ACCOUNT_SECRET_NAME
+from smarter.apps.provider.const import (
+    GOOGLE_MAPS_API_KEY_SECRET_NAME,
+    GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
+)
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.apps.provider.utils import get_google_service_account_bearer_token
 from smarter.apps.secret.models import Secret
@@ -427,7 +430,7 @@ class Command(SmarterCommand):
     def initialize_google_maps(self):
         """Initialize Google Maps provider."""
         API_KEY_ENV_VAR = "GOOGLE_MAPS_API_KEY"
-        API_KEY_NAME = "googlemaps_api_key"
+        API_KEY_NAME = GOOGLE_MAPS_API_KEY_SECRET_NAME
 
         logger.info("initialize_googlemaps")
         if self.user_profile is None:
@@ -662,35 +665,6 @@ class Command(SmarterCommand):
             default_model=DEFAULT_MODEL,
         )
 
-    def initialize_pinecone(self):
-        """Initialize Pinecone provider."""
-        API_KEY_ENV_VAR = "PINECONE_API_KEY"
-        API_KEY_NAME = "pinecone_api_key"
-
-        logger.info("initialize_pinecone")
-        if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_pinecone: User profile is not set."))
-            return
-
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_pinecone: {API_KEY_ENV_VAR} is not set. Cannot initialize Pinecone provider."
-                    f"Get your API key from https://www.pinecone.io/start/ and add it to your .env file as {API_KEY_ENV_VAR}."
-                )
-            )
-            return
-
-        Secret.objects.update_or_create(
-            name=API_KEY_NAME,
-            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
-            defaults={
-                "description": "API key for Pinecone services.",
-                "user_profile": self.user_profile,
-            },
-        )
-
     def initialize_togetheria(self):
         """Initialize TogetherAI provider and its models."""
         API_KEY_ENV_VAR = "TOGETHERAI_API_KEY"
@@ -775,7 +749,6 @@ class Command(SmarterCommand):
             self.initialize_metaai()
             self.initialize_mistral()
             self.initialize_openai()
-            self.initialize_pinecone()
             self.initialize_togetheria()
         # pylint: disable=broad-except
         except Exception as exc:

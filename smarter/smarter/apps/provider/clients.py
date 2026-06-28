@@ -70,7 +70,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
 
         provider=PROVIDER_NAME
         base_url=BASE_URL
-        api_key=smarter_settings.gemini_api_key.get_secret_value()
+        api_key=API_KEY
     """
 
     def __init__(self, *args, provider: str, base_url: str, api_key: str, **kwargs):
