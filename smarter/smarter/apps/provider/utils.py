@@ -3,13 +3,19 @@
 
 import logging
 
+import google.auth.transport.requests
 import requests
+from google.auth.exceptions import GoogleAuthError
+from google.oauth2 import service_account
 
+from smarter.apps.secret.models import Secret
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
+from .const import GOOGLE_SERVICE_ACCOUNT_SECRET_NAME
 from .models import (
     Provider,
     ProviderModel,
@@ -42,9 +48,7 @@ module_prefix = "smarter.apps.provider.utils."
 def get_provider_verification_for_type(
     provider: Provider, verification_type: ProviderVerificationTypes
 ) -> ProviderVerification:
-    """
-    Get the provider verification for a specific type.
-    """
+    """Get the provider verification for a specific type."""
     prefix = formatted_text(module_prefix + "get_provider_verification_for_type()")
     logger.debug("%s Getting provider verification for %s of type %s", prefix, provider.name, verification_type)
 
@@ -57,9 +61,7 @@ def get_provider_verification_for_type(
 def get_model_verification_for_type(
     provider_model: ProviderModel, verification_type: ProviderModelVerificationTypes
 ) -> ProviderModelVerification:
-    """
-    Get the model verification for a specific type.
-    """
+    """Get the model verification for a specific type."""
     prefix = formatted_text(module_prefix + "get_model_verification_for_type()")
     logger.debug("%s Getting model verification for %s of type %s", prefix, provider_model.name, verification_type)
 
@@ -74,9 +76,7 @@ def get_model_verification_for_type(
 def set_model_verification(
     provider_model_verification: ProviderModelVerification, is_successful: bool, **kwargs
 ) -> None:
-    """
-    Set the model verification status.
-    """
+    """Set the model verification status."""
     prefix = formatted_text(module_prefix + "set_model_verification()")
     logger.debug(
         "%s Setting model verification for %s to %s",
@@ -98,9 +98,7 @@ def set_model_verification(
 
 
 def set_provider_verification(provider_verification: ProviderVerification, is_successful: bool, **kwargs) -> None:
-    """
-    Set the provider verification status.
-    """
+    """Set the provider verification status."""
     prefix = formatted_text(module_prefix + "set_provider_verification()")
     logger.debug(
         "%s Setting provider verification for %s to %s",
@@ -118,9 +116,7 @@ def set_provider_verification(provider_verification: ProviderVerification, is_su
 
 
 def test_web_page(url: str, test_str: str) -> bool:
-    """
-    Test a web page to see if it is valid.
-    """
+    """Test a web page to see if it is valid."""
     prefix = formatted_text(module_prefix + "test_web_page()")
     logger.debug("%s Testing web page %s", prefix, url)
 
@@ -139,3 +135,41 @@ def test_web_page(url: str, test_str: str) -> bool:
     except requests.RequestException as exc:
         logger.error("%s Web page test failed: %s", prefix, exc)
         return False
+
+
+def get_google_service_account_bearer_token() -> str | None:
+    """Get a Google service account bearer token."""
+
+    SCOPES = [
+        "https://www.googleapis.com/auth/cloud-platform",
+        "https://www.googleapis.com/auth/generative-language.retriever",
+        "https://www.googleapis.com/auth/generative-language",
+    ]
+    try:
+        secret = Secret.get_cached_object(GOOGLE_SERVICE_ACCOUNT_SECRET_NAME)
+    except Secret.DoesNotExist:
+        logger.error("initialize_googleai: Google service account secret not found.")
+        return
+
+    try:
+        svc_account = secret.get_secret()
+        if not svc_account:
+            logger.error("initialize_googleai: Google service account secret is empty.")
+            return
+        svc_account_dict = json.loads(svc_account)
+
+        credentials = service_account.Credentials.from_service_account_info(svc_account_dict, scopes=SCOPES)
+        auth_req = google.auth.transport.requests.Request()
+    except json.JSONDecodeError as e:
+        logger.error("initialize_googleai: Error decoding Google service account JSON: %s", e)
+        return
+    except GoogleAuthError as e:
+        logger.error("initialize_googleai: Error loading Google credentials: %s", e)
+        return
+    # pylint: disable=broad-except
+    except Exception as e:
+        logger.error("initialize_googleai: Unexpected error: %s", e)
+        return
+    credentials.refresh(auth_req)
+    bearer_token = credentials.token
+    return bearer_token
