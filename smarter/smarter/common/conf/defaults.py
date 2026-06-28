@@ -34,7 +34,6 @@ from smarter.common.utils.utils import (
     bool_environment_variable,
     generate_fernet_encryption_key,
 )
-from smarter.lib import json
 
 from .const import DEFAULT_ROOT_DOMAIN
 from .env import get_env
@@ -82,7 +81,6 @@ class SettingsDefaults:
     # for liveness and readiness probes from kubernetes.
     # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
     ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", ["localhost", "testserver"])
-    ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY", is_secret=True, is_required=True))
 
     API_DESCRIPTION: str = get_env(
         "API_DESCRIPTION", "A declarative AI resource management platform and developer framework"
@@ -182,29 +180,9 @@ class SettingsDefaults:
 
     FILE_DROP_ZONE_ENABLED = bool_environment_variable("FILE_DROP_ZONE_ENABLED", True)
 
-    GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY", is_secret=True, is_required=True))
-
-    try:
-        GOOGLE_SERVICE_ACCOUNT_B64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True, is_required=True)
-        GOOGLE_SERVICE_ACCOUNT: SecretStr = SecretStr(
-            json.loads(base64.b64decode(GOOGLE_SERVICE_ACCOUNT_B64).decode("utf-8"))
-        )
-    except (json.JSONDecodeError, UnicodeDecodeError) as e:
-        logger.error("Failed to load Google service account: %s", e)
-        logger.error(
-            "See https://console.cloud.google.com/projectselector2/iam-admin/serviceaccounts?supportedpurview=project"
-        )
-        GOOGLE_SERVICE_ACCOUNT = SecretStr(json.dumps({}))
-    # pylint: disable=broad-except
-    except Exception as e:
-        logger.error("Unexpected error loading Google service account: %s", e)
-        GOOGLE_SERVICE_ACCOUNT = SecretStr(json.dumps({}))
-
-    GEMINI_API_KEY: SecretStr = SecretStr(get_env("GEMINI_API_KEY", is_secret=True, is_required=True))
     INTERNAL_IP_PREFIXES: List[str] = get_env("INTERNAL_IP_PREFIXES", ["192.168."])
     LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "prompt_history")
 
-    LLAMA_API_KEY: SecretStr = SecretStr(get_env("LLAMA_API_KEY", is_secret=True, is_required=True))
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-4o-mini"
     LLM_DEFAULT_SYSTEM_ROLE = (
@@ -241,11 +219,9 @@ class SettingsDefaults:
     )
 
     OPENAI_API_ORGANIZATION = get_env("OPENAI_API_ORGANIZATION")
-    OPENAI_API_KEY: SecretStr = SecretStr(get_env("OPENAI_API_KEY", is_secret=True, is_required=True))
     OPENAI_ENDPOINT_IMAGE_N = get_env("OPENAI_ENDPOINT_IMAGE_N", 4)
     OPENAI_ENDPOINT_IMAGE_SIZE = get_env("OPENAI_ENDPOINT_IMAGE_SIZE", "1024x768")
     PLATFORM_SUBDOMAIN = get_env("PLATFORM_SUBDOMAIN", SMARTER_PLATFORM_DEFAULT_SUBDOMAIN)
-    PINECONE_API_KEY: SecretStr = SecretStr(get_env("PINECONE_API_KEY", is_secret=True))
 
     REACTJS_APP_LOADER_PATH = get_env("REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
 
