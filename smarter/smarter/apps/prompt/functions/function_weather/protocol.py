@@ -1,5 +1,6 @@
 """
-This module provides a weather forecast function for use with Smarter's
+This module provides a weather forecast function for use with Smarter's.
+
 extension of the OpenAI API function calling feature.
 
 Secondarily, this module also serves as a template for implementing
@@ -21,7 +22,6 @@ manipulation and unit conversion. These best practices include the following:
   Raises, Examples, and See Also.
 - Use of Django signals to emit events at key points in the function execution,
   allowing for extensibility and integration with other parts of the application.
-
 
 See Also
 --------
@@ -81,7 +81,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
 )
 
 try:
-    from openmeteo_requests import OpenMeteoRequestsError
+    from openmeteo_requests import OpenMeteoRequestsError  # type: ignore
 except ImportError:
     # version < 1.5.0
     from openmeteo_requests.Client import OpenMeteoRequestsError
@@ -107,7 +107,7 @@ from .models import WeatherRequestModel
 # - an authenticated Google Maps client instance
 # - an authenticated OpenMeteo API cacheable client instance
 # - a lambda function that checks if logging should be enabled
-from .utils import google_maps_client, openmeteo_api_client, should_log
+from .utils import get_google_maps_client, openmeteo_api_client, should_log
 
 WEATHER_API_URL = "https://api.open-meteo.com/v1/forecast"
 
@@ -119,7 +119,8 @@ ureg = UnitRegistry()
 
 def weather_tool_factory() -> dict[str, Any]:
     """
-    Constructs and returns a JSON-compatible dictionary defining the weather
+    Constructs and returns a JSON-compatible dictionary defining the weather.
+
     tool for OpenAI LLM function calling.
 
     See Also
@@ -172,7 +173,8 @@ def weather_tool_factory() -> dict[str, Any]:
 
 def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[str, Any]]:
     """
-    Retrieves the current weather and a 24-hour forecast for a specified
+    Retrieves the current weather and a 24-hour forecast for a specified.
+
     location. The basic flow is:
 
     1. Define and initialize variables to be used in the function.
@@ -233,6 +235,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall) -> list[dict[s
     # 2.) Check if the necessary API clients are initialized before proceeding.
     # If not, return an error message.
     # -------------------------------------------------------------------------
+    google_maps_client = get_google_maps_client()
     if google_maps_client is None:
         retval = {
             "error": (

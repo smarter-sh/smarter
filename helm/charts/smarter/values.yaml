@@ -36,7 +36,7 @@
 env:
   AUTHENTICATION_BACKENDS: "social_core.backends.google.GoogleOAuth2,social_core.backends.github.GithubOAuth2,django.contrib.auth.backends.ModelBackend"
   AWS_ACCESS_KEY_ID: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  AWS_REGION: "us-east-1"
+  AWS_REGION: "ca-central-1"
   AWS_SECRET_ACCESS_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   CACHES_LOCATION: "SET-ME-IN-helm/charts/smarter/values.yaml"
   CELERY_BROKER_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"

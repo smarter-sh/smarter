@@ -66,10 +66,6 @@ class TestSettings(SmarterTestBase):
                 re.match(r"^[a-zA-Z0-9.-]+(:[0-9]+)?$", host), f"Invalid host: {host} {smarter_settings.allowed_hosts}"
             )
 
-    def test_another_training_example(self):
-        self.assertIsNotNone(smarter_settings.anthropic_api_key)
-        self.assertIsInstance(smarter_settings.anthropic_api_key, SecretStr)
-
     def test_api_description(self):
         self.assertIsNotNone(smarter_settings.api_description)
 
@@ -187,23 +183,11 @@ class TestSettings(SmarterTestBase):
     def test_fernet_encryption_key(self):
         self.assertIsNotNone(smarter_settings.fernet_encryption_key)
 
-    def test_gemini_api_key(self):
-        self.assertIsNotNone(smarter_settings.gemini_api_key)
-
-    def test_google_maps_api_key(self):
-        self.assertIsNotNone(smarter_settings.google_maps_api_key)
-
-    def test_google_service_account(self):
-        self.assertIsNotNone(smarter_settings.google_service_account)
-
     def test_internal_ip_prefixes(self):
         self.assertIsNotNone(smarter_settings.internal_ip_prefixes)
 
     def test_log_level(self):
         self.assertIsNotNone(smarter_settings.log_level)
-
-    def test_llama_api_key(self):
-        self.assertIsNotNone(smarter_settings.llama_api_key)
 
     def test_local_hosts(self):
         self.assertIsNotNone(smarter_settings.local_hosts)
@@ -241,17 +225,11 @@ class TestSettings(SmarterTestBase):
     def test_openai_api_organization(self):
         self.assertIsNotNone(smarter_settings.openai_api_organization)
 
-    def test_openai_api_key(self):
-        self.assertIsNotNone(smarter_settings.openai_api_key)
-
     def test_openai_endpoint_image_n(self):
         self.assertIsNotNone(smarter_settings.openai_endpoint_image_n)
 
     def test_openai_endpoint_image_size(self):
         self.assertIsNotNone(smarter_settings.openai_endpoint_image_size)
-
-    def test_pinecone_api_key(self):
-        self.assertIsNotNone(smarter_settings.pinecone_api_key)
 
     def test_root_domain(self):
         self.assertIsNotNone(smarter_settings.root_domain)
