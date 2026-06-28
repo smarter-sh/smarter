@@ -230,48 +230,6 @@ class Settings(BaseSettings):
 
         return list(set(retval))
 
-    anthropic_api_key: SecretStr = Field(
-        settings_defaults.ANTHROPIC_API_KEY,
-        description="API key for Anthropic services. Masked by pydantic SecretStr.",
-        examples=["sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
-        title="Anthropic API Key",
-    )
-    """
-    API key for Anthropic services, used to authenticate requests to the Anthropic API.
-
-    Required when registering Anthropic as a provider via a Provider manifest.
-
-    Set via the ``SMARTER_ANTHROPIC_API_KEY`` environment variable in ``.env``.
-    Obtain a key at https://console.anthropic.com/ under Settings → API Keys.
-
-    :type: SecretStr
-    :default: Value from ``settings_defaults.ANTHROPIC_API_KEY``
-    :raises SmarterConfigurationError: If the value is not a valid SecretStr.
-    """
-
-    @before_field_validator("anthropic_api_key")
-    def validate_anthropic_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
-        """Validates the `anthropic_api_key` field.
-
-        Args:
-            v (Optional[SecretStr]): The Anthropic API key value to validate.
-
-        Returns:
-            SecretStr: The validated Anthropic API key.
-        """
-        warnings.warn(
-            "`anthropic_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if v is None:
-            return settings_defaults.ANTHROPIC_API_KEY
-
-        if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError(f"anthropic_api_key of type {type(v)} is not a SecretStr.")
-
-        return v
-
     api_description: str = Field(
         settings_defaults.API_DESCRIPTION,
         description="The description of the API.",
@@ -607,36 +565,6 @@ class Settings(BaseSettings):
                 )
             )
             logger.warning("SMTP is not configured properly. Email features may not work as expected.")
-            retval = False
-
-        if self.openai_api_key and self.openai_api_key.get_secret_value() == self.default_missing_value:
-            print(
-                formatted_text_red(
-                    "\n"
-                    + "=" * 80
-                    + "\n[WARNING] OPENAI_API_KEY is not configured properly. OpenAI features may not work as expected.\n"
-                    + "Ensure that OPENAI_API_KEY is set in environment variables or .env file.\n"
-                    + "=" * 80
-                    + "\n"
-                )
-            )
-            logger.warning("OPENAI_API_KEY is not configured properly. OpenAI features may not work as expected.")
-            retval = False
-
-        if self.google_maps_api_key and self.google_maps_api_key.get_secret_value() == self.default_missing_value:
-            print(
-                formatted_text_red(
-                    "\n"
-                    + "=" * 80
-                    + "\n[WARNING] GOOGLE_MAPS_API_KEY is not configured properly. Google Maps features may not work as expected.\n"
-                    + "Ensure that GOOGLE_MAPS_API_KEY is set in environment variables or .env file.\n"
-                    + "=" * 80
-                    + "\n"
-                )
-            )
-            logger.warning(
-                "GOOGLE_MAPS_API_KEY is not configured properly. Google Maps features may not work as expected."
-            )
             retval = False
 
         self._ready = retval
@@ -2144,116 +2072,6 @@ class Settings(BaseSettings):
 
         return v
 
-    gemini_api_key: SecretStr = Field(
-        settings_defaults.GEMINI_API_KEY,
-        description="The API key for Google Gemini services. Masked by pydantic SecretStr.",
-        examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
-        title="Google Gemini API Key",
-    )
-    """
-    The API key for Google Gemini services.
-
-    Masked by pydantic SecretStr.
-    This setting provides the API key used to authenticate with Google Gemini services.
-    It is required for accessing Gemini's APIs and services.
-
-    :type: SecretStr
-    :default: Value from ``settings_defaults.GEMINI_API_KEY``
-    :raises SmarterConfigurationError: If the value is not a valid API key.
-    """
-
-    @before_field_validator("gemini_api_key")
-    def validate_gemini_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
-        """Validates the `gemini_api_key` field.
-
-        Args:
-            v (Optional[SecretStr]): The Gemini API key value to validate.
-
-        Returns:
-            SecretStr: The validated Gemini API key.
-        """
-        warnings.warn(
-            "`gemini_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if str(v) in THE_EMPTY_SET:
-            return settings_defaults.GEMINI_API_KEY
-        if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError(f"gemini_api_key of type {type(v)} is not a SecretStr.")
-
-        return v
-
-    google_maps_api_key: SecretStr = Field(
-        settings_defaults.GOOGLE_MAPS_API_KEY,
-        description="The API key for Google Maps services. Masked by pydantic SecretStr. Used for geocoding, maps, and places APIs, for the OpenAI get_weather() example function.",
-        examples=["AIzaSy..."],
-        title="Google Maps API Key",
-    )
-    """
-    The API key for Google Maps services.
-
-    Masked by pydantic SecretStr. Used for geocoding, maps, and places APIs, for the OpenAI get_weather() example function.
-    This setting provides the API key used to authenticate with Google Maps services.
-    It is required for accessing Google Maps APIs such as geocoding, maps rendering,
-    and places information.
-
-    :type: SecretStr
-    :default: Value from ``settings_defaults.GOOGLE_MAPS_API_KEY``
-    :raises SmarterConfigurationError: If the value is not a valid API key.
-    """
-
-    @before_field_validator("google_maps_api_key")
-    def validate_google_maps_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
-        """Validates the `google_maps_api_key` field.
-
-        Args:
-            v (Optional[SecretStr]): The Google Maps API key value to validate.
-
-        Returns:
-            SecretStr: The validated Google Maps API key.
-        """
-        if str(v) in THE_EMPTY_SET:
-            return settings_defaults.GOOGLE_MAPS_API_KEY
-        if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError(f"google_maps_api_key of type {type(v)} is not a SecretStr.")
-        return v
-
-    google_service_account: SecretStr = Field(
-        settings_defaults.GOOGLE_SERVICE_ACCOUNT,
-        description="The Google service account credentials as a dictionary. Used for Google Cloud services integration.",
-        examples=[{"type": "service_account", "project_id": "my-project", "...": "..."}],
-        title="Google Service Account Credentials",
-    )
-    """
-    The Google service account credentials as a dictionary.
-
-    Used for Google Cloud services integration.
-    This setting contains the credentials for a Google service account in JSON format.
-    It is used to authenticate and authorize access to Google Cloud services on behalf
-    of the platform.
-
-    :type: dict
-    :default: Value from ``settings_defaults.GOOGLE_SERVICE_ACCOUNT``
-    :raises SmarterConfigurationError: If the value is not a valid service account JSON.
-    """
-
-    @before_field_validator("google_service_account")
-    def validate_google_service_account(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
-        """Validates the `google_service_account` field.
-
-        Args:
-            v (Optional[SecretStr]): The Google service account value to validate.
-        Returns:
-            SecretStr: The validated Google service account.
-        """
-        if v is None:
-            return settings_defaults.GOOGLE_SERVICE_ACCOUNT
-
-        if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError(f"google_service_account of type {type(v)} is not a SecretStr.")
-        return v
-
     internal_ip_prefixes: List[str] = Field(
         settings_defaults.INTERNAL_IP_PREFIXES,
         description="A list of internal IP prefixes used for security and middleware features.",
@@ -2303,46 +2121,6 @@ class Settings(BaseSettings):
         examples=[logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL],
         title="Logging Level",
     )
-
-    llama_api_key: SecretStr = Field(
-        settings_defaults.LLAMA_API_KEY,
-        description="The API key for LLaMA services. Masked by pydantic SecretStr.",
-        examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
-        title="LLaMA API Key",
-    )
-    """
-    The API key for LLaMA services.
-
-    Masked by pydantic SecretStr.
-    This setting provides the API key used to authenticate with LLaMA services.
-    It is required for accessing LLaMA's APIs and services.
-
-    :type: SecretStr
-    :default: Value from ``settings_defaults.LLAMA_API_KEY``
-    :raises SmarterConfigurationError: If the value is not a valid API key.
-    """
-
-    @before_field_validator("llama_api_key")
-    def validate_llama_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
-        """Validates the `llama_api_key` field.
-
-        Args:
-            v (Optional[SecretStr]): The Llama API key value to validate.
-
-        Returns:
-            SecretStr: The validated Llama API key.
-        """
-        warnings.warn(
-            "`llama_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if str(v) in THE_EMPTY_SET:
-            return settings_defaults.LLAMA_API_KEY
-
-        if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError(f"llama_api_key of type {type(v)} is not a SecretStr")
-        return v
 
     local_hosts: List[str] = Field(
         settings_defaults.LOCAL_HOSTS,
@@ -2759,46 +2537,6 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"openai_api_organization of type {type(v)} is not a str: {v}")
         return v
 
-    openai_api_key: SecretStr = Field(
-        settings_defaults.OPENAI_API_KEY,
-        description="The API key for OpenAI services. Masked by pydantic SecretStr.",
-        examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
-        title="OpenAI API Key",
-    )
-    """
-    The API key for OpenAI services.
-
-    Masked by pydantic SecretStr.
-    This setting provides the API key used to authenticate with OpenAI services.
-    It is required for accessing OpenAI's APIs and services.
-
-    :type: SecretStr
-    :default: Value from ``settings_defaults.OPENAI_API_KEY``
-    :raises SmarterConfigurationError: If the value is not a valid API key.
-    """
-
-    @before_field_validator("openai_api_key")
-    def validate_openai_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
-        """Validates the `openai_api_key` field.
-
-        Args:
-            v (Optional[SecretStr]): The OpenAI API key value to validate.
-        Returns:
-            SecretStr: The validated OpenAI API key.
-        """
-        warnings.warn(
-            "`openai_api_key` is deprecated and will be removed in a future release. Please use Django ORM Secret instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if str(v) in THE_EMPTY_SET and settings_defaults.OPENAI_API_KEY is not None:
-            return settings_defaults.OPENAI_API_KEY
-
-        if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError(f"openai_api_key of type {type(v)} is not a SecretStr")
-
-        return v
-
     openai_endpoint_image_n: Optional[int] = Field(
         settings_defaults.OPENAI_ENDPOINT_IMAGE_N,
         description="The number of images to generate per request to the OpenAI image endpoint.",
@@ -2879,42 +2617,6 @@ class Settings(BaseSettings):
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"openai_endpoint_image_size of type {type(v)} is not a str: {v}")
-
-        return v
-
-    pinecone_api_key: SecretStr = Field(
-        settings_defaults.PINECONE_API_KEY,
-        description="The API key for Pinecone services. Masked by pydantic SecretStr.",
-        examples=["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
-        title="Pinecone API Key",
-    )
-    """
-    The API key for Pinecone services.
-
-    Masked by pydantic SecretStr.
-    This setting provides the API key used to authenticate with Pinecone services.
-    It is required for accessing Pinecone's APIs and services.
-
-    :type: SecretStr
-    :default: Value from ``settings_defaults.PINECONE_API_KEY``
-    :raises SmarterConfigurationError: If the value is not a valid API key.
-    """
-
-    @before_field_validator("pinecone_api_key")
-    def validate_pinecone_api_key(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
-        """Validates the `pinecone_api_key` field.
-
-        Args:
-            v (Optional[SecretStr]): The Pinecone API key value to validate.
-
-        Returns:
-            SecretStr: The validated Pinecone API key.
-        """
-        if str(v) in THE_EMPTY_SET and settings_defaults.PINECONE_API_KEY is not None:
-            return settings_defaults.PINECONE_API_KEY
-
-        if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError(f"pinecone_api_key of type {type(v)} is not a SecretStr")
 
         return v
 

@@ -155,7 +155,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         if self._kubeconfig:
             return self._kubeconfig
         self._kubeconfig = get_readonly_yaml_file(self.kubeconfig_path)
-        logger.info("%s loaded kubeconfig from path %s", module_prefix, self.kubeconfig_path)
+        logger.debug("%s loaded kubeconfig from path %s", module_prefix, self.kubeconfig_path)
         return self._kubeconfig
 
     def update_kubeconfig(self) -> bool:
@@ -169,7 +169,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         :return: True if the kubeconfig was updated successfully, False otherwise.
         :rtype: bool
         """
-        logger.info(
+        logger.debug(
             "%s.update_kubeconfig() updating kubeconfig for Kubernetes cluster %s",
             module_prefix,
             smarter_settings.aws_eks_cluster_name,
@@ -186,7 +186,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         try:
             subprocess.check_call(command)
             self._configured = True
-            logger.info("%s.update_kubeconfig() kubeconfig updated successfully", module_prefix)
+            logger.debug("%s.update_kubeconfig() kubeconfig updated successfully", module_prefix)
             return True
         except subprocess.CalledProcessError as e:
             self._configured = False
@@ -238,7 +238,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         :return: True if the namespace exists, False otherwise.
         :rtype: bool
         """
-        logger.info(
+        logger.debug(
             "%s.verify_namespace() verifying namespace in cluster %s, name %s",
             module_prefix,
             smarter_settings.aws_eks_cluster_name,
@@ -250,7 +250,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         try:
             output = subprocess.check_output(command)
             json.loads(output)
-            logger.info("%s found namespace resource %s", module_prefix, namespace)
+            logger.debug("%s found namespace resource %s", module_prefix, namespace)
         except subprocess.CalledProcessError:
             logger.warning("%s did not find namespace resource %s", module_prefix, namespace)
             return False

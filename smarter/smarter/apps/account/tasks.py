@@ -17,6 +17,7 @@ from .models.charge import Charge, aggregate_charges
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.ACCOUNT_LOGGING]
 )
+logger_level = logger.getEffectiveLevel()
 module_prefix = "smarter.apps.account.tasks."
 
 
@@ -51,7 +52,7 @@ def create_charge(*args, **kwargs):
     total_tokens = kwargs.get("total_tokens")
     prefix = logging.formatted_text(module_prefix + "create_charge()")
 
-    logger.info(
+    logger.debug(
         "%s. resource_locator %s, charge_type %s, prompt_tokens %s, completion_tokens %s, total_tokens %s",
         prefix,
         resource_locator,

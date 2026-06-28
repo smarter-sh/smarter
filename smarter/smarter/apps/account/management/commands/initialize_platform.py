@@ -111,6 +111,12 @@ class Command(SmarterCommand):
             logger.error("Failed to initialize providers: %s", e)
 
         try:
+            call_command("initialize_vectorstore_providers")  # Initialize builtin vectorstore providers: pinecone
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("Failed to initialize vectorstore providers: %s", e)
+
+        try:
             call_command(
                 "verify_dns_configuration"
             )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records

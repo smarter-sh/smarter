@@ -1,5 +1,6 @@
 """
-Utility functions and shared resources for prompt functions, such as
+Utility functions and shared resources for prompt functions, such as.
+
 API clients and logging configuration. This module contains
 code initialization and housekeeping logic that distracts from
 in-classroom presentations, so we keep it here in order to keep
@@ -20,7 +21,7 @@ import requests_cache
 from django_redis import get_redis_connection
 from retry_requests import retry
 
-from smarter.common.conf import smarter_settings
+from smarter.apps.provider.utils import get_google_maps_api_key
 from smarter.common.exceptions import SmarterInvalidApiKeyError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
@@ -48,9 +49,7 @@ logger_prefix = formatted_text(__name__)
 # object to reuse across function calls to avoid creating multiple sessions
 # and Redis connections.
 def get_session():
-    """
-    Returns a cached session for making HTTP requests, using Redis as the backend.
-    """
+    """Returns a cached session for making HTTP requests, using Redis as the backend."""
     # pylint: disable=global-statement
     _session = None
     if _session is None:
@@ -79,32 +78,19 @@ openmeteo_api_client = openmeteo_requests.Client(session=cached_session_with_ret
 
 # Google Maps API key and client
 # -----------------------------------------------------------------------------
-google_maps_client = None
-if (
-    not smarter_settings.google_maps_api_key
-    or smarter_settings.google_maps_api_key.get_secret_value() == smarter_settings.default_missing_value
-):
-    try:
-        raise SmarterInvalidApiKeyError(
-            f"{logger_prefix} Google Maps API key is not set. Please set GOOGLE_MAPS_API_KEY in your .env file."
-        )
-    except SmarterInvalidApiKeyError as invalid_key_error:
-        logger.warning(str(invalid_key_error))
+def get_google_maps_client() -> googlemaps.Client:
+    """Returns an authenticated Google Maps client instance, or None if initialization failed."""
 
-try:
-    google_maps_client = googlemaps.Client(key=smarter_settings.google_maps_api_key.get_secret_value())
-# pylint: disable=broad-except
-except ValueError as e:
-    try:
-        raise SmarterInvalidApiKeyError(
-            f"{logger_prefix} Invalid Google Maps API key. Please check your GOOGLE_MAPS_API_KEY in your .env file: {e}"
-        ) from e
-    except SmarterInvalidApiKeyError as invalid_key_error:
-        logger.warning(str(invalid_key_error))
-except Exception as value_error:
-    logger.warning(
-        f"{logger_prefix} Could not initialize Google Maps API. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview. Add your GOOGLE_MAPS_API_KEY to .env: {value_error}"
-    )
+    google_maps_api_key = get_google_maps_api_key()
+    if not google_maps_api_key:
+        try:
+            raise SmarterInvalidApiKeyError(
+                f"{logger_prefix} Google Maps API key is not set. Please set GOOGLE_MAPS_API_KEY in your .env file."
+            )
+        except SmarterInvalidApiKeyError as invalid_key_error:
+            logger.warning(str(invalid_key_error))
+
+    return googlemaps.Client(key=google_maps_api_key)
 
 
-__all__ = ["google_maps_client", "should_log", "openmeteo_api_client"]
+__all__ = ["get_google_maps_client", "should_log", "openmeteo_api_client"]

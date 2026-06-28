@@ -31,6 +31,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_level = logger.getEffectiveLevel()
 module_prefix = "smarter.apps.prompt.tasks."
 
 
@@ -41,7 +42,7 @@ module_prefix = "smarter.apps.prompt.tasks."
     queue=smarter_settings.llm_client_tasks_celery_task_queue,
 )
 def create_prompt_history(prompt_id, request, response, messages):
-    logger.info("%s prompt_id: %s", formatted_text(module_prefix + "create_prompt_history()"), prompt_id)
+    logger.debug("%s prompt_id: %s", formatted_text(module_prefix + "create_prompt_history()"), prompt_id)
     try:
         prompt = Prompt.objects.get(id=prompt_id)
     except Prompt.DoesNotExist:
@@ -52,9 +53,15 @@ def create_prompt_history(prompt_id, request, response, messages):
     PromptHistory.objects.create(prompt=prompt, request=request, response=response, messages=messages)
 
 
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
+    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+)
 def aggregate_prompt_history():
     """Summarize detail llm_client history into aggregate records."""
-    logger.info("%s", formatted_text(module_prefix + "aggregate_prompt_history()"))
+    logger.debug("%s", formatted_text(module_prefix + "aggregate_prompt_history()"))
 
 
 @app.task(
@@ -81,7 +88,7 @@ def create_prompt(session_key, llm_client_id):
 )
 def create_prompt_tool_call_history(prompt_id, plugin_meta_id, function_name, function_args, request, response):
     """Create prompt tool call history record."""
-    logger.info("%s", formatted_text(module_prefix + "create_prompt_tool_call_history()"))
+    logger.debug("%s", formatted_text(module_prefix + "create_prompt_tool_call_history()"))
     prompt = None
     plugin_meta = None
 
@@ -117,7 +124,7 @@ def create_prompt_plugin_usage(*args, **kwargs):
     prompt_id = kwargs.get("prompt_id", None)
     plugin_id = kwargs.get("plugin_id", None)
 
-    logger.info(
+    logger.debug(
         "%s prompt_id=%s, plugin_id=%s", formatted_text(module_prefix + "create_plugin_usage()"), prompt_id, plugin_id
     )
     if prompt_id is None:
