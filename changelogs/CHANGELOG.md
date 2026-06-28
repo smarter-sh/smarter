@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.17-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.16...v0.14.17-alpha.1) (2026-06-28)
+
+### Bug Fixes
+
+* add anthropic, cohere, fireworks, mistral, pinecone, togherai ([9dde2f4](https://github.com/smarter-sh/smarter/commit/9dde2f4d5ef9db6665d63c1fc6ffd8c60121ce1c))
+
+### Refactoring
+
+* allow detail log entry when smarter_settings.enable_dashboard_server_logs == True ([f257ad4](https://github.com/smarter-sh/smarter/commit/f257ad4c95bdddb9a715ede81e0bee09441e30ed))
+* demote from logger.info to logger.debug ([40bb695](https://github.com/smarter-sh/smarter/commit/40bb695bd13e73fab92d75fb5ea79b1996f7e071))
+* detach from smarter_settings ([913e028](https://github.com/smarter-sh/smarter/commit/913e0288dea48f29c3ab9fdb841a65b6d26e5785))
+
 ## [0.14.16](https://github.com/smarter-sh/smarter/compare/v0.14.15...v0.14.16) (2026-06-27)
 
 ### Bug Fixes
