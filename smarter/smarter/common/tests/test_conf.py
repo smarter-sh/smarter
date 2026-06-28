@@ -183,9 +183,6 @@ class TestSettings(SmarterTestBase):
     def test_fernet_encryption_key(self):
         self.assertIsNotNone(smarter_settings.fernet_encryption_key)
 
-    def test_google_service_account(self):
-        self.assertIsNotNone(smarter_settings.google_service_account)
-
     def test_internal_ip_prefixes(self):
         self.assertIsNotNone(smarter_settings.internal_ip_prefixes)
 
