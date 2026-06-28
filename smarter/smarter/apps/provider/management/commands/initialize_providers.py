@@ -1,4 +1,4 @@
-"""This module is used to generate seed records for the prompt history models."""
+"""Initialize 3rd party providers."""
 
 import base64
 import logging
@@ -18,7 +18,6 @@ from smarter.apps.provider.const import (
     GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
 )
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
-from smarter.apps.provider.utils import get_google_service_account_bearer_token
 from smarter.apps.secret.models import Secret
 from smarter.common.conf.const import get_env
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
@@ -37,13 +36,41 @@ class Command(SmarterCommand):
     This command is used to create/update the principal
     Providers that are preloaded on all platforms.
 
-    This runs during deployment.
+    This is called indirectly by initialize_platform and runs during automated deployment.
     """
 
     user_profile: UserProfile
 
     def initialize_google_service_account(self):
-        """Initialize Google service account credentials."""
+        """
+        Initialize Google service account credentials.
+
+        A Google service account is a special identity that allows an application,
+        rather than a person, to securely authenticate with Google APIs and
+        services. It uses cryptographic credentials to prove its identity and
+        obtain temporary access tokens without requiring a user to log in. The
+        service account can only perform the actions that have been explicitly
+        granted to it through Google Cloud IAM permissions.
+
+        Example service account JSON structure::
+
+            service_account_json = {
+            "type": "service_account",
+            "project_id": "smarter-sh",
+            "private_key_id": "65fc3e5bd38b1234567890676f6d6abcdefghijk",
+            "private_key": "PRIVATE-KEY-DATA",
+            "client_email": "smarter-gemini-initializer@smarter-sh.iam.gserviceaccount.com",
+            "client_id": "104887368144732193269",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/smarter-gemini-initializer%40smarter-sh.iam.gserviceaccount.com",
+            "universe_domain": "googleapis.com"
+            }
+
+            service_account_b64 = base64.b64encode(json.dumps(service_account_json).encode("utf-8")).decode("ascii")
+            print(service_account_b64)
+        """
         try:
             svc_acct_b64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True, is_required=True)
             secret_string = SecretStr(json.loads(base64.b64decode(svc_acct_b64).decode("utf-8")))
@@ -91,6 +118,19 @@ class Command(SmarterCommand):
         url = urljoin(provider.base_url, end_point)
         headers = {"Authorization": f"Bearer {bearer_token}"}
 
+        def _initialize_provider_model(provider: Provider, model_name: str, is_default: bool = False):
+            """Helper function to initialize a single provider model."""
+
+            ProviderModel.objects.update_or_create(
+                provider=provider,
+                name=model_name,
+                defaults={
+                    "description": f"{model_name} model for {provider.name}.",
+                    "is_active": True,
+                    "is_default": is_default,
+                },
+            )
+
         try:
             self.stdout.write(f"{log_prefix} Fetching provider models from {url}")
             response = requests.get(url, headers=headers, timeout=10)
@@ -127,24 +167,67 @@ class Command(SmarterCommand):
         for model in models:
             model_name = model.get("id")
             if model_name:
-                self.initialize_provider_model(
+                _initialize_provider_model(
                     provider=provider, model_name=model_name, is_default=model_name == default_model
                 )
         self.stdout.write(
             self.style.SUCCESS(f"{log_prefix} provider models initialized {len(models)} models successfully.")
         )
 
-    def initialize_provider_model(self, provider: Provider, model_name: str, is_default: bool = False):
-        """Helper function to initialize a single provider model."""
+    def initialize_generic_provider(
+        self,
+        api_key_env_var: str,
+        api_key_name: str,
+        name: str,
+        default_model: str,
+        defaults: dict,
+        logo_filename: str,
+        provider_api_url: str,
+    ):
+        """
+        Initialize a provider and its models.
 
-        ProviderModel.objects.update_or_create(
-            provider=provider,
-            name=model_name,
+        - create/update api key secret
+        - create/update provider
+        - create/update provider models
+        """
+
+        logger.info("initialize_%s", name)
+        if self.user_profile is None:
+            self.stdout.write(self.style.ERROR(f"initialize_{name}: User profile is not set."))
+            return
+
+        secret_string = SecretStr(get_env(api_key_env_var, is_secret=True, is_required=True))
+        if not secret_string or not secret_string.get_secret_value():
+            self.stdout.write(
+                self.style.WARNING(
+                    f"initialize_{name}: {api_key_env_var} is not set. Cannot initialize {name} provider."
+                    f"Get your API key from {provider_api_url} and add it to your .env file as {api_key_env_var}."
+                )
+            )
+            return
+
+        secret, _ = Secret.objects.update_or_create(
+            name=api_key_name,
+            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
             defaults={
-                "description": f"{model_name} model for {provider.name}.",
-                "is_active": True,
-                "is_default": is_default,
+                "description": f"API key for {name} services.",
+                "user_profile": self.user_profile,
             },
+        )
+        defaults["api_key"] = secret
+        provider, _ = Provider.objects.update_or_create(
+            name=name,
+            defaults=defaults,
+        )
+        logo_path = HERE / "data" / "logos" / name / logo_filename
+        with open(logo_path, "rb") as logo_file:
+            provider.logo.save(logo_filename, ContentFile(logo_file.read()), save=True)
+
+        self.initialize_provider_models(
+            provider=provider,
+            bearer_token=secret_string.get_secret_value(),
+            default_model=default_model,
         )
 
     def initialize_anthropic(self):
@@ -154,32 +237,11 @@ class Command(SmarterCommand):
         DEFAULT_MODEL = "claude-sonnet-4-6"
         API_KEY_NAME = "anthropic_api_key"
 
-        logger.info("initialize_anthropic")
-        if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_anthropic: User profile is not set."))
-            return
-
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_anthropic: {API_KEY_ENV_VAR} is not set. Cannot initialize Anthropic provider."
-                    f"Get your API key from https://platform.claude.com/docs/en/api/overview and add it to your .env file as {API_KEY_ENV_VAR}."
-                )
-            )
-            return
-
-        secret, _ = Secret.objects.update_or_create(
-            name=API_KEY_NAME,
-            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
-            defaults={
-                "description": "API key for Anthropic services.",
-                "user_profile": self.user_profile,
-            },
-        )
-
-        provider, _ = Provider.objects.update_or_create(
+        self.initialize_generic_provider(
+            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_name=API_KEY_NAME,
             name=NAME,
+            default_model=DEFAULT_MODEL,
             defaults={
                 "description": "Anthropic provides advanced AI models and APIs.",
                 "user_profile": self.user_profile,
@@ -190,7 +252,6 @@ class Command(SmarterCommand):
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://api.anthropic.com/v1/",
-                "api_key": secret,
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://www.anthropic.com/",
@@ -204,16 +265,8 @@ class Command(SmarterCommand):
                 "tos_accepted_at": timezone.now(),
                 "tos_accepted_by": self.user_profile.cached_user,
             },
-        )
-        filename = "anthropic-logo.jpeg"
-        anthropic_logo = HERE / "data" / "logos" / "anthropic" / filename
-        with open(anthropic_logo, "rb") as logo_file:
-            provider.logo.save(filename, ContentFile(logo_file.read()), save=True)
-
-        self.initialize_provider_models(
-            provider=provider,
-            bearer_token=secret_string.get_secret_value(),
-            default_model=DEFAULT_MODEL,
+            logo_filename="anthropic-logo.svg",
+            provider_api_url="https://platform.claude.com/docs/en/api/overview",
         )
 
     def initialize_cohere(self):
@@ -223,32 +276,11 @@ class Command(SmarterCommand):
         DEFAULT_MODEL = "command-r-plus"
         API_KEY_NAME = "cohere_api_key"
 
-        logger.info("initialize_cohere")
-        if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_cohere: User profile is not set."))
-            return
-
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_cohere: {API_KEY_ENV_VAR} is not set. Cannot initialize Cohere provider."
-                    f"Get your API key from https://docs.cohere.com/docs/ and add it to your .env file as {API_KEY_ENV_VAR}."
-                )
-            )
-            return
-
-        secret, _ = Secret.objects.update_or_create(
-            name=API_KEY_NAME,
-            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
-            defaults={
-                "description": "API key for Cohere services.",
-                "user_profile": self.user_profile,
-            },
-        )
-
-        provider, _ = Provider.objects.update_or_create(
+        self.initialize_generic_provider(
+            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_name=API_KEY_NAME,
             name=NAME,
+            default_model=DEFAULT_MODEL,
             defaults={
                 "description": "Cohere provides advanced AI models and APIs.",
                 "user_profile": self.user_profile,
@@ -259,7 +291,6 @@ class Command(SmarterCommand):
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://api.cohere.com/v1/",
-                "api_key": secret,
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://www.cohere.com/",
@@ -273,16 +304,8 @@ class Command(SmarterCommand):
                 "tos_accepted_at": timezone.now(),
                 "tos_accepted_by": self.user_profile.cached_user,
             },
-        )
-        filename = "cohere-logo.png"
-        cohere_logo = HERE / "data" / "logos" / "cohere" / filename
-        with open(cohere_logo, "rb") as logo_file:
-            provider.logo.save(filename, ContentFile(logo_file.read()), save=True)
-
-        self.initialize_provider_models(
-            provider=provider,
-            bearer_token=secret_string.get_secret_value(),
-            default_model=DEFAULT_MODEL,
+            logo_filename="cohere-logo.svg",
+            provider_api_url="https://platform.cohere.com/docs/en/api/overview",
         )
 
     def initialize_fireworks(self):
@@ -292,32 +315,11 @@ class Command(SmarterCommand):
         DEFAULT_MODEL = "command-r-plus"
         API_KEY_NAME = "fireworks_api_key"
 
-        logger.info("initialize_fireworks")
-        if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_fireworks: User profile is not set."))
-            return
-
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_fireworks: {API_KEY_ENV_VAR} is not set. Cannot initialize Fireworks provider."
-                    f"Get your API key from https://app.fireworks.ai/settings/users/api-keys and add it to your .env file as {API_KEY_ENV_VAR}."
-                )
-            )
-            return
-
-        secret, _ = Secret.objects.update_or_create(
-            name=API_KEY_NAME,
-            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
-            defaults={
-                "description": "API key for Fireworks services.",
-                "user_profile": self.user_profile,
-            },
-        )
-
-        provider, _ = Provider.objects.update_or_create(
+        self.initialize_generic_provider(
+            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_name=API_KEY_NAME,
             name=NAME,
+            default_model=DEFAULT_MODEL,
             defaults={
                 "description": "Fireworks provides advanced AI models and APIs.",
                 "user_profile": self.user_profile,
@@ -328,7 +330,6 @@ class Command(SmarterCommand):
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://api.fireworks.ai/inference/v1/",
-                "api_key": secret,
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://www.fireworks.ai/",
@@ -342,16 +343,8 @@ class Command(SmarterCommand):
                 "tos_accepted_at": timezone.now(),
                 "tos_accepted_by": self.user_profile.cached_user,
             },
-        )
-        filename = "fireworks-logo.jpeg"
-        fireworks_logo = HERE / "data" / "logos" / "fireworks" / filename
-        with open(fireworks_logo, "rb") as logo_file:
-            provider.logo.save(filename, ContentFile(logo_file.read()), save=True)
-
-        self.initialize_provider_models(
-            provider=provider,
-            bearer_token=secret_string.get_secret_value(),
-            default_model=DEFAULT_MODEL,
+            logo_filename="fireworks-logo.svg",
+            provider_api_url="https://app.fireworks.ai/settings/users/api-keys",
         )
 
     def initialize_googleai(self):
@@ -361,32 +354,11 @@ class Command(SmarterCommand):
         DEFAULT_MODEL = "gemini-flash-latest"
         API_KEY_NAME = "googleai_api_key"
 
-        logger.info("initialize_googleai")
-        if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_googleai: User profile is not set."))
-            return
-
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_googleai: {API_KEY_ENV_VAR} is not set. Cannot initialize Google AI provider."
-                    f"Get your API key from https://aistudio.google.com/app/apikey and add it to your .env file as {API_KEY_ENV_VAR}."
-                )
-            )
-            return
-
-        secret, _ = Secret.objects.update_or_create(
-            name=API_KEY_NAME,
-            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
-            defaults={
-                "description": "API key for Google AI services.",
-                "user_profile": self.user_profile,
-            },
-        )
-
-        provider, _ = Provider.objects.update_or_create(
+        self.initialize_generic_provider(
+            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_name=API_KEY_NAME,
             name=NAME,
+            default_model=DEFAULT_MODEL,
             defaults={
                 "description": "Google AI provides a range of AI and machine learning services.",
                 "user_profile": self.user_profile,
@@ -397,7 +369,6 @@ class Command(SmarterCommand):
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://generativelanguage.googleapis.com/v1beta/",
-                "api_key": secret,
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "prompt/completions",
                 "website_url": "https://ai.google.com/",
@@ -411,49 +382,42 @@ class Command(SmarterCommand):
                 "tos_accepted_at": timezone.now(),
                 "tos_accepted_by": self.user_profile.cached_user,
             },
+            logo_filename="google-ai.svg",
+            provider_api_url="https://aistudio.google.com/app/apikey",
         )
-        filename = "google-ai.png"
-        google_logo = HERE / "data" / "logos" / "googleai" / filename
-        with open(google_logo, "rb") as logo_file:
-            provider.logo.save(filename, ContentFile(logo_file.read()), save=True)
-
-        bearer_token = get_google_service_account_bearer_token()
-        if not bearer_token:
-            self.stdout.write(
-                self.style.ERROR(
-                    "initialize_googleai: Failed to obtain Google service account bearer token. Cannot initialize Google AI provider models."
-                )
-            )
-            return
-        self.initialize_provider_models(provider=provider, bearer_token=bearer_token, default_model=DEFAULT_MODEL)
 
     def initialize_google_maps(self):
         """Initialize Google Maps provider."""
         API_KEY_ENV_VAR = "GOOGLE_MAPS_API_KEY"
         API_KEY_NAME = GOOGLE_MAPS_API_KEY_SECRET_NAME
 
-        logger.info("initialize_googlemaps")
-        if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_googlemaps: User profile is not set."))
-            return
-
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_googlemaps: {API_KEY_ENV_VAR} is not set. Cannot initialize Google Maps provider."
-                    f"Get your API key from https://aistudio.google.com/app/apikey and add it to your .env file as {API_KEY_ENV_VAR}."
-                )
-            )
-            return
-
-        Secret.objects.update_or_create(
-            name=API_KEY_NAME,
-            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
+        self.initialize_generic_provider(
+            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_name=API_KEY_NAME,
+            name="googlemaps",
+            default_model="",
             defaults={
-                "description": "API key for Google Maps services.",
+                "description": "Google Maps provides mapping and geolocation services.",
                 "user_profile": self.user_profile,
+                "status": ProviderStatus.VERIFIED,
+                "is_active": True,
+                "is_verified": True,
+                "is_deprecated": False,
+                "is_flagged": False,
+                "is_suspended": False,
+                "base_url": "https://maps.googleapis.com/maps/api/",
+                "default_model": "",
+                "connectivity_test_path": "geocode/json",
+                "website_url": "https://developers.google.com/maps",
+                "contact_email": SMARTER_CONTACT_EMAIL,
+                "contact_email_verified": timezone.now(),
+                "support_email": SMARTER_CUSTOMER_SUPPORT_EMAIL,
+                "support_email_verified": timezone.now(),
+                "terms_of_service_url": "https://cloud.google.com/maps-platform/terms",
+                "privacy_policy_url": "https://policies.google.com/privacy",
             },
+            logo_filename="google-maps.svg",
+            provider_api_url="https://aistudio.google.com/app/apikey",
         )
 
     def initialize_metaai(self):
@@ -463,32 +427,11 @@ class Command(SmarterCommand):
         DEFAULT_MODEL = "llama3.2-3b"
         API_KEY_NAME = "metaai_api_key"
 
-        logger.info("initialize_metaai")
-        if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
-            return
-
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_metaai: {API_KEY_ENV_VAR} is not set. Cannot initialize Meta AI provider."
-                    f"Get your API key from https://llama.developer.meta.com/ and add it to your .env file as {API_KEY_ENV_VAR}."
-                )
-            )
-            return
-
-        secret, _ = Secret.objects.update_or_create(
-            name=API_KEY_NAME,
-            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
-            defaults={
-                "description": "API key for Meta AI services.",
-                "user_profile": self.user_profile,
-            },
-        )
-
-        provider, _ = Provider.objects.update_or_create(
+        self.initialize_generic_provider(
+            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_name=API_KEY_NAME,
             name=NAME,
+            default_model=DEFAULT_MODEL,
             defaults={
                 "description": "Meta AI provides a range of AI and machine learning services.",
                 "user_profile": self.user_profile,
@@ -499,7 +442,6 @@ class Command(SmarterCommand):
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://metaai.com/api/",
-                "api_key": secret,
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://ai.meta.com/",
@@ -513,17 +455,8 @@ class Command(SmarterCommand):
                 "tos_accepted_at": timezone.now(),
                 "tos_accepted_by": self.user_profile.cached_user,
             },
-        )
-
-        filename = "Meta_lockup_mono_white_RGB.svg"
-        meta_logo = HERE / "data" / "logos" / "metaai" / "mono_white" / filename
-        with open(meta_logo, "rb") as logo_file:
-            provider.logo.save(filename, ContentFile(logo_file.read()), save=True)
-
-        self.initialize_provider_models(
-            provider=provider,
-            bearer_token=secret_string.get_secret_value(),
-            default_model=DEFAULT_MODEL,
+            logo_filename="Meta_lockup_mono_white_RGB.svg",
+            provider_api_url="https://llama.developer.meta.com/",
         )
 
     def initialize_mistral(self):
@@ -533,32 +466,11 @@ class Command(SmarterCommand):
         DEFAULT_MODEL = "mistral-1"
         API_KEY_NAME = "mistral_api_key"
 
-        logger.info("initialize_mistral")
-        if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_mistral: User profile is not set."))
-            return
-
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_mistral: {API_KEY_ENV_VAR} is not set. Cannot initialize Mistral provider."
-                    f"Get your API key from https://admin.mistral.ai/organization/api-keys and add it to your .env file as {API_KEY_ENV_VAR}."
-                )
-            )
-            return
-
-        secret, _ = Secret.objects.update_or_create(
-            name=API_KEY_NAME,
-            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
-            defaults={
-                "description": "API key for Mistral AI services.",
-                "user_profile": self.user_profile,
-            },
-        )
-
-        provider, _ = Provider.objects.update_or_create(
+        self.initialize_generic_provider(
+            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_name=API_KEY_NAME,
             name=NAME,
+            default_model=DEFAULT_MODEL,
             defaults={
                 "description": "Mistral AI provides a range of AI and machine learning services.",
                 "user_profile": self.user_profile,
@@ -569,7 +481,6 @@ class Command(SmarterCommand):
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://api.mistral.ai/v1/",
-                "api_key": secret,
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://mistral.ai/",
@@ -583,17 +494,8 @@ class Command(SmarterCommand):
                 "tos_accepted_at": timezone.now(),
                 "tos_accepted_by": self.user_profile.cached_user,
             },
-        )
-
-        filename = "mistral-logo.jpeg"
-        mistral_logo = HERE / "data" / "logos" / "mistral" / filename
-        with open(mistral_logo, "rb") as logo_file:
-            provider.logo.save(filename, ContentFile(logo_file.read()), save=True)
-
-        self.initialize_provider_models(
-            provider=provider,
-            bearer_token=secret_string.get_secret_value(),
-            default_model=DEFAULT_MODEL,
+            logo_filename="mistral-logo.svg",
+            provider_api_url="https://admin.mistral.ai/organization/api-keys",
         )
 
     def initialize_openai(self):
@@ -603,32 +505,11 @@ class Command(SmarterCommand):
         DEFAULT_MODEL = "gpt-4o-mini"
         API_KEY_NAME = "openai_api_key"
 
-        logger.info("initialize_openai")
-        if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_openai: User profile is not set."))
-            return
-
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_openai: {API_KEY_ENV_VAR} is not set. Cannot initialize OpenAI provider."
-                    f"Get your API key from https://platform.openai.com/api-keys and add it to your .env file as {API_KEY_ENV_VAR}."
-                )
-            )
-            return
-
-        secret, _ = Secret.objects.update_or_create(
-            name=API_KEY_NAME,
-            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
-            defaults={
-                "description": "API key for OpenAI services.",
-                "user_profile": self.user_profile,
-            },
-        )
-
-        provider, _ = Provider.objects.update_or_create(
+        self.initialize_generic_provider(
+            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_name=API_KEY_NAME,
             name=NAME,
+            default_model=DEFAULT_MODEL,
             defaults={
                 "description": "OpenAI provides advanced AI models and APIs.",
                 "user_profile": self.user_profile,
@@ -639,7 +520,6 @@ class Command(SmarterCommand):
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://api.openai.com/v1/",
-                "api_key": secret,
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "prompt/completions",
                 "website_url": "https://www.openai.com/",
@@ -653,16 +533,8 @@ class Command(SmarterCommand):
                 "tos_accepted_at": timezone.now(),
                 "tos_accepted_by": self.user_profile.cached_user,
             },
-        )
-        filename = "OpenAI-white-monoblossom.png"
-        openai_logo = HERE / "data" / "logos" / "openai" / filename
-        with open(openai_logo, "rb") as logo_file:
-            provider.logo.save(filename, ContentFile(logo_file.read()), save=True)
-
-        self.initialize_provider_models(
-            provider=provider,
-            bearer_token=secret_string.get_secret_value(),
-            default_model=DEFAULT_MODEL,
+            logo_filename="OpenAI-white-monoblossom.png",
+            provider_api_url="https://platform.openai.com/api-keys",
         )
 
     def initialize_togetheria(self):
@@ -672,32 +544,11 @@ class Command(SmarterCommand):
         DEFAULT_MODEL = "gpt-4o-mini"
         API_KEY_NAME = "togetherai_api_key"
 
-        logger.info("initialize_togetherai")
-        if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_togetherai: User profile is not set."))
-            return
-
-        secret_string = SecretStr(get_env(API_KEY_ENV_VAR, is_secret=True, is_required=True))
-        if not secret_string or not secret_string.get_secret_value():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"initialize_togetherai: {API_KEY_ENV_VAR} is not set. Cannot initialize TogetherAI provider."
-                    f"Get your API key from https://platform.openai.com/api-keys and add it to your .env file as {API_KEY_ENV_VAR}."
-                )
-            )
-            return
-
-        secret, _ = Secret.objects.update_or_create(
-            name=API_KEY_NAME,
-            encrypted_value=Secret.encrypt(secret_string.get_secret_value()),
-            defaults={
-                "description": "API key for TogetherAI services.",
-                "user_profile": self.user_profile,
-            },
-        )
-
-        provider, _ = Provider.objects.update_or_create(
+        self.initialize_generic_provider(
+            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_name=API_KEY_NAME,
             name=NAME,
+            default_model=DEFAULT_MODEL,
             defaults={
                 "description": "TogetherAI provides advanced AI models and APIs.",
                 "user_profile": self.user_profile,
@@ -708,7 +559,6 @@ class Command(SmarterCommand):
                 "is_flagged": False,
                 "is_suspended": False,
                 "base_url": "https://api.togai.com/v1/",
-                "api_key": secret,
                 "default_model": DEFAULT_MODEL,
                 "connectivity_test_path": "chat/completions",
                 "website_url": "https://www.together.ai/",
@@ -722,16 +572,8 @@ class Command(SmarterCommand):
                 "tos_accepted_at": timezone.now(),
                 "tos_accepted_by": self.user_profile.cached_user,
             },
-        )
-        filename = "together-logo.jpeg"
-        togetherai_logo = HERE / "data" / "logos" / "togetherai" / filename
-        with open(togetherai_logo, "rb") as logo_file:
-            provider.logo.save(filename, ContentFile(logo_file.read()), save=True)
-
-        self.initialize_provider_models(
-            provider=provider,
-            bearer_token=secret_string.get_secret_value(),
-            default_model=DEFAULT_MODEL,
+            logo_filename="together-logo.svg",
+            provider_api_url="https://platform.openai.com/api-keys",
         )
 
     def handle(self, *args, **options):
