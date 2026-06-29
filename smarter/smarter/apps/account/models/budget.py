@@ -116,14 +116,19 @@ def charge_authorization(resource_locator: Union[list[str], str], on_behalf_of: 
     """
     Check if a charge is authorized for the given list of resource locators.
 
+    We want to match the ResourceLock
+    checking operations to the periodicity of the budget itself (hourly), so we cache the results of the
+    authorization check for one hour.
+
     :param resource_locator: A list of resource locators or a single resource locator that may be used by the custom implementation.
     :param on_behalf_of: An optional object representing the entity on whose behalf the charge is being authorized.
     :return: True if the charge is authorized, False otherwise.
     """
+    ONE_HOUR = 60 * 60  # seconds
 
-    @cache_results()
-    def _check_authorization(resource_locator: str) -> bool:
-        if ResourceLock.objects.filter(resource_locator=resource_locator).exists():
+    @cache_results(timeout=ONE_HOUR)
+    def _check_authorization(resource: str) -> bool:
+        if ResourceLock.objects.filter(resource_locator=resource).exists():
             return False
         charge_authorized.send(sender=charge_authorization, record_locator=resource, charge=on_behalf_of)
         return True

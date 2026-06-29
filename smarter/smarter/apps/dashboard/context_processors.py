@@ -338,7 +338,7 @@ def branding(request: "HttpRequest") -> dict[str, Any]:
                 "contact_url": smarter_settings.branding_contact_url,
                 "support_hours": smarter_settings.branding_support_hours,
                 "support_phone_number": smarter_settings.branding_support_phone_number,
-                "copyright": f"© {current_year} {smarter_settings.branding_corporate_name}. All rights reserved.",
+                "copyright": f"© 2023-{current_year} {smarter_settings.branding_corporate_name}. All rights reserved.",
                 "og_url": smarter_settings.marketing_site_url,
                 "canonical_url": smarter_settings.environment_url,
                 "og_image": "https://cdn.smarter.sh/cms/img/smarter_og_image.png",
