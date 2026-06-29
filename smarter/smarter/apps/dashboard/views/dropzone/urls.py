@@ -30,6 +30,7 @@ Example:
 from django.urls import include, path
 
 from smarter.common.conf import smarter_settings
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 
 from .api import urls as api_urls
@@ -49,11 +50,15 @@ if smarter_settings.enable_dropzone_manifest_apply:
         path("api/", include(api_urls, api_urls.namespace)),
     ]
     logger.info(
-        "%s dropzone apply views enabled. Set env 'ENABLE_MANIFEST_DROPZONE' to 'true' to enable.",
+        "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
         logging.formatted_text(__name__),
+        app_name,
+        SmarterReadyState.READY,
     )
 else:
     logger.info(
-        "%s dropzone apply views disabled. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
+        "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'true' to enable.",
         logging.formatted_text(__name__),
+        app_name,
+        SmarterReadyState.NOT_READY,
     )
