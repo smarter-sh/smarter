@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.18-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.18-alpha.1...v0.14.18-alpha.2) (2026-06-30)
+
+### Bug Fixes
+
+* Secret.get_cached_object(name='google_maps_api_key' ([fbda984](https://github.com/smarter-sh/smarter/commit/fbda984252837eddbb907b7bfc56d5b1cdb4c800))
+
 ## [0.14.18-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.17...v0.14.18-alpha.1) (2026-06-30)
 
 ### Bug Fixes
