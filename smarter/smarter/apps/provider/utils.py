@@ -227,8 +227,9 @@ def initialize_google_maps() -> None:
 
 def get_google_maps_api_key(recursed=False) -> str | None:
     """Get the Google Maps API key from the secret store."""
+    user_profile = smarter_cached_objects.smarter_admin_user_profile
     try:
-        secret = Secret.get_cached_object("google_maps_api_key")
+        secret = Secret.get_cached_object(name="google_maps_api_key", user_profile=user_profile)
         api_key = secret.get_secret()
         if not api_key:
             logger.error("Google Maps API key secret is empty.")
