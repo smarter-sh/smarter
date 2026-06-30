@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.20-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.19...v0.14.20-alpha.1) (2026-06-30)
+
+### Bug Fixes
+
+* validate inputs before attempting to update kubeconfig ([9201f6a](https://github.com/smarter-sh/smarter/commit/9201f6ae63fa10fe0a84c3b7ff73d47bcb769734))
+
 ## [0.14.19](https://github.com/smarter-sh/smarter/compare/v0.14.18...v0.14.19) (2026-06-30)
 
 ### Bug Fixes
