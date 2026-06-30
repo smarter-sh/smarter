@@ -10,8 +10,8 @@ import ListView from "@/components/ListView";
 import CardView from "@/components/CardView";
 
 const tabs: Tabs = [
-  { key: "owned" as TabKey, label: "Your Prompts" },
-  { key: "shared" as TabKey, label: "Shared Prompts" },
+  { key: "owned" as TabKey, label: "Your LLM Clients" },
+  { key: "shared" as TabKey, label: "Shared LLM Clients" },
 ];
 
 // Set the TabbedViewContext generic object type to LLMClient,
@@ -28,7 +28,7 @@ export type ProviderTabbedViewContext = Omit<
 
 const providerTabbedListViewContext: ProviderTabbedViewContext = {
   objectType: {} as LLMClient,
-  objectTypeName: "provider",
+  objectTypeName: "llm_client",
   tabs: tabs,
   ListView: ListView,
   CardView: CardView,
