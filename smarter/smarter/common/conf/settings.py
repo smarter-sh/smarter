@@ -4391,7 +4391,14 @@ class Settings(BaseSettings):
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    """Get the singleton settings instance."""
+    """
+    Lazily get the singleton settings instance.
+
+    This approach is intended
+    to speed up the app startup time by deferring the creation of the Settings instance
+    until it is first needed. This *might* also be useful for deferring loading
+    environment variables until they are actually needed, but that is not the primary goal.
+    """
     try:
         return Settings()
     except ValidationError as e:

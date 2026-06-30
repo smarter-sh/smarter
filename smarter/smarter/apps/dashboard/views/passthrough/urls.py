@@ -30,6 +30,7 @@ Example:
 from django.urls import include, path
 
 from smarter.common.conf import smarter_settings
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
@@ -57,11 +58,15 @@ if smarter_settings.enable_dashboard_passthrough_prompt:
         path("api/", include(api_urls, api_urls.namespace)),
     ]
     logger.info(
-        "%s passthrough prompt views enabled. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'true' to enable.",
+        "%s %s app passthrough url endpoint is %s. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'false' to disable.",
         logging.formatted_text(__name__),
+        app_name,
+        SmarterReadyState.READY,
     )
 else:
     logger.info(
-        "%s passthrough prompt views disabled. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'false' to disable.",
+        "%s %s app passthrough url endpoint is %s. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'true' to enable.",
         logging.formatted_text(__name__),
+        app_name,
+        SmarterReadyState.NOT_READY,
     )
