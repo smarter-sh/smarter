@@ -146,7 +146,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
               <div className="mt-n20 position-relative">
                 {/* begin::Row */}
                 <div className="row g-3 g-lg-6">
-                  {/* begin::Col */}
+                  {/* begin::Col - LLM Clients */}
                   <div className="col-6">
                     {/* begin::Items */}
                     <a href={data?.llm_clients_url}>
@@ -172,7 +172,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                           }
                           {/* end::Number */}
                           <span className="text-gray-500 fw-semibold fs-6">
-                            Agents
+                            LLM Clients
                           </span>
                         </div>
                         {/* end::Workbench */}
@@ -180,8 +180,8 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                     </a>
                     {/* end::Items */}
                   </div>
-                  {/* end::Col */}
-                  {/* begin::Col */}
+                  {/* end::Col - LLM Clients */}
+                  {/* begin::Col - Plugins */}
                   <div className="col-6">
                     {/* begin::Items */}
                     <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
@@ -209,7 +209,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                           {/* end::Number */}
                           {/* begin::Desc */}
                           <span className="text-gray-500 fw-semibold fs-6">
-                            Plugins
+                            Skills/Plugins
                           </span>
                           {/* end::Desc */}
                         </div>
@@ -218,8 +218,8 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                     </div>
                     {/* end::Items */}
                   </div>
-                  {/* end::Col */}
-                  {/* begin::Col */}
+                  {/* end::Col - Plugins */}
+                  {/* begin::Col - Connections */}
                   <div className="col-6">
                     {/* begin::Items */}
                     <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
@@ -260,8 +260,8 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                     </div>
                     {/* end::Items */}
                   </div>
-                  {/* end::Col */}
-                  {/* begin::Col */}
+                  {/* end::Col - Connections */}
+                  {/* begin::Col - LLM Providers */}
                   <div className="col-6">
                     {/* begin::Items */}
                     <div className="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
@@ -293,7 +293,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                           {/* end::Number */}
                           {/* begin::Desc */}
                           <span className="text-gray-500 fw-semibold fs-6">
-                            Providers
+                            LLM Providers
                           </span>
                           {/* end::Desc */}
                         </div>
@@ -302,7 +302,7 @@ function MyResources({ apiUrl }: MyResourcesProps) {
                     </div>
                     {/* end::Items */}
                   </div>
-                  {/* end::Col */}
+                  {/* end::Col - LLM Providers */}
                 </div>
                 {/* end::Row */}
               </div>
