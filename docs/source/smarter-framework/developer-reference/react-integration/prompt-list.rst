@@ -25,5 +25,3 @@ with the resources you need—all without requiring a page reload or manual refr
    prompt-list/django-template
    prompt-list/template-tags
    prompt-list/index
-   prompt-list/example-usage
-   prompt-list/react-component
