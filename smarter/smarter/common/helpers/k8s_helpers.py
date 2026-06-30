@@ -174,6 +174,17 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             module_prefix,
             smarter_settings.aws_eks_cluster_name,
         )
+        if not smarter_settings.aws_eks_cluster_name:
+            msg = f"{module_prefix}.update_kubeconfig() smarter_settings.aws_eks_cluster_name is not set. Cannot update kubeconfig."
+            logger.error(msg)
+            return False
+        if not smarter_settings.aws_region:
+            msg = (
+                f"{module_prefix}.update_kubeconfig() smarter_settings.aws_region is not set. Cannot update kubeconfig."
+            )
+            logger.error(msg)
+            return False
+
         command = [
             "aws",
             "eks",
