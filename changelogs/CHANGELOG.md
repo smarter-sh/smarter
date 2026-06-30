@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.14.19-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.18...v0.14.19-alpha.1) (2026-06-30)
+
+### Bug Fixes
+
+* Secret.get_cached_object(name='google_maps_api_key' ([fbda984](https://github.com/smarter-sh/smarter/commit/fbda984252837eddbb907b7bfc56d5b1cdb4c800))
+
 ## [0.14.18](https://github.com/smarter-sh/smarter/compare/v0.14.17...v0.14.18) (2026-06-30)
 
 ### Bug Fixes
