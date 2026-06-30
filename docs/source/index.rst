@@ -146,6 +146,7 @@ Usage
    smarter-resources
    smarter-framework
    adr
+   contributors
 
 .. toctree::
    :maxdepth: 1
