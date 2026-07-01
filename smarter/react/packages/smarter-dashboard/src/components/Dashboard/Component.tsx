@@ -44,7 +44,7 @@ import Cli from "../Cli/Component";
 import SelfHost from "../SelfHost/Component";
 import Contribute from "../Contribute/Component";
 import YTVideo from "../YTVideo/Component";
-
+import UserUsage from "../TokenUsage/";
 
 function Dashboard({ appContext }: { appContext: AppContextInterface }) {
 
@@ -67,6 +67,12 @@ function Dashboard({ appContext }: { appContext: AppContextInterface }) {
                 <CertificateProgram />
               </div>
               <VSCodeExtension />
+            </div>
+          </div>
+
+          <div className="row g-5 g-xl-10 mt-3">
+            <div className="col-xl-8 mb-5 mb-xl-10">
+              <UserUsage />
             </div>
           </div>
 
