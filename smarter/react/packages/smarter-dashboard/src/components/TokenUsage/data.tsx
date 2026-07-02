@@ -1,4 +1,4 @@
-import type { AreaSeries, LineSeries, TokenUsagePoint } from "./types";
+import type { TokenUsagePoint } from "./types";
 
 export const data: TokenUsagePoint[] = [
   {
@@ -27,26 +27,5 @@ export const data: TokenUsagePoint[] = [
     totalTokens: 33000,
     remainingTokens: 57000,
     utilization: 0.367,
-  },
-];
-
-export const areas: AreaSeries[] = [
-  {
-    key: "requestTokens",
-    label: "Request",
-    color: "#3b82f6",
-  },
-  {
-    key: "completionTokens",
-    label: "Completion",
-    color: "#10b981",
-  },
-];
-
-export const lines: LineSeries[] = [
-  {
-    key: "budgetTokens",
-    label: "Budget",
-    color: "#111827",
   },
 ];

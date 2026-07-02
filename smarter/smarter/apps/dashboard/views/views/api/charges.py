@@ -322,13 +322,13 @@ def get_aggregated_charges(
     return data
 
 
-class MyResourcesView(SmarterAuthenticatedWebView):
+class ChargesView(SmarterAuthenticatedWebView):
     """API view for the Aggregated Charges Chart React component on the dashboard."""
 
     @property
     def formatted_class_name(self) -> str:
         """Returns the class name in a formatted string along with the name of this view."""
-        class_name = f"{__name__}.{MyResourcesView.__name__}[{id(self)}]"
+        class_name = f"{__name__}.{ChargesView.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
     def post(self, request: HttpRequest, periodicity: str, *args, **kwargs) -> JsonResponse:
