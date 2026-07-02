@@ -1,3 +1,3 @@
-import UserUsage from "./UserUsage";
+import UserCharges from "./UserCharges";
 
-export default UserUsage;
+export default UserCharges;

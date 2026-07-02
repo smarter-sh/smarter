@@ -12,8 +12,6 @@ from smarter.apps.dashboard.views.views import (
     NotificationsView,
 )
 from smarter.apps.dashboard.views.views.api import urls as dashboard_api_urls
-from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
-from smarter.apps.dashboard.views.views.api.service_health import ServiceHealthView
 from smarter.apps.plugin import urls as plugin_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.mixins.helper_mixin import SmarterReadyState
@@ -32,8 +30,6 @@ class DashboardReverseNames:
     notifications = to_snake_case(NotificationsView.__name__)
     changelog = to_snake_case(ChangeLogView.__name__)
     email_added = to_snake_case(EmailAdded.__name__)
-    api_my_resources = to_snake_case(MyResourcesView.__name__)
-    api_service_health = to_snake_case(ServiceHealthView.__name__)
 
 
 urlpatterns = [

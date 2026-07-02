@@ -1,11 +1,14 @@
-import {TokenUsageChart} from "./Chart";
-import {data, areas, lines} from "./data";
+import  TokenUsageChart from "./Chart";
+import  { areas, lines} from "./Chart";
+import { data } from "./data";
 import "./styles.css";
 
 interface UserUsageProps {
+  apiUrl: string;
 }
 
-function UserUsage({  }: UserUsageProps) {
+function UserCharges({ apiUrl }: UserUsageProps) {
+  console.debug("apiUrl", apiUrl)
   return (
     <>
       <div id="user-usage" aria-label="User Usage" className="col-xl-12 mb-5 mb-xl-10">
@@ -15,7 +18,7 @@ function UserUsage({  }: UserUsageProps) {
           <div className="card-body d-flex flex-column ps-xl-15 h-100">
             {/* begin::Title */}
             <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">
-              User Token Usage
+              User Token Charges
             </h6>
             <TokenUsageChart data={data} areas={areas} lines={lines} />
           </div>
@@ -25,4 +28,4 @@ function UserUsage({  }: UserUsageProps) {
   );
 }
 
-export default UserUsage;
+export default UserCharges;
