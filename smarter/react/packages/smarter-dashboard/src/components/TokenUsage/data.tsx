@@ -1,7 +1,4 @@
 import type { AreaSeries, LineSeries, TokenUsagePoint } from "./types";
-// -----------------------------------------------------------------------------
-// Example
-// -----------------------------------------------------------------------------
 
 export const data: TokenUsagePoint[] = [
   {
@@ -53,11 +50,3 @@ export const lines: LineSeries[] = [
     color: "#111827",
   },
 ];
-
-// Usage:
-//
-// <TokenUsageChart
-//     data={data}
-//     areas={areas}
-//     lines={lines}
-// />
