@@ -1,4 +1,44 @@
-"""This module is used to manage the superuser account."""
+"""
+This module provides a Django management command to create or update a user for a given account.
+
+It handles user creation, setting password, sending notification emails, creating UserProfile, and
+updating or creating AccountContact as needed.
+
+Classes
+=======
+Command
+    Implements the logic for the ``manage.py create_user`` command.
+
+Command-line Arguments
+=====================
+--account_number : str, required
+    The Smarter account number the user should belong to.
+--username : str, required
+    The username for the new user.
+--email : str, required
+    The email address for the new user.
+--first_name : str, required
+    The first name of the new user.
+--last_name : str, required
+    The last name of the new user.
+--password : str, optional
+    The password for the new user. If not provided, a random password is generated.
+--admin : bool (flag), optional
+    Set to true to mark the new user as an admin.
+
+Functionality
+=============
+- Creates or updates a ``User`` for the provided account.
+- Validates the provided email address.
+- Sets password (either provided or randomly generated for new users).
+- Optionally emails credentials if the `ENABLE_NEW_USER_PASSWORD_EMAIL` Waffle switch is enabled.
+- Creates or updates corresponding ``UserProfile`` and ``AccountContact`` records as needed.
+- All creation is wrapped in an atomic transaction for integrity.
+
+Usage Example
+=============
+    python manage.py create_user --account_number=<number> --username=<name> --email=<email> --first_name=<first> --last_name=<last> [--password=<pwd>] [--admin]
+"""
 
 import secrets
 import string
@@ -16,13 +56,18 @@ from smarter.lib.django.validators import SmarterValidator
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """Django manage.py create_user command. This command is used to create a new user for an account."""
+    """Django manage.py create_user command.
+
+    This command is used to create a new user for an account.
+    """
 
     def create_user(
         self, account_number, username, email, first_name, last_name, password=None, is_admin=False
     ) -> bool:
         """
-        Create a new user for the specified account. If the user already exists,
+        Create a new user for the specified account.
+
+        If the user already exists,
         update the user's information. The basic workflow is as follows:
 
           1. Get the account based on the provided account number. If the account does
@@ -53,7 +98,6 @@ class Command(SmarterCommand):
               log a failure and return False.
           7. If all steps are successful, log a success message that the create_user
               command completed successfully and return True.
-
 
         :param str account_number: The account number of the account to which the user belongs.
         :param str username: The username for the new user.
@@ -192,7 +236,7 @@ class Command(SmarterCommand):
         )
 
     def handle(self, *args, **options):
-        """create the user."""
+        """Create the user."""
         self.handle_begin()
 
         account_number = options["account_number"]

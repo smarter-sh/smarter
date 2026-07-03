@@ -1,4 +1,36 @@
-"""This module is used to remove an email address from the Account Contact list."""
+"""
+This module provides a Django management command to remove an email address from.
+
+the Account Contact list associated with a specific Account.
+
+Classes
+=======
+Command
+    Implements the logic for the ``manage.py delete_account_contact`` command.
+
+Command-line Arguments
+=====================
+--account_number : str, optional
+    The Smarter account number from which the contact should be removed.
+--company_name : str, optional
+    The company name from which the contact should be removed.
+--email : str, optional
+    The email address of the contact to be removed.
+--username : str, optional
+    The username for identifying the account contact. If supplied, the email is looked up from this username.
+
+Functionality
+=============
+- Resolves the account from account number or company name.
+- Optional user's username can be supplied to look up the email address.
+- Deletes the contact with the specified email from the resolved account.
+- Handles errors for missing accounts or contacts appropriately.
+
+Usage Example
+=============
+    python manage.py delete_account_contact --account_number=<number> --email=<email>
+    python manage.py delete_account_contact --company_name="<name>" --username=<username>
+"""
 
 from typing import Optional
 
@@ -19,7 +51,7 @@ class Command(SmarterCommand):
         parser.add_argument("--username", type=str, help="The username for the new superuser")
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Create the superuser account."""
         self.handle_begin()
 
         account_number = options["account_number"]

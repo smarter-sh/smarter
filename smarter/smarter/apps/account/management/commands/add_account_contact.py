@@ -1,4 +1,39 @@
-"""This module is used to add an email address to the Account Contact list."""
+"""
+This module provides a custom Django management command to add an email address to.
+
+the Account Contact list associated with an Account in the system.
+
+Classes
+=======
+Command
+    Handles the logic for adding an account contact via command-line arguments.
+
+Command-line Arguments
+=====================
+--account_number : str, optional
+    The Smarter account number to which the user belongs.
+
+--company_name : str, optional
+    The company name to which the user belongs.
+
+--email : str, optional
+    The email address for the new superuser/account contact.
+
+--username : str, optional
+    The username for the new superuser. If provided, the email will be derived
+    from the associated user profile.
+
+Exceptions
+==========
+SmarterValueError
+    Raised if neither account_number nor company_name is provided, or for
+    invalid operation/state.
+
+Usage Example
+=============
+    python manage.py add_account_contact --account_number=<number> --email=<email>
+    python manage.py add_account_contact --company_name="<name>" --username=<username>
+"""
 
 from typing import Optional
 
@@ -9,7 +44,7 @@ from smarter.lib.django.management.base import SmarterCommand
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """add an email address to the Account Contact list."""
+    """Add an email address to the Account Contact list."""
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -19,7 +54,7 @@ class Command(SmarterCommand):
         parser.add_argument("--username", type=str, help="The username for the new superuser")
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Create the superuser account."""
         self.handle_begin()
 
         account_number = options["account_number"]

@@ -1,4 +1,34 @@
-"""This module is used to create a superuser account."""
+"""
+This module provides a Django management command to create or update a superuser ("Smarter admin").
+
+account, user profile, and a corresponding API key for the platform.
+
+Classes
+=======
+Command
+    Implements the logic for the ``manage.py create_smarter_admin`` command.
+
+Command-line Arguments
+=====================
+-u, --username : str, optional
+    The username for the new superuser (defaults to value from settings).
+-e, --email : str, optional
+    The email address for the new superuser (defaults to username@domain).
+-p, --password : str, optional
+    The password for the new superuser. If not specified, a random password is generated.
+
+Functionality
+=============
+- Ensures there is a platform admin account in the system, fully populated.
+- Creates or updates User and UserProfile for the superuser.
+- Creates a default AccountContact if absent.
+- Creates and displays a new API key (auth token) for the superuser if one does not exist.
+- Most account and contact attributes are populated from configuration settings.
+
+Usage Example
+=============
+    python manage.py create_smarter_admin --username=admin --email=admin@example.com --password=s3cret
+"""
 
 import secrets
 import string
@@ -26,7 +56,7 @@ class Command(SmarterCommand):
         parser.add_argument("-p", "--password", type=str, help="The password for the new superuser")
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Create the superuser account."""
         self.handle_begin()
 
         username = options["username"] or SMARTER_ADMIN_USERNAME
