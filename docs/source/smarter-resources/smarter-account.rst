@@ -32,6 +32,7 @@ Technical Reference
    :maxdepth: 1
 
    account/api
+   account/commands
    account/const
    account/models
    account/receivers
