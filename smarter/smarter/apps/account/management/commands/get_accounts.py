@@ -1,4 +1,22 @@
-"""This module is used to generate a JSON list of all accounts, printed to the command line, using manage.py"""
+"""
+This module provides a Django management command to print out all.
+
+external integrations that are currently configured in the system.
+
+Classes
+=======
+Command
+    Implements the logic for the ``manage.py dump_integrations`` command.
+
+Functionality
+=============
+- Prints details about each external integration configured in the project.
+- Typically used for debugging, transparency, or audits of system integrations.
+
+Usage Example
+=============
+    python manage.py dump_integrations
+"""
 
 import re
 
@@ -11,7 +29,10 @@ from smarter.lib.django.management.base import SmarterCommand
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """Django manage.py get_plugins command. This command is used to generate a JSON list of all accounts."""
+    """Django manage.py get_plugins command.
+
+    This command is used to generate a JSON list of all accounts.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""

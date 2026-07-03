@@ -1,5 +1,18 @@
 """
-Django manage.py command to reset the Django cache.
+Django management command to reset the Django cache.
+
+This module defines the ``reset_cache`` management command for the Smarter platform.
+It provides a mechanism to clear (reset) all entries from the Django cache backend being used.
+
+Features
+--------
+- Clears all cache entries for the configured Django cache backend.
+- Outputs status messages upon success or failure.
+
+Typical Usage
+-------------
+Used by administrators or developers via ``manage.py reset_cache`` to manually reset cached data,
+which can be helpful during development, troubleshooting, or after certain operational events.
 """
 
 from django.core.cache import cache
