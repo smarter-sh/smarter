@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.20-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.14.20-alpha.3...v0.14.20-alpha.4) (2026-07-03)
+
 ## [0.14.20-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.20-alpha.2...v0.14.20-alpha.3) (2026-07-02)
 
 ## [0.14.20-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.20-alpha.1...v0.14.20-alpha.2) (2026-07-01)
