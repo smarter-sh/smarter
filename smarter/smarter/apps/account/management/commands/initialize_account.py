@@ -17,7 +17,7 @@ It provides functionality to:
 It also supports initializing all existing accounts to update their shared AI resources.
 
 Command-line Arguments
----------------------
+-----------------------
 * ``--account_number``: The account number that will own the remote API connection.
 * ``--username``: Username for the admin account for this Account.
 * ``--email``: Email address of the account admin user (fallback is ``<username>@<root_domain>``).
