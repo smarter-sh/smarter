@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.20-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.14.20-alpha.5...v0.14.20-alpha.6) (2026-07-06)
+
+## [0.14.20-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.14.20-alpha.4...v0.14.20-alpha.5) (2026-07-06)
+
+## [0.14.20-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.14.20-alpha.3...v0.14.20-alpha.4) (2026-07-03)
+
+## [0.14.20-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.14.20-alpha.2...v0.14.20-alpha.3) (2026-07-02)
+
+## [0.14.20-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.14.20-alpha.1...v0.14.20-alpha.2) (2026-07-01)
+
+## [0.14.20-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.19...v0.14.20-alpha.1) (2026-06-30)
+
+### Bug Fixes
+
+* validate inputs before attempting to update kubeconfig ([9201f6a](https://github.com/smarter-sh/smarter/commit/9201f6ae63fa10fe0a84c3b7ff73d47bcb769734))
+
 ## [0.14.19](https://github.com/smarter-sh/smarter/compare/v0.14.18...v0.14.19) (2026-06-30)
 
 ### Bug Fixes

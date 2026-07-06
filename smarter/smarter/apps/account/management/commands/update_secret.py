@@ -1,4 +1,28 @@
-"""This module is used to update the encrypted value of a Secret."""
+"""
+Django management command to update the encrypted value of a Secret.
+
+This module defines the ``update_secret`` management command for the Smarter platform.
+It allows administrators or users to update the encrypted value for a named Secret
+associated with a user's profile.
+
+Features
+--------
+- Updates or sets a new encrypted value for an existing Secret belonging to a user.
+- Associates the Secret to the specified user or the current user if not explicitly provided.
+- If the value is not passed as an argument, it prompts securely for one at runtime.
+- Provides command-line feedback for errors such as missing users, user profiles, or secrets.
+
+Command-line Options
+-------------------
+- ``--name``: The name of the Smarter Secret to update (required).
+- ``--username``: The username associated with the Secret. If not provided, will attempt to use the current user.
+- ``--value``: The value to encrypt and store. If not provided, you will be securely prompted for it.
+
+Typical Usage
+-------------
+Used by administrators or trusted users via ``manage.py update_secret`` to update account secrets,
+such as API keys, credentials, or private tokens.
+"""
 
 import getpass
 
@@ -8,7 +32,10 @@ from smarter.lib.django.management.base import SmarterCommand
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """Django manage.py create_user command. This command is used to update the encrypted value of a Secret."""
+    """Django manage.py create_user command.
+
+    This command is used to update the encrypted value of a Secret.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -27,7 +54,7 @@ class Command(SmarterCommand):
         )
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Create the superuser account."""
         self.handle_begin()
 
         name = options.get("name")

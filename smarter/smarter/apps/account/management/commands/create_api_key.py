@@ -1,4 +1,31 @@
-"""This module is used to create a new api key."""
+"""
+This module provides a Django management command to create a new API key for a user and account.
+
+Classes
+=======
+Command
+    Implements the logic for the ``manage.py create_api_key`` command.
+
+Command-line Arguments
+=====================
+--account_number : str, optional
+    The Smarter account number to which the user belongs. Format: ####-####-####
+--username : str, optional
+    The username of the API key owner.
+--description : str, optional
+    Optional brief text description for the API key.
+
+Functionality
+=============
+- Finds the specified user and account using the provided arguments.
+- Creates a new API key (auth token) for the given user profile.
+- Outputs the API key value and relevant information. Warns that the key is only shown once.
+- Displays instructions for associating the API key with an LLMClient.
+
+Usage Example
+=============
+    python manage.py create_api_key --account_number=1234-5678-9012 --username=myuser --description="integration key"
+"""
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import get_cached_admin_user_for_account
