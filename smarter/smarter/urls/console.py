@@ -47,6 +47,8 @@ from smarter.apps.docs.views.webserver import (
     RobotsTxtView,
     SitemapXmlView,
 )
+from smarter.apps.guardrail import urls as guardrail_urls
+from smarter.apps.guardrail.const import namespace as guardrail_namespace
 from smarter.apps.llm_client.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.plugin import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
@@ -164,6 +166,7 @@ urlpatterns = [
     path("api/", include(urls, namespace=api_namespace)),
     path("authtoken/", include(drf_urls, namespace=drf_namespace)),
     path("connection/", include(connection_urls, namespace=connection_namespace)),
+    path("guardrail/", include(guardrail_urls, namespace=guardrail_namespace)),
     path("dashboard/", include(dashboard_urls, namespace=dashboard_namespace)),
     path("docs/", include(docs_urls, namespace=docs_namespace)),
     path("login/", LoginView.as_view(), name="login_view"),

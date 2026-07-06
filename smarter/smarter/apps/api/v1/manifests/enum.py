@@ -12,6 +12,9 @@ from smarter.apps.connection.manifest.models.api_connection.const import (
 from smarter.apps.connection.manifest.models.sql_connection.const import (
     MANIFEST_KIND as SQLCONNECTION_MANIFEST_KIND,
 )
+from smarter.apps.guardrail.manifest.models.guardrail.const import (
+    MANIFEST_KIND as GUARDRAIL_MANIFEST_KIND,
+)
 from smarter.apps.llm_client.manifest.models.llm_client.const import (
     MANIFEST_KIND as LLM_CLIENT_MANIFEST_KIND,
 )
@@ -107,6 +110,8 @@ class SAMKinds(SmarterEnumAbstract):
     AUTH_TOKEN = AUTH_TOKEN_MANIFEST_KIND
     USER = USER_MANIFEST_KIND
     SECRET = SECRET_MANIFEST_KIND
+
+    GUARDRAIL = GUARDRAIL_MANIFEST_KIND
 
     # prompt resources
     PROMPT = PROMPT_MANIFEST_KIND

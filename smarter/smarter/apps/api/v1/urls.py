@@ -33,6 +33,9 @@ from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.api.v1.cli import urls as cli_urls
 from smarter.apps.api.v1.tests import urls as tests_urls
 from smarter.apps.connection.api.v1 import urls as connection_urls
+from smarter.apps.connection.const import namespace as connnection_namespace
+from smarter.apps.guardrail.api.v1 import urls as guardrail_urls
+from smarter.apps.guardrail.const import namespace as guardrail_namespace
 from smarter.apps.llm_client.api.v1 import urls as llm_client_urls
 from smarter.apps.llm_client.const import namespace as llm_client_namespace
 from smarter.apps.plugin.api.v1 import urls as plugin_urls
@@ -67,7 +70,8 @@ urlpatterns = [
     path("accounts/", include(account_urls, namespace=account_namespace)),
     path("llm-clients/", include(llm_client_urls, namespace=llm_client_namespace)),
     path("cli/", include(cli_urls, namespace=cli_namespace)),
-    path("connections/", include(connection_urls, namespace="connection")),
+    path("connections/", include(connection_urls, namespace=connnection_namespace)),
+    path("guardrails/", include(guardrail_urls, namespace=guardrail_namespace)),
     path("plugins/", include(plugin_urls, namespace=plugin_namespace)),
     path("prompts/", include(prompt_urls, namespace=prompt_namespace)),
     path("providers/", include(provider_urls, namespace=provider_namespace)),

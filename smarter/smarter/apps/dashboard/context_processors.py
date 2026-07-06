@@ -85,6 +85,7 @@ from smarter.apps.dashboard.views.terminal_emulator.names import (
 )
 from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.apps.docs.urls import DocsReverseNames
+from smarter.apps.guardrail.urls import GuardrailReverseNames
 from smarter.apps.llm_client.models import LLMClient
 from smarter.apps.plugin.models import (
     PluginMeta,
@@ -137,6 +138,7 @@ def sidebar_context() -> dict[str, Any]:
             "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
             "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
             "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
+            "guardrails": reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview),
             "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
             "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
             "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
