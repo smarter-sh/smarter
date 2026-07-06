@@ -60,10 +60,16 @@ class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.AUTH_TOKEN)
 
 
-class DocsJsonSchemaChatView(DocsJsonSchemaBaseView):
+class DocsJsonSchemaPromptView(DocsJsonSchemaBaseView):
     """Prompt JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.PROMPT)
+
+
+class DocsJsonSchemaGuardrailView(DocsJsonSchemaBaseView):
+    """Guardrail JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.GUARDRAIL)
 
 
 class DocsJsonSchemaLLMClientView(DocsJsonSchemaBaseView):

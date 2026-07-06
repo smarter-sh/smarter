@@ -27,6 +27,12 @@ from smarter.apps.guardrail.manifest.models.guardrail.status import SAMGuardrail
 from smarter.apps.guardrail.models import (
     Guardrail,
 )
+from smarter.apps.guardrail.models.guardail import (
+    GuardrailAction,
+    GuardrailCategory,
+    GuardrailType,
+    MatchStrategy,
+)
 from smarter.apps.plugin.signals import broker_ready
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
@@ -561,7 +567,20 @@ class SAMGuardrailBroker(AbstractBroker):
                 {"hash": "sha256:abc123def456"},
             ],
         )
-        config = SAMGuardrailSpecConfig()
+        config = SAMGuardrailSpecConfig(
+            guardrail_type=GuardrailType.OUTPUT,
+            category=GuardrailCategory.JAILBREAK,
+            match_strategy=MatchStrategy.REGEX,
+            pattern="",
+            config={},
+            action=GuardrailAction.ESCALATE,
+            severity=2,
+            confidence_threshold=1,
+            is_active=True,
+            is_blocking=True,
+            priority=100,
+            fallback_message="help",
+        )
 
         spec = SAMGuardrailSpec(
             config=config,

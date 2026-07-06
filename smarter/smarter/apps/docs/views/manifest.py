@@ -78,10 +78,16 @@ class DocsExampleManifestApiKeyView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.AUTH_TOKEN)
 
 
-class DocsExampleManifestChatView(DocsExampleManifestBaseView):
+class DocsExampleManifestPromptView(DocsExampleManifestBaseView):
     """Prompt JSON Schema view."""
 
     kind = SAMKinds(SAMKinds.PROMPT)
+
+
+class DocsExampleManifestGuardrailView(DocsExampleManifestBaseView):
+    """Guardrail JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.GUARDRAIL)
 
 
 class DocsExampleManifestLLMClientView(DocsExampleManifestBaseView):
