@@ -10,10 +10,7 @@ from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 from taggit.managers import TaggableManager
 
-from smarter.apps.account.utils import (
-    smarter_cached_objects,
-    valid_resource_owners_for_user,
-)
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.guardrail.manifest.models.guardrail.const import MANIFEST_KIND
 from smarter.apps.guardrail.manifest.models.guardrail.metadata import (
     SAMGuardrailMetadata,
@@ -603,13 +600,15 @@ class SAMGuardrailBroker(AbstractBroker):
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
 
+        if self.user_profile is None:
+            raise SAMBrokerErrorNotReady("user_profile is not set.")
+
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
             guardrails = Guardrail.objects.filter(user_profile__account=self.account, name=name)
         else:
             guardrails = Guardrail.objects.filter(user_profile__account=self.account)
-        valid_owners = valid_resource_owners_for_user(user_profile=self.user_profile)
-        guardrails = guardrails.filter(user_profile__in=valid_owners).order_by("name")[:MAX_RESULTS]
+        guardrails = guardrails.with_ownership_permission_for(self.user_profile.user).order_by("name")[:MAX_RESULTS]
         logger.debug(
             "%s.get() found %s Guardrails for account %s", self.formatted_class_name, guardrails.count(), self.account
         )
@@ -797,14 +796,12 @@ class SAMGuardrailBroker(AbstractBroker):
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise NotImplementedError(
-            f"{self.kind} {self.name} deploy() is not implemented.", thing=self.kind, command=command
-        )
+        raise SAMBrokerError(f"{self.kind} {self.name} deploy() is not implemented.", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise NotImplementedError(
+        raise SAMBrokerError(
             f"{self.kind} {self.name} undeploy() is not implemented.", thing=self.kind, command=command
         )
 
