@@ -1,4 +1,30 @@
-"""manage.py create_account command."""
+"""
+This module provides a Django management command to create a new Account record.
+
+Classes
+=======
+Command
+    Implements logic for the ``manage.py create_account`` command.
+
+Command-line Arguments
+=====================
+--account_number : str, optional
+    The account number for the new account.
+--company_name : str, optional
+    The company name for the new account.
+
+Functionality
+=============
+- If ``account_number`` is provided, attempts to find or create an Account with that number and associates the company name.
+- If only ``company_name`` is provided, finds or creates the Account based on company name.
+- Populates account details like name (in snake_case) and description for newly created accounts.
+- Success or failure status is reported to the user.
+
+Usage Example
+=============
+    python manage.py create_account --account_number=<number> --company_name="<name>"
+    python manage.py create_account --company_name="<name>"
+"""
 
 from smarter.apps.account.models import Account
 from smarter.common.utils import to_snake_case

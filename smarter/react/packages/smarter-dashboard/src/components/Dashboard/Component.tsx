@@ -44,21 +44,13 @@ import Cli from "../Cli/Component";
 import SelfHost from "../SelfHost/Component";
 import Contribute from "../Contribute/Component";
 import YTVideo from "../YTVideo/Component";
-
+import UserCharges from "../TokenUsage/";
 
 function Dashboard({ appContext }: { appContext: AppContextInterface }) {
-
   return (
     <>
-      <section
-        id="kt_app_content"
-        aria-label="Dashboard"
-        className="app-content flex-column-fluid"
-      >
-        <div
-          id="kt_app_content_container"
-          className="app-container container-xxl"
-        >
+      <section id="kt_app_content" aria-label="Dashboard" className="app-content flex-column-fluid">
+        <div id="kt_app_content_container" className="app-container container-xxl">
           <div className="row g-5 g-xl-10 mt-3">
             <MyResources apiUrl={appContext.myResourcesApiUrl} />
             <div className="col-xl-8 mb-5 mb-xl-10">
@@ -70,22 +62,22 @@ function Dashboard({ appContext }: { appContext: AppContextInterface }) {
             </div>
           </div>
 
+          <div className="row g-5 g-xl-10">
+            <div className="col-xl-12 mb-5 mb-xl-10">
+              <UserCharges sessionContext={appContext.sessionContext} apiUrl={appContext.chargesApiUrl} />
+            </div>
+          </div>
+
           <div className="row g-5 g-xl-10 align-items-stretch">
             <Sdk />
             <Cli />
           </div>
 
           <div className="row g-5 g-xl-10 align-items-stretch">
-            <div
-              className="col-xl-6 mb-5 mb-xl-10"
-              style={{ minHeight: "300px" }}
-            >
+            <div className="col-xl-6 mb-5 mb-xl-10" style={{ minHeight: "300px" }}>
               <SelfHost />
             </div>
-            <div
-              className="col-xl-6 mb-5 mb-xl-10"
-              style={{ minHeight: "300px" }}
-            >
+            <div className="col-xl-6 mb-5 mb-xl-10" style={{ minHeight: "300px" }}>
               <Contribute />
             </div>
           </div>

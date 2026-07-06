@@ -1,5 +1,3 @@
-"""Django manage.py initialize_platform command."""
-
 import logging
 
 from django.core.management import call_command

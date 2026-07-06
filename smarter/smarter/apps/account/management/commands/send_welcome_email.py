@@ -1,4 +1,28 @@
-"""This module is used to send the html welcome email to a user in the AccountContact table."""
+"""
+Django management command to send a welcome email to an account user.
+
+This module defines the ``send_welcome_email`` management command for the Smarter platform.
+It allows administrators to send the HTML welcome email to a user
+recorded in the AccountContact table, based on various identifying inputs.
+
+Features
+--------
+- Sends an HTML welcome email to a target user of an account.
+- User can be located via username, email, account number, or company name.
+- Will create the AccountContact record if it does not already exist.
+
+Command-line Options
+-------------------
+- ``--account_number``: The Smarter account number to which the user belongs.
+- ``--company_name``: The company name to which the user belongs.
+- ``--username``: The username of the user.
+- ``--email``: The email address of the user.
+
+Typical Usage
+-------------
+Used by administrators via ``manage.py send_welcome_email`` to send or re-send
+the welcome email to new or existing users for onboarding or support purposes.
+"""
 
 from typing import Optional
 
@@ -19,7 +43,7 @@ class Command(SmarterCommand):
         parser.add_argument("--email", type=str, help="The email address")
 
     def handle(self, *args, **options):
-        """create the superuser account."""
+        """Create the superuser account."""
         self.handle_begin()
 
         account_number = options["account_number"]

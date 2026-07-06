@@ -18,6 +18,7 @@ const sessionContext: SessionContext = {
 const appContext: AppContextInterface = {
   myResourcesApiUrl: "https://customer.smarter.sh/dashboard/api/my-resources",
   serviceHealthApiUrl: "https://customer.smarter.sh/dashboard/api/service-health",
+  chargesApiUrl: "https://customer.smarter.sh/dashboard/api/charges",
   sessionContext: sessionContext,
 };
 

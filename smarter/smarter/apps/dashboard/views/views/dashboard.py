@@ -109,6 +109,11 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
                         DashboardApiReverseNames.namespace,
                         DashboardApiReverseNames.service_health,
                     ),
+                    "charges_api_url": reverse(
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.namespace,
+                        DashboardApiReverseNames.token_charges,
+                    ),
                     "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                     "smarter_request_id": self.generate_smarter_request_id(),
                 }
