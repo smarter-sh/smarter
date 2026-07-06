@@ -20,7 +20,7 @@ export const areas: AreaSeries[] = [
 export const lines: LineSeries[] = [
   {
     key: "budgetTokens",
-    label: "Budget",
+    label: "Limit",
     color: "#111827",
   },
 ];
@@ -85,6 +85,7 @@ export default function TokenUsageChart({ sessionContext, apiUrl, height = 400 }
         setErrMessage(error.message);
       })
       .finally(() => {
+        setIsLoading(false);
       });
 
     return () => {
