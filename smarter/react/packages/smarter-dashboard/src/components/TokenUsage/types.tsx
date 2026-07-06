@@ -1,4 +1,6 @@
-export interface TokenUsagePoint {
+import type { SessionContext } from "@smarter/common";
+
+export interface TokenUsageInterface {
   timestamp: string;
 
   requestTokens: number;
@@ -11,20 +13,19 @@ export interface TokenUsagePoint {
 }
 
 export interface AreaSeries {
-  key: keyof TokenUsagePoint;
+  key: keyof TokenUsageInterface;
   label: string;
   color: string;
 }
 
 export interface LineSeries {
-  key: keyof TokenUsagePoint;
+  key: keyof TokenUsageInterface;
   label: string;
   color: string;
 }
 
 export interface TokenUsageChartProps {
-  data: TokenUsagePoint[];
-  areas: AreaSeries[];
-  lines: LineSeries[];
+  sessionContext: SessionContext;
+  apiUrl: string;
   height?: number;
 }

@@ -1,13 +1,14 @@
 import  TokenUsageChart from "./Chart";
-import  { areas, lines} from "./Chart";
-import { data } from "./data";
+import type { SessionContext } from "@smarter/common";
+
 import "./styles.css";
 
 interface UserUsageProps {
+  sessionContext: SessionContext,
   apiUrl: string;
 }
 
-function UserCharges({ apiUrl }: UserUsageProps) {
+function UserCharges({ sessionContext, apiUrl }: UserUsageProps) {
   console.debug("apiUrl", apiUrl)
   return (
     <>
@@ -20,7 +21,7 @@ function UserCharges({ apiUrl }: UserUsageProps) {
             <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">
               User Token Charges
             </h6>
-            <TokenUsageChart data={data} areas={areas} lines={lines} />
+            <TokenUsageChart sessionContext={sessionContext} apiUrl={apiUrl} />
           </div>
         </div>
       </div>

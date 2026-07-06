@@ -1,8 +1,9 @@
-"""Account serializers for Smarter API"""
+"""Account serializers for Smarter API."""
 
 from smarter.apps.account.models import (
     Account,
     AccountContact,
+    Charge,
     User,
     UserProfile,
 )
@@ -34,7 +35,6 @@ class UserSerializer(MetaDataModelSerializer):
         from smarter.apps.account.serializers import UserSerializer
         serializer = UserSerializer(user_instance)
         data = serializer.data
-
     """
 
     # pylint: disable=missing-class-docstring
@@ -77,7 +77,6 @@ class UserMiniSerializer(SmarterCamelCaseSerializer):
 
     .. seealso::
         For full user details, use :class:`UserSerializer`.
-
     """
 
     # pylint: disable=missing-class-docstring
@@ -114,7 +113,6 @@ class AccountSerializer(MetaDataModelSerializer):
 
     .. seealso::
         For lightweight account representations, use :class:`AccountMiniSerializer`.
-
     """
 
     # pylint: disable=missing-class-docstring
@@ -148,13 +146,38 @@ class AccountMiniSerializer(SmarterCamelCaseSerializer):
 
     .. seealso::
         For full account details, use :class:`AccountSerializer`.
-
     """
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = Account
         fields = ("account_number",)
+
+
+class ChargeSerializer(SmarterCamelCaseSerializer):
+    """
+    Read-only serializer for the ``Charge`` model.
+
+    This serializer converts :class:`Charge` model instances to and from the
+    JSON representation used by the Smarter API. Field names are automatically
+    converted between Django's ``snake_case`` convention and the API's
+
+    ``camelCase`` convention by the
+
+    :class:`SmarterCamelCaseSerializer` base class.
+
+    This serializer is intended for read operations only. All model fields are
+    exposed, and every field is marked as read-only, preventing creation or
+    modification through this serializer.
+
+    :inherits: SmarterCamelCaseSerializer
+    """
+
+    # pylint: disable=C0115
+    class Meta:
+        model = User
+        fields = ["__all__"]
+        read_only_fields = fields
 
 
 class UserProfileSerializer(SmarterCamelCaseSerializer):
@@ -171,7 +194,6 @@ class UserProfileSerializer(SmarterCamelCaseSerializer):
 
             Only the ``user`` and ``account`` fields are included in serialization.
 
-
     **Example usage**::
 
         from smarter.apps.account.serializers import UserProfileSerializer
@@ -180,7 +202,6 @@ class UserProfileSerializer(SmarterCamelCaseSerializer):
 
     .. seealso::
         For more detailed user or account data, use :class:`UserSerializer` or :class:`AccountSerializer`.
-
     """
 
     user = UserMiniSerializer()
@@ -209,7 +230,6 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
 
             All fields are read-only in this serializer.
 
-
     **Example usage**::
 
         from smarter.apps.account.serializers import AccountContactSerializer
@@ -219,7 +239,6 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
     .. seealso::
 
             For full account details, use :class:`AccountSerializer`.
-
     """
 
     account = AccountMiniSerializer()
@@ -237,9 +256,7 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
 
 
 class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
-    """
-    Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field.
-    """
+    """Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field."""
 
     user_profile = UserProfileSerializer(read_only=True)
 
