@@ -28,5 +28,5 @@ class DashboardApiReverseNames:
 urlpatterns = [
     path("my-resources/", MyResourcesView.as_view(), name=DashboardApiReverseNames.my_resources),
     path("service-health/", ServiceHealthView.as_view(), name=DashboardApiReverseNames.service_health),
-    path("charges/", ChargesView.as_view(), name=DashboardApiReverseNames.token_charges),
+    path("charges/<str:periodicity>/", ChargesView.as_view(), name=DashboardApiReverseNames.token_charges),
 ]

@@ -1,6 +1,6 @@
-import type { TokenUsagePoint } from "./types";
+import type { TokenUsageInterface } from "./types";
 
-export const data: TokenUsagePoint[] = [
+export const data: TokenUsageInterface[] = [
   {
     timestamp: "09:00",
     requestTokens: 12000,

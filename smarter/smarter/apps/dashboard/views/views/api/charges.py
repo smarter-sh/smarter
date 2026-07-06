@@ -37,11 +37,12 @@ reference, see the generated developer docs or inline function docstrings.
 
 from datetime import datetime, timedelta
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 from zoneinfo import ZoneInfo
 
 from django.db.models import Q, Sum
 from django.http import HttpRequest, JsonResponse
+from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
@@ -49,6 +50,7 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
+from smarter.apps.account.serializers import ChargeSerializer
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.views import (
@@ -227,7 +229,7 @@ class AggregatedChargesPeriod:
 @cache_results(timeout=60 * 60)  # one hour
 def get_aggregated_charges(
     user_profile: UserProfile, periodicity: str = AggregatedChargesPeriod.HOUR, invalidate: bool = False
-) -> list[dict[str, Any]]:
+) -> ReturnList[ReturnDict[str, Any]]:
     """
     Query and aggregate resource usage charges for a user over a specified reporting interval.
 
@@ -276,8 +278,9 @@ def get_aggregated_charges(
         user_profile,
     )
     resource_locator = user_profile.record_locator
-    start_date = datetime.now().astimezone()
-    end_date = AggregatedChargesPeriod.delta(periodicity=periodicity)
+    utc = ZoneInfo("UTC")
+    end_date = datetime.now(utc)
+    start_date = AggregatedChargesPeriod.delta(periodicity=periodicity, tz=utc)
     group_fields = AggregatedChargesPeriod.grouping_fields(periodicity)
     start_q = (
         Q(year__gt=start_date.year)
@@ -312,7 +315,7 @@ def get_aggregated_charges(
             "resource_locator",
         )
     )
-    data = list(retval)
+    data = cast(ReturnList[ReturnDict[str, Any]], ChargeSerializer(retval, many=True).data)
     logger.debug(
         "%s.get_aggregated_charges() retrieved and cached aggregated charges for %s: %s",
         logger_prefix,
@@ -338,4 +341,4 @@ class ChargesView(SmarterAuthenticatedWebView):
         logger.debug("%s.post()", self.formatted_class_name)
 
         retval = get_aggregated_charges(user_profile=user_profile, periodicity=periodicity)
-        return JsonResponse(retval, status=HTTPStatus.OK)
+        return JsonResponse(retval, status=HTTPStatus.OK, safe=False)
