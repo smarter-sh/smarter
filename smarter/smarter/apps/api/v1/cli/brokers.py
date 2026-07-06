@@ -29,6 +29,7 @@ from smarter.apps.connection.manifest.brokers.api_connection import (
 from smarter.apps.connection.manifest.brokers.sql_connection import (
     SAMSqlConnectionBroker,
 )
+from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.apps.llm_client.manifest.brokers.llm_client import SAMLLMClientBroker
 from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
@@ -95,17 +96,18 @@ class Brokers:
 
     _brokers: Dict[str, Type[AbstractBroker]] = {
         SAMKinds.ACCOUNT.value: SAMAccountBroker,
-        SAMKinds.AUTH_TOKEN.value: SAMSmarterAuthTokenBroker,
-        SAMKinds.PROMPT.value: SAMPromptBroker,
-        SAMKinds.LLM_CLIENT.value: SAMLLMClientBroker,
-        SAMKinds.STATIC_PLUGIN.value: SAMStaticPluginBroker,
+        SAMKinds.API_CONNECTION.value: SAMApiConnectionBroker,
         SAMKinds.API_PLUGIN.value: SAMApiPluginBroker,
+        SAMKinds.AUTH_TOKEN.value: SAMSmarterAuthTokenBroker,
+        SAMKinds.GUARDRAIL.value: SAMGuardrailBroker,
+        SAMKinds.LLM_CLIENT.value: SAMLLMClientBroker,
+        SAMKinds.PROMPT.value: SAMPromptBroker,
+        SAMKinds.PROVIDER.value: SAMProviderBroker,
+        SAMKinds.SECRET.value: SAMSecretBroker,
         SAMKinds.SQL_PLUGIN.value: SAMSqlPluginBroker,
         SAMKinds.SQL_CONNECTION.value: SAMSqlConnectionBroker,
-        SAMKinds.API_CONNECTION.value: SAMApiConnectionBroker,
+        SAMKinds.STATIC_PLUGIN.value: SAMStaticPluginBroker,
         SAMKinds.USER.value: SAMUserBroker,
-        SAMKinds.SECRET.value: SAMSecretBroker,
-        SAMKinds.PROVIDER.value: SAMProviderBroker,
         SAMKinds.VECTORSTORE.value: SAMVectorstoreBroker,
     }
 
