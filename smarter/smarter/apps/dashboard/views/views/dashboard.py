@@ -86,6 +86,9 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
         @cache_results()
         def _get_context() -> dict[str, dict[str, str]]:
             # pylint: disable=C0415
+            from smarter.apps.dashboard.views.views.api.charges import (
+                AggregatedChargesPeriod,
+            )
             from smarter.apps.dashboard.views.views.api.urls import (
                 DashboardApiReverseNames,
             )
@@ -110,9 +113,14 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
                         DashboardApiReverseNames.service_health,
                     ),
                     "charges_api_url": reverse(
-                        DashboardApiReverseNames.namespace,
-                        DashboardApiReverseNames.namespace,
-                        DashboardApiReverseNames.token_charges,
+                        ":".join(
+                            (
+                                DashboardReverseNames.namespace,
+                                DashboardApiReverseNames.namespace,
+                                DashboardApiReverseNames.token_charges,
+                            )
+                        ),
+                        kwargs={"periodicity": AggregatedChargesPeriod.DAY},
                     ),
                     "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                     "smarter_request_id": self.generate_smarter_request_id(),

@@ -94,6 +94,12 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django ORM model instance.
     """
 
+    GUARDRAIL = "Guardrail"
+    """Smarter API Guardrail resource.
+
+    A Django ORM model instance.
+    """
+
     LLM_CLIENT = "LLMClient"
     """Smarter LLMClient resource.
 

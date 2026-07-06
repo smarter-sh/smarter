@@ -1,0 +1,13 @@
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  description: "A guardrail runs bandit on llm responses."
+  name: bandit
+  version: 0.1.0
+  tags:
+    - bandit
+  annotations:
+    - smarter.sh/tests/focus-level: high
+    - smarter.sh/tests/owner: Lawrence McDaniel
+spec:
+  config:

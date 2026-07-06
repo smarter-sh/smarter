@@ -736,6 +736,7 @@ INSTALLED_APPS = [
     "smarter.apps.api",
     "smarter.apps.llm_client",
     "smarter.apps.connection",
+    "smarter.apps.guardrail",
     "smarter.apps.dashboard",
     "smarter.apps.docs",
     "smarter.apps.plugin",

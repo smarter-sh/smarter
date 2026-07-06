@@ -62,6 +62,9 @@ class SmarterWaffleSwitches:
     CONNECTION_LOGGING = "log_connection"
     """Enables logging throughout the smarter.app.connection namespace."""
 
+    GUARDRAIL_LOGGING = "log_guardrail"
+    """Enables logging throughout the smarter.app.guardrail namespace."""
+
     PROMPT_LOGGING = "log_prompt"
     """Enables logging throughout the smarter.app.prompt namespace."""
 
@@ -222,6 +225,11 @@ class SmarterWaffleSwitches:
         CONNECTION_LOGGING: SmarterWaffleSwitch(
             name=CONNECTION_LOGGING,
             comment="Enables logging throughout the smarter.app.connection namespace.",
+            default=True,
+        ),
+        GUARDRAIL_LOGGING: SmarterWaffleSwitch(
+            name=GUARDRAIL_LOGGING,
+            comment="Enables logging throughout the smarter.app.guardrail namespace",
             default=True,
         ),
         SECRET_LOGGING: SmarterWaffleSwitch(
