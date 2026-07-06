@@ -10,7 +10,7 @@ Command
     Implements the logic for the ``manage.py create_user`` command.
 
 Command-line Arguments
-=====================
+=======================
 --account_number : str, required
     The Smarter account number the user should belong to.
 --username : str, required

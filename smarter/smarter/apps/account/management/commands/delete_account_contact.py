@@ -9,7 +9,7 @@ Command
     Implements the logic for the ``manage.py delete_account_contact`` command.
 
 Command-line Arguments
-=====================
+=======================
 --account_number : str, optional
     The Smarter account number from which the contact should be removed.
 --company_name : str, optional

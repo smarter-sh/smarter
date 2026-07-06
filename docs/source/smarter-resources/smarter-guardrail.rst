@@ -46,9 +46,6 @@ Technical Reference
    guardrail/manifest
    guardrail/models
    guardrail/serializers
-   guardrail/services
    guardrail/signals
    guardrail/tasks
-   guardrail/utils
-   guardrail/verification
    guardrail/views

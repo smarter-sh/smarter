@@ -9,7 +9,7 @@ Command
     Implements the logic for the ``manage.py create_smarter_admin`` command.
 
 Command-line Arguments
-=====================
+=======================
 -u, --username : str, optional
     The username for the new superuser (defaults to value from settings).
 -e, --email : str, optional
