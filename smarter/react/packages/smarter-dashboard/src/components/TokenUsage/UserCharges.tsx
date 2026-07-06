@@ -19,7 +19,7 @@ function UserCharges({ sessionContext, apiUrl }: UserUsageProps) {
           <div className="card-body d-flex flex-column ps-xl-15 h-100">
             {/* begin::Title */}
             <h6 className="text-muted  opacity-75-hover w-100 my-4 fs-3 fw-bold">
-              User Token Charges
+              Token Usage
             </h6>
             <TokenUsageChart sessionContext={sessionContext} apiUrl={apiUrl} />
           </div>
