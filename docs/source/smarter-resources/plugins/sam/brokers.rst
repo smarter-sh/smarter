@@ -7,4 +7,5 @@ Brokers
     brokers/api-plugin
     brokers/plugin-base
     brokers/sql-plugin
+    brokers/skill-plugin
     brokers/static-plugin

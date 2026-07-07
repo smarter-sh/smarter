@@ -24,6 +24,9 @@ from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
 from smarter.apps.plugin.manifest.models.api_plugin.const import (
     MANIFEST_KIND as APIPLUGIN_MANIFEST_KIND,
 )
+from smarter.apps.plugin.manifest.models.skill_plugin.const import (
+    MANIFEST_KIND as SKILLPLUGIN_MANIFEST_KIND,
+)
 from smarter.apps.plugin.manifest.models.sql_plugin.const import (
     MANIFEST_KIND as SQLPLUGIN_MANIFEST_KIND,
 )
@@ -102,6 +105,7 @@ class SAMKinds(SmarterEnumAbstract):
     # plugins
     STATIC_PLUGIN = STATICPLUGIN_MANIFEST_KIND
     API_PLUGIN = APIPLUGIN_MANIFEST_KIND
+    SKILL_PLUGIN = SKILLPLUGIN_MANIFEST_KIND
     SQL_PLUGIN = SQLPLUGIN_MANIFEST_KIND
 
     # connections

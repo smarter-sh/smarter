@@ -10,6 +10,7 @@ Django ORM
    models/plugin-selector
    models/plugin-selector-history
    models/plugin-database
+   models/plugin-data-skill
    models/plugin-data-static
    models/plugin-data-api
    models/plugin-data-sql

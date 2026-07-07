@@ -96,6 +96,12 @@ class DocsJsonSchemaSqlConnectionView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.SQL_CONNECTION)
 
 
+class DocsJsonSchemaSkillView(DocsJsonSchemaBaseView):
+    """Plugin Skill JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.SKILL_PLUGIN)
+
+
 class DocsJsonSchemaSqlView(DocsJsonSchemaBaseView):
     """Plugin Sql JSON Schema view."""
 

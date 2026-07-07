@@ -114,6 +114,12 @@ class DocsExampleManifestSqlConnectionView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.SQL_CONNECTION)
 
 
+class DocsExampleManifestSkillView(DocsExampleManifestBaseView):
+    """Plugin Skill JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.SKILL_PLUGIN)
+
+
 class DocsExampleManifestSqlView(DocsExampleManifestBaseView):
     """Plugin Sql JSON Schema view."""
 
