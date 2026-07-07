@@ -9,20 +9,27 @@ Smarter LLMClient
 Overview
 --------
 
-Smarter LLMClients are highly advanced conversational agents designed to provide
-intelligent and context-aware interactions with human users as well as
-fully automated workflows. They leverage the vanguard
-of generative AI text completion technology to deliver personalized and efficient
-responses. Namely, these llm_clients leverage the Smarter Plugin architecture, which
-provides extensible tool integration capabilities, including secure access to
-to private, secure data sources and external APIs.
+The Smarter LLMClient is the platform’s implementation of what is commonly
+known as an LLM harness. It provides the execution environment surrounding a
+large language model, managing the prompts, conversation state, tool execution,
+configuration, security, and runtime behavior required to transform a foundation
+model into a reliable, production-ready application.
 
-LLMClients are recognized by the yaml-based :doc:`Smarter API Manifest (SAM) <../smarter-framework/smarter-api>` architecture,
-facilitating both behavioral and visual customization. This allows developers to
-tailor the llm_client's functionality and appearance to meet specific use cases and
-user preferences.
+LLMClients support both interactive conversations with human users and fully
+automated workflows. In addition to orchestrating requests to a language model,
+they leverage the Smarter Plugin architecture to invoke tools, retrieve data
+from private systems, access external APIs, execute code, and integrate other
+runtime capabilities. This allows developers to extend the model far beyond
+text generation while maintaining consistent interfaces, security boundaries,
+and execution policies.
 
-LLMClients are managed with the :doc:`Smarter command-line interface (CLI) <../smarter-platform/cli>`.
+Each LLMClient is defined by a YAML-based :doc:Smarter API Manifest (SAM) <../smarter-framework/smarter-api>,
+which describes its model configuration, prompts, plugins, user interface,
+behavior, and other runtime characteristics. Because every aspect of an
+LLMClient is declaratively configured, developers can easily customize and
+deploy specialized AI applications without modifying framework code.
+
+LLMClients are managed using the :doc:`Smarter command-line interface (CLI) <../smarter-platform/cli>`.
 
 .. seealso::
 
@@ -58,26 +65,26 @@ Technical Reference
 .. toctree::
    :maxdepth: 1
 
-   llm_clients/api
-   llm_clients/models
-   llm_clients/sam
-   llm_clients/serializers
-   llm_clients/react-ui
-   llm_clients/helper
-   llm_clients/kubernetes-ingress
-   llm_clients/management-commands
-   llm_clients/middleware
-   llm_clients/tasks
-   llm_clients/signals
-   llm_clients/urls
-   llm_clients/utils
+   llm_client/api
+   llm_client/models
+   llm_client/sam
+   llm_client/serializers
+   llm_client/react-ui
+   llm_client/helper
+   llm_client/kubernetes-ingress
+   llm_client/management-commands
+   llm_client/middleware
+   llm_client/tasks
+   llm_client/signals
+   llm_client/urls
+   llm_client/utils
 
 
 Sandbox Mode
 ------------
 
 Smarter LLMClients can be operated in a 'Sandbox Mode', which restricts their
-capabilities to ensure safe experimentation and testing. In this mode, llm_clients
+capabilities to ensure safe experimentation and testing. In this mode, llm_client
 are only addressable using URL schemes that authenticate with Django sessions.
 That is, they cannot be accessed via API keys nor will they function using
 URL schemas such as `stackademy.1234-5678-9012.api.example.com`.
