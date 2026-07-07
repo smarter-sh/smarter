@@ -443,7 +443,7 @@ kinds most relevant to your initial setup are:
      - Extends a LLMClient's knowledge domain using function-calling and data
        connectors (SQL, REST API, static data).  Out of scope for this
        tutorial but documented at
-       ``https://docs.smarter.sh/en/latest/smarter-resources/plugins/``
+       ``https://docs.smarter.sh/en/latest/smarter-resources/plugin/``
 
 Regarding the **Provider** resource kind: this is a platform-level resource
 managed by the infrastructure team through Smarter's administrative interface.
@@ -1002,7 +1002,7 @@ resolve the issue, contact the IT helpdesk and include:
    * - Smarter Provider manifest reference (infrastructure team)
      - ``https://docs.smarter.sh/en/latest/smarter-resources/smarter-provider.html``
    * - Smarter Plugin documentation
-     - ``https://docs.smarter.sh/en/latest/smarter-resources/plugins/``
+     - ``https://docs.smarter.sh/en/latest/smarter-resources/plugin/``
    * - VS Code extension for Smarter manifests
      - ``https://marketplace.visualstudio.com/items?itemName=Querium.smarter-manifest``
 
