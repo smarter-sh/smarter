@@ -1,4 +1,4 @@
-Smarter LLMClient
+Smarter LLM Client
 ==================
 
 .. attention::

@@ -1,4 +1,4 @@
-Smarter MCP Client
+Smarter LLM Host
 =====================
 
 Overview

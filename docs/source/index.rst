@@ -41,33 +41,46 @@ The Smarter Project |project_version| Documentation
    :alt: AGPL-3 License
 
 
-The Smarter Project is a cloud-native :doc:`platform <smarter-platform>` and
-:doc:`developer framework <smarter-framework>` for
-building, deploying, and managing AI applications. Using declarative
-:doc:`Smarter Manifests <smarter-framework/smarter-manifests>`, developers can
-define :doc:`AI resources <smarter-resources>`, :doc:`prompts <smarter-resources/smarter-prompt>`,
-workflows, :doc:`agents <smarter-resources/smarter-llm_client>`, :doc:`APIs <smarter-framework/smarter-api>`,
-and :doc:`integrations <smarter-resources/smarter-connection>` as version-controlled infrastructure, enabling repeatable
-deployments, governance, and lifecycle management across environments.
+The Smarter Project is an open source, cloud-native :doc:`platform <smarter-platform>` and
+:doc:`developer framework <smarter-framework>` for building, deploying, and governing AI
+applications. It runs wherever you do — a single `Docker <https://hub.docker.com/r/mcdaniel0073/smarter>`_
+container to get started, or natively on `Kubernetes <https://kubernetes.io/>`_ via the
+`Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`_ for
+production. There's no managed-service dependency and no vendor lock-in: you own the deployment,
+the data, and the infrastructure it runs on.
 
-At the center of the platform is :doc:`declarative AI <smarter-resources>`
-resource management. Rather than manually configuring providers, prompts,
-APIs, databases, workflows, and deployment settings across multiple systems,
-developers describe their desired state in :doc:`YAML manifests <smarter-framework/smarter-manifests>`. Smarter handles
-resource provisioning, dependency
-management, versioning, governance, security, budget controls, and lifecycle operations, allowing
-teams to focus on building solutions instead of managing infrastructure,
-budgets, and operations.
+Every capability in Smarter — from calling a model, to running a tool, to storing a credential —
+is expressed as a declarative :doc:`Resource <smarter-resources>`, and every Resource is created
+and managed the same way: by applying a :doc:`Smarter Manifest (SAM) <smarter-framework/smarter-manifests>`,
+a plain `YAML <https://en.wikipedia.org/wiki/YAML>`__ file that declares its desired state. There's
+no resource-specific SDK to learn and no separate API convention to memorize — an
+:doc:`Account <smarter-resources/smarter-account>`, a :doc:`Secret <smarter-resources/smarter-secret>`,
+an :doc:`LLMClient <smarter-resources/smarter-llm_client>`, an
+:doc:`Orchestrator <smarter-resources/smarter-orchestrator>` coordinating a multi-agent workflow, a
+:doc:`Plugin <smarter-resources/smarter-plugin>` reaching into an external database — all of it is
+created, versioned, diffed, and reviewed like any other infrastructure-as-code. Because SAM files
+are plain, human-readable YAML, they can be understood by non-developers — business analysts and
+product managers — not just by the engineers who apply them.
+
+Resources compose into four layers — Access & Governance, Model Connectivity, Extensibility &
+Trust, and Conversation (see the full :doc:`Resource Reference <smarter-resources>`) — so a single
+:doc:`Prompt <smarter-resources/smarter-prompt>` can be traced end to end: back through the
+guardrail checks, tool calls, and model connection that produced it, back through any
+:doc:`Orchestrator <smarter-resources/smarter-orchestrator>` run that coordinated it, to the
+account and budget that authorized it in the first place. This layered, fully auditable design is
+what lets Smarter scale from a single AI assistant to large, governed, multi-agent applications
+without changing how you work with it.
 
 The project combines three complementary capabilities. The
 :doc:`Smarter Platform <smarter-platform>` provides :doc:`authoring & administration <smarter-platform/smarter-web-console>`,
 deployment, operations, and governance. :doc:`Smarter Resources <smarter-resources>`
 define the building blocks of AI applications, including :doc:`LLM providers <smarter-resources/smarter-provider>`,
 :doc:`prompts <smarter-resources/smarter-prompt>`, :doc:`agents <smarter-resources/smarter-llm_client>`,
-:doc:`plugins <smarter-resources/smarter-plugin>`, :doc:`connections <smarter-resources/smarter-connection>`,
-:doc:`secrets <smarter-resources/smarter-secret>`, workflows, vectorstores,
-and :doc:`integrations <smarter-resources/smarter-connection>`. The
-:doc:`Smarter Development Framework <smarter-framework>` provides APIs, `SDKs <https://github.com/smarter-sh/smarter-python>`_,
+:doc:`orchestrators <smarter-resources/smarter-orchestrator>`, :doc:`plugins <smarter-resources/smarter-plugin>`,
+:doc:`connections <smarter-resources/smarter-connection>`, :doc:`secrets <smarter-resources/smarter-secret>`,
+vectorstores, and :doc:`integrations <smarter-resources/smarter-connection>`. The
+:doc:`Smarter Development Framework <smarter-framework>` — the same framework Smarter itself is
+built on and ships as open source — provides APIs, `SDKs <https://github.com/smarter-sh/smarter-python>`_,
 :doc:`command-line tools <smarter-platform/cli>`, :doc:`React components <smarter-framework/developer-reference/react-integration>`,
 and :doc:`developer tooling <smarter-framework/developer-reference>` for building
 enterprise AI applications on top of the platform.
@@ -88,17 +101,17 @@ lifecycle.
 
 - **AI Resource Management**
 
-  - Works with many :doc:`AI model providers <smarter-resources/smarter-provider>` — `OpenAI <https://developers.openai.com/api/reference/overview/>`_, `Google AI <https://ai.google.dev/api>`_, `Meta AI <https://developers.facebook.com/docs/>`_, `DeepSeek <https://api-docs.deepseek.com/>`_, and others.
+  - Works with many :doc:`AI model providers <smarter-resources/smarter-provider>` — `OpenAI <https://developers.openai.com/api/reference/overview/>`_, `Google AI <https://ai.google.dev/api>`_, `Meta AI <https://developers.facebook.com/docs/>`_, `DeepSeek <https://api-docs.deepseek.com/>`_, and others — or self-hosted models you deploy and manage yourself.
   - Lets you :doc:`organize <smarter-resources/smarter-llm_client>` and version your prompts, and see how they change over time.
-  - Supports “:doc:`agents <smarter-resources/smarter-plugin>`” and multi-step AI workflows so you can build bigger, smarter tasks.
-  - Secure integrations to :doc:`external data sources <smarter-resources/smarter-plugin>` like :doc:`databases <smarter-resources/plugins/plugin/sql>` and :doc:`APIs <smarter-resources/plugins/plugin/api>`.
+  - Coordinates multiple models into multi-agent workflows with :doc:`Orchestrator <smarter-resources/smarter-orchestrator>` — sequential, parallel, supervisor/worker, routing, and voting/debate strategies — so you can build bigger, smarter tasks.
+  - Secure integrations to :doc:`external data sources <smarter-resources/smarter-plugin>` like :doc:`databases <smarter-resources/plugin/plugin/sql>` and :doc:`APIs <smarter-resources/plugin/plugin/api>`.
 
 - **Developer Application Framework**
 
   - Built on :doc:`Django <smarter-framework/developer-reference/lib/django>`, :doc:`Django REST Framework <smarter-framework/developer-reference/lib/drf>`, :doc:`Pydantic <smarter-framework/technologies/pydantic>`.
   - Automated :doc:`AWS cloud infrastructure <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` management.
   - ReactJS component-based :doc:`UI integration solution <smarter-framework/developer-reference/react-integration/smarter-chat>` that works for any web page.
-  - Build AI tools that connect to enterprise resources like :doc:`Sql databases <smarter-resources/plugins/plugin/sql>` and :doc:`REST APIs <smarter-resources/plugins/plugin/api>`.
+  - Build AI tools that connect to enterprise resources like :doc:`Sql databases <smarter-resources/plugin/plugin/sql>` and :doc:`REST APIs <smarter-resources/plugin/plugin/api>`.
   - :doc:`Prompt engineer workbench <smarter-framework/developer-reference/react-integration/smarter-chat>` for testing prompts and workflows before you deploy.
   - Vibrant developer community: `PyPI <https://pypi.org/project/smarter-api/>`_, `NPM <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, `VS Code extensions <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_, and more.
 
