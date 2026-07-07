@@ -118,6 +118,12 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django ORM model instance.
     """
 
+    ORCHESTRATOR = "Orchestrator"
+    """Smarter Orchestrator resource.
+
+    A Django ORM model instance.
+    """
+
     PROMPT = "Prompt"
     """Smarter Prompt resource.
 

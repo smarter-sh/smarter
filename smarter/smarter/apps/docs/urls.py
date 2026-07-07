@@ -27,6 +27,7 @@ from .views.json_schema import (
     DocsJsonSchemaLLMClientView,
     DocsJsonSchemaLLMHostView,
     DocsJsonSchemaMCPClientView,
+    DocsJsonSchemaOrchestratorView,
     DocsJsonSchemaPluginView,
     DocsJsonSchemaPromptView,
     DocsJsonSchemaProviderView,
@@ -46,6 +47,7 @@ from .views.manifest import (
     DocsExampleManifestLLMClientView,
     DocsExampleManifestLLMHostView,
     DocsExampleManifestMCPClientView,
+    DocsExampleManifestOrchestratorView,
     DocsExampleManifestPluginView,
     DocsExampleManifestPromptView,
     DocsExampleManifestProviderView,
@@ -131,6 +133,11 @@ urlpatterns = [
         json_schema_path(SAMKinds.MCP_CLIENT.value),
         DocsJsonSchemaMCPClientView.as_view(),
         name=json_schema_name(SAMKinds.MCP_CLIENT.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.ORCHESTRATOR.value),
+        DocsJsonSchemaOrchestratorView.as_view(),
+        name=json_schema_name(SAMKinds.ORCHESTRATOR.value),
     ),
     path(
         json_schema_path(SAMKinds.PROMPT.value),
@@ -219,6 +226,11 @@ urlpatterns = [
         manifest_path(SAMKinds.MCP_CLIENT.value),
         DocsExampleManifestMCPClientView.as_view(),
         name=manifest_name(SAMKinds.MCP_CLIENT.value),
+    ),
+    path(
+        manifest_path(SAMKinds.ORCHESTRATOR.value),
+        DocsExampleManifestOrchestratorView.as_view(),
+        name=manifest_name(SAMKinds.ORCHESTRATOR.value),
     ),
     path(
         manifest_path(SAMKinds.PROMPT.value),

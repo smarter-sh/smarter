@@ -138,10 +138,6 @@ class LLMHost(MetaDataWithOwnershipModel):
     class Meta:
         verbose_name_plural = "LLMHosts"
         unique_together = ("user_profile", "name")
-        indexes = [
-            models.Index(fields=["status", "is_active"]),
-            models.Index(fields=["inference_engine"]),
-        ]
 
     def __str__(self) -> str:
         return f"{self.name}"

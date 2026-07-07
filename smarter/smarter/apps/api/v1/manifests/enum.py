@@ -24,6 +24,9 @@ from smarter.apps.llmhost.manifest.models.llmhost.const import (
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     MANIFEST_KIND as MCP_CLIENT_MANIFEST_KIND,
 )
+from smarter.apps.orchestrator.manifest.models.orchestrator.const import (
+    MANIFEST_KIND as ORCHESTRATOR_MANIFEST_KIND,
+)
 from smarter.apps.plugin.manifest.models.api_plugin.const import (
     MANIFEST_KIND as APIPLUGIN_MANIFEST_KIND,
 )
@@ -155,6 +158,7 @@ class SAMKinds(SmarterEnumAbstract):
     LLM_CLIENT = LLM_CLIENT_MANIFEST_KIND
     LLM_HOST = LLM_HOST_MANIFEST_KIND
     MCP_CLIENT = MCP_CLIENT_MANIFEST_KIND
+    ORCHESTRATOR = ORCHESTRATOR_MANIFEST_KIND
 
     # provider resources
     PROVIDER = PROVIDER_MANIFEST_KIND

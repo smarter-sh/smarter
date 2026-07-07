@@ -90,6 +90,12 @@ class DocsJsonSchemaMCPClientView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.MCP_CLIENT)
 
 
+class DocsJsonSchemaOrchestratorView(DocsJsonSchemaBaseView):
+    """Orchestrator JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.ORCHESTRATOR)
+
+
 class DocsJsonSchemaPluginView(DocsJsonSchemaBaseView):
     """Plugin JSON Schema view."""
 

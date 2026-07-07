@@ -741,6 +741,7 @@ INSTALLED_APPS = [
     "smarter.apps.llm_client",
     "smarter.apps.llmhost",
     "smarter.apps.mcpclient",
+    "smarter.apps.orchestrator",
     "smarter.apps.plugin",
     "smarter.apps.prompt",
     "smarter.apps.provider",

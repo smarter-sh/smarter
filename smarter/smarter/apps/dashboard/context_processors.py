@@ -89,6 +89,7 @@ from smarter.apps.guardrail.urls import GuardrailReverseNames
 from smarter.apps.llm_client.models import LLMClient
 from smarter.apps.llmhost.urls import LLMHostReverseNames
 from smarter.apps.mcpclient.urls import MCPClientReverseNames
+from smarter.apps.orchestrator.urls import OrchestratorReverseNames
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
@@ -139,6 +140,7 @@ def sidebar_context() -> dict[str, Any]:
             ),
             "llmhost": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.listview),
             "mcpclients": reverse(MCPClientReverseNames.namespace, MCPClientReverseNames.listview),
+            "orchestrators": reverse(OrchestratorReverseNames.namespace, OrchestratorReverseNames.listview),
             "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
             "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
             "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),

@@ -54,6 +54,8 @@ from smarter.apps.llmhost import urls as llmhost_urls
 from smarter.apps.llmhost.const import namespace as llmhost_namespace
 from smarter.apps.mcpclient import urls as mcp_urls
 from smarter.apps.mcpclient.const import namespace as mcp_namespace
+from smarter.apps.orchestrator import urls as orchestrator_urls
+from smarter.apps.orchestrator.const import namespace as orchestrator_namespace
 from smarter.apps.plugin import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt import urls as prompt_urls
@@ -177,6 +179,7 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout_view"),
     path("llmhost", include(llmhost_urls, namespace=llmhost_namespace)),
     path("mcpclient/", include(mcp_urls, namespace=mcp_namespace)),
+    path("orchestrator/", include(orchestrator_urls, namespace=orchestrator_namespace)),
     path("plugin/", include(plugin_urls, namespace=plugin_namespace)),
     path("provider/", include(provider_urls, namespace=provider_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
