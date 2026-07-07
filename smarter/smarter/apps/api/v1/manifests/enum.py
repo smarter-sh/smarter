@@ -18,6 +18,9 @@ from smarter.apps.guardrail.manifest.models.guardrail.const import (
 from smarter.apps.llm_client.manifest.models.llm_client.const import (
     MANIFEST_KIND as LLM_CLIENT_MANIFEST_KIND,
 )
+from smarter.apps.llmhost.manifest.models.llmhost.const import (
+    MANIFEST_KIND as LLM_HOST_MANIFEST_KIND,
+)
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     MANIFEST_KIND as MCP_CLIENT_MANIFEST_KIND,
 )
@@ -61,45 +64,72 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 class SAMKinds(SmarterEnumAbstract):
     """
-    Smarter manifest kinds enumeration.
+    Enumeration of all Smarter Application Manifest (SAM) resource kinds.
 
-    This is the comprehensive list of all
-    manifest kinds supported by the Smarter platform.
+    ``SAMKinds`` defines the complete set of manifest kinds recognized by the
+    Smarter platform. Each value identifies the type of resource described by
+    a Smarter Application Manifest (SAM), allowing manifests to be validated,
+    discovered, and routed to the appropriate resource handler.
 
-    Each manifest kind corresponds to a specific resource type within the
-    Smarter ecosystem, such as plugins, connections, account resources, prompt
-    resources, and provider resources.
+    Manifest kinds are organized into several functional categories:
+
+    - **Plugins** provide executable capabilities, such as Static, API,
+      Skill, and SQL plugins.
+    - **Connections** define connectivity to external services and databases.
+    - **Account resources** manage users, accounts, authentication tokens,
+      secrets, and guardrails.
+    - **Prompt resources** configure language model infrastructure, including
+      prompts, LLM clients, LLM hosts, and MCP clients.
+    - **Provider resources** describe AI model providers.
+    - **Proxy resources** define proxy services.
+    - **Vectorstore resources** configure vector database integrations.
+
+    This enumeration is used throughout the platform for manifest parsing,
+    resource validation, URL resolution, CLI commands, and API dispatch.
 
     Attributes:
-        STATIC_PLUGIN: Represents a static plugin manifest kind.
-        API_PLUGIN: Represents an API plugin manifest kind.
-        SQL_PLUGIN: Represents an SQL plugin manifest kind.
-        API_CONNECTION: Represents an API connection manifest kind.
-        SQL_CONNECTION: Represents an SQL connection manifest kind.
-        ACCOUNT: Represents an account manifest kind.
-        AUTH_TOKEN: Represents an authentication token manifest kind.
-        USER: Represents a user manifest kind.
-        SECRET: Represents a secret manifest kind.
-        PROMPT: Represents a prompt manifest kind.
-        PROXY: Represents a proxy manifest kind.
-        LLM_CLIENT: Represents an llm_client manifest kind.
-        PROVIDER: Represents a provider manifest kind.
+        STATIC_PLUGIN: Static plugin manifest.
+        API_PLUGIN: API plugin manifest.
+        SKILL_PLUGIN: Skill plugin manifest.
+        SQL_PLUGIN: SQL plugin manifest.
+        API_CONNECTION: API connection manifest.
+        SQL_CONNECTION: SQL connection manifest.
+        ACCOUNT: Account manifest.
+        AUTH_TOKEN: Authentication token manifest.
+        USER: User manifest.
+        SECRET: Secret manifest.
+        GUARDRAIL: Guardrail manifest.
+        PROMPT: Prompt manifest.
+        LLM_CLIENT: LLM client manifest.
+        LLM_HOST: LLM host manifest.
+        MCP_CLIENT: MCP client manifest.
+        PROVIDER: AI provider manifest.
+        PROXY: Proxy manifest.
+        VECTORSTORE: Vector store manifest.
 
-    Methods:
-        str_to_kind(cls, kind_str: str) -> "SAMKinds":
-            Convert a string to a SAMKinds enumeration value.
-        all_plugins(cls) -> list:
-            Return a list of all plugin manifest kinds.
-        all_connections(cls) -> list:
-            Return a list of all connection manifest kinds.
-        all_slugs(cls) -> list:
-            Return a list of all manifest kind slugs (singular and plural).
-        singular_slugs(cls) -> list:
-            Return a list of singular manifest kind slugs.
-        plural_slugs(cls) -> list:
-            Return a list of plural manifest kind slugs.
-        from_url(cls, url) -> str:
-            Extract the manifest kind from a URL.
+    Class Methods:
+        str_to_kind(kind_str):
+            Convert a manifest kind string into the corresponding
+            :class:`SAMKinds` enumeration value.
+
+        all_plugins():
+            Return the supported plugin manifest kinds.
+
+        all_connections():
+            Return the supported connection manifest kinds.
+
+        all_slugs():
+            Return all supported manifest kind URL slugs, including both
+            singular and plural forms.
+
+        singular_slugs():
+            Return the singular manifest kind URL slugs.
+
+        plural_slugs():
+            Return the plural manifest kind URL slugs.
+
+        from_url(url):
+            Determine the manifest kind represented by a resource URL.
     """
 
     # plugins
@@ -123,6 +153,7 @@ class SAMKinds(SmarterEnumAbstract):
     # prompt resources
     PROMPT = PROMPT_MANIFEST_KIND
     LLM_CLIENT = LLM_CLIENT_MANIFEST_KIND
+    LLM_HOST = LLM_HOST_MANIFEST_KIND
     MCP_CLIENT = MCP_CLIENT_MANIFEST_KIND
 
     # provider resources

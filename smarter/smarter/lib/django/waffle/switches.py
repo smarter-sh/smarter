@@ -83,6 +83,9 @@ class SmarterWaffleSwitches:
     LLM_CLIENT_HELPER_LOGGING = "log_llm_clienthelper"
     """Enables logging within the smarter.apps.llm_client.model.LLMClientHelper class."""
 
+    LLM_HOST_LOGGING = "log_llm_host"
+    """Enables logging throughout the smarter.app.llmhost namespace."""
+
     MCPCLIENT_LOGGING = "mcpclient_logging"
     """Enables logging within the smarter.apps.mcpclient namespace."""
 
@@ -233,6 +236,11 @@ class SmarterWaffleSwitches:
         GUARDRAIL_LOGGING: SmarterWaffleSwitch(
             name=GUARDRAIL_LOGGING,
             comment="Enables logging throughout the smarter.app.guardrail namespace",
+            default=True,
+        ),
+        LLM_HOST_LOGGING: SmarterWaffleSwitch(
+            name=LLM_HOST_LOGGING,
+            comment="Enables logging throughout the smarter.app.llmhost namespace.",
             default=True,
         ),
         MCPCLIENT_LOGGING: SmarterWaffleSwitch(
