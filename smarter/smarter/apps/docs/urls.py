@@ -30,6 +30,7 @@ from .views.json_schema import (
     DocsJsonSchemaPromptView,
     DocsJsonSchemaProviderView,
     DocsJsonSchemaSecretView,
+    DocsJsonSchemaSkillView,
     DocsJsonSchemaSqlConnectionView,
     DocsJsonSchemaSqlView,
     DocsJsonSchemaUserView,
@@ -47,6 +48,7 @@ from .views.manifest import (
     DocsExampleManifestPromptView,
     DocsExampleManifestProviderView,
     DocsExampleManifestSecretView,
+    DocsExampleManifestSkillView,
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestSqlView,
     DocsExampleManifestUserView,
@@ -149,6 +151,11 @@ urlpatterns = [
         name=json_schema_name(SAMKinds.SQL_CONNECTION.value),
     ),
     path(
+        json_schema_path(SAMKinds.SKILL_PLUGIN.value),
+        DocsJsonSchemaSkillView.as_view(),
+        name=json_schema_name(SAMKinds.SKILL_PLUGIN.value),
+    ),
+    path(
         json_schema_path(SAMKinds.SQL_PLUGIN.value),
         DocsJsonSchemaSqlView.as_view(),
         name=json_schema_name(SAMKinds.SQL_PLUGIN.value),
@@ -215,6 +222,11 @@ urlpatterns = [
         manifest_path(SAMKinds.SECRET.value),
         DocsExampleManifestSecretView.as_view(),
         name=manifest_name(SAMKinds.SECRET.value),
+    ),
+    path(
+        manifest_path(SAMKinds.SKILL_PLUGIN.value),
+        DocsExampleManifestSkillView.as_view(),
+        name=manifest_name(SAMKinds.SKILL_PLUGIN.value),
     ),
     path(
         manifest_path(SAMKinds.SQL_CONNECTION.value),

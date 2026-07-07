@@ -9,15 +9,19 @@ from smarter.lib.manifest.enum import SmarterEnumAbstract
 class SAMPluginCommonMetadataClassValues(SmarterEnumAbstract):
     """Smarter API Plugin Metadata Class keys enumeration."""
 
-    # a plugin that returns a static json response contained inside the plugin manifest
-    LEGACY = "static"
-
-    # a plugin that returns a static json response contained inside the plugin manifest
-    STATIC = "static"
-
     # a plugin that returns a dynamic json response by
     # executing an http request to a remote server that returns a json response
     API = "api"
+
+    # a plugin that returns a static json response contained inside the plugin manifest
+    LEGACY = "static"
+
+    # a plugin that returns a static Skill.md text response
+    # following the Antropic Agent Skill standard.
+    SKILL = "skill"
+
+    # a plugin that returns a static json response contained inside the plugin manifest
+    STATIC = "static"
 
     # a plugin that returns a dynamic json response by executing a sql query
     # to a database that returns a mysql readable object response
@@ -50,9 +54,10 @@ class SAMPluginCommonMetadataKeys(SmarterEnumAbstract):
 class SAMPluginCommonMetadataClass(SmarterEnumAbstract):
     """Smarter API Plugin Metadata Class keys enumeration."""
 
-    STATIC = "static"
     API = "api"
+    SKILL = "skill"
     SQL = "sql"
+    STATIC = "static"
 
 
 class SAMPluginSpecKeys(SmarterEnumAbstract):

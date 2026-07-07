@@ -1,12 +1,11 @@
-"""
-Plugin models for the Smarter platform.
-"""
+"""Plugin models for the Smarter platform."""
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 
 from .exceptions import PluginDataValueError
 from .plugin_data_api import PluginDataApi
 from .plugin_data_base import PluginDataBase
+from .plugin_data_skill import PluginDataSkill
 from .plugin_data_sql import PluginDataSql
 from .plugin_data_static import PluginDataStatic
 from .plugin_meta import PluginMeta
@@ -30,6 +29,7 @@ __all__ = [
     "PluginDataBase",
     "PluginDataStatic",
     "PluginDataApi",
+    "PluginDataSkill",
     "PluginDataSql",
     "PluginMeta",
     "PluginPrompt",

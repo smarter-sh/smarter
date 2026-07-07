@@ -33,6 +33,7 @@ from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.apps.llm_client.manifest.brokers.llm_client import SAMLLMClientBroker
 from smarter.apps.mcpclient.manifest.brokers.mcpclient import SAMMCPClientBroker
 from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
+from smarter.apps.plugin.manifest.brokers.skill_plugin import SAMSkillPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
 from smarter.apps.prompt.manifest.brokers.prompt import SAMPromptBroker
@@ -106,6 +107,7 @@ class Brokers:
         SAMKinds.PROMPT.value: SAMPromptBroker,
         SAMKinds.PROVIDER.value: SAMProviderBroker,
         SAMKinds.SECRET.value: SAMSecretBroker,
+        SAMKinds.SKILL_PLUGIN.value: SAMSkillPluginBroker,
         SAMKinds.SQL_PLUGIN.value: SAMSqlPluginBroker,
         SAMKinds.SQL_CONNECTION.value: SAMSqlConnectionBroker,
         SAMKinds.STATIC_PLUGIN.value: SAMStaticPluginBroker,

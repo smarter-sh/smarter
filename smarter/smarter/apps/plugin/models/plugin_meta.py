@@ -66,9 +66,10 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     objects: MetaDataWithOwnershipModelManager["PluginMeta"] = MetaDataWithOwnershipModelManager()
 
     PLUGIN_CLASSES = [
-        (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
-        (SAMPluginCommonMetadataClassValues.SQL.value, SAMPluginCommonMetadataClassValues.SQL.value),
         (SAMPluginCommonMetadataClassValues.API.value, SAMPluginCommonMetadataClassValues.API.value),
+        (SAMPluginCommonMetadataClassValues.SKILL.value, SAMPluginCommonMetadataClassValues.SKILL.value),
+        (SAMPluginCommonMetadataClassValues.SQL.value, SAMPluginCommonMetadataClassValues.SQL.value),
+        (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
     ]
     """The classes of plugins supported by Smarter."""
 

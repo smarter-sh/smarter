@@ -148,6 +148,12 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django ORM model instance.
     """
 
+    SKILL_PLUGIN = "SkillPlugin"
+    """Smarter Skill Plugin AI resource.
+
+    A Django ORM model instance.
+    """
+
     SQL_PLUGIN = "SqlPlugin"
     """Smarter SQL Plugin AI resource.
 
@@ -180,12 +186,15 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.API_CONNECTION.value, cls.API_CONNECTION.value),
             (cls.API_PLUGIN.value, cls.API_PLUGIN.value),
             (cls.AUTH_TOKEN.value, cls.AUTH_TOKEN.value),
+            (cls.GUARDRAIL.value, cls.GUARDRAIL.value),
             (cls.LLM_CLIENT.value, cls.LLM_CLIENT.value),
+            (cls.MCPCLIENT.value, cls.MCPCLIENT.value),
             (cls.PROMPT.value, cls.PROMPT.value),
             (cls.PROMPT_CONFIG.value, cls.PROMPT_CONFIG.value),
             (cls.PROXY.value, cls.PROXY.value),
             (cls.PROVIDER.value, cls.PROVIDER.value),
             (cls.SECRET.value, cls.SECRET.value),
+            (cls.SKILL_PLUGIN.value, cls.SKILL_PLUGIN.value),
             (cls.SQL_CONNECTION.value, cls.SQL_CONNECTION.value),
             (cls.SQL_PLUGIN.value, cls.SQL_PLUGIN.value),
             (cls.STATIC_PLUGIN.value, cls.STATIC_PLUGIN.value),

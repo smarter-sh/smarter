@@ -11,6 +11,7 @@ from smarter.apps.account.serializers import (
 from smarter.apps.connection.models import ApiConnection, SqlConnection
 from smarter.apps.plugin.models import (
     PluginDataApi,
+    PluginDataSkill,
     PluginDataSql,
     PluginDataStatic,
     PluginMeta,
@@ -74,7 +75,6 @@ class PluginMetaSerializer(MetaDataWithOwnershipModelSerializer):
         #   "annotations": {...},
         #   "tags": ["tag1", "tag2"]
         # }
-
     """
 
     user_profile = UserProfileSerializer(read_only=True)
@@ -140,7 +140,6 @@ class PluginSelectorSerializer(SmarterCamelCaseSerializer):
         #   "directive": "...",
         #   "searchTerms": "..."
         # }
-
     """
 
     # pylint: disable=missing-class-docstring
@@ -196,7 +195,6 @@ class PluginPromptSerializer(SmarterCamelCaseSerializer):
         #   "temperature": ...,
         #   "maxTokens": ...
         # }
-
     """
 
     # TODO: this temporarily deals with a breaking change in gpt 5
@@ -206,6 +204,58 @@ class PluginPromptSerializer(SmarterCamelCaseSerializer):
     class Meta:
         model = PluginPrompt
         fields = ["provider", "system_role", "model", "temperature", "max_tokens"]
+
+
+class PluginSkillSerializer(SmarterCamelCaseSerializer):
+    """
+    Serializer for the PluginDataSkill model.
+
+    This serializer handles SKILL.md-format plugin data, exposing fields for description,
+    the raw skill_document (YAML frontmatter + Markdown instructions), the parsed metadata,
+    the denormalized allowed_tools list, and any bundled resource references. It is used to
+    serialize and deserialize skill plugin configuration for API endpoints.
+
+    :param description: A brief description of the skill plugin.
+    :type description: str
+    :param skill_document: The raw SKILL.md document (frontmatter + Markdown body) for the plugin.
+    :type skill_document: str
+    :param metadata: Parsed YAML frontmatter from skill_document (name, description, license, allowed-tools).
+    :type metadata: dict
+    :param allowed_tools: The list of tool names this skill is permitted to invoke.
+    :type allowed_tools: list
+    :param resources: Relative paths to bundled files (scripts/, references/, assets/) shipped alongside this skill.
+    :type resources: list
+
+    :return: Serialized skill plugin data.
+    :rtype: dict
+
+    .. seealso::
+
+        - :class:`PluginDataSkill`
+
+    **Example usage**:
+
+    .. code-block:: python
+
+        from smarter.apps.plugin.serializers import PluginSkillSerializer
+        from smarter.apps.plugin.models import PluginDataSkill
+
+        skill_plugin = PluginDataSkill.objects.first()
+        serializer = PluginSkillSerializer(skill_plugin)
+        print(serializer.data)
+        # Output: {
+        #   "description": "...",
+        #   "skillDocument": "---\\nname: pdf-form-filler\\n...",
+        #   "metadata": {"name": "pdf-form-filler", "description": "...", "allowed-tools": [...]},
+        #   "allowedTools": ["bash", "view", "str_replace"],
+        #   "resources": ["scripts/fill_pdf_form.py", "references/pdf_field_types.md"]
+        # }
+    """
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = PluginDataSkill
+        fields = ["description", "skill_document", "metadata", "allowed_tools", "resources"]
 
 
 class PluginStaticSerializer(SmarterCamelCaseSerializer):
@@ -222,7 +272,6 @@ class PluginStaticSerializer(SmarterCamelCaseSerializer):
 
     :return: Serialized static plugin data.
     :rtype: dict
-
 
     .. seealso::
 
@@ -242,7 +291,6 @@ class PluginStaticSerializer(SmarterCamelCaseSerializer):
         #   "description": "...",
         #   "staticData": {...}
         # }
-
     """
 
     # pylint: disable=missing-class-docstring
@@ -302,7 +350,6 @@ class PluginSqlSerializer(SmarterCamelCaseSerializer):
         #   "testValues": {...},
         #   "limit": ...
         # }
-
     """
 
     if is_sphinx_build():
