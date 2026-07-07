@@ -50,6 +50,8 @@ from smarter.apps.docs.views.webserver import (
 from smarter.apps.guardrail import urls as guardrail_urls
 from smarter.apps.guardrail.const import namespace as guardrail_namespace
 from smarter.apps.llm_client.api.v1.views.default import DefaultLLMClientApiView
+from smarter.apps.mcpclient import urls as mcp_urls
+from smarter.apps.mcpclient.const import namespace as mcp_namespace
 from smarter.apps.plugin import urls as plugin_urls
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt import urls as prompt_urls
@@ -171,6 +173,7 @@ urlpatterns = [
     path("docs/", include(docs_urls, namespace=docs_namespace)),
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
+    path("mcpclient/", include(mcp_urls, namespace=mcp_namespace)),
     path("plugin/", include(plugin_urls, namespace=plugin_namespace)),
     path("provider/", include(provider_urls, namespace=provider_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),

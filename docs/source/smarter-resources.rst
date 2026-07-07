@@ -38,9 +38,10 @@ capabilities of the various team member roles, and provides usable tools and abs
    :caption: Technical Reference
 
    smarter-resources/smarter-account
-   smarter-resources/smarter-llm_client
    smarter-resources/smarter-connection
    smarter-resources/smarter-guardrail
+   smarter-resources/smarter-llm_client
+   smarter-resources/smarter-mcpclient
    smarter-resources/smarter-plugin
    smarter-resources/smarter-prompt
    smarter-resources/smarter-provider

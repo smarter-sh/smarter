@@ -1,0 +1,18 @@
+---
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: test_mcpclient
+  description: mcpclient for running unit test
+  version: 1.0.0
+  tags:
+    - test
+    - mcpclient
+    - unittests
+  annotations:
+    - smarter.sh/llm-client/test-mcpclient/creator: QA Team
+    - smarter.sh/llm-client/test-mcpclient/purpose: unit testing
+    - smarter.sh/llm-client/test-mcpclient/release-date: 2024-06-15
+    - smarter.sh/llm-client/test-mcpclient/backward-compatibility: true
+spec:
+  config:

@@ -96,6 +96,12 @@ class DocsExampleManifestLLMClientView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.LLM_CLIENT)
 
 
+class DocsExampleManifestMCPClientView(DocsExampleManifestBaseView):
+    """MCPClient JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.MCP_CLIENT)
+
+
 class DocsExampleManifestPluginView(DocsExampleManifestBaseView):
     """Plugin JSON Schema view."""
 

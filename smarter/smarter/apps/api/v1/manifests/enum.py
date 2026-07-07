@@ -18,6 +18,9 @@ from smarter.apps.guardrail.manifest.models.guardrail.const import (
 from smarter.apps.llm_client.manifest.models.llm_client.const import (
     MANIFEST_KIND as LLM_CLIENT_MANIFEST_KIND,
 )
+from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
+    MANIFEST_KIND as MCP_CLIENT_MANIFEST_KIND,
+)
 from smarter.apps.plugin.manifest.models.api_plugin.const import (
     MANIFEST_KIND as APIPLUGIN_MANIFEST_KIND,
 )
@@ -116,6 +119,7 @@ class SAMKinds(SmarterEnumAbstract):
     # prompt resources
     PROMPT = PROMPT_MANIFEST_KIND
     LLM_CLIENT = LLM_CLIENT_MANIFEST_KIND
+    MCP_CLIENT = MCP_CLIENT_MANIFEST_KIND
 
     # provider resources
     PROVIDER = PROVIDER_MANIFEST_KIND

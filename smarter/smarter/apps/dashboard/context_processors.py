@@ -87,6 +87,7 @@ from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.apps.docs.urls import DocsReverseNames
 from smarter.apps.guardrail.urls import GuardrailReverseNames
 from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.mcpclient.urls import MCPClientReverseNames
 from smarter.apps.plugin.models import (
     PluginMeta,
 )
@@ -135,6 +136,7 @@ def sidebar_context() -> dict[str, Any]:
             "prompt_passthrough": reverse(
                 DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
             ),
+            "mcpclients": reverse(MCPClientReverseNames.namespace, MCPClientReverseNames.listview),
             "providers": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
             "plugins": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
             "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
