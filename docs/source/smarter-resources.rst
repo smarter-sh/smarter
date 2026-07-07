@@ -90,4 +90,5 @@ toward different parts of the stack, without needing to understand the whole thi
    smarter-resources/smarter-prompt
    smarter-resources/smarter-provider
    smarter-resources/smarter-secret
+   smarter-resources/smarter-vectorsearch
    smarter-resources/smarter-vectorstore
