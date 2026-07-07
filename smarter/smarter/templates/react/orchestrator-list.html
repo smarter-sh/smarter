@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% load react_orchestrator_list %}
+
+{% block style_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the orchestrator list
+  see: smarter.apps.orchestrator.templatetags.react_orchestrator_list.
+  reads the React manifest.json file to determine the correct hashed filenames to include.
+  -->
+  {% orchestrator_list_react_assets as assets %}
+  {% for css_file in assets.css %}
+    <link class="smarter" rel="stylesheet" href="{% static 'react/@smarter/orchestrator-list/' %}{{ css_file }}">
+  {% endfor %}
+{% endblock %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+
+  <div
+    id="{{ orchestrator_list.root_id }}"
+    django-csrf-cookie-name="{{ orchestrator_list.django_csrf_cookie_name }}"
+    django-session-cookie-name="{{ orchestrator_list.django_session_cookie_name }}"
+    django-cookie-domain="{{ orchestrator_list.cookie_domain }}"
+    smarter-orchestrator-list-api-url="{{ orchestrator_list.orchestrator_list_api_url }}"
+    react-debug-mode="{{ orchestrator_list.react_debug_mode }}"
+    smarter-request-id="{{ orchestrator_list.smarter_request_id }}"
+    >
+  </div>
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+
+  <!--
+  Vite assets for the orchestrator list
+  see: smarter.apps.orchestrator_list.templatetags.react_orchestrator_list.
+  reads the React manifest.json file to determine the correct .js entry filename to include.
+  -->
+  {% orchestrator_list_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/orchestrator-list/' %}{{ js_file }}"></script>
+  {% endfor %}
+
+{% endblock %}

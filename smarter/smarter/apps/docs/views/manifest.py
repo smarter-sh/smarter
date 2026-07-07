@@ -108,6 +108,12 @@ class DocsExampleManifestMCPClientView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.MCP_CLIENT)
 
 
+class DocsExampleManifestOrchestratorView(DocsExampleManifestBaseView):
+    """Orchestrator JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.ORCHESTRATOR)
+
+
 class DocsExampleManifestPluginView(DocsExampleManifestBaseView):
     """Plugin JSON Schema view."""
 
