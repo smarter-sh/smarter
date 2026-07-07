@@ -739,6 +739,7 @@ INSTALLED_APPS = [
     "smarter.apps.docs",
     "smarter.apps.guardrail",
     "smarter.apps.llm_client",
+    "smarter.apps.llmhost",
     "smarter.apps.mcpclient",
     "smarter.apps.plugin",
     "smarter.apps.prompt",

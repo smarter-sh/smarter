@@ -1,0 +1,53 @@
+/**
+ *
+ * Smarter LLMHost List React App.
+ * Used to display a list of available llmhosts.
+ *
+ */
+import { TabbedListView } from "@smarter/common";
+import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
+
+import type { LLMHost, LLMHostListViewProps, LLMHostCardViewProps } from "@/lib/Types";
+import ListView from "@/components/ListView";
+import CardView from "@/components/CardView";
+
+const tabs: Tabs = [
+  { key: "owned" as TabKey, label: "Your LLMHosts" },
+  { key: "shared" as TabKey, label: "Shared LLMHosts" },
+];
+
+// Set the TabbedViewContext generic object type to LLMHost,
+// then omit the two abstrasct attributes ListView and CardView
+// from TabbedViewContext and replace these with
+// concrete React component types from this package.
+export type LLMHostTabbedViewContext = Omit<
+  TabbedViewContext<LLMHost>,
+  "ListView" | "CardView"
+> & {
+  ListView: React.ComponentType<LLMHostListViewProps>;
+  CardView: React.ComponentType<LLMHostCardViewProps>;
+};
+
+const llmhostTabbedListViewContext: LLMHostTabbedViewContext = {
+  objectType: {} as LLMHost,
+  objectTypeName: "llmhost",
+  tabs: tabs,
+  ListView: ListView,
+  CardView: CardView,
+};
+
+interface AppProps {
+  sessionContext: SessionContext;
+}
+
+function App({ sessionContext }: AppProps) {
+  return (
+    <>
+      <section className="mt-5 mb-5 container" id="llmhost-list">
+        <TabbedListView sessionContext={sessionContext} tabbedListViewContext={llmhostTabbedListViewContext} />
+      </section>
+    </>
+  );
+}
+
+export default App;
