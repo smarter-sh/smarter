@@ -50,6 +50,8 @@ from smarter.apps.proxy.api.v1 import urls as proxy_urls
 from smarter.apps.proxy.const import namespace as proxy_namespace
 from smarter.apps.secret.api.v1 import urls as secret_urls
 from smarter.apps.secret.const import namespace as secret_namespace
+from smarter.apps.vectorsearch.api.v1 import urls as vectorsearch_urls
+from smarter.apps.vectorsearch.const import namespace as vectorsearch_namespace
 from smarter.apps.vectorstore.api.v1 import urls as vectorstore_urls
 from smarter.common.conf import smarter_settings
 from smarter.common.mixins.helper_mixin import SmarterReadyState
@@ -80,6 +82,7 @@ urlpatterns = [
     path("providers/", include(provider_urls, namespace=provider_namespace)),
     path("secrets/", include(secret_urls, namespace=secret_namespace)),
     path("tests/", include(tests_urls, namespace="tests")),
+    path("vectorsearches/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
 ]
 
 if smarter_settings.enable_proxy:

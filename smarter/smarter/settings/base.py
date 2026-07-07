@@ -747,6 +747,7 @@ INSTALLED_APPS = [
     "smarter.apps.provider",
     "smarter.apps.proxy",
     "smarter.apps.secret",
+    "smarter.apps.vectorsearch",
     "smarter.apps.vectorstore",
     # 3rd party apps
     # -------------------------------

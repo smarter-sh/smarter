@@ -43,6 +43,9 @@ from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBr
 from smarter.apps.prompt.manifest.brokers.prompt import SAMPromptBroker
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
 from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
+from smarter.apps.vectorsearch.manifest.brokers.vectorsearch import (
+    SAMVectorsearchBroker,
+)
 from smarter.apps.vectorstore.manifest.brokers.vectorstore import SAMVectorstoreBroker
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib import logging
@@ -119,6 +122,7 @@ class Brokers:
         SAMKinds.STATIC_PLUGIN.value: SAMStaticPluginBroker,
         SAMKinds.USER.value: SAMUserBroker,
         SAMKinds.VECTORSTORE.value: SAMVectorstoreBroker,
+        SAMKinds.VECTORSEARCH.value: SAMVectorsearchBroker,
     }
 
     @classmethod

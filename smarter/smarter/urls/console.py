@@ -67,6 +67,8 @@ from smarter.apps.proxy import urls as proxy_urls
 from smarter.apps.proxy.const import namespace as proxy_namespace
 from smarter.apps.secret import urls as secret_urls
 from smarter.apps.secret.const import namespace as secret_namespace
+from smarter.apps.vectorsearch import urls as vectorsearch_urls
+from smarter.apps.vectorsearch.const import namespace as vectorsearch_namespace
 from smarter.apps.vectorstore import urls as vectorstore_urls
 from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
@@ -182,6 +184,7 @@ urlpatterns = [
     path("orchestrator/", include(orchestrator_urls, namespace=orchestrator_namespace)),
     path("plugin/", include(plugin_urls, namespace=plugin_namespace)),
     path("provider/", include(provider_urls, namespace=provider_namespace)),
+    path("vectorsearch/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
     path("session-test/", session_test_view, name="session_test"),
     path("secret/", include(secret_urls, namespace=secret_namespace)),

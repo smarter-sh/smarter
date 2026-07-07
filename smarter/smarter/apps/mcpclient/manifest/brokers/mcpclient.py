@@ -24,7 +24,6 @@ from smarter.apps.mcpclient.manifest.models.mcpclient.status import SAMMCPClient
 from smarter.apps.mcpclient.models import (
     MCPAuthType,
     MCPClient,
-    MCPConnectionStatus,
     MCPTransport,
 )
 from smarter.apps.plugin.signals import broker_ready

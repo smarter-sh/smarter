@@ -95,6 +95,9 @@ class SmarterWaffleSwitches:
     SECRET_LOGGING = "log_secret"
     """Enables logging throughout the smarter.app.secret namespace."""
 
+    VECTORSEARCH_LOGGING = "leg_vectorsearch"
+    """Enables logging throughout the smarter.app.vectorsearch namespace."""
+
     VECTORSTORE_LOGGING = "log_vectorstore"
     """Enables logging throughout the smarter.app.vectorstore namespace."""
 
@@ -259,6 +262,11 @@ class SmarterWaffleSwitches:
         SECRET_LOGGING: SmarterWaffleSwitch(
             name=SECRET_LOGGING,
             comment="Enables logging throughout the smarter.app.secret namespace.",
+            default=True,
+        ),
+        VECTORSEARCH_LOGGING: SmarterWaffleSwitch(
+            name=VECTORSEARCH_LOGGING,
+            comment="Enables logging throughout the smarter.app.vectorsearch namespace.",
             default=True,
         ),
         VECTORSTORE_LOGGING: SmarterWaffleSwitch(

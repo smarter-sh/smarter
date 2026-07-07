@@ -184,6 +184,12 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django Auth User model instance.
     """
 
+    VECTORSEARCH = "Vectorsearch"
+    """Smarter Vectorsearch resource.
+
+    A Django ORM model instance.
+    """
+
     VECTORSTORE = "Vectorstore"
     """Smarter Vectorstore resource.
 
@@ -201,6 +207,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.GUARDRAIL.value, cls.GUARDRAIL.value),
             (cls.LLM_CLIENT.value, cls.LLM_CLIENT.value),
             (cls.MCPCLIENT.value, cls.MCPCLIENT.value),
+            (cls.ORCHESTRATOR.value, cls.ORCHESTRATOR.value),
             (cls.PROMPT.value, cls.PROMPT.value),
             (cls.PROMPT_CONFIG.value, cls.PROMPT_CONFIG.value),
             (cls.PROXY.value, cls.PROXY.value),
@@ -211,6 +218,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.SQL_PLUGIN.value, cls.SQL_PLUGIN.value),
             (cls.STATIC_PLUGIN.value, cls.STATIC_PLUGIN.value),
             (cls.USER.value, cls.USER.value),
+            (cls.VECTORSEARCH.value, cls.VECTORSEARCH.value),
             (cls.VECTORSTORE.value, cls.VECTORSTORE.value),
         ]
 

@@ -156,6 +156,12 @@ class DocsExampleManifestProviderView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.PROVIDER)
 
 
+class DocsExampleManifestVectorsearchView(DocsExampleManifestBaseView):
+    """Vectorsearch JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.VECTORSEARCH)
+
+
 class DocsExampleManifestVectorstoreView(DocsExampleManifestBaseView):
     """Vectorstore JSON Schema view."""
 
