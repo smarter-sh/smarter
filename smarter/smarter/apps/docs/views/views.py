@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""Django views"""
+"""Django views."""
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.lib.django.views import SmarterWebHtmlView
@@ -11,7 +11,7 @@ from ..utils import json_schema_path, manifest_path
 # Public Access Views
 # ------------------------------------------------------------------------------
 class ManifestsView(SmarterWebHtmlView):
-    """Public Access Dashboard view"""
+    """Public Access Dashboard view."""
 
     template_path = "docs/manifests.html"
 
@@ -23,13 +23,17 @@ class ManifestsView(SmarterWebHtmlView):
                 "path": "/docs/" + manifest_path(kind),
             }
 
-        manifests = [manifest(kind) for kind in SAMKinds.all()]
+        manifests = sorted(
+            (manifest(kind) for kind in SAMKinds.all()),
+            key=lambda m: m["name"],
+        )
+
         context = {"manifests": manifests}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
 class JsonSchemasView(SmarterWebHtmlView):
-    """Public Access Dashboard view"""
+    """Public Access Dashboard view."""
 
     template_path = "docs/json-schemas.html"
 
@@ -41,6 +45,9 @@ class JsonSchemasView(SmarterWebHtmlView):
                 "path": "/docs/" + json_schema_path(kind),
             }
 
-        schemas = [json_schema(kind) for kind in SAMKinds.all()]
+        schemas = sorted(
+            (json_schema(kind) for kind in SAMKinds.all()),
+            key=lambda m: m["name"],
+        )
         context = {"schemas": schemas}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
