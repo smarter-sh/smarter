@@ -98,6 +98,7 @@ from smarter.apps.prompt.urls import PromptReverseNames
 from smarter.apps.provider.urls import ProviderReverseNames
 from smarter.apps.proxy.urls import ProxyReverseNames
 from smarter.apps.secret.urls import SecretReverseNames
+from smarter.apps.vectorsearch.urls import VectorsearchReverseNames
 from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
@@ -146,6 +147,7 @@ def sidebar_context() -> dict[str, Any]:
             "connections": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
             "guardrails": reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview),
             "secrets": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
+            "vectorsearches": reverse(VectorsearchReverseNames.namespace, VectorsearchReverseNames.listview),
             "api_keys": reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
             "custom_domains": reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),  # FIX ME
             "example_manifests": reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),

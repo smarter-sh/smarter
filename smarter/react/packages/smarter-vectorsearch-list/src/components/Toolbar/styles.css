@@ -1,0 +1,4 @@
+.toolbar .btn:hover i,
+.toolbar .btn:focus i {
+  color: var(--bs-primary, #0d6efd);
+}

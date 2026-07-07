@@ -51,6 +51,9 @@ from smarter.apps.proxy.manifest.models.proxy.const import (
 from smarter.apps.secret.manifest.models.secret.const import (
     MANIFEST_KIND as SECRET_MANIFEST_KIND,
 )
+from smarter.apps.vectorsearch.manifest.models.vectorsearch.const import (
+    MANIFEST_KIND as VECTORSEARCH_MANIFEST_KIND,
+)
 from smarter.apps.vectorstore.manifest.models.vectorstore.const import (
     MANIFEST_KIND as VECTORSTORE_MANIFEST_KIND,
 )
@@ -167,6 +170,7 @@ class SAMKinds(SmarterEnumAbstract):
     PROXY = PROXY_MANIFEST_KIND
 
     # vectorstore resources
+    VECTORSEARCH = VECTORSEARCH_MANIFEST_KIND
     VECTORSTORE = VECTORSTORE_MANIFEST_KIND
 
     @classmethod

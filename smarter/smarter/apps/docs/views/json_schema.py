@@ -138,6 +138,12 @@ class DocsJsonSchemaProviderView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.PROVIDER)
 
 
+class DocsJsonSchemaVectorsearchView(DocsJsonSchemaBaseView):
+    """Vectorsearch JSON Schema view."""
+
+    kind = SAMKinds(SAMKinds.VECTORSEARCH)
+
+
 class DocsJsonSchemaVectorstoreView(DocsJsonSchemaBaseView):
     """Vectorstore JSON Schema view."""
 

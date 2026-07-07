@@ -36,6 +36,7 @@ from .views.json_schema import (
     DocsJsonSchemaSqlConnectionView,
     DocsJsonSchemaSqlView,
     DocsJsonSchemaUserView,
+    DocsJsonSchemaVectorsearchView,
     DocsJsonSchemaVectorstoreView,
 )
 from .views.manifest import (
@@ -56,6 +57,7 @@ from .views.manifest import (
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestSqlView,
     DocsExampleManifestUserView,
+    DocsExampleManifestVectorsearchView,
     DocsExampleManifestVectorstoreView,
 )
 from .views.views import JsonSchemasView, ManifestsView
@@ -180,6 +182,11 @@ urlpatterns = [
         name=json_schema_name(SAMKinds.USER.value),
     ),
     path(
+        json_schema_path(SAMKinds.VECTORSEARCH.value),
+        DocsJsonSchemaVectorsearchView.as_view(),
+        name=json_schema_name(SAMKinds.VECTORSEARCH.value),
+    ),
+    path(
         json_schema_path(SAMKinds.VECTORSTORE.value),
         DocsJsonSchemaVectorstoreView.as_view(),
         name=json_schema_name(SAMKinds.VECTORSTORE.value),
@@ -271,6 +278,11 @@ urlpatterns = [
         manifest_path(SAMKinds.USER.value),
         DocsExampleManifestUserView.as_view(),
         name=manifest_name(SAMKinds.USER.value),
+    ),
+    path(
+        manifest_path(SAMKinds.VECTORSEARCH.value),
+        DocsExampleManifestVectorsearchView.as_view(),
+        name=manifest_name(SAMKinds.VECTORSEARCH.value),
     ),
     path(
         manifest_path(SAMKinds.VECTORSTORE.value),
