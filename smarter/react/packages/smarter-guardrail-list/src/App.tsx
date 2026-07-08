@@ -41,9 +41,14 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
+  const title = "Plugins";
+  const icon = "ki-book-open";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-guardrail.html";
+  const helpText = "Guardrail app is responsible for enforcing constraints on the interaction between an application and a large language model. Rather than relying solely on prompt instructions such as “do not reveal sensitive information” or “respond only in JSON,” guardrails validate inputs, outputs, and execution state before information is accepted or returned. ";
   return (
     <>
       <section className="mt-5 mb-5 container" id="guardrail-list">
+        <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={guardrailTabbedListViewContext} />
       </section>
     </>

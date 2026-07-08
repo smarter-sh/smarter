@@ -41,9 +41,14 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
+  const title = "Plugins";
+  const icon = "ki-book-open";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-plugin.html";
+  const helpText = "";
   return (
     <>
       <section className="mt-5 mb-5 container" id="proxy-list">
+        <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={proxyTabbedListViewContext} />
       </section>
     </>

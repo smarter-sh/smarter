@@ -4,7 +4,7 @@
  * Used to display a list of available authtokens.
  *
  */
-import { TabbedListView } from "@smarter/common";
+import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { AuthToken, AuthTokenListViewProps, AuthTokenCardViewProps } from "@/lib/Types";
@@ -41,9 +41,14 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
+  const title = "AuthTokens";
+  const icon = "ki-book-open";
+  const docsUrl = "https://docs.smarter.sh/smarter-framework/developer-reference/lib/drf/models.html";
+  const helpText = "AuthTokens represent a Smarter API Key used for authenticating and authorizing access to the Smarter platform. Attach these to resources like LLMClients (aka harnesses or Agents) to provide secure access to your users.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="authtoken-list">
+        <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={authtokenTabbedListViewContext} />
       </section>
     </>
