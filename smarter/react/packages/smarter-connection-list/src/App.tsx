@@ -4,7 +4,7 @@
  * Used to display a list of available connections.
  *
  */
-import { TabbedListView } from "@smarter/common";
+import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { Connection, ConnectionListViewProps, ConnectionCardViewProps } from "@/lib/Types";
@@ -41,9 +41,14 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
+  const title = "Connections";
+  const icon = "ki-book-open";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-connection.html";
+  const helpText = "A Connection defines and stores the credentials and configuration needed to access an external system on which an AI application depends";
   return (
     <>
       <section className="mt-5 mb-5 container" id="connection-list">
+        <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={connectionTabbedListViewContext} />
       </section>
     </>

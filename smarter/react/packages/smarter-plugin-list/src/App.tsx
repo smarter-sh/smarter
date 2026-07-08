@@ -19,10 +19,7 @@ const tabs: Tabs = [
 // then omit the two abstrasct attributes ListView and CardView
 // from TabbedViewContext and replace these with
 // concrete React component types from this package.
-export type PluginTabbedViewContext = Omit<
-  TabbedViewContext<Plugin>,
-  "ListView" | "CardView"
-> & {
+export type PluginTabbedViewContext = Omit<TabbedViewContext<Plugin>, "ListView" | "CardView"> & {
   ListView: React.ComponentType<PluginListViewProps>;
   CardView: React.ComponentType<PluginCardViewProps>;
 };
@@ -40,14 +37,15 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
+  const title = "Plugins";
+  const icon = "ki-book-open";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-plugin.html";
+  const helpText =
+    "Plugins provide a declarative yaml manifest alternative to programming in Python in order to extend LLM tool functionality. Plugins are fundamentally more feature rich than traditional LLM function tools. A Smarter Plugin manifest defines not only what proprietary data is being made available to the LLM, but also the LLM prompt specification itself (which provider, model, temperature, etc.), and most importantly, the criteria which the tool should be presented to the LLM.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="plugin-list">
-        <WorkbenchHelp
-          title="Plugins"
-          icon="ki-book-open"
-          docsUrl="https://docs.smarter.sh/smarter-resources/smarter-plugin.html"
-          helpText="Plugins provide a declarative yaml manifest alternative to programming in Python in order to extend LLM tool functionality." />
+        <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={pluginTabbedListViewContext} />
       </section>
     </>
