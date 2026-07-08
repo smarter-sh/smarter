@@ -4,7 +4,7 @@
  * Used to display a list of available plugins.
  *
  */
-import { TabbedListView } from "@smarter/common";
+import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 import type { Plugin, PluginListViewProps, PluginCardViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
@@ -43,6 +43,11 @@ function App({ sessionContext }: AppProps) {
   return (
     <>
       <section className="mt-5 mb-5 container" id="plugin-list">
+        <WorkbenchHelp
+          title="Plugins"
+          icon="ki-book-open"
+          docsUrl="https://docs.smarter.sh/smarter-resources/smarter-plugin.html"
+          helpText="Plugins provide a declarative yaml manifest alternative to programming in Python in order to extend LLM tool functionality." />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={pluginTabbedListViewContext} />
       </section>
     </>
