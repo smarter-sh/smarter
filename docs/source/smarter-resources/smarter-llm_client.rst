@@ -3,8 +3,8 @@ Smarter LLM Client
 
 .. attention::
 
-   The term 'LLMClient' is used interchangeably with 'Agent' and 'Workflow Unit' throughout
-   this documentation.
+   The term 'LLMClient' is used interchangeably with 'Agent', 'Workflow Unit'
+   and 'Harness' throughout this documentation.
 
 Overview
 --------

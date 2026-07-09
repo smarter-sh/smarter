@@ -41,7 +41,7 @@ function App({ sessionContext }: AppProps) {
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-plugin.html";
   const helpText =
-    "Plugins provide a declarative yaml manifest alternative to programming in Python in order to extend LLM tool functionality. Plugins are fundamentally more feature rich than traditional LLM function tools. A Smarter Plugin manifest defines not only what proprietary data is being made available to the LLM, but also the LLM prompt specification itself (which provider, model, temperature, etc.), and most importantly, the criteria which the tool should be presented to the LLM.";
+    "Plugins provide a declarative yaml manifest alternative to programming in Python in order to extend LLM tool functionality. Plugins are fundamentally more feature rich than traditional LLM function tools. A Smarter Plugin manifest defines not only what proprietary data is being made available to the LLM, but also the LLM prompt specification itself (which provider, model, temperature, etc.), and most importantly, the criteria which the tool should be presented to the LLM. Plugins connect directly to remote data sources — SQL databases, REST APIs, free-form JSON endpoints, and Anthropic-standard SKILL.md files — giving the LLM live access to proprietary data and capabilities without writing custom integration code.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="plugin-list">

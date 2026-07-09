@@ -3,7 +3,7 @@
  * Used to send raw JSON prompts to LLM APIs and display raw JSON responses.
  *
  */
-import { TabbedListView } from "@smarter/common";
+import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 import type { LLMClient, LLMClientListViewProps, LLMClientCardViewProps } from "@/lib/Types";
 import ListView from "@/components/ListView";
@@ -39,10 +39,10 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "Plugins";
+  const title = "LLM Clients (aka 'Harnesses')";
   const icon = "ki-book-open";
-  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-plugin.html";
-  const helpText = "";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-llm_client.html";
+  const helpText = "LLMClients implement of what is commonly known as an LLM 'Harness'. It provides the execution environment surrounding a large language model, managing the prompts, conversation state, tool execution, configuration, security, and runtime behavior required to transform a foundation model into a reliable, production-ready application. LLMClients support both interactive conversations with human users and fully automated workflows. In addition to orchestrating requests to a language model, they leverage the Smarter Plugin architecture to invoke tools, retrieve data from private systems, access external APIs, execute code, and integrate other runtime capabilities. ";
   return (
     <>
       <section className="mt-5 mb-5 container" id="prompt-list">

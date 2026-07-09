@@ -4,7 +4,7 @@
  * Used to display a list of available vectorsearchs.
  *
  */
-import { TabbedListView } from "@smarter/common";
+import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { Vectorsearch, VectorsearchListViewProps, VectorsearchCardViewProps } from "@/lib/Types";
@@ -41,10 +41,10 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "Plugins";
+  const title = "Vector Search";
   const icon = "ki-book-open";
-  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-plugin.html";
-  const helpText = "";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-vectorsearch.html";
+  const helpText = "Smarter Vectorsearch provides a framework for executing RAG (Retrieval Augmented Generation) semantic search queries against locally-hosted vector databases managed by Smarter Vectorstore.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="vectorsearch-list">

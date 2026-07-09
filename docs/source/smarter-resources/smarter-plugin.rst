@@ -16,6 +16,7 @@ resource to store authentication credentials:
 
 **Plugins Types**
 
+ - :doc:`plugin/plugin/skill`: These plugins provide Anthropic standard Skills definitions in markdown format. See `The Complete Guide To Building Skills For Claude <https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf>``
  - :doc:`plugin/plugin/static`: These plugins provide structured data that is part of the SAM itself.
  - :doc:`plugin/plugin/sql`: These plugins allow you to run docs/build/html/adr.htmlSQL queries against a connected database.
  - :doc:`plugin/plugin/api`: These plugins allow you to connect to external APIs.

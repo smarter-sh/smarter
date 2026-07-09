@@ -80,6 +80,7 @@ toward different parts of the stack, without needing to understand the whole thi
    :caption: Technical Reference
 
    smarter-resources/smarter-account
+   smarter-resources/smarter-authtoken
    smarter-resources/smarter-connection
    smarter-resources/smarter-guardrail
    smarter-resources/smarter-llm_client
@@ -89,6 +90,7 @@ toward different parts of the stack, without needing to understand the whole thi
    smarter-resources/smarter-plugin
    smarter-resources/smarter-prompt
    smarter-resources/smarter-provider
+   smarter-resources/smarter-proxy
    smarter-resources/smarter-secret
    smarter-resources/smarter-vectorsearch
    smarter-resources/smarter-vectorstore

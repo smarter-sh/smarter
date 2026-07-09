@@ -4,7 +4,7 @@
  * Used to display a list of available mcpclients.
  *
  */
-import { TabbedListView } from "@smarter/common";
+import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { MCPClient, MCPClientListViewProps, MCPClientCardViewProps } from "@/lib/Types";
@@ -41,10 +41,10 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "Plugins";
+  const title = "MCP (Model Context Protocol) Clients";
   const icon = "ki-book-open";
-  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-plugin.html";
-  const helpText = "";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-mcpclient.html";
+  const helpText = "MCP Clients provide a standardized interface for connecting large language models to external tools and services through the Model Context Protocol (MCP).";
   return (
     <>
       <section className="mt-5 mb-5 container" id="mcpclient-list">

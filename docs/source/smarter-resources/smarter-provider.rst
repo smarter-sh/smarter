@@ -11,20 +11,25 @@ Smarter Provider
 Overview
 --------
 
-The Smarter Provider app is responsible for managing 3rd party LLM provider
-integrations to the Smarter Platform. It provides services for onboarding
-and validating LLM provider models, to make these available for use in Smarter Resources.
-It ensures and periodically verifies compatibility with the Smarter Resource feature
-set by performing a series of verification checks on the provider models.
+The Smarter Provider app connects third-party LLM providers to the Smarter Platform.
+Rather than wiring each provider in through manual, one-off configuration, it
+exposes a structured onboarding process that validates a provider's models before
+they become available to Smarter Resources. As part of that process, the app runs
+a battery of verification checks confirming that a provider's models are compatible
+with the Smarter Resource feature set, and it re-runs those checks periodically
+so compatibility doesn't silently drift over time.
 
-The Smarter Provider app is included in v0.11.0 and later.
-It shifts management of LLM provider API credentials from an IT
-and devops responsibility, to the Account administrators.
+How these features get deployed depends on the installation. Some organizations
+restrict Provider onboarding to internal administrators and treat it purely as
+an admin function. Others open it up publicly, letting independent LLM providers
+register themselves and self-onboard their models directly.
 
-Depending on the nature of your Smarter installation, you may choose to
-use the Smarter Provider features internally as admin functions, or expose these
-publicly so that independent LLM providers can register themselves and
-self-onboard their models to your Smarter installation.
+
+.. note::
+
+  The Smarter Provider app is included in v0.11.0 and later. It shifts management of LLM provider
+  API credentials from an IT and DevOps responsibility to the Account administrators.
+
 
 .. seealso::
 

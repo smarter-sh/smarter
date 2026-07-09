@@ -4,38 +4,32 @@ Smarter Prompt
 Overview
 --------
 
-Smarter Prompt manages :py:class:`prompt sessions <smarter.apps.prompt.views.views.SmarterPromptSession>` and integrations between the Smarter backend and the
-:doc:`ReactJS chat component <../smarter-framework/developer-reference/react-integration/smarter-chat>` used for managing sessions in the Smarter Chat in html integrations,
-as well as in the :doc:`command-line interface (CLI) <../smarter-framework/smarter-cli>`.
-
-Smarter Prompt is chiefly responsible for:
-
- - Storing and retrieving :py:class:`prompt sessions <smarter.apps.prompt.models.Chat>` and messages in the database.
- - Serving the :doc:`configuration object <prompt/example-config>` to the :doc:`ReactJS chat component <../smarter-framework/developer-reference/react-integration/smarter-chat>`.
- - Handling REST API :doc:`prompt requests <prompt/example-request>`.
- - Serving :doc:`prompt responses <prompt/example-response>`.
- - Orchestrating the Smarter resources for the session
-   (
-   :doc:`Account <smarter-account>`,
-   :doc:`LLMClient <smarter-llm_client>`,
-   :doc:`Plugin <smarter-plugin>`)
+Smarter Prompt manages :py:class:`prompt sessions <smarter.apps.prompt.views.views.SmarterPromptSession>` and the
+integration between the Smarter backend and the :doc:`ReactJS chat component <../smarter-framework/developer-reference/react-integration/smarter-chat>`
+used to manage sessions in the Smarter Chat HTML integration, as well as in the :doc:`command-line interface (CLI) <../smarter-framework/smarter-cli>`.
+It is chiefly responsible for storing and retrieving
+:py:class:`prompt sessions <smarter.apps.prompt.models.Chat>` and messages in the
+database, serving the :doc:`configuration object <prompt/example-config>` to the
+ReactJS chat component, handling REST API :doc:`prompt requests <prompt/example-request>`,
+serving :doc:`prompt responses <prompt/example-response>`, and orchestrating the
+Smarter resources associated with a session, including :doc:`Account <smarter-account>`,
+:doc:`LLMClient <smarter-llm_client>`, and :doc:`Plugin <smarter-plugin>`.
 
 Smarter sessions do not expire unless deleted by an administrator as part of MySQL database disk space maintenance operations.
 
 
 .. note::
 
-  Smarter sessions are distinct from Smarter LLMClients. A Smarter LLMClient is a resource that defines
-  the configuration of an llm_client, including its system prompt, plugins, and other settings. A Smarter session,
-  on the other hand, is an instance of a conversation with an llm_client, which includes the
-  complete history of messages exchanged during that conversation.
+  Smarter sessions are distinct from Smarter LLMClients. An LLMClient is a resource that defines the
+  configuration of an llm_client, including its system prompt, plugins, and other settings. A session,
+  by contrast, is an instance of a conversation with an llm_client, comprising the complete history of
+  messages exchanged during that conversation.
 
   Smarter sessions originate in Smarter Prompt, are passed to the ReactJS component as part of the
-  configuration object, and are stored as browser cookies. Smarter session identifiers are a
-  GUID-like string that, with a high level of certainty, uniquely identify a session.
-
-  Smarter sessions are distinct to the device/browser in which they are created. If you start a session
-  on one device/browser, you cannot continue that session on another device/browser.
+  configuration object, and are stored as browser cookies, identified by a GUID-like string that,
+  with a high level of certainty, uniquely identifies the session. Sessions are specific to the device
+  and browser in which they were created; a session started on one device or browser cannot be
+  continued on another.evice/browser, you cannot continue that session on another device/browser.
 
 Usage
 -----
