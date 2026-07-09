@@ -4,7 +4,7 @@
  * Used to display a list of available llmhosts.
  *
  */
-import { TabbedListView } from "@smarter/common";
+import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { LLMHost, LLMHostListViewProps, LLMHostCardViewProps } from "@/lib/Types";
@@ -41,10 +41,10 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "Plugins";
+  const title = "LLM Hosts";
   const icon = "ki-book-open";
-  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-plugin.html";
-  const helpText = "";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-llmhost.html";
+  const helpText = "LLMHosts provide a standardized interface for deploying and managing self-hosted large language models from platforms like HuggingFace within Smarter-orchestrated applications.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="llmhost-list">

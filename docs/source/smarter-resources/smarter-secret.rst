@@ -4,13 +4,16 @@ Smarter Secret
 Overview
 --------
 
-The Smarter Secret module provides secure storage capabilities for the Smarter platform,
-with seamless integration to Smarter resources that rely on sensitive information
-for authentication and connectivity.
+Smarter Secret is a standard credentials vault, seamlessly integrated with every
+other Smarter resource that relies on sensitive information for authentication
+and connectivity. Secrets can be shared across teams and referenced by dependent
+resources without ever exposing the underlying value, and, like any other Smarter
+resource, a Secret is defined and managed through a standard SAM manifest.
 
-- :doc:`Smarter Secret <secret/resources/secret>`: A Django ORM-based secure storage for sensitive
-    information like SQL connection strings and API keys. Secrets are used by other
-    Smarter resources to provide authentication credentials for remote services.
+* :doc:`Smarter Secret <secret/resources/secret>`: a Django ORM-based secure store
+* for sensitive information such as SQL connection strings and API keys. Secrets
+* are consumed by other Smarter resources to supply the authentication credentials
+* those resources need to reach remote services.
 
 .. literalinclude:: ../example-manifests/secret.yaml
    :language: yaml

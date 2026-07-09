@@ -4,7 +4,7 @@
  * Used to display a list of available secrets.
  *
  */
-import { TabbedListView } from "@smarter/common";
+import { TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
 import type { Secret, SecretListViewProps, SecretCardViewProps } from "@/lib/Types";
@@ -41,10 +41,10 @@ interface AppProps {
 }
 
 function App({ sessionContext }: AppProps) {
-  const title = "Plugins";
+  const title = "Secrets";
   const icon = "ki-book-open";
-  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-plugin.html";
-  const helpText = "";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-secret.html";
+  const helpText = "Smarter Secret is a standard credentials vault, seamlessly integrated with every other Smarter resource that relies on sensitive information for authentication and connectivity. Secrets can be shared across teams and referenced by dependent resources without ever exposing the underlying value, and, like any other Smarter resource, a Secret is defined and managed through a standard SAM manifest.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="secret-list">

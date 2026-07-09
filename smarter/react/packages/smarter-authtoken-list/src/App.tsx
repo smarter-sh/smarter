@@ -44,7 +44,7 @@ function App({ sessionContext }: AppProps) {
   const title = "AuthTokens";
   const icon = "ki-book-open";
   const docsUrl = "https://docs.smarter.sh/smarter-framework/developer-reference/lib/drf/models.html";
-  const helpText = "AuthTokens represent a Smarter API Key used for authenticating and authorizing access to the Smarter platform. Attach these to resources like LLMClients (aka harnesses or Agents) to provide secure access to your users.";
+  const helpText = "Smarter Authtokens are a Django REST Framework API authentication token that can be associated with any Smarter resource, rather than being limited to a user account. This allows access to be scoped precisely: individual users and services can each be issued a token limited to a specific resource, rather than sharing one broad credential across an entire integration.";
   return (
     <>
       <section className="mt-5 mb-5 container" id="authtoken-list">
