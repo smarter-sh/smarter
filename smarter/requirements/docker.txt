@@ -487,7 +487,7 @@ social-auth-app-django==5.7.0
     # via -r smarter/requirements/in/base.in
 social-auth-core==4.8.5
     # via social-auth-app-django
-soupsieve==2.8.3
+soupsieve==2.8.4
     # via beautifulsoup4
 sqlalchemy==2.0.49
     # via
