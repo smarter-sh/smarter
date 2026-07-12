@@ -8,7 +8,6 @@ artifact snippet (served from an AWS Cloudfront CDN) into the Django-rendered
 HTML template. The React app then takes over the UI from there.
 """
 
-import logging
 import traceback
 from http import HTTPStatus
 from typing import Optional
@@ -36,6 +35,7 @@ from smarter.common.exceptions import (
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,

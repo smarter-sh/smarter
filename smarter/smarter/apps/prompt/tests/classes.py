@@ -1,6 +1,5 @@
 """Base class for creating units tests of prompt providers."""
 
-import logging
 import os
 
 # python stuff
@@ -38,6 +37,7 @@ from smarter.apps.provider.services.text_completion.providers import (
     smarter_compatible_client,
 )
 from smarter.common.utils import get_readonly_yaml_file
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches

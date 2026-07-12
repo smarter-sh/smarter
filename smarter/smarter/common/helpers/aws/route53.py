@@ -1,7 +1,6 @@
 """AWS Route53 helper class."""
 
 # python stuff
-import logging
 import time
 from typing import Any, Optional, Tuple
 
@@ -11,6 +10,7 @@ import dns.resolver
 
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 
 from .aws import AWSBase, SmarterAWSException
 from .exceptions import AWSRoute53RecordVerificationTimeout

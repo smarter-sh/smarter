@@ -1,14 +1,13 @@
 # pylint: disable=W0613,C0302
 """PromptSandboxView is a Django class-based view that serves as the base URL."""
 
-import logging
-
 from django.http import (
     HttpRequest,
     HttpResponseNotFound,
 )
 
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches

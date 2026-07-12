@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test SAMAccountBroker."""
 
-import logging
 import os
 
 from django.http import HttpRequest
@@ -15,7 +14,7 @@ from smarter.apps.account.manifest.models.account.spec import (
     SAMAccountSpec,
     SAMAccountSpecConfig,
 )
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )

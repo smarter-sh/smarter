@@ -1,8 +1,5 @@
-"""
-switch_is_active() - Check if a Waffle switch is active with caching and database readiness checks.
-"""
+"""Switch_is_active() - Check if a Waffle switch is active with caching and database readiness checks."""
 
-import logging
 from importlib import import_module
 
 import waffle as waffle_orig
@@ -12,6 +9,7 @@ from django.core.exceptions import AppRegistryNotReady
 from django.db.utils import OperationalError, ProgrammingError
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 
 from .ready import is_database_ready
 from .switches import smarter_waffle_switches

@@ -1,22 +1,20 @@
 # pylint: disable=wrong-import-position
 """Test MetaDataModel model."""
 
-# our stuff
-import logging
-
 from django.db.models.query import QuerySet
 
 from smarter.apps.account.models import Account
 from smarter.apps.account.tests.test_account_mixin import TestAccountMixin
 from smarter.common.helpers.console_helpers import formatted_text
 
+# our stuff
+from smarter.lib import logging
+
 logger = logging.getLogger(__name__)
 
 
 class TestMetaDataModel(TestAccountMixin):
-    """
-    Test MetaDataModel model
-    """
+    """Test MetaDataModel model."""
 
     logger_prefix = formatted_text(f"{__name__}.TestMetaDataModel()")
 
@@ -31,6 +29,7 @@ class TestMetaDataModel(TestAccountMixin):
     def test_get_cached_object(self):
         """
         Test retrieving a model instance by primary key with caching.
+
         Using Account as a proxy for MetaDataModel since it's a subclass and has the necessary methods.
         """
 

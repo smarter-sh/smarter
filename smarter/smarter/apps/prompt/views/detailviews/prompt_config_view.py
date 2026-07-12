@@ -6,7 +6,6 @@ configuration data to the ReactJS prompt UI component in the Smarter
 web application.
 """
 
-import logging
 from http import HTTPStatus
 from typing import Any, Optional, Union
 
@@ -46,6 +45,7 @@ from smarter.common.const import (
 )
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.common.utils import is_authenticated_request, search_replace
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,

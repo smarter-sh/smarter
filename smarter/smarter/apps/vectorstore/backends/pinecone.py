@@ -4,7 +4,6 @@ Backend implementation for the Pinecode vectorstore.
 see: https://www.pinecone.io/
 """
 
-import logging
 from typing import Any, Optional
 
 from langchain_core.documents import Document
@@ -26,7 +25,7 @@ from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.signals import load_failed, load_started, load_success
 from smarter.common.conf import smarter_settings
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

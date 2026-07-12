@@ -4,7 +4,6 @@
 # python stuff
 import copy
 import datetime
-import logging
 import re
 from abc import ABC, abstractmethod
 from functools import cached_property
@@ -56,7 +55,7 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

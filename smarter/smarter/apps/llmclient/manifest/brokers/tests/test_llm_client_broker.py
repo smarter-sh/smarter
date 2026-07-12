@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test SAMLLMClientBroker."""
 
-import logging
 import os
 
 from django.http import HttpRequest
@@ -18,7 +17,7 @@ from smarter.apps.llmclient.manifest.models.llmclient.spec import (
     SAMLLMClientSpecConfig,
 )
 from smarter.apps.llmclient.models import LLMClient
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass

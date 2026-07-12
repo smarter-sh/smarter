@@ -1,8 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test LLMClient tasks."""
 
-# python stuff
-import logging
 import time
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -16,6 +14,9 @@ from smarter.apps.llmclient.tasks import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.aws_helpers import aws_helper
+
+# python stuff
+from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 
 logger = logging.getLogger(__name__)

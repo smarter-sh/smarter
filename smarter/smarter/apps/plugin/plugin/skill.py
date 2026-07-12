@@ -19,7 +19,6 @@ A Plugin that returns a SKILL.md-format skill packaged within the Plugin itself.
     :caption: 2.) Example LLMClient Manifest
 """
 
-import logging
 from datetime import datetime
 from typing import Any, Optional, Type, Union
 
@@ -49,7 +48,7 @@ from smarter.apps.plugin.serializers import PluginSkillSerializer
 from smarter.apps.plugin.signals import plugin_called, plugin_responded
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings_defaults
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

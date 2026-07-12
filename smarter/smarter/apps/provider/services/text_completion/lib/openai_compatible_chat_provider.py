@@ -2,7 +2,6 @@
 """Base class for prompt providers."""
 
 import ast
-import logging
 import re
 import time
 import traceback
@@ -67,7 +66,7 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

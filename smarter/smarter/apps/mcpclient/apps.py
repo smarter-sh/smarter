@@ -1,11 +1,10 @@
 """Django Config for the MCPClient app."""
 
-import logging
-
 from django.apps import AppConfig
 
 from smarter.common.const import SMARTER_APP_NAME
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 
 from .const import namespace as app_name
 from .const import presentation_app_name
@@ -18,7 +17,7 @@ class MCPClientConfig(AppConfig, SmarterHelperMixin):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = f"smarter.apps.{app_name.lower()}"
-    verbose_name = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
+    verbose_name = f"{SMARTER_APP_NAME} {presentation_app_name}"
 
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):

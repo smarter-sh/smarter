@@ -2,7 +2,6 @@
 
 # pylint: disable=W0104
 
-import logging
 import os
 from typing import Optional
 
@@ -14,7 +13,7 @@ from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCom
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 from smarter.lib.unittest.base_classes import SmarterTestBase

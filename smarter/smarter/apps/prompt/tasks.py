@@ -7,13 +7,12 @@ Celery workers in order to avoid blocking the main app thread. This is advance w
 future high-traffic scenarios.
 """
 
-import logging
-
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

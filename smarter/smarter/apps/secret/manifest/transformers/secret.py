@@ -1,7 +1,6 @@
 """A class for working with Secret manifests and the Secret Django ORM."""
 
 # python stuff
-import logging
 from datetime import datetime
 from typing import Any, Optional, Union
 
@@ -34,7 +33,7 @@ from smarter.apps.secret.signals import (
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterException
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -95,6 +94,7 @@ class SecretTransformer(SmarterHelperMixin):
     ):
         """
         Options for initialization are:
+
         - name: name of the secret, for initializing the Django ORM model.
         - Pydantic model created by a manifest broker (preferred method).
         - django model secret id.
@@ -369,7 +369,7 @@ class SecretTransformer(SmarterHelperMixin):
 
     @property
     def expires_at(self) -> Optional[datetime]:
-        """Return the expiration date in the format, YYYY-MM-DD"""
+        """Return the expiration date in the format, YYYY-MM-DD."""
         if (
             self._manifest
             and self._manifest.spec
@@ -470,6 +470,7 @@ class SecretTransformer(SmarterHelperMixin):
     def name(self) -> Optional[str]:
         """
         Return the name of the secret.
+
         The manifest takes precedence over the secret ORM
         """
         if self._name:
@@ -650,9 +651,7 @@ class SecretTransformer(SmarterHelperMixin):
         return True
 
     def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
-        """
-        Serialize a secret in JSON format that is importable by Pydantic.
-        """
+        """Serialize a secret in JSON format that is importable by Pydantic."""
         if not self.ready:
             return None
         if not self.manifest:

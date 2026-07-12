@@ -14,7 +14,6 @@ Notes:
 
 import ast
 import hashlib
-import logging
 import logging.config
 import math
 import os
@@ -33,7 +32,7 @@ from dotenv import load_dotenv
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
-from smarter.lib import json
+from smarter.lib import json, logging
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__)

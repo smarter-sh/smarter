@@ -1,13 +1,12 @@
 """This module is used to initialize the environment."""
 
-import logging
-
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import settings_defaults
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_LLM_CLIENT_NAME
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)

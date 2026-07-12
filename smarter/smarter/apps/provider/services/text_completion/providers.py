@@ -51,7 +51,6 @@ enabling seamless integration with a variety of large language model (LLM) backe
    This is the main entry point for consumers needing OpenAI-compatible prompt completion handling and passthrough.
 """
 
-import logging
 from functools import cached_property
 from typing import Any, List, Optional, Union
 
@@ -71,6 +70,7 @@ from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_p
 from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

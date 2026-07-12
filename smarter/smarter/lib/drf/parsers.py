@@ -1,12 +1,11 @@
 """Django Rest Framework YAML parser."""
 
-import logging
-
 import yaml
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import BaseParser
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(f"{__name__}.YAMLParser()")

@@ -5,7 +5,6 @@ provisioning, deleting, and interacting
 """
 
 import glob
-import logging
 import os
 from typing import Optional
 
@@ -20,6 +19,7 @@ from smarter.apps.provider.services import (
 from smarter.apps.vectorstore.backends import Backends, SmarterVectorstoreBackend
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

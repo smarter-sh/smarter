@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Plugin utils module for core plugin functionality."""
 
-import logging
 import os
 import re
 from typing import Any, Optional, Union
@@ -15,6 +14,7 @@ from smarter.apps.account.utils import (
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
 from smarter.common.const import PYTHON_ROOT
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -55,7 +55,6 @@ class Plugins:
         plugins = Plugins(user=my_user, account=my_account)
         plugin_dicts = plugins.data
         plugin_json = plugins.to_json()
-
     """
 
     account: Optional[Account] = None
@@ -132,7 +131,6 @@ class PluginExample:
         print(example.name)
         print(example.to_yaml())
         print(example.to_json())
-
     """
 
     _filename: Optional[str]
@@ -140,7 +138,7 @@ class PluginExample:
     _yaml: Optional[str]
 
     def __init__(self, filepath: str, filename: str):
-        """Initialize the class from a yaml file"""
+        """Initialize the class from a yaml file."""
         with open(os.path.join(filepath, filename), encoding="utf-8") as file:
             self._yaml = file.read()
             self._json = yaml.safe_load(self._yaml)
@@ -216,7 +214,6 @@ class PluginExamples:
         print(examples.count())
         for example in examples.plugins:
             print(example.filename, example.name)
-
     """
 
     _plugin_examples: list[PluginExample] = []

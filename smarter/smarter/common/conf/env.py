@@ -1,14 +1,11 @@
-"""
-Smarter common environment variable utilities.
-"""
+"""Smarter common environment variable utilities."""
 
-import logging
 import os
 from typing import Any, Optional
 
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils.utils import bool_environment_variable
-from smarter.lib import json
+from smarter.lib import json, logging
 
 logger = logging.getLogger(__name__)
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"

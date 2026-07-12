@@ -1,6 +1,5 @@
 """Secret models."""
 
-import logging
 from typing import Optional
 
 # 3rd party stuff
@@ -25,6 +24,7 @@ from smarter.apps.secret.signals import (
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

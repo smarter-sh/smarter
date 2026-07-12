@@ -1,7 +1,6 @@
 # pylint: disable=C0114,C0115
 """Plugin admin."""
 
-import logging
 import re
 
 from django.contrib import admin
@@ -12,6 +11,7 @@ from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,
 )
+from smarter.lib import logging
 
 from .manifest.enum import (
     SAMPluginCommonMetadataClassValues,
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # Register your models here.
 class PluginSelectorInline(admin.StackedInline):
-    """Inline form for Plugin"""
+    """Inline form for Plugin."""
 
     model = PluginSelector
     extra = 0  # This will not show extra empty forms
@@ -42,7 +42,7 @@ class PluginSelectorInline(admin.StackedInline):
 
 
 class PluginPromptInline(admin.StackedInline):
-    """Inline form for Plugin"""
+    """Inline form for Plugin."""
 
     model = PluginPrompt
     extra = 0  # This will not show extra empty forms
@@ -53,7 +53,7 @@ class PluginPromptInline(admin.StackedInline):
 
 
 class PluginDataInline(admin.StackedInline):
-    """Inline form for Plugin"""
+    """Inline form for Plugin."""
 
     model = PluginDataStatic
     extra = 0  # This will not show extra empty forms
@@ -68,7 +68,7 @@ class PluginDataInline(admin.StackedInline):
 
 
 class PluginDataApiInline(admin.StackedInline):
-    """Inline form for Plugin"""
+    """Inline form for Plugin."""
 
     model = PluginDataApi
     extra = 0  # This will not show extra empty forms
@@ -83,7 +83,7 @@ class PluginDataApiInline(admin.StackedInline):
 
 
 class PluginDataSqlInline(admin.StackedInline):
-    """Inline form for Plugin"""
+    """Inline form for Plugin."""
 
     model = PluginDataSql
     extra = 0  # This will not show extra empty forms
@@ -99,7 +99,9 @@ class PluginDataSqlInline(admin.StackedInline):
 
 class PluginStaticAdmin(SmarterCustomerModelAdmin):
     """
-    Plugin model admin. This is a primary Smarter resource, that descends
+    Plugin model admin.
+
+    This is a primary Smarter resource, that descends
     directly from MetaDataWithOwnershipModel. Visibility of Plugins is
     determined by ownership and role.
     """
@@ -120,9 +122,7 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
 
     def get_queryset(self, request):
-        """
-        Visibility is determined by ownership and role.
-        """
+        """Visibility is determined by ownership and role."""
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -136,7 +136,9 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
 
 class PluginApiAdmin(SmarterCustomerModelAdmin):
     """
-    Plugin model admin. This is a primary Smarter resource, that descends
+    Plugin model admin.
+
+    This is a primary Smarter resource, that descends
     directly from MetaDataWithOwnershipModel. Visibility of Plugins is
     determined by ownership and role.
     """
@@ -157,9 +159,7 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
 
     def get_queryset(self, request):
-        """
-        Visibility is determined by ownership and role.
-        """
+        """Visibility is determined by ownership and role."""
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -174,7 +174,9 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
 
 class PluginSqlAdmin(SmarterCustomerModelAdmin):
     """
-    Plugin model admin. This is a primary Smarter resource, that descends
+    Plugin model admin.
+
+    This is a primary Smarter resource, that descends
     directly from MetaDataWithOwnershipModel. Visibility of Plugins is
     determined by ownership and role.
     """
@@ -195,9 +197,7 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
     list_display = ("id", "user_profile", "plugin_name", "version", "created_at", "updated_at")
 
     def get_queryset(self, request):
-        """
-        Visibility is determined by ownership and role.
-        """
+        """Visibility is determined by ownership and role."""
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):
@@ -211,7 +211,9 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
 
 class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
     """
-    Plugin Selection History model admin. This descends from
+    Plugin Selection History model admin.
+
+    This descends from
     PluginSelector, so visibility is determined by the parent Plugin and role.
     """
 
@@ -232,9 +234,7 @@ class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
     )
 
     def get_queryset(self, request):
-        """
-        Visibility is determined by ownership of the parent Plugin and role.
-        """
+        """Visibility is determined by ownership of the parent Plugin and role."""
         user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
         if not isinstance(user, User):

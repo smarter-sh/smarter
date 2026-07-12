@@ -24,7 +24,6 @@ See individual function documentation for usage details.
 """
 
 import ast
-import logging
 import math
 import operator
 
@@ -39,7 +38,7 @@ from smarter.apps.prompt.signals import (
 )
 from smarter.common.enum import SmarterEnum
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -87,6 +86,7 @@ class CalculatorParameters(SmarterEnum):
 def safe_eval(expr: str) -> float:
     """
     Safely evaluate a mathematical expression string supporting parentheses and math functions.
+
     Only allows numbers, math functions, and operators.
     """
     allowed_names = {k: getattr(math, k) for k in dir(math) if not k.startswith("_")}
@@ -171,6 +171,7 @@ def safe_eval(expr: str) -> float:
 def calculator(tool_call: ChatCompletionMessageToolCall) -> list:
     """
     Performs basic arithmetic and trigonometric calculations.
+
     Accepts a single 'expression' string parameter.
     """
     arguments = None

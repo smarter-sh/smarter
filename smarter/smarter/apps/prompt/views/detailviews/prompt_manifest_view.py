@@ -5,7 +5,6 @@ LLMClientDetailView is a Django class-based view that renders a detail view of.
 a SAM manifest for an llmclient.
 """
 
-import logging
 from typing import Optional
 
 import yaml
@@ -20,6 +19,7 @@ from smarter.apps.llmclient.models import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_json
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,

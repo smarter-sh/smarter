@@ -10,7 +10,6 @@ If not, it performs a test to verify the capability and updates the verification
 """
 
 import io
-import logging
 import wave
 
 import openai
@@ -25,6 +24,7 @@ from smarter.apps.provider.utils import (
     set_model_verification,
 )
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

@@ -1,6 +1,4 @@
-"""Secret API views"""
-
-import logging
+"""Secret API views."""
 
 from django.http.response import HttpResponseForbidden
 from rest_framework.request import Request
@@ -9,6 +7,7 @@ from smarter.apps.account.models import User, UserProfile
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.serializers import SecretSerializer
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
@@ -29,7 +28,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SecretView(SmarterAdminAPIView):
-    """class for secret views."""
+    """Class for secret views."""
 
     serializer_class = SecretSerializer
 
@@ -45,7 +44,7 @@ class SecretView(SmarterAdminAPIView):
 
 
 class SecretListView(SmarterAdminListAPIView):
-    """class for secret list views."""
+    """Class for secret list views."""
 
     serializer_class = SecretSerializer
 
@@ -73,7 +72,10 @@ class SecretListView(SmarterAdminListAPIView):
         return response
 
     def setup(self, request: Request, *args, **kwargs):
-        """Setup the view. This is called by Django before dispatch() and is used to set up the view for the request."""
+        """Setup the view.
+
+        This is called by Django before dispatch() and is used to set up the view for the request.
+        """
         super().setup(request, *args, **kwargs)
         if not hasattr(self.request, "user") or not isinstance(self.request.user, User):
             logger.warning(

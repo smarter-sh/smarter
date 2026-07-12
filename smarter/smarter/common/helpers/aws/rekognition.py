@@ -1,9 +1,9 @@
 """AWS Rekognition helper class."""
 
-import logging
 from typing import Optional
 
 from smarter.common.helpers.aws.exceptions import AWSNotReadyError
+from smarter.lib import logging
 
 from .aws import AWSBase
 

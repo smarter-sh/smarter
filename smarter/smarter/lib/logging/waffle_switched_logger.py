@@ -33,10 +33,11 @@ The logger will only emit messages if the condition function returns True for th
 is WARNING or higher (forced by REQUIRED_LOG_LEVEL).
 """
 
-import logging
 from typing import Any, Callable, Optional
 
 from django.core.exceptions import SynchronousOnlyOperation
+
+from smarter.lib import logging
 
 
 class WaffleSwitchedLoggerWrapper:
