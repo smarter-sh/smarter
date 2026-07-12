@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'apply' view."""
 
-import logging
 import platform
 import traceback
 from http import HTTPStatus
@@ -13,6 +12,7 @@ from django_redis import get_redis_connection
 
 from smarter.apps.api.v1.cli.views.base import CliBaseApiView
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.lib import logging
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,

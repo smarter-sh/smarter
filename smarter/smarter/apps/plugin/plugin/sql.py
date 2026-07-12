@@ -29,7 +29,6 @@ A PLugin that uses a remote SQL database server to retrieve its return data.
     :caption: 4.) Example Stackademy LLMClient Manifest
 """
 
-import logging
 import re
 from datetime import datetime
 from typing import Any, Optional, Type, Union
@@ -67,7 +66,7 @@ from smarter.common.conf import settings_defaults
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import to_snake_case
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

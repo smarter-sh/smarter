@@ -25,7 +25,6 @@ The following symbols are re-exported unmodified from :mod:`json`:
 import datetime
 import decimal
 import json
-import logging
 import uuid
 
 # pylint: disable=unused-import
@@ -37,6 +36,8 @@ from json import (  # unmodified re-export
 )
 
 from pydantic import HttpUrl, TypeAdapter
+
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 formatted_logger_prefix = "SmarterJSONEncoder"

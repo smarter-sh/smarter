@@ -1,12 +1,12 @@
-"""Smarter API Manifest - Plugin.spec"""
+"""Smarter API Manifest - Plugin.spec."""
 
-import logging
 import os
 import re
 from typing import ClassVar, Optional
 
 from pydantic import EmailStr, Field, field_validator
 
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -160,7 +160,7 @@ class SAMProviderSpecProvider(SmarterBasePydanticModel):
 
 
 class SAMProviderSpec(AbstractSAMSpecBase):
-    """Smarter API Api Connection Manifest ApiConnection.spec"""
+    """Smarter API Api Connection Manifest ApiConnection.spec."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

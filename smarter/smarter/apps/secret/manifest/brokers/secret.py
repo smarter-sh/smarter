@@ -1,7 +1,6 @@
 # pylint: disable=W0718,C0302
 """Smarter API User Manifest handler."""
 
-import logging
 import traceback
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Optional, Type
@@ -26,7 +25,7 @@ from smarter.apps.secret.manifest.transformers.secret import SecretTransformer
 from smarter.apps.secret.models import Secret
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.utils.decorators import camel_case
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands

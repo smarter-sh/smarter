@@ -2,7 +2,6 @@
 """Smarter API User Manifest handler."""
 
 import datetime
-import logging
 from typing import Optional, Type
 
 from django.db import transaction
@@ -37,6 +36,7 @@ from smarter.apps.vectorstore.models import (
 )
 from smarter.apps.vectorstore.serializers import VectorstoreSerializer
 from smarter.common.conf.settings import smarter_settings
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches

@@ -1,6 +1,5 @@
 """Models for the vectorstore app."""
 
-import logging
 from typing import Optional
 
 from django.db import models
@@ -13,6 +12,7 @@ from smarter.apps.account.models import (
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

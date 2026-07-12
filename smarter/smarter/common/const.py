@@ -2,12 +2,13 @@
 """A module containing constants for the OpenAI API."""
 
 import importlib.util
-import logging
 import os
 from pathlib import Path
 from typing import Dict
 
 import hcl2
+
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 

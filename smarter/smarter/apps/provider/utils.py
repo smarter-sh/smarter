@@ -1,8 +1,6 @@
 # pylint: disable=W0613
 """Utility functions for Provider app."""
 
-import logging
-
 import google.auth.transport.requests
 import requests
 from google.auth.exceptions import GoogleAuthError
@@ -14,7 +12,7 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.models import Secret
 from smarter.common.conf.env import get_env
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

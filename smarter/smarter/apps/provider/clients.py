@@ -4,7 +4,6 @@ This module contains passthrough views for interacting directly with the LLM.
 provider backend API.
 """
 
-import logging
 import traceback
 from http import HTTPStatus
 from typing import Any, Optional
@@ -25,7 +24,7 @@ from smarter.apps.prompt.signals import (
 from smarter.apps.provider.models import Provider
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,

@@ -1,6 +1,5 @@
-"""Smarter API Manifest - Plugin.spec"""
+"""Smarter API Manifest - Plugin.spec."""
 
-import logging
 import os
 from typing import Optional
 
@@ -8,6 +7,7 @@ from langchain_community.vectorstores.utils import DistanceStrategy
 from pydantic import Field, field_validator
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -57,9 +57,7 @@ class SAMVectorstoreInterface(SmarterBasePydanticModel):
 
     @field_validator("distance_strategy")
     def validate_distance_strategy(cls, v):
-        """
-        Validate that the distance_strategy value is a non-empty string and matches DistanceStrategy enum if provided.
-        """
+        """Validate that the distance_strategy value is a non-empty string and matches DistanceStrategy enum if provided."""
         if v is not None:
             v = str(v).strip()
             if not v:
@@ -73,9 +71,7 @@ class SAMVectorstoreInterface(SmarterBasePydanticModel):
 
     @field_validator("text_key")
     def validate_text_key(cls, v):
-        """
-        Validate that the text_key value is a non-empty string if provided.
-        """
+        """Validate that the text_key value is a non-empty string if provided."""
         if v is not None:
             v = str(v).strip()
             if not v:
@@ -84,9 +80,7 @@ class SAMVectorstoreInterface(SmarterBasePydanticModel):
 
     @field_validator("namespace")
     def validate_namespace(cls, v):
-        """
-        Validate that the namespace value is a non-empty string if provided.
-        """
+        """Validate that the namespace value is a non-empty string if provided."""
         if v is not None:
             v = str(v).strip()
             if not v:

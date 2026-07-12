@@ -1,11 +1,10 @@
-"""Mailchimp API helper functions"""
-
-import logging
+"""Mailchimp API helper functions."""
 
 import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
 
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +12,7 @@ MAILCHIMP_SERVER = "us3"
 
 
 class MailchimpHelper:
-    """Mailchimp API helper functions"""
+    """Mailchimp API helper functions."""
 
     client = MailchimpMarketing.Client()
     client.set_config({"api_key": smarter_settings.mailchimp_api_key.get_secret_value(), "server": MAILCHIMP_SERVER})

@@ -1,10 +1,10 @@
 """A utility class for introspecting AWS infrastructure."""
 
-import logging
-
 # python stuff
 import time
 from typing import Any, Optional
+
+from smarter.lib import logging
 
 # our stuff
 from .aws import AWSBase
@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 
 class AWSCertificateManager(AWSBase):
     """
-    AWS Certificate Manager helper class. Provides a high-level interface for managing AWS Certificate Manager (ACM) resources.
+    AWS Certificate Manager helper class.
+
+    Provides a high-level interface for managing AWS Certificate Manager (ACM) resources.
 
     This helper class encapsulates common operations related to ACM, such as requesting new certificates,
     retrieving certificate details, handling DNS validation, and verifying certificate status. It abstracts
@@ -70,7 +72,8 @@ class AWSCertificateManager(AWSBase):
 
     def get_certificate_status(self, certificate_arn: str) -> dict[str, Any]:
         """
-        Return the certificate status
+        Return the certificate status.
+
         see example return in ./data/aws/certificate_detail.json
 
         :param certificate_arn: The ARN of the certificate.

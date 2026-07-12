@@ -1,9 +1,9 @@
 """AWS S3 helper class."""
 
-import logging
 from typing import Optional
 
 from smarter.common.helpers.aws.exceptions import AWSNotReadyError
+from smarter.lib import logging
 
 from .aws import AWSBase
 
@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 class AWSSimpleStorageSystem(AWSBase):
     """
     AWS S3 helper class.
+
     Provides a high-level interface for managing Amazon Simple Storage Service (S3) resources.
 
     This helper class abstracts common operations related to AWS S3, such as retrieving and verifying S3 buckets,

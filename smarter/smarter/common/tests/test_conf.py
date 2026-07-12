@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test configuration Settings class."""
 
-import logging
 import re
 
 # 3rd party stuff
@@ -10,6 +9,7 @@ from pydantic import SecretStr
 # our stuff
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 logger = logging.getLogger(__name__)

@@ -1,5 +1,6 @@
 """
 Custom authentication backends for hosted Smarter platforms.
+
 Includes payment and account status verification.
 
 To verify subscription status, use the following API call:
@@ -13,7 +14,6 @@ curl -X 'GET' \
 Returns HTTP 200 if the subscription is active. 40x otherwise.
 """
 
-import logging
 from http import HTTPStatus
 
 import requests
@@ -28,6 +28,7 @@ from smarter.apps.account.models import User
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
@@ -38,14 +39,17 @@ USERNAME = "username"
 INACTIVE_ACCOUNT_REDIRECT_URL = "account_inactive"
 SUBSCRIPTION_STATUS_API_URL = f"https://api.am.{smarter_settings.root_domain}/accounts/subscription-status/"
 """
-API endpoint to verify subscription status. see https://github.com/smarter-sh/account-manager
+API endpoint to verify subscription status.
+
+see https://github.com/smarter-sh/account-manager
 """
 
 
 @cache_results()
 def verify_payment_status(username) -> bool:
     """
-    Verify the payment status of a user by making an API call
+    Verify the payment status of a user by making an API call.
+
     to the Account Manager subscription status endpoint.
     Returns True if the subscription is active, False otherwise.
     In case of errors, defaults to returning True to avoid
@@ -53,9 +57,7 @@ def verify_payment_status(username) -> bool:
     """
 
     def handle_error(err_type: str, err) -> str:
-        """
-        Helper function to format error messages.
-        """
+        """Helper function to format error messages."""
         return f"{logger_prefix}.verify_payment_status() {err_type} error occurred while verifying payment status for user {username}: {err}"
 
     DEFAULT_ERROR_RESPONSE = True
@@ -122,7 +124,8 @@ def verify_payment_status(username) -> bool:
 
 class GoogleOAuth2Multitenant(GoogleOAuth2):
     """
-    Custom Google OAuth2 backend that also verifies
+    Custom Google OAuth2 backend that also verifies.
+
     payment status of the hosted platform.
     """
 
@@ -149,7 +152,8 @@ class GoogleOAuth2Multitenant(GoogleOAuth2):
 
 class GithubOAuth2Multitenant(GithubOAuth2):
     """
-    Custom GitHub OAuth2 backend that also verifies
+    Custom GitHub OAuth2 backend that also verifies.
+
     payment status of the hosted platform.
     """
 
@@ -179,7 +183,8 @@ class GithubOAuth2Multitenant(GithubOAuth2):
 
 class DjangoModelBackendMultitenant(ModelBackend):
     """
-    Custom Django ModelBackend that also verifies
+    Custom Django ModelBackend that also verifies.
+
     payment status of the hosted platform.
     """
 

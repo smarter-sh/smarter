@@ -1,13 +1,12 @@
 # pylint: disable=W0212
 """Admin configuration for the orchestrator app."""
 
-import logging
-
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,
 )
+from smarter.lib import logging
 
 from .models import (
     Orchestrator,

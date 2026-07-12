@@ -1,7 +1,6 @@
 # pylint: disable=import-outside-toplevel
 """Vectorstore backends."""
 
-import logging
 from typing import Dict, Optional, Type
 from urllib.parse import urlparse
 
@@ -11,6 +10,7 @@ from langchain_core.vectorstores import VectorStore
 from smarter.apps.vectorstore.enum import SmarterVectorStoreBackends
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

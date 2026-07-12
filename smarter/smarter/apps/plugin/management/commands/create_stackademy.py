@@ -1,7 +1,5 @@
 """Command to create the Stackademy AI resources."""
 
-import logging
-
 from django.core.management import CommandError
 
 from smarter.apps.account.models import Account
@@ -11,6 +9,7 @@ from smarter.apps.account.utils import (
 from smarter.apps.api.utils import apply_manifest_v2
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)

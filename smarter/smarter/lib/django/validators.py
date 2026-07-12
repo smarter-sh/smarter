@@ -7,7 +7,6 @@ Before adding anything to this module, please first check if there is a built-in
 or a Django utility that can do the validation.
 """
 
-import logging
 import re
 import warnings
 from typing import Optional
@@ -20,7 +19,7 @@ from django.core.exceptions import AppRegistryNotReady
 from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # guard against Sphinx doc build circular import errors

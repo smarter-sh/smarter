@@ -1,20 +1,18 @@
 # pylint: disable=wrong-import-position
 """Test TimestampedModel model."""
 
-# our stuff
-import logging
-
 from smarter.apps.account.models import Account
 from smarter.apps.account.tests.test_account_mixin import TestAccountMixin
 from smarter.common.helpers.console_helpers import formatted_text
+
+# our stuff
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 
 
 class TestTimestampedModel(TestAccountMixin):
-    """
-    Test TimestampedModel model
-    """
+    """Test TimestampedModel model."""
 
     logger_prefix = formatted_text(f"{__name__}.TestTimestampedModel()")
 

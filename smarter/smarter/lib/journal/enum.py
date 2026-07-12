@@ -1,11 +1,11 @@
 """Smarter API Manifests Enumerations."""
 
-import logging
 from typing import Optional
 from urllib.parse import urlparse
 
 from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterException
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 

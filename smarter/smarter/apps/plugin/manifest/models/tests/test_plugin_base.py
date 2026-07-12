@@ -1,7 +1,6 @@
 # pylint: disable=R0801,W0613
 """Test plugin base class."""
 
-import logging
 from time import sleep
 
 from pydantic_core import ValidationError as PydanticValidationError
@@ -49,7 +48,7 @@ from smarter.apps.provider.services.text_completion.const import OpenAIMessageKe
 from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 
 # python stuff
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoaderError

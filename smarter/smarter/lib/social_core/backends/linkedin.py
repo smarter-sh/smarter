@@ -1,11 +1,11 @@
 # pylint: disable=missing-module-docstring,missing-function-docstring,missing-class-docstring
 """
 LinkedIn OAuth1 and OAuth2 backend, docs at:
+
     https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
 """
 
 import datetime
-import logging
 from calendar import timegm
 from datetime import timezone
 
@@ -13,12 +13,16 @@ from social_core.backends.oauth import BaseOAuth2
 from social_core.backends.open_id_connect import OpenIdConnectAuth
 from social_core.exceptions import AuthCanceled, AuthTokenError
 
+from smarter.lib import logging
+
 logger = logging.getLogger(__name__)
 
 
 class LinkedinOpenIdConnect(OpenIdConnectAuth):
     """
-    Linkedin OpenID Connect backend. Oauth2 has been deprecated as of August 1, 2023.
+    Linkedin OpenID Connect backend.
+
+    Oauth2 has been deprecated as of August 1, 2023.
     https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin-v2?context=linkedin/consumer/context
     """
 
@@ -96,11 +100,12 @@ class LinkedinOAuth2(BaseOAuth2):
         return list(filter(None, email_addresses))
 
     def get_user_details(self, response):
-        """Return user details from Linkedin account"""
+        """Return user details from Linkedin account."""
 
         def get_localized_name(name):
             """
-            FirstName & Last Name object
+            FirstName & Last Name object.
+
             {
                   'localized': {
                      'en_US': 'Smith'

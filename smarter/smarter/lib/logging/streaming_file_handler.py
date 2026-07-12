@@ -25,9 +25,10 @@ To use the streaming file handler in your logging configuration::
 The log file will be created in the system temporary directory under a "logs" subdirectory.
 """
 
-import logging
 import os
 import tempfile
+
+from smarter.lib import logging
 
 
 class StreamingFileHandler(logging.Handler):

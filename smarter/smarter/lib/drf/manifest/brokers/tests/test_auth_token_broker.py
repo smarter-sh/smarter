@@ -1,13 +1,12 @@
 # pylint: disable=wrong-import-position
 """Test SAMSmarterAuthTokenBroker."""
 
-import logging
 import os
 
 from django.http import HttpRequest
 from pydantic_core import ValidationError
 
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthTokenBroker
 from smarter.lib.drf.manifest.models.auth_token.metadata import (
     SAMSmarterAuthTokenMetadata,

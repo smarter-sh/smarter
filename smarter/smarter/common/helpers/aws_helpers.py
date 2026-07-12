@@ -14,10 +14,10 @@ class is created.
 Individual services are accessed lazily via properties on the AWSInfrastructureConfig class.
 """
 
-import logging
 from typing import Optional
 
 from smarter.common.mixins import Singleton
+from smarter.lib import logging
 
 from .aws.acm import AWSCertificateManager
 from .aws.api_gateway import AWSAPIGateway
@@ -80,7 +80,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     _rds: Optional[AWSRds] = None
 
     def ready(self) -> bool:
-        """Check if AWS is ready"""
+        """Check if AWS is ready."""
         return self.aws.ready
 
     @property
@@ -116,7 +116,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def get_botocore_version(self) -> str:
         """
-        Return the botocore version
+        Return the botocore version.
 
         :return: Botocore version string.
         :rtype: str
@@ -126,7 +126,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def aws(self) -> AWSBase:
         """
-        Return the AWS Base
+        Return the AWS Base.
 
         :return: AWSBase instance.
         :rtype: AWSBase
@@ -138,7 +138,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def acm(self) -> AWSCertificateManager:
         """
-        Return the AWS Certificate Manager
+        Return the AWS Certificate Manager.
 
         :return: AWSCertificateManager instance.
         :rtype: AWSCertificateManager
@@ -152,7 +152,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def api_gateway(self) -> AWSAPIGateway:
         """
-        Return the AWS API Gateway
+        Return the AWS API Gateway.
 
         :return: AWSAPIGateway instance.
         :rtype: AWSAPIGateway
@@ -166,7 +166,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def dynamodb(self) -> AWSDynamoDB:
         """
-        Return the AWS DynamoDB
+        Return the AWS DynamoDB.
 
         :return: AWSDynamoDB instance.
         :rtype: AWSDynamoDB
@@ -180,7 +180,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def eks(self) -> AWSEks:
         """
-        Return the AWS EKS
+        Return the AWS EKS.
 
         :return: AWSEks instance.
         :rtype: AWSEks
@@ -194,7 +194,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def lambda_function(self) -> AWSLambdaFunction:
         """
-        Return the AWS Lambda Function
+        Return the AWS Lambda Function.
 
         :return: AWSLambdaFunction instance.
         :rtype: AWSLambdaFunction
@@ -208,7 +208,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def iam(self) -> AWSIdentifyAccessManagement:
         """
-        Return the AWS IAM
+        Return the AWS IAM.
 
         :return: AWSIdentifyAccessManagement instance.
         :rtype: AWSIdentifyAccessManagement
@@ -222,7 +222,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def rds(self) -> AWSRds:
         """
-        Return the AWS RDS
+        Return the AWS RDS.
 
         :return: AWSRds instance.
         :rtype: AWSRds
@@ -236,7 +236,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def rekognition(self) -> AWSRekognition:
         """
-        Return the AWS Rekognition
+        Return the AWS Rekognition.
 
         :return: AWSRekognition instance.
         :rtype: AWSRekognition
@@ -250,7 +250,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def route53(self) -> AWSRoute53:
         """
-        Return the AWS Route53
+        Return the AWS Route53.
 
         :return: AWSRoute53 instance.
         :rtype: AWSRoute53
@@ -264,7 +264,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     @property
     def s3(self) -> AWSSimpleStorageSystem:
         """
-        Return the AWS S3
+        Return the AWS S3.
 
         :return: AWSSimpleStorageSystem instance.
         :rtype: AWSSimpleStorageSystem

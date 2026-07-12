@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test TestSmarterPluginBrokerBase."""
 
-import logging
 import os
 
 from smarter.apps.api.utils import apply_manifest
@@ -9,6 +8,7 @@ from smarter.apps.connection.models import SqlConnection
 from smarter.apps.plugin.const import DATA_PATH as PLUGIN_DATA_PATH
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.manifest.loader import SAMLoader
 
 from .connection_base import TestSmarterConnectionBrokerBase
@@ -18,7 +18,8 @@ MANIFEST_PATH_SQL_CONNECTION = os.path.abspath(
     os.path.join(PLUGIN_DATA_PATH, "manifest", "brokers", "tests", "data", "sql-connection.yaml")
 )
 """
-Path to the Sql connection manifest file 'sql-connection.yaml' which
+Path to the Sql connection manifest file 'sql-connection.yaml' which.
+
 contains the actual connection parameters for the remote test database.
 """
 
@@ -26,9 +27,7 @@ HERE = __name__
 
 
 class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
-    """
-    Adds a class-level setup to create SqlConnection instances for use in plugin broker tests.
-    """
+    """Adds a class-level setup to create SqlConnection instances for use in plugin broker tests."""
 
     test_smarter_plugin_broker_base_logger_prefix = formatted_text(f"{HERE}.TestSmarterPluginBrokerBase()")
 
@@ -36,6 +35,7 @@ class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
     def setUpClass(cls):
         """
         Set up the test class with:
+
         - a single account, and admin and non-admin users.
           using the class setup so that we retain the same user_profile for each test
         - a Secret with the Sql connection authentication data

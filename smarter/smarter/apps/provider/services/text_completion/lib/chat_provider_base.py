@@ -1,6 +1,5 @@
 """Base class for prompt providers."""
 
-import logging
 from functools import cached_property
 from typing import Any, Dict, List, Optional, Union
 
@@ -40,7 +39,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

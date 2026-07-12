@@ -13,8 +13,6 @@ Exported functions and variables:
 - openmeteo_api_client: An authenticated OpenMeteo API client instance, or None if initialization failed.
 """
 
-import logging
-
 import googlemaps
 import openmeteo_requests
 import requests_cache
@@ -24,6 +22,7 @@ from retry_requests import retry
 from smarter.apps.provider.utils import get_google_maps_api_key
 from smarter.common.exceptions import SmarterInvalidApiKeyError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

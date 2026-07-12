@@ -1,7 +1,5 @@
 """Unit tests for common plugin manifest models."""
 
-import logging
-
 from smarter.apps.plugin.manifest.models.common import (
     Parameter,
     ParameterType,
@@ -10,6 +8,7 @@ from smarter.apps.plugin.manifest.models.common import (
     UrlParam,
 )
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 logger = logging.getLogger(__name__)

@@ -1,7 +1,6 @@
 """AWS helper base class."""
 
 # python stuff
-import logging
 import os
 from functools import cached_property
 from typing import Optional
@@ -24,6 +23,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_red,
 )
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.lib import logging
 
 # mcdaniel apr-2024: technically we shouldn't import smarter.libe.django into the aws helpers
 # but the validators don't depend on django initialization, so we're okay here.
@@ -179,7 +179,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def client(self):
         """
-        Return the AWS client
+        Return the AWS client.
 
         :return: boto3 client instance
         :rtype: a child of boto3.client
@@ -293,7 +293,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def debug_mode(self) -> bool:
         """
-        Debug mode
+        Debug mode.
 
         :return: debug mode
         :rtype: bool
@@ -304,6 +304,7 @@ class AWSBase(SmarterHelperMixin):
     def authentication_credentials_are_initialized(self) -> bool:
         """
         Are aws authentication settings initialized?
+
         True if we have enoug information to try to connect to AWS.
         False otherwise.
 
@@ -335,7 +336,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_profile(self) -> Optional[str]:
         """
-        AWS profile
+        AWS profile.
 
         :return: AWS profile
         :rtype: Optional[str]
@@ -345,7 +346,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_account_id(self) -> Optional[str]:
         """
-        AWS account id
+        AWS account id.
 
         :return: AWS account id
         :rtype: Optional[str]
@@ -361,7 +362,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_iam_arn(self) -> Optional[str]:
         """
-        AWS IAM ARN
+        AWS IAM ARN.
 
         :return: AWS IAM ARN (Amazon Resource Name)
         :rtype: Optional[str]
@@ -377,7 +378,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_region(self) -> Optional[str]:
         """
-        AWS region
+        AWS region.
 
         :return: AWS region (e.g. 'us-west-2')
         :rtype: Optional[str]
@@ -387,7 +388,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_access_key_id_source(self) -> Optional[str]:
         """
-        AWS access key id source
+        AWS access key id source.
 
         :return: AWS access key id source
         :rtype: Optional[str]
@@ -397,7 +398,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_access_key_id(self) -> Optional[str]:
         """
-        AWS access key id
+        AWS access key id.
 
         :return: AWS access key id
         :rtype: Optional[str]
@@ -407,7 +408,8 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_secret_access_key_source(self) -> Optional[str]:
         """
-        AWS secret access key source
+        AWS secret access key source.
+
         :return: AWS secret access key source
         :rtype: Optional[str]
         """
@@ -416,7 +418,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_secret_access_key(self) -> Optional[str]:
         """
-        AWS secret access key
+        AWS secret access key.
 
         :return: AWS secret access key
         :rtype: Optional[str]
@@ -426,7 +428,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_auth(self) -> dict[str, Optional[str]]:
         """
-        AWS authentication
+        AWS authentication.
 
         :return: AWS authentication details
         :rtype: dict[str, Optional[str]]
@@ -442,7 +444,7 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_session(self) -> Optional[boto3.Session]:
         """
-        AWS session
+        AWS session.
 
         :return: boto3 AWS session
         :rtype: Optional[boto3.Session]
@@ -530,7 +532,8 @@ class AWSBase(SmarterHelperMixin):
     @property
     def environment_domain(self) -> str:
         """
-        we need to rebuild these in order to reformat the localhost domain into
+        We need to rebuild these in order to reformat the localhost domain into.
+
         a proxy domain that will work with AWS Route53 and Kubernetes
 
         :return: environment domain
@@ -541,7 +544,8 @@ class AWSBase(SmarterHelperMixin):
     @property
     def environment_api_domain(self) -> str:
         """
-        we need to rebuild these in order to reformat the localhost domain into
+        We need to rebuild these in order to reformat the localhost domain into.
+
         a proxy domain that will work with AWS Route53 and Kubernetes
 
         :return: environment API domain
@@ -597,7 +601,8 @@ class AWSBase(SmarterHelperMixin):
     @property
     def ready(self) -> bool:
         """
-        Return True if we're working with a known Smarter environment, and
+        Return True if we're working with a known Smarter environment, and.
+
         we consider it safe to create billable resources in AWS.
 
         :return: True if ready

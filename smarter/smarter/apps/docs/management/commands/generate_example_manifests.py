@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """This module is used to create a new plugin using manage.py."""
 
-import logging
 import os
 from typing import Type
 
@@ -21,6 +20,7 @@ from smarter.apps.docs.views.manifest import (
     DocsExampleManifestUserView,
 )
 from smarter.common.conf import smarter_settings
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logging.basicConfig(level=smarter_settings.log_level)

@@ -1,14 +1,12 @@
 # pylint: disable=W0707,W0718,W0613
 """Views for unit tests."""
 
-import logging
-
 from rest_framework import serializers, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.drf.views.helpers import (
     SmarterUnauthenticatedAPIListView,
     SmarterUnauthenticatedAPIView,
@@ -131,7 +129,8 @@ class TestStackademyCourseCatalogueView(SmarterUnauthenticatedAPIView):
 
     def get(self, request: Request, *args, **kwargs):
         """
-        Handle GET requests and return the faux Stackacademy
+        Handle GET requests and return the faux Stackacademy.
+
         course catalog.
         """
         course_id = request.query_params.get("course_id")

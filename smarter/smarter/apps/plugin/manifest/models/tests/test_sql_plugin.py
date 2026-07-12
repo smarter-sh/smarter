@@ -1,12 +1,11 @@
 """
-Unit tests for SAMSqlPlugin
+Unit tests for SAMSqlPlugin.
 
 mcdaniel jan-2026: TestSqlPluginLegacy should be refactored. it contains a mix
 of Pydantic model tests combined with Django ORM model tests,
 which really should be (or might already be) in the broker test bank.
 """
 
-import logging
 import os
 from typing import Optional
 
@@ -38,6 +37,7 @@ from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.secret.manifest.models.secret.model import SAMSecret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import logging
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -47,7 +47,8 @@ MANIFEST_PATH_SQL_PLUGIN = os.path.abspath(
     os.path.join(PLUGIN_DATA_PATH, "manifest", "brokers", "tests", "data", "sql-plugin.yaml")
 )
 """
-Path to the Sql plugin manifest file 'sql-plugin.yaml' which
+Path to the Sql plugin manifest file 'sql-plugin.yaml' which.
+
 contains the actual connection parameters for the remote test database.
 
 Note that we're borrowing the sql-connection.yaml file from the
@@ -113,9 +114,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             )
 
     def test_alternative_initialization(self):
-        """
-        Test that the SAMSqlPlugin model can be initialized using a single dict.
-        """
+        """Test that the SAMSqlPlugin model can be initialized using a single dict."""
         data = {
             "apiVersion": self.loader.manifest_api_version,
             "kind": self.loader.manifest_kind,
@@ -427,7 +426,9 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
 # pylint: disable=W0223
 class TestSqlPluginLegacy(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, AuthenticatedRequestMixin):
     """
-    Test SAM manifest using ApiPlugin. This contains a mixture of
+    Test SAM manifest using ApiPlugin.
+
+    This contains a mixture of
     Pydantic model tests and Django ORM model tests which should
     be refactored into separate test classes and moved to the broker
     test bank.
@@ -467,7 +468,7 @@ class TestSqlPluginLegacy(TestPluginBase, ManifestTestsMixin, SqlConnectionTestM
         return self._sql_plugin_model
 
     def test_00_sql_connection_mixin(self):
-        """Test the SqlConnection itself, lest we get ahead of ourselves"""
+        """Test the SqlConnection itself, lest we get ahead of ourselves."""
         self.assertIsInstance(
             self.sql_connection_model,
             SAMSqlConnection,

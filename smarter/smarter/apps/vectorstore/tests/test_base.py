@@ -1,9 +1,6 @@
 # pylint: disable=wrong-import-position
 """Vectorstore base test class."""
 
-# python stuff
-import logging
-
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.apps.secret.models import Secret
@@ -16,6 +13,9 @@ from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.apps.vectorstore.utils import get_pinecone_api_key
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.logger_helpers import formatted_text
+
+# python stuff
+from smarter.lib import logging
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(f"{__name__}.VectorstoreTestBase()")

@@ -26,9 +26,8 @@ Usage Example
     python manage.py get_secret --name="my_secret" --username="myuser"
 """
 
-import logging
-
 from smarter.apps.secret.models import Secret, User, UserProfile
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)

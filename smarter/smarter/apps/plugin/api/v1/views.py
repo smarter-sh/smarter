@@ -1,7 +1,6 @@
 # pylint: disable=W0718
 """PluginMeta views."""
 
-import logging
 from http import HTTPStatus
 from typing import Optional
 from urllib.parse import urljoin
@@ -24,7 +23,7 @@ from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib import json
+from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -244,7 +243,7 @@ def create_plugin(request, data: Optional[dict] = None):
 
 
 def update_plugin(request: ASGIRequest):
-    """update a plugin from a json representation in the body of the request."""
+    """Update a plugin from a json representation in the body of the request."""
     user = get_resolved_user(request.user)
     data: str
 
@@ -298,7 +297,7 @@ def update_plugin(request: ASGIRequest):
 
 
 def delete_plugin(request, plugin_id):
-    """delete a plugin by id."""
+    """Delete a plugin by id."""
     try:
         user_profile = UserProfile.get_cached_object(user=request.user)
     except UserProfile.DoesNotExist:

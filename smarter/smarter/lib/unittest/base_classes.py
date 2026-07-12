@@ -1,9 +1,6 @@
-"""
-Project level base classes for unit tests.
-"""
+"""Project level base classes for unit tests."""
 
 import csv
-import logging
 import unittest
 from typing import Union
 
@@ -15,7 +12,7 @@ from django.test import RequestFactory
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import hash_factory, to_snake_case
-from smarter.lib import json
+from smarter.lib import json, logging
 
 logger = logging.getLogger(__name__)
 HERE = __name__

@@ -1,6 +1,5 @@
 """This file contains the mixins for the provider model."""
 
-import logging
 from typing import Optional
 
 from django.db.models import Sum
@@ -23,6 +22,7 @@ from smarter.apps.prompt.tasks import (
 from smarter.apps.provider.models import Provider
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

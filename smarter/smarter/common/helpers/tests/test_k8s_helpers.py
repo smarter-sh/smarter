@@ -7,7 +7,6 @@ WARNINGS:
 - leaving the DNS resources in place permanently as it takes 15+ minutes to propagate
 """
 
-import logging
 import os
 
 # python stuff
@@ -25,6 +24,7 @@ from smarter.common.helpers.k8s_helpers import (
     KubernetesHelperException,
     kubernetes_helper,
 )
+from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class Testk8sHelpers(SmarterTestBase):
-    """Test Account model"""
+    """Test Account model."""
 
     @classmethod
     def setUpClass(cls):
@@ -169,6 +169,7 @@ class Testk8sHelpers(SmarterTestBase):
     def test_verify_ingress(self):
         """
         Test verify_ingress method.
+
         verifying an existing ingress.
         """
         if not kubernetes_helper.ready:
@@ -181,6 +182,7 @@ class Testk8sHelpers(SmarterTestBase):
     def test_verify_certificate(self):
         """
         Test verify_certificate method.
+
         verifying an existing certificate
         """
         if not kubernetes_helper.ready:
@@ -192,7 +194,8 @@ class Testk8sHelpers(SmarterTestBase):
 
     def test_verify_secret(self):
         """
-        Test verify_secret method
+        Test verify_secret method.
+
         verifying an existing secret
         """
         if not kubernetes_helper.ready:
@@ -204,7 +207,8 @@ class Testk8sHelpers(SmarterTestBase):
 
     def test_apply_manifest(self):
         """
-        Test that we can apply a manifest that creates
+        Test that we can apply a manifest that creates.
+
         a new ingress with a certificate and secret.
         """
         if not kubernetes_helper.ready:
@@ -229,7 +233,8 @@ class Testk8sHelpers(SmarterTestBase):
 
     def test_apply_illegal_host_name(self):
         """
-        Test that we can apply a manifest that creates
+        Test that we can apply a manifest that creates.
+
         a new ingress with a certificate and secret.
         """
         bad_hostname = f"test_k8s_helpers.{self.account_number}.{self.cluster_issuer}"

@@ -2,7 +2,6 @@
 """Smarter API Provider Manifest handler."""
 
 import datetime
-import logging
 from typing import Optional, Type
 
 from django.http import HttpRequest
@@ -20,6 +19,7 @@ from smarter.apps.provider.manifest.models.provider.status import SAMProviderSta
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
 from smarter.common.utils.decorators import camel_case
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands

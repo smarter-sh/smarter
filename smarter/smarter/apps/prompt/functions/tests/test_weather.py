@@ -1,14 +1,11 @@
-"""
-Test mixins for the plugin module.
-"""
-
-import logging
+"""Test mixins for the plugin module."""
 
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
     Function,
 )
 
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -27,9 +24,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class GetCurrentWeather(SmarterTestBase):
-    """
-    Test get_current_weather() functions.
-    """
+    """Test get_current_weather() functions."""
 
     def test_get_current_weather(self):
         """Test get_current_weather() function."""
