@@ -190,7 +190,7 @@ class ProviderBaseClass(TestAccountMixin):
         request = Request(wsgi_request)  # type: ignore
         request.user = self.admin_user
 
-        self.handler = smarter_compatible_client.get_smarter_handler(request=request, provider_name=self.provider)
+        self.handler = smarter_compatible_client.get_smarter_harness(request=request, provider_name=self.provider)
         print(f"provider {self.provider} is setup")
 
         self.prompt = Prompt.objects.create(
@@ -349,7 +349,7 @@ class ProviderBaseClass(TestAccountMixin):
         try:
             if not self.handler:
                 raise ValueError(
-                    "Handler is not set. Did you call smarter_compatible_client.get_smarter_handler(provider=...) ?"
+                    "Handler is not set. Did you call smarter_compatible_client.get_smarter_harness(provider=...) ?"
                 )
 
             response = self.handler(
@@ -400,7 +400,7 @@ class ProviderBaseClass(TestAccountMixin):
         try:
             if not self.handler:
                 raise ValueError(
-                    "Handler is not set. Did you call smarter_compatible_client.get_smarter_handler(provider=...) ?"
+                    "Handler is not set. Did you call smarter_compatible_client.get_smarter_harness(provider=...) ?"
                 )
 
             response = self.handler(
@@ -419,7 +419,7 @@ class ProviderBaseClass(TestAccountMixin):
         try:
             if not self.handler:
                 raise ValueError(
-                    "Handler is not set. Did you call smarter_compatible_client.get_smarter_handler(provider=...) ?"
+                    "Handler is not set. Did you call smarter_compatible_client.get_smarter_harness(provider=...) ?"
                 )
 
             response = self.handler(

@@ -81,7 +81,7 @@ dictionary (representing a successful response) or one of several specific
 error response types, including HTTP 403 Forbidden, HTTP 404 Not Found,
 HTTP 400 Bad Request, or journaled JSON error/response types. This allows
 for consistent handling of both successful and error responses across all
-prompt provider handlers that implement the SmarterChatHandlerProtocol.
+prompt provider handlers that implement the SmarterChatHarnessProtocol.
 """
 
 
@@ -113,7 +113,7 @@ class OpenAICompatiblePassthroughProtocol(Protocol):
     ) -> OpenAICompatibleChatCompletionResponseType: ...
 
 
-class SmarterChatHandlerProtocol(Protocol):
+class SmarterChatHarnessProtocol(Protocol):
     """
     A fixed Protocol for all Smarter prompt provider handler functions.
 
@@ -146,7 +146,7 @@ class SmarterChatHandlerProtocol(Protocol):
 
 
 __all__ = [
-    "SmarterChatHandlerProtocol",
+    "SmarterChatHarnessProtocol",
     "OpenAICompatiblePassthroughProtocol",
     "OpenAICompatibleChatCompletionResponseType",
     "SmarterChatCompletionResponseType",

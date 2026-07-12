@@ -586,7 +586,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         # pylint: disable=C0415
         from smarter.apps.provider.services.text_completion.providers import (
-            SmarterChatHandlerProtocol,
+            SmarterChatHarnessProtocol,
             smarter_compatible_client,
         )
 
@@ -616,7 +616,7 @@ class LLMClientApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.NOT_FOUND.value,
                 stack_trace=traceback.format_exc(),
             )
-        handler: SmarterChatHandlerProtocol = smarter_compatible_client.get_smarter_handler(
+        handler: SmarterChatHarnessProtocol = smarter_compatible_client.get_smarter_harness(
             request=request, provider_name=self.llm_client.provider
         )
         if not self.chat_helper:
