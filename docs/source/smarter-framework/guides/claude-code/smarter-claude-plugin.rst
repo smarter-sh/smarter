@@ -346,7 +346,7 @@ For Claude integration, you will create one secret that holds your Anthropic API
    Never commit API keys to version control. Always use Smarter Secrets or environment variables,
    and add ``.env`` and ``config.yaml`` files to ``.gitignore``.
 
-.. _concept-llm_client:
+.. _concept-llmclient:
 
 LLMClients
 ~~~~~~~~~~~
@@ -383,9 +383,9 @@ The **Smarter CLI** (``smarter``) is a statically compiled Go binary that provid
      - Creates or updates the resource described in a manifest
    * - ``smarter get providers``
      - Lists all registered LLM providers
-   * - ``smarter get llm_clients``
+   * - ``smarter get llmclients``
      - Lists all deployed LLMClients
-   * - ``smarter describe llm_client <name>``
+   * - ``smarter describe llmclient <name>``
      - Shows detailed status and configuration for a LLMClient
 
 The CLI communicates with the Smarter platform API using the credentials stored in ``$HOME/.smarter/config.yaml``. All manifest operations are idempotent — running ``smarter apply`` on an existing resource updates it rather than creating a duplicate.
@@ -571,7 +571,7 @@ to pass validation automatically.
 
 Additionally confirm:
 
-- ``smarter/apps/llm_client/models.py`` — ``validate_provider()`` permits ``"claude"``
+- ``smarter/apps/llmclient/models.py`` — ``validate_provider()`` permits ``"claude"``
   (no manual changes required if ``all`` is updated correctly).
 - Any manifest docs or examples that enumerate provider names include ``"claude"``.
 
@@ -809,7 +809,7 @@ Retrieve your exact LLMClient URL:
 
 .. code-block:: bash
 
-   smarter describe llm_client napl-claude-poc   # look for: url_llm_client
+   smarter describe llmclient napl-claude-poc   # look for: url_llmclient
 
 Or inspect the live config directly:
 
@@ -857,7 +857,7 @@ Steps
 .. code-block:: bash
 
    mkdir smarter-poc && cd smarter-poc
-   smarter manifest llm_client -o yaml > napl-claude-poc.yml
+   smarter manifest llmclient -o yaml > napl-claude-poc.yml
 
 Edit ``napl-claude-poc.yml`` with the following key fields:
 
@@ -884,7 +884,7 @@ Edit ``napl-claude-poc.yml`` with the following key fields:
 .. code-block:: bash
 
    smarter apply -f napl-claude-poc.yml
-   smarter describe llm_client napl-claude-poc   # confirm status: deployed
+   smarter describe llmclient napl-claude-poc   # confirm status: deployed
 
 **5 — Run the** ``curl`` **test**
 
@@ -894,7 +894,7 @@ Retrieve your exact LLMClient URL at any time with:
 
 .. code-block:: bash
 
-   smarter describe llm_client napl-claude-poc   # look for: url_llm_client
+   smarter describe llmclient napl-claude-poc   # look for: url_llmclient
 
 **6 — Confirm in the Smarter Sandbox**
 
@@ -913,7 +913,7 @@ The PoC is complete when all four criteria are met:
 
    <table style="width:100%">
      <tbody>
-       <tr><td style="vertical-align:middle; width:3%"><input type="checkbox"></td><td><code>smarter describe llm_client napl-claude-poc</code> returns <code>status: deployed</code></td></tr>
+       <tr><td style="vertical-align:middle; width:3%"><input type="checkbox"></td><td><code>smarter describe llmclient napl-claude-poc</code> returns <code>status: deployed</code></td></tr>
        <tr><td style="vertical-align:middle"><input type="checkbox"></td><td>The <code>curl</code> POST to <code>/chat/</code> returns <code>statusCode: 200</code></td></tr>
        <tr><td style="vertical-align:middle"><input type="checkbox"></td><td>The response body contains a non-empty <code>choices[0].message.content</code></td></tr>
        <tr><td style="vertical-align:middle"><input type="checkbox"></td><td>The Smarter Sandbox shows a complete 5-stage processing run</td></tr>
@@ -1068,14 +1068,14 @@ with unexpected settings.
 
 .. code-block:: bash
 
-   python3 -c "import yaml; yaml.safe_load(open('my-llm_client.yml'))" \
+   python3 -c "import yaml; yaml.safe_load(open('my-llmclient.yml'))" \
            && echo "YAML is valid"
 
 **Generate a reference template to compare against your file:**
 
 .. code-block:: bash
 
-   smarter manifest llm_client -o yaml > reference-llm_client.yml
+   smarter manifest llmclient -o yaml > reference-llmclient.yml
 
 **List valid provider names** — ``defaultProvider`` must match exactly:
 
@@ -1083,13 +1083,13 @@ with unexpected settings.
 
    smarter get providers
 
-**Reset a misconfigured llm_client** — ``apply`` does not remove fields
+**Reset a misconfigured llmclient** — ``apply`` does not remove fields
 absent from your manifest. Delete and re-create for a clean state:
 
 .. code-block:: bash
 
-   smarter delete llm_client <name>
-   smarter apply -f my-llm_client.yml
+   smarter delete llmclient <name>
+   smarter apply -f my-llmclient.yml
 
 .. important::
 
@@ -1097,8 +1097,8 @@ absent from your manifest. Delete and re-create for a clean state:
 
    .. code-block:: bash
 
-      smarter get llm_clients
-      smarter describe llm_client <your-llm_client-name>
+      smarter get llmclients
+      smarter describe llmclient <your-llmclient-name>
 
 .. _ts-04-context-performance:
 
@@ -1148,13 +1148,13 @@ TS-05 — Sandbox Reflects Stale Configuration
 in the Smarter Sandbox.
 
 - **Force a browser cache clear:** ``Cmd+Shift+R`` (macOS) or ``Ctrl+Shift+R`` (Windows/Linux)
-- **Re-apply the manifest** after any local file change: ``smarter apply -f my-llm_client.yml``
+- **Re-apply the manifest** after any local file change: ``smarter apply -f my-llmclient.yml``
 - **Remove unconfigured plugins** — an empty ``plugins:`` block causes silent failures; comment it out during initial testing
 - **Inspect the live config** directly:
 
 .. code-block:: text
 
-   https://platform.smarter.sh/llm-clients/<your-llm_client-name>/config/
+   https://platform.smarter.sh/llm-clients/<your-llmclient-name>/config/
 
 .. _ts-06-web-integration:
 
@@ -1171,9 +1171,9 @@ TS-06 — Web Integration and Embedding Issues
    * - LLMClient Type
      - URL Pattern
    * - Public (deployed)
-     - ``https://<llm_client-name>.<account-id>.api.smarter.sh/``
+     - ``https://<llmclient-name>.<account-id>.api.smarter.sh/``
    * - Authenticated
-     - ``https://platform.smarter.sh/llm-clients/<llm_client-name>/``
+     - ``https://platform.smarter.sh/llm-clients/<llmclient-name>/``
 
 **CDN loader script** — must be present in ``<head>``:
 
@@ -1186,14 +1186,14 @@ TS-06 — Web Integration and Embedding Issues
 .. code-block:: html
 
    <div id="root"
-        smarter-chatbot-api-url="https://<llm_client-name>.<account-id>.api.smarter.sh/">
+        smarter-chatbot-api-url="https://<llmclient-name>.<account-id>.api.smarter.sh/">
    </div>
 
 **LLMClient not yet deployed** — verify status before embedding a public URL:
 
 .. code-block:: bash
 
-   smarter describe llm_client <name>   # confirm status: deployed
+   smarter describe llmclient <name>   # confirm status: deployed
 
 .. _escalation-path:
 

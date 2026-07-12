@@ -2,9 +2,9 @@ apiVersion: smarter.sh/v1
 kind: LLMClient
 metadata:
   description:
-    To create and deploy an example Smarter llm_client. Prompt with example
+    To create and deploy an example Smarter llmclient. Prompt with example
     function calling to trigger the example Static Plugin
-  name: example_llm_client
+  name: example_llmclient
   version: 0.1.0
 spec:
   apiKey: snake_case_api_key_name
@@ -26,7 +26,7 @@ spec:
     defaultMaxTokens: 2048
     defaultModel: gpt-4o-mini
     defaultSystemRole:
-      You are a helpful llm_client. When given the opportunity to utilize
+      You are a helpful llmclient. When given the opportunity to utilize
       function calling, you should always do so. This will allow you to provide the
       best possible responses to the user. If you are unable to provide a response,
       you should prompt the user for more information. If you are still unable to
@@ -36,7 +36,7 @@ spec:
     deployed: false
     dnsVerificationStatus: Not Verified
     provider: openai
-    subdomain: example-llm_client
+    subdomain: example-llmclient
   functions:
     - weather
     - datemath

@@ -60,7 +60,7 @@ class PromptReverseNames:
         from smarter.lib.django.shortcuts import reverse
         url = reverse(PromptReverseNames.describe, kwargs={'hashed_id': 'rMTAwMDAzOQx'})
 
-        # returns manifest of the llm_client with the given hashed_id
+        # returns manifest of the llmclient with the given hashed_id
         retval = PromptReverseNames.describe
         print(retval)
     """
@@ -89,17 +89,17 @@ urlpatterns = [
         name=PromptReverseNames.listview_api,
     ),
     path(
-        "api/listview/clone/<int:llm_client_id>/<str:new_name>/",
+        "api/listview/clone/<int:llmclient_id>/<str:new_name>/",
         PromptListApiCloneView.as_view(),
         name=PromptReverseNames.listview_api_clone,
     ),
     path(
-        "api/listview/delete/<int:llm_client_id>/",
+        "api/listview/delete/<int:llmclient_id>/",
         PromptListApiDeleteView.as_view(),
         name=PromptReverseNames.listview_api_delete,
     ),
     path(
-        "api/listview/rename/<int:llm_client_id>/<str:new_name>/",
+        "api/listview/rename/<int:llmclient_id>/<str:new_name>/",
         PromptListApiRenameView.as_view(),
         name=PromptReverseNames.listview_api_rename,
     ),

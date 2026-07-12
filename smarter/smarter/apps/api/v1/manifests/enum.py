@@ -15,7 +15,7 @@ from smarter.apps.connection.manifest.models.sql_connection.const import (
 from smarter.apps.guardrail.manifest.models.guardrail.const import (
     MANIFEST_KIND as GUARDRAIL_MANIFEST_KIND,
 )
-from smarter.apps.llm_client.manifest.models.llm_client.const import (
+from smarter.apps.llmclient.manifest.models.llmclient.const import (
     MANIFEST_KIND as LLM_CLIENT_MANIFEST_KIND,
 )
 from smarter.apps.llmhost.manifest.models.llmhost.const import (

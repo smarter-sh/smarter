@@ -7,10 +7,10 @@ metadata:
   tags:
     - stackademy
     - sql
-    - llm_client
+    - llmclient
   annotations:
     - smarter.sh/llm-client/stackademy-sql/creator: QA Team
-    - smarter.sh/llm-client/stackademy-sql/purpose: llm_client for Stackademy course catalogue inquiries
+    - smarter.sh/llm-client/stackademy-sql/purpose: llmclient for Stackademy course catalogue inquiries
     - smarter.sh/llm-client/stackademy-sql/release-date: 2024-06-15
     - smarter.sh/llm-client/stackademy-sql/backward-compatibility: true
     - smarter.sh/llm-client/stackademy-sql/note: |

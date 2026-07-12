@@ -348,7 +348,7 @@ platform.  Before using Claude Code you should understand four core ideas:
 Smarter API Manifests (SAM)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-All Smarter resources — providers, llm_clients, plugins, secrets — are declared
+All Smarter resources — providers, llmclients, plugins, secrets — are declared
 as human-readable **YAML manifest files** (think Kubernetes manifests).
 You apply them with the CLI:
 
@@ -381,7 +381,7 @@ Key commands you will use daily:
 * ``smarter apply -f <file>`` — create or update a resource.
 * ``smarter get providers`` — list available LLM providers.
 * ``smarter describe provider Anthropic`` — inspect a provider.
-* ``smarter chat <llm_client-name>`` — start an interactive chat session.
+* ``smarter chat <llmclient-name>`` — start an interactive chat session.
 
 Claude Code and Smarter
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -438,17 +438,17 @@ Use the CLI to scaffold a LLMClient manifest pre-filled with defaults:
 
 .. code-block:: bash
 
-   smarter manifest llm_client -o yaml > my-claude-llm_client.yaml
+   smarter manifest llmclient -o yaml > my-claude-llmclient.yaml
 
-Open ``my-claude-llm_client.yaml`` in your editor and update the key fields:
+Open ``my-claude-llmclient.yaml`` in your editor and update the key fields:
 
 .. code-block:: yaml
 
    apiVersion: smarter.sh/v1
    kind: LLMClient
    metadata:
-     name: my-claude-llm_client
-     description: Personal Claude Code llm_client for NAPL dev work
+     name: my-claude-llmclient
+     description: Personal Claude Code llmclient for NAPL dev work
      version: 1.0.0
    spec:
      provider: Anthropic
@@ -463,14 +463,14 @@ Step 4 — Apply and Deploy the LLMClient
 
 .. code-block:: bash
 
-   smarter apply -f my-claude-llm_client.yaml
-   smarter deploy llm_client my-claude-llm_client
+   smarter apply -f my-claude-llmclient.yaml
+   smarter deploy llmclient my-claude-llmclient
 
 Confirm it was created:
 
 .. code-block:: bash
 
-   smarter get llm_clients
+   smarter get llmclients
 
 Step 5 — Chat with Claude Code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -479,7 +479,7 @@ Start an interactive terminal session:
 
 .. code-block:: bash
 
-   smarter chat my-claude-llm_client
+   smarter chat my-claude-llmclient
 
 Type a prompt to test:
 
@@ -502,7 +502,7 @@ Proof of Concept
 ----------------
 
 A successful integration produces output like this when you run
-``smarter chat my-claude-llm_client`` and send a test prompt:
+``smarter chat my-claude-llmclient`` and send a test prompt:
 
 .. code-block:: text
 

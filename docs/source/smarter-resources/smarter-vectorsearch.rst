@@ -13,7 +13,7 @@ A Vectorsearch is a named, ownable configuration describing how to query a singl
 how many results to return, and any metadata filters to apply. It does not itself
 hold embeddings or documents, and it does not generate text -- it is purely the
 retrieval half of a retrieval-augmented generation pipeline. Combining a
-Vectorsearch with a :doc:`Smarter LLMClient <smarter-llm_client>` yields a complete
+Vectorsearch with a :doc:`Smarter LLMClient <smarter-llmclient>` yields a complete
 RAG solution: the top-k results returned by the Vectorsearch are injected into the
 LLMClient's system prompt at inference time, grounding the model's response in the
 underlying Vectorstore's content.

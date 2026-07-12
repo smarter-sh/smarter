@@ -67,12 +67,12 @@ def smarter_filter_queryset_for_user_profile(
         )
         return qs.none()
 
-    # 2.) if the user is a superuser, return all llm_clients.
+    # 2.) if the user is a superuser, return all llmclients.
     if user_profile.user.is_superuser:
         logger.debug("%s: User %s is superuser, returning unfiltered queryset", logger_prefix, user_profile.user)
         return qs
 
-    # 3.) if user is staff then select all llm_clients for the account of the user.
+    # 3.) if user is staff then select all llmclients for the account of the user.
     if user_profile.user.is_staff:
         logger.debug(
             "%s: User %s is staff, filtering queryset for account %s",
@@ -90,8 +90,8 @@ def smarter_filter_queryset_for_user_profile(
             logger.error("Error filtering queryset for staff user %s: %s", user_profile.user, e)
             return qs.none()
 
-    # 4.) if the user is a Customer then select all llm_clients owned by the
-    # user + all llm_clients shared with the user which are llm_clients owned
+    # 4.) if the user is a Customer then select all llmclients owned by the
+    # user + all llmclients shared with the user which are llmclients owned
     # by an admin user of the account (could be more than one).
     logger.debug(
         "%s: User %s is customer, filtering queryset for owned and shared objects", logger_prefix, user_profile.user

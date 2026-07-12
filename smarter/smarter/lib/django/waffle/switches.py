@@ -77,11 +77,11 @@ class SmarterWaffleSwitches:
     Enables debug-level javascript console logging inside the browser
     """
 
-    LLM_CLIENT_LOGGING = "log_llm_client"
-    """Enables logging throughout the smarter.app.llm_client namespace."""
+    LLM_CLIENT_LOGGING = "log_llmclient"
+    """Enables logging throughout the smarter.app.llmclient namespace."""
 
-    LLM_CLIENT_HELPER_LOGGING = "log_llm_clienthelper"
-    """Enables logging within the smarter.apps.llm_client.model.LLMClientHelper class."""
+    LLM_CLIENT_HELPER_LOGGING = "log_llmclienthelper"
+    """Enables logging within the smarter.apps.llmclient.model.LLMClientHelper class."""
 
     LLM_HOST_LOGGING = "log_llm_host"
     """Enables logging throughout the smarter.app.llmhost namespace."""
@@ -101,7 +101,7 @@ class SmarterWaffleSwitches:
     VECTORSTORE_LOGGING = "log_vectorstore"
     """Enables logging throughout the smarter.app.vectorstore namespace."""
 
-    CSRF_SUPPRESS_FOR_LLM_CLIENTS = "disable_csrf_middleware_for_llm_clients"
+    CSRF_SUPPRESS_FOR_LLM_CLIENTS = "disable_csrf_middleware_for_llmclients"
     """Disables CSRF middleware checks for prompt completion endpoints."""
 
     ENABLE_DEBUG_MODE = "enable_debug_mode"
@@ -231,7 +231,7 @@ class SmarterWaffleSwitches:
         ),
         LLM_CLIENT_LOGGING: SmarterWaffleSwitch(
             name=LLM_CLIENT_LOGGING,
-            comment="Enables logging throughout the smarter.app.llm_client namespace.",
+            comment="Enables logging throughout the smarter.app.llmclient namespace.",
             default=True,
         ),
         CONNECTION_LOGGING: SmarterWaffleSwitch(
@@ -276,7 +276,7 @@ class SmarterWaffleSwitches:
         ),
         LLM_CLIENT_HELPER_LOGGING: SmarterWaffleSwitch(
             name=LLM_CLIENT_HELPER_LOGGING,
-            comment="Enables logging within the smarter.apps.llm_client.model.LLMClientHelper class.",
+            comment="Enables logging within the smarter.apps.llmclient.model.LLMClientHelper class.",
             default=False,
         ),
         CSRF_SUPPRESS_FOR_LLM_CLIENTS: SmarterWaffleSwitch(

@@ -6,7 +6,7 @@ from typing import Any, ClassVar, Optional
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
-from smarter.apps.llm_client.manifest.models.llm_client.const import MANIFEST_KIND
+from smarter.apps.llmclient.manifest.models.llmclient.const import MANIFEST_KIND
 from smarter.apps.llmhost.enum import (
     ApiFormat,
     CloudProvider,

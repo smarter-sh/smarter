@@ -300,7 +300,7 @@ class SAMPromptBroker(AbstractBroker):
         command = self.prompt.__name__
         command = SmarterJournalCliCommands(command)
         prompt: typing.Optional[str] = kwargs.get("prompt", None)
-        data = {"response": "Hello, I am an llm_client!", "prompt": prompt, "chat_id": "1234567890"}
+        data = {"response": "Hello, I am an llmclient!", "prompt": prompt, "chat_id": "1234567890"}
         return self.json_response_ok(command=command, data=data)
 
     def describe(self, request: ASGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

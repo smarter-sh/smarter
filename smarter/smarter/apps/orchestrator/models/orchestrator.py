@@ -6,7 +6,7 @@ from django.db import models
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
 )
-from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient
 from smarter.lib import logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
 
@@ -41,7 +41,7 @@ class Orchestrator(MetaDataWithOwnershipModel):
         default=OrchestrationStrategy.SEQUENTIAL,
         help_text="Coordination pattern used to sequence/parallelize member LLMClients.",
     )
-    llm_clients = models.ManyToManyField(
+    llmclients = models.ManyToManyField(
         LLMClient,
         through="OrchestratorHarness",
         related_name="orchestrators",

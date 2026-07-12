@@ -7,7 +7,7 @@ delegates route handling to app-specific URL modules.
 **Routes**
 
 - ``accounts/``: User account management endpoints.
-- ``llm_clients/``: LLMClient CRUD and related operations.
+- ``llmclients/``: LLMClient CRUD and related operations.
 - ``cli/``: Brokered services for CLI workflows.
 - ``connections/``: External connection integration endpoints.
 - ``plugins/``: Plugin management endpoints.
@@ -36,8 +36,8 @@ from smarter.apps.connection.api.v1 import urls as connection_urls
 from smarter.apps.connection.const import namespace as connnection_namespace
 from smarter.apps.guardrail.api.v1 import urls as guardrail_urls
 from smarter.apps.guardrail.const import namespace as guardrail_namespace
-from smarter.apps.llm_client.api.v1 import urls as llm_client_urls
-from smarter.apps.llm_client.const import namespace as llm_client_namespace
+from smarter.apps.llmclient.api.v1 import urls as llmclient_urls
+from smarter.apps.llmclient.const import namespace as llmclient_namespace
 from smarter.apps.mcpclient.api.v1 import urls as mcpclient_urls
 from smarter.apps.mcpclient.const import namespace as mcpclient_namespace
 from smarter.apps.plugin.api.v1 import urls as plugin_urls
@@ -67,12 +67,12 @@ app_name = namespace
 # /api/v1/ is the main entry point for the API
 urlpatterns = [
     # for LLMClients of the form https://example.3141-5926-5359.alpha.api.example.com
-    # path("", include(llm_client_urls)),
+    # path("", include(llmclient_urls)),
     # -------------------------------------------
     # the main API
     # -------------------------------------------
     path("accounts/", include(account_urls, namespace=account_namespace)),
-    path("llm-clients/", include(llm_client_urls, namespace=llm_client_namespace)),
+    path("llm-clients/", include(llmclient_urls, namespace=llmclient_namespace)),
     path("mcpclients/", include(mcpclient_urls, namespace=mcpclient_namespace)),
     path("cli/", include(cli_urls, namespace=cli_namespace)),
     path("connections/", include(connection_urls, namespace=connnection_namespace)),

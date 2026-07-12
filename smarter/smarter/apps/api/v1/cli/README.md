@@ -14,7 +14,7 @@ calls: https://api.smarter.sh/v1/cli/describe/
 
 ```console
 smarter get plugins
-smarter get llm_clients
+smarter get llmclients
 smarter get chat
 ```
 

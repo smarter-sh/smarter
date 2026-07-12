@@ -4,7 +4,7 @@ from http import HTTPStatus
 from urllib.parse import urlencode
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.journal.enum import (
@@ -35,15 +35,15 @@ class TestApiCliV1Chat(ApiV1CliTestBase):
 
         self.query_params = urlencode({"uid": self.uid})
 
-        self.llm_client = self.llm_client_factory()
+        self.llmclient = self.llmclient_factory()
 
     def tearDown(self):
-        if self.llm_client:
-            self.llm_client.delete()
+        if self.llmclient:
+            self.llmclient.delete()
         super().tearDown()
 
-    def llm_client_factory(self):
-        llm_client = LLMClient.objects.create(
+    def llmclient_factory(self):
+        llmclient = LLMClient.objects.create(
             name=self.name,
             user_profile=self.user_profile,
             description="Test LLMClient",
@@ -55,7 +55,7 @@ class TestApiCliV1Chat(ApiV1CliTestBase):
             app_assistant="Smarty Pants",
             app_welcome_message="Welcome to Smarter!",
         )
-        return llm_client
+        return llmclient
 
     def validate_response(self, response: dict) -> None:
         self.assertIsInstance(response, dict)

@@ -130,47 +130,45 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         :param args: Additional positional arguments (not used).
         :param kwargs: Additional keyword arguments, including:
 
-            - llm_client_id (str): The ID of the PluginMeta to be cloned.
+            - llmclient_id (str): The ID of the PluginMeta to be cloned.
             - new_name (str): The new name for the cloned PluginMeta.
 
         :returns: A JsonResponse containing the serialized data of the newly cloned PluginMeta if successful, or an error message if the cloning fails.
         :rtype: JsonResponse
         """
-        llm_client_id = kwargs.get("llm_client_id")
+        llmclient_id = kwargs.get("llmclient_id")
         new_name = kwargs.get("new_name")
-        llm_client: PluginMeta
+        llmclient: PluginMeta
 
-        if not llm_client_id or not new_name:
+        if not llmclient_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. llm_client_id: %s, new_name: %s",
+                "%s.post() Missing required parameters. llmclient_id: %s, new_name: %s",
                 self.formatted_class_name,
-                llm_client_id,
+                llmclient_id,
                 new_name,
             )
-            return JsonResponse({"error": "llm_client_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse({"error": "llmclient_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            llm_client = PluginMeta.objects.with_read_permission_for(self.user_profile.user).get(id=llm_client_id)  # type: ignore
+            llmclient = PluginMeta.objects.with_read_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except PluginMeta.DoesNotExist:
             logger.warning(
-                "%s.post() PluginMeta with id %s not found for cloning.", self.formatted_class_name, llm_client_id
+                "%s.post() PluginMeta with id %s not found for cloning.", self.formatted_class_name, llmclient_id
             )
-            return JsonResponse(
-                {"error": f"PluginMeta with id {llm_client_id} not found."}, status=HTTPStatus.NOT_FOUND
-            )
+            return JsonResponse({"error": f"PluginMeta with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
             new_name = self.to_snake_case(new_name.strip())
-            cloned_llm_client = llm_client.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
+            cloned_llmclient = llmclient.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = PluginSerializer(cloned_llm_client).data
+            data = PluginSerializer(cloned_llmclient).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
                 "%s.post() Error cloning PluginMeta with id %s: %s",
                 self.formatted_class_name,
-                llm_client_id,
+                llmclient_id,
                 str(e),
                 exc_info=True,
             )
@@ -202,40 +200,36 @@ class PluginListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         :param args: Additional positional arguments (not used).
         :param kwargs: Additional keyword arguments, including:
 
-            - llm_client_id (str): The ID of the PluginMeta to be deleted.
+            - llmclient_id (str): The ID of the PluginMeta to be deleted.
 
         :returns: A JsonResponse indicating the success or failure of the deletion.
         :rtype: JsonResponse
         """
-        llm_client_id = kwargs.get("llm_client_id")
-        if not llm_client_id:
-            logger.warning(
-                "%s.post() Missing required parameter llm_client_id for deletion.", self.formatted_class_name
-            )
-            return JsonResponse({"error": "llm_client_id is required."}, status=HTTPStatus.BAD_REQUEST)
+        llmclient_id = kwargs.get("llmclient_id")
+        if not llmclient_id:
+            logger.warning("%s.post() Missing required parameter llmclient_id for deletion.", self.formatted_class_name)
+            return JsonResponse({"error": "llmclient_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            llm_client = PluginMeta.objects.with_ownership_permission_for(self.user_profile.user).get(id=llm_client_id)  # type: ignore
+            llmclient = PluginMeta.objects.with_ownership_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except PluginMeta.DoesNotExist:
             logger.warning(
-                "%s.post() PluginMeta with id %s not found for deletion.", self.formatted_class_name, llm_client_id
+                "%s.post() PluginMeta with id %s not found for deletion.", self.formatted_class_name, llmclient_id
             )
-            return JsonResponse(
-                {"error": f"PluginMeta with id {llm_client_id} not found."}, status=HTTPStatus.NOT_FOUND
-            )
+            return JsonResponse({"error": f"PluginMeta with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
-            llm_client.delete()
+            llmclient.delete()
             invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
             return JsonResponse(
-                {"message": f"PluginMeta with id {llm_client_id} deleted successfully."}, status=HTTPStatus.OK
+                {"message": f"PluginMeta with id {llmclient_id} deleted successfully."}, status=HTTPStatus.OK
             )
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
                 "%s.post() Error deleting PluginMeta with id %s: %s",
                 self.formatted_class_name,
-                llm_client_id,
+                llmclient_id,
                 str(e),
                 exc_info=True,
             )
@@ -267,45 +261,43 @@ class PluginListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         :param args: Additional positional arguments (not used).
         :param kwargs: Additional keyword arguments, including:
 
-            - llm_client_id (str): The ID of the PluginMeta to be renamed.
+            - llmclient_id (str): The ID of the PluginMeta to be renamed.
             - new_name (str): The new name for the PluginMeta.
 
         :returns: A JsonResponse indicating the success or failure of the renaming.
         :rtype: JsonResponse
         """
-        llm_client_id = kwargs.get("llm_client_id")
+        llmclient_id = kwargs.get("llmclient_id")
         new_name = kwargs.get("new_name")
-        if not llm_client_id or not new_name:
+        if not llmclient_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. llm_client_id: %s, new_name: %s",
+                "%s.post() Missing required parameters for renaming. llmclient_id: %s, new_name: %s",
                 self.formatted_class_name,
-                llm_client_id,
+                llmclient_id,
                 new_name,
             )
-            return JsonResponse({"error": "llm_client_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse({"error": "llmclient_id and new_name are required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            llm_client = PluginMeta.objects.with_ownership_permission_for(self.user_profile.user).get(id=llm_client_id)  # type: ignore
+            llmclient = PluginMeta.objects.with_ownership_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except PluginMeta.DoesNotExist:
             logger.warning(
-                "%s.post() PluginMeta with id %s not found for renaming.", self.formatted_class_name, llm_client_id
+                "%s.post() PluginMeta with id %s not found for renaming.", self.formatted_class_name, llmclient_id
             )
-            return JsonResponse(
-                {"error": f"PluginMeta with id {llm_client_id} not found."}, status=HTTPStatus.NOT_FOUND
-            )
+            return JsonResponse({"error": f"PluginMeta with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
             new_name = self.to_snake_case(new_name.strip())
-            llm_client.rename(new_name=new_name)
+            llmclient.rename(new_name=new_name)
             invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
-            data = PluginSerializer(llm_client).data
+            data = PluginSerializer(llmclient).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
                 "%s.post() Error renaming PluginMeta with id %s: %s",
                 self.formatted_class_name,
-                llm_client_id,
+                llmclient_id,
                 str(e),
                 exc_info=True,
             )

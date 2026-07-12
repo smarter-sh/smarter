@@ -8,7 +8,7 @@ label, 'functions'
 
 Contributors: add your new function to the following
 
-- smarter.apps.llm_client.models.LLMClientFunctions.CHOICES
+- smarter.apps.llmclient.models.LLMClientFunctions.CHOICES
 - smarter.apps.prompt.functions
 
 See also:

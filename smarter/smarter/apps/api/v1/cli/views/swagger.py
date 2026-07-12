@@ -27,7 +27,7 @@ with open(
     EXAMPLE_MANIFEST_PLUGIN = json.load(f)
 
 with open(
-    os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "apply", "llm_client.yaml"), encoding="utf-8"
+    os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "apply", "llmclient.yaml"), encoding="utf-8"
 ) as f:
     EXAMPLE_MANIFEST_LLM_CLIENT = f.read()
 

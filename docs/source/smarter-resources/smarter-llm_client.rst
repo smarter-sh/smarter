@@ -53,7 +53,7 @@ Usage
 Example Manifest
 ----------------
 
-.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llm_client-sql.yaml
+.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llmclient-sql.yaml
    :language: yaml
    :caption: Example Smarter Manifest
 
@@ -65,26 +65,26 @@ Technical Reference
 .. toctree::
    :maxdepth: 1
 
-   llm_client/api
-   llm_client/models
-   llm_client/sam
-   llm_client/serializers
-   llm_client/react-ui
-   llm_client/helper
-   llm_client/kubernetes-ingress
-   llm_client/management-commands
-   llm_client/middleware
-   llm_client/tasks
-   llm_client/signals
-   llm_client/urls
-   llm_client/utils
+   llmclient/api
+   llmclient/models
+   llmclient/sam
+   llmclient/serializers
+   llmclient/react-ui
+   llmclient/helper
+   llmclient/kubernetes-ingress
+   llmclient/management-commands
+   llmclient/middleware
+   llmclient/tasks
+   llmclient/signals
+   llmclient/urls
+   llmclient/utils
 
 
 Sandbox Mode
 ------------
 
 Smarter LLMClients can be operated in a 'Sandbox Mode', which restricts their
-capabilities to ensure safe experimentation and testing. In this mode, llm_client
+capabilities to ensure safe experimentation and testing. In this mode, llmclient
 are only addressable using URL schemes that authenticate with Django sessions.
 That is, they cannot be accessed via API keys nor will they function using
 URL schemas such as `stackademy.1234-5678-9012.api.example.com`.
@@ -102,22 +102,22 @@ Deploy a Smarter LLMClient using the Smarter CLI. For example:
 
 .. code-block:: bash
 
-  smarter deploy llm_client stackademy-sql
+  smarter deploy llmclient stackademy-sql
 
 .. code-block:: bash
 
-  smarter deploy llm_client -h
+  smarter deploy llmclient -h
   Deploys a LLMClient:
 
-  smarter deploy llm_client <name> [flags]
+  smarter deploy llmclient <name> [flags]
 
   The Smarter API will deploy the LLMClient.
 
   Usage:
-    smarter deploy llm_client <name> [flags]
+    smarter deploy llmclient <name> [flags]
 
   Flags:
-    -h, --help   help for llm_client
+    -h, --help   help for llmclient
 
   Global Flags:
         --api_key string         Smarter API key to use
@@ -135,7 +135,7 @@ Update a Smarter LLMClient using the Smarter CLI. For example:
 
 .. code-block:: bash
 
-  smarter apply -f path/to/llm_client-manifest.yaml
+  smarter apply -f path/to/llmclient-manifest.yaml
 
 
 Deleting
@@ -145,7 +145,7 @@ Delete a Smarter LLMClient using the Smarter CLI. For example:
 
 .. code-block:: bash
 
-  smarter delete llm_client stackademy-sql
+  smarter delete llmclient stackademy-sql
 
 
 Testing
@@ -175,7 +175,7 @@ Use ad hoc Sql queries to monitor your Smarter LLMClient's production performanc
 
 See:
 
- - :py:class:`smarter.apps.llm_client.models.LLMClientRequests`
+ - :py:class:`smarter.apps.llmclient.models.LLMClientRequests`
  - :py:class:`smarter.apps.plugin.models.PluginSelectorHistory`
  - :py:class:`smarter.lib.journal.models.SAMJournal`
 

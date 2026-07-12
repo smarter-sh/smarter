@@ -54,10 +54,10 @@ class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
     :type request: ASGIRequest
     :param args: Additional positional arguments.
     :type args: tuple
-    :param kwargs: Keyword arguments, must include 'name' (llm_client name) and 'kind' (llm_client type).
+    :param kwargs: Keyword arguments, must include 'name' (llmclient name) and 'kind' (llmclient type).
     :type kwargs: dict
 
-    :returns: Rendered HTML page with llm_client manifest details, or a 404 error page if the llm_client is not found or parameters are invalid.
+    :returns: Rendered HTML page with llmclient manifest details, or a 404 error page if the llmclient is not found or parameters are invalid.
     :rtype: HttpResponse
 
     **Example usage**::

@@ -30,7 +30,7 @@ from smarter.apps.connection.manifest.brokers.sql_connection import (
     SAMSqlConnectionBroker,
 )
 from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
-from smarter.apps.llm_client.manifest.brokers.llm_client import SAMLLMClientBroker
+from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
 from smarter.apps.llmhost.manifest.brokers.llmhost import SAMLLMHostBroker
 from smarter.apps.mcpclient.manifest.brokers.mcpclient import SAMMCPClientBroker
 from smarter.apps.orchestrator.manifest.brokers.orchestrator import (

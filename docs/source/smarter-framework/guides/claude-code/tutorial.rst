@@ -124,7 +124,7 @@ Create ``web-coding-assistant.yaml``:
        maxTokens: 16384
      plugins: []
 
-Apply the llm_client:
+Apply the llmclient:
 
 .. code-block:: bash
 
@@ -133,7 +133,7 @@ Apply the llm_client:
 **Step 4: Generate the Todo App in the Prompt Engineer Workbench**
 
 1. Open Smarter Web Dashboard -> Prompt Engineer Workbench.
-2. Select the llm_client **web-coding-assistant**.
+2. Select the llmclient **web-coding-assistant**.
 3. Paste the following prompt:
 
 ::

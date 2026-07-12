@@ -1,8 +1,8 @@
 /**
  * TabbedListView React Component
  *
- * Displays a tabbed interface for viewing llm_clients owned by the current user
- * and llm_clients shared with the user.
+ * Displays a tabbed interface for viewing llmclients owned by the current user
+ * and llmclients shared with the user.
  *
  * Tabs:
  * - Your LLMClients
@@ -13,7 +13,7 @@
  * - Thumbnail card
  *
  * Features:
- * - Loads owned and shared llm_client lists from the backend using session context.
+ * - Loads owned and shared llmclient lists from the backend using session context.
  * - Hydrates the UI from cached results before the initial fetch resolves.
  * - Shows loading and error states during fetches.
  * - Allows switching between list and card views.
@@ -25,25 +25,25 @@
  * - sessionContext (SessionContext): Authentication and API context used for requests.
  *
  * State:
- * - isLoadingOwned: Loading state for owned llm_clients.
- * - isLoadingShared: Loading state for shared llm_clients.
+ * - isLoadingOwned: Loading state for owned llmclients.
+ * - isLoadingShared: Loading state for shared llmclients.
  * - errorMessage: Error text for failed requests.
- * - userListObjects: Owned llm_client list.
- * - sharedListObjects: Shared llm_client list.
+ * - userListObjects: Owned llmclient list.
+ * - sharedListObjects: Shared llmclient list.
  * - invalidateCacheFlag: Indicates whether backend cache should be invalidated on load.
  * - viewMode: Current display mode ("list" or "thumbnail").
  * - activeTab: Current tab ("user" or "shared").
  *
  * Internal Helpers:
  * - getCookie: Reads cookie values used for skeleton sizing.
- * - load (from ./load): Fetches llm_client data and updates state via setters.
+ * - load (from ./load): Fetches llmclient data and updates state via setters.
  *
  * Page Rendering Performance and Caching behavior:
  * - Improves the perceived load time by rendering cached results immediately when
  *   available while a fresh backend fetch is still in flight. It is not uncommon
  *   for the backend response to take up to 1-2 seconds, so this is important from
  *   a UX perspective.
- * - Reads the most recent owned/shared llm_client results from sessionStorage on mount,
+ * - Reads the most recent owned/shared llmclient results from sessionStorage on mount,
  *   keyed by API URL and tab.
  * - Writes successful fetch results back to the cache so the next initial page load
  *   can show recent data without waiting on the network.

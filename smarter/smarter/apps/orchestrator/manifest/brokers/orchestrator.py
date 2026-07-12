@@ -11,7 +11,7 @@ from rest_framework.serializers import ModelSerializer
 from taggit.managers import TaggableManager
 
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.llm_client.models import LLMClient  # adjust to actual location
+from smarter.apps.llmclient.models import LLMClient  # adjust to actual location
 from smarter.apps.orchestrator.enum import HarnessRole, OrchestrationStrategy
 from smarter.apps.orchestrator.manifest.models.orchestrator.const import MANIFEST_KIND
 from smarter.apps.orchestrator.manifest.models.orchestrator.metadata import (
@@ -266,7 +266,7 @@ class SAMOrchestratorBroker(AbstractBroker):
 
         ``harnesses`` list. The manifest is treated as the full desired state:
         memberships not present in the manifest are deleted, memberships present
-        are created or updated, matched on (orchestrator, llm_client) per the
+        are created or updated, matched on (orchestrator, llmclient) per the
         model's unique_together constraint.
 
         Must be called from within apply()'s transaction, after self.orchestrator
@@ -286,13 +286,11 @@ class SAMOrchestratorBroker(AbstractBroker):
             )
 
         harness_configs: list[SAMOrchestratorHarnessConfig] = self.manifest.spec.config.harnesses
-        seen_llm_client_ids = set()
+        seen_llmclient_ids = set()
 
         for harness_config in harness_configs:
             try:
-                llm_client = LLMClient.objects.get(
-                    user_profile__account=self.account, name=harness_config.llmClientName
-                )
+                llmclient = LLMClient.objects.get(user_profile__account=self.account, name=harness_config.llmClientName)
             except LLMClient.DoesNotExist as e:
                 raise SAMOrchestratorBrokerError(
                     f"LLMClient '{harness_config.llmClientName}' not found for account {self.account}",
@@ -301,7 +299,7 @@ class SAMOrchestratorBroker(AbstractBroker):
 
             OrchestratorHarness.objects.update_or_create(
                 orchestrator=self.orchestrator,
-                llm_client=llm_client,
+                llmclient=llmclient,
                 defaults={
                     "role": harness_config.role.value,
                     "execution_order": harness_config.executionOrder,
@@ -309,9 +307,9 @@ class SAMOrchestratorBroker(AbstractBroker):
                     "config": harness_config.config,
                 },
             )
-            seen_llm_client_ids.add(llm_client.id)
+            seen_llmclient_ids.add(llmclient.id)
 
-        stale = self.orchestrator.harnesses.exclude(llm_client_id__in=seen_llm_client_ids)
+        stale = self.orchestrator.harnesses.exclude(llmclient_id__in=seen_llmclient_ids)
         stale_count = stale.count()
         if stale_count:
             logger.debug(
@@ -368,13 +366,13 @@ class SAMOrchestratorBroker(AbstractBroker):
 
         harnesses = [
             SAMOrchestratorHarnessConfig(
-                llmClientName=membership.llm_client.name,
+                llmClientName=membership.llmclient.name,
                 role=HarnessRole(membership.role),
                 executionOrder=membership.execution_order,
                 isActive=membership.is_active,
                 config=membership.config,
             )
-            for membership in self.orchestrator.harnesses.select_related("llm_client").order_by("execution_order")
+            for membership in self.orchestrator.harnesses.select_related("llmclient").order_by("execution_order")
         ]
         orchestrator_dict["harnesses"] = [harness.model_dump(mode="json") for harness in harnesses]
 

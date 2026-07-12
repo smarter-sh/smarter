@@ -7,14 +7,14 @@
   display: block;
 }
 
-.llm_client-card > .card-header {
+.llmclient-card > .card-header {
   border-bottom: 1px solid #e5e5e5;
 }
 
-.smarter-llm_client-card {
+.smarter-llmclient-card {
 }
 
-.user-llm_client-card {
+.user-llmclient-card {
 }
 
 .card-body > p {

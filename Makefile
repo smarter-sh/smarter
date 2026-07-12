@@ -174,9 +174,9 @@ docker-init:
 		python manage.py initialize_platform && \
 		python manage.py add_plugin_examples && \
 		python manage.py create_stackademy && \
-		python manage.py deploy_builtin_llm_clients && \
-		python manage.py deploy_example_llm_client" && \
-	docker exec smarter-mysql mysql -u smarter -psmarter -e 'UPDATE smarter.llm_client_llmclient SET deployed = 0;'
+		python manage.py deploy_builtin_llmclients && \
+		python manage.py deploy_example_llmclient" && \
+	docker exec smarter-mysql mysql -u smarter -psmarter -e 'UPDATE smarter.llmclient_llmclient SET deployed = 0;'
 	@echo "Docker and Smarter are initialized."
 	docker ps
 

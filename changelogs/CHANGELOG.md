@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-
-
 ## [0.15.0-alpha.10](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.9...v0.15.0-alpha.10) (2026-07-09)
 
 ## [0.15.0-alpha.9](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.8...v0.15.0-alpha.9) (2026-07-08)
@@ -40,19 +38,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Bug Fixes
 
-* validate inputs before attempting to update kubeconfig ([9201f6a](https://github.com/smarter-sh/smarter/commit/9201f6ae63fa10fe0a84c3b7ff73d47bcb769734))
+- validate inputs before attempting to update kubeconfig ([9201f6a](https://github.com/smarter-sh/smarter/commit/9201f6ae63fa10fe0a84c3b7ff73d47bcb769734))
 
 ## [0.14.19](https://github.com/smarter-sh/smarter/compare/v0.14.18...v0.14.19) (2026-06-30)
 
 ### Bug Fixes
 
-* Secret.get_cached_object(name='google_maps_api_key' ([fbda984](https://github.com/smarter-sh/smarter/commit/fbda984252837eddbb907b7bfc56d5b1cdb4c800))
+- Secret.get_cached_object(name='google_maps_api_key' ([fbda984](https://github.com/smarter-sh/smarter/commit/fbda984252837eddbb907b7bfc56d5b1cdb4c800))
 
 ## [0.14.19-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.18...v0.14.19-alpha.1) (2026-06-30)
 
 ### Bug Fixes
 
-* Secret.get_cached_object(name='google_maps_api_key' ([fbda984](https://github.com/smarter-sh/smarter/commit/fbda984252837eddbb907b7bfc56d5b1cdb4c800))
+- Secret.get_cached_object(name='google_maps_api_key' ([fbda984](https://github.com/smarter-sh/smarter/commit/fbda984252837eddbb907b7bfc56d5b1cdb4c800))
 
 ## [0.14.18](https://github.com/smarter-sh/smarter/compare/v0.14.17...v0.14.18) (2026-06-30)
 
@@ -64,7 +62,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Bug Fixes
 
-* force a new release ([54bb0e7](https://github.com/smarter-sh/smarter/commit/54bb0e7f75397e213b1963bcbe427dde639b7efd))
+- force a new release ([54bb0e7](https://github.com/smarter-sh/smarter/commit/54bb0e7f75397e213b1963bcbe427dde639b7efd))
 
 ## [0.14.18-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.17...v0.14.18-alpha.1) (2026-06-30)
 
@@ -583,7 +581,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - switch to redis cache ([a6ea3e0](https://github.com/smarter-sh/smarter/commit/a6ea3e0894e9aa794c21c91b2b1c98c53110fd04))
 - switch to session-based storage ([f2ba419](https://github.com/smarter-sh/smarter/commit/f2ba4193fa55c36f398ada5299ae3162f172bc89))
 - switch to with_read_permission_for() ([02b654e](https://github.com/smarter-sh/smarter/commit/02b654efdaa1d3cb802b3d3ca5de2dd0dc9238b7))
-- to_snake_case should convert LLMClient to llm_client ([fbd7f08](https://github.com/smarter-sh/smarter/commit/fbd7f08f83fded957045fe6c414c0fe57fdf5646))
+- to_snake_case should convert LLMClient to llmclient ([fbd7f08](https://github.com/smarter-sh/smarter/commit/fbd7f08f83fded957045fe6c414c0fe57fdf5646))
 - track shared and owned list fetches separately ([7f25321](https://github.com/smarter-sh/smarter/commit/7f2532142421ea1d36cf3ad87879b2df4849d321))
 - type clashes in snake_to_camel() and camel_to_snake() ([b48c003](https://github.com/smarter-sh/smarter/commit/b48c003527e6e2b922c43409b8eeb441fa663d03))
 - use HTTP_X_FORWARDED_PROTO to determine protocol of originating request ([bb4f050](https://github.com/smarter-sh/smarter/commit/bb4f05056bca443b118379fa0b696f690fde75cf))
@@ -619,7 +617,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Bug Fixes
 
-- to_snake_case should convert LLMClient to llm_client ([fbd7f08](https://github.com/smarter-sh/smarter/commit/fbd7f08f83fded957045fe6c414c0fe57fdf5646))
+- to_snake_case should convert LLMClient to llmclient ([fbd7f08](https://github.com/smarter-sh/smarter/commit/fbd7f08f83fded957045fe6c414c0fe57fdf5646))
 
 ## [0.14.0-alpha.54](https://github.com/smarter-sh/smarter/compare/v0.14.0-alpha.53...v0.14.0-alpha.54) (2026-06-05)
 

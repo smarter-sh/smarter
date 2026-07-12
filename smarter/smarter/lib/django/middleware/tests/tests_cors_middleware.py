@@ -41,28 +41,28 @@ class TestSmarterCorsMiddleware(TestAccountMixin):
 
     @override_settings(CORS_ALLOWED_ORIGINS=["null"])
     def test_origin_found_in_white_lists_in_origins(self):
-        self.middleware._llm_client = None
+        self.middleware._llmclient = None
         self.middleware._url = None
         result = self.middleware.origin_found_in_white_lists("null", self.split_url)
         self.assertTrue(result)
 
     @override_settings(CORS_ALLOWED_ORIGINS=["https://example.com"])
     def test_origin_found_in_white_lists_url_in_whitelist(self):
-        self.middleware._llm_client = None
+        self.middleware._llmclient = None
         self.middleware._url = None
         result = self.middleware.origin_found_in_white_lists("https://other.com", self.split_url)
         self.assertTrue(result)
 
     @override_settings(CORS_ALLOWED_ORIGINS=[], CORS_ALLOWED_ORIGIN_REGEXES=[r"^https://.*\.example\.com$"])
     def test_origin_found_in_white_lists_regex(self):
-        self.middleware._llm_client = None
+        self.middleware._llmclient = None
         self.middleware._url = None
         result = self.middleware.origin_found_in_white_lists("https://foo.example.com", self.split_url)
         self.assertTrue(result)
 
     @override_settings(CORS_ALLOWED_ORIGINS=["https://example.com"])
     def test__url_in_whitelist(self):
-        self.middleware._llm_client = None
+        self.middleware._llmclient = None
         url = urlsplit("https://example.com")
         result = self.middleware._url_in_whitelist(url)
         self.assertTrue(result)
@@ -72,7 +72,7 @@ class TestSmarterCorsMiddleware(TestAccountMixin):
 
     @override_settings(CORS_ALLOWED_ORIGIN_REGEXES=[r"^https://.*\.example\.com$"])
     def test_regex_domain_match(self):
-        self.middleware._llm_client = None
+        self.middleware._llmclient = None
         result = self.middleware.regex_domain_match("https://foo.example.com")
         self.assertTrue(result)
         result2 = self.middleware.regex_domain_match("https://bar.com")

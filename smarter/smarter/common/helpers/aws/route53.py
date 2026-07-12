@@ -708,7 +708,7 @@ class AWSRoute53(AWSBase):
                 record_type="A",
                 record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
                 record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
-                record_ttl=smarter_settings.llm_client_tasks_default_ttl,
+                record_ttl=smarter_settings.llmclient_tasks_default_ttl,
             )
             verb = "Created" if created else "Verified"
             logger.debug(

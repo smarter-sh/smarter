@@ -146,11 +146,11 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(srm.domain, "testserver")
         self.assertEqual(srm.ip_address, "1.2.3.4")
         self.assertFalse(srm.is_smarter_api)
-        self.assertFalse(srm.is_llm_client)
-        self.assertFalse(srm.is_llm_client_smarter_api_url)
-        self.assertFalse(srm.is_llm_client_named_url)
-        self.assertFalse(srm.is_llm_client_sandbox_url)
-        self.assertFalse(srm.is_llm_client_cli_api_url)
+        self.assertFalse(srm.is_llmclient)
+        self.assertFalse(srm.is_llmclient_smarter_api_url)
+        self.assertFalse(srm.is_llmclient_named_url)
+        self.assertFalse(srm.is_llmclient_sandbox_url)
+        self.assertFalse(srm.is_llmclient_cli_api_url)
         self.assertFalse(srm.is_default_domain)
         self.assertEqual(srm.path, "/")
         self.assertEqual(srm.root_domain, "testserver")
@@ -200,10 +200,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.url, url)
-        self.assertTrue(srm.is_llm_client)
-        self.assertTrue(srm.is_llm_client_named_url)
-        self.assertFalse(srm.is_llm_client_cli_api_url)
-        self.assertFalse(srm.is_llm_client_sandbox_url)
+        self.assertTrue(srm.is_llmclient)
+        self.assertTrue(srm.is_llmclient_named_url)
+        self.assertFalse(srm.is_llmclient_cli_api_url)
+        self.assertFalse(srm.is_llmclient_sandbox_url)
         self.assertTrue(srm.is_smarter_api)
         self.assertIsNotNone(srm.session_key)
         self.assertEqual(srm.domain, "example.3141-5926-5359.api.localhost:9357")
@@ -226,14 +226,14 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
         self.assertEqual(srm.domain, "localhost:9357")
-        self.assertFalse(srm.is_llm_client_named_url)
-        self.assertFalse(srm.is_llm_client_cli_api_url)
+        self.assertFalse(srm.is_llmclient_named_url)
+        self.assertFalse(srm.is_llmclient_cli_api_url)
         self.assertFalse(srm.is_smarter_api)
         self.assertEqual(srm.path, path)
         self.assertTrue(
-            srm.is_llm_client_sandbox_url, f"Expected is_llm_client_sandbox_url to be True for URL {url} but got False"
+            srm.is_llmclient_sandbox_url, f"Expected is_llmclient_sandbox_url to be True for URL {url} but got False"
         )
-        self.assertTrue(srm.is_llm_client)
+        self.assertTrue(srm.is_llmclient)
 
     def test_api_url(self):
         """
@@ -253,10 +253,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
         self.assertEqual(srm.domain, "localhost:9357")
-        self.assertTrue(srm.is_llm_client)
-        self.assertFalse(srm.is_llm_client_named_url)
-        self.assertFalse(srm.is_llm_client_cli_api_url)
-        self.assertTrue(srm.is_llm_client_sandbox_url)
+        self.assertTrue(srm.is_llmclient)
+        self.assertFalse(srm.is_llmclient_named_url)
+        self.assertFalse(srm.is_llmclient_cli_api_url)
+        self.assertTrue(srm.is_llmclient_sandbox_url)
         self.assertTrue(srm.is_smarter_api)
         self.assertEqual(srm.path, path)
 
@@ -278,10 +278,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
         self.assertEqual(srm.domain, "localhost:9357")
-        self.assertTrue(srm.is_llm_client)
-        self.assertFalse(srm.is_llm_client_named_url)
-        self.assertTrue(srm.is_llm_client_cli_api_url)
-        self.assertFalse(srm.is_llm_client_sandbox_url)
+        self.assertTrue(srm.is_llmclient)
+        self.assertFalse(srm.is_llmclient_named_url)
+        self.assertTrue(srm.is_llmclient_cli_api_url)
+        self.assertFalse(srm.is_llmclient_sandbox_url)
         self.assertTrue(srm.is_smarter_api)
         self.assertEqual(srm.path, path)
 
@@ -442,70 +442,70 @@ class TestSmarterRequestMixin(TestAccountMixin):
             pass
         self.assertIsNone(mixin.root_domain)
 
-    @patch.object(SmarterRequestMixin, "is_llm_client_sandbox_url", new=property(lambda self: True))
+    @patch.object(SmarterRequestMixin, "is_llmclient_sandbox_url", new=property(lambda self: True))
     @patch.object(SmarterRequestMixin, "url_path_parts", new=property(lambda self: ["workbench", "example", "config"]))
-    def test_smarter_request_llm_client_name_sandbox_url(self):
-        """Extract llm_client name from sandbox URL."""
+    def test_smarter_request_llmclient_name_sandbox_url(self):
+        """Extract llmclient name from sandbox URL."""
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
 
-        if not isinstance(mixin.smarter_request_llm_client_name, str):
+        if not isinstance(mixin.smarter_request_llmclient_name, str):
             self.fail(
-                f"Expected smarter_request_llm_client_name to be a string but got {type(mixin.smarter_request_llm_client_name)}"
+                f"Expected smarter_request_llmclient_name to be a string but got {type(mixin.smarter_request_llmclient_name)}"
             )
-        self.assertTrue(mixin.smarter_request_llm_client_name.startswith("example"))
+        self.assertTrue(mixin.smarter_request_llmclient_name.startswith("example"))
 
-    @patch.object(SmarterRequestMixin, "is_llm_client_sandbox_url", new=property(lambda self: True))
-    @patch.object(SmarterRequestMixin, "is_llm_client", new=property(lambda self: True))
+    @patch.object(SmarterRequestMixin, "is_llmclient_sandbox_url", new=property(lambda self: True))
+    @patch.object(SmarterRequestMixin, "is_llmclient", new=property(lambda self: True))
     @patch.object(SmarterRequestMixin, "url_path_parts", new=property(lambda self: None))
-    def test_smarter_request_llm_client_name_sandbox_url_exception(self):
-        """Exception in extracting llm_client name from sandbox URL."""
+    def test_smarter_request_llmclient_name_sandbox_url_exception(self):
+        """Exception in extracting llmclient name from sandbox URL."""
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
         mixin._parse_result = None  # type: ignore
 
         try:
-            del mixin.__dict__["smarter_request_llm_client_name"]
+            del mixin.__dict__["smarter_request_llmclient_name"]
         except KeyError:
             pass
         with self.assertLogs("smarter.lib.django.request", level="DEBUG"):
-            _ = mixin.smarter_request_llm_client_name
+            _ = mixin.smarter_request_llmclient_name
 
-    @patch.object(SmarterRequestMixin, "is_llm_client_named_url", new=property(lambda self: False))
-    @patch.object(SmarterRequestMixin, "is_llm_client_sandbox_url", new=property(lambda self: False))
-    @patch.object(SmarterRequestMixin, "is_llm_client_smarter_api_url", new=property(lambda self: True))
-    def test_is_llm_client_smarter_api_url(self):
-        """Smarter api url has no llm_client name."""
+    @patch.object(SmarterRequestMixin, "is_llmclient_named_url", new=property(lambda self: False))
+    @patch.object(SmarterRequestMixin, "is_llmclient_sandbox_url", new=property(lambda self: False))
+    @patch.object(SmarterRequestMixin, "is_llmclient_smarter_api_url", new=property(lambda self: True))
+    def test_is_llmclient_smarter_api_url(self):
+        """Smarter api url has no llmclient name."""
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
         mixin._parse_result = None  # type: ignore
 
         try:
-            del mixin.__dict__["smarter_request_llm_client_name"]
+            del mixin.__dict__["smarter_request_llmclient_name"]
         except KeyError:
             pass
 
-    @patch.object(SmarterRequestMixin, "is_llm_client_named_url", new=property(lambda self: False))
-    @patch.object(SmarterRequestMixin, "is_llm_client_sandbox_url", new=property(lambda self: False))
-    @patch.object(SmarterRequestMixin, "is_llm_client_smarter_api_url", new=property(lambda self: False))
-    @patch.object(SmarterRequestMixin, "is_llm_client_cli_api_url", new=property(lambda self: True))
+    @patch.object(SmarterRequestMixin, "is_llmclient_named_url", new=property(lambda self: False))
+    @patch.object(SmarterRequestMixin, "is_llmclient_sandbox_url", new=property(lambda self: False))
+    @patch.object(SmarterRequestMixin, "is_llmclient_smarter_api_url", new=property(lambda self: False))
+    @patch.object(SmarterRequestMixin, "is_llmclient_cli_api_url", new=property(lambda self: True))
     @patch.object(
         SmarterRequestMixin, "url_path_parts", new=property(lambda self: ["api", "v1", "cli", "prompt", "mybot"])
     )
-    def test_smarter_request_llm_client_name_cli_api_url(self):
-        """Extract llm_client name from CLI API URL."""
+    def test_smarter_request_llmclient_name_cli_api_url(self):
+        """Extract llmclient name from CLI API URL."""
 
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
 
         self.assertEqual(
-            mixin.smarter_request_llm_client_name,
+            mixin.smarter_request_llmclient_name,
             "mybot",
-            f"LLMClient name should be 'mybot' but got {mixin.smarter_request_llm_client_name}",
+            f"LLMClient name should be 'mybot' but got {mixin.smarter_request_llmclient_name}",
         )
 
     def test_is_environment_root_domain_true(self):
@@ -558,8 +558,8 @@ class TestSmarterRequestMixin(TestAccountMixin):
         with patch.object(smarter_settings, "environment_platform_domain", host_name):
             self.assertFalse(mixin.is_environment_root_domain)
 
-    def test_is_llm_client_true(self):
-        """Returns True if any llm_client URL type is True."""
+    def test_is_llmclient_true(self):
+        """Returns True if any llmclient URL type is True."""
 
         host_name = "example.3141-5926-5359.api.localhost:9357"
 
@@ -568,9 +568,9 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
 
-        self.assertTrue(mixin.is_llm_client)
+        self.assertTrue(mixin.is_llmclient)
 
-    def test_is_llm_client_false(self):
+    def test_is_llmclient_false(self):
         """Returns False if not a qualified request."""
 
         host_name = "wikipedia.org"
@@ -580,7 +580,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
 
-        self.assertFalse(mixin.is_llm_client)
+        self.assertFalse(mixin.is_llmclient)
 
     def test_is_smarter_api_true(self):
         """Returns True if 'api' in url_path_parts."""
@@ -606,9 +606,9 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         self.assertFalse(mixin.is_smarter_api)
 
-    def test_is_llm_client_smarter_api_url_true(self):
+    def test_is_llmclient_smarter_api_url_true(self):
         """
-        Returns True for valid smarter API llm_client URL.
+        Returns True for valid smarter API llmclient URL.
 
         Returns True if the URL is of the form:
 
@@ -616,7 +616,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
               path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'prompt']
 
             - http://localhost:9357/api/v1/llm-clients/1556/prompt/
-              path_parts: ['api', 'v1', 'llm_clients', '<int:pk>', 'prompt']
+              path_parts: ['api', 'v1', 'llmclients', '<int:pk>', 'prompt']
         """
         host_name = "localhost:9357"
         response = self.client.get(
@@ -628,20 +628,20 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
         try:
-            del mixin.__dict__["is_llm_client_smarter_api_url"]
+            del mixin.__dict__["is_llmclient_smarter_api_url"]
         except KeyError:
             pass
 
         try:
             # will raise an exception if the db is not initialized
             # and there are not LLMClients in the database.
-            self.assertTrue(mixin.is_llm_client_smarter_api_url)
+            self.assertTrue(mixin.is_llmclient_smarter_api_url)
         # pylint: disable=W0718
         except Exception as e:
             logger.warning("Exception during SmarterRequestMixin instantiation: %s", e)
 
-    def test_is_llm_client_smarter_api_url_false(self):
-        """Returns False for invalid smarter API llm_client URL."""
+    def test_is_llmclient_smarter_api_url_false(self):
+        """Returns False for invalid smarter API llmclient URL."""
 
         host_name = "localhost:9357"
         response = self.client.get(
@@ -650,20 +650,20 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
         try:
-            del mixin.__dict__["is_llm_client_smarter_api_url"]
+            del mixin.__dict__["is_llmclient_smarter_api_url"]
         except KeyError:
             pass
 
         try:
             # will raise an exception if the db is not initialized
             # and there are not LLMClients in the database.
-            self.assertFalse(mixin.is_llm_client_smarter_api_url)
+            self.assertFalse(mixin.is_llmclient_smarter_api_url)
         # pylint: disable=W0718
         except Exception as e:
             logger.warning("Exception during SmarterRequestMixin instantiation: %s", e)
 
-    def test_is_llm_client_cli_api_url_true(self):
-        """Returns True for valid CLI API llm_client URL."""
+    def test_is_llmclient_cli_api_url_true(self):
+        """Returns True for valid CLI API llmclient URL."""
         host_name = "localhost:9357"
         response = self.client.get(
             f"http://{host_name}/api/v1/cli/prompt/example/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
@@ -672,22 +672,22 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         mixin = SmarterRequestMixin(request)
         try:
-            del mixin.__dict__["is_llm_client_cli_api_url"]
+            del mixin.__dict__["is_llmclient_cli_api_url"]
         except KeyError:
             pass
         try:
             # will raise an exception if the db is not initialized
             # and there are not LLMClients in the database.
             mixin = SmarterRequestMixin(request)
-            self.assertTrue(mixin.is_llm_client_smarter_api_url)
+            self.assertTrue(mixin.is_llmclient_smarter_api_url)
         # pylint: disable=W0718
         except Exception as e:
             logger.warning("Exception during SmarterRequestMixin instantiation: %s", e)
 
-        self.assertTrue(mixin.is_llm_client_cli_api_url)
+        self.assertTrue(mixin.is_llmclient_cli_api_url)
 
-    def test_is_llm_client_cli_api_url_false(self):
-        """Returns False for invalid CLI API llm_client URL."""
+    def test_is_llmclient_cli_api_url_false(self):
+        """Returns False for invalid CLI API llmclient URL."""
 
         host_name = "localhost:9357"
         response = self.client.get(
@@ -697,45 +697,45 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         mixin = SmarterRequestMixin(request)
         try:
-            del mixin.__dict__["is_llm_client_cli_api_url"]
+            del mixin.__dict__["is_llmclient_cli_api_url"]
         except KeyError:
             pass
         try:
             # will raise an exception if the db is not initialized
             # and there are not LLMClients in the database.
             mixin = SmarterRequestMixin(request)
-            self.assertFalse(mixin.is_llm_client_smarter_api_url)
+            self.assertFalse(mixin.is_llmclient_smarter_api_url)
         # pylint: disable=W0718
         except Exception as e:
             logger.warning("Exception during SmarterRequestMixin instantiation: %s", e)
 
-        self.assertFalse(mixin.is_llm_client_cli_api_url)
+        self.assertFalse(mixin.is_llmclient_cli_api_url)
 
-    def test_is_llm_client_named_url_true(self):
-        """Returns True for valid named llm_client URL."""
+    def test_is_llmclient_named_url_true(self):
+        """Returns True for valid named llmclient URL."""
         host_name = "example.3141-5926-5359.api.localhost:9357"
         response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
         try:
-            del mixin.__dict__["is_llm_client_named_url"]
+            del mixin.__dict__["is_llmclient_named_url"]
         except KeyError:
             pass
-        self.assertTrue(mixin.is_llm_client_named_url)
+        self.assertTrue(mixin.is_llmclient_named_url)
 
-    def test_is_llm_client_named_url_false(self):
-        """Returns False for invalid named llm_client URL."""
+    def test_is_llmclient_named_url_false(self):
+        """Returns False for invalid named llmclient URL."""
         host_name = "api.localhost:9357"
         response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
         try:
-            del mixin.__dict__["is_llm_client_named_url"]
+            del mixin.__dict__["is_llmclient_named_url"]
         except KeyError:
             pass
-        self.assertFalse(mixin.is_llm_client_named_url)
+        self.assertFalse(mixin.is_llmclient_named_url)
 
-    def test_is_llm_client_sandbox_url_true(self):
+    def test_is_llmclient_sandbox_url_true(self):
         """Returns True for valid sandbox URL."""
 
         host_name = "platform.example.com"
@@ -753,13 +753,13 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
         try:
-            del mixin.__dict__["is_llm_client_sandbox_url"]
+            del mixin.__dict__["is_llmclient_sandbox_url"]
         except KeyError:
             pass
         with patch.object(smarter_settings, "environment_platform_domain", "platform.example.com"):
-            self.assertTrue(mixin.is_llm_client_sandbox_url)
+            self.assertTrue(mixin.is_llmclient_sandbox_url)
 
-    def test_is_llm_client_sandbox_url_false(self):
+    def test_is_llmclient_sandbox_url_false(self):
         """Returns False for invalid sandbox URL."""
 
         host_name = "platform.example.com"
@@ -770,11 +770,11 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
         try:
-            del mixin.__dict__["is_llm_client_sandbox_url"]
+            del mixin.__dict__["is_llmclient_sandbox_url"]
         except KeyError:
             pass
         with patch.object(smarter_settings, "environment_platform_domain", "platform.example.com"):
-            self.assertFalse(mixin.is_llm_client_sandbox_url)
+            self.assertFalse(mixin.is_llmclient_sandbox_url)
 
     def test_is_default_domain_true(self):
         """Returns True if environment_api_domain in url."""
@@ -1142,7 +1142,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
 
-        with patch.object(mixin, "is_llm_client", True):
+        with patch.object(mixin, "is_llmclient", True):
             self.assertTrue(mixin.is_config)
 
     def test_is_dashboard_true(self):
@@ -1232,8 +1232,8 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertIn("auth_header", json_dump)
         self.assertIn("api_token", json_dump)
         self.assertIn("data", json_dump)
-        self.assertIn("llm_client_id", json_dump)
-        self.assertIn("llm_client_name", json_dump)
+        self.assertIn("llmclient_id", json_dump)
+        self.assertIn("llmclient_name", json_dump)
 
         with patch.object(mixin, "is_requestmixin_ready", False):
             json_dump = mixin.to_json()
@@ -1242,5 +1242,5 @@ class TestSmarterRequestMixin(TestAccountMixin):
             self.assertIn("auth_header", json_dump)
             self.assertIn("api_token", json_dump)
             self.assertIn("data", json_dump)
-            self.assertIn("llm_client_id", json_dump)
-            self.assertIn("llm_client_name", json_dump)
+            self.assertIn("llmclient_id", json_dump)
+            self.assertIn("llmclient_name", json_dump)

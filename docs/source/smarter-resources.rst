@@ -37,7 +37,7 @@ the platform:
 **Model Connectivity**
    :doc:`smarter-resources/smarter-provider` and :doc:`smarter-resources/smarter-llmhost` are the two
    ways a model reaches Smarter — a third-party API such as OpenAI or Anthropic, or a self-hosted,
-   freely downloadable model you run and manage yourself. :doc:`smarter-resources/smarter-llm_client`
+   freely downloadable model you run and manage yourself. :doc:`smarter-resources/smarter-llmclient`
    sits in front of both, giving prompts and applications one consistent interface regardless of which
    kind of model is actually answering the request. :doc:`smarter-resources/smarter-orchestrator` sits
    in front of LLMClient in turn, coordinating a collection of LLMClients — as Harnesses, each with its
@@ -83,7 +83,7 @@ toward different parts of the stack, without needing to understand the whole thi
    smarter-resources/smarter-authtoken
    smarter-resources/smarter-connection
    smarter-resources/smarter-guardrail
-   smarter-resources/smarter-llm_client
+   smarter-resources/smarter-llmclient
    smarter-resources/smarter-llmhost
    smarter-resources/smarter-mcpclient
    smarter-resources/smarter-orchestrator

@@ -85,10 +85,10 @@ Three concepts you need to understand:
 - **LLMClient** — a named resource that bundles a provider, a model, a system
   prompt, and optional data plugins. This is what you interact with.
 - **Manifest** — the YAML file that defines any Smarter resource. Every
-  llm_client, provider, and plugin is described this way.
+  llmclient, provider, and plugin is described this way.
 
-You interact with **llm_clients**, not providers directly. Your administrator has
-already created an llm_client backed by Claude Code — you just need its name.
+You interact with **llmclients**, not providers directly. Your administrator has
+already created an llmclient backed by Claude Code — you just need its name.
 
 Step-by-Step: Using Claude Code
 ================================
@@ -98,9 +98,9 @@ Step 4: Find Your LLMClient
 
 .. code-block:: bash
 
-   smarter get llm_clients
+   smarter get llmclients
 
-This lists every llm_client assigned to your account. Note the name of an llm_client
+This lists every llmclient assigned to your account. Note the name of an llmclient
 configured with the Anthropic provider.
 
 Step 5: Chat from the Terminal
@@ -108,7 +108,7 @@ Step 5: Chat from the Terminal
 
 .. code-block:: bash
 
-   smarter chat <llm_client-name>
+   smarter chat <llmclient-name>
 
 This opens an interactive session with streaming responses. Type your prompt
 and press Enter.
@@ -120,14 +120,14 @@ Useful commands while exploring:
    # Confirm the Anthropic provider is active
    smarter describe provider anthropic
 
-   # Inspect an llm_client's full configuration
-   smarter describe llm_client <llm_client-name>
+   # Inspect an llmclient's full configuration
+   smarter describe llmclient <llmclient-name>
 
 Step 6: Chat from the Browser
 --------------------------------
 
 1. Navigate to **Workbench** in the left sidebar of the Smarter web console.
-2. Select your Claude Code llm_client.
+2. Select your Claude Code llmclient.
 3. Type a prompt and press Enter.
 
 The Workbench lets you tune system prompts, temperature, and max tokens —
@@ -140,7 +140,7 @@ Step 7: Integrate into Your Workflow
 
 .. code-block:: bash
 
-   cat my_script.py | smarter chat <llm_client-name> --prompt "Review this code for bugs"
+   cat my_script.py | smarter chat <llmclient-name> --prompt "Review this code for bugs"
 
 **REST API** — call Smarter from scripts or CI/CD pipelines. See the
 :doc:`/external-links/swagger` for endpoint details.
@@ -158,7 +158,7 @@ Run this sequence end to end:
 
    smarter status                    # platform is reachable
    smarter get providers             # anthropic is listed and active
-   smarter chat <llm_client-name>
+   smarter chat <llmclient-name>
 
 In the chat session, type:
 
@@ -184,9 +184,9 @@ Troubleshooting
    Run ``smarter configure`` and re-enter your API key. You can also pass it
    inline with ``--api_key``.
 
-**"No llm_clients found"**
-   Your administrator has not yet assigned an llm_client to your account. Ask them
-   to grant you access to an llm_client configured with the Anthropic provider.
+**"No llmclients found"**
+   Your administrator has not yet assigned an llmclient to your account. Ask them
+   to grant you access to an llmclient configured with the Anthropic provider.
 
 **Slow or timed-out responses**
    Run ``smarter status``. If the platform is healthy, the delay is on
@@ -198,8 +198,8 @@ Troubleshooting
    then contact your administrator.
 
 **Unexpected model behavior**
-   Run ``smarter describe llm_client <llm_client-name>`` to confirm which model the
-   llm_client is using. Different Claude models have different capabilities and
+   Run ``smarter describe llmclient <llmclient-name>`` to confirm which model the
+   llmclient is using. Different Claude models have different capabilities and
    context window sizes.
 
 .. seealso::

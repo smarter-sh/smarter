@@ -45,13 +45,13 @@ Smarter Plugin, ``example_configuration``. The ``example_configuration`` Plugin 
     apiVersion: smarter.sh/v1
     kind: LLMClient
     metadata:
-      description: "An example llm_client with tool calling and Smarter Plugins."
+      description: "An example llmclient with tool calling and Smarter Plugins."
       name: example
       version: 0.1.0
     spec:
       config:
         defaultModel: gpt-4o-mini
-        defaultSystemRole: You are a helpful llm_client.
+        defaultSystemRole: You are a helpful llmclient.
         provider: openai
       functions:
       - get_current_weather

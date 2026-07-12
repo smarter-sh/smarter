@@ -26,7 +26,7 @@ class TestConversionUtils(SmarterTestBase):
             rfc1034_compliant_str("")
 
     def test_rfc1034_compliant_to_snake(self):
-        self.assertEqual(rfc1034_compliant_to_snake("my-llm_client-2025"), "my_llm_client_2025")
+        self.assertEqual(rfc1034_compliant_to_snake("my-llmclient-2025"), "my_llmclient_2025")
         self.assertEqual(rfc1034_compliant_to_snake("simplelabel"), "simplelabel")
         self.assertEqual(rfc1034_compliant_to_snake("this-is-a-test-label"), "this_is_a_test_label")
         with self.assertRaises(Exception):

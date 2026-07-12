@@ -54,17 +54,17 @@ urlpatterns = [
         name=ProviderReverseNames.listview_api,
     ),
     path(
-        "react-integration/api/clone/<int:llm_client_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:llmclient_id>/<str:new_name>/",
         ProviderListApiCloneView.as_view(),
         name=ProviderReverseNames.listview_api_clone,
     ),
     path(
-        "react-integration/api/delete/<int:llm_client_id>/",
+        "react-integration/api/delete/<int:llmclient_id>/",
         ProviderListApiDeleteView.as_view(),
         name=ProviderReverseNames.listview_api_delete,
     ),
     path(
-        "react-integration/api/rename/<int:llm_client_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:llmclient_id>/<str:new_name>/",
         ProviderListApiRenameView.as_view(),
         name=ProviderReverseNames.listview_api_rename,
     ),

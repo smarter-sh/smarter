@@ -33,7 +33,7 @@ SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
 SMARTER_DEFAULT_REACTJS_APP_LOADER_URL = "https://cdn.smarter.sh/ui-prompt/app-loader.js"
 
 # The following are used in the React app
-# to store the llm_client prompt session key and debug mode settings
+# to store the llmclient prompt session key and debug mode settings
 # as browser cookies. The React app has constants
 # for these values as well which should be kept in sync.
 SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
