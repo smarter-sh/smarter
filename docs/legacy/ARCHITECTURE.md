@@ -80,7 +80,7 @@ Be aware that there are many considerations for getting React to work inside a D
 
 ## Smarter REST API
 
-API document is located here, [Smarter Docs - API](https://platform.smarter.sh/docs/api/) and source code is located here, [smarter/apps/api/](../smarter/smarter/apps/api/)
+API document is located here, [Smarter Docs - API](https://docs.smarter.sh/api/) and source code is located here, [smarter/apps/api/](../smarter/smarter/apps/api/)
 
 Not to be confused with Smarter's flagship product, customer-implemented custom REST API's, Smarter additionally has its own REST API, which is a Python Django project implementing it's proprietary Plugin model, along with additional models for commercializing the service.
 

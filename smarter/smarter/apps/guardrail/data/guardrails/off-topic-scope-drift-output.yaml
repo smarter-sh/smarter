@@ -1,0 +1,50 @@
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  annotations:
+  - color: blue
+  - size: medium
+  description: For a scoped assistant (e.g. an ed-tech course helper that should
+    stick to course material, or a support bot that should stick to product
+    questions), flags completions that wander into unrelated territory —
+    general chit-chat, unrelated technical support, or topics the product
+    owner doesn't want the assistant opining on. Set to flag rather than block
+    since scope drift is a product/UX concern, not a safety one; someone
+    reviews the flagged transcripts to decide whether the system prompt or
+    this guardrail's judge prompt needs tightening.
+  name: off_topic_scope_drift_output
+  tags:
+  - off-topic
+  - scope
+  - product
+  version: 1.0.0
+spec:
+  config:
+    action: flag
+    category: off_topic
+    confidence_threshold: 0.75
+    config:
+      model_id: gpt-4o-mini
+      temperature: 0.0
+    fallback_message: ''
+    guardrail_type: output
+    is_active: true
+    is_blocking: true
+    match_strategy: llm_judge
+    pattern: |-
+      You are reviewing responses from an assistant whose intended scope is:
+      course material, programming exercises, and platform how-to questions
+      for an ed-tech product. Read the response below and decide whether it
+      substantively answers something clearly outside that scope (e.g.
+      general life advice, unrelated current events, or topics with no
+      connection to the course or platform).
+
+      Assistant response:
+      """
+      {text}
+      """
+
+      Respond with a JSON object only, no other text:
+      {{"triggered": <true|false>, "confidence": <0.0-1.0>, "rationale": "<one sentence>"}}
+    priority: 70
+    severity: 1

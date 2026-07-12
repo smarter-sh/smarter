@@ -14,6 +14,9 @@ from smarter.apps.account.utils import (
     smarter_cached_objects,
     valid_resource_owners_for_user,
 )
+from smarter.apps.guardrail.caching import (
+    get_cached_guardrails_available_to_user_profile,
+)
 from smarter.apps.llmclient.manifest.models.llmclient.const import MANIFEST_KIND
 from smarter.apps.llmclient.manifest.models.llmclient.metadata import (
     SAMLLMClientMetadata,
@@ -28,6 +31,7 @@ from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientAPIKey,
     LLMClientFunctions,
+    LLMClientGuardrails,
     LLMClientPlugin,
 )
 from smarter.apps.plugin.models import PluginMeta
@@ -717,6 +721,7 @@ class SAMLLMClientBroker(AbstractBroker):
             config=config,
             plugins=get_plugin_examples_by_name(),
             functions=["date_calculator", "get_current_weather"],
+            guardrails=["security_injection_input", "jailbreak_llm_judge_catchall_input"],
             apiKey="snake_case_api_key_name",
         )
         status = SAMLLMClientStatus(
@@ -972,6 +977,36 @@ class SAMLLMClientBroker(AbstractBroker):
                             message=f"Function {function} not found. Valid functions are: {LLMClientFunctions.choices_list()}",
                         )
                     _, created = LLMClientFunctions.objects.get_or_create(llmclient=self.llmclient, name=function)
+                    if created:
+                        logger.debug(
+                            "%s.apply() attached Function %s to LLMClient %s",
+                            self.formatted_class_name,
+                            function,
+                            self.llmclient.name,
+                        )
+
+            # LLMClientGuardrails: add what's missing, remove what's in the model but not in the manifest
+            # -------------
+            for guardrail in LLMClientGuardrails.objects.filter(llmclient=self.llmclient):
+                if guardrail.guardrail not in self.manifest.spec.guardrails:
+                    guardrail.delete()
+                    logger.debug(
+                        "%s.apply() Detached Function %s from LLMClient %s",
+                        self.formatted_class_name,
+                        guardrail.guardrail,
+                        self.llmclient.name,
+                    )
+
+            guardrails = get_cached_guardrails_available_to_user_profile(self.user_profile)  # type: ignore
+            valid_guardrails = [g.name for g in guardrails]
+            if self.manifest.spec.guardrails:
+                for guardrail in self.manifest.spec.guardrails:
+                    if guardrail not in valid_guardrails:
+                        return self.json_response_err_notfound(
+                            command=command,
+                            message=f"Function {function} not found. Valid guardrails are: {valid_guardrails}",
+                        )
+                    _, created = LLMClientFunctions.objects.get_or_create(llmclient=self.llmclient, name=guardrail)
                     if created:
                         logger.debug(
                             "%s.apply() attached Function %s to LLMClient %s",

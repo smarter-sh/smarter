@@ -1,4 +1,4 @@
-"""Django URL patterns for the MCPClient app."""
+"""Django URL patterns for the MCPClient app API."""
 
 from django.urls import include, path
 from django.views.generic import RedirectView

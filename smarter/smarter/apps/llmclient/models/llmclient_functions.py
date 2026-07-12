@@ -1,4 +1,4 @@
-"""All models for the OpenAI Function Calling API app."""
+"""LLMClientFunctions model."""
 
 from typing import List, Optional
 

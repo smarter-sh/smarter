@@ -996,7 +996,7 @@ resolve the issue, contact the IT helpdesk and include:
    * - Smarter CLI reference
      - ``https://docs.smarter.sh/en/latest/smarter-framework/smarter-cli.html``
    * - Smarter manifest overview
-     - ``https://platform.smarter.sh/docs/manifests/``
+     - ``https://docs.smarter.sh/manifests/``
    * - Smarter CLI download
      - ``https://smarter.sh/cli``
    * - Smarter Provider manifest reference (infrastructure team)

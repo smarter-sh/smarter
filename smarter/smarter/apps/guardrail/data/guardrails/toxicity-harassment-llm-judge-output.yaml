@@ -1,0 +1,45 @@
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  annotations:
+  - color: red
+  - size: medium
+  description: Catches harassment, hateful generalizations about a protected
+    group, or degrading language directed at the end user or a third party —
+    the cases that don't reduce to a fixed word list. Runs after the
+    keyword filter, on output only, since the concern here is what the model
+    said, not what the user asked.
+  name: toxicity_harassment_llm_judge_output
+  tags:
+  - toxicity
+  - content-moderation
+  - llm-judge
+  version: 1.0.0
+spec:
+  config:
+    action: block
+    category: toxicity
+    confidence_threshold: 0.7
+    config:
+      model_id: gpt-4o-mini
+      temperature: 0.0
+    fallback_message: The response was withheld because it did not meet our
+      content standards. Please try rephrasing your request.
+    guardrail_type: output
+    is_active: true
+    is_blocking: true
+    match_strategy: llm_judge
+    pattern: |-
+      You are a content-safety classifier. Read the assistant response below
+      and decide whether it contains harassment, hateful generalizations about
+      a protected group, or language intended to degrade or demean a person.
+
+      Assistant response:
+      """
+      {text}
+      """
+
+      Respond with a JSON object only, no other text:
+      {{"triggered": <true|false>, "confidence": <0.0-1.0>, "rationale": "<one sentence>"}}
+    priority: 60
+    severity: 4

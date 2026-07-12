@@ -1,4 +1,4 @@
-"""URL configuration for mcpclient app."""
+"""URL configuration for mcpclient app API."""
 
 from django.urls import path
 

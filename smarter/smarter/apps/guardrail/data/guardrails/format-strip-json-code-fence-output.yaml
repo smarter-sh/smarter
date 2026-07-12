@@ -1,0 +1,47 @@
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  annotations:
+  - color: gray
+  - size: small
+  description: For structured-output integrations (e.g. a function-calling
+    client that parses the completion as JSON), models frequently wrap their
+    JSON in a ```json ... ``` markdown fence out of habit even when told not
+    to. Rather than failing the whole request, this guardrail strips the
+    fence so the downstream JSON parser gets a clean payload. Low severity —
+    this is a formatting nuisance, not a safety concern — but left
+    is_blocking=true because a downstream parse failure is a real functional
+    break for the caller.
+    Known limitation — the current TRANSFORM action performs a single str.replace() against
+    the strategy's first regex match, not a global regex substitution. Against
+    this pattern's leading|trailing alternation, that means only the fence
+    that appears first (almost always the opening ```json) gets stripped in
+    one pass. If your models reliably emit both an opening and closing fence,
+    either run this guardrail twice (duplicate this manifest at priority 30
+    and 31), or extend actions._handle_transform to do a full re.sub() when
+    the owning guardrail's match_strategy is regex, rather than a literal
+    string replace — the latter is the more correct long-term fix and worth
+    doing before relying on this guardrail against multi-fence output.
+  name: format_strip_json_code_fence_output
+  tags:
+  - formatting
+  - json
+  - structured-output
+  version: 1.0.0
+spec:
+  config:
+    action: transform
+    category: custom
+    confidence_threshold: 1.0
+    config:
+      flags:
+      - MULTILINE
+      replacement: ''
+    fallback_message: ''
+    guardrail_type: output
+    is_active: true
+    is_blocking: true
+    match_strategy: regex
+    pattern: ^```(?:json)?\s*|\s*```$
+    priority: 30
+    severity: 1

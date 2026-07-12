@@ -26,7 +26,7 @@ This tutorial assumes you already have the following:
 - A Smarter account (provided by your team lead) and the ability to log in to
   the Smarter web console
 - The **Smarter CLI** (``smarter``) installed and authenticated on your
-  workstation — see `Smarter CLI documentation <https://platform.smarter.sh/docs/>`_
+  workstation — see `Smarter CLI documentation <https://docs.smarter.sh/>`_
 - **Claude Code** installed (``npm install -g @anthropic-ai/claude-code``)
 - A terminal emulator (PowerShell, bash, or zsh)
 - ``git`` installed and configured with your GitHub credentials
@@ -318,7 +318,7 @@ Your work is now synchronized with your remote repository on GitHub.
 
 .. seealso::
 
-   - `Smarter Platform Documentation <https://platform.smarter.sh/docs/>`_
+   - `Smarter Platform Documentation <https://docs.smarter.sh/>`_
    - `Smarter Technical Documentation <https://docs.smarter.sh/>`_
    - `Anthropic Claude Code Documentation <https://docs.anthropic.com/en/docs/claude-code>`_
    - `Smarter CLI Repository <https://github.com/smarter-sh/smarter-cli>`_

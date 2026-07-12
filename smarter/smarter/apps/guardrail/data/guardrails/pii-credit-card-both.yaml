@@ -1,0 +1,32 @@
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  annotations:
+  - color: orange
+  - size: small
+  description: Detects Visa, Mastercard, Amex, and Discover card number formats
+    anywhere in the conversation — a user pasting a card number, or a model
+    hallucinating/echoing one back — and redacts the match. Runs on both input
+    and output since either side of the exchange can introduce a card number.
+  name: pii_credit_card_both
+  tags:
+  - pii
+  - security
+  - compliance
+  - pci
+  version: 1.0.0
+spec:
+  config:
+    action: redact
+    category: pii
+    confidence_threshold: 1.0
+    config:
+      flags: []
+    fallback_message: ''
+    guardrail_type: both
+    is_active: true
+    is_blocking: true
+    match_strategy: regex
+    pattern: \b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\b
+    priority: 10
+    severity: 4

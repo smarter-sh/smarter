@@ -5,6 +5,7 @@ from .llmclient_api_key import LLMClientAPIKey
 from .llmclient_custom_domain import LLMClientCustomDomain
 from .llmclient_custom_domain_dns import LLMClientCustomDomainDNS
 from .llmclient_functions import LLMClientFunctions
+from .llmclient_guardrail import LLMClientGuardrails
 from .llmclient_helper import LLMClientHelper
 from .llmclient_plugin import LLMClientPlugin
 from .llmclient_requests import LLMClientRequests
@@ -17,6 +18,7 @@ __all__ = [
     "LLMClientFunctions",
     "LLMClientPlugin",
     "LLMClientRequests",
+    "LLMClientGuardrails",
     "LLMClient",
     "LLMClientHelper",
     "get_cached_llmclient_by_request",
