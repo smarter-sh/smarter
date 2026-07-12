@@ -90,7 +90,7 @@ business systems, or building large-scale multi-agent applications, Smarter
 provides a unified framework for managing AI resources throughout their entire
 lifecycle.
 
-- **From scratch** | :doc:`smarter-platform/installation/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://platform.smarter.sh/docs/learn/>`__
+- **From scratch** | :doc:`smarter-platform/installation/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://docs.smarter.sh/learn/>`__
 - **Platform**
 
   - A proxy server that facilitates secure, governed, auditable access to AI providers and resources without exposing secrets or direct access to the underlying vendor accounts.

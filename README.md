@@ -32,14 +32,14 @@ system for defining, testing, and running AI workflows across environments.
 - Connect LLMs to APIs and SQL databases without writing custom orchestration code.
 - [command-line interface](https://smarter.sh/cli) for Windows, macOS, Linux
   and Docker
-- [rest api](https://platform.smarter.sh/docs/swagger/)
+- [rest api](https://docs.smarter.sh/swagger/)
 - web console / prompt engineer workbench
 - [SDKs](https://github.com/smarter-sh/smarter-python),
   [UI components](https://www.npmjs.com/package/@smarter.sh/ui-chat),
   [CLI tools](https://smarter.sh/cli),
   and [IDE integrations](https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest)
   for building on Smarter
-- publicly accessible [online documentation](https://platform.smarter.sh/docs/)
+- publicly accessible [online documentation](https://docs.smarter.sh/)
   and self onboarding resources
 - open source UI components for jump starting projects
 

@@ -1,0 +1,32 @@
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  annotations:
+  - color: orange
+  - size: small
+  description: Detects US Social Security Numbers (###-##-#### format) in the
+    user's prompt before it is sent to the model, and redacts them in place.
+    Prevents SSNs from ever reaching the LLM provider's logs or the completion
+    payload.
+  name: pii_ssn_input
+  tags:
+  - pii
+  - security
+  - compliance
+  version: 1.0.0
+spec:
+  config:
+    action: redact
+    category: pii
+    confidence_threshold: 1.0
+    config:
+      flags:
+      - IGNORECASE
+    fallback_message: ''
+    guardrail_type: input
+    is_active: true
+    is_blocking: true
+    match_strategy: regex
+    pattern: \b\d{3}-\d{2}-\d{4}\b
+    priority: 10
+    severity: 4

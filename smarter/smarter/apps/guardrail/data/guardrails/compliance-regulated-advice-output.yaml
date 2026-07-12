@@ -1,0 +1,46 @@
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  annotations:
+  - color: purple
+  - size: medium
+  description: Flags completions that phrase themselves as specific financial,
+    legal, or medical advice/diagnosis rather than general information — the
+    kind of phrasing that creates regulatory exposure (unlicensed advice) even
+    when the underlying content is accurate. Deliberately a keyword match on
+    the phrasing pattern ("you should invest in...", "I diagnose you with...",
+    "my legal advice is...") rather than the topic itself, since discussing
+    these topics informationally is fine; asserting personalized advice is
+    the actual compliance concern.
+  name: compliance_regulated_advice_output
+  tags:
+  - compliance
+  - legal
+  - financial
+  - medical
+  version: 1.0.0
+spec:
+  config:
+    action: flag
+    category: compliance
+    confidence_threshold: 1.0
+    config:
+      case_sensitive: false
+      whole_word: false
+    fallback_message: ''
+    guardrail_type: output
+    is_active: true
+    is_blocking: true
+    match_strategy: keyword
+    pattern: |-
+      you should invest in,
+      I recommend you buy,
+      guaranteed returns,
+      I diagnose you with,
+      you are diagnosed with,
+      take this medication,
+      my legal advice is,
+      you should plead,
+      this constitutes legal advice
+    priority: 25
+    severity: 3

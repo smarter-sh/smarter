@@ -1,0 +1,37 @@
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  annotations:
+  - color: red
+  - size: medium
+  description: If completions are rendered into a chat widget as HTML/markdown
+    (rather than displayed as plain text), a model that echoes back
+    user-supplied HTML/script content — whether hallucinated, copied from a
+    tool result, or coaxed out via injection — becomes a stored-XSS vector.
+    Blocks any completion containing a <script> tag, inline event handler
+    (onerror=, onload=, etc.), or a javascript-scheme URI. This is a
+    defense-in-depth guardrail, not a substitute for output-encoding/sanitizing
+    on the render side — keep both.
+  name: format_block_script_injection_output
+  tags:
+  - formatting
+  - security
+  - xss
+  version: 1.0.0
+spec:
+  config:
+    action: block
+    category: custom
+    confidence_threshold: 1.0
+    config:
+      flags:
+      - IGNORECASE
+    fallback_message: The response was withheld because it contained content
+      that isn't safe to render.
+    guardrail_type: output
+    is_active: true
+    is_blocking: true
+    match_strategy: regex
+    pattern: (<script[\s>])|(on(?:error|load|click|mouseover)\s*=)|(javascript:)
+    priority: 15
+    severity: 5

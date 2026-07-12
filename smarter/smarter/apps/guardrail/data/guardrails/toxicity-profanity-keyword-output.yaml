@@ -1,0 +1,37 @@
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  annotations:
+  - color: yellow
+  - size: small
+  description: Cheap, high-recall keyword filter for the most common profanity
+    in model completions. Deliberately conservative (severity 2, redact not
+    block) — it exists to catch stray coarse language in an otherwise fine
+    response rather than to police tone; genuine harassment/hate content is
+    handled by the LLM-judge toxicity guardrail with a harder action. The
+    actual word list lives in config.pattern in your environment and should
+    be maintained by whoever owns your trust & safety policy, not hardcoded
+    into application code.
+  name: toxicity_profanity_keyword_output
+  tags:
+  - toxicity
+  - content-moderation
+  version: 1.0.0
+spec:
+  config:
+    action: redact
+    category: toxicity
+    confidence_threshold: 1.0
+    config:
+      case_sensitive: false
+      whole_word: true
+    fallback_message: ''
+    guardrail_type: output
+    is_active: true
+    is_blocking: true
+    match_strategy: keyword
+    pattern: |-
+      replace-with-your-org-approved-word-list,
+      maintained-by-trust-and-safety-team
+    priority: 20
+    severity: 2

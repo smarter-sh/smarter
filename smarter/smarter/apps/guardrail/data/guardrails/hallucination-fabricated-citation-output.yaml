@@ -1,0 +1,51 @@
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  annotations:
+  - color: yellow
+  - size: medium
+  description: Models frequently fabricate plausible-looking citations —
+    a real domain with a fake path, or an invented paper/report title
+    attributed to a real organization. This guardrail asks a judge model to
+    check whether any URL, DOI, or "according to <source>" claim in the
+    response is either (a) unverifiable from general knowledge, or (b)
+    contradicted by well-established facts about that source. Set to flag
+    rather than block — the judge itself can be wrong about obscure-but-real
+    sources, so a human/reviewer makes the final call rather than the
+    guardrail silently discarding a possibly-legitimate citation.
+  name: hallucination_fabricated_citation_output
+  tags:
+  - hallucination
+  - factuality
+  - citations
+  version: 1.0.0
+spec:
+  config:
+    action: flag
+    category: hallucination
+    confidence_threshold: 0.65
+    config:
+      model_id: gpt-4o-mini
+      temperature: 0.0
+    fallback_message: ''
+    guardrail_type: output
+    is_active: true
+    is_blocking: true
+    match_strategy: llm_judge
+    pattern: |-
+      You are fact-checking an AI assistant's response for fabricated
+      citations. Read the response below. If it cites a URL, DOI, paper
+      title, or names a specific source ("according to X", "a 2023 study
+      by Y"), assess whether that citation looks fabricated or
+      unverifiable, as opposed to a real, checkable source. If the response
+      contains no citations at all, this should not trigger.
+
+      Assistant response:
+      """
+      {text}
+      """
+
+      Respond with a JSON object only, no other text:
+      {{"triggered": <true|false>, "confidence": <0.0-1.0>, "rationale": "<one sentence>"}}
+    priority: 65
+    severity: 3

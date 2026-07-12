@@ -1,0 +1,46 @@
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  annotations:
+  - color: purple
+  - size: small
+  description: Detects a user invoking a data-subject right (GDPR "right to
+    erasure", CCPA "do not sell/share", data access/portability requests) in
+    the prompt. These carry statutory response-time obligations that an LLM
+    completion cannot discharge on its own, so the guardrail routes the
+    request to a human/compliance queue rather than letting the model attempt
+    to handle it conversationally. Runs on input since the trigger is what the
+    user asked, not what the model would have said.
+  name: compliance_data_subject_request_input
+  tags:
+  - compliance
+  - gdpr
+  - ccpa
+  - privacy
+  version: 1.0.0
+spec:
+  config:
+    action: escalate
+    category: compliance
+    confidence_threshold: 1.0
+    config:
+      case_sensitive: false
+      whole_word: false
+    fallback_message: ''
+    guardrail_type: input
+    is_active: true
+    is_blocking: true
+    match_strategy: keyword
+    pattern: |-
+      delete my data,
+      delete my account,
+      right to be forgotten,
+      right to erasure,
+      do not sell my personal information,
+      do not sell my data,
+      opt out of data collection,
+      GDPR request,
+      CCPA request,
+      data subject access request
+    priority: 20
+    severity: 3

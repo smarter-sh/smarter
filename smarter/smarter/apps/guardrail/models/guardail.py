@@ -1,6 +1,5 @@
-"""All models for the OpenAI Function Calling API app."""
+"""Guardrail model."""
 
-from django.conf import settings
 from django.db import models
 
 from smarter.apps.account.models import (
@@ -46,7 +45,7 @@ class GuardrailAction(models.TextChoices):
 
 
 class Guardrail(MetaDataWithOwnershipModel):
-    """Implements the Guardrail API model."""
+    """Implements the Guardrail model."""
 
     # pylint: disable=C0115
     class Meta:
@@ -99,4 +98,4 @@ class Guardrail(MetaDataWithOwnershipModel):
     )
 
 
-__all__ = ["Guardrail"]
+__all__ = ["Guardrail", "GuardrailType", "GuardrailCategory", "MatchStrategy", "GuardrailAction"]

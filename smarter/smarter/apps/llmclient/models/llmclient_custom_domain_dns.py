@@ -1,4 +1,4 @@
-"""All models for the OpenAI Function Calling API app."""
+"""LLMClientCustomDomainDNS model."""
 
 from django.db import models
 

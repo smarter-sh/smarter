@@ -1,4 +1,4 @@
-"""All models for the OpenAI Function Calling API app."""
+"""LLMClientHelper model."""
 
 from functools import cached_property
 from typing import Any, Optional

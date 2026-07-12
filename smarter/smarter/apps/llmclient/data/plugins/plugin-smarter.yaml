@@ -86,7 +86,7 @@ spec:
         This documentation includes manifest documentation, self-onboarding tutorials, command-line interface (CLI) documentation,
         api documentation, developer resources, and the Smarter developer team.
 
-        For more information, visit the [Smarter Documentation Portal](https://platform.smarter.sh/docs/) or contact
+        For more information, visit the [Smarter Documentation Portal](https://docs.smarter.sh/) or contact
         Lawrence McDaniel at +1 (617) 834-6172 or email [lpm0073@gmail.com](mailto:lpm0073@gmail.com).
 
         Check out Smarter on GitHub for code samples, at [https://github.com/smarter-sh/](https://github.com/smarter-sh/).
@@ -109,7 +109,7 @@ spec:
         the Smarter platform provides a powerful API for managing AI resources. The API is RESTful and is accessible
         via HTTP requests. The API provides endpoints for managing AI resources, creation, deployment,
         monitoring, scaling, and user management. The API is documented in the Smarter documentation portal at
-        [https://platform.smarter.sh/docs/api/](https://platform.smarter.sh/docs/api/).
+        [https://docs.smarter.sh/api/](https://docs.smarter.sh/api/).
 
         example API endpoints:
         - GET /api/v1/llmclients
@@ -284,12 +284,12 @@ spec:
         or visit any of these links.
 
         - [Smarter website](https://smarter.sh/)
-        - [Smarter Plugin documentation](https://platform.smarter.sh/docs/plugins/)
-        - [Smarter documentation home page](https://platform.smarter.sh/docs/)
-        - [Smarter manifest documentation](https://platform.smarter.sh/docs/manifests/)
-        - [Smarter self-onboarding tutorial](https://platform.smarter.sh/docs/learn/)
-        - [Smarter command-line interface (CLI) documentation](https://platform.smarter.sh/docs/cli/)
-        - [Smarter developer resources](https://platform.smarter.sh/docs/developers/)
+        - [Smarter Plugin documentation](https://docs.smarter.sh/plugins/)
+        - [Smarter documentation home page](https://docs.smarter.sh/)
+        - [Smarter manifest documentation](https://docs.smarter.sh/manifests/)
+        - [Smarter self-onboarding tutorial](https://docs.smarter.sh/learn/)
+        - [Smarter command-line interface (CLI) documentation](https://docs.smarter.sh/cli/)
+        - [Smarter developer resources](https://docs.smarter.sh/developers/)
         - [Smarter developer team](https://smarter.sh/home/about/)
         - [Smarter origin story](https://smarter.sh/smarter-origin-story/)
         - [Smarter Certification Program](https://smarter.sh/certification-program/). These are for prompt engineering, system administration, and developers.

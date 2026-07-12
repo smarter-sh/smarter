@@ -125,11 +125,15 @@ class SAMLLMClientSpec(AbstractSAMSpecBase):
     plugins: Optional[List[str]] = Field(
         None,
         description=f"{class_identifier}.searchTerms[list]. Optional. The Plugins to add to the "
-        f"{MANIFEST_KIND}. Plugins are a proprietary extensibility model for tool calling and are not the same as OpenAI plugins. See https://platform.smarter.sh/docs/plugins/ for more information.",
+        f"{MANIFEST_KIND}. Plugins are a proprietary extensibility model for tool calling and are not the same as OpenAI plugins. See https://docs.smarter.sh/plugins/ for more information.",
     )
     functions: Optional[List[str]] = Field(
         None,
-        description=f"{class_identifier}.functions[list]. Optional. The built-in Smarter Functions to add to the {MANIFEST_KIND}. Example: ['get_current_weather']. These are built-in backing functions written in Python that are fully compatible with OpenAI API-compatible function calling. These are not the same as OpenAI functions. See https://platform.smarter.sh/docs/functions/ for more information.",
+        description=f"{class_identifier}.functions[list]. Optional. The built-in Smarter Functions to add to the {MANIFEST_KIND}. Example: ['get_current_weather']. These are built-in backing functions written in Python that are fully compatible with OpenAI API-compatible function calling. These are not the same as OpenAI functions. See https://docs.smarter.sh/ for more information.",
+    )
+    guardrails: Optional[List[str]] = Field(
+        None,
+        description=f"{class_identifier}.guardrails[list]. Optional. The built-in Smarter Guardrails to add to the {MANIFEST_KIND}. Example: ['security_injection_input']. These are built-in backing functions written in Python that are fully compatible with OpenAI API-compatible function calling. These are not the same as OpenAI functions. See https://docs.smarter.sh/ for more information.",
     )
     apiKey: Optional[str] = Field(
         None,
