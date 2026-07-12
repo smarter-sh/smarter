@@ -64,7 +64,7 @@ class Command(SmarterCommand):
         2. Create an admin user for the Account.
         3. Apply example manifests from GitHub.
         4. Add plugin examples.
-        5. Deploy builtin example llm_clients.
+        5. Deploy builtin example llmclients.
         6. Create StackAcademy AI resources.
 
         .. note::
@@ -138,11 +138,11 @@ class Command(SmarterCommand):
             repo_version=2,
         )
 
-        # 4. Add builtin plugin examples and deploy llm_clients.
+        # 4. Add builtin plugin examples and deploy llmclients.
 
         call_command("add_plugin_examples", username=username)
-        call_command("deploy_example_llm_client", account_number=account_number)
-        call_command("deploy_builtin_llm_clients", account_number=account_number)
+        call_command("deploy_example_llmclient", account_number=account_number)
+        call_command("deploy_builtin_llmclients", account_number=account_number)
 
         # 5. Setup Stackademy AI resources, used for training and testing.
 
@@ -216,7 +216,7 @@ class Command(SmarterCommand):
         2. Create an admin user for the Account.
         3. Apply example manifests from GitHub.
         4. Add plugin examples.
-        5. Deploy builtin example llm_clients.
+        5. Deploy builtin example llmclients.
         6. Create StackAcademy AI resources.
         """
         self.handle_begin()

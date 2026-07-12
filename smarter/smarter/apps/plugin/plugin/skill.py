@@ -14,7 +14,7 @@ A Plugin that returns a SKILL.md-format skill packaged within the Plugin itself.
     :language: yaml
     :caption: 1.) Example Skill Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llm_client/data/llm-clients/llm_client-example.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/llmclient/data/llm-clients/llmclient-example.yaml
     :language: yaml
     :caption: 2.) Example LLMClient Manifest
 """
@@ -110,8 +110,8 @@ class SkillPlugin(PluginBase):
 
     **Example Use Cases:**
 
-        - Teaching an llm_client how to fill out a PDF form given field values.
-        - Teaching an llm_client how to assemble a slide deck from a content outline.
+        - Teaching an llmclient how to fill out a PDF form given field values.
+        - Teaching an llmclient how to assemble a slide deck from a content outline.
         - Providing a repeatable, tool-assisted procedure for a domain-specific task.
     """
 

@@ -4,7 +4,7 @@ from http import HTTPStatus
 from urllib.parse import urlencode
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient
 from smarter.common.api import SmarterApiVersions
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import logging
@@ -42,15 +42,15 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
 
         self.query_params = urlencode({"uid": self.uid})
 
-        self.llm_client = self.llm_client_factory()
+        self.llmclient = self.llmclient_factory()
 
     def tearDown(self):
-        if self.llm_client:
-            self.llm_client.delete()
+        if self.llmclient:
+            self.llmclient.delete()
         super().tearDown()
 
-    def llm_client_factory(self):
-        llm_client = LLMClient.objects.create(
+    def llmclient_factory(self):
+        llmclient = LLMClient.objects.create(
             name=self.name,
             user_profile=self.user_profile,
             description="Test LLMClient",
@@ -62,7 +62,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
             app_assistant="Smarty Pants",
             app_welcome_message="Welcome to Smarter!",
         )
-        return llm_client
+        return llmclient
 
     def validate_response(self, response: dict) -> None:
         self.assertIsInstance(response, dict)
@@ -76,7 +76,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
             SMARTER_CHAT_SESSION_KEY_NAME,
             "sandbox_mode",
             "debug_mode",
-            "llm_client",
+            "llmclient",
             "meta_data",
             "history",
             "meta_data",
@@ -102,11 +102,11 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                 "session_key": "a506bd92f58682c8280d756066f18ce2d2a3381b7fb7bb13fbe54dd5d114d24f",
                 "sandbox_mode": False,
                 "debug_mode": True,
-                "llm_client": {
+                "llmclient": {
                     "id": 372,
-                    "url_llm_client": "http://localhost:9357/api/v1/llm-clients/372/prompt/",
+                    "url_llmclient": "http://localhost:9357/api/v1/llm-clients/372/prompt/",
                     "account": {"accountNumber": "7154-0706-7820"},
-                    "default_system_role": "The current date/time is Wednesday, 2026-01-07T23:25:02+0000\nYou are a helpful llm_client. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+                    "default_system_role": "The current date/time is Wednesday, 2026-01-07T23:25:02+0000\nYou are a helpful llmclient. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
                     "created_at": "2026-01-07T23:25:02.548999Z",
                     "updated_at": "2026-01-07T23:25:02.549006Z",
                     "name": "smarter_test_base_364beb79380074c9",
@@ -143,12 +143,12 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                         "user_agent": "",
                         "url": "",
                         "account": None,
-                        "llm_client": None,
+                        "llmclient": None,
                     },
                     "prompt_history": [],
                     "chat_tool_call_history": [],
                     "chat_plugin_usage_history": [],
-                    "llm_client_request_history": [],
+                    "llmclient_request_history": [],
                     "plugin_selector_history": [],
                 },
                 "meta_data": {
@@ -158,7 +158,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                     "api_token": "****c10e",
                     "auth_header": "Token 5d65****",
                     "cache_key": "887e673f7be35b7190caf0934bcdc09c2286f9f941799310444fcd70d5e3971a",
-                    "llm_client": {
+                    "llmclient": {
                         "id": 372,
                         "created_at": "2026-01-07T23:25:02.548999Z",
                         "updated_at": "2026-01-07T23:25:02.549006Z",
@@ -172,7 +172,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                         "deployed": False,
                         "provider": "openai",
                         "default_model": None,
-                        "default_system_role": "You are a helpful llm_client. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+                        "default_system_role": "You are a helpful llmclient. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
                         "default_temperature": 0.5,
                         "default_max_tokens": 2048,
                         "app_name": "Smarter",
@@ -188,23 +188,23 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                         "tls_certificate_issuance_status": "No Certificate",
                         "tags": [],
                         "tagged_items": [],
-                        "url_llm_client": "http://localhost:9357/api/v1/llm-clients/372/prompt/",
+                        "url_llmclient": "http://localhost:9357/api/v1/llm-clients/372/prompt/",
                     },
-                    "llm_client_custom_domain": None,
-                    "llm_client_id": None,
-                    "llm_client_name": "smarter_test_base_364beb79380074c9",
+                    "llmclient_custom_domain": None,
+                    "llmclient_id": None,
+                    "llmclient_name": "smarter_test_base_364beb79380074c9",
                     "class_name": "LLMClientHelper",
                     "data": {},
                     "domain": "testserver",
                     "environment_api_domain": "api.localhost:9357",
                     "ip_address": "127.0.0.1",
                     "is_authentication_required": False,
-                    "is_llm_client": True,
-                    "is_llm_client_cli_api_url": True,
-                    "is_llm_client_named_url": False,
-                    "is_llm_client_sandbox_url": False,
-                    "is_llm_client_smarter_api_url": False,
-                    "is_llm_clienthelper_ready": True,
+                    "is_llmclient": True,
+                    "is_llmclient_cli_api_url": True,
+                    "is_llmclient_named_url": False,
+                    "is_llmclient_sandbox_url": False,
+                    "is_llmclient_smarter_api_url": False,
+                    "is_llmclienthelper_ready": True,
                     "is_config": True,
                     "is_custom_domain": False,
                     "is_dashboard": False,

@@ -28,7 +28,7 @@ export type ProviderTabbedViewContext = Omit<
 
 const providerTabbedListViewContext: ProviderTabbedViewContext = {
   objectType: {} as LLMClient,
-  objectTypeName: "llm_client",
+  objectTypeName: "llmclient",
   tabs: tabs,
   ListView: ListView,
   CardView: CardView,
@@ -41,7 +41,7 @@ interface AppProps {
 function App({ sessionContext }: AppProps) {
   const title = "LLM Clients (aka 'Harnesses')";
   const icon = "ki-book-open";
-  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-llm_client.html";
+  const docsUrl = "https://docs.smarter.sh/smarter-resources/smarter-llmclient.html";
   const helpText = "LLMClients implement of what is commonly known as an LLM 'Harness'. It provides the execution environment surrounding a large language model, managing the prompts, conversation state, tool execution, configuration, security, and runtime behavior required to transform a foundation model into a reliable, production-ready application. LLMClients support both interactive conversations with human users and fully automated workflows. In addition to orchestrating requests to a language model, they leverage the Smarter Plugin architecture to invoke tools, retrieve data from private systems, access external APIs, execute code, and integrate other runtime capabilities. ";
   return (
     <>

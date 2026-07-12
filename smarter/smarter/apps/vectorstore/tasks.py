@@ -32,9 +32,9 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 @app.task(
     bind=True,
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llm_client_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llm_client_tasks_celery_max_retries,
-    queue=smarter_settings.llm_client_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
 def embed_and_load_pdf(self) -> bool:
     """Celery task to load pdf documents into a vectorstore."""

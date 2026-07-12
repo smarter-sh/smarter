@@ -92,7 +92,7 @@ ALLOWED_HOSTS = smarter_settings.allowed_hosts
 A list of strings representing the host/domain names that this Django site can serve.
 
 Smarter implements its own middleware to validate host names.
-See smarter.apps.llm_client.middleware.security.SmarterSecurityMiddleware.
+See smarter.apps.llmclient.middleware.security.SmarterSecurityMiddleware.
 
 See:
 
@@ -738,7 +738,7 @@ INSTALLED_APPS = [
     "smarter.apps.dashboard",
     "smarter.apps.docs",
     "smarter.apps.guardrail",
-    "smarter.apps.llm_client",
+    "smarter.apps.llmclient",
     "smarter.apps.llmhost",
     "smarter.apps.mcpclient",
     "smarter.apps.orchestrator",
@@ -793,7 +793,7 @@ MIDDLEWARE = [
     # -------------------------------
     "smarter.lib.logging.middleware.SmarterRequestLogContextMiddleware",
     #
-    # handles cors for deployed llm_clients.
+    # handles cors for deployed llmclients.
     # -------------------------------
     "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
     #
@@ -812,7 +812,7 @@ MIDDLEWARE = [
     #
     #
     # this replaces django.middleware.csrf.SmarterCsrfViewMiddleware
-    # to add llm_client-specific CSRF handling
+    # to add llmclient-specific CSRF handling
     # -------------------------------
     "smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware",
     #
@@ -823,7 +823,7 @@ MIDDLEWARE = [
     # simple middleware to block requests for common sensitive files
     # like .env, private key files, etc.
     # -------------------------------
-    "smarter.apps.llm_client.middleware.security.SmarterSecurityMiddleware",
+    "smarter.apps.llmclient.middleware.security.SmarterSecurityMiddleware",
     #
     # -------------------------------
     # to handle 'already associated error from python social auth'
@@ -862,7 +862,7 @@ ROOT_HOSTCONF = "smarter.hosts"
 The root host configuration module for django-hosts.
 
 Smarter hosts multiple subdomains
-for platform, API, and llm_client apps. These are defined in smarter.hosts.
+for platform, API, and llmclient apps. These are defined in smarter.hosts.
 
 See: https://django-hosts.readthedocs.io/en/latest/
 """

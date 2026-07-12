@@ -13,7 +13,7 @@ database, serving the :doc:`configuration object <prompt/example-config>` to the
 ReactJS chat component, handling REST API :doc:`prompt requests <prompt/example-request>`,
 serving :doc:`prompt responses <prompt/example-response>`, and orchestrating the
 Smarter resources associated with a session, including :doc:`Account <smarter-account>`,
-:doc:`LLMClient <smarter-llm_client>`, and :doc:`Plugin <smarter-plugin>`.
+:doc:`LLMClient <smarter-llmclient>`, and :doc:`Plugin <smarter-plugin>`.
 
 Smarter sessions do not expire unless deleted by an administrator as part of MySQL database disk space maintenance operations.
 
@@ -21,8 +21,8 @@ Smarter sessions do not expire unless deleted by an administrator as part of MyS
 .. note::
 
   Smarter sessions are distinct from Smarter LLMClients. An LLMClient is a resource that defines the
-  configuration of an llm_client, including its system prompt, plugins, and other settings. A session,
-  by contrast, is an instance of a conversation with an llm_client, comprising the complete history of
+  configuration of an llmclient, including its system prompt, plugins, and other settings. A session,
+  by contrast, is an instance of a conversation with an llmclient, comprising the complete history of
   messages exchanged during that conversation.
 
   Smarter sessions originate in Smarter Prompt, are passed to the ReactJS component as part of the
@@ -52,7 +52,7 @@ Usage
     - :doc:`Smarter API <../smarter-framework/smarter-api>`
     - :doc:`Smarter Journal <../smarter-framework/developer-reference/smarter-journal>`
     - :doc:`Smarter Account <../smarter-resources/smarter-account>`
-    - :doc:`Smarter LLMClients <../smarter-resources/smarter-llm_client>`
+    - :doc:`Smarter LLMClients <../smarter-resources/smarter-llmclient>`
     - :doc:`Smarter Plugins <../smarter-resources/smarter-plugin>`
 
 

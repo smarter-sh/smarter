@@ -24,7 +24,7 @@ A PLugin that uses a remote SQL database server to retrieve its return data.
     :language: yaml
     :caption: 3.) Example Stackademy SQL Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llm_client-sql.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llmclient-sql.yaml
     :language: yaml
     :caption: 4.) Example Stackademy LLMClient Manifest
 """

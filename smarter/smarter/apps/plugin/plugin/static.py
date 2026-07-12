@@ -14,7 +14,7 @@ A PLugin that returns a static json object stored in the Plugin itself.
     :language: yaml
     :caption: 1.) Example Static Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/llm_client/data/llm-clients/llm_client-example.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/llmclient/data/llm-clients/llmclient-example.yaml
     :language: yaml
     :caption: 2.) Example LLMClient Manifest
 """
@@ -103,7 +103,7 @@ class StaticPlugin(PluginBase):
 
     **Example Use Cases:**
 
-        - Providing static product information for an llm_client.
+        - Providing static product information for an llmclient.
         - Supplying company contact details or promotional codes.
         - Returning biographical information about a company founder.
     """

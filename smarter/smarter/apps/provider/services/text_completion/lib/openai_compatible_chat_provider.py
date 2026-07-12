@@ -460,7 +460,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.total_tokens = response.usage.total_tokens
         self.reference = response.system_fingerprint
 
-        resource_locators = [self.provider.record_locator, self.prompt.llm_client.record_locator]  # type: ignore[assignment]
+        resource_locators = [self.provider.record_locator, self.prompt.llmclient.record_locator]  # type: ignore[assignment]
         self._insert_charge_by_type(resource_locators, ChargeTypes.PROMPT_COMPLETION.value)
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
@@ -531,8 +531,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             response=response,
         )
         resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
-        if isinstance(self.prompt, Prompt) and self.prompt.llm_client:
-            resource_locators.append(self.prompt.llm_client.record_locator)
+        if isinstance(self.prompt, Prompt) and self.prompt.llmclient:
+            resource_locators.append(self.prompt.llmclient.record_locator)
         self._insert_charge_by_type(resource_locators, ChargeTypes.TOOL.value)
         self.db_insert_chat_tool_call(
             function_name=function_name, function_args=function_args, request=request, response=response
@@ -558,7 +558,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             input_text=self.input_text,
         )
         resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
-        resource_locators.append(self.prompt.llm_client.record_locator)  # type: ignore[union-attr]
+        resource_locators.append(self.prompt.llmclient.record_locator)  # type: ignore[union-attr]
         resource_locators.append(plugin.plugin_meta.record_locator)  # type: ignore[union-attr]
         if plugin.plugin_data and hasattr(plugin.plugin_data, "connection"):
             resource_locators.append(plugin.plugin_data.connection.record_locator)  # type: ignore[union-attr]
@@ -901,9 +901,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         try:
             self.validate()
-            self.model = self.prompt.llm_client.default_model or self.default_model
-            self.temperature = self.prompt.llm_client.default_temperature or self.default_temperature
-            self.max_completion_tokens = self.prompt.llm_client.default_max_tokens or self.default_max_tokens
+            self.model = self.prompt.llmclient.default_model or self.default_model
+            self.temperature = self.prompt.llmclient.default_temperature or self.default_temperature
+            self.max_completion_tokens = self.prompt.llmclient.default_max_tokens or self.default_max_tokens
             if not self.data:
                 raise SmarterValueError(f"{self.formatted_class_name}: data is required")
             self.input_text = self.get_input_text_prompt(data=self.data)
@@ -933,7 +933,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                     if plugin.selected(user=self.user_profile.user, input_text=self.input_text, messages=self.messages):
                         self.handle_plugin_selected(plugin=plugin)
 
-            # add all functions that are included in the llm_client definition
+            # add all functions that are included in the llmclient definition
             if self.functions:
                 for function in self.functions:
                     self.handle_function_provided(function)

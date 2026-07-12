@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("account", "0003_alter_aggregatedcharges_options"),
-        ("llm_client", "0002_initial"),
+        ("llmclient", "0002_initial"),
         ("prompt", "0001_initial"),
         (
             "taggit",
@@ -247,11 +247,11 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "llm_client",
+                    "llmclient",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="orchestrator_memberships",
-                        to="llm_client.llmclient",
+                        to="llmclient.llmclient",
                     ),
                 ),
                 (
@@ -272,12 +272,12 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="orchestrator",
-            name="llm_clients",
+            name="llmclients",
             field=models.ManyToManyField(
                 help_text="LLMClients (Harnesses) available to this Orchestrator.",
                 related_name="orchestrators",
                 through="orchestrator.OrchestratorHarness",
-                to="llm_client.llmclient",
+                to="llmclient.llmclient",
             ),
         ),
         migrations.CreateModel(
@@ -361,7 +361,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name="orchestratorharness",
-            unique_together={("orchestrator", "llm_client")},
+            unique_together={("orchestrator", "llmclient")},
         ),
         migrations.AlterUniqueTogether(
             name="orchestrator",

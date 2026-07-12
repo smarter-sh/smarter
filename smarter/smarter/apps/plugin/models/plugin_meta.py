@@ -151,9 +151,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     @property
     def rfc1034_compliant_kind(self) -> Optional[str]:
         """
-        Returns a URL-friendly kind for the llm_client.
+        Returns a URL-friendly kind for the llmclient.
 
-        This is a convenience property that returns an RFC 1034-compliant kind for the llm_client,
+        This is a convenience property that returns an RFC 1034-compliant kind for the llmclient,
         suitable for use in URLs and DNS labels.
 
         **Example:**

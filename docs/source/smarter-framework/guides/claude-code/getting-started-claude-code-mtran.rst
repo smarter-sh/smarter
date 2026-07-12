@@ -75,7 +75,7 @@ easier to follow.
 Smarter Manifests
 -----------------
 
-Smarter manages all AI resources — llm_clients, plugins, models, users — through
+Smarter manages all AI resources — llmclients, plugins, models, users — through
 **YAML manifests**. A manifest is a declarative document, inspired by
 Kubernetes, with four main sections:
 
@@ -136,7 +136,7 @@ Step 1 — Scaffold a LLMClient Manifest
 
 Use the Smarter CLI to generate a blank LLMClient manifest::
 
-   smarter manifest llm_client -o yaml > napl-claude-copilot.yaml
+   smarter manifest llmclient -o yaml > napl-claude-copilot.yaml
 
 This produces a YAML file pre-populated with every available field and
 sensible defaults. Open it in your editor.
@@ -204,7 +204,7 @@ Deploy your new LLMClient resource::
 Smarter will validate the manifest, create the LLMClient, and set its state to
 ``deployed``. Confirm with::
 
-   smarter get llm_clients
+   smarter get llmclients
 
 You should see ``NAPLClaudeCopilot`` listed with a ``deployed`` status.
 
@@ -283,7 +283,7 @@ Troubleshooting
 
 **Manifest validation fails on apply**
    Double-check YAML indentation — YAML is whitespace-sensitive. Use the
-   ``smarter manifest llm_client -o yaml`` output as a reference. Ensure
+   ``smarter manifest llmclient -o yaml`` output as a reference. Ensure
    ``apiVersion`` is ``smarter.sh/v1`` and ``kind`` is ``LLMClient``.
 
 **Claude Code responds but Smarter shows no logs**

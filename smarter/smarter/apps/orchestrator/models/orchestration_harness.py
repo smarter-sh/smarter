@@ -2,7 +2,7 @@
 
 from django.db import models
 
-from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
@@ -35,7 +35,7 @@ class OrchestratorHarness(TimestampedModel):
         on_delete=models.CASCADE,
         related_name="harnesses",
     )
-    llm_client = models.ForeignKey(
+    llmclient = models.ForeignKey(
         LLMClient,
         on_delete=models.CASCADE,
         related_name="orchestrator_memberships",
@@ -55,8 +55,8 @@ class OrchestratorHarness(TimestampedModel):
     class Meta:
         verbose_name = "Orchestrator Harness"
         verbose_name_plural = "Orchestrator Harnesses"
-        unique_together = ("orchestrator", "llm_client")
+        unique_together = ("orchestrator", "llmclient")
         ordering = ["execution_order"]
 
     def __str__(self) -> str:
-        return f"{self.orchestrator.name} · {self.llm_client} ({self.role})"
+        return f"{self.orchestrator.name} · {self.llmclient} ({self.role})"

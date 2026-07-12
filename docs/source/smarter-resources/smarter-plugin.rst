@@ -68,7 +68,7 @@ the tool should be presented to the LLM.
 .. seealso::
 
     - :doc:`Smarter API Manifest (SAM) <../smarter-framework/smarter-api>`
-    - :doc:`Smarter LLMClient <../smarter-resources/smarter-llm_client>`
+    - :doc:`Smarter LLMClient <../smarter-resources/smarter-llmclient>`
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
     - :doc:`Smarter Chat <../smarter-framework/developer-reference/react-integration/smarter-chat>`
 
@@ -94,7 +94,7 @@ Usage
 Example Manifest
 -----------------------
 
-.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llm_client-sql.yaml
+.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llmclient-sql.yaml
     :language: yaml
     :caption: Example SQL Plugin Manifest
 

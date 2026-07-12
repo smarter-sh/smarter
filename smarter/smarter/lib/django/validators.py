@@ -479,25 +479,25 @@ class SmarterValidator:
         return account_number
 
     @staticmethod
-    def validate_llm_client_slug(slug: str) -> str:
-        """Validate llm_client slug format.
+    def validate_llmclient_slug(slug: str) -> str:
+        """Validate llmclient slug format.
 
-        Checks if the provided string is a valid llm_client slug.
+        Checks if the provided string is a valid llmclient slug.
 
-        :param slug: The llm_client slug to validate.
+        :param slug: The llmclient slug to validate.
         :type slug: str
-        :raises SmarterValueError: If the llm_client slug is not valid.
-        :returns: The validated llm_client slug.
+        :raises SmarterValueError: If the llmclient slug is not valid.
+        :returns: The validated llmclient slug.
         :rtype: str
 
         Example::
 
-            SmarterValidator.validate_llm_client_slug("example-slug")  # returns "example-slug"
-            SmarterValidator.validate_llm_client_slug("invalid slug")  # raises SmarterValueError
+            SmarterValidator.validate_llmclient_slug("example-slug")  # returns "example-slug"
+            SmarterValidator.validate_llmclient_slug("invalid slug")  # raises SmarterValueError
         """
-        logger.debug("%s.validate_llm_client_slug() %s", logger_prefix, slug)
+        logger.debug("%s.validate_llmclient_slug() %s", logger_prefix, slug)
         if not re.match(SmarterValidator.VALID_LLM_CLIENT_SLUG_PATTERN, slug):
-            raise SmarterValueError(f"Invalid llm_client slug {slug}")
+            raise SmarterValueError(f"Invalid llmclient slug {slug}")
         return slug
 
     @staticmethod
@@ -923,27 +923,27 @@ class SmarterValidator:
             return False
 
     @staticmethod
-    def is_valid_llm_client_slug(slug: str) -> bool:
-        """Check if llm_client slug is valid.
+    def is_valid_llmclient_slug(slug: str) -> bool:
+        """Check if llmclient slug is valid.
 
-        Checks whether the provided llm_client slug is valid.
+        Checks whether the provided llmclient slug is valid.
 
-        :param slug: The llm_client slug to check.
+        :param slug: The llmclient slug to check.
         :type slug: str
-        :returns: True if the llm_client slug is valid, otherwise False.
+        :returns: True if the llmclient slug is valid, otherwise False.
         :rtype: bool
 
         Example::
 
-            SmarterValidator.is_valid_llm_client_slug("example-slug")  # returns True
-            SmarterValidator.is_valid_llm_client_slug("invalid slug")  # returns False
+            SmarterValidator.is_valid_llmclient_slug("example-slug")  # returns True
+            SmarterValidator.is_valid_llmclient_slug("invalid slug")  # returns False
         """
-        logger.debug("%s.is_valid_llm_client_slug() %s", logger_prefix, slug)
+        logger.debug("%s.is_valid_llmclient_slug() %s", logger_prefix, slug)
         try:
-            SmarterValidator.validate_llm_client_slug(slug)
+            SmarterValidator.validate_llmclient_slug(slug)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_llm_client_slug() invalid %s", logger_prefix, slug)
+            logger.debug("%s.is_valid_llmclient_slug() invalid %s", logger_prefix, slug)
             return False
 
     @staticmethod

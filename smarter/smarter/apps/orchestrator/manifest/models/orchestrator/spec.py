@@ -55,8 +55,8 @@ class SAMOrchestratorSpecConfig(BaseModel):
 
     @field_validator("harnesses")
     @classmethod
-    def validate_unique_llm_clients(cls, v: list[SAMOrchestratorHarnessConfig]) -> list[SAMOrchestratorHarnessConfig]:
-        # Mirrors the model's unique_together on (orchestrator, llm_client) —
+    def validate_unique_llmclients(cls, v: list[SAMOrchestratorHarnessConfig]) -> list[SAMOrchestratorHarnessConfig]:
+        # Mirrors the model's unique_together on (orchestrator, llmclient) —
         # the same LLMClient can't be attached to an Orchestrator twice.
         names = [harness.llmClientName for harness in v]
         duplicates = {name for name in names if names.count(name) > 1}

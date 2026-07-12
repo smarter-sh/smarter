@@ -24,14 +24,14 @@ class Command(SmarterCommand):
     This command is used to create the Stackademy AI resources
     used for training and testing. It creates the following:
 
-    Sql-based llm_client
+    Sql-based llmclient
     --------------------
     - Secret for SqlConnection
     - SqlConnection
     - Stackademy SqlPlugin
     - LLMClient using the Stackademy SqlPlugin
 
-    Api-based llm_client
+    Api-based llmclient
     --------------------
     - Secret for ApiConnection
     - ApiConnection
@@ -90,7 +90,7 @@ class Command(SmarterCommand):
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml",
                 "smarter/apps/connection/data/sample-connections/smarter-test-db.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml",
-                "smarter/apps/plugin/data/stackademy/stackademy-llm_client-sql.yaml",
+                "smarter/apps/plugin/data/stackademy/stackademy-llmclient-sql.yaml",
             ]
             for file_path in sql_file_paths:
                 apply(file_path)
@@ -102,7 +102,7 @@ class Command(SmarterCommand):
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-api.yaml",
                 "smarter/apps/connection/data/sample-connections/smarter-test-api.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-plugin-api.yaml",
-                "smarter/apps/plugin/data/stackademy/stackademy-llm_client-api.yaml",
+                "smarter/apps/plugin/data/stackademy/stackademy-llmclient-api.yaml",
             ]
             for file_path in api_file_paths:
                 apply(file_path)

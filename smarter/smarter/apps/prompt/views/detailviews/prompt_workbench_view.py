@@ -19,10 +19,10 @@ from django.http import (
 )
 from django.shortcuts import render
 
-from smarter.apps.llm_client.models import (
+from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientHelper,
-    get_cached_llm_client_by_request,
+    get_cached_llmclient_by_request,
 )
 from smarter.apps.prompt.models import Prompt, PromptHelper
 from smarter.apps.prompt.signals import prompt_session_invoked
@@ -83,7 +83,7 @@ class SmarterPromptSession(SmarterHelperMixin):
 
     _chat: Optional[Prompt] = None
     _chat_helper: Optional[PromptHelper] = None
-    _llm_client: Optional[LLMClient] = None
+    _llmclient: Optional[LLMClient] = None
     request: Optional[HttpRequest] = None
     _session_key: str
 
@@ -93,26 +93,26 @@ class SmarterPromptSession(SmarterHelperMixin):
         class_name = f"{__name__}.{SmarterPromptSession.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
-    def __init__(self, request: HttpRequest, session_key: str, *args, llm_client: Optional[LLMClient] = None, **kwargs):
+    def __init__(self, request: HttpRequest, session_key: str, *args, llmclient: Optional[LLMClient] = None, **kwargs):
         super().__init__()
         verbose_logger.debug(
-            "SmarterPromptSession().__init__() called with session_key=%s, llm_client=%s", session_key, llm_client
+            "SmarterPromptSession().__init__() called with session_key=%s, llmclient=%s", session_key, llmclient
         )
         self.request = request
         if not isinstance(session_key, str):
             logger.error("%s - session_key is not a string: %s", self.formatted_class_name, type(session_key))
         self._session_key = session_key
 
-        if llm_client:
-            self._llm_client = llm_client
-            self.user_profile = llm_client.user_profile
+        if llmclient:
+            self._llmclient = llmclient
+            self.user_profile = llmclient.user_profile
 
         # leaving this in place as a reminder that we need one or the other
-        if not self.session_key and not self.llm_client:
-            logger.error("%s - either session_key or llm_client must be provided", self.formatted_class_name)
+        if not self.session_key and not self.llmclient:
+            logger.error("%s - either session_key or llmclient must be provided", self.formatted_class_name)
 
         self._chat_helper = PromptHelper(
-            request, *args, session_key=self.session_key, llm_client=self.llm_client, **kwargs
+            request, *args, session_key=self.session_key, llmclient=self.llmclient, **kwargs
         )
         self._chat = self._chat_helper.prompt
 
@@ -122,7 +122,7 @@ class SmarterPromptSession(SmarterHelperMixin):
 
     def __str__(self):
         return (
-            f"{SmarterPromptSession.__name__}[{id(self)}](llm_client={self.llm_client}, session_key={self.session_key})"
+            f"{SmarterPromptSession.__name__}[{id(self)}](llmclient={self.llmclient}, session_key={self.session_key})"
         )
 
     def __repr__(self):
@@ -147,8 +147,8 @@ class SmarterPromptSession(SmarterHelperMixin):
         return self._session_key
 
     @property
-    def llm_client(self):
-        return self._llm_client
+    def llmclient(self):
+        return self._llmclient
 
     @property
     def prompt(self):
@@ -221,8 +221,8 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     reactjs_cdn_path = smarter_settings.smarter_reactjs_app_loader_path
     reactjs_loader_url = smarter_settings.smarter_reactjs_app_loader_url
 
-    llm_client: Optional[LLMClient] = None
-    llm_client_helper: Optional[LLMClientHelper] = None
+    llmclient: Optional[LLMClient] = None
+    llmclient_helper: Optional[LLMClientHelper] = None
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
@@ -295,27 +295,27 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 self.account,
                 self.user_profile.user,
             )
-            # first try to avoid some quite-expensive steps by looking for the llm_client
+            # first try to avoid some quite-expensive steps by looking for the llmclient
             # in the cache based on the request.
-            self.llm_client = get_cached_llm_client_by_request(request=self.smarter_request)
-            if not self.llm_client:
-                self.llm_client_helper = LLMClientHelper(
+            self.llmclient = get_cached_llmclient_by_request(request=self.smarter_request)
+            if not self.llmclient:
+                self.llmclient_helper = LLMClientHelper(
                     request=self.smarter_request,
                     session_key=self.session_key,
                     account=self.account,
                     user=self.user,
                     user_profile=self.user_profile,
                 )
-                self.llm_client = self.llm_client_helper.llm_client if self.llm_client_helper.llm_client else None
-            if self.llm_client:
+                self.llmclient = self.llmclient_helper.llmclient if self.llmclient_helper.llmclient else None
+            if self.llmclient:
                 verbose_logger.debug(
-                    "%s.dispatch() - set llm_client=%s from self.llm_client_helper",
+                    "%s.dispatch() - set llmclient=%s from self.llmclient_helper",
                     self.formatted_class_name,
-                    self.llm_client,
+                    self.llmclient,
                 )
             else:
                 logger.debug(
-                    "%s.dispatch() - no llm_client found for request. Returning 404. Request URL: %s, Session Key: %s",
+                    "%s.dispatch() - no llmclient found for request. Returning 404. Request URL: %s, Session Key: %s",
                     self.formatted_class_name,
                     request.build_absolute_uri(),
                     self.session_key,
@@ -323,7 +323,7 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 return SmarterHttpResponseNotFound(request=request, error_message="LLMClient not found")
         except LLMClient.DoesNotExist:
             logger.debug(
-                "%s.dispatch() - LLMClient.DoesNotExist. No llm_client found for request. Returning 404. Request URL: %s, Session Key: %s",
+                "%s.dispatch() - LLMClient.DoesNotExist. No llmclient found for request. Returning 404. Request URL: %s, Session Key: %s",
                 self.formatted_class_name,
                 request.build_absolute_uri(),
                 self.session_key,
@@ -332,7 +332,7 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
-                "%s.dispatch() - Exception occurred while getting llm_client: %s. "
+                "%s.dispatch() - Exception occurred while getting llmclient: %s. "
                 "Request URL: %s, Session Key: %s\nStack trace: %s",
                 self.formatted_class_name,
                 str(e),
@@ -342,9 +342,9 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             )
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
-        if not self.llm_client:
+        if not self.llmclient:
             logger.debug(
-                "%s.dispatch() - no llm_client found for request after exception handling. Returning 404. Request URL: %s, Session Key: %s",
+                "%s.dispatch() - no llmclient found for request after exception handling. Returning 404. Request URL: %s, Session Key: %s",
                 self.formatted_class_name,
                 request.build_absolute_uri(),
                 self.session_key,
@@ -357,7 +357,7 @@ class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             "chatapp_workbench": {
                 "div_id": smarter_settings.smarter_reactjs_root_div_id,
                 "app_loader_url": self.reactjs_loader_url,
-                "llm_client_api_url": self.llm_client.sandbox_url,
+                "llmclient_api_url": self.llmclient.sandbox_url,
                 "toggle_metadata": True,
                 "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
                 "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter prompt session, not the Django session.

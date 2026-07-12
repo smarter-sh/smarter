@@ -22,7 +22,7 @@ from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.apps.docs.views.base import DocsError
-from smarter.apps.llm_client.exceptions import SmarterLLMClientException
+from smarter.apps.llmclient.exceptions import SmarterLLMClientException
 from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
     SmarterChatappViewError,
@@ -321,7 +321,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
         The manifest name is used to identify the resource
         within a Kind. For example, the manifest name for a LLMClient resource is the
-        name of the llm_client. The manifest name is used to identify the resource
+        name of the llmclient. The manifest name is used to identify the resource
         within a Kind. The name can be passed from inside the raw manifest data, or
         it can be passed as part of a url path.
 

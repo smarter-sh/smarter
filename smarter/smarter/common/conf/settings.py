@@ -181,7 +181,7 @@ class Settings(BaseSettings):
         A list of strings representing the host/domain names that this Django site can serve.
 
         Smarter implements its own middleware to validate host names.
-        See smarter.apps.llm_client.middleware.security.SmarterSecurityMiddleware.
+        See smarter.apps.llmclient.middleware.security.SmarterSecurityMiddleware.
 
         See: https://docs.djangoproject.com/en/stable/ref/settings/#allowed-hosts
 
@@ -1283,16 +1283,16 @@ class Settings(BaseSettings):
         except ValueError as e:
             raise SmarterConfigurationError("could not validate chat_cache_expiration") from e
 
-    llm_client_cache_expiration: int = Field(
+    llmclient_cache_expiration: int = Field(
         settings_defaults.LLM_CLIENT_CACHE_EXPIRATION,
         gt=0,
-        description="The llm_client cache expiration time in seconds for cached llm_client data.",
+        description="The llmclient cache expiration time in seconds for cached llmclient data.",
         title="LLMClient Cache Expiration",
     )
     """
-    The llm_client cache expiration time in seconds for cached llm_client data.
+    The llmclient cache expiration time in seconds for cached llmclient data.
 
-    This setting defines how long cached llm_client data should be considered valid before it is
+    This setting defines how long cached llmclient data should be considered valid before it is
     refreshed or invalidated. A shorter expiration time may lead to more frequent
     cache refreshes, while a longer expiration time can improve performance by reducing
     the number of cache lookups.
@@ -1302,14 +1302,14 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
-    @before_field_validator("llm_client_cache_expiration")
-    def parse_llm_client_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
-        """Validates the 'llm_client_cache_expiration' field.
+    @before_field_validator("llmclient_cache_expiration")
+    def parse_llmclient_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'llmclient_cache_expiration' field.
 
         Args:
-            v (Optional[Union[int, str]]): the llm_client_cache_expiration value to validate
+            v (Optional[Union[int, str]]): the llmclient_cache_expiration value to validate
         Returns:
-            int: The validated llm_client_cache_expiration.
+            int: The validated llmclient_cache_expiration.
         """
         if isinstance(v, int):
             return v
@@ -1318,21 +1318,21 @@ class Settings(BaseSettings):
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
             if int_value < 0:
-                raise SmarterConfigurationError(f"llm_client_cache_expiration {int_value} must be a positive integer.")
+                raise SmarterConfigurationError(f"llmclient_cache_expiration {int_value} must be a positive integer.")
             return int_value
         except ValueError as e:
-            raise SmarterConfigurationError("could not validate llm_client_cache_expiration") from e
+            raise SmarterConfigurationError("could not validate llmclient_cache_expiration") from e
 
-    llm_client_max_returned_history: int = Field(
+    llmclient_max_returned_history: int = Field(
         settings_defaults.LLM_CLIENT_MAX_RETURNED_HISTORY,
         gt=0,
-        description="The maximum number of prompt history messages to return from the llm_client.",
+        description="The maximum number of prompt history messages to return from the llmclient.",
         title="LLMClient Max Returned History",
     )
     """
-    The maximum number of prompt history messages to return from the llm_client.
+    The maximum number of prompt history messages to return from the llmclient.
 
-    This setting defines the maximum number of previous prompt messages that the llm_client
+    This setting defines the maximum number of previous prompt messages that the llmclient
     will include in its responses. Limiting the number of returned messages can help
     improve performance and reduce response times.
     :type: int
@@ -1340,14 +1340,14 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
-    @before_field_validator("llm_client_max_returned_history")
-    def parse_llm_client_max_returned_history(cls, v: Optional[Union[int, str]]) -> int:
-        """Validates the 'llm_client_max_returned_history' field.
+    @before_field_validator("llmclient_max_returned_history")
+    def parse_llmclient_max_returned_history(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'llmclient_max_returned_history' field.
 
         Args:
-            v (Optional[Union[int, str]]): the llm_client_max_returned_history value to validate
+            v (Optional[Union[int, str]]): the llmclient_max_returned_history value to validate
         Returns:
-            int: The validated llm_client_max_returned_history.
+            int: The validated llmclient_max_returned_history.
         """
         if isinstance(v, int):
             return v
@@ -1357,21 +1357,21 @@ class Settings(BaseSettings):
             int_value = int(v)  # type: ignore[reportArgumentType]
             if int_value < 0:
                 raise SmarterConfigurationError(
-                    f"llm_client_max_returned_history {int_value} must be a positive integer."
+                    f"llmclient_max_returned_history {int_value} must be a positive integer."
                 )
             return int_value
         except ValueError as e:
-            raise SmarterConfigurationError("could not validate llm_client_max_returned_history") from e
+            raise SmarterConfigurationError("could not validate llmclient_max_returned_history") from e
 
-    llm_client_tasks_create_dns_record: bool = Field(
+    llmclient_tasks_create_dns_record: bool = Field(
         settings_defaults.LLM_CLIENT_TASKS_CREATE_DNS_RECORD,
-        description="True if DNS records should be created for llm_client tasks.",
+        description="True if DNS records should be created for llmclient tasks.",
         title="LLMClient Tasks Create DNS Record",
     )
     """
     Set these to true if we *DO NOT* place a wildcard A record in the customer API domain.
 
-    requiring that every llm_client have its own A record. This is the default behavior.
+    requiring that every llmclient have its own A record. This is the default behavior.
     For programmatically creating DNS records in AWS Route53 during LLMClient deployment.
 
     :type: bool
@@ -1379,15 +1379,15 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @before_field_validator("llm_client_tasks_create_dns_record")
-    def parse_llm_client_tasks_create_dns_record(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'llm_client_tasks_create_dns_record' field.
+    @before_field_validator("llmclient_tasks_create_dns_record")
+    def parse_llmclient_tasks_create_dns_record(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'llmclient_tasks_create_dns_record' field.
 
         Args:
-            v (Optional[Union[bool, str]]): the llm_client_tasks_create_dns_record value to validate
+            v (Optional[Union[bool, str]]): the llmclient_tasks_create_dns_record value to validate
 
         Returns:
-            bool: The validated llm_client_tasks_create_dns_record.
+            bool: The validated llmclient_tasks_create_dns_record.
         """
         if isinstance(v, bool):
             return v
@@ -1396,15 +1396,15 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate llm_client_tasks_create_dns_record: {v}")
+        raise SmarterConfigurationError(f"could not validate llmclient_tasks_create_dns_record: {v}")
 
-    llm_client_tasks_create_ingress_manifest: bool = Field(
+    llmclient_tasks_create_ingress_manifest: bool = Field(
         settings_defaults.LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST,
-        description="True if ingress manifests should be created for llm_client tasks.",
+        description="True if ingress manifests should be created for llmclient tasks.",
         title="LLMClient Tasks Create Ingress Manifest",
     )
     """
-    True if ingress manifests should be created for llm_client tasks.
+    True if ingress manifests should be created for llmclient tasks.
 
     For programmatically creating ingress manifests during LLMClient deployment.
     :type: bool
@@ -1412,14 +1412,14 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @before_field_validator("llm_client_tasks_create_ingress_manifest")
-    def parse_llm_client_tasks_create_ingress_manifest(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'llm_client_tasks_create_ingress_manifest' field.
+    @before_field_validator("llmclient_tasks_create_ingress_manifest")
+    def parse_llmclient_tasks_create_ingress_manifest(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'llmclient_tasks_create_ingress_manifest' field.
 
         Args:
-            v (Optional[Union[bool, str]]): the llm_client_tasks_create_ingress_manifest value to validate
+            v (Optional[Union[bool, str]]): the llmclient_tasks_create_ingress_manifest value to validate
         Returns:
-            bool: The validated llm_client_tasks_create_ingress_manifest.
+            bool: The validated llmclient_tasks_create_ingress_manifest.
         """
         if isinstance(v, bool):
             return v
@@ -1428,9 +1428,9 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate llm_client_tasks_create_ingress_manifest: {v}")
+        raise SmarterConfigurationError(f"could not validate llmclient_tasks_create_ingress_manifest: {v}")
 
-    llm_client_tasks_default_ttl: int = Field(
+    llmclient_tasks_default_ttl: int = Field(
         settings_defaults.LLM_CLIENT_TASKS_DEFAULT_TTL,
         description="Default TTL (time to live) for DNS records created in AWS Route53 during LLMClient deployment.",
         title="LLMClient Tasks Default TTL",
@@ -1444,14 +1444,14 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a non-negative integer.
     """
 
-    @before_field_validator("llm_client_tasks_default_ttl")
-    def parse_llm_client_tasks_default_ttl(cls, v: Optional[Union[int, str]]) -> int:
-        """Validates the 'llm_client_tasks_default_ttl' field.
+    @before_field_validator("llmclient_tasks_default_ttl")
+    def parse_llmclient_tasks_default_ttl(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'llmclient_tasks_default_ttl' field.
 
         Args:
-            v (Optional[Union[int, str]]): the llm_client_tasks_default_ttl value to validate
+            v (Optional[Union[int, str]]): the llmclient_tasks_default_ttl value to validate
         Returns:
-            int: The validated llm_client_tasks_default_ttl.
+            int: The validated llmclient_tasks_default_ttl.
         """
         if isinstance(v, int):
             return v
@@ -1461,34 +1461,34 @@ class Settings(BaseSettings):
             int_value = int(v)  # type: ignore[reportArgumentType]
             if int_value < 0:
                 raise SmarterConfigurationError(
-                    f"llm_client_tasks_default_ttl {int_value} must be a non-negative integer."
+                    f"llmclient_tasks_default_ttl {int_value} must be a non-negative integer."
                 )
             return int_value
         except ValueError as e:
-            raise SmarterConfigurationError(f"could not validate llm_client_tasks_default_ttl: {v}") from e
+            raise SmarterConfigurationError(f"could not validate llmclient_tasks_default_ttl: {v}") from e
 
-    llm_client_tasks_celery_max_retries: int = Field(
+    llmclient_tasks_celery_max_retries: int = Field(
         settings_defaults.LLM_CLIENT_TASKS_CELERY_MAX_RETRIES,
         gt=0,
-        description="Maximum number of retries for llm_client tasks in Celery.",
+        description="Maximum number of retries for llmclient tasks in Celery.",
         title="LLMClient Tasks Celery Max Retries",
     )
     """
-    Maximum number of retries for llm_client tasks in Celery.
+    Maximum number of retries for llmclient tasks in Celery.
 
     :type: int
     :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CELERY_MAX_RETRIES``
     :raises SmarterConfigurationError: If the value is not a non-negative integer.
     """
 
-    @before_field_validator("llm_client_tasks_celery_max_retries")
-    def parse_llm_client_tasks_celery_max_retries(cls, v: Optional[Union[int, str]]) -> int:
-        """Validates the 'llm_client_tasks_celery_max_retries' field.
+    @before_field_validator("llmclient_tasks_celery_max_retries")
+    def parse_llmclient_tasks_celery_max_retries(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'llmclient_tasks_celery_max_retries' field.
 
         Args:
-            v (Optional[Union[int, str]]): the llm_client_tasks_celery_max_retries value to validate
+            v (Optional[Union[int, str]]): the llmclient_tasks_celery_max_retries value to validate
         Returns:
-            int: The validated llm_client_tasks_celery_max_retries.
+            int: The validated llmclient_tasks_celery_max_retries.
         """
         if isinstance(v, int):
             return v
@@ -1498,9 +1498,9 @@ class Settings(BaseSettings):
             int_value = int(v)  # type: ignore[reportArgumentType]
             return int_value
         except ValueError as e:
-            raise SmarterConfigurationError(f"could not validate llm_client_tasks_celery_max_retries: {v}") from e
+            raise SmarterConfigurationError(f"could not validate llmclient_tasks_celery_max_retries: {v}") from e
 
-    llm_client_tasks_celery_retry_backoff: bool = Field(
+    llmclient_tasks_celery_retry_backoff: bool = Field(
         settings_defaults.LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF,
         description="If True, enables exponential backoff for Celery task retries related to LLMClient deployment and management",
         title="LLMClient Tasks Celery Retry Backoff",
@@ -1513,14 +1513,14 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @before_field_validator("llm_client_tasks_celery_retry_backoff")
-    def parse_llm_client_tasks_celery_retry_backoff(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'llm_client_tasks_celery_retry_backoff' field.
+    @before_field_validator("llmclient_tasks_celery_retry_backoff")
+    def parse_llmclient_tasks_celery_retry_backoff(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'llmclient_tasks_celery_retry_backoff' field.
 
         Args:
-            v (Optional[Union[bool, str]]): the llm_client_tasks_celery_retry_backoff value to validate
+            v (Optional[Union[bool, str]]): the llmclient_tasks_celery_retry_backoff value to validate
         Returns:
-            bool: The validated llm_client_tasks_celery_retry_backoff.
+            bool: The validated llmclient_tasks_celery_retry_backoff.
         """
         if isinstance(v, bool):
             return v
@@ -1529,35 +1529,35 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate llm_client_tasks_celery_retry_backoff: {v}")
+        raise SmarterConfigurationError(f"could not validate llmclient_tasks_celery_retry_backoff: {v}")
 
-    llm_client_tasks_celery_task_queue: str = Field(
+    llmclient_tasks_celery_task_queue: str = Field(
         settings_defaults.LLM_CLIENT_TASKS_CELERY_TASK_QUEUE,
-        description="The Celery task queue name for llm_client tasks.",
+        description="The Celery task queue name for llmclient tasks.",
         title="LLMClient Tasks Celery Task Queue",
     )
     """
-    The Celery task queue name for llm_client tasks.
+    The Celery task queue name for llmclient tasks.
 
     :type: str
     :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CELERY_TASK_QUEUE``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("llm_client_tasks_celery_task_queue")
-    def validate_llm_client_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
-        """Validates the `llm_client_tasks_celery_task_queue` field.
+    @before_field_validator("llmclient_tasks_celery_task_queue")
+    def validate_llmclient_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
+        """Validates the `llmclient_tasks_celery_task_queue` field.
 
         Args:
-            v (Optional[str]): The llm_client tasks celery task queue value to validate.
+            v (Optional[str]): The llmclient tasks celery task queue value to validate.
         Returns:
-            str: The validated llm_client tasks celery task queue.
+            str: The validated llmclient tasks celery task queue.
         """
         if v in THE_EMPTY_SET:
             return settings_defaults.LLM_CLIENT_TASKS_CELERY_TASK_QUEUE
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError(f"llm_client_tasks_celery_task_queue of type {type(v)} is not a str: {v}")
+            raise SmarterConfigurationError(f"llmclient_tasks_celery_task_queue of type {type(v)} is not a str: {v}")
 
         return v
 
@@ -2079,7 +2079,7 @@ class Settings(BaseSettings):
         title="Internal IP Prefixes",
     )
     """
-    Supplemental list of internal IP prefixes used in smarter.apps.llm_client.middleware.security.SmarterSecurityMiddleware.
+    Supplemental list of internal IP prefixes used in smarter.apps.llmclient.middleware.security.SmarterSecurityMiddleware.
 
     and smarter.lib.django.middleware security features.
 
@@ -2265,7 +2265,7 @@ class Settings(BaseSettings):
     llm_default_system_role: str = Field(
         settings_defaults.LLM_DEFAULT_SYSTEM_ROLE,
         description="The default system role prompt to use for language model interactions.",
-        examples=["You are a helpful llm_client..."],
+        examples=["You are a helpful llmclient..."],
         title="Default LLM System Role",
     )
     """

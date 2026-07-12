@@ -49,7 +49,7 @@ from smarter.apps.docs.views.webserver import (
 )
 from smarter.apps.guardrail import urls as guardrail_urls
 from smarter.apps.guardrail.const import namespace as guardrail_namespace
-from smarter.apps.llm_client.api.v1.views.default import DefaultLLMClientApiView
+from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.llmhost import urls as llmhost_urls
 from smarter.apps.llmhost.const import namespace as llmhost_namespace
 from smarter.apps.mcpclient import urls as mcp_urls
@@ -118,7 +118,7 @@ smarter_restricted_admin_site, which is accessible to staff users.
 SMARTER_APP_LABELS = [
     "account",
     "api",
-    "llm_client",
+    "llmclient",
     "plugin",
     "prompt",
     "provider",

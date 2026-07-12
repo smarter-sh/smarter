@@ -15,7 +15,7 @@ from django.db.utils import IntegrityError
 from django.test import Client
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.llm_client.models import LLMClient, LLMClientPlugin
+from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginDataValueError
 from smarter.apps.plugin.nlp import does_refer_to
@@ -71,7 +71,7 @@ class ProviderBaseClass(TestAccountMixin):
     handler: Optional[Callable]
     plugin: Optional[PluginBase]
     plugins: Optional[list[PluginBase]]
-    llm_client: Optional[LLMClient]
+    llmclient: Optional[LLMClient]
     client: Optional[Client]
     prompt: Optional[Prompt]
 
@@ -93,7 +93,7 @@ class ProviderBaseClass(TestAccountMixin):
         self.handler = None
         self.plugin = None
         self.plugins = None
-        self.llm_client = None
+        self.llmclient = None
         self.client = None
         self.prompt = None
 
@@ -174,9 +174,9 @@ class ProviderBaseClass(TestAccountMixin):
             self.plugins = [self.plugin]
         print(f"plugin: {self.plugin}")
 
-        # create an llm_client that uses the provider
+        # create an llmclient that uses the provider
         print(f"Setting up provider {self.provider}")
-        self.llm_client = self.llm_client_factory(provider=self.provider)  # type: ignore[assignment]
+        self.llmclient = self.llmclient_factory(provider=self.provider)  # type: ignore[assignment]
 
         self.client = Client()
         self.client.force_login(self.admin_user)  # type: ignore[call-arg]
@@ -195,7 +195,7 @@ class ProviderBaseClass(TestAccountMixin):
 
         self.prompt = Prompt.objects.create(
             session_key=secrets.token_hex(32),
-            llm_client=self.llm_client,
+            llmclient=self.llmclient,
             user_profile=self.user_profile,
             ip_address="192.1.1.1",
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
@@ -219,16 +219,16 @@ class ProviderBaseClass(TestAccountMixin):
             except IntegrityError as e:
                 logger.debug("IntegrityError details: %s", e)
 
-        if self.llm_client:
-            self.llm_client.delete()
+        if self.llmclient:
+            self.llmclient.delete()
         if self.plugin:
             self.plugin.delete()
         self.plugins = None
         self.handler = None
         super().tearDown()
 
-    def llm_client_factory(self, provider: str = "openai"):
-        llm_client, _ = LLMClient.objects.get_or_create(
+    def llmclient_factory(self, provider: str = "openai"):
+        llmclient, _ = LLMClient.objects.get_or_create(
             name="TestLLMClient",
             user_profile=self.user_profile,
             description="Test LLMClient",
@@ -242,10 +242,10 @@ class ProviderBaseClass(TestAccountMixin):
             provider=provider,
         )
         LLMClientPlugin.objects.get_or_create(
-            llm_client=llm_client,
+            llmclient=llmclient,
             plugin_meta=self.plugin.plugin_meta,  # type: ignore[attr-defined]
         )
-        return llm_client
+        return llmclient
 
     def check_response(self, response):
         """Check response structure from api.v1.views.prompt handler()."""
@@ -294,7 +294,7 @@ class ProviderBaseClass(TestAccountMixin):
             return [
                 {
                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "You are a helpful llm_client.",
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "You are a helpful llmclient.",
                 },
                 {
                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,

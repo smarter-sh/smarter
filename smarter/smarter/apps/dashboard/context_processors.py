@@ -35,7 +35,7 @@ Cache utilities
 ---------------
 
 :func:`cache_invalidations`
-    Invalidates all per-user caches (account, profile, plugins, llm_clients, and
+    Invalidates all per-user caches (account, profile, plugins, llmclients, and
     page-level caches for the dashboard and workbench) after user data changes.
     Called by signal handlers in the account app.
 
@@ -86,7 +86,7 @@ from smarter.apps.dashboard.views.terminal_emulator.names import (
 from smarter.apps.dashboard.views.views.urls import DashboardReverseNames
 from smarter.apps.docs.urls import DocsReverseNames
 from smarter.apps.guardrail.urls import GuardrailReverseNames
-from smarter.apps.llm_client.models import LLMClient
+from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmhost.urls import LLMHostReverseNames
 from smarter.apps.mcpclient.urls import MCPClientReverseNames
 from smarter.apps.orchestrator.urls import OrchestratorReverseNames
@@ -212,7 +212,7 @@ def base(request: "HttpRequest") -> dict[str, Any]:
     This context processor injects a comprehensive set of user-specific and
     application-wide variables into the template context. These variables
     include user identity, role flags, product metadata, and resource counts
-    (such as llm_clients, plugins, API keys, custom domains, connections, and
+    (such as llmclients, plugins, API keys, custom domains, connections, and
     secrets). The context is used to render the dashboard layout and
     personalize the user experience.
 

@@ -143,16 +143,16 @@ class MetaDataModel(TimestampedModel):
     @cached_property
     def rfc1034_compliant_name(self) -> Optional[str]:
         """
-        Returns a URL-friendly name for the llm_client.
+        Returns a URL-friendly name for the llmclient.
 
-        This property returns an RFC 1034-compliant name for the llm_client, suitable for use in URLs and DNS labels.
+        This property returns an RFC 1034-compliant name for the llmclient, suitable for use in URLs and DNS labels.
 
         **Example:**
 
         .. code-block:: python
 
             self.name = 'Example LLMClient 1'
-            self.rfc1034_compliant_name  # 'example-llm_client-1'
+            self.rfc1034_compliant_name  # 'example-llmclient-1'
 
         :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
         :rtype: Optional[str]

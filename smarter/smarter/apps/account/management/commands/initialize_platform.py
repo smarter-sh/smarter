@@ -41,9 +41,9 @@ class Command(SmarterCommand):
         4. Verify DNS configuration.
         5. Load example projects from GitHub.
         6. Add plugin examples.
-        7. Deploy example llm_clients.
+        7. Deploy example llmclients.
         8. Initialize providers.
-        9. Create StackAcademy SQL and API llm_clients.
+        9. Create StackAcademy SQL and API llmclients.
         10. Apply manifests and update secrets for database connections.
         """
         self.handle_begin()

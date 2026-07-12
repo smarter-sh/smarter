@@ -55,7 +55,7 @@ and managed the same way: by applying a :doc:`Smarter Manifest (SAM) <smarter-fr
 a plain `YAML <https://en.wikipedia.org/wiki/YAML>`__ file that declares its desired state. There's
 no resource-specific SDK to learn and no separate API convention to memorize — an
 :doc:`Account <smarter-resources/smarter-account>`, a :doc:`Secret <smarter-resources/smarter-secret>`,
-an :doc:`LLMClient <smarter-resources/smarter-llm_client>`, an
+an :doc:`LLMClient <smarter-resources/smarter-llmclient>`, an
 :doc:`Orchestrator <smarter-resources/smarter-orchestrator>` coordinating a multi-agent workflow, a
 :doc:`Plugin <smarter-resources/smarter-plugin>` reaching into an external database — all of it is
 created, versioned, diffed, and reviewed like any other infrastructure-as-code. Because SAM files
@@ -75,7 +75,7 @@ The project combines three complementary capabilities. The
 :doc:`Smarter Platform <smarter-platform>` provides :doc:`authoring & administration <smarter-platform/smarter-web-console>`,
 deployment, operations, and governance. :doc:`Smarter Resources <smarter-resources>`
 define the building blocks of AI applications, including :doc:`LLM providers <smarter-resources/smarter-provider>`,
-:doc:`prompts <smarter-resources/smarter-prompt>`, :doc:`agents <smarter-resources/smarter-llm_client>`,
+:doc:`prompts <smarter-resources/smarter-prompt>`, :doc:`agents <smarter-resources/smarter-llmclient>`,
 :doc:`orchestrators <smarter-resources/smarter-orchestrator>`, :doc:`plugins <smarter-resources/smarter-plugin>`,
 :doc:`connections <smarter-resources/smarter-connection>`, :doc:`secrets <smarter-resources/smarter-secret>`,
 vectorstores, and :doc:`integrations <smarter-resources/smarter-connection>`. The
@@ -102,7 +102,7 @@ lifecycle.
 - **AI Resource Management**
 
   - Works with many :doc:`AI model providers <smarter-resources/smarter-provider>` — `OpenAI <https://developers.openai.com/api/reference/overview/>`_, `Google AI <https://ai.google.dev/api>`_, `Meta AI <https://developers.facebook.com/docs/>`_, `DeepSeek <https://api-docs.deepseek.com/>`_, and others — or self-hosted models you deploy and manage yourself.
-  - Lets you :doc:`organize <smarter-resources/smarter-llm_client>` and version your prompts, and see how they change over time.
+  - Lets you :doc:`organize <smarter-resources/smarter-llmclient>` and version your prompts, and see how they change over time.
   - Coordinates multiple models into multi-agent workflows with :doc:`Orchestrator <smarter-resources/smarter-orchestrator>` — sequential, parallel, supervisor/worker, routing, and voting/debate strategies — so you can build bigger, smarter tasks.
   - Secure integrations to :doc:`external data sources <smarter-resources/smarter-plugin>` like :doc:`databases <smarter-resources/plugin/plugin/sql>` and :doc:`APIs <smarter-resources/plugin/plugin/api>`.
 
@@ -121,7 +121,7 @@ Usage
 
 **1. Create a Smarter manifest**
 
-.. literalinclude:: ../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llm_client-sql.yaml
+.. literalinclude:: ../../smarter/smarter/apps/plugin/data/stackademy/stackademy-llmclient-sql.yaml
    :language: yaml
    :caption: Example Smarter Manifest
 
@@ -130,7 +130,7 @@ Usage
 
 .. code-block:: console
 
-   smarter apply -f stackademy-llm_client-sql.yaml
+   smarter apply -f stackademy-llmclient-sql.yaml
 
 **3. Interact**
 

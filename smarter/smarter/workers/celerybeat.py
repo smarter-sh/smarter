@@ -12,8 +12,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
 from smarter.lib.celery_conf import APP as app
 
 app.conf.beat_schedule = {
-    "aggregate-llm_client-history": {
-        "task": "smarter.apps.llm_client.tasks.aggregate_llm_client_history",
+    "aggregate-llmclient-history": {
+        "task": "smarter.apps.llmclient.tasks.aggregate_llmclient_history",
         "schedule": timedelta(hours=12),
         "options": {"queue": "beat_tasks"},
     },

@@ -56,17 +56,17 @@ urlpatterns = [
         name=GuardrailReverseNames.listview_api,
     ),
     path(
-        "react-integration/api/clone/<int:llm_client_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:llmclient_id>/<str:new_name>/",
         GuardrailListApiCloneView.as_view(),
         name=GuardrailReverseNames.listview_api_clone,
     ),
     path(
-        "react-integration/api/delete/<int:llm_client_id>/",
+        "react-integration/api/delete/<int:llmclient_id>/",
         GuardrailListApiDeleteView.as_view(),
         name=GuardrailReverseNames.listview_api_delete,
     ),
     path(
-        "react-integration/api/rename/<int:llm_client_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:llmclient_id>/<str:new_name>/",
         GuardrailListApiRenameView.as_view(),
         name=GuardrailReverseNames.listview_api_rename,
     ),
