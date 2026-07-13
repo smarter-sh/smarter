@@ -3,6 +3,7 @@
 import io
 import os
 import re
+from pathlib import Path
 from typing import Optional, Union
 
 import yaml
@@ -77,11 +78,7 @@ class GuardrailExample:
 
     @property
     def fullpath(self) -> Optional[str]:
-        if not self.filename:
-            return None
-        if not self.filepath:
-            return None
-        return self.filepath + self.filename
+        return str(Path(self.filepath) / self.filename) if self.filepath and self.filename else None
 
     @property
     def name(self) -> Optional[str]:

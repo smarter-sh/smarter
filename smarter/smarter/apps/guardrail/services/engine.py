@@ -13,7 +13,7 @@ actually calls.
 from __future__ import annotations
 
 import time
-from typing import Any, Optional
+from typing import Any
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.guardrail.models import Guardrail, GuardrailType
@@ -129,8 +129,8 @@ class GuardrailEngine:
         outcomes: list[GuardrailOutcome] = []
         context = StrategyContext(
             stage=stage,
-            account_id=self.account.id,
-            user_profile_id=self.user_profile.id if self.user_profile else None,
+            account_id=self.account.id,  # type: ignore
+            user_profile_id=self.user_profile.id if self.user_profile else None,  # type: ignore
             request_uid=request_uid,
         )
 
@@ -176,7 +176,7 @@ class GuardrailEngine:
                     continue
                 findings.append(
                     GuardrailFinding(
-                        guardrail_id=guardrail.id,
+                        guardrail_id=guardrail.id,  # type: ignore
                         guardrail_name=guardrail.name,
                         category=guardrail.category,
                         match_strategy=guardrail.match_strategy,
@@ -192,13 +192,14 @@ class GuardrailEngine:
         except (GuardrailConfigError, GuardrailStrategyNotImplementedError) as exc:
             error = str(exc)
             logger.error("Guardrail '%s' failed to evaluate: %s", guardrail.name, error)
+        # pylint: disable=broad-except
         except Exception as exc:  # noqa: BLE001 - a single bad guardrail must not take down the pipeline
             error = f"Unexpected error: {exc}"
-            logger.exception("Guardrail '%s' raised an unexpected error during evaluation.", guardrail.name)
+            logger.error("Guardrail '%s' raised an unexpected error during evaluation.", guardrail.name)
 
         duration_ms = (time.monotonic() - start) * 1000
         return GuardrailOutcome(
-            guardrail_id=guardrail.id,
+            guardrail_id=guardrail.id,  # type: ignore
             guardrail_name=guardrail.name,
             is_blocking=guardrail.is_blocking,
             priority=guardrail.priority,

@@ -1,13 +1,26 @@
-"""MatchStrategy.SEMANTIC — embedding cosine-similarity against a set of.
+"""``MatchStrategy.SEMANTIC`` — embedding cosine-similarity against a set.
 
-reference texts.
+of reference texts.
 
-config keys recognized:
-    reference_texts: list[str]   (required) -- exemplar strings the segment
-                                   is compared against
-    embedding_model: str          (optional) -- passed through to the client
-guardrail.confidence_threshold is the minimum cosine similarity (0-1) to
-trigger; defaults to 0.85 if unset.
+Recognized ``guardrail.config`` keys:
+
+* ``reference_texts`` (``list[str]``, required) — exemplar strings the
+  segment is compared against.
+* ``similarity_threshold`` (``float``, required) — the minimum cosine
+  similarity (``0``-``1``) required to trigger. Required by the
+  platform's ``SAMGuardrailSpec`` validator when
+  ``match_strategy=semantic``; takes precedence over
+  ``guardrail.confidence_threshold`` when both are set, since the
+  validator only enforces presence of the former.
+* ``embedding_model`` (``str``, optional) — passed through to the
+  client.
+
+Falls back to ``guardrail.confidence_threshold``, then
+:data:`_DEFAULT_THRESHOLD`, if ``config["similarity_threshold"]`` is
+unset — but a manifest applied through the platform's broker will
+already have been rejected before reaching this code if it's missing,
+so the fallback exists mainly for guardrails constructed directly
+against the ORM outside the manifest pipeline.
 """
 
 from __future__ import annotations
@@ -26,6 +39,18 @@ _DEFAULT_THRESHOLD = 0.85
 
 
 def _cosine_similarity(a: list[float], b: list[float]) -> float:
+    """Compute the cosine similarity between two equal-length vectors.
+
+    :param a: The first vector.
+    :type a: list[float]
+    :param b: The second vector.
+    :type b: list[float]
+    :returns: The cosine similarity in ``[-1.0, 1.0]``, or ``0.0`` if
+        either vector has zero magnitude.
+    :rtype: float
+    :raises smarter.apps.guardrail.services.exceptions.GuardrailConfigError:
+        If ``a`` and ``b`` have different lengths.
+    """
     if len(a) != len(b):
         raise GuardrailConfigError("Embedding dimension mismatch between segment and reference text.")
     dot = sum(x * y for x, y in zip(a, b))
@@ -37,17 +62,44 @@ def _cosine_similarity(a: list[float], b: list[float]) -> float:
 
 
 class SemanticStrategy(BaseGuardrailStrategy):
+    """Match a text segment by embedding similarity to reference texts.
+
+    :param embedding_client: The client used to embed both the segment
+        and each reference text.
+    :type embedding_client: ~smarter.apps.guardrail.services.strategies.clients.EmbeddingClient
+    """
+
     def __init__(self, embedding_client: EmbeddingClient):
         self._client = embedding_client
 
     def evaluate(self, *, segment, guardrail, context: StrategyContext) -> StrategyMatch:
+        """Compare ``segment.text`` against each configured reference text.
+
+        :param segment: The text segment to evaluate.
+        :type segment: ~smarter.apps.guardrail.services.contracts.TextSegment
+        :param guardrail: The guardrail row; requires
+            ``config["reference_texts"]`` to be a non-empty list.
+        :type guardrail: ~smarter.apps.guardrail.models.Guardrail
+        :param context: Ambient evaluation context (unused by this
+            strategy).
+        :type context: ~smarter.apps.guardrail.services.strategies.base.StrategyContext
+        :returns: A match whose ``confidence`` is the best cosine
+            similarity found across all reference texts, ``triggered``
+            when that score meets ``config["similarity_threshold"]``
+            (or ``guardrail.confidence_threshold`` if the former is
+            unset).
+        :rtype: ~smarter.apps.guardrail.services.strategies.base.StrategyMatch
+        :raises smarter.apps.guardrail.services.exceptions.GuardrailConfigError:
+            If ``guardrail.config["reference_texts"]`` is empty, or an
+            embedding dimension mismatch occurs.
+        """
         reference_texts: list[str] = guardrail.config.get("reference_texts") or []
         if not reference_texts:
             raise GuardrailConfigError(
                 f"Guardrail '{guardrail.name}' uses match_strategy=semantic but config.reference_texts is empty."
             )
 
-        threshold = guardrail.confidence_threshold or _DEFAULT_THRESHOLD
+        threshold = guardrail.config.get("similarity_threshold") or guardrail.confidence_threshold or _DEFAULT_THRESHOLD
         segment_vector = self._client.embed(segment.text)
 
         best_score = 0.0
