@@ -36,9 +36,9 @@ their outcomes into a single verdict.
 from __future__ import annotations
 
 import time
-from typing import Any, Optional
+from typing import Any
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import UserProfile
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.services.actions import ActionOutcome, apply_action
 from smarter.apps.guardrail.services.contracts import (
@@ -184,10 +184,9 @@ class GuardrailPipeline:
             The ORM model defining each guardrail rule.
     """
 
-    def __init__(self, account: Account, user_profile: UserProfile | None = None):
-        self.account = account
+    def __init__(self, user_profile: UserProfile | None = None):
         self.user_profile = user_profile
-        self._engine = GuardrailEngine(account=account, user_profile=user_profile)
+        self._engine = GuardrailEngine(user_profile=user_profile)
 
     def run_pre(self, request_json: dict[str, Any], *, request_uid: str | None = None) -> PipelineResult:
         """Evaluate the pre-completion request against input guardrails.
