@@ -9,12 +9,10 @@ can compose handlers across multiple triggered guardrails without
 cross-talk.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Optional
+from typing import Any
 
-from smarter.apps.guardrail.models import GuardrailAction
+from smarter.apps.guardrail.models import Guardrail, GuardrailAction
 from smarter.apps.guardrail.services.contracts import (
     GuardrailFinding,
     PipelineDisposition,
@@ -22,9 +20,6 @@ from smarter.apps.guardrail.services.contracts import (
 from smarter.apps.guardrail.services.text_extraction import resolve_path, write_segment
 from smarter.lib import logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
-
-if TYPE_CHECKING:
-    from smarter.apps.guardrail.models import Guardrail
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
 
@@ -101,6 +96,7 @@ def apply_action(
     return handler(payload=payload, finding=finding, guardrail=guardrail)
 
 
+# pylint: disable=W0613
 def _handle_allow(*, payload, finding, guardrail) -> ActionOutcome:
     """Handle ``GuardrailAction.ALLOW`` — log only, payload unchanged.
 
@@ -176,14 +172,14 @@ def _redact_in_place(payload: dict[str, Any], finding: GuardrailFinding) -> dict
         string field.
     :rtype: dict[str, typing.Any]
     """
-    node, key = resolve_path(payload, finding.segment_path)
+    node, key = resolve_path(payload, finding.segment_path)  # type: ignore
     if node is None:
         return payload
     original = node.get(key) if isinstance(node, dict) else None
     if not isinstance(original, str):
         return payload
-    redacted_text = original.replace(finding.matched_text, _REDACTION_TOKEN)
-    return write_segment(payload, finding.segment_path, redacted_text)
+    redacted_text = original.replace(finding.matched_text, _REDACTION_TOKEN)  # type: ignore
+    return write_segment(payload, finding.segment_path, redacted_text)  # type: ignore
 
 
 def _handle_transform(*, payload, finding, guardrail) -> ActionOutcome:

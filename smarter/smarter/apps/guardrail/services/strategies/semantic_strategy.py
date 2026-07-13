@@ -14,8 +14,6 @@ Recognized ``guardrail.config`` keys:
 if unset.
 """
 
-from __future__ import annotations
-
 import math
 
 from smarter.apps.guardrail.services.exceptions import GuardrailConfigError

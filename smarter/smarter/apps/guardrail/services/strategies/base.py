@@ -14,13 +14,11 @@ this keeps strategies swappable and testable in isolation.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional
 
 from pydantic import BaseModel
 
-if TYPE_CHECKING:
-    from smarter.apps.guardrail.models import Guardrail
-    from smarter.apps.guardrail.services.contracts import GuardrailStage, TextSegment
+from smarter.apps.guardrail.models import Guardrail
+from smarter.apps.guardrail.services.contracts import GuardrailStage, TextSegment
 
 
 class StrategyContext(BaseModel):
@@ -42,7 +40,6 @@ class StrategyContext(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
     stage: GuardrailStage
-    account_id: int | None = None
     user_profile_id: int | None = None
     request_uid: str | None = None
 

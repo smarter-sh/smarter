@@ -10,8 +10,6 @@ consistently, and :class:`~smarter.apps.guardrail.models.GuardrailAction`
 syntax used for extraction.
 """
 
-from __future__ import annotations
-
 import copy
 from typing import Any
 

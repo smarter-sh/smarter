@@ -1,11 +1,6 @@
 """Exceptions raised by the Guardrail service."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Optional
-
-if TYPE_CHECKING:
-    from smarter.apps.guardrail.services.contracts import GuardrailFinding
+from smarter.apps.guardrail.services.contracts import GuardrailFinding
 
 
 class GuardrailServiceError(Exception):

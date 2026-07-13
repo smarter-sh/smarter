@@ -6,8 +6,6 @@ Recognized ``guardrail.config`` keys:
   ``"DOTALL"``. Defaults to ``["IGNORECASE"]``.
 """
 
-from __future__ import annotations
-
 import re
 from functools import lru_cache
 

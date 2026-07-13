@@ -23,8 +23,6 @@ so the fallback exists mainly for guardrails constructed directly
 against the ORM outside the manifest pipeline.
 """
 
-from __future__ import annotations
-
 import math
 
 from smarter.apps.guardrail.services.exceptions import GuardrailConfigError

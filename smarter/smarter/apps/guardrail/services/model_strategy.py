@@ -10,8 +10,6 @@ config keys recognized:
 guardrail.confidence_threshold gates the trigger; defaults to 0.5 if unset.
 """
 
-from __future__ import annotations
-
 from smarter.apps.guardrail.services.exceptions import GuardrailConfigError
 from smarter.apps.guardrail.services.strategies.base import (
     BaseGuardrailStrategy,

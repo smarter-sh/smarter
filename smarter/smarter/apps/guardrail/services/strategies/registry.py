@@ -12,10 +12,6 @@ startup (e.g. ``AppConfig.ready()``) with your concrete adapters; see
 protocols to implement.
 """
 
-from __future__ import annotations
-
-from typing import Optional
-
 from smarter.apps.guardrail.models import MatchStrategy
 from smarter.apps.guardrail.services.exceptions import (
     GuardrailStrategyNotImplementedError,
@@ -27,7 +23,16 @@ from smarter.apps.guardrail.services.strategies.clients import (
     LLMJudgeClient,
 )
 from smarter.apps.guardrail.services.strategies.keyword_strategy import KeywordStrategy
+from smarter.apps.guardrail.services.strategies.llm_judge_strategy import (
+    LLMJudgeStrategy,
+)
+from smarter.apps.guardrail.services.strategies.model_strategy import (
+    ModelStrategy,
+)
 from smarter.apps.guardrail.services.strategies.regex_strategy import RegexStrategy
+from smarter.apps.guardrail.services.strategies.semantic_strategy import (
+    SemanticStrategy,
+)
 
 _embedding_client: EmbeddingClient | None = None
 _classifier_client: ClassifierClient | None = None
@@ -96,9 +101,6 @@ def get_strategy(match_strategy: str) -> BaseGuardrailStrategy:
                 "match_strategy=semantic requires an EmbeddingClient — call "
                 "strategies.registry.configure_clients(embedding_client=...) at startup."
             )
-        from smarter.apps.guardrail.services.strategies.semantic_strategy import (
-            SemanticStrategy,
-        )
 
         return SemanticStrategy(_embedding_client)
 
@@ -108,9 +110,6 @@ def get_strategy(match_strategy: str) -> BaseGuardrailStrategy:
                 "match_strategy=model requires a ClassifierClient — call "
                 "strategies.registry.configure_clients(classifier_client=...) at startup."
             )
-        from smarter.apps.guardrail.services.strategies.model_strategy import (
-            ModelStrategy,
-        )
 
         return ModelStrategy(_classifier_client)
 
@@ -120,9 +119,6 @@ def get_strategy(match_strategy: str) -> BaseGuardrailStrategy:
                 "match_strategy=llm_judge requires an LLMJudgeClient — call "
                 "strategies.registry.configure_clients(judge_client=...) at startup."
             )
-        from smarter.apps.guardrail.services.strategies.llm_judge_strategy import (
-            LLMJudgeStrategy,
-        )
 
         return LLMJudgeStrategy(_judge_client)
 
