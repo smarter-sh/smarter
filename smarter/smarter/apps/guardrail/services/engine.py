@@ -1,16 +1,14 @@
-"""Load and evaluate guardrails for a given account/user_profile scope.
+"""Load and evaluate guardrails for a given user_profile scope.
 
 :class:`GuardrailEngine` loads the ordered, active
 :class:`~smarter.apps.guardrail.models.Guardrail` rows for an
-account/user_profile and runs each against every scannable segment of a
+user_profile and runs each against every scannable segment of a
 payload, producing :class:`~smarter.apps.guardrail.services.contracts.GuardrailOutcome`
 objects. It knows nothing about the Harness or HTTP —
 :class:`~smarter.apps.guardrail.services.pipeline.GuardrailPipeline` is
 the thing that wraps this into the pre/post contract the Harness
 actually calls.
 """
-
-from __future__ import annotations
 
 import time
 from typing import Any
@@ -45,28 +43,20 @@ _STAGE_TO_TYPES = {
 
 
 class GuardrailEngine:
-    """Evaluate an account's guardrails against a payload's text segments.
+    """Evaluate an user_profiles's guardrails against a payload's text segments.
 
     Stateless with respect to individual requests — construct one per
-    :class:`~smarter.apps.account.models.Account`/
     :class:`~smarter.apps.account.models.UserProfile` scope (cheap; the
     query is re-issued per call, see :meth:`load_guardrails`) and call
     :meth:`run` for every pre/post payload in that scope.
 
-    :param account: The account whose guardrails should be evaluated.
-    :type account: ~smarter.apps.account.models.Account
-    :param user_profile: If given, further restricts evaluation to
-        guardrails owned by this user profile within the account.
-    :type user_profile: ~smarter.apps.account.models.UserProfile or None
+    :param user_profile: the  whose guardrails should be evaluated.
+    :type user_profile: ~smarter.apps.account.models.UserProfile
 
-    :ivar account: The account this engine instance is scoped to.
-    :vartype account: ~smarter.apps.account.models.Account
-    :ivar user_profile: The user profile this engine instance is scoped
-        to, or ``None`` if unscoped.
-    :vartype user_profile: ~smarter.apps.account.models.UserProfile or None
+    :ivar user_profile: The UserProfile this engine instance is scoped to.
     """
 
-    def __init__(self, user_profile: UserProfile | None = None):
+    def __init__(self, user_profile: UserProfile):
         self.user_profile = user_profile
 
     def load_guardrails(self, stage: GuardrailStage) -> list[Guardrail]:
@@ -74,7 +64,7 @@ class GuardrailEngine:
 
         .. note::
             :class:`~smarter.apps.account.models.MetaDataWithOwnershipModel`'s
-            account/user_profile scoping follows the same convention as
+            user_profile scoping follows the same convention as
             every other resource type on the platform (see
             ``LLMClient``, ``Vectorsearch``, etc.) — adjust the filter
             kwargs here if ``Guardrail``'s actual FK names differ.
@@ -84,7 +74,7 @@ class GuardrailEngine:
             either stage.
         :type stage: ~smarter.apps.guardrail.services.contracts.GuardrailStage
         :returns: Active, applicable guardrails scoped to this engine's
-            account/user_profile, ordered by ``priority`` (lower runs
+            user_profile, ordered by ``priority`` (lower runs
             first) then ``id``.
         :rtype: list[~smarter.apps.guardrail.models.Guardrail]
         """
@@ -128,7 +118,6 @@ class GuardrailEngine:
         outcomes: list[GuardrailOutcome] = []
         context = StrategyContext(
             stage=stage,
-            account_id=self.account.id,  # type: ignore
             user_profile_id=self.user_profile.id if self.user_profile else None,  # type: ignore
             request_uid=request_uid,
         )

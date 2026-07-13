@@ -9,8 +9,6 @@ Recognized ``guardrail.config`` keys:
   boundaries so e.g. ``"ass"`` doesn't match inside ``"assistant"``.
 """
 
-from __future__ import annotations
-
 import re
 from functools import lru_cache
 

@@ -20,8 +20,6 @@ can't actually run should never be mistaken for one that ran and
 passed.
 """
 
-from __future__ import annotations
-
 from typing import Protocol
 
 
@@ -39,26 +37,7 @@ class EmbeddingClient(Protocol):
         :returns: The embedding vector.
         :rtype: list[float]
         """
-        ...
-
-
-class ClassifierClient(Protocol):
-    """Used by :class:`~smarter.apps.guardrail.services.strategies.model_strategy.ModelStrategy`.
-
-    to run a segment through a hosted/local classifier model (e.g. a
-    moderation or PII-detection model).
-    """
-
-    def classify(self, text: str, *, model_id: str) -> ClassifierVerdict:
-        """Classify ``text`` using the given model.
-
-        :param text: The text to classify.
-        :type text: str
-        :param model_id: Identifier of the classifier model to use.
-        :type model_id: str
-        :returns: The classifier's verdict.
-        :rtype: ClassifierVerdict
-        """
+        # pylint: disable=W2301
         ...
 
 
@@ -85,28 +64,24 @@ class ClassifierVerdict:
         self.confidence = confidence
 
 
-class LLMJudgeClient(Protocol):
-    """Used by :class:`~smarter.apps.guardrail.services.strategies.llm_judge_strategy.LLMJudgeStrategy`.
+class ClassifierClient(Protocol):
+    """Used by :class:`~smarter.apps.guardrail.services.strategies.model_strategy.ModelStrategy`.
 
-    to run a judge prompt against an LLM and get back a structured
-    verdict.
+    to run a segment through a hosted/local classifier model (e.g. a
+    moderation or PII-detection model).
     """
 
-    def judge(self, prompt: str, *, model_id: str, temperature: float = 0.0) -> JudgeVerdict:
-        """Run a judge prompt against an LLM.
+    def classify(self, text: str, *, model_id: str) -> ClassifierVerdict:
+        """Classify ``text`` using the given model.
 
-        :param prompt: The fully-rendered judge prompt (i.e. the
-            guardrail's ``pattern`` template with ``{text}`` already
-            substituted).
-        :type prompt: str
-        :param model_id: Identifier of the judge model to use.
+        :param text: The text to classify.
+        :type text: str
+        :param model_id: Identifier of the classifier model to use.
         :type model_id: str
-        :param temperature: Sampling temperature for the judge call.
-            Defaults to ``0.0`` to keep judge verdicts deterministic.
-        :type temperature: float
-        :returns: The judge's structured verdict.
-        :rtype: JudgeVerdict
+        :returns: The classifier's verdict.
+        :rtype: ClassifierVerdict
         """
+        # pylint: disable=W2301
         ...
 
 
@@ -139,6 +114,32 @@ class JudgeVerdict:
         self.triggered = triggered
         self.confidence = confidence
         self.rationale = rationale
+
+
+class LLMJudgeClient(Protocol):
+    """Used by :class:`~smarter.apps.guardrail.services.strategies.llm_judge_strategy.LLMJudgeStrategy`.
+
+    to run a judge prompt against an LLM and get back a structured
+    verdict.
+    """
+
+    def judge(self, prompt: str, *, model_id: str, temperature: float = 0.0) -> JudgeVerdict:
+        """Run a judge prompt against an LLM.
+
+        :param prompt: The fully-rendered judge prompt (i.e. the
+            guardrail's ``pattern`` template with ``{text}`` already
+            substituted).
+        :type prompt: str
+        :param model_id: Identifier of the judge model to use.
+        :type model_id: str
+        :param temperature: Sampling temperature for the judge call.
+            Defaults to ``0.0`` to keep judge verdicts deterministic.
+        :type temperature: float
+        :returns: The judge's structured verdict.
+        :rtype: JudgeVerdict
+        """
+        # pylint: disable=W2301
+        ...
 
 
 __all__ = [

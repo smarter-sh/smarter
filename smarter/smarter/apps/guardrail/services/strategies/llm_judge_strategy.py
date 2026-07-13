@@ -14,8 +14,6 @@ Recognized ``guardrail.config`` keys:
 :data:`_DEFAULT_THRESHOLD` if unset.
 """
 
-from __future__ import annotations
-
 from smarter.apps.guardrail.services.exceptions import GuardrailConfigError
 from smarter.apps.guardrail.services.strategies.base import (
     BaseGuardrailStrategy,

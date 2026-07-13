@@ -33,8 +33,6 @@ runs the full active, ordered set for the stage in question and folds
 their outcomes into a single verdict.
 """
 
-from __future__ import annotations
-
 import time
 from typing import Any
 
@@ -184,7 +182,7 @@ class GuardrailPipeline:
             The ORM model defining each guardrail rule.
     """
 
-    def __init__(self, user_profile: UserProfile | None = None):
+    def __init__(self, user_profile: UserProfile):
         self.user_profile = user_profile
         self._engine = GuardrailEngine(user_profile=user_profile)
 
