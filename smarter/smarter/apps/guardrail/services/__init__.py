@@ -19,13 +19,6 @@ Everything else (``engine``, ``strategies``, ``actions``,
 need to import directly.
 """
 
-from smarter.apps.guardrail.services.contracts import (
-    GuardrailFinding,
-    GuardrailOutcome,
-    GuardrailStage,
-    PipelineDisposition,
-    PipelineResult,
-)
 from smarter.apps.guardrail.services.exceptions import (
     GuardrailBlockedError,
     GuardrailConfigError,
@@ -33,6 +26,13 @@ from smarter.apps.guardrail.services.exceptions import (
     GuardrailStrategyNotImplementedError,
 )
 from smarter.apps.guardrail.services.pipeline import GuardrailPipeline
+from smarter.apps.provider.services.text_completion.contracts import (
+    GuardrailFinding,
+    GuardrailOutcome,
+    GuardrailStage,
+    PipelineDisposition,
+    PipelineResult,
+)
 
 __all__ = [
     "GuardrailPipeline",

@@ -39,12 +39,12 @@ from typing import Any
 from smarter.apps.account.models import UserProfile
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.services.actions import ActionOutcome, apply_action
-from smarter.apps.guardrail.services.contracts import (
+from smarter.apps.guardrail.services.engine import GuardrailEngine
+from smarter.apps.provider.services.text_completion.contracts import (
     GuardrailStage,
     PipelineDisposition,
     PipelineResult,
 )
-from smarter.apps.guardrail.services.engine import GuardrailEngine
 from smarter.lib import logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
 

@@ -18,7 +18,10 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel
 
 from smarter.apps.guardrail.models import Guardrail
-from smarter.apps.guardrail.services.contracts import GuardrailStage, TextSegment
+from smarter.apps.provider.services.text_completion.contracts import (
+    GuardrailStage,
+    TextSegment,
+)
 
 
 class StrategyContext(BaseModel):

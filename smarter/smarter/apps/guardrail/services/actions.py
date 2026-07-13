@@ -13,11 +13,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from smarter.apps.guardrail.models import Guardrail, GuardrailAction
-from smarter.apps.guardrail.services.contracts import (
+from smarter.apps.guardrail.services.text_extraction import resolve_path, write_segment
+from smarter.apps.provider.services.text_completion.contracts import (
     GuardrailFinding,
     PipelineDisposition,
 )
-from smarter.apps.guardrail.services.text_extraction import resolve_path, write_segment
 from smarter.lib import logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
 
