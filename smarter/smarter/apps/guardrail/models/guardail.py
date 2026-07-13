@@ -60,11 +60,13 @@ class Guardrail(MetaDataWithOwnershipModel):
     match_strategy = models.CharField(max_length=16, choices=MatchStrategy.choices)
     pattern = models.TextField(
         blank=True,
+        null=True,
         help_text="Regex, keyword list (newline/comma), or judge prompt template depending on match_strategy.",
     )
     config = models.JSONField(
         default=dict,
         blank=True,
+        null=True,
         help_text="Strategy-specific params: similarity_threshold, model_id, temperature, few-shot examples, etc.",
     )
 
@@ -94,6 +96,7 @@ class Guardrail(MetaDataWithOwnershipModel):
     # --- versioning / provenance ---
     fallback_message = models.TextField(
         blank=True,
+        null=True,
         help_text="User-facing message returned when action=BLOCK.",
     )
 

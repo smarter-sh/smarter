@@ -12,7 +12,7 @@ metadata:
     since scope drift is a product/UX concern, not a safety one; someone
     reviews the flagged transcripts to decide whether the system prompt or
     this guardrail's judge prompt needs tightening.
-  name: off_topic_scope_drift_output
+  name: off-topic-scope-drift-output
   tags:
   - off-topic
   - scope
@@ -26,25 +26,26 @@ spec:
     config:
       model_id: gpt-4o-mini
       temperature: 0.0
+      judge_prompt: |-
+        You are reviewing responses from an assistant whose intended scope is:
+        course material, programming exercises, and platform how-to questions
+        for an ed-tech product. Read the response below and decide whether it
+        substantively answers something clearly outside that scope (e.g.
+        general life advice, unrelated current events, or topics with no
+        connection to the course or platform).
+
+        Assistant response:
+        """
+        {text}
+        """
+
+        Respond with a JSON object only, no other text:
+        {{"triggered": <true|false>, "confidence": <0.0-1.0>, "rationale": "<one sentence>"}}
     fallback_message: ''
     guardrail_type: output
     is_active: true
     is_blocking: true
     match_strategy: llm_judge
-    pattern: |-
-      You are reviewing responses from an assistant whose intended scope is:
-      course material, programming exercises, and platform how-to questions
-      for an ed-tech product. Read the response below and decide whether it
-      substantively answers something clearly outside that scope (e.g.
-      general life advice, unrelated current events, or topics with no
-      connection to the course or platform).
-
-      Assistant response:
-      """
-      {text}
-      """
-
-      Respond with a JSON object only, no other text:
-      {{"triggered": <true|false>, "confidence": <0.0-1.0>, "rationale": "<one sentence>"}}
+    pattern: null
     priority: 70
     severity: 1
