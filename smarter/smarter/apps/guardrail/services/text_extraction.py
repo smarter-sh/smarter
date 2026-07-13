@@ -13,7 +13,10 @@ syntax used for extraction.
 import copy
 from typing import Any
 
-from smarter.apps.guardrail.services.contracts import GuardrailStage, TextSegment
+from smarter.apps.provider.services.text_completion.contracts import (
+    GuardrailStage,
+    TextSegment,
+)
 
 
 def extract_segments(payload: dict[str, Any], stage: GuardrailStage) -> list[TextSegment]:

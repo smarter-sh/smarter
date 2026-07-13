@@ -1,6 +1,6 @@
 """Exceptions raised by the Guardrail service."""
 
-from smarter.apps.guardrail.services.contracts import GuardrailFinding
+from smarter.apps.provider.services.text_completion.contracts import GuardrailFinding
 
 
 class GuardrailServiceError(Exception):

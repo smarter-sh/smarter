@@ -18,12 +18,6 @@ from smarter.apps.guardrail.caching import (
     get_cached_guardrails_available_to_user_profile,
 )
 from smarter.apps.guardrail.models import Guardrail, GuardrailType
-from smarter.apps.guardrail.services.contracts import (
-    GuardrailFinding,
-    GuardrailOutcome,
-    GuardrailStage,
-    TextSegment,
-)
 from smarter.apps.guardrail.services.exceptions import (
     GuardrailConfigError,
     GuardrailStrategyNotImplementedError,
@@ -31,6 +25,12 @@ from smarter.apps.guardrail.services.exceptions import (
 from smarter.apps.guardrail.services.strategies.base import StrategyContext
 from smarter.apps.guardrail.services.strategies.registry import get_strategy
 from smarter.apps.guardrail.services.text_extraction import extract_segments
+from smarter.apps.provider.services.text_completion.contracts import (
+    GuardrailFinding,
+    GuardrailOutcome,
+    GuardrailStage,
+    TextSegment,
+)
 from smarter.lib import logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
 
