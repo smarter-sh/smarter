@@ -15,7 +15,10 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import UserProfile
+from smarter.apps.guardrail.caching import (
+    get_cached_guardrails_available_to_user_profile,
+)
 from smarter.apps.guardrail.models import Guardrail, GuardrailType
 from smarter.apps.guardrail.services.contracts import (
     GuardrailFinding,
@@ -63,8 +66,7 @@ class GuardrailEngine:
     :vartype user_profile: ~smarter.apps.account.models.UserProfile or None
     """
 
-    def __init__(self, account: Account, user_profile: UserProfile | None = None):
-        self.account = account
+    def __init__(self, user_profile: UserProfile | None = None):
         self.user_profile = user_profile
 
     def load_guardrails(self, stage: GuardrailStage) -> list[Guardrail]:
@@ -86,14 +88,11 @@ class GuardrailEngine:
             first) then ``id``.
         :rtype: list[~smarter.apps.guardrail.models.Guardrail]
         """
+
         applicable_types = _STAGE_TO_TYPES[stage]
-        queryset = Guardrail.objects.filter(
-            account=self.account,
-            is_active=True,
-            guardrail_type__in=applicable_types,
-        )
-        if self.user_profile is not None:
-            queryset = queryset.filter(user_profile=self.user_profile)
+        queryset = get_cached_guardrails_available_to_user_profile(user_profile=self.user_profile)  # type: ignore
+        queryset = queryset.filter(guardrail_type__in=applicable_types)
+
         return list(queryset.order_by("priority", "id"))
 
     def run(
