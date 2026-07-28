@@ -19,7 +19,7 @@
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@smarter/common": "^0.1.0",
-    "js-yaml": "^5.1.0",
+    "js-yaml": "^5.2.2",
     "process": "^0.11.10",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
