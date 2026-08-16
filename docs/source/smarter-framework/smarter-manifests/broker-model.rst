@@ -13,3 +13,4 @@ AI Resources that implement the Broker Model will subclass the AbstractBroker cl
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:

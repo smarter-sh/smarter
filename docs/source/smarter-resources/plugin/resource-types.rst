@@ -11,3 +11,4 @@ Plugin Reference
    plugin/sql
    plugin/api
    plugin/utils
+   plugin/skill
