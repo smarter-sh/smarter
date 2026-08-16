@@ -21,4 +21,4 @@ with no broader access implied.
 Technical Reference
 -------------------
 
-See: :doc:`Smarter Django REST Framework <smarter-framework/developer-reference/lib/drf>`
+See: :doc:`Smarter Django REST Framework <../smarter-framework/developer-reference/lib/drf>`
