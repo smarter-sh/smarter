@@ -493,7 +493,7 @@ sqlalchemy==2.0.49
     # via
     #   langchain-classic
     #   langchain-community
-sqlparse==0.5.5
+sqlparse==0.6.0
     # via
     #   django
     #   django-debug-toolbar
