@@ -52,6 +52,8 @@ jobs:
                 prerelease: true
               }
             ]
+          extra_plugins: |
+            conventional-changelog-conventionalcommits@^10.2.0
         env:
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
