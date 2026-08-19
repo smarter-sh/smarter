@@ -32,6 +32,7 @@ from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import redirect, render
 
+from smarter.apps.dashboard.views.views.api.charges import AggregatedChargesPeriod
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
 from smarter.lib.cache import cache_results
@@ -110,9 +111,8 @@ class DashboardView(SmarterAuthenticatedNeverCachedWebView):
                         DashboardApiReverseNames.service_health,
                     ),
                     "charges_api_url": reverse(
-                        DashboardApiReverseNames.namespace,
-                        DashboardApiReverseNames.namespace,
-                        DashboardApiReverseNames.token_charges,
+                        f"{DashboardReverseNames.namespace}:{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.token_charges}",
+                        kwargs={"periodicity": AggregatedChargesPeriod.HOUR},
                     ),
                     "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
                     "smarter_request_id": self.generate_smarter_request_id(),
