@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.21](https://github.com/smarter-sh/smarter/compare/v0.14.20...v0.14.21) (2026-08-19)
+
+### Bug Fixes
+
+* broken reverse url for charges_api_url ([22dbac1](https://github.com/smarter-sh/smarter/commit/22dbac1f47baf73d4e7a5dd9d7c449175b95882e))
+
 ## [0.14.20](https://github.com/smarter-sh/smarter/compare/v0.14.19...v0.14.20) (2026-07-06)
 
 ## [0.14.20-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.14.20-alpha.5...v0.14.20-alpha.6) (2026-07-06)
