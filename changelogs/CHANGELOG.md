@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.15.0-alpha.13](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.12...v0.15.0-alpha.13) (2026-08-19)
+
+### Bug Fixes
+
+* broken reverse url for charges_api_url ([22dbac1](https://github.com/smarter-sh/smarter/commit/22dbac1f47baf73d4e7a5dd9d7c449175b95882e))
+
+### Refactoring
+
+* move contracts to the providers app ([0d2b3f7](https://github.com/smarter-sh/smarter/commit/0d2b3f7888d6ee0176cb169c14406516c1fcbe8d))
+
 ## [0.15.0-alpha.12](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.11...v0.15.0-alpha.12) (2026-07-13)
 
 ## [0.15.0-alpha.11](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.10...v0.15.0-alpha.11) (2026-07-12)
