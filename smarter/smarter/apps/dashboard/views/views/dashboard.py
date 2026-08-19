@@ -32,6 +32,7 @@ from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import redirect, render
 
+from smarter.apps.dashboard.views.views.api.charges import AggregatedChargesPeriod
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
 from smarter.lib.cache import cache_results

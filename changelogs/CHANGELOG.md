@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-
-
 ## [0.15.0-alpha.12](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.11...v0.15.0-alpha.12) (2026-07-13)
 
 ## [0.15.0-alpha.11](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.10...v0.15.0-alpha.11) (2026-07-12)
@@ -29,6 +27,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ## [0.15.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.1...v0.15.0-alpha.2) (2026-07-06)
 
 ## [0.15.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.14.20-alpha.6...v0.15.0-alpha.1) (2026-07-06)
+
+## [0.14.20](https://github.com/smarter-sh/smarter/compare/v0.14.19...v0.14.20) (2026-07-06)
 
 ## [0.14.20-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.14.20-alpha.5...v0.14.20-alpha.6) (2026-07-06)
 
