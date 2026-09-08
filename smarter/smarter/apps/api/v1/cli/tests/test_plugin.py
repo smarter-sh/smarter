@@ -87,14 +87,14 @@ class TestApiV1CliPlugin(ApiV1CliTestBase):
                     "tags": ["down", "up", "all-around"],
                     "annotations": [
                         {"smarter.sh/tests/owner": "test bank"},
-                        {"smarter.sh/tests/host": "sql.lawrencemcdaniel.com"},
+                        {"smarter.sh/tests/host": "localhost"},
                         {
                             "smarter.sh/tests/purpose": "Provide information about Stackademy University courses using SQL queries."
                         },
                         {"smarter.sh/tests/last-updated": "2025-12-31"},
                         {"smarter.sh/tests/documentation": "https://docs.tests.edu/sql-llmclient"},
                         {
-                            "smarter.sh/tests/connection-info": "This llmclient connects to the Stackademy SQL database hosted at sql.lawrencemcdaniel.com using the Stackademy SQL plugin to retrieve course information.\n"
+                            "smarter.sh/tests/connection-info": "This llmclient connects to the Stackademy SQL database hosted at localhost using the Stackademy SQL plugin to retrieve course information.\n"
                         },
                     ],
                     "pluginClass": "static",

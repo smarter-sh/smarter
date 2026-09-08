@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 9.6.0, for macos26.2 (arm64)
 --
--- Host: sql.lawrencemcdaniel.com    Database: smarter_test_db
+-- Database: smarter_test_db
 -- ------------------------------------------------------
 -- Server version	8.4.9
 
@@ -9,6 +9,17 @@
 --
 
 GRANT ALL PRIVILEGES ON *.* TO 'smarter'@'%' WITH GRANT OPTION;
+
+--
+-- Create read-only test users for smarter_test_db
+--
+
+CREATE USER IF NOT EXISTS 'smarter_test_proxy_user'@'%' IDENTIFIED BY 'smarter_test_proxy_user';
+GRANT SELECT ON smarter_test_db.* TO 'smarter_test_proxy_user'@'%';
+
+CREATE USER IF NOT EXISTS 'smarter_test_user'@'%' IDENTIFIED BY 'smarter_test_user';
+GRANT SELECT ON smarter_test_db.* TO 'smarter_test_user'@'%';
+
 FLUSH PRIVILEGES;
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -23,12 +34,6 @@ FLUSH PRIVILEGES;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 SET @MYSQLDUMP_TEMP_LOG_BIN = @@SESSION.SQL_LOG_BIN;
 SET @@SESSION.SQL_LOG_BIN= 0;
-
---
--- GTID state at the beginning of the backup
---
-
-SET @@GLOBAL.GTID_PURGED=/*!80000 '+'*/ '';
 
 --
 -- Current Database: `smarter_test_db`
