@@ -29,7 +29,7 @@ metadata:
 spec:
   connection:
     dbEngine: django.db.backends.mysql
-    hostname: sql.lawrencemcdaniel.com
+    hostname: smarter-sqldb
     port: 3306
     username: smarter_test_user
     password: smarter_test_user
