@@ -6,12 +6,11 @@
 # will be available at http://localhost:9357.
 #------------------------------------------------------------------------------
 services:
-  smarter-mysql:
-    container_name: smarter-mysql
+  smarter-sqldb:
+    container_name: smarter-sqldb
     mem_limit: 2g
     cpus: 0.5
-    image: mysql:8
-    command: ["mysqld", "--mysql-native-password=ON"]
+    image: mariadb:latest
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: smarter
@@ -21,7 +20,7 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - ./mysql-data:/var/lib/mysql
+      - ./mariadb-data:/var/lib/mysql
 
   smarter-redis:
     container_name: smarter-redis
@@ -61,7 +60,7 @@ services:
     ports:
       - 9357:9357
     depends_on:
-      - smarter-mysql
+      - smarter-sqldb
       - smarter-redis
     env_file:
       - ./.env
@@ -91,7 +90,7 @@ services:
     image: smarter
     command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
     depends_on:
-      - smarter-mysql
+      - smarter-sqldb
       - smarter-redis
       - smarter-app
     env_file:
@@ -132,7 +131,7 @@ services:
     image: smarter
     command: celery -A smarter.workers.celerybeat beat --loglevel=info
     depends_on:
-      - smarter-mysql
+      - smarter-sqldb
       - smarter-redis
       - smarter-app
     env_file:

@@ -36,7 +36,7 @@ service-account.b64
 # -------------------------------------
 .ruff_cache
 celerybeat-schedule
-mysql-data
+mariadb-data
 db.sqlite3
 .cache.sqlite
 staticfiles

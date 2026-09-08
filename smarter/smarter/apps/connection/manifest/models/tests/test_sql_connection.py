@@ -593,7 +593,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(self.model.spec)
 
         self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
-        self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
+        self.assertEqual(self.model.spec.connection.hostname, "smarter-sqldb")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
         self.assertEqual(self.model.spec.connection.password, "smarter")
@@ -677,7 +677,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(self.model.spec)
 
         self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
-        self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
+        self.assertEqual(self.model.spec.connection.hostname, "smarter-sqldb")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
         self.assertEqual(self.model.spec.connection.password, "smarter")
@@ -763,7 +763,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self.assertIsNotNone(self.model.spec)
 
         self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
-        self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
+        self.assertEqual(self.model.spec.connection.hostname, "smarter-sqldb")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
         self.assertEqual(self.model.spec.connection.password, "smarter")
@@ -817,7 +817,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         # pylint: disable=W0612
         example_output = {
             "dbEngine": "django.db.backends.mysql",
-            "hostname": "smarter-mysql",
+            "hostname": "smarter-sqldb",
             "port": 3306,
             "database": "smarter",
             "username": "smarter",

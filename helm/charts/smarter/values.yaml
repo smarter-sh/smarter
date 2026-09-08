@@ -256,7 +256,7 @@ externalDatabase:
 
 mysql:
   enabled: false
-  fullnameOverride: "smarter-mysql"
+  fullnameOverride: "smarter-sqldb"
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
