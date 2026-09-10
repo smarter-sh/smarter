@@ -29,6 +29,10 @@ from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.prompt.views.detailviews import PromptConfigView
 
 urlpatterns = [
+    path("", PromptConfigView.as_view(), name="llmclient_config"),
+    # Alias for 'console_home' so that templates shared with the web console
+    # (e.g. error pages) can resolve this name regardless of which
+    # django-hosts urlconf is active for the current request.
     path("", PromptConfigView.as_view(), name="console_home"),
     path("config/", PromptConfigView.as_view(), name="llmclient_named_config"),
     path("prompt/", DefaultLLMClientApiView.as_view(), name="llmclient_named_chat"),

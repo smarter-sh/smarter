@@ -121,6 +121,24 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     permission_classes = (SmarterAuthenticatedPermissionClass,)
     authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
 
+    def get_permissions(self):
+        """
+        Do not require authentication for OPTIONS requests.
+
+        OPTIONS requests are used both for DRF's own metadata introspection
+        and, more importantly, as CORS preflight probes issued by browsers.
+        Preflight requests never carry credentials (no cookies, no
+        Authorization header), so if CORS middleware doesn't intercept them
+        first (e.g. a misconfigured/disallowed origin, or the middleware
+        being disabled), enforcing authentication here causes the preflight
+        itself to fail with a 401. That, in turn, makes the browser abort
+        the real (authenticated) request before it's ever sent, which looks
+        like "I'm logged in but I still get an authentication error".
+        """
+        if getattr(self, "request", None) is not None and self.request.method == "OPTIONS":
+            return []
+        return super().get_permissions()
+
     _BrokerClass: Optional[Type[AbstractBroker]] = None
     _broker: Optional[AbstractBroker] = None
     _loader: Optional[SAMLoader] = None
@@ -566,6 +584,19 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             )
             super().initial(request, *args, **kwargs)
 
+            # super().initial() just ran DRF's real authentication pipeline
+            # (SmarterTokenAuthentication and/or SessionAuthentication), which
+            # is the only path that resolves session-based auth. The earlier
+            # `self.smarter_request = request` assignment above ran before
+            # that, when `request.user` was still anonymous, so it could only
+            # pick up token-based auth via self.authenticate() (see its
+            # docstring: it only ever tries self.api_token). Re-assign now so
+            # SmarterRequestMixin/AccountMixin (self.user, self.user_profile,
+            # self.account) reflect the now-authenticated request.user,
+            # rather than staying stuck on the pre-auth Anonymous state for
+            # session-authenticated requests.
+            self.smarter_request = request
+
             logger.debug(
                 "%s.initial() - authenticated request: %s, user: %s, self.user: %s is_authenticated: %s, auth_header: %s",
                 self.logger_prefix,
@@ -629,9 +660,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 f"{self.formatted_class_name}.smarter_request request object is not set. This should not happen."
             )
         if not self.ready:
-            logger.warning(
-                "%s.initial() is not in a ready state. This might affect some operations.", self.logger_prefix
-            )
+            # Expected for anonymous/unauthenticated requests (e.g. OPTIONS
+            # preflight probes), which never carry account context.
+            logger.debug("%s.initial() is not in a ready state. This might affect some operations.", self.logger_prefix)
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
@@ -734,11 +765,15 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
         self.smarter_request = request
         response = None
-        msg = f"{self.logger_prefix}.dispatch() - is {self.is_cli_base_api_view_ready_state} - {self.smarter_request} - {self.user_profile if self.user_profile else "Anonymous"}"
-        if self.ready:
-            logger.debug(msg)
-        else:
-            logger.warning(msg)
+        # note: `is_cli_base_api_view_ready_state` reflects only `cba_ready`
+        # (currently a hardcoded no-op), not the combined readiness that
+        # `self.ready` checks, so it's not used here to avoid a misleading
+        # "is READY" message on requests that are actually not ready (e.g.
+        # anonymous OPTIONS preflight probes, which are expected to be
+        # "not ready" since they carry no account context).
+        ready_state = self.formatted_state_ready if self.ready else self.formatted_state_not_ready
+        msg = f"{self.logger_prefix}.dispatch() - is {ready_state} - {self.smarter_request} - {self.user_profile if self.user_profile else "Anonymous"}"
+        logger.debug(msg)
         try:
             logger.debug(
                 "%s.dispatch() - called for request: %s and authorization: %s",
