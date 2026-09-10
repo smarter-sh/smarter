@@ -38,6 +38,15 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
     permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
+    def get_permissions(self):
+        """OPTIONS requests (CORS preflight, DRF metadata probes) never carry credentials.
+
+        Don't require authentication for them.
+        """
+        if getattr(self, "request", None) is not None and self.request.method == "OPTIONS":
+            return []
+        return super().get_permissions()
+
     def __init__(self, *args, **kwargs):
         """Initialize the SmarterAuthenticatedAPIView."""
         logger.debug(
@@ -136,6 +145,39 @@ class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
 
     permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
+
+    def get_permissions(self):
+        """OPTIONS requests (CORS preflight, DRF metadata probes) never carry credentials.
+
+        Don't require authentication for them.
+        """
+        if getattr(self, "request", None) is not None and self.request.method == "OPTIONS":
+            return []
+        return super().get_permissions()
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the SmarterAuthenticatedListAPIView.
+
+        Unlike SmarterAuthenticatedAPIView, this class previously had no
+        __init__ override. DRF/Django's View.__init__ does not call
+        super().__init__(), so without this, SmarterRequestMixin.__init__()
+        (and thus self._srm_ready and friends) was never invoked, causing an
+        AttributeError the first time self.srm_ready was accessed.
+        """
+        logger.debug(
+            "%s.__init__() - called with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+        super().__init__(*args, **kwargs)
+        self.request = kwargs.pop("request", None)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, request=self.request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
 
     @property
     def formatted_class_name(self):

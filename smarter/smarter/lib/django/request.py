@@ -2105,7 +2105,11 @@ class SmarterRequestMixin(AccountMixin):
             return self._srm_ready
         # cheap and easy way to fail.
         if not self.am_ready:
-            logger.warning(
+            # AccountMixin is legitimately not ready for anonymous requests
+            # (e.g. CORS preflight OPTIONS probes, unauthenticated callers).
+            # That's an expected, routine state, not a problem, so this
+            # doesn't warrant WARNING-level attention.
+            logger.debug(
                 "%s.srm_ready() - AccountMixin is not srm_ready. Cannot process request.",
                 self.srm_formatted_class_name,
             )

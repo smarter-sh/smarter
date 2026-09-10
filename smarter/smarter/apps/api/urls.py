@@ -11,6 +11,6 @@ from .v1.const import namespace as v1_namespace
 app_name = namespace
 
 urlpatterns = [
-    path("", RedirectView.as_view(url="v1/", permanent=True), name="console_home"),
+    path("", RedirectView.as_view(url="v1/", permanent=True), name="redirect_to_v1"),
     path("v1/", include(api_v1_urls, namespace=v1_namespace)),
 ]

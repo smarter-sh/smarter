@@ -254,6 +254,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     UNDEPLOY = "undeploy"
     VERSION = "version"
     WHOAMI = "whoami"
+    RESOURCES = "resources"
 
     @classmethod
     def choices(cls) -> list[tuple[str, str]]:
@@ -274,6 +275,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             (cls.VERSION.value, cls.VERSION.value),
             (cls.UNDEPLOY.value, cls.UNDEPLOY.value),
             (cls.WHOAMI.value, cls.WHOAMI.value),
+            (cls.RESOURCES.value, cls.RESOURCES.value),
         ]
 
     @classmethod
@@ -295,6 +297,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             cls.VERSION.value: "fetched version",
             cls.UNDEPLOY.value: "undeployed",
             cls.WHOAMI.value: "fetched identity",
+            cls.RESOURCES.value: "fetched resources",
         }
 
     @classmethod
