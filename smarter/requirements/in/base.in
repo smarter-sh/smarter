@@ -79,6 +79,7 @@ python-Levenshtein                      # Levenshtein distance calculation for L
 nltk~=3.0                               # Natural Language Toolkit
 textblob                                # Text processing library
 inflect                                 # Pluralization and singularization
+inflection                              # String transformation library (pluralize/singularize/camelize)
 
 # CMS and web publishing tools
 # ------------

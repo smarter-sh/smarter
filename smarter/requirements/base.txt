@@ -209,7 +209,9 @@ idna==3.11
 inflect==7.5.0
     # via -r smarter/requirements/in/base.in
 inflection==0.5.1
-    # via drf-yasg
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   drf-yasg
 invoke==3.0.3
     # via paramiko
 jiter==0.14.0
