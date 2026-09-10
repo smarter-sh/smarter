@@ -1,5 +1,9 @@
 """Smarter API V1 Manifests Enumerations."""
 
+import re
+
+import inflection
+
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
 )
@@ -174,7 +178,26 @@ class SAMKinds(SmarterEnumAbstract):
     VECTORSTORE = VECTORSTORE_MANIFEST_KIND
 
     @classmethod
-    def str_to_kind(cls, kind_str: str) -> "SAMKinds":
+    def plural(cls, kind: str) -> str:
+        """
+        Returns the plural of the kind, pluralizing only its final.
+
+        CamelCase token.
+
+        example:
+
+        SAMKinds.plural(SAMKinds.API_CONNECTION)  # "ApiConnection" -> "ApiConnections"
+        """
+        kind = SAMKinds.str_to_kind(kind)
+        tokens = re.findall(r"[A-Z][a-z0-9]*|[a-z0-9]+", kind)
+        if not tokens:
+            return inflection.pluralize(kind)
+
+        tokens[-1] = inflection.pluralize(tokens[-1])
+        return "".join(tokens)
+
+    @classmethod
+    def str_to_kind(cls, kind_str: str) -> str:
         """Convert a string to a SAMKinds enumeration value."""
         if isinstance(kind_str, bytes):
             kind_str = kind_str.decode("utf-8")
@@ -184,7 +207,7 @@ class SAMKinds(SmarterEnumAbstract):
         # Try case-insensitive key lookup
         for _, member in cls.__members__.items():
             if hasattr(member, "value") and isinstance(member.value, str) and member.value.lower() == kind_str.lower():
-                return member
+                return str(member)
 
         raise SmarterValueError(f"Invalid SAMKinds value: {kind_str}.")
 

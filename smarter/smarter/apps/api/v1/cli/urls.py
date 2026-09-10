@@ -43,6 +43,7 @@ from .views.logs import ApiV1CliLogsApiView
 from .views.manifest import ApiV1CliManifestApiView
 from .views.nonbrokered.prompt import ApiV1CliPromptApiView
 from .views.nonbrokered.prompt_config import ApiV1CliPromptConfigApiView
+from .views.nonbrokered.resources import ApiV1CliResourcesApiView
 from .views.nonbrokered.status import ApiV1CliStatusApiView
 from .views.nonbrokered.version import ApiV1CliVersionApiView
 from .views.nonbrokered.whoami import ApiV1CliWhoamiApiView
@@ -100,6 +101,7 @@ class ApiV1CliReverseViews:
     json_schema = to_snake_case(ApiV1CliSchemaApiView.__name__)
     version = to_snake_case(ApiV1CliVersionApiView.__name__)
     whoami = to_snake_case(ApiV1CliWhoamiApiView.__name__)
+    resources = to_snake_case(ApiV1CliResourcesApiView.__name__)
 
 
 urlpatterns = [
@@ -117,4 +119,5 @@ urlpatterns = [
     path("status/", ApiV1CliStatusApiView.as_view(), name=ApiV1CliReverseViews.status),
     path("version/", ApiV1CliVersionApiView.as_view(), name=ApiV1CliReverseViews.version),
     path("whoami/", ApiV1CliWhoamiApiView.as_view(), name=ApiV1CliReverseViews.whoami),
+    path("resources/", ApiV1CliResourcesApiView.as_view(), name=ApiV1CliReverseViews.resources),
 ]
