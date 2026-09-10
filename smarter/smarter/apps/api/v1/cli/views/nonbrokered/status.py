@@ -80,7 +80,9 @@ class ApiV1CliStatusApiView(CliBaseApiView):
                 SmarterJournalApiResponseKeys.DATA: {
                     "infrastructures": {
                         "kubernetes": aws_helper.eks.get_kubernetes_info(),
-                        "mysql": aws_helper.rds.get_mysql_info(),
+                        # mcdaniel: remote mysql is not part of the platform. this
+                        # should not be here.
+                        # "mysql": aws_helper.rds.get_mysql_info(),
                         "redis": self.get_redis_info(),
                     },
                     "compute": {

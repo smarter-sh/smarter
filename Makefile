@@ -214,7 +214,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.lib"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.api.v1.cli.views.nonbrokered.tests.test_resources"
 
 docker-prune:
 	@echo ""
