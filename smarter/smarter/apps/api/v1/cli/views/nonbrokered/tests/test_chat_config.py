@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from urllib.parse import urlencode
 
+from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.llmclient.models import LLMClient
 from smarter.common.api import SmarterApiVersions
@@ -16,8 +17,6 @@ from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
     SmarterJournalThings,
 )
-
-from .base_class import ApiV1CliTestBase
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.API_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]

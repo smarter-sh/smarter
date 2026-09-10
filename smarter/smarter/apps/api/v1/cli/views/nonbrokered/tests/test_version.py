@@ -1,7 +1,8 @@
-"""Test Api v1 CLI non-brokered status command"""
+"""Test Api v1 CLI non-brokered version command."""
 
 from http import HTTPStatus
 
+from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.shortcuts import reverse
@@ -11,12 +12,10 @@ from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
 )
 
-from .base_class import ApiV1CliTestBase
 
-
-class TestApiCliV1Status(ApiV1CliTestBase):
+class TestApiCliV1Version(ApiV1CliTestBase):
     """
-    Test Api v1 CLI non-brokered status command
+    Test Api v1 CLI non-brokered version command.
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
@@ -29,20 +28,22 @@ class TestApiCliV1Status(ApiV1CliTestBase):
     def validate_response(self, response: dict) -> None:
         self.assertIsInstance(response, dict)
         self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
-        self.assertEqual(response[SmarterJournalApiResponseKeys.THING], "None")
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
-        self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
 
-    def test_status(self) -> None:
-        """Test status command"""
+        metadata = response[SmarterJournalApiResponseKeys.METADATA]
+        self.assertIsInstance(metadata, dict)
+        self.assertEqual(metadata[SmarterJournalApiResponseKeys.THING], "None")
 
-        path = reverse(self.namespace + ApiV1CliReverseViews.status, kwargs=None)
+    def test_version(self) -> None:
+        """Test version command."""
+
+        path = reverse(self.namespace + ApiV1CliReverseViews.version, kwargs=None)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]
-        self.assertIn("infrastructures", data.keys())
-        self.assertIn("compute", data.keys())
+        self.assertIn("api", data.keys())
+        self.assertIn("cli", data.keys())
 
         metadata = response[SmarterJournalApiResponseKeys.METADATA]
-        metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.STATUS.value
+        self.assertEqual(metadata[SCLIResponseMetadata.COMMAND], SmarterJournalCliCommands.VERSION.value)

@@ -1,22 +1,27 @@
-"""Test Api v1 CLI non-brokered version command"""
+"""Test Api v1 CLI non-brokered whoami command."""
 
 from http import HTTPStatus
 
+from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.api import SmarterApiVersions
+from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
     SCLIResponseMetadata,
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
 )
 
-from .base_class import ApiV1CliTestBase
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.API_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
+)
 
 
-class TestApiCliV1Version(ApiV1CliTestBase):
+class TestApiCliV1Whoami(ApiV1CliTestBase):
     """
-    Test Api v1 CLI non-brokered version command
+    Test Api v1 CLI non-brokered whoami command.
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
@@ -33,16 +38,17 @@ class TestApiCliV1Version(ApiV1CliTestBase):
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
 
-    def test_version(self) -> None:
-        """Test version command"""
+    def test_whoami(self) -> None:
+        """Test whoami command."""
 
-        path = reverse(self.namespace + ApiV1CliReverseViews.version, kwargs=None)
+        path = reverse(self.namespace + ApiV1CliReverseViews.whoami, kwargs=None)
+        logger.info("TestApiCliV1Whoami().test_whoami() Testing whoami command at path: %s", path)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]
-        self.assertIn("api", data.keys())
-        self.assertIn("cli", data.keys())
+        self.assertIn("user", data.keys())
+        self.assertIn("account", data.keys())
 
         metadata = response[SmarterJournalApiResponseKeys.METADATA]
-        metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.VERSION.value
+        metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.WHOAMI.value
