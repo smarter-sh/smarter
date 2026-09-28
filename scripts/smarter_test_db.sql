@@ -1,15 +1,7 @@
--- MySQL dump 10.13  Distrib 9.6.0, for macos26.2 (arm64)
+-- Compatible with MariaDB 10.6+ / 11.x and MySQL 8.x
 --
 -- Database: smarter_test_db
 -- ------------------------------------------------------
--- Server version	8.4.9
-
---
--- Grant the smarter application user superuser privileges
---
-
-GRANT ALL PRIVILEGES ON *.* TO 'smarter'@'%' WITH GRANT OPTION;
-
 --
 -- Create read-only test users for smarter_test_db
 --
@@ -32,8 +24,6 @@ FLUSH PRIVILEGES;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-SET @MYSQLDUMP_TEMP_LOG_BIN = @@SESSION.SQL_LOG_BIN;
-SET @@SESSION.SQL_LOG_BIN= 0;
 
 --
 -- Current Database: `smarter_test_db`
@@ -41,7 +31,7 @@ SET @@SESSION.SQL_LOG_BIN= 0;
 
 /*!40000 DROP DATABASE IF EXISTS `smarter_test_db`*/;
 
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `smarter_test_db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `smarter_test_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE `smarter_test_db`;
 
@@ -63,7 +53,7 @@ CREATE TABLE `courses` (
   UNIQUE KEY `course_code` (`course_code`),
   KEY `prerequisite_id` (`prerequisite_id`),
   CONSTRAINT `courses_ibfk_1` FOREIGN KEY (`prerequisite_id`) REFERENCES `courses` (`course_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -77,13 +67,6 @@ INSERT INTO `courses` VALUES (1,'CS101','Introduction to Computer Science','Fund
 UNLOCK TABLES;
 
 
---
--- Dumping routines for database 'smarter_test_db'
---
---
--- WARNING: can't read the INFORMATION_SCHEMA.libraries table. It's most probably an old server 8.4.9.
---
-SET @@SESSION.SQL_LOG_BIN = @MYSQLDUMP_TEMP_LOG_BIN;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -93,5 +76,3 @@ SET @@SESSION.SQL_LOG_BIN = @MYSQLDUMP_TEMP_LOG_BIN;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2026-08-05 12:30:31

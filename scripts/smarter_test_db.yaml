@@ -9,12 +9,6 @@ data:
     -- Database: smarter_test_db
     -- ------------------------------------------------------
     --
-    -- Grant the smarter application user superuser privileges
-    --
-
-    GRANT ALL PRIVILEGES ON *.* TO 'smarter'@'%' WITH GRANT OPTION;
-
-    --
     -- Create read-only test users for smarter_test_db
     --
 
