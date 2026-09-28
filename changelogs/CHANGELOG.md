@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.0-alpha.14](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.13...v0.15.0-alpha.14) (2026-09-28)
+
+### Bug Fixes
+
+* add /api/v1/cli/resources/ ([d3c3325](https://github.com/smarter-sh/smarter/commit/d3c33250c2cdcbaa8fce46543a22818c555808be))
+* add /api/v1/resources ([f837551](https://github.com/smarter-sh/smarter/commit/f837551ba4653cd8f1e0a05a565a2b5bdc92844d))
+
+### Refactoring
+
+* move smarter-test-db into mariadb container ([6b1e8be](https://github.com/smarter-sh/smarter/commit/6b1e8bedc6e3b1b80af52e41499e85ef460a36c2))
+* swap mysql for mariadb in local environment ([f8ad88e](https://github.com/smarter-sh/smarter/commit/f8ad88eb47f013c99d2b41e5ea494859a2860ad7))
+
 ## [0.15.0-alpha.13](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.12...v0.15.0-alpha.13) (2026-08-19)
 
 ### Bug Fixes
