@@ -1,6 +1,6 @@
 -- read-only user
 -- ----------------------------------------------------------
--- host:  sql.lawrencemcdaniel.com
+-- host:  smarter-mariadb
 -- port:  3306
 -- db:	  smarter_test_db
 -- user:  smarter_test_user
