@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.14.22](https://github.com/smarter-sh/smarter/compare/v0.14.21...v0.14.22) (2026-09-28)
+
+### Bug Fixes
+
+* swap sql.lawrencemcdaniel for smarter-mariadb ([581331b](https://github.com/smarter-sh/smarter/commit/581331b5640efa27872064c8296eaa255b793caf))
+
 ## [0.14.21](https://github.com/smarter-sh/smarter/compare/v0.14.20...v0.14.21) (2026-08-19)
 
 ### Bug Fixes
