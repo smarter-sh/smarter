@@ -18,7 +18,7 @@ practices.
 
    - `./smarter/requirements <https://github.com/smarter-sh/smarter/tree/main/smarter/requirements>`_
    - `./package.json <https://github.com/smarter-sh/smarter/tree/main/package.json>`_
-   - `./helm/charts/smarter <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter>`_
+   - `./helm/charts/smarter <https://github.com/smarter-sh/smarter-helm>`_
 
 
 3. **Config**: [✅] Store config in the environment. This project

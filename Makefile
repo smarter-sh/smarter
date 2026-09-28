@@ -177,7 +177,7 @@ docker-init:
 		python manage.py create_stackademy && \
 		python manage.py deploy_builtin_llmclients && \
 		python manage.py deploy_example_llmclient" && \
-	docker exec smarter-sqldb mariadb -u root -psmarter -e "GRANT ALL PRIVILEGES ON smarter_test_db.* TO 'smarter'@'%'; FLUSH PRIVILEGES;" && \
+	docker exec smarter-sqldb mariadb -u root -psmarter -e "GRANT ALL PRIVILEGES ON *.* TO 'smarter'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;" && \
 	docker exec smarter-sqldb mariadb -u smarter -psmarter -e 'UPDATE smarter.llmclient_llmclient SET deployed = 0;'
 	@echo "Docker and Smarter are initialized."
 	docker ps
@@ -373,7 +373,7 @@ sphinx-linkcheck:
 
 sphinx-publish:
 	cd docs/build/html && \
-	aws s3 sync . s3://docs.smarter.sh/ --delete && \
+	aws s3 sync . s3://docs.smarter.sh/ --delete --acl public-read && \
 	aws cloudfront create-invalidation --distribution-id E3J3PFZATCQOFX --paths "/*"
 
 ######################

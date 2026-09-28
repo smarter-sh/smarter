@@ -36,7 +36,7 @@ as a starting point for your own CI/CD pipeline. This workflow deploys the Smart
 Kubernetes
 -----------
 
-The Smarter project maintains a Helm chart located in the `./helm/charts/smarter <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter>`__
+The Smarter project maintains a Helm chart located in the `./helm/charts/smarter <https://github.com/smarter-sh/smarter-helm>`__
 directory of the smarter repository. This chart is published to `https://artifacthub.io/packages/helm/project-smarter/smarter <https://artifacthub.io/packages/helm/project-smarter/smarter>`__
 and is regularly updated with each new release. You can use this Helm chart to deploy Smarter to any Kubernetes cluster.
 
