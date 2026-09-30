@@ -14,6 +14,7 @@ from smarter.apps.plugin.models import (
     PluginDataSkill,
     PluginDataSql,
     PluginDataStatic,
+    PluginDataWebsearch,
     PluginMeta,
     PluginPrompt,
     PluginSelector,
@@ -270,6 +271,63 @@ class PluginSkillSerializer(SmarterCamelCaseSerializer):
             "resources",
             "source_url",
             "source_retrieved_at",
+        ]
+
+
+class PluginWebsearchSerializer(SmarterCamelCaseSerializer):
+    """
+    Serializer for the PluginDataWebsearch model.
+
+    Experimental.
+
+    This serializer exposes the configuration of a WebsearchPlugin: its web search API, the
+    Secret that contains the api key, search options, web page reading options, domain policy,
+    timeout and cache duration. The api key is serialized as the name of its Secret, never its value.
+
+    **Example usage**:
+
+    .. code-block:: python
+
+        serializer = PluginWebsearchSerializer(PluginDataWebsearch.objects.first())
+        print(serializer.data)
+        # Output: {
+        #   "description": "...",
+        #   "searchProvider": "brave",
+        #   "searchApiKey": "brave_search_api_key",
+        #   "searchMaxResults": 5,
+        #   "fetchEnabled": true,
+        #   "allowedDomains": [],
+        #   ...
+        # }
+
+    .. note::
+
+        **Experimental.** The WebsearchPlugin was designed and coded by Claude Code (Anthropic's
+        Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental, and will
+        be documented.
+    """
+
+    search_api_key = serializers.SlugRelatedField(slug_field="name", read_only=True)
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = PluginDataWebsearch
+        fields = [
+            "description",
+            "search_provider",
+            "search_api_key",
+            "search_max_results",
+            "search_safe_search",
+            "search_country",
+            "search_language",
+            "search_freshness",
+            "fetch_enabled",
+            "fetch_max_characters",
+            "fetch_respect_robots_txt",
+            "allowed_domains",
+            "blocked_domains",
+            "timeout",
+            "cache_ttl",
         ]
 
 

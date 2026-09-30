@@ -70,6 +70,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         (SAMPluginCommonMetadataClassValues.SKILL.value, SAMPluginCommonMetadataClassValues.SKILL.value),
         (SAMPluginCommonMetadataClassValues.SQL.value, SAMPluginCommonMetadataClassValues.SQL.value),
         (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
+        (SAMPluginCommonMetadataClassValues.WEBSEARCH.value, SAMPluginCommonMetadataClassValues.WEBSEARCH.value),
     ]
     """The classes of plugins supported by Smarter."""
 
@@ -147,6 +148,8 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             return SAMKinds.API_PLUGIN
         elif self.plugin_class == SAMPluginCommonMetadataClassValues.SKILL.value:
             return SAMKinds.SKILL_PLUGIN
+        elif self.plugin_class == SAMPluginCommonMetadataClassValues.WEBSEARCH.value:
+            return SAMKinds.WEBSEARCH_PLUGIN
         else:
             raise SmarterValueError(f"Unsupported plugin class: {self.plugin_class}")
 

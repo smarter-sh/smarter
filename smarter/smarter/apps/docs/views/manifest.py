@@ -132,6 +132,15 @@ class DocsExampleManifestSkillView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.SKILL_PLUGIN)
 
 
+class DocsExampleManifestWebsearchView(DocsExampleManifestBaseView):
+    """Plugin Websearch example manifest view.
+
+    Experimental.
+    """
+
+    kind = SAMKinds(SAMKinds.WEBSEARCH_PLUGIN)
+
+
 class DocsExampleManifestSqlView(DocsExampleManifestBaseView):
     """Plugin Sql JSON Schema view."""
 

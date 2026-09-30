@@ -38,6 +38,7 @@ from .views.json_schema import (
     DocsJsonSchemaUserView,
     DocsJsonSchemaVectorsearchView,
     DocsJsonSchemaVectorstoreView,
+    DocsJsonSchemaWebsearchView,
 )
 from .views.manifest import (
     DocsExampleManifestAccountView,
@@ -59,6 +60,7 @@ from .views.manifest import (
     DocsExampleManifestUserView,
     DocsExampleManifestVectorsearchView,
     DocsExampleManifestVectorstoreView,
+    DocsExampleManifestWebsearchView,
 )
 from .views.views import JsonSchemasView, ManifestsView
 
@@ -172,6 +174,11 @@ urlpatterns = [
         name=json_schema_name(SAMKinds.SKILL_PLUGIN.value),
     ),
     path(
+        json_schema_path(SAMKinds.WEBSEARCH_PLUGIN.value),
+        DocsJsonSchemaWebsearchView.as_view(),
+        name=json_schema_name(SAMKinds.WEBSEARCH_PLUGIN.value),
+    ),
+    path(
         json_schema_path(SAMKinds.SQL_PLUGIN.value),
         DocsJsonSchemaSqlView.as_view(),
         name=json_schema_name(SAMKinds.SQL_PLUGIN.value),
@@ -258,6 +265,11 @@ urlpatterns = [
         manifest_path(SAMKinds.SKILL_PLUGIN.value),
         DocsExampleManifestSkillView.as_view(),
         name=manifest_name(SAMKinds.SKILL_PLUGIN.value),
+    ),
+    path(
+        manifest_path(SAMKinds.WEBSEARCH_PLUGIN.value),
+        DocsExampleManifestWebsearchView.as_view(),
+        name=manifest_name(SAMKinds.WEBSEARCH_PLUGIN.value),
     ),
     path(
         manifest_path(SAMKinds.SQL_CONNECTION.value),

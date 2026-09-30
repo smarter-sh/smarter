@@ -16,6 +16,9 @@ Test data lives in ``./data``:
 - ``skill-plugin.yaml``: the shared SkillPlugin, whose SKILL.md and bundled files are contained verbatim.
 - ``skill-plugin-remote.yaml``: the shared remotely sourced SkillPlugin, which refers to a skill on GitHub.
 - ``skill-remote/``: the skill that :class:`FakeSkillHost` serves in lieu of GitHub.
+- ``websearch-plugin.yaml``: the shared WebsearchPlugin, which searches with Brave, and reads pages.
+- ``websearch-plugin-docs.yaml``: a WebsearchPlugin that searches with Tavily, restricted to docs.example.com.
+- ``websearch-plugin-reader.yaml``: a WebsearchPlugin that reads pages, but cannot search.
 
 .. note::
 
@@ -58,11 +61,15 @@ from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.manifest.models.skill_plugin.model import SAMSkillPlugin
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
+from smarter.apps.plugin.manifest.models.websearch_plugin.model import (
+    SAMWebsearchPlugin,
+)
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.api import ApiPlugin
 from smarter.apps.plugin.plugin.skill import SkillPlugin
 from smarter.apps.plugin.plugin.sql import SqlPlugin
 from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.plugin.websearch import WebsearchPlugin
 from smarter.apps.secret.models import Secret
 from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 from smarter.lib import json, logging
@@ -83,6 +90,19 @@ STATIC_PLUGIN_NAME = "test_static_plugin"
 STATIC_EDGE_CASES_PLUGIN_NAME = "test_static_plugin_edge_cases"
 SKILL_PLUGIN_NAME = "test_skill_plugin"
 SKILL_REMOTE_PLUGIN_NAME = "test_skill_plugin_remote"
+WEBSEARCH_PLUGIN_NAME = "test_websearch_plugin"
+WEBSEARCH_DOCS_PLUGIN_NAME = "test_websearch_plugin_docs"
+WEBSEARCH_READER_PLUGIN_NAME = "test_websearch_plugin_reader"
+WEBSEARCH_DATA_FILES = {
+    "research": "websearch-plugin.yaml",
+    "docs": "websearch-plugin-docs.yaml",
+    "reader": "websearch-plugin-reader.yaml",
+}
+# these must match ./data/websearch-plugin*.yaml
+BRAVE_API_KEY_SECRET = "test_brave_api_key"
+TAVILY_API_KEY_SECRET = "test_tavily_api_key"
+BRAVE_API_KEY = "test-brave-api-key-value"
+TAVILY_API_KEY = "tvly-test-api-key-value"
 
 # the fictitious GitHub repository that FakeSkillHost serves from ./data/skill-remote.
 # these must match ./data/skill-plugin-remote.yaml
@@ -98,8 +118,12 @@ SKILL_REMOTE_TREE_URL = (
     f"https://api.github.com/repos/{SKILL_REMOTE_OWNER}/{SKILL_REMOTE_REPO}/git/trees/{SKILL_REMOTE_REF}?recursive=1"
 )
 SKILL_REMOTE_RAW_URL = f"https://raw.githubusercontent.com/{SKILL_REMOTE_OWNER}/{SKILL_REMOTE_REPO}/{SKILL_REMOTE_REF}/{SKILL_REMOTE_DIRECTORY}/"
-SKILL_SOURCES_REQUESTS_PATCH = "smarter.apps.plugin.plugin.skill_sources.requests.get"
-SKILL_SOURCES_DNS_PATCH = "smarter.apps.plugin.plugin.skill_sources.socket.getaddrinfo"
+# remote requests are made by smarter.apps.plugin.plugin.safe_http, on behalf of both the
+# SkillPlugin and the WebsearchPlugin.
+SAFE_HTTP_REQUESTS_PATCH = "smarter.apps.plugin.plugin.safe_http.requests.request"
+SAFE_HTTP_DNS_PATCH = "smarter.apps.plugin.plugin.safe_http.socket.getaddrinfo"
+SKILL_SOURCES_REQUESTS_PATCH = SAFE_HTTP_REQUESTS_PATCH
+SKILL_SOURCES_DNS_PATCH = SAFE_HTTP_DNS_PATCH
 PUBLIC_ADDRESS = "140.82.112.3"
 
 # these must match ./data/sql-plugin.yaml and ./data/api-plugin.yaml
@@ -173,18 +197,54 @@ def public_getaddrinfo(host, port, *args, **kwargs):
     return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", (PUBLIC_ADDRESS, port))]
 
 
-class FakeSkillHost:
+class FakeWebHost:
     """
-    Serves ./data/skill-remote as the skill at SKILL_REMOTE_URL, in lieu of GitHub.
+    A fake of the open web, for requests made by smarter.apps.plugin.plugin.safe_http.
 
-    It answers the GitHub git trees api, and raw.githubusercontent.com. Other routes can be
-    added with :meth:`add`. Every requested URL is recorded in :attr:`requested`.
+    Serve responses with :meth:`add`. Unknown URLs return 404. URLs are matched without
+    their query string parameters. Every request is recorded in :attr:`calls`, and every
+    requested URL in :attr:`requested`.
     """
 
     def __init__(self):
-        self.files = read_skill_remote_files()
         self.routes: dict[str, tuple[bytes, int, dict]] = {}
         self.requested: list[str] = []
+        self.calls: list[dict[str, Any]] = []
+
+    def add(self, url: str, content: bytes = b"", status_code: int = 200, headers: Optional[dict] = None) -> None:
+        """Serve a response for a URL."""
+        self.routes[url] = (content, status_code, headers or {})
+
+    def add_html(self, url: str, html: str, status_code: int = 200) -> None:
+        """Serve an HTML page for a URL."""
+        self.add(url, html.encode("utf-8"), status_code, {"Content-Type": "text/html; charset=utf-8"})
+
+    def add_json(self, url: str, data: Any, status_code: int = 200) -> None:
+        """Serve JSON for a URL."""
+        self.add(url, json.dumps(data).encode("utf-8"), status_code, {"Content-Type": "application/json"})
+
+    def remove(self, url: str) -> None:
+        """Stop serving a URL, so that it returns 404."""
+        self.routes.pop(url, None)
+
+    def request(self, method, url, **kwargs) -> mock.MagicMock:
+        """A stand-in for requests.request."""
+        self.requested.append(url)
+        self.calls.append({"method": method, "url": url, **kwargs})
+        content, status_code, headers = self.routes.get(url, (b"Not Found", 404, {}))
+        return fake_http_response(content, status_code, headers)
+
+
+class FakeSkillHost(FakeWebHost):
+    """
+    Serves ./data/skill-remote as the skill at SKILL_REMOTE_URL, in lieu of GitHub.
+
+    It answers the GitHub git trees api, and raw.githubusercontent.com.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.files = read_skill_remote_files()
         tree = [
             {"path": f"{SKILL_REMOTE_DIRECTORY}/{path}", "type": "blob", "size": len(content)}
             for path, content in self.files.items()
@@ -198,31 +258,23 @@ class FakeSkillHost:
         for path, content in self.files.items():
             self.add(SKILL_REMOTE_RAW_URL + quote(path), content)
 
-    def add(self, url: str, content: bytes = b"", status_code: int = 200, headers: Optional[dict] = None) -> None:
-        """Serve a response for a URL."""
-        self.routes[url] = (content, status_code, headers or {})
 
-    def remove(self, url: str) -> None:
-        """Stop serving a URL, so that it returns 404."""
-        self.routes.pop(url, None)
-
-    # pylint: disable=unused-argument
-    def get(self, url, **kwargs) -> mock.MagicMock:
-        """A stand-in for requests.get."""
-        self.requested.append(url)
-        content, status_code, headers = self.routes.get(url, (b"Not Found", 404, {}))
-        return fake_http_response(content, status_code, headers)
+@contextmanager
+def mock_web_host(host: Optional[FakeWebHost] = None):
+    """Serve the open web from a FakeWebHost, and resolve every host to a public address."""
+    host = host or FakeWebHost()
+    with (
+        mock.patch(SAFE_HTTP_REQUESTS_PATCH, side_effect=host.request),
+        mock.patch(SAFE_HTTP_DNS_PATCH, side_effect=public_getaddrinfo),
+    ):
+        yield host
 
 
 @contextmanager
-def mock_skill_host(host: Optional[FakeSkillHost] = None):
+def mock_skill_host(host: Optional[FakeWebHost] = None):
     """Serve remote skills from a FakeSkillHost, and resolve every host to a public address."""
-    host = host or FakeSkillHost()
-    with (
-        mock.patch(SKILL_SOURCES_REQUESTS_PATCH, side_effect=host.get),
-        mock.patch(SKILL_SOURCES_DNS_PATCH, side_effect=public_getaddrinfo),
-    ):
-        yield host
+    with mock_web_host(host or FakeSkillHost()) as fake_host:
+        yield fake_host
 
 
 def live_api_is_available(attempts: int = 5) -> bool:
@@ -260,6 +312,7 @@ class PluginTestBase(TestAccountMixin):
     api_fixtures: bool = True
     static_fixtures: bool = False
     skill_fixtures: bool = False
+    websearch_fixtures: bool = False
 
     sql_plugin_yaml: dict
     api_plugin_yaml: dict
@@ -267,9 +320,12 @@ class PluginTestBase(TestAccountMixin):
     static_edge_cases_yaml: dict
     skill_plugin_yaml: dict
     skill_remote_yaml: dict
+    websearch_yaml: dict[str, dict]
     api_key: str
 
     sql_secret: Optional[Secret] = None
+    brave_secret: Optional[Secret] = None
+    tavily_secret: Optional[Secret] = None
     api_secret: Optional[Secret] = None
     api_proxy_secret: Optional[Secret] = None
     sql_connection: SqlConnection
@@ -282,6 +338,9 @@ class PluginTestBase(TestAccountMixin):
     static_edge_cases_plugin: StaticPlugin
     skill_plugin: SkillPlugin
     skill_remote_plugin: SkillPlugin
+    websearch_plugin: WebsearchPlugin
+    websearch_docs_plugin: WebsearchPlugin
+    websearch_reader_plugin: WebsearchPlugin
 
     # -------------------------------------------------------------------------
     # class fixtures
@@ -295,6 +354,7 @@ class PluginTestBase(TestAccountMixin):
         cls.static_edge_cases_yaml = get_test_data("static-plugin-edge-cases.yaml")
         cls.skill_plugin_yaml = get_test_data("skill-plugin.yaml")
         cls.skill_remote_yaml = get_test_data("skill-plugin-remote.yaml")
+        cls.websearch_yaml = {variant: get_test_data(filename) for variant, filename in WEBSEARCH_DATA_FILES.items()}
         if cls.sql_fixtures:
             cls._create_sql_connections()
             cls.sql_plugin = SqlPlugin(manifest=cls.sql_manifest(SQL_PLUGIN_NAME), user_profile=cls.user_profile)
@@ -317,6 +377,24 @@ class PluginTestBase(TestAccountMixin):
                 cls.skill_remote_plugin = SkillPlugin(
                     manifest=cls.skill_manifest(SKILL_REMOTE_PLUGIN_NAME, remote=True), user_profile=cls.user_profile
                 )
+        if cls.websearch_fixtures:
+            cls.brave_secret = secret_factory(
+                user_profile=cls.user_profile, name=BRAVE_API_KEY_SECRET, value=BRAVE_API_KEY
+            )
+            cls.tavily_secret = secret_factory(
+                user_profile=cls.user_profile, name=TAVILY_API_KEY_SECRET, value=TAVILY_API_KEY
+            )
+            cls.websearch_plugin = WebsearchPlugin(
+                manifest=cls.websearch_manifest(WEBSEARCH_PLUGIN_NAME), user_profile=cls.user_profile
+            )
+            cls.websearch_docs_plugin = WebsearchPlugin(
+                manifest=cls.websearch_manifest(WEBSEARCH_DOCS_PLUGIN_NAME, variant="docs"),
+                user_profile=cls.user_profile,
+            )
+            cls.websearch_reader_plugin = WebsearchPlugin(
+                manifest=cls.websearch_manifest(WEBSEARCH_READER_PLUGIN_NAME, variant="reader"),
+                user_profile=cls.user_profile,
+            )
 
     @classmethod
     def tearDownClass(cls):
@@ -326,7 +404,7 @@ class PluginTestBase(TestAccountMixin):
                 connection = cls.__dict__.get(name)
                 if connection is not None:
                     connection.delete()
-            for secret in (cls.api_secret, cls.api_proxy_secret, cls.sql_secret):
+            for secret in (cls.api_secret, cls.api_proxy_secret, cls.sql_secret, cls.brave_secret, cls.tavily_secret):
                 if secret is not None:
                     secret.delete()
         # pylint: disable=W0718
@@ -470,6 +548,30 @@ class PluginTestBase(TestAccountMixin):
         """
         return SAMSkillPlugin(**cls.skill_manifest_dict(name, **kwargs))
 
+    @classmethod
+    def websearch_manifest_dict(cls, name: str, variant: str = "research", **websearch_data) -> dict[str, Any]:
+        """
+        Return a WebsearchPlugin manifest dict based on ./data/websearch-plugin*.yaml, optionally.
+
+        replacing its websearchData fields. A value of None removes a field.
+        """
+        data = copy.deepcopy(cls.websearch_yaml[variant])
+        data["metadata"]["name"] = name
+        for key, value in websearch_data.items():
+            if value is None:
+                data["spec"]["websearchData"].pop(key, None)
+            else:
+                data["spec"]["websearchData"][key] = value
+        return data
+
+    @classmethod
+    def websearch_manifest(cls, name: str, **kwargs) -> SAMWebsearchPlugin:
+        """Return a WebsearchPlugin Pydantic manifest.
+
+        See websearch_manifest_dict().
+        """
+        return SAMWebsearchPlugin(**cls.websearch_manifest_dict(name, **kwargs))
+
     # -------------------------------------------------------------------------
     # test fixtures
     # -------------------------------------------------------------------------
@@ -520,6 +622,20 @@ class PluginTestBase(TestAccountMixin):
         """Return a fresh instance of a shared SkillPlugin, loaded from the database."""
         plugin = self.skill_remote_plugin if remote else self.skill_plugin
         return SkillPlugin(plugin_id=plugin.id, user_profile=self.user_profile)
+
+    def new_websearch_plugin(self, name: str, **kwargs) -> WebsearchPlugin:
+        """Create a throwaway WebsearchPlugin that is deleted when the test ends."""
+        self.addCleanup(self.delete_plugin_by_name, name)
+        return WebsearchPlugin(manifest=self.websearch_manifest(name, **kwargs), user_profile=self.user_profile)
+
+    def load_websearch_plugin(self, variant: str = "research") -> WebsearchPlugin:
+        """Return a fresh instance of a shared WebsearchPlugin, loaded from the database."""
+        plugin = {
+            "research": self.websearch_plugin,
+            "docs": self.websearch_docs_plugin,
+            "reader": self.websearch_reader_plugin,
+        }[variant]
+        return WebsearchPlugin(plugin_id=plugin.id, user_profile=self.user_profile)
 
     def load_sql_plugin(self) -> SqlPlugin:
         """Return a fresh instance of the shared SqlPlugin, loaded from the database."""
