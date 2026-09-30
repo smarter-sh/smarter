@@ -1,11 +1,49 @@
-"""Smarter API Manifest - Plugin.spec."""
+"""
+Smarter API Manifest - SkillPlugin.spec.
+
+A SkillPlugin's ``spec.skillData`` contains an Agent Skill, either verbatim or by reference.
+
+**Verbatim:** paste the unmodified contents of a ``SKILL.md`` file into ``skill``, using a
+YAML literal block scalar (``|``) so that the Markdown is preserved exactly. Bundled files,
+which the skill refers to by relative path, can be pasted into ``resources``.
+
+.. code-block:: yaml
+
+    skillData:
+      skill: |
+        ---
+        name: meeting-notes
+        description: Turns raw meeting transcripts into structured notes. Use when the user shares a meeting transcript.
+        ---
+
+        # Meeting notes
+        Follow the template in [the template](assets/template.md).
+      resources:
+        assets/template.md: |
+          ## Decisions
+          ...
+
+**By reference:** refer to a skill in a public GitHub repository, or to any https URL of a
+``SKILL.md`` file. The skill and its bundled files are retrieved when the manifest is
+applied, and stored with the plugin. Apply the manifest again to retrieve the latest version.
+
+.. code-block:: yaml
+
+    skillData:
+      source:
+        url: https://github.com/anthropics/skills/tree/main/skills/pdf
+
+.. note::
+
+    **Experimental.** The SkillPlugin was designed and coded by Claude Code (Anthropic's
+    Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental, and will
+    be documented.
+"""
 
 import os
-import re
 from typing import ClassVar, Optional
 
-import yaml
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
 from smarter.lib import logging
@@ -14,189 +52,110 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import SmarterBasePydanticModel
 
 from .const import MANIFEST_KIND
+from .document import (
+    SkillDocument,
+    SkillDocumentError,
+    normalize_resources,
+    parse_skill_document,
+)
+from .source import SkillSourceError, SkillSourceLocation, parse_source_url
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
-SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 
-# Matches a leading YAML frontmatter block delimited by '---' lines, per the
-# SKILL.md convention. Kept identical to the pattern used by
-# smarter.apps.plugin.models.plugin_data_skill.PluginDataSkill so that the
-# manifest (spec) layer and the storage (ORM) layer parse SKILL.md text
-# identically.
-FRONTMATTER_PATTERN = re.compile(r"\A---\s*\n(.*?)\n---\s*\n?(.*)", re.DOTALL)
+
+class SkillSource(SmarterBasePydanticModel):
+    """Smarter API - SkillPlugin.spec.skillData.source: the remote location of a skill."""
+
+    class_identifier: ClassVar[str] = f"{MODULE_IDENTIFIER}.source"
+
+    url: str = Field(
+        ...,
+        description=(
+            f"{class_identifier}.url[str]: the https URL of the skill. Either a GitHub URL of a skill directory "
+            "(e.g. https://github.com/anthropics/skills/tree/main/skills/pdf) or of a SKILL.md file, or any https "
+            "URL of a SKILL.md file. The skill and its bundled files are retrieved when the manifest is applied."
+        ),
+    )
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        """Validate that the url refers to a supported skill location."""
+        try:
+            parse_source_url(v)
+        except SkillSourceError as e:
+            raise SAMValidationError(f"{cls.class_identifier}: {e}") from e
+        return v.strip()
+
+    @property
+    def location(self) -> SkillSourceLocation:
+        """The resolved location of the skill."""
+        return parse_source_url(self.url)
 
 
 class SkillData(SmarterBasePydanticModel):
     """
-    Smarter API - generic API Skill data class.
+    Smarter API - SkillPlugin.spec.skillData: an Agent Skill.
 
-    Models a single SKILL.md-format skill as discrete, validated manifest
-    properties: the YAML frontmatter fields (``name``, ``description``,
-    ``license``, ``allowed-tools``) plus the Markdown ``instructions`` body
-    and any bundled ``resources`` file references.
-
-    ``to_skill_document()`` and ``from_skill_document()`` provide lossless
-    round-tripping to/from the canonical SKILL.md text representation
-    persisted by ``PluginDataSkill.skill_document``, so a manifest author can
-    author a skill either as structured YAML keys under ``skillData``, or by
-    pasting a raw SKILL.md file's contents and parsing it with
-    ``from_skill_document()``.
+    Exactly one of ``skill`` or ``source`` is required.
     """
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    name: str = Field(
-        ...,
-        description=(
-            f"{class_identifier}.name[str]: the SKILL.md frontmatter 'name' value. "
-            "A short, unique, machine-friendly identifier for this skill."
-        ),
-    )
-    description: str = Field(
-        ...,
-        description=(
-            f"{class_identifier}.description[str]: the SKILL.md frontmatter 'description' value. "
-            "A concise summary of what the skill does and when the LLM should use it."
-        ),
-    )
-    license: Optional[str] = Field(
-        default=None,
-        description=f"{class_identifier}.license[str]: the SKILL.md frontmatter 'license' value, if any.",
-    )
-    allowedTools: Optional[list[str]] = Field(
+    skill: Optional[str] = Field(
         default=None,
         description=(
-            f"{class_identifier}.allowedTools[list]: the SKILL.md frontmatter 'allowed-tools' value: "
-            "the set of tool names this skill is permitted to invoke, if restricted. Omit to allow all tools."
+            f"{class_identifier}.skill[str]: the verbatim contents of a SKILL.md file: YAML frontmatter, "
+            "containing at least 'name' and 'description', followed by Markdown instructions. Use a YAML literal "
+            "block scalar (|) to preserve the Markdown exactly. See https://agentskills.io/specification"
         ),
     )
-    instructions: str = Field(
-        ...,
-        max_length=SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH,
-        description=(
-            f"{class_identifier}.instructions[str]: the SKILL.md Markdown body: the step-by-step "
-            f"instructions returned to the LLM when this skill is invoked. Limited to "
-            f"{SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH} characters."
-        ),
+    source: Optional[SkillSource] = Field(
+        default=None,
+        description=f"{class_identifier}.source[obj]: the remote location of the skill, in lieu of 'skill'.",
     )
-    resources: Optional[list[str]] = Field(
-        default_factory=list,
+    resources: Optional[dict[str, Optional[str]]] = Field(
+        default=None,
         description=(
-            f"{class_identifier}.resources[list]: optional relative paths to bundled files "
-            "(scripts/, references/, assets/) shipped alongside this skill."
+            f"{class_identifier}.resources[obj]: the skill's bundled files, e.g. references/, scripts/ and assets/, "
+            "keyed by their path relative to the skill root, as SKILL.md refers to them. Only valid with 'skill'."
         ),
     )
 
     @model_validator(mode="after")
     def validate_skill_data(self) -> "SkillData":
-        """Validate field values beyond what Field()'s declarative constraints already enforce."""
-        if not self.name.strip():
-            raise SAMValidationError(f"{self.class_identifier}.name must not be empty or whitespace.")
-        if not self.description.strip():
-            raise SAMValidationError(f"{self.class_identifier}.description must not be empty or whitespace.")
-        if not self.instructions.strip():
-            raise SAMValidationError(f"{self.class_identifier}.instructions must not be empty or whitespace.")
-        if self.allowedTools is not None and (
-            not isinstance(self.allowedTools, list)
-            or not all(isinstance(tool, str) and tool.strip() for tool in self.allowedTools)
-        ):
-            raise SAMValidationError(f"{self.class_identifier}.allowedTools must be a list of non-empty strings.")
-        if self.resources is not None and (
-            not isinstance(self.resources, list)
-            or not all(isinstance(resource, str) and resource.strip() for resource in self.resources)
-        ):
-            raise SAMValidationError(f"{self.class_identifier}.resources must be a list of non-empty strings.")
+        """Validate that exactly one of skill or source is provided, and that the skill and its resources are valid."""
+        if bool(self.skill) == bool(self.source):
+            raise SAMValidationError(f"{self.class_identifier}: exactly one of 'skill' or 'source' is required.")
+        if self.source and self.resources:
+            raise SAMValidationError(
+                f"{self.class_identifier}: 'resources' can only be used with 'skill'. The bundled files of a "
+                "remote skill are retrieved from its source."
+            )
+        try:
+            if self.skill:
+                parse_skill_document(self.skill)
+            normalize_resources(self.resources)
+        except SkillDocumentError as e:
+            raise SAMValidationError(f"{self.class_identifier}: {e}") from e
         return self
 
-    def to_skill_document(self) -> str:
-        """
-        Render this SkillData as a canonical SKILL.md document: a YAML frontmatter.
-
-        block followed by the Markdown instructions body.
-
-        This is the inverse of :meth:`from_skill_document`, and is the representation
-        persisted to :attr:`PluginDataSkill.skill_document` when the manifest controller
-        materializes this spec into a Django model instance.
-
-        :return: The rendered SKILL.md text.
-        :rtype: str
-        """
-        frontmatter: dict = {"name": self.name, "description": self.description}
-        if self.license:
-            frontmatter["license"] = self.license
-        if self.allowedTools:
-            frontmatter["allowed-tools"] = self.allowedTools
-
-        rendered_frontmatter = yaml.safe_dump(frontmatter, sort_keys=False).strip()
-        return f"---\n{rendered_frontmatter}\n---\n\n{self.instructions.strip()}\n"
-
-    @classmethod
-    def from_skill_document(cls, skill_document: str) -> "SkillData":
-        """
-        Parse a raw SKILL.md document (YAML frontmatter + Markdown body) into a.
-
-        validated SkillData instance.
-
-        This is the inverse of :meth:`to_skill_document`, and allows a manifest
-        author to paste an existing SKILL.md file's contents directly rather than
-        re-authoring it as structured YAML keys.
-
-        :param skill_document: The raw SKILL.md file contents.
-        :type skill_document: str
-        :return: A validated SkillData instance.
-        :rtype: SkillData
-        :raises SAMValidationError: If the document has no frontmatter block, the
-            frontmatter is not valid YAML, the frontmatter does not parse to a
-            mapping, or required keys are missing.
-        """
-        name: str
-        description: str
-        license_str: str
-
-        match = FRONTMATTER_PATTERN.match(skill_document or "")
-        if not match:
-            raise SAMValidationError(
-                f"{cls.class_identifier}: skill_document must begin with a YAML frontmatter block "
-                "delimited by '---' lines, per the SKILL.md spec."
-            )
-        raw_frontmatter, body = match.group(1), match.group(2)
-        try:
-            frontmatter = yaml.safe_load(raw_frontmatter) or {}
-            name = frontmatter.get("name")  # type: ignore
-            if not name:
-                raise SAMValidationError("name is required")
-            description = frontmatter.get("description")  # type: ignore
-            if not description:
-                raise SAMValidationError("description is required")
-            license_str = frontmatter.get("license")  # type: ignore
-            if not license:
-                raise SAMValidationError("license is required")
-        except yaml.YAMLError as e:
-            raise SAMValidationError(
-                f"{cls.class_identifier}: skill_document frontmatter is not valid YAML: {e}"
-            ) from e
-
-        if not isinstance(frontmatter, dict):
-            raise SAMValidationError(f"{cls.class_identifier}: skill_document frontmatter must parse to a mapping.")
-
-        return cls(
-            name=name,
-            description=description,
-            license=license_str,
-            allowedTools=frontmatter.get("allowed-tools"),
-            instructions=body.strip(),
-        )
+    @property
+    def document(self) -> Optional[SkillDocument]:
+        """The parsed SKILL.md document of a verbatim skill, or None for a remote skill."""
+        return parse_skill_document(self.skill) if self.skill else None
 
 
 class SAMSkillPluginSpec(SAMPluginCommonSpec):
-    """Smarter API SkillData Connection Manifest SkillConnection.spec."""
+    """Smarter API Manifest - SkillPlugin.spec."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
     skillData: SkillData = Field(
-        ..., description=f"{class_identifier}.selector[obj]: the SkillData to use for the {MANIFEST_KIND}"
+        ...,
+        description=f"{class_identifier}.skillData[obj]: the Agent Skill that the {MANIFEST_KIND} provides to the LLM.",
     )

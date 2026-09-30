@@ -145,6 +145,8 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             return SAMKinds.SQL_PLUGIN
         elif self.plugin_class == SAMPluginCommonMetadataClassValues.API.value:
             return SAMKinds.API_PLUGIN
+        elif self.plugin_class == SAMPluginCommonMetadataClassValues.SKILL.value:
+            return SAMKinds.SKILL_PLUGIN
         else:
             raise SmarterValueError(f"Unsupported plugin class: {self.plugin_class}")
 

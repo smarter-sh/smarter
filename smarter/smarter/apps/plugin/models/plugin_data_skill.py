@@ -1,14 +1,26 @@
-"""PluginDataSkill model for storing SKILL.md-based plugin data configuration."""
+"""
+PluginDataSkill model for storing Agent Skill (SKILL.md) plugin data.
 
-import re
-from functools import lru_cache
+.. note::
+
+    **Experimental.** The SkillPlugin was designed and coded by Claude Code (Anthropic's
+    Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental, and will
+    be documented.
+"""
+
+import posixpath
 from typing import Any, Optional, Union
 
-import yaml
 from django.db import models
 
 from smarter.apps.account.models.budget import charge_authorization
-from smarter.common.conf import smarter_settings
+from smarter.apps.plugin.manifest.models.skill_plugin.document import (
+    SkillDocument,
+    SkillDocumentError,
+    normalize_resource_path,
+    normalize_resources,
+    parse_skill_document,
+)
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.cache import cache_results
@@ -20,59 +32,33 @@ from .plugin_meta import PluginMeta
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 logger_prefix = logging.formatted_text(f"{__name__}")
 
-# Matches a leading YAML frontmatter block delimited by '---' lines, per the
-# SKILL.md convention (https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills
-# and the broader community "Skill.md" format).
-FRONTMATTER_PATTERN = re.compile(r"\A---\s*\n(.*?)\n---\s*\n?(.*)", re.DOTALL)
-
-# Required frontmatter keys per the SKILL.md spec.
-REQUIRED_FRONTMATTER_KEYS = ("name", "description")
-
-# Recognized, optional frontmatter keys. Anything else is preserved in `metadata`
-# but is not separately validated.
-KNOWN_FRONTMATTER_KEYS = REQUIRED_FRONTMATTER_KEYS + ("license", "allowed-tools", "metadata")
-
 
 class PluginDataSkill(PluginDataBase):
     """
-    Stores the configuration and content of a Smarter plugin based on the.
+    Stores an Agent Skill for a Smarter plugin, per the SKILL.md standard.
 
-    SKILL.md standard.
+    An Agent Skill is a ``SKILL.md`` document -- YAML frontmatter (``name``, ``description``,
+    and optionally ``license``, ``compatibility``, ``metadata`` and ``allowed-tools``) followed
+    by Markdown instructions -- plus any bundled files (``scripts/``, ``references/``,
+    ``assets/``) that the instructions refer to by relative path.
 
-    This model is used for plugins that expose a "skill": a self-contained
-    Markdown document with a YAML frontmatter header describing the skill
-    (``name``, ``description``, and optionally ``license`` and
-    ``allowed-tools``), followed by a Markdown body containing the
-    instructions the LLM should follow when the skill is invoked. Skills may
-    also reference bundled resources (scripts, references, assets) that ship
-    alongside the SKILL.md file.
+    The verbatim ``SKILL.md`` text is stored in ``skill_document``. The parsed frontmatter and
+    the normalized ``allowed-tools`` are derived from it on every save. Bundled files are stored
+    in ``resources``, keyed by path relative to the skill root.
 
-    ``PluginDataSkill`` provides methods for:
-      - Parsing ``skill_document`` into its YAML frontmatter and Markdown body.
-      - Validating that the frontmatter conforms to the SKILL.md spec (i.e.
-        contains the required ``name`` and ``description`` keys).
-      - Returning sanitized skill data (name, description, instructions,
-        allowed tools, license, and bundled resources) for use in LLM prompts.
-      - Extracting and caching the set of top-level keys present in the
-        parsed frontmatter.
+    Skills that were retrieved from a remote source, such as a GitHub repository, record
+    the source URL and retrieval time. Their ``skill_document`` and ``resources`` are a
+    snapshot of the remote skill, which is refreshed when the plugin manifest is applied.
 
-    This model is a concrete subclass of :class:`PluginDataBase`, and is
-    referenced by :class:`PluginMeta` to provide the data payload for
-    skill-type plugins. It is also used in conjunction with
-    :class:`PluginSelector` and :class:`PluginPrompt` to enable full plugin
-    lifecycle management.
+    ``PluginDataSkill`` is a concrete subclass of :class:`PluginDataBase`, and is referenced by
+    :class:`PluginMeta` to provide the data payload for skill-type plugins.
 
-    Typical use cases include plugins that teach the LLM a repeatable
-    procedure, workflow, or domain-specific technique -- for example, "how to
-    fill out this PDF form" or "how to generate a pptx deck" -- without
-    requiring a remote API or SQL connection.
+    .. seealso::
 
-    See also:
-
-    - :class:`PluginDataBase`
-    - :class:`PluginDataStatic`
-    - :class:`PluginDataSql`
-    - :class:`PluginMeta`
+        - :class:`PluginDataBase`
+        - :class:`PluginMeta`
+        - :py:mod:`smarter.apps.plugin.manifest.models.skill_plugin.document`
+        - Agent Skills specification: https://agentskills.io/specification
     """
 
     # pylint: disable=C0115
@@ -88,7 +74,7 @@ class PluginDataSkill(PluginDataBase):
             "plugin is invoked by the user prompt."
         ),
     )
-    """The raw SKILL.md document (frontmatter + Markdown body) that this plugin returns to the LLM."""
+    """The verbatim SKILL.md document (frontmatter + Markdown body)."""
 
     metadata = models.JSONField(
         help_text="Parsed YAML frontmatter from skill_document (name, description, license, allowed-tools, and any additional custom keys).",
@@ -96,9 +82,9 @@ class PluginDataSkill(PluginDataBase):
         encoder=json.SmarterJSONEncoder,
         blank=True,
     )
-    """Cached, parsed representation of the YAML frontmatter block.
+    """The complete parsed frontmatter of ``skill_document``.
 
-    Repopulated on every save().
+    Derived on every save().
     """
 
     allowed_tools = models.JSONField(
@@ -107,165 +93,218 @@ class PluginDataSkill(PluginDataBase):
         encoder=json.SmarterJSONEncoder,
         blank=True,
     )
-    """Denormalized copy of the frontmatter's `allowed-tools` list, kept in sync on save() for efficient querying."""
+    """The frontmatter's ``allowed-tools``, normalized to a list.
+
+    Derived on every save().
+    """
 
     resources = models.JSONField(
         help_text=(
-            "Optional list of bundled resource file references (e.g. scripts/, references/, "
-            "assets/ paths) that accompany this skill, expressed as relative paths."
+            "The skill's bundled files (e.g. scripts/, references/, assets/), keyed by path relative "
+            "to the skill root. A null value denotes a file whose contents are unavailable, such as a binary asset."
         ),
-        default=list,
+        default=dict,
         encoder=json.SmarterJSONEncoder,
         blank=True,
     )
-    """Relative paths to any bundled files (scripts, references, assets) shipped alongside this skill."""
+    """The skill's bundled files, keyed by normalized path relative to the skill root."""
 
-    @staticmethod
-    def parse_skill_document(skill_document: str) -> tuple[dict[str, Any], str]:
-        """
-        Split a SKILL.md document into its parsed YAML frontmatter and Markdown body.
+    source_url = models.URLField(
+        max_length=2048,
+        help_text="The URL from which this skill was retrieved, if it was sourced remotely, e.g. from a GitHub repository.",
+        blank=True,
+        null=True,
+    )
+    """The skill source URL, as written in the plugin manifest, for remotely sourced skills."""
 
-        :param skill_document: The raw SKILL.md file contents.
-        :type skill_document: str
-        :return: A tuple of (frontmatter dict, body markdown string).
-        :rtype: tuple[dict[str, Any], str]
-        :raises SmarterValueError: If the document has no frontmatter block, or the
-            frontmatter is not valid YAML, or does not parse to a dict.
-        """
-        match = FRONTMATTER_PATTERN.match(skill_document or "")
-        if not match:
-            raise SmarterValueError(
-                "skill_document must begin with a YAML frontmatter block delimited by '---' lines, "
-                "per the SKILL.md spec."
-            )
-        raw_frontmatter, body = match.group(1), match.group(2)
-        try:
-            frontmatter = yaml.safe_load(raw_frontmatter)
-        except yaml.YAMLError as e:
-            raise SmarterValueError(f"skill_document frontmatter is not valid YAML: {e}") from e
-
-        if not isinstance(frontmatter, dict):
-            raise SmarterValueError("skill_document frontmatter must parse to a mapping of key/value pairs.")
-
-        return frontmatter, body.strip()
-
-    def validate_frontmatter(self) -> dict[str, Any]:
-        """
-        Validate that ``skill_document`` parses correctly and its frontmatter.
-
-        contains the required SKILL.md keys.
-
-        :return: The parsed frontmatter dict.
-        :rtype: dict[str, Any]
-        :raises SmarterValueError: If required keys are missing, or ``allowed-tools``
-            is present but not a list of strings.
-        """
-        frontmatter, _ = self.parse_skill_document(self.skill_document)
-
-        missing = [key for key in REQUIRED_FRONTMATTER_KEYS if not frontmatter.get(key)]
-        if missing:
-            raise SmarterValueError(f"skill_document frontmatter is missing required key(s): {', '.join(missing)}")
-
-        allowed_tools = frontmatter.get("allowed-tools")
-        if allowed_tools is not None:
-            if not isinstance(allowed_tools, list) or not all(isinstance(item, str) for item in allowed_tools):
-                raise SmarterValueError("skill_document frontmatter 'allowed-tools' must be a list of strings.")
-
-        return frontmatter
-
-    def validate(self) -> bool:
-        super().validate()
-        self.validate_frontmatter()
-        return True
-
-    def save(self, *args, **kwargs):
-        """Override the save method to parse/validate skill_document and sync derived fields."""
-        frontmatter = self.validate_frontmatter()
-        self.metadata = frontmatter
-        self.allowed_tools = frontmatter.get("allowed-tools") or []
-        super().save(*args, **kwargs)
-        self.get_cached_data_by_plugin(self.plugin, invalidate=True)
-
-    def sanitized_return_data(self, params: Optional[dict] = None) -> Optional[dict]:
-        """
-        Return the skill data for this plugin as a dictionary suitable for the LLM.
-
-        This returns the parsed frontmatter fields (``name``, ``description``,
-        ``license``, ``allowed-tools``) plus the Markdown instructions body and
-        any bundled resource references. The instructions body is truncated to
-        ``smarter_settings.plugin_max_data_results`` characters if it exceeds that length,
-        to bound prompt size.
-
-        :param params: Optional parameters for future extensibility (currently unused).
-        :type params: Optional[dict]
-        :return: The sanitized skill data.
-        :rtype: Optional[dict]
-        :raises SmarterValueError: If skill_document cannot be parsed.
-        """
-        frontmatter, body = self.parse_skill_document(self.skill_document)
-
-        max_len = getattr(smarter_settings, "plugin_max_data_results", None)
-        if isinstance(max_len, int) and max_len > 0 and len(body) > max_len:
-            logger.warning(
-                "%s.sanitized_return_data: Truncating skill instructions to %s characters.",
-                self.formatted_class_name,
-                max_len,
-            )
-            body = body[:max_len]
-
-        return {
-            "name": frontmatter.get("name"),
-            "description": frontmatter.get("description"),
-            "license": frontmatter.get("license"),
-            "allowed_tools": frontmatter.get("allowed-tools") or [],
-            "instructions": body,
-            "resources": self.resources,
-        }
+    source_retrieved_at = models.DateTimeField(
+        help_text="When this skill was last retrieved from its source_url.",
+        blank=True,
+        null=True,
+    )
+    """When a remotely sourced skill was last retrieved."""
 
     @property
-    @lru_cache(maxsize=128)
-    def return_data_keys(self) -> Optional[list[str]]:
+    def document(self) -> SkillDocument:
         """
-        Return all top-level keys present in the parsed ``skill_document`` frontmatter.
+        The parsed SKILL.md document.
 
-        :return: A list of frontmatter keys (e.g. ``['name', 'description', 'license']``).
-        :rtype: Optional[list[str]]
-        :raises SmarterValueError: If skill_document cannot be parsed.
+        :raises SkillDocumentError: If ``skill_document`` is invalid.
+        """
+        return parse_skill_document(self.skill_document)
+
+    @property
+    def instructions(self) -> str:
+        """The Markdown instructions of the skill: the body of SKILL.md."""
+        return self.document.body
+
+    @property
+    def resource_paths(self) -> list[str]:
+        """The paths of the skill's bundled files, relative to the skill root."""
+        return list(self.resources or {})
+
+    @property
+    def return_data_keys(self) -> list[str]:
+        """
+        Return the paths of the skill's bundled files, which the LLM can request by name.
+
+        :return: The paths of the bundled files, e.g. ``['references/FORMS.md', 'scripts/fill_form.py']``.
+        :rtype: list[str]
+        """
+        return self.resource_paths
+
+    def find_resource(self, path: str) -> tuple[str, Optional[str]]:
+        """
+        Find a bundled file by the path that the LLM requested.
+
+        The LLM may refer to a file exactly as SKILL.md does, which is not always its actual
+        path. For example, Anthropic's pdf skill refers to ``FORMS.md``, which is bundled as
+        ``forms.md``. So, in order of precedence, this matches the normalized path, then the
+        path ignoring case, then a unique file name ignoring case.
+
+        :param path: The requested path, relative to the skill root.
+        :return: A tuple of the file's path and its contents. The contents are None if unavailable.
+        :raises SmarterValueError: If no bundled file, or more than one, matches the path.
 
         **Example:**
 
         .. code-block:: python
 
-            # If skill_document frontmatter is:
-            # ---
-            # name: pdf-form-filler
-            # description: Fill out a PDF form given field values.
-            # allowed-tools: [bash, view]
-            # ---
-            return_data_keys  # ['name', 'description', 'allowed-tools']
+            plugin_data.find_resource("./FORMS.md")
+            # ('forms.md', '# PDF form filling guide ...')
         """
-        frontmatter, _ = self.parse_skill_document(self.skill_document)
-        return list(frontmatter.keys()) if frontmatter else None
+        resources = self.resources or {}
+        try:
+            normalized = normalize_resource_path(path)
+        except SkillDocumentError as e:
+            raise SmarterValueError(str(e)) from e
+        if normalized in resources:
+            return normalized, resources[normalized]
+
+        matches = [key for key in resources if key.lower() == normalized.lower()]
+        if not matches:
+            basename = posixpath.basename(normalized).lower()
+            matches = [key for key in resources if posixpath.basename(key).lower() == basename]
+        if len(matches) == 1:
+            return matches[0], resources[matches[0]]
+        if matches:
+            raise SmarterValueError(f"resource {path} is ambiguous. It could refer to any of: {sorted(matches)}")
+        raise SmarterValueError(f"resource {path} was not found. Available resources are: {self.resource_paths}")
+
+    def validate(self) -> bool:
+        """
+        Validate the skill document and bundled files.
+
+        :raises SmarterValueError: If ``skill_document`` is not a valid SKILL.md document, or a
+            bundled file path or its contents are invalid.
+        """
+        super().validate()
+        parse_skill_document(self.skill_document)
+        normalize_resources(self.resources)
+        return True
+
+    def save(self, *args, **kwargs):
+        """
+        Validate the skill, derive the frontmatter fields from ``skill_document``, and save.
+
+        The tool description presented to the LLM defaults to the skill's ``description``,
+        which, per the specification, describes what the skill does and when to use it.
+        """
+        document = parse_skill_document(self.skill_document)
+        self.skill_document = document.document
+        self.metadata = document.frontmatter
+        self.allowed_tools = document.allowed_tools
+        self.resources = normalize_resources(self.resources)
+        if not self.description:
+            self.description = document.description
+        super().save(*args, **kwargs)
+
+    def sanitized_return_data(self, params: Optional[dict] = None) -> dict[str, Any]:
+        """
+        Return the skill, or one of its bundled files, for the LLM.
+
+        This implements the progressive disclosure of the Agent Skills specification. The
+        skill's name and description are presented to the LLM as the tool description. When
+        the LLM invokes the tool, it receives the skill's instructions, along with the paths
+        of its bundled files. The LLM then invokes the tool again, with ``resource`` set to a
+        path, to read a bundled file only when the instructions call for it.
+
+        :param params: The tool call arguments. If ``resource`` is present, the bundled file
+            at that path is returned instead of the instructions.
+        :type params: Optional[dict]
+        :return: The skill instructions, or the bundled file.
+        :rtype: dict[str, Any]
+        :raises SmarterValueError: If the requested resource does not exist.
+
+        **Example:**
+
+        .. code-block:: python
+
+            plugin_data.sanitized_return_data()
+            # {'name': 'pdf', 'description': '...', 'instructions': '# PDF processing ...', 'resources': ['forms.md', ...], ...}
+
+            plugin_data.sanitized_return_data({"resource": "forms.md"})
+            # {'name': 'pdf', 'resource': 'forms.md', 'content': '# PDF form filling ...'}
+        """
+        document = self.document
+        requested = (params or {}).get("resource")
+        if requested:
+            path, content = self.find_resource(requested)
+            retval: dict[str, Any] = {"name": document.name, "resource": path, "content": content}
+            if content is None:
+                retval["note"] = "The contents of this file are not available, because it is not a text file."
+            return retval
+
+        retval = {
+            "name": document.name,
+            "description": document.description,
+            "instructions": document.body,
+        }
+        for key, value in (
+            ("license", document.license),
+            ("compatibility", document.compatibility),
+            ("allowed_tools", document.allowed_tools),
+            ("metadata", document.metadata),
+        ):
+            if value:
+                retval[key] = value
+        if self.resource_paths:
+            retval["resources"] = self.resource_paths
+            retval["note"] = (
+                "The instructions may refer to the bundled files listed in 'resources'. To read one, call this "
+                "tool again with 'resource' set to its path. Scripts are provided for reference, and cannot be "
+                "executed by this tool."
+            )
+        return retval
 
     def data(self, params: Optional[dict] = None) -> Optional[dict]:
         """
-        Return the skill document as a structured dictionary of frontmatter + instructions.
-
-        Unlike :meth:`sanitized_return_data`, this returns the untruncated body and
-        the full, unfiltered frontmatter mapping (including any custom keys beyond
-        the standard SKILL.md fields).
+        Return the skill as a structured dictionary of frontmatter, instructions and bundled files.
 
         :param params: Optional parameters for future extensibility (currently unused).
         :type params: Optional[dict]
-        :return: A dict with ``frontmatter`` and ``instructions`` keys, or None on failure.
+        :return: A dict with ``frontmatter``, ``instructions`` and ``resources`` keys, or None if
+            ``skill_document`` is invalid.
         :rtype: Optional[dict]
         """
         try:
-            frontmatter, body = self.parse_skill_document(self.skill_document)
-            return {"frontmatter": frontmatter, "instructions": body}
-        except SmarterValueError as e:
+            document = self.document
+        except SkillDocumentError as e:
             logger.error("%s.data: Failed to parse skill_document: %s", self.formatted_class_name, e)
             return None
+        return {"frontmatter": document.frontmatter, "instructions": document.body, "resources": self.resources}
+
+    def manifest_data(self) -> dict[str, Any]:
+        """
+        Return the ``spec.skillData`` section of the plugin manifest, as the author wrote it.
+
+        :return: ``{"source": {"url": ...}}`` for a remotely sourced skill, otherwise
+            ``{"skill": ..., "resources": ...}``.
+        :rtype: dict[str, Any]
+        """
+        if self.source_url:
+            return {"source": {"url": self.source_url}}
+        return {"skill": self.skill_document, "resources": self.resources or None}
 
     @classmethod
     def get_cached_data_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginDataSkill", None]:
