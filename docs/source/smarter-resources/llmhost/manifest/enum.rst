@@ -1,7 +1,7 @@
 Enumerations Classes
 ======================
 
-.. automodule:: smarter.apps.account.manifest.enum
+.. automodule:: smarter.apps.llmhost.manifest.enum
     :members:
     :undoc-members:
     :show-inheritance:

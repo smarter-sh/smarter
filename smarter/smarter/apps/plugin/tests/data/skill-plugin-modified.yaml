@@ -1,0 +1,39 @@
+---
+# A SkillPlugin for the plugin app's management command tests. Its
+# kind is not Plugin, so it verifies that the commands choose the
+# Pydantic model for the manifest's kind.
+apiVersion: smarter.sh/v1
+kind: SkillPlugin
+metadata:
+  name: test_plugin_app_skill_plugin
+  pluginClass: skill
+  description: A modified skill plugin for unit testing the plugin app.
+  version: 0.2.0
+  tags:
+    - skill
+    - test
+  annotations:
+    - smarter.sh/plugin-app-test/purpose: unit testing
+spec:
+  selector:
+    directive: search_terms
+    searchTerms:
+      - expense report
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant for unit testing the plugin app.
+    model: gpt-4o-mini
+    temperature: 0.0
+    maxTokens: 256
+  skillData:
+    skill: |
+      ---
+      name: expense-reports
+      description: Prepares expense reports. Use when the user asks to file an expense report.
+      ---
+
+      # Expense reports
+
+      1. Collect the receipts.
+      2. Fill out the form.

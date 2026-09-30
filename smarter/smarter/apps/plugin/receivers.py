@@ -109,7 +109,8 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
     """Handle plugin responded signal."""
 
     inquiry_type: Optional[str] = kwargs.get("inquiry_type")
-    inquiry_return: Optional[Union[dict, list, str]] = kwargs.get("inquiry_return")
+    # plugins send their response as ``response``.
+    inquiry_return: Optional[Union[dict, list, str]] = kwargs.get("response", kwargs.get("inquiry_return"))
 
     try:
         inquiry_return = json.loads(inquiry_return) if isinstance(inquiry_return, str) else inquiry_return
@@ -151,9 +152,15 @@ def handle_plugin_selected(sender, *args, **kwargs):
         search_term,
         prompt,
     )
+    if plugin is None or plugin.id is None:
+        logger.warning(
+            "%s received without a plugin id. Plugin selector history is not recorded.",
+            formatted_text(prefix + "plugin_selected"),
+        )
+        return
 
     create_plugin_selector_history.delay(
-        plugin_id=plugin.id,  # type: ignore
+        plugin_id=plugin.id,
         user_id=user_id,
         input_text=input_text,
         messages=messages,

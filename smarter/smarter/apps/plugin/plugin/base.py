@@ -1606,12 +1606,14 @@ class PluginBase(ABC, AccountMixin):
         transaction.on_commit(committed)
         return True
 
-    def clone(self, new_name: Optional[str] = None):
+    def clone(self, new_name: Optional[str] = None, user_profile: Optional[UserProfile] = None):
         """
         Clone a plugin.
 
         :param new_name: The new name for the cloned plugin. If None, a name will be generated.
         :type new_name: Optional[str]
+        :param user_profile: The owner of the cloned plugin. If None, the clone has the same owner as the plugin.
+        :type user_profile: Optional[UserProfile]
         :return: The id of the cloned plugin if successful, False otherwise.
         :rtype: Optional[int]
         :raises SmarterPluginError: If the plugin is not ready.
@@ -1650,6 +1652,8 @@ class PluginBase(ABC, AccountMixin):
             if isinstance(plugin_meta_copy, PluginMeta):
                 plugin_meta_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
                 plugin_meta_copy.name = new_name or get_new_name(plugin_name=self.name)
+                if user_profile is not None:
+                    plugin_meta_copy.user_profile = user_profile
                 plugin_meta_copy.save()
                 if isinstance(self.plugin_meta, PluginMeta):
                     plugin_meta_copy.tags.set(self.plugin_meta.tags.all())

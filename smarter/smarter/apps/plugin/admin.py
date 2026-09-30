@@ -161,7 +161,7 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
             return qs.none()
         return (
             PluginMeta.objects.with_ownership_permission_for(user=user)
-            .filter(requests__in=qs)
+            .filter(id__in=qs)
             .filter(plugin_class=SAMPluginCommonMetadataClassValues.STATIC.value)
         )
 
@@ -199,7 +199,7 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
 
         return (
             PluginMeta.objects.with_ownership_permission_for(user=user)
-            .filter(requests__in=qs)
+            .filter(id__in=qs)
             .filter(plugin_class=SAMPluginCommonMetadataClassValues.API.value)
         )
 
@@ -236,7 +236,7 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
             return qs.none()
         return (
             PluginMeta.objects.with_ownership_permission_for(user=user)
-            .filter(requests__in=qs)
+            .filter(id__in=qs)
             .filter(plugin_class=SAMPluginCommonMetadataClassValues.SQL.value)
         )
 
@@ -273,7 +273,7 @@ class PluginSkillAdmin(SmarterCustomerModelAdmin):
             return qs.none()
         return (
             PluginMeta.objects.with_ownership_permission_for(user=user)
-            .filter(requests__in=qs)
+            .filter(id__in=qs)
             .filter(plugin_class=SAMPluginCommonMetadataClassValues.SKILL.value)
         )
 
@@ -310,7 +310,7 @@ class PluginWebsearchAdmin(SmarterCustomerModelAdmin):
             return qs.none()
         return (
             PluginMeta.objects.with_ownership_permission_for(user=user)
-            .filter(requests__in=qs)
+            .filter(id__in=qs)
             .filter(plugin_class=SAMPluginCommonMetadataClassValues.WEBSEARCH.value)
         )
 
@@ -345,8 +345,8 @@ class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
         qs = super().get_queryset(request)
         if not isinstance(user, User):
             return qs.none()
-        plugins = PluginMeta.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
-        return PluginSelectorHistory.objects.filter(plugin_selector__plugin__in=plugins)
+        plugins = PluginMeta.objects.with_ownership_permission_for(user=user)
+        return qs.filter(plugin_selector__plugin__in=plugins)
 
 
 # Plugin Models

@@ -78,6 +78,7 @@ def create_custom_domain_dns_record(
     Get or create a DNS record in an AWS Route53 hosted zone for an llmclient custom domain.
 
     This Celery task performs the following steps:
+
     1. Sends a pre-create signal for the DNS record.
     2. Logs the DNS record creation request.
     3. Retrieves the LLMClientCustomDomain instance by ID.
@@ -103,14 +104,16 @@ def create_custom_domain_dns_record(
     dict
         The DNS record details as returned by AWS Route53, for example:
 
-        {
-            'Name': 'example.com.',
-            'Type': 'A',
-            'TTL': 300,
-            'ResourceRecords': [
-                {'Value': '192.0.2.44'},
-            ],
-        }
+        .. code-block:: python
+
+            {
+                'Name': 'example.com.',
+                'Type': 'A',
+                'TTL': 300,
+                'ResourceRecords': [
+                    {'Value': '192.0.2.44'},
+                ],
+            }
 
     Signals
     -------

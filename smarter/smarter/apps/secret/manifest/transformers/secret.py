@@ -98,8 +98,8 @@ class SecretTransformer(SmarterHelperMixin):
         - name: name of the secret, for initializing the Django ORM model.
         - Pydantic model created by a manifest broker (preferred method).
         - django model secret id.
-        - yaml manifest or json representation of a yaml manifest
-        see ./tests/data/secret-good.yaml for an example.
+        - yaml manifest or json representation of a yaml manifest,
+          see ./tests/data/secret-good.yaml for an example.
         """
         logger.debug(
             "%s.__init__() called with args=%s, user_profile=%s, name=%s, api_version=%s, manifest=%s, secret_id=%s, secret=%s, data=%s, kwargs=%s",

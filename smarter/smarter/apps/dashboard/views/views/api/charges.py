@@ -1,8 +1,8 @@
 # pylint: disable=W0613
 """
-Smarter.apps.dashboard.views.api.charges.
-
+Smarter.apps.dashboard.views.api.charges
 =========================================
+
 This module implements the API logic for aggregated usage charges in the Smarter dashboard application.
 
 Overview

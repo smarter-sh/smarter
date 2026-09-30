@@ -1,0 +1,57 @@
+---
+# Test cases for smarter.apps.plugin.nlp.
+clean_prompt:
+  - prompt: WhoIsLawrenceMcDaniel
+    expected: Who Is Lawrence McDaniel
+  - prompt: "Hello, world!"
+    expected: Hello world
+  - prompt: tell me about gobstoppers
+    expected: tell me about gobstoppers
+lower_case_splitter:
+  - value: The Quick Brown Fox
+    expected: [the, quick, brown, fox]
+  - value: ""
+    expected: []
+simple_search:
+  - prompt: Find all weather plugins for New York
+    search_term: weather plugins
+    expected: true
+  - prompt: Find all weather plugins for New York
+    search_term: Weather
+    expected: true
+  - prompt: plugins for weather in New York
+    search_term: weather plugins
+    expected: true
+  - prompt: Find all weather plugins for New York
+    search_term: California
+    expected: false
+# within_levenshtein_distance() lower cases the prompt's words before it
+# selects the title cased ones, so no word is ever selected, and it never
+# matches. These cases record that behavior, which contradicts the
+# function's docstring.
+within_levenshtein_distance:
+  - prompt: Find all plugins for Lawrance
+    search_term: Lawrence
+    threshold: 3
+    expected: false
+  - prompt: Find all plugins for Lawrance
+    search_term: lawrence
+    threshold: 3
+    expected: false
+  - prompt: nothing to see here
+    search_term: lawrence
+    threshold: 3
+    expected: false
+does_refer_to:
+  - prompt: WhoIsLawrenceMcDaniel
+    search_term: Lawrence McDaniel
+    expected: true
+  - prompt: Tell me about the Everlasting Gobstopper.
+    search_term: Gobstopper
+    expected: true
+  - prompt: Tell me about Gobstoppers
+    search_term: Gobstopper
+    expected: true
+  - prompt: WhoIsLawrenceMcDaniel
+    search_term: John Doe
+    expected: false
