@@ -14,4 +14,5 @@ Django ORM
    models/plugin-data-static
    models/plugin-data-api
    models/plugin-data-sql
+   models/plugin-data-websearch
    models/plugin-controller

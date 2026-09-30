@@ -12,3 +12,4 @@ Plugin Reference
    plugin/api
    plugin/utils
    plugin/skill
+   plugin/websearch
