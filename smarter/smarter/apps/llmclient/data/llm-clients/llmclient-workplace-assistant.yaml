@@ -1,0 +1,65 @@
+apiVersion: smarter.sh/v1
+kind: LLMClient
+metadata:
+  description: "A workplace assistant that writes meeting notes, status reports and internal communications."
+  name: workplace_assistant
+  version: 1.0.0
+  tags:
+    - productivity
+    - meetings
+    - internal-communications
+    - enterprise
+  annotations:
+    - smarter.sh/llmclient/use-case: workplace productivity assistant
+    - smarter.sh/llmclient/showcases: MCPClient, WebsearchPlugin, SkillPlugin, Guardrail
+    - smarter.sh/llmclient/last-updated: 2026-09-30
+    - smarter.sh/llmclient/owner: Lawrence McDaniel
+spec:
+  apiKey: null
+  config:
+    appAssistant: Penny
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - Turn this meeting transcript into notes with decisions and action items.
+    - Write a weekly status report for my team from these bullet points.
+    - Draft a company newsletter announcing our new office.
+    - How do I schedule a recurring meeting in Microsoft Teams?
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: https://cdn.smarter.sh/images/logo/smarter-crop.png
+    appName: Workplace Assistant
+    appPlaceholder: Paste a transcript, some notes, or a link...
+    appWelcomeMessage: Welcome! I write meeting notes, status reports, newsletters and other internal communications.
+    customDomain: null
+    defaultMaxTokens: 4096
+    defaultModel: gpt-4o-mini
+    defaultSystemRole:
+      You are an executive assistant who helps employees communicate clearly at work. Turn
+      meeting transcripts into structured meeting notes, with decisions and action items,
+      following the meeting notes skill that is provided to you. Write status reports,
+      newsletters, announcements and other internal communications following the internal
+      comms skill that is provided to you. When the user shares a PDF, use the pdf skill to
+      read it. When the user links to a web page, read it. For questions about Microsoft
+      365, such as Teams, Outlook or SharePoint, use Microsoft Learn.
+
+      Write clearly and concisely, in plain language. Give every action item an owner and a
+      due date, and ask the user for them if they are missing. Keep a professional tone.
+    defaultTemperature: 0.3
+    deployed: false
+    dnsVerificationStatus: Verified
+    provider: openai
+    subdomain: null
+  functions: []
+  plugins:
+    - meeting_notes
+    - anthropic_internal_comms
+    - anthropic_pdf
+    - url_reader
+  mcpClients:
+    - microsoft_learn
+  guardrails:
+    - pii_redaction_input
+    - secrets_redaction_input
+    - pii_leak_output
+    - secrets_leak_output
+    - profanity_output
