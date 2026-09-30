@@ -14,9 +14,7 @@ from smarter.apps.account.utils import (
     smarter_cached_objects,
     valid_resource_owners_for_user,
 )
-from smarter.apps.guardrail.caching import (
-    get_cached_guardrails_available_to_user_profile,
-)
+from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.llmclient.manifest.models.llmclient.const import MANIFEST_KIND
 from smarter.apps.llmclient.manifest.models.llmclient.metadata import (
     SAMLLMClientMetadata,
@@ -458,6 +456,10 @@ class SAMLLMClientBroker(AbstractBroker):
             link.mcpclient.name
             for link in LLMClientMCPClients.objects.filter(llmclient=self.llmclient).select_related("mcpclient")
         ]
+        guardrail_names = [
+            link.guardrail.name
+            for link in LLMClientGuardrails.objects.filter(llmclient=self.llmclient).select_related("guardrail")
+        ]
 
         api_key = self.llmclient_api_key.api_key if self.llmclient_api_key else None
 
@@ -473,6 +475,7 @@ class SAMLLMClientBroker(AbstractBroker):
             config=spec_config,
             plugins=plugin_names,
             functions=function_names,
+            guardrails=guardrail_names or None,
             mcpClients=mcpclient_names or None,
             apiKey=api_key,
         )
@@ -740,7 +743,7 @@ class SAMLLMClientBroker(AbstractBroker):
             config=config,
             plugins=get_plugin_examples_by_name(),
             functions=["date_calculator", "get_current_weather"],
-            guardrails=["security_injection_input", "jailbreak_llm_judge_catchall_input"],
+            guardrails=["pii_redaction_input", "prompt_injection_keyword_input", "moderation_output"],
             mcpClients=["deepwiki"],
             apiKey="snake_case_api_key_name",
         )
@@ -1007,33 +1010,32 @@ class SAMLLMClientBroker(AbstractBroker):
 
             # LLMClientGuardrails: add what's missing, remove what's in the model but not in the manifest
             # -------------
-            for guardrail in LLMClientGuardrails.objects.filter(llmclient=self.llmclient):
-                if guardrail.guardrail not in self.manifest.spec.guardrails:
-                    guardrail.delete()
+            guardrail_names = self.manifest.spec.guardrails or []
+            for link in LLMClientGuardrails.objects.filter(llmclient=self.llmclient).select_related("guardrail"):
+                if link.guardrail.name not in guardrail_names:
+                    link.delete()
                     logger.debug(
-                        "%s.apply() Detached Function %s from LLMClient %s",
+                        "%s.apply() detached Guardrail %s from LLMClient %s",
                         self.formatted_class_name,
-                        guardrail.guardrail,
+                        link.guardrail.name,
                         self.llmclient.name,
                     )
-
-            guardrails = get_cached_guardrails_available_to_user_profile(self.user_profile)  # type: ignore
-            valid_guardrails = [g.name for g in guardrails]
-            if self.manifest.spec.guardrails:
-                for guardrail in self.manifest.spec.guardrails:
-                    if guardrail not in valid_guardrails:
-                        return self.json_response_err_notfound(
-                            command=command,
-                            message=f"Function {function} not found. Valid guardrails are: {valid_guardrails}",
-                        )
-                    _, created = LLMClientFunctions.objects.get_or_create(llmclient=self.llmclient, name=guardrail)
-                    if created:
-                        logger.debug(
-                            "%s.apply() attached Function %s to LLMClient %s",
-                            self.formatted_class_name,
-                            function,
-                            self.llmclient.name,
-                        )
+            for guardrail_name in guardrail_names:
+                guardrail = self.resolve_guardrail(guardrail_name)
+                if guardrail is None:
+                    raise SAMBrokerErrorNotFound(
+                        f"Guardrail {guardrail_name} not found, or not shared with {self.user_profile}",
+                        thing=self.kind,
+                        command=command,
+                    )
+                _, created = LLMClientGuardrails.objects.get_or_create(llmclient=self.llmclient, guardrail=guardrail)
+                if created:
+                    logger.debug(
+                        "%s.apply() attached Guardrail %s to LLMClient %s",
+                        self.formatted_class_name,
+                        guardrail.name,
+                        self.llmclient.name,
+                    )
 
             # LLMClientMCPClients: add what's missing, remove what's in the model but not in the manifest
             # -------------
@@ -1067,6 +1069,29 @@ class SAMLLMClientBroker(AbstractBroker):
             # done! return the response. Django will take care of committing the transaction
             self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
+
+    def resolve_guardrail(self, name: str) -> Optional[Guardrail]:
+        """
+        Return the Guardrail named ``name`` that this broker's user may use.
+
+        The user's own Guardrail takes precedence over one that is shared with them, such as
+        the built-in guardrails of the Smarter admin user.
+
+        :param name: The name of the Guardrail.
+        :returns: The Guardrail, or ``None`` if the user has none by that name.
+        :rtype: Optional[Guardrail]
+        """
+        if not self.user_profile:
+            return None
+        own = Guardrail.objects.filter(name=name, user_profile=self.user_profile).first()
+        if own is not None:
+            return own
+        return (
+            Guardrail.objects.filter(name=name)
+            .with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
+            .order_by("-updated_at")
+            .first()
+        )
 
     def resolve_mcpclient(self, name: str) -> Optional[MCPClient]:
         """

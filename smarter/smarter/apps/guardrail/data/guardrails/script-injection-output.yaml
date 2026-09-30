@@ -1,0 +1,28 @@
+---
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: script_injection_output
+  description: 'Removes HTML script tags, javascript: URLs and inline event handlers from the LLM''s reply,
+    for applications that render replies as HTML.'
+  version: 1.0.0
+  tags:
+  - security
+  - xss
+  - html
+  annotations:
+  - smarter.sh/guardrail/builtin: 'true'
+spec:
+  config:
+    isActive: true
+    mode: enforce
+    stage: output
+    category: formatting
+    strategy: regex
+    pattern: <script\b[^>]*>[\s\S]*?</script\s*>|javascript:|\bon(error|load|click|mouseover)\s*=
+    flags:
+    - IGNORECASE
+    action: redact
+    replacement: '[script removed]'
+    severity: 4
+    priority: 20

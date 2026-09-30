@@ -1,0 +1,43 @@
+---
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: prompt_injection_keyword_input
+  description: Blocks messages that contain well-known prompt injection and jailbreak phrases, such as
+    'ignore all previous instructions' and 'developer mode'. It is fast and free, but only catches literal
+    phrasings. Pair it with prompt_injection_llm_judge_input to catch paraphrases.
+  version: 1.0.0
+  tags:
+  - prompt-injection
+  - jailbreak
+  - security
+  annotations:
+  - smarter.sh/guardrail/builtin: 'true'
+spec:
+  config:
+    isActive: true
+    mode: enforce
+    stage: input
+    category: prompt_injection
+    strategy: keyword
+    keywords:
+    - ignore all previous instructions
+    - ignore previous instructions
+    - ignore the above instructions
+    - disregard all prior instructions
+    - disregard your instructions
+    - forget your instructions
+    - reveal your system prompt
+    - print your system prompt
+    - what is your system prompt
+    - developer mode enabled
+    - you are now DAN
+    - do anything now
+    - jailbreak mode
+    - act as an unrestricted AI
+    - you have no restrictions
+    action: block
+    message: Your message looks like an attempt to change the assistant's instructions, so it was not
+      processed. Please rephrase your request.
+    severity: 4
+    priority: 20

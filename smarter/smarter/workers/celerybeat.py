@@ -27,6 +27,11 @@ app.conf.beat_schedule = {
         "schedule": timedelta(hours=1),
         "options": {"queue": "beat_tasks"},
     },
+    "purge-guardrail-events": {
+        "task": "smarter.apps.guardrail.tasks.purge_guardrail_events",
+        "schedule": timedelta(days=1),
+        "options": {"queue": "beat_tasks"},
+    },
     "refresh-mcpclients": {
         "task": "smarter.apps.mcpclient.tasks.refresh_mcpclients",
         "schedule": timedelta(hours=1),

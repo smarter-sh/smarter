@@ -1,0 +1,41 @@
+---
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: off_topic_input
+  description: Keeps a single-purpose assistant on topic, by asking a small LLM whether the user's message
+    is within its scope. Adapt the scope in judgePrompt to your assistant. This example is for the support
+    assistant of a fictional web hosting company.
+  version: 1.0.0
+  tags:
+  - off-topic
+  - scope
+  - llm-judge
+  annotations:
+  - smarter.sh/guardrail/builtin: 'true'
+spec:
+  config:
+    isActive: true
+    mode: enforce
+    stage: input
+    category: off_topic
+    strategy: llm_judge
+    judgePrompt: |-
+      You are a scope classifier for a customer support assistant of ACME Cloud, a web
+      hosting company. The assistant may help only with ACME Cloud's products, accounts,
+      billing, and web hosting in general.
+
+      Decide whether the user message below is OUTSIDE that scope.
+
+      User message:
+      """
+      {text}
+      """
+
+      Respond with a JSON object only: {{"triggered": true if out of scope, "confidence": 0.0 to 1.0, "rationale": "one sentence"}}
+    model: gpt-4o-mini
+    threshold: 0.8
+    action: block
+    message: I can only help with ACME Cloud products, accounts and web hosting.
+    severity: 2
+    priority: 80

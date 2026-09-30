@@ -1,87 +1,70 @@
-"""URL configuration for guardrail app."""
+"""
+URL configuration for the Guardrail app API.
+
+These are mounted at ``/api/v1/guardrails/``. See :mod:`smarter.apps.guardrail.api.v1.views.views`.
+"""
 
 from django.urls import path
 
 from smarter.common.utils import to_snake_case
 
 from .const import namespace
-from .views.default import DefaultGuardrailApiView
 from .views.views import (
+    GuardrailEvaluateView,
+    GuardrailEventsView,
     GuardrailListView,
     GuardrailView,
 )
 
 app_name = namespace
-BY_ID = "by_id"
-BY_HASHED_ID = "by_hashed_id"
+BY_ID = "_by_id"
+BY_HASHED_ID = "_by_hashed_id"
 
 
 class GuardrailApiV1ReverseViews:
     """
-    Reverse views for the Guardrail CLI commands.
+    Reverse view names for the Guardrail api.
 
-    Provides named references for reversing CLI-related API endpoints.
-
-    This class is used for reverse URL resolution in Django, where each attribute
-    corresponds to a CLI command endpoint. The names are derived from the actual
-    API view class names, ensuring consistency and reducing the risk of typos
-    when using Django's URL reversing features.
-
-    All CLI commands available in the Smarter platform are included as attributes
-    of this class. This centralizes the reverse URL names for all CLI endpoints,
-    making it easier to maintain and reference them throughout the codebase.
-
-    Usage
-    -----
-    Use these attributes with Django's ``reverse()`` function or in templates
-    to generate URLs for CLI API endpoints based on the view class names.
+    Each Guardrail view is available by the Guardrail's hashed id, and by its id.
 
     Example
     -------
     .. code-block:: python
 
-        from smarter.lib.django.shortcuts import reverse
-        url = reverse(ApiV1CliReverseViews.deploy, kwargs={'kind': 'Plugin'})
-
-        str(ApiV1CliReverseViews.deploy)
-        returns 'api_v1_cli_deploy_api_view'
+        from django.urls import reverse
+        url = reverse(
+            f"{GuardrailApiV1ReverseViews.namespace}:{GuardrailApiV1ReverseViews.evaluate_by_hashed_id}",
+            kwargs={"hashed_id": guardrail.hashed_id},
+        )
     """
 
-    namespace = f"api:{namespace}:guardrail"
+    namespace = "api:v1:guardrail"
 
-    # reverse() by hashed_id
-    # --------------------------------------------------------------------------
-    guardrail_view_by_hashed_id = to_snake_case(GuardrailView.__name__) + BY_HASHED_ID
-    default_guardrail_api_view_by_hashed_id = to_snake_case(DefaultGuardrailApiView.__name__) + BY_HASHED_ID
+    list_view = to_snake_case(GuardrailListView.__name__)
 
-    # legacy reverse() references by guardrail_id
-    # --------------------------------------------------------------------------
-    default_guardrail_api_view_by_id = to_snake_case(DefaultGuardrailApiView.__name__)
+    guardrail_by_hashed_id = to_snake_case(GuardrailView.__name__) + BY_HASHED_ID
+    evaluate_by_hashed_id = to_snake_case(GuardrailEvaluateView.__name__) + BY_HASHED_ID
+    events_by_hashed_id = to_snake_case(GuardrailEventsView.__name__) + BY_HASHED_ID
 
-    # currently no reverse() references to these named views.
-    # --------------------------------------------------------------------------
-    guardrail_list_view = to_snake_case(GuardrailListView.__name__)
-    guardrail_view_by_id = to_snake_case(GuardrailView.__name__) + BY_ID
+    guardrail_by_id = to_snake_case(GuardrailView.__name__) + BY_ID
+    evaluate_by_id = to_snake_case(GuardrailEvaluateView.__name__) + BY_ID
+    events_by_id = to_snake_case(GuardrailEventsView.__name__) + BY_ID
 
 
 urlpatterns = [
-    path("", GuardrailListView.as_view(), name=GuardrailApiV1ReverseViews.guardrail_list_view),
-    # --------------------------------------------------------------------------
-    # paths by hashed_id
-    # --------------------------------------------------------------------------
-    path("<str:hashed_id>/", GuardrailView.as_view(), name=GuardrailApiV1ReverseViews.guardrail_view_by_hashed_id),
+    path("", GuardrailListView.as_view(), name=GuardrailApiV1ReverseViews.list_view),
+    # by guardrail_id
+    path("<int:guardrail_id>/", GuardrailView.as_view(), name=GuardrailApiV1ReverseViews.guardrail_by_id),
     path(
-        "<str:hashed_id>/guardrail/",
-        DefaultGuardrailApiView.as_view(),
-        name=GuardrailApiV1ReverseViews.default_guardrail_api_view_by_hashed_id,
+        "<int:guardrail_id>/evaluate/", GuardrailEvaluateView.as_view(), name=GuardrailApiV1ReverseViews.evaluate_by_id
     ),
-    # --------------------------------------------------------------------------
-    # paths by guardrail_id
-    # --------------------------------------------------------------------------
-    path("<int:guardrail_id>/", GuardrailView.as_view(), name=GuardrailApiV1ReverseViews.guardrail_view_by_id),
+    path("<int:guardrail_id>/events/", GuardrailEventsView.as_view(), name=GuardrailApiV1ReverseViews.events_by_id),
+    # by hashed_id
+    path("<str:hashed_id>/", GuardrailView.as_view(), name=GuardrailApiV1ReverseViews.guardrail_by_hashed_id),
     path(
-        "<int:guardrail_id>/guardrail/",
-        DefaultGuardrailApiView.as_view(),
-        name=GuardrailApiV1ReverseViews.default_guardrail_api_view_by_id,
+        "<str:hashed_id>/evaluate/",
+        GuardrailEvaluateView.as_view(),
+        name=GuardrailApiV1ReverseViews.evaluate_by_hashed_id,
     ),
+    path("<str:hashed_id>/events/", GuardrailEventsView.as_view(), name=GuardrailApiV1ReverseViews.events_by_hashed_id),
 ]

@@ -133,7 +133,13 @@ class SAMLLMClientSpec(AbstractSAMSpecBase):
     )
     guardrails: Optional[List[str]] = Field(
         None,
-        description=f"{class_identifier}.guardrails[list]. Optional. The built-in Smarter Guardrails to add to the {MANIFEST_KIND}. Example: ['security_injection_input']. These are built-in backing functions written in Python that are fully compatible with OpenAI API-compatible function calling. These are not the same as OpenAI functions. See https://docs.smarter.sh/ for more information.",
+        description=(
+            f"{class_identifier}.guardrails[list]. Optional. The names of the Guardrails that protect the "
+            f"{MANIFEST_KIND}'s prompts. Example: ['pii_redaction_input', 'prompt_injection_keyword_input']. Each "
+            "must be a Guardrail that you own, or that is shared with you, such as Smarter's built-in guardrails. "
+            "Input guardrails run on the user's message before it is sent to the LLM, and output guardrails on the "
+            "LLM's reply before it is returned to the user, in order of their priority. Experimental."
+        ),
     )
     mcpClients: Optional[List[str]] = Field(
         None,

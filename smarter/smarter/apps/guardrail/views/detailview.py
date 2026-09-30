@@ -145,7 +145,7 @@ class GuardrailDetailView(DocsBaseView):
             )
             return SmarterHttpResponseNotFound(request=request, error_message="Guardrail not found")
 
-        self.kind = SAMKinds.PROVIDER
+        self.kind = SAMKinds.GUARDRAIL
 
         logger.debug(
             "%s.post() Rendering guardrail detail view for %s, kwargs=%s.",

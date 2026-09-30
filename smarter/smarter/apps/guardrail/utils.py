@@ -148,14 +148,14 @@ class GuardrailExamples:
 
     _guardrail_examples: list[GuardrailExample] = []
     HERE = os.path.abspath(os.path.dirname(__file__))
-    PLUGINS_PATH = os.path.join(PYTHON_ROOT, "smarter", "apps", "guardrail", "data", "guardrails")
+    GUARDRAILS_PATH = os.path.join(PYTHON_ROOT, "smarter", "apps", "guardrail", "data", "guardrails")
 
     def __init__(self, *args, **kwargs):
         """Initialize the class."""
         self._guardrail_examples = []
-        for file in os.listdir(self.PLUGINS_PATH):
+        for file in os.listdir(self.GUARDRAILS_PATH):
             if file.endswith(".yaml"):
-                guardrail_example = GuardrailExample(filepath=self.PLUGINS_PATH, filename=file)
+                guardrail_example = GuardrailExample(filepath=self.GUARDRAILS_PATH, filename=file)
                 self._guardrail_examples.append(guardrail_example)
 
     def count(self) -> int:
@@ -171,9 +171,10 @@ class GuardrailExamples:
 # pylint: disable=W0613,C0415
 def add_builtin_guardrails(user_profile: Optional[UserProfile], verbose: bool = False) -> bool:
     """
-    Create example guardrails for a new user.
+    Apply the built-in Guardrail manifests, in ``data/guardrails``, for a user.
 
-    This function provisions example guardrails for a user.
+    ``manage.py initialize_platform`` applies them for the Smarter admin user, so that every
+    account's LLMClients may list them in their ``spec.guardrails``.
 
     :param user_profile: The `UserProfile` instance representing the new user. Must not be `None`.
     :type user_profile: Optional[UserProfile]
@@ -186,7 +187,7 @@ def add_builtin_guardrails(user_profile: Optional[UserProfile], verbose: bool = 
 
     .. note::
 
-        - This function applies sample secrets and connections using Django management commands. Manifests for these are located in smarter/apps/guardrail/data.
+        - This function applies the manifests with the ``apply_manifest`` management command.
         - This function is called during deployment jobs.
 
     .. important::
@@ -197,7 +198,6 @@ def add_builtin_guardrails(user_profile: Optional[UserProfile], verbose: bool = 
     .. seealso::
 
         - :class:`GuardrailExamples`
-        - :class:`GuardrailController`
         - :class:`SmarterValueError`
 
     **Example usage**:
