@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.15.0-alpha.25](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.24...v0.15.0-alpha.25) (2026-09-30)
+
+### Bug Fixes
+
+* swap sql.lawrencemcdaniel for smarter-mariadb ([581331b](https://github.com/smarter-sh/smarter/commit/581331b5640efa27872064c8296eaa255b793caf))
+
 ## [0.15.0-alpha.24](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.23...v0.15.0-alpha.24) (2026-09-30)
 
 ### Bug Fixes
