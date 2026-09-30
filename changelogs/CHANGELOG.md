@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.0-alpha.24](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.23...v0.15.0-alpha.24) (2026-09-30)
+
+### Bug Fixes
+
+* **plugin:** look up PluginDataBase by plugin FK, not by PluginMeta pk ([9a546e6](https://github.com/smarter-sh/smarter/commit/9a546e6793fe61163ee3e926a4b3553066947b46))
+
 ## [0.15.0-alpha.23](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.22...v0.15.0-alpha.23) (2026-09-30)
 
 ### Features
