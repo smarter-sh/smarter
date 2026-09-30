@@ -2,7 +2,7 @@
 Django URL patterns for the mcpclient app.
 
 how we got here:
- - /mcpclients/api/v1/
+ - /mcpclient/
 """
 
 from django.urls import include, path, re_path
@@ -32,9 +32,7 @@ class MCPClientReverseNames:
 
     namespace = namespace
 
-    listview = to_snake_case(MCPClientListApiView.__name__)
     detailview = to_snake_case(MCPClientDetailView.__name__)
-
     listview = to_snake_case(MCPClientListView.__name__)
     listview_api = to_snake_case(MCPClientListApiView.__name__)
     listview_api_all = to_snake_case(MCPClientListApiView.__name__) + "_all"
@@ -56,17 +54,17 @@ urlpatterns = [
         name=MCPClientReverseNames.listview_api,
     ),
     path(
-        "react-integration/api/clone/<int:llmclient_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:mcpclient_id>/<str:new_name>/",
         MCPClientListApiCloneView.as_view(),
         name=MCPClientReverseNames.listview_api_clone,
     ),
     path(
-        "react-integration/api/delete/<int:llmclient_id>/",
+        "react-integration/api/delete/<int:mcpclient_id>/",
         MCPClientListApiDeleteView.as_view(),
         name=MCPClientReverseNames.listview_api_delete,
     ),
     path(
-        "react-integration/api/rename/<int:llmclient_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:mcpclient_id>/<str:new_name>/",
         MCPClientListApiRenameView.as_view(),
         name=MCPClientReverseNames.listview_api_rename,
     ),

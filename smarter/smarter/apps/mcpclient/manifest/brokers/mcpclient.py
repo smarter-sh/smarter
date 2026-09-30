@@ -1,16 +1,30 @@
-# pylint: disable=W0718,C0302
-"""Smarter API MCPClient Manifest handler."""
+# pylint: disable=W0718,C0302,R0904
+"""
+Smarter API MCPClient Manifest handler.
+
+.. note::
+
+    **Experimental.** The MCPClient was designed and coded by Claude Code (Anthropic's
+    Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental, and will
+    be documented.
+"""
 
 import datetime
-from typing import Optional, Type
+from typing import Any, Optional, Type
 
 from django.db import transaction
-from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
-from taggit.managers import TaggableManager
 
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.mcpclient.caching import (
+    invalidate_all_cached_mcpclients_for_user_profile,
+    invalidate_cached_catalog,
+)
+from smarter.apps.mcpclient.manifest.enum import (
+    SAMMCPClientAuthType,
+    SAMMCPClientTransport,
+)
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import MANIFEST_KIND
 from smarter.apps.mcpclient.manifest.models.mcpclient.metadata import (
     SAMMCPClientMetadata,
@@ -21,13 +35,10 @@ from smarter.apps.mcpclient.manifest.models.mcpclient.spec import (
     SAMMCPClientSpecConfig,
 )
 from smarter.apps.mcpclient.manifest.models.mcpclient.status import SAMMCPClientStatus
-from smarter.apps.mcpclient.models import (
-    MCPAuthType,
-    MCPClient,
-    MCPTransport,
-)
+from smarter.apps.mcpclient.models import MCPClient
+from smarter.apps.mcpclient.serializers import MCPClientSerializer
 from smarter.apps.plugin.signals import broker_ready
-from smarter.common.utils.decorators import camel_case
+from smarter.apps.secret.models import Secret
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -35,6 +46,7 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -51,6 +63,23 @@ logger = logging.getSmarterLogger(
 
 MAX_RESULTS = 1000
 
+CONFIG_FIELDS = {
+    # manifest spec.config field: Django ORM MCPClient field
+    "transport": "transport",
+    "endpointUrl": "endpoint_url",
+    "headers": "headers",
+    "timeout": "timeout",
+    "authType": "auth_type",
+    "apiKeyHeader": "api_key_header",
+    "allowedTools": "allowed_tools",
+    "allowedResources": "allowed_resources",
+    "includeInstructions": "include_instructions",
+    "cacheTtl": "cache_ttl",
+    "isActive": "is_active",
+    "priority": "priority",
+}
+"""The spec.config fields, other than credentials, and their Django ORM fields."""
+
 
 class SAMMCPClientBrokerError(SAMBrokerError):
     """Base exception for Smarter API MCPClient Broker handling."""
@@ -60,47 +89,21 @@ class SAMMCPClientBrokerError(SAMBrokerError):
         return "Smarter API MCPClient Manifest Broker Error"
 
 
-class MCPClientSerializer(ModelSerializer):
-    """Django ORM model serializer for get()."""
-
-    # pylint: disable=C0115
-    class Meta:
-        model = MCPClient
-        fields = ["__all__"]
-
-
 class SAMMCPClientBroker(AbstractBroker):
     """
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` MCPClient manifests.
 
-    This class provides a high-level abstraction for managing mcpclient manifests
-    within the Smarter platform. It acts as the central coordinator for the
-    lifecycle of mcpclient manifests, bridging the gap between declarative YAML
-    files and persistent application state.
+    The broker converts between MCPClient manifests and the
+    :class:`~smarter.apps.mcpclient.models.MCPClient` Django ORM model, and implements the
+    ``smarter`` CLI commands for MCPClients: ``apply``, ``describe``, ``get``, ``delete``
+    and ``example_manifest``. MCPClients are not deployed, so ``deploy`` and ``undeploy``
+    are not implemented.
 
-    The broker is responsible for:
-
-    - Managing the lifecycle of mcpclient manifests, including loading, validation,
-      and parsing of YAML files.
-    - Initializing Pydantic models from manifest data to ensure robust schema
-      validation and serialization.
-    - Integrating with Django ORM models that represent mcpclient manifests,
-      supporting creation, update, deletion, and querying of database records.
-    - Transforming data between Django ORM models and Pydantic models to enable
-      seamless conversion between database and API representations.
-    - Coordinating composite models, such as MCPClient, MCPClientAPIKey,
-      MCPClientPlugin, and MCPClientFunctions, to ensure all components of an mcpclient
-      are synchronized according to the manifest specification.
-    - Ensuring atomic and consistent application of changes using Django's
-      transaction management.
-    - Providing detailed logging and error handling integrated with the Smarter
-      platform's diagnostics systems.
-
-    This broker is a key component in the deployment, configuration, and
-    lifecycle management of mcpclients in the Smarter Framework.
+    ``spec.config.credentials`` is the name of a Smarter Secret, which must belong to, or
+    be shared with, the manifest's owner. It is stored as a foreign key, and rendered as
+    the Secret's name, never its value.
     """
 
-    # override the base abstract manifest model with the MCPClient model
     _manifest: Optional[SAMMCPClient] = None
     _pydantic_model: Type[SAMMCPClient] = SAMMCPClient
     _mcpclient: Optional[MCPClient] = None
@@ -113,13 +116,8 @@ class SAMMCPClientBroker(AbstractBroker):
         logger.info(msg)
 
     @property
-    def SerializerClass(self) -> Type[MCPClientSerializer]:
-        """
-        The Django ORM model serializer class for the MCPClient.
-
-        :returns: The MCPClient Django ORM model serializer class.
-        :rtype: Type[ModelSerializer]
-        """
+    def SerializerClass(self) -> Type[ModelSerializer]:
+        """The Django ORM model serializer class for the MCPClient."""
         return MCPClientSerializer
 
     @property
@@ -127,28 +125,17 @@ class SAMMCPClientBroker(AbstractBroker):
         """
         Check if the broker is ready for operations.
 
-        This property determines whether the broker has been properly initialized
-        and is ready to perform its functions. A broker is considered ready if
-        it has a valid manifest loaded, either from raw data, a loader, or
-        existing Django ORM models.
+        A broker is ready if it has a manifest, or an account.
 
         :returns: ``True`` if the broker is ready, ``False`` otherwise.
         :rtype: bool
         """
         if self._ready:
             return self._ready
-        retval = super().ready
-        if not retval:
+        if not super().ready:
             logger.debug("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
             return False
-        retval = self.manifest is not None or self.account is not None
-        logger.debug(
-            "%s.ready() manifest presence indicates ready=%s for %s",
-            self.formatted_class_name,
-            retval,
-            self.kind,
-        )
-        if retval:
+        if self.manifest is not None or self.account is not None:
             self._ready = True
             broker_ready.send(sender=self.__class__, broker=self)
         return self._ready
@@ -156,218 +143,130 @@ class SAMMCPClientBroker(AbstractBroker):
     @property
     def mcpclient(self) -> Optional[MCPClient]:
         """
-        Provides access to the Django ORM model instance representing the current Smarter MCPClient.
+        The user's MCPClient with the broker's name, if it exists.
 
-        This property retrieves the MCPClient object associated with the broker's account and name.
-        If a matching MCPClient record exists in the database, it is returned and cached for future access.
-        If no such record exists, and a manifest is available, a new MCPClient instance is created using
-        data extracted from the manifest and then persisted to the database.
+        Unlike the scaffolded version of this property, it never creates an MCPClient.
+        :meth:`apply` does that.
 
-        This property ensures that the broker always has access to a valid MCPClient model, either by
-        fetching an existing record or by creating one from the manifest specification. The MCPClient
-        model stores the configuration and runtime state of the mcpclient, and is used for all database
-        operations related to the mcpclient's lifecycle.
-
-        :returns: The Django ORM MCPClient instance if found or created, otherwise ``None`` if neither
-                  a database record nor a manifest is available.
+        :returns: The MCPClient, or ``None``.
         :rtype: Optional[MCPClient]
-
-        .. note::
-
-            The returned MCPClient object is essential for linking related resources such as API keys,
-            plugins, and functions, and for performing updates or queries on the mcpclient's state.
-
-        .. admonition:: FIX NOTE
-
-            This should be refactored/removed in favor of orm_instance. There is no logic
-            in this property that merits it overriding the parent orm_instance property.
-
-        .. admonition:: FIX NOTE
-
-            This is breaking an unwritten rule of Smarter resources in that it is
-            lazily **creating** a database record on a property getter.
-            Creating/updating database records should be handled in apply().
         """
         if self._mcpclient:
             return self._mcpclient
-
-        try:
-            self._mcpclient = MCPClient.get_cached_object(
-                invalidate=True, user_profile=self.user_profile, name=self.name
-            )  # type: ignore
-            logger.debug(
-                "%s.mcpclient() retrieved existing MCPClient instance %s owned by %s from database.",
-                self.formatted_class_name,
-                self._mcpclient,
-                self.user_profile,
-            )
-            return self._mcpclient
-        except MCPClient.DoesNotExist:
-            self._mcpclient = None
-
-        logger.debug(
-            "%s.mcpclient() MCPClient instance not found for user_profile %s. Attempting to create a new instance.",
-            self.formatted_class_name,
-            self.user_profile,
+        if not self.user_profile or not self.name:
+            return None
+        self._mcpclient = (
+            MCPClient.objects.select_related("credentials", "user_profile__user", "user_profile__account")
+            .filter(user_profile=self.user_profile, name=self.name)
+            .first()
         )
-        if self.manifest:
-            data = self.manifest_to_django_orm()
-            data["user_profile"] = self.user_profile
-            logger.debug("%s.mcpclient() Creating new MCPClient with data: %s", self.formatted_class_name, data)
-            tags = data.pop("tags", [])
-            self._mcpclient = MCPClient.objects.create(**data)
-            if self._mcpclient and tags:
-                self._mcpclient.tags.set(tags)
-            self._created = True
-            logger.warning(
-                "%s.mcpclient() lazily created new MCPClient instance %s owned by %s. This logic should be handled in apply().",
-                self.formatted_class_name,
-                self._mcpclient,
-                self.user_profile,
-            )
-        else:
-            logger.warning(
-                "%s.mcpclient() %s not found for user_profile %s",
-                self.formatted_class_name,
-                self._mcpclient,
-                self.user_profile,
-            )
-
         return self._mcpclient
 
-    def manifest_to_django_orm(self) -> dict:
+    def resolve_secret(self, name: Optional[str]) -> Optional[Secret]:
         """
-        Convert the Smarter API MCPClient manifest into a dictionary suitable for creating or updating a Django ORM MCPClient model.
+        Return the Secret named ``name`` that the broker's user may read.
 
-        This method extracts all relevant configuration, metadata, and versioning information from the loaded manifest
-        and transforms it into a dictionary format compatible with Django ORM operations. The manifest's configuration
-        is first dumped and converted from camelCase to snake_case to match Django's field naming conventions.
+        The user's own Secret takes precedence over one that is shared with them.
 
-        The resulting dictionary includes the account, name, description, and version fields from the manifest metadata,
-        as well as all configuration fields from the manifest specification. This dictionary can be used to instantiate
-        or update a MCPClient ORM model instance in the database.
+        :param name: The name of the Secret, or ``None``.
+        :returns: The Secret, or ``None`` if ``name`` is ``None``.
+        :raises SAMBrokerErrorNotFound: If the user has no Secret by that name.
+        """
+        if not name:
+            return None
+        if not self.user_profile:
+            raise SAMBrokerErrorNotReady("user_profile is not set.", thing=self.kind)
+        secret = Secret.objects.filter(name=name, user_profile=self.user_profile).first()
+        if secret is None:
+            secret = (
+                Secret.objects.filter(name=name)
+                .with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
+                .order_by("-updated_at")
+                .first()
+            )
+        if secret is None:
+            raise SAMBrokerErrorNotFound(
+                f"Secret {name} not found, or not shared with {self.user_profile}.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+        return secret
 
-        If the manifest is not loaded or is invalid, an exception is raised to indicate that the broker is not ready
-        to perform the transformation.
+    def manifest_to_django_orm(self) -> dict[str, Any]:
+        """
+        Convert the manifest into a dict of Django ORM MCPClient fields.
 
-        :returns: A dictionary containing all fields required to create or update a Django ORM MCPClient model.
+        The ``credentials`` Secret name is resolved to the Secret. The fields are mapped
+        explicitly, rather than by converting camelCase to snake_case, so that the keys of
+        ``headers`` are preserved.
+
+        :returns: A dict of MCPClient fields, including the metadata fields.
         :rtype: dict
-
-        :raises SAMBrokerErrorNotReady: If the manifest is not loaded or cannot be found.
-        :raises SAMMCPClientBrokerError: If the manifest configuration cannot be converted to a dictionary.
+        :raises SAMBrokerErrorNotReady: If the manifest is not loaded.
+        :raises SAMBrokerErrorNotFound: If the credentials Secret is not found.
         """
         if not self.manifest:
             raise SAMBrokerErrorNotReady(
                 f"Manifest not loaded for {self.kind} broker. Cannot convert to Django ORM.", thing=self.kind
             )
         metadata = super().manifest_to_django_orm()
-
-        config_dump = self.manifest.spec.config.model_dump()
-        config_dump = self.to_snake_case(config_dump)
-        if not isinstance(config_dump, dict):
-            raise SAMMCPClientBrokerError(
-                f"Failed to convert {self.kind} {self.manifest.metadata.name} to dict. Got {type(config_dump)}",
-                thing=self.kind,
-            )
-        retval = {
-            **metadata,
-            **config_dump,
-        }
-        logger.debug(
-            "%s.manifest_to_django_orm() converted manifest to Django ORM dict: %s",
-            self.formatted_class_name,
-            retval,
-        )
-
+        config = self.manifest.spec.config
+        retval = {**metadata}
+        for manifest_field, orm_field in CONFIG_FIELDS.items():
+            retval[orm_field] = getattr(config, manifest_field)
+        retval["credentials"] = self.resolve_secret(config.credentials)
         return retval
 
-    @camel_case()
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
-        Transform the Django ORM MCPClient model instance into a dictionary compatible with the Smarter API MCPClient manifest format.
+        Convert the MCPClient into a manifest dict.
 
-        This method converts the current MCPClient ORM model and its related resources (plugins, functions, API key)
-        into a dictionary structure that matches the expected schema for a Pydantic manifest. The conversion includes
-        renaming fields from snake_case to camelCase, removing internal-only fields, and assembling metadata, spec,
-        and status sections as required by the manifest.
+        ``credentials`` is rendered as the Secret's name, never its value. The status
+        reports the result of the last connection to the MCP server.
 
-        The resulting dictionary contains all configuration, metadata, plugin, function, and status information
-        necessary to reconstruct the manifest for the mcpclient. This enables seamless round-trip conversion between
-        database state and manifest representation.
-
-        If the MCPClient model is not available, the method logs a warning and returns ``None``. If the conversion
-        fails, an exception is raised to indicate the error.
-
-        :returns: A dictionary representing the Smarter API MCPClient manifest, or ``None`` if the MCPClient model is not set.
+        :returns: The manifest, as a dict, or ``None`` if the MCPClient does not exist.
         :rtype: Optional[dict]
-
-        :raises SAMMCPClientBrokerError: If the ORM model cannot be converted to a manifest dictionary.
-
-        See also:
-
-        - :py:meth:`smarter.apps.mcpclient.manifest.brokers.mcpclient.SAMMCPClientBroker.manifest_to_django_orm`
-        - :py:class:`smarter.apps.mcpclient.manifest.models.mcpclient.SAMMCPClient`
-        - :py:class:`smarter.apps.mcpclient.manifest.models.mcpclient.metadata.SAMMCPClientMetadata`
-        - :py:class:`smarter.apps.mcpclient.manifest.models.mcpclient.spec.SAMMCPClientSpec`
-        - :py:class:`smarter.apps.mcpclient.manifest.models.mcpclient.status.SAMMCPClientStatus`
         """
-        if not self.account:
+        if not self.account or not self.user_profile:
             raise SAMBrokerErrorNotReady(
-                f"Account not loaded for {self.kind} broker. Cannot convert Django ORM to manifest dict.",
+                f"Account and user profile are required to describe a {self.kind}.",
                 thing=self.kind,
             )
-        if not self.user_profile:
-            raise SAMBrokerErrorNotReady(
-                f"User profile not loaded for {self.kind} broker. Cannot convert Django ORM to manifest dict.",
-                thing=self.kind,
-            )
-        if not self.mcpclient:
-            logger.warning(
-                "%s.django_orm_to_manifest_dict() called without a MCPClient. This could affect broker operations.",
-                self.formatted_class_name,
-            )
+        mcpclient = self.mcpclient
+        if not mcpclient:
             return None
-        mcpclient_dict = model_to_dict(self.mcpclient)
-        mcpclient_dict = self.to_camel_case(mcpclient_dict)
-        if not isinstance(mcpclient_dict, dict):
-            raise SAMMCPClientBrokerError(
-                f"Failed to convert {self.kind} {self.mcpclient.name} to dict", thing=self.kind
-            )
-        mcpclient_dict.pop("id")
-        mcpclient_dict.pop("name")
-        mcpclient_dict.pop("description")
-        mcpclient_dict.pop("version")
-
+        config_data = {
+            manifest_field: getattr(mcpclient, orm_field) for manifest_field, orm_field in CONFIG_FIELDS.items()
+        }
+        config_data["transport"] = config_data["transport"] or SAMMCPClientTransport.HTTP.value
+        config_data["headers"] = config_data["headers"] or {}
+        config_data["allowedTools"] = config_data["allowedTools"] or []
+        config_data["allowedResources"] = config_data["allowedResources"] or []
+        config_data["authType"] = config_data["authType"] or SAMMCPClientAuthType.NONE.value
+        config_data["credentials"] = mcpclient.credential_name
         meta = SAMMCPClientMetadata(
-            name=self.mcpclient.name,
-            description=self.mcpclient.description,
-            version=self.mcpclient.version,
-            tags=self.mcpclient.tags_list,
-            annotations=self.mcpclient.annotations if isinstance(self.mcpclient.annotations, list) else [],
+            name=mcpclient.name,
+            description=mcpclient.description,
+            version=mcpclient.version,
+            tags=mcpclient.tags_list,
+            annotations=mcpclient.annotations if isinstance(mcpclient.annotations, list) else [],
         )
-        spec_config = SAMMCPClientSpecConfig(**mcpclient_dict)
-        spec = SAMMCPClientSpec(config=spec_config)
+        spec = SAMMCPClientSpec(config=SAMMCPClientSpecConfig(**config_data))
         status = SAMMCPClientStatus(
             accountNumber=self.account.account_number,
             username=self.user_profile.user.username,
-            recordLocator=self.mcpclient.record_locator,
-            created=self.mcpclient.created_at,
-            modified=self.mcpclient.updated_at,
+            recordLocator=mcpclient.record_locator,
+            created=mcpclient.created_at,
+            modified=mcpclient.updated_at,
+            connectionStatus=mcpclient.status,
+            protocolVersion=mcpclient.protocol_version,
+            serverName=mcpclient.server_name,
+            serverVersion=mcpclient.server_version,
+            lastConnected=mcpclient.last_connected_at,
+            lastError=mcpclient.last_error,
+            tools=mcpclient.tools or [],
         )
-        model = SAMMCPClient(
-            apiVersion=self.api_version,
-            kind=self.kind,
-            metadata=meta,
-            spec=spec,
-            status=status,
-        )
-
-        logger.debug(
-            "%s.django_orm_to_manifest_dict() converted MCPClient %s to manifest dict: %s",
-            self.formatted_class_name,
-            self.mcpclient.name,
-            model.model_dump(),
-        )
+        model = SAMMCPClient(apiVersion=self.api_version, kind=self.kind, metadata=meta, spec=spec, status=status)
         return model.model_dump()
 
     ###########################################################################
@@ -375,71 +274,21 @@ class SAMMCPClientBroker(AbstractBroker):
     ###########################################################################
     @property
     def formatted_class_name(self) -> str:
-        """
-        Returns a formatted string representing the class name for logging purposes.
-
-        This property generates a human-readable class name that is used to improve the clarity
-        and consistency of log messages throughout the broker. The formatted class name includes
-        the parent class name and appends the specific broker class identifier, making it easier
-        to trace log entries back to their source within the codebase.
-
-        The formatted class name is especially useful in environments where multiple brokers or
-        components are active, as it helps distinguish log messages and aids in debugging and
-        monitoring application behavior.
-
-        :returns: A string containing the formatted class name, suitable for use in log output.
-        :rtype: str
-        """
+        """The class name, for logging."""
         class_name = f"{SAMMCPClientBroker.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
     @property
     def kind(self) -> str:
-        """
-        Returns the manifest kind for the Smarter API MCPClient.
-
-        This property provides the specific kind identifier used to classify the Smarter API MCPClient
-        manifest within the Smarter platform. The kind is a key component of the manifest schema,
-        allowing the system to recognize and process mcpclient manifests appropriately. The kind value is defined as a constant in the mcpclient manifest model
-        and is used throughout the broker to ensure consistency when handling mcpclient manifests.
-
-        :returns: The manifest kind string for the Smarter API MCPClient.
-        :rtype: str
-
-        .. important::
-
-            The kind property is essential for manifest validation, routing, and processing within
-            the Smarter platform.
-        """
+        """The manifest kind: MCPClient."""
         return MANIFEST_KIND
 
     @property
     def manifest(self) -> Optional[SAMMCPClient]:
         """
-        Returns the Smarter API MCPClient manifest as a Pydantic model.
+        The MCPClient manifest, as a Pydantic model, from the manifest loader.
 
-        This method constructs and returns an instance of the ``SAMMCPClient`` Pydantic model,
-        which represents the full manifest for a Smarter API MCPClient. The manifest contains
-        all configuration, metadata, and specification details required to describe and deploy
-        an mcpclient within the Smarter platform.
-
-        The manifest is initialized using data provided by the manifest loader. The loader
-        supplies the manifest's API version, kind, metadata, and specification, which are
-        passed to the respective fields of the ``SAMMCPClient`` model. The metadata and spec
-        fields are themselves Pydantic models (``SAMMCPClientMetadata`` and ``SAMMCPClientSpec``),
-        and are recursively initialized with their corresponding data.
-
-        Unlike child models, which are automatically cascade-initialized by Pydantic when
-        constructing the parent model, the top-level manifest model must be explicitly
-        instantiated in this method. This ensures that all manifest data is validated and
-        structured according to the schema defined by the ``SAMMCPClient`` model.
-
-        If the manifest has already been initialized and cached, this method returns the
-        cached instance. If the loader is present and its manifest kind matches the expected
-        kind, a new manifest instance is created and cached before returning.
-
-        :returns: An instance of ``SAMMCPClient`` representing the mcpclient manifest, or ``None``
-                if the manifest cannot be initialized.
+        :returns: The manifest, or ``None`` if the broker has no loader for an MCPClient manifest.
         :rtype: Optional[SAMMCPClient]
         """
         if self._manifest:
@@ -447,33 +296,11 @@ class SAMMCPClientBroker(AbstractBroker):
                 raise SAMMCPClientBrokerError("Cached manifest is not a SAMMCPClient instance", thing=self.kind)
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            logger.debug(
-                "%s.manifest() initializing %s from SAMLoader with name %s",
-                self.formatted_class_name,
-                self.kind,
-                self.loader.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown"),
-            )
             self._manifest = SAMMCPClient(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=SAMMCPClientMetadata(**self.loader.manifest_metadata),
                 spec=SAMMCPClientSpec(**self.loader.manifest_spec),
-            )
-            return self._manifest
-        if self._mcpclient:
-            self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
-            if self._manifest:
-                logger.debug(
-                    "%s.manifest() initialized from loader for existing MCPClient %s with name %s",
-                    self.formatted_class_name,
-                    self._mcpclient,
-                    self._mcpclient.name,
-                )
-                return self._manifest
-        else:
-            logger.warning(
-                "%s.manifest() could not initialize",
-                self.formatted_class_name,
             )
         return self._manifest
 
@@ -481,104 +308,48 @@ class SAMMCPClientBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def cache_invalidations(self) -> None:
-        """
-        Handle broker specific cache invalidation logic.
-
-        We should invalidate
-        any cached objects that are related to the MCPClient when any mutation
-        occurs. In this case, we need to invalidate the MCPClient cache itself,
-        but also any related objects such as the plugins, functions and
-        api keys.
-
-        .. returns: None
-        .. rtype: None
-        """
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
-
-        # 1.) invalidate the MCPClient cache itself.
-        # -----------------------------
-        MCPClient.get_cached_object(pk=self.mcpclient.id, invalidate=True)  # type: ignore
-
-        # 2.) invalidate anything else in which the mcpclient is part of. this could
-        # include listviews, the plugins, functions and api keys.
-        # -----------------------------
-        MCPClient.get_cached_objects(user_profile=self.user_profile, invalidate=True)
-
-        # 3.) invalidate all children of MCPClient
-        # -----------------------------
-
+        """Invalidate the cached MCPClient, the user's cached MCPClient lists, and the MCPClient's catalog."""
+        if self.mcpclient:
+            MCPClient.get_cached_object(pk=self.mcpclient.id, invalidate=True)  # type: ignore[attr-defined]
+            invalidate_cached_catalog(self.mcpclient)
+        if self.user_profile:
+            MCPClient.get_cached_objects(user_profile=self.user_profile, invalidate=True)
+            invalidate_all_cached_mcpclients_for_user_profile(self.user_profile)
         return super().cache_invalidations()
 
     @property
     def ORMMetaModelClass(self) -> Type[MCPClient]:
-        """
-        Return the Django ORM meta model class for the broker.
-
-        :return: The Django ORM meta model class definition for the broker.
-        :rtype: Type[MCPClient]
-        """
+        """The Django ORM meta model class: MCPClient."""
         return MCPClient
 
     @property
     def ORMModelClass(self) -> Type[MCPClient]:
-        """
-        The Django ORM model class for the MCPClient.
-
-        :returns: The MCPClient Django ORM model class.
-        :rtype: Type[MCPClient]
-        """
+        """The Django ORM model class: MCPClient."""
         return MCPClient
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        Return an example manifest for the Smarter API MCPClient.
-
-        :returns: A JSON response containing an example Smarter API MCPClient manifest.
-        :rtype: SmarterJournaledJsonResponse
-
-        See also:
-
-        - :py:class:`smarter.apps.mcpclient.manifest.models.mcpclient.SAMMCPClient`
-        - :py:class:`smarter.lib.manifest.enumSAMKeys`
-        - :py:class:`smarter.apps.mcpclient.manifest.enum.SAMMetadataKeys`
-        - :py:class:`smarter.apps.mcpclient.manifest.enum.SCLIResponseGet`
-        - :py:class:`smarter.apps.mcpclient.manifest.enum.SCLIResponseGetData`
-        - :py:class:`from smarter.common.conf.settings_defaults`
-        """
-
-        command = self.example_manifest.__name__
-        command = SmarterJournalCliCommands(command)
-
+        """Return an example MCPClient manifest."""
+        command = SmarterJournalCliCommands(self.example_manifest.__name__)
         meta_data = SAMMCPClientMetadata(
             name="example_mcpclient",
-            description="This is an example mcpclient manifest generated by the SAMMCPClientBroker. It serves as a template for creating your own mcpclient manifests.",
+            description="An example MCPClient, for GitHub's MCP server. It offers the LLM the server's read-only tools.",
             version="1.0.0",
-            tags=["example", "template", "school-project"],
-            annotations=[
-                {"color": "red"},
-                {"size": "medium"},
-                {"hash": "sha256:abc123def456"},
-            ],
+            tags=["example", "github"],
+            annotations=[{"smarter.sh/mcpclient/documentation": "https://github.com/github/github-mcp-server"}],
         )
         config = SAMMCPClientSpecConfig(
-            transport=MCPTransport.HTTP,
-            endpoint_url="https://mcp.example.com/v1",
-            command="",
-            config={
-                "headers": {"X-Client-Id": "smarter-harness"},
-                "timeout_s": 30,
-                "retry_policy": {"max_attempts": 3, "backoff_s": 2},
-            },
-            auth_type=MCPAuthType.API_KEY,
-            credentials="mcp-example-api-key",
-            allowed_tools=["search_docs", "create_ticket"],
-            allowed_resources=["docs://example.com/*"],
-            is_active=True,
+            transport=SAMMCPClientTransport.HTTP.value,
+            endpointUrl="https://api.githubcopilot.com/mcp/",
+            headers={"X-MCP-Toolsets": "repos,issues,pull_requests"},
+            timeout=30,
+            authType=SAMMCPClientAuthType.BEARER_TOKEN.value,
+            credentials="github_personal_access_token",
+            allowedTools=["get_*", "list_*", "search_*"],
+            allowedResources=[],
+            includeInstructions=True,
+            cacheTtl=300,
+            isActive=True,
             priority=100,
-        )
-
-        spec = SAMMCPClientSpec(
-            config=config,
         )
         status = SAMMCPClientStatus(
             accountNumber=smarter_cached_objects.smarter_account.account_number,
@@ -587,13 +358,18 @@ class SAMMCPClientBroker(AbstractBroker):
             created=datetime.datetime.now(),
             modified=datetime.datetime.now(),
         )
-        model = SAMMCPClient(apiVersion=self.api_version, kind=self.kind, metadata=meta_data, spec=spec, status=status)
-
+        model = SAMMCPClient(
+            apiVersion=self.api_version,
+            kind=self.kind,
+            metadata=meta_data,
+            spec=SAMMCPClientSpec(config=config),
+            status=status,
+        )
         return self.json_response_ok(command=command, data=model.model_dump())
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
+        """Return the MCPClients that the user may read, optionally filtered by name."""
+        command = SmarterJournalCliCommands(self.get.__name__)
         data = []
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
@@ -601,34 +377,15 @@ class SAMMCPClientBroker(AbstractBroker):
         if self.user_profile is None:
             raise SAMBrokerErrorNotReady("user_profile is not set.")
 
-        # generate a QuerySet of PluginMeta objects that match our search criteria
+        mcpclients = MCPClient.objects.with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
         if name:
-            mcpclients = MCPClient.objects.filter(user_profile__account=self.account, name=name)
-        else:
-            mcpclients = MCPClient.objects.filter(user_profile__account=self.account)
-        mcpclients = mcpclients.with_ownership_permission_for(self.user_profile.user).order_by("name")[:MAX_RESULTS]
-        logger.debug(
-            "%s.get() found %s MCPClients for account %s", self.formatted_class_name, mcpclients.count(), self.account
-        )
+            mcpclients = mcpclients.filter(name=name)
+        mcpclients = mcpclients.order_by("name")[:MAX_RESULTS]
 
-        # iterate over the QuerySet and use a serializer to create a model dump for each MCPClient
         for mcpclient in mcpclients:
             try:
-                model_dump = MCPClientSerializer(mcpclient).data
-                if not model_dump:
-                    raise SAMMCPClientBrokerError(
-                        f"Model dump failed for {self.kind} {mcpclient.name}", thing=self.kind, command=command
-                    )
-                camel_cased_model_dump = self.to_camel_case(model_dump)
-                data.append(camel_cased_model_dump)
+                data.append(self.to_camel_case(MCPClientSerializer(mcpclient).data))
             except Exception as e:
-                logger.error(
-                    "%s.get() failed to serialize %s %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    mcpclient.name,
-                    exc_info=True,
-                )
                 raise SAMMCPClientBrokerError(
                     f"Failed to serialize {self.kind} {mcpclient.name}", thing=self.kind, command=command
                 ) from e
@@ -645,166 +402,111 @@ class SAMMCPClientBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    # pylint: disable=too-many-branches
     def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Apply the manifest.
+        Create or update the MCPClient from the manifest.
 
-        copy the manifest data to the Django ORM model and
-        save the model to the database. Note that there are fields included in the
-        manifest that are not editable
-        and are therefore removed from the Django ORM model dict prior to attempting
-        the save() command. These fields are defined in the readonly_fields list.
-
-        MCPClient is a composite model that includes the MCPClient, MCPClientAPIKey,
-        MCPClientPlugin and MCPClientFunctions models. All of these are represented
-        in the manifest spec and are created or updated as needed.
+        Saving the MCPClient queues :func:`~smarter.apps.mcpclient.tasks.refresh_mcpclient`,
+        which connects to the MCP server and records the result in the MCPClient's status.
 
         .. note::
 
             tags are handled separately because they are of type TaggableManager and
             require a different method to set them.
         """
-        command = self.apply.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.apply.__name__)
         if not self.ready:
             raise SAMBrokerErrorNotReady(
                 f"{self.kind} {self.name} broker is not ready", thing=self.kind, command=command
             )
         if not self.manifest:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
-        if not self.manifest.spec:
-            raise SAMBrokerErrorNotReady(
-                f"{self.kind} {self.name} manifest spec not found", thing=self.kind, command=command
-            )
-        if not isinstance(self.mcpclient, MCPClient):
-            raise SAMMCPClientBrokerError(f"MCPClient {self.name} not found", thing=self.kind, command=command)
+
+        data = self.manifest_to_django_orm()
+        tags = data.pop("tags", None) or []
+        for field in ("id", "created_at", "updated_at"):
+            data.pop(field, None)
         with transaction.atomic():
-            readonly_fields = ["id", "created_at", "updated_at", "tags"]
-            try:
-                data = self.manifest_to_django_orm()
-                tags = data.get("tags", [])
-                for field in readonly_fields:
-                    data.pop(field, None)
-                for key, value in data.items():
-                    setattr(self.mcpclient, key, value)
-                if self.mcpclient.user_profile != self.user_profile:
+            mcpclient = self.mcpclient
+            if mcpclient is None:
+                mcpclient = MCPClient(**data)
+            else:
+                if mcpclient.user_profile != self.user_profile:
                     raise SAMMCPClientBrokerError(
                         f"User profile mismatch for {self.kind} {self.manifest.metadata.name}",
                         thing=self.kind,
                         command=command,
                     )
-                self.mcpclient.save()
-
-                # Fix note: occasionally seeing AttributeError: \'list\' object has no attribute \'set\ in the logs,
-                # which is why this is wrapped in a try/except block.
-                try:
-                    if not isinstance(self.mcpclient.tags, TaggableManager):
-                        logger.warning(
-                            "%s.apply() mcpclient.tags is a list instead of a TaggableManager for %s %s owned by %s. This is unexpected and may indicate an issue with the MCPClient model definition or the database state. Tags=%s",
-                            self.formatted_class_name,
-                            self.kind,
-                            self.manifest.metadata.name,
-                            self.user_profile,
-                            tags,
-                        )
-                    else:
-                        self.mcpclient.tags.set(tags)
-                # pylint: disable=broad-except
-                except Exception as e:
-                    logger.error(
-                        "%s.apply() failed to set tags for %s %s owned by %s. Tags=%s. Error: %s",
-                        self.formatted_class_name,
-                        self.kind,
-                        self.manifest.metadata.name,
-                        self.user_profile,
-                        tags,
-                        e,
-                        exc_info=True,
-                    )
-                self.mcpclient.refresh_from_db()
+                for key, value in data.items():
+                    setattr(mcpclient, key, value)
+            try:
+                mcpclient.save()
+                mcpclient.tags.set(tags)
             except Exception as e:
                 logger.error(
-                    "%s.apply() failed to save %s %s owned by %s. Error: %s",
+                    "%s.apply() failed to save %s %s: %s",
                     self.formatted_class_name,
                     self.kind,
                     self.manifest.metadata.name,
-                    self.user_profile,
                     e,
                     exc_info=True,
                 )
                 raise SAMMCPClientBrokerError(
-                    f"Failed to apply {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
+                    f"Failed to apply {self.kind} {self.manifest.metadata.name}: {e}", thing=self.kind, command=command
                 ) from e
-
-            # done! return the response. Django will take care of committing the transaction
-            self.cache_invalidations()
-            return self.json_response_ok(command=command, data=self.to_json())
+        self._mcpclient = mcpclient
+        self.cache_invalidations()
+        return self.json_response_ok(command=command, data=self.to_json())
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        command = self.prompt.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
+        """Return the MCPClient as a manifest, with its status."""
+        command = SmarterJournalCliCommands(self.describe.__name__)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
-        if self.mcpclient:
-            try:
-                data = self.django_orm_to_manifest_dict()
-                return self.json_response_ok(command=command, data=data)
-            except Exception as e:
-                logger.error(
-                    "%s.describe() failed to describe %s %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    self.name,
-                    exc_info=True,
-                )
-                raise SAMMCPClientBrokerError(
-                    f"Failed to describe {self.kind} {self.name}", thing=self.kind, command=command
-                ) from e
-        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        if not self.mcpclient:
+            raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        try:
+            data = self.django_orm_to_manifest_dict()
+        except Exception as e:
+            raise SAMMCPClientBrokerError(
+                f"Failed to describe {self.kind} {self.name}", thing=self.kind, command=command
+            ) from e
+        return self.json_response_ok(command=command, data=data)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        command = self.delete.__name__
-        command = SmarterJournalCliCommands(command)
-        if self.name is None:
-            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
-        if self.mcpclient:
-            try:
-                self.mcpclient.delete()
-                self.cache_invalidations()
-                return self.json_response_ok(command=command, data={})
-            except Exception as e:
-                logger.error(
-                    "%s.delete() failed to delete %s %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    self.name,
-                    exc_info=True,
-                )
-                raise SAMMCPClientBrokerError(
-                    f"Failed to delete {self.kind} {self.name}", thing=self.kind, command=command
-                ) from e
-        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        """Delete the MCPClient.
+
+        It is also detached from any LLMClients.
+        """
+        command = SmarterJournalCliCommands(self.delete.__name__)
+        if self.name is None or not self.mcpclient:
+            raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+        try:
+            self.cache_invalidations()
+            self.mcpclient.delete()
+            self._mcpclient = None
+        except Exception as e:
+            raise SAMMCPClientBrokerError(
+                f"Failed to delete {self.kind} {self.name}", thing=self.kind, command=command
+            ) from e
+        return self.json_response_ok(command=command, data={})
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
-        raise SAMBrokerError(f"{self.kind} {self.name} deploy() is not implemented.", thing=self.kind, command=command)
+        command = SmarterJournalCliCommands(self.deploy.__name__)
+        raise SAMBrokerErrorNotImplemented(
+            message=f"{self.kind} {self.name} deploy() is not implemented.", thing=self.kind, command=command
+        )
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
-        raise SAMBrokerError(
-            f"{self.kind} {self.name} undeploy() is not implemented.", thing=self.kind, command=command
+        command = SmarterJournalCliCommands(self.undeploy.__name__)
+        raise SAMBrokerErrorNotImplemented(
+            message=f"{self.kind} {self.name} undeploy() is not implemented.", thing=self.kind, command=command
         )
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        command = self.logs.__name__
-        command = SmarterJournalCliCommands(command)
-        data = {}
-        return self.json_response_ok(command=command, data=data)
+        command = SmarterJournalCliCommands(self.logs.__name__)
+        return self.json_response_ok(command=command, data={})

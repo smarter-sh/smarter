@@ -145,7 +145,7 @@ class MCPClientDetailView(DocsBaseView):
             )
             return SmarterHttpResponseNotFound(request=request, error_message="MCPClient not found")
 
-        self.kind = SAMKinds.PROVIDER
+        self.kind = SAMKinds.MCP_CLIENT
 
         logger.debug(
             "%s.post() Rendering mcpclient detail view for %s, kwargs=%s.",

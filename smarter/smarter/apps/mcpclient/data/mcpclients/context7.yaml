@@ -1,0 +1,32 @@
+---
+# Up-to-date, version-specific documentation and code examples for programming libraries, from Upstash Context7.
+# Documentation: https://github.com/upstash/context7
+#
+# Prerequisite: a Smarter Secret named context7_api_key, containing a Context7 API key
+# from https://context7.com/dashboard. Context7 also works without a key, at lower rate
+# limits: set authType to none and remove credentials.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: context7
+  description: Up-to-date, version-specific documentation and code examples for programming libraries, from Upstash Context7.
+  version: 1.0.0
+  tags:
+    - documentation
+    - libraries
+    - code
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://github.com/upstash/context7
+spec:
+  config:
+    transport: http
+    endpointUrl: https://mcp.context7.com/mcp
+    authType: api_key
+    credentials: context7_api_key
+    apiKeyHeader: CONTEXT7_API_KEY
+    allowedTools: []            # all of the server's tools
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

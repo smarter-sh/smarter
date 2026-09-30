@@ -14,6 +14,7 @@ from .models import (
     LLMClientCustomDomain,
     LLMClientCustomDomainDNS,
     LLMClientFunctions,
+    LLMClientMCPClients,
     LLMClientPlugin,
     LLMClientRequests,
 )
@@ -186,8 +187,7 @@ class LLMClientPluginAdmin(SmarterCustomerModelAdmin):
         if not isinstance(user, User):
             return qs.none()
 
-        llmclients = LLMClient.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
-        return LLMClientPlugin.objects.filter(llmclient__in=llmclients)
+        return qs.filter(llmclient__in=LLMClient.objects.with_ownership_permission_for(user=user))
 
 
 class LLMClientFunctionsAdmin(SmarterCustomerModelAdmin):
@@ -212,8 +212,30 @@ class LLMClientFunctionsAdmin(SmarterCustomerModelAdmin):
         if not isinstance(user, User):
             return qs.none()
 
-        llmclients = LLMClient.objects.with_ownership_permission_for(user=user).filter(id__in=qs)
-        return LLMClientFunctions.objects.filter(llmclient__in=llmclients)
+        return qs.filter(llmclient__in=LLMClient.objects.with_ownership_permission_for(user=user))
+
+
+class LLMClientMCPClientsAdmin(SmarterCustomerModelAdmin):
+    """
+    LLMClientMCPClients model admin.
+
+    Visibility is determined by ownership of the parent LLMClient, and role.
+    """
+
+    model = LLMClientMCPClients
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = ["llmclient", "mcpclient", "created_at", "updated_at"]
+
+    def get_queryset(self, request):
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
+        return qs.filter(llmclient__in=LLMClient.objects.with_ownership_permission_for(user=user))
 
 
 smarter_restricted_admin_site.register(LLMClient, LLMClientAdmin)
@@ -222,4 +244,5 @@ smarter_restricted_admin_site.register(LLMClientCustomDomainDNS, LLMClientCustom
 smarter_restricted_admin_site.register(LLMClientAPIKey, LLMClientAPIKeyAdmin)
 smarter_restricted_admin_site.register(LLMClientPlugin, LLMClientPluginAdmin)
 smarter_restricted_admin_site.register(LLMClientFunctions, LLMClientFunctionsAdmin)
+smarter_restricted_admin_site.register(LLMClientMCPClients, LLMClientMCPClientsAdmin)
 smarter_restricted_admin_site.register(LLMClientRequests, LLMClientRequestsAdmin)

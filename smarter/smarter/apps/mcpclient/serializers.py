@@ -1,13 +1,21 @@
 # pylint: disable=missing-class-docstring,W0212
 """MCPClient serializers."""
 
+from rest_framework import serializers
+
 from smarter.apps.account.serializers import MetaDataWithOwnershipModelSerializer
 
 from .models import MCPClient
 
 
 class MCPClientSerializer(MetaDataWithOwnershipModelSerializer):
-    """Serializer for the smarter.apps.mcpclient.models.MCPClient model."""
+    """
+    Serializer for the smarter.apps.mcpclient.models.MCPClient model.
+
+    All fields are read only. ``credentials`` is rendered as the Secret's name, never its value.
+    """
+
+    credentials = serializers.SlugRelatedField(read_only=True, slug_field="name")
 
     class Meta:
         model = MCPClient

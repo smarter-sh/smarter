@@ -32,13 +32,14 @@ from smarter.apps.llmclient.models import (
     LLMClientAPIKey,
     LLMClientFunctions,
     LLMClientGuardrails,
+    LLMClientMCPClients,
     LLMClientPlugin,
 )
+from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import settings_defaults
-from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -364,13 +365,18 @@ class SAMLLMClientBroker(AbstractBroker):
             )
         metadata = super().manifest_to_django_orm()
 
-        config_dump = self.manifest.spec.config.model_dump()
-        config_dump = self.to_snake_case(config_dump)
+        original_config = self.manifest.spec.config.model_dump()
+        config_dump = self.to_snake_case(original_config)
         if not isinstance(config_dump, dict):
             raise SAMLLMClientBrokerError(
                 f"Failed to convert {self.kind} {self.manifest.metadata.name} to dict. Got {type(config_dump)}",
                 thing=self.kind,
             )
+        # to_snake_case() also converts the strings in lists, which are values, e.g. the
+        # appExamplePrompts, so lists are restored as is.
+        for key, value in original_config.items():
+            if isinstance(value, list):
+                config_dump[str(self.to_snake_case(key))] = value
         retval = {
             **metadata,
             **config_dump,
@@ -383,7 +389,9 @@ class SAMLLMClientBroker(AbstractBroker):
 
         return retval
 
-    @camel_case()
+    # the return value is a Pydantic model_dump(), whose keys are already camelCase. It is
+    # not passed through @camel_case(), which would also convert the names in lists, e.g.
+    # spec.plugins and spec.mcpClients.
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
         Transform the Django ORM LLMClient model instance into a dictionary compatible with the Smarter API LLMClient manifest format.
@@ -446,6 +454,11 @@ class SAMLLMClientBroker(AbstractBroker):
         functions = LLMClientFunctions.objects.filter(llmclient=self.llmclient)
         function_names = [function.name for function in functions]
 
+        mcpclient_names = [
+            link.mcpclient.name
+            for link in LLMClientMCPClients.objects.filter(llmclient=self.llmclient).select_related("mcpclient")
+        ]
+
         api_key = self.llmclient_api_key.api_key if self.llmclient_api_key else None
 
         meta = SAMLLMClientMetadata(
@@ -456,7 +469,13 @@ class SAMLLMClientBroker(AbstractBroker):
             annotations=self.llmclient.annotations if isinstance(self.llmclient.annotations, list) else [],
         )
         spec_config = SAMLLMClientSpecConfig(**llmclient_dict)
-        spec = SAMLLMClientSpec(config=spec_config, plugins=plugin_names, functions=function_names, apiKey=api_key)
+        spec = SAMLLMClientSpec(
+            config=spec_config,
+            plugins=plugin_names,
+            functions=function_names,
+            mcpClients=mcpclient_names or None,
+            apiKey=api_key,
+        )
         status = SAMLLMClientStatus(
             accountNumber=self.account.account_number,
             username=self.user_profile.user.username,
@@ -722,6 +741,7 @@ class SAMLLMClientBroker(AbstractBroker):
             plugins=get_plugin_examples_by_name(),
             functions=["date_calculator", "get_current_weather"],
             guardrails=["security_injection_input", "jailbreak_llm_judge_catchall_input"],
+            mcpClients=["deepwiki"],
             apiKey="snake_case_api_key_name",
         )
         status = SAMLLMClientStatus(
@@ -1015,9 +1035,60 @@ class SAMLLMClientBroker(AbstractBroker):
                             self.llmclient.name,
                         )
 
+            # LLMClientMCPClients: add what's missing, remove what's in the model but not in the manifest
+            # -------------
+            mcpclient_names = self.manifest.spec.mcpClients or []
+            for link in LLMClientMCPClients.objects.filter(llmclient=self.llmclient).select_related("mcpclient"):
+                if link.mcpclient.name not in mcpclient_names:
+                    link.delete()
+                    logger.debug(
+                        "%s.apply() detached MCPClient %s from LLMClient %s",
+                        self.formatted_class_name,
+                        link.mcpclient.name,
+                        self.llmclient.name,
+                    )
+            for mcpclient_name in mcpclient_names:
+                mcpclient = self.resolve_mcpclient(mcpclient_name)
+                if mcpclient is None:
+                    raise SAMBrokerErrorNotFound(
+                        f"MCPClient {mcpclient_name} not found, or not shared with {self.user_profile}",
+                        thing=self.kind,
+                        command=command,
+                    )
+                _, created = LLMClientMCPClients.objects.get_or_create(llmclient=self.llmclient, mcpclient=mcpclient)
+                if created:
+                    logger.debug(
+                        "%s.apply() attached MCPClient %s to LLMClient %s",
+                        self.formatted_class_name,
+                        mcpclient.name,
+                        self.llmclient.name,
+                    )
+
             # done! return the response. Django will take care of committing the transaction
             self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.to_json())
+
+    def resolve_mcpclient(self, name: str) -> Optional[MCPClient]:
+        """
+        Return the MCPClient named ``name`` that this broker's user may use.
+
+        The user's own MCPClient takes precedence over one that is shared with them.
+
+        :param name: The name of the MCPClient.
+        :returns: The MCPClient, or ``None`` if the user has none by that name.
+        :rtype: Optional[MCPClient]
+        """
+        if not self.user_profile:
+            return None
+        own = MCPClient.objects.filter(name=name, user_profile=self.user_profile).first()
+        if own is not None:
+            return own
+        return (
+            MCPClient.objects.filter(name=name)
+            .with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
+            .order_by("-updated_at")
+            .first()
+        )
 
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.prompt.__name__

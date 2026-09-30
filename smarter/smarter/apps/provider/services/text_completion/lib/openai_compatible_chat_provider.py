@@ -21,6 +21,7 @@ from smarter.apps.account.models import (
     ChargeTypes,
     UserProfile,
 )
+from smarter.apps.mcpclient.toolkit import MCPToolkit
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta, PluginPrompt
 from smarter.apps.plugin.plugin.base import PluginBase
@@ -121,6 +122,12 @@ class OpenAISmarterClient(SmarterChatProviderBase):
     .. seealso::
         - https://developers.openai.com/api/reference/overview/prompt
         - :class:`SmarterChatProviderBase`
+    """
+
+    mcp_toolkit: Optional[MCPToolkit] = None
+    """The MCP tools of the current prompt.
+
+    See :meth:`handle_mcp_clients`.
     """
 
     @property
@@ -503,7 +510,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             messages=self.messages,
         )
 
-    def handle_tool_called(self, function_name: str, function_args: str) -> None:
+    def handle_tool_called(
+        self, function_name: str, function_args: str, extra_resource_locators: Optional[list[str]] = None
+    ) -> None:
         """
         Handle a built-in tool call.
 
@@ -513,6 +522,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :type function_name: str
         :param function_args: The arguments passed to the tool function.
         :type function_args: str
+        :param extra_resource_locators: The record locators of any other resources that the tool
+            call used, e.g. an MCPClient, to include in the charge.
+        :type extra_resource_locators: Optional[list[str]]
 
         :returns: None
         :rtype: None
@@ -532,6 +544,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
         if isinstance(self.prompt, Prompt) and self.prompt.llmclient:
             resource_locators.append(self.prompt.llmclient.record_locator)
+        resource_locators.extend(extra_resource_locators or [])
         self._insert_charge_by_type(resource_locators, ChargeTypes.TOOL.value)
         self.db_insert_chat_tool_call(
             function_name=function_name, function_args=function_args, request=request, response=response
@@ -602,8 +615,20 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.append_message_tool_called(tool_call=tool_call)
 
         function_response = None
+        extra_resource_locators: list[str] = []
         if function_name in [get_current_weather.__name__, date_calculator.__name__, calculator.__name__]:
             function_response = function_to_call(tool_call=tool_call)
+
+        elif self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
+            mcpclient = self.mcp_toolkit.mcpclient_for(function_name)
+            function_response = self.mcp_toolkit.call(function_name, function_args)
+            if mcpclient is not None:
+                serialized_tool_call[_InternalKeys.SMARTER_MCPCLIENT_KEY] = {
+                    "id": mcpclient.id,  # type: ignore[attr-defined]
+                    "name": mcpclient.name,
+                    "tool": self.mcp_toolkit.functions[function_name].tool_name,
+                }
+                extra_resource_locators.append(mcpclient.record_locator)
 
         elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
             plugin_id = int(function_name[-4:])
@@ -661,7 +686,11 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 f"{self.formatted_class_name}: serialized_tool_calls must be a list, got {type(self.serialized_tool_calls)}"
             )
         self.serialized_tool_calls.append(serialized_tool_call)
-        self.handle_tool_called(function_name=function_name, function_args=function_args)
+        self.handle_tool_called(
+            function_name=function_name,
+            function_args=function_args,
+            extra_resource_locators=extra_resource_locators,
+        )
         llm_tool_responded.send(
             sender=self.process_tool_call, tool_call=tool_call.model_dump(), tool_response=function_response
         )
@@ -703,6 +732,72 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)  # type: ignore[call-arg]
         llm_tool_presented.send(sender=self.handle_plugin_selected, tool=plugin.custom_tool, plugin=plugin)
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
+
+    def handle_mcp_clients(self) -> None:
+        """
+        Offer the LLM the tools of the LLMClient's MCP servers.
+
+        The LLMClient's active MCPClients, listed in its manifest's ``spec.mcpClients``, are
+        loaded into an :class:`~smarter.apps.mcpclient.toolkit.MCPToolkit`, whose tools are
+        added to the request, and whose servers' instructions are added to the system prompt.
+        An MCP server that cannot be reached is skipped, and reported in a Smarter message.
+
+        :returns: None
+        :rtype: None
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.llmclient.models import LLMClientMCPClients
+
+        self.mcp_toolkit = None
+        llmclient = self.prompt.llmclient if isinstance(self.prompt, Prompt) else None
+        if llmclient is None:
+            return
+        mcpclients = LLMClientMCPClients.mcpclients_for(llmclient)
+        if not mcpclients:
+            return
+        logger.debug(
+            "%s.handle_mcp_clients() loading MCPClients: %s",
+            self.formatted_class_name,
+            [mcpclient.name for mcpclient in mcpclients],
+        )
+        self.mcp_toolkit = MCPToolkit(mcpclients).load()
+        if self.mcp_toolkit.tools:
+            if self.tools is None:
+                self.tools = []
+            if self.available_functions is None:
+                self.available_functions = {}
+            self.tools.extend(self.mcp_toolkit.tools)
+            for function_name in self.mcp_toolkit.functions:
+                self.available_functions[function_name] = self.mcp_toolkit.call
+        instructions = self.mcp_toolkit.system_prompt()
+        if instructions and isinstance(self.messages, list):
+            for i, message in enumerate(self.messages):
+                if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
+                    content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) or ""
+                    self.messages[i] = {
+                        **message,
+                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{content}\n\n{instructions}",
+                    }
+                    break
+            else:
+                self.messages.insert(
+                    0,
+                    {
+                        OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: instructions,
+                    },
+                )
+        if self.mcp_toolkit.connected:
+            names = ", ".join(mcpclient.name for mcpclient in self.mcp_toolkit.connected)
+            self.append_message(
+                role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
+                content=f"Smarter added the tools of these MCP servers: {names}",
+            )
+        for name, error in self.mcp_toolkit.errors.items():
+            self.append_message(
+                role=OpenAIMessageKeys.SMARTER_ERROR_KEY,
+                content=f"Smarter could not use the {name} MCP server: {error}",
+            )
 
     def handle_function_provided(self, function: str) -> None:
         """
@@ -931,6 +1026,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 for plugin in self.plugins:
                     if plugin.selected(user=self.user_profile.user, input_text=self.input_text, messages=self.messages):
                         self.handle_plugin_selected(plugin=plugin)
+
+            # add the tools and instructions of the llmclient's MCP servers
+            self.handle_mcp_clients()
 
             # add all functions that are included in the llmclient definition
             if self.functions:

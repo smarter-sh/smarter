@@ -1,0 +1,31 @@
+---
+# Query and manage Supabase projects, databases and edge functions.
+# Documentation: https://supabase.com/docs/guides/getting-started/mcp
+#
+# Prerequisite: a Smarter Secret named supabase_personal_access_token, containing a
+# Supabase personal access token from https://supabase.com/dashboard/account/tokens.
+# Consider appending ?read_only=true&project_ref=<project> to endpointUrl.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: supabase
+  description: Query and manage Supabase projects, databases and edge functions.
+  version: 1.0.0
+  tags:
+    - database
+    - postgres
+    - developer-tools
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://supabase.com/docs/guides/getting-started/mcp
+spec:
+  config:
+    transport: http
+    endpointUrl: https://mcp.supabase.com/mcp
+    authType: bearer_token
+    credentials: supabase_personal_access_token
+    allowedTools: []            # all of the server's tools
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

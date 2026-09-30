@@ -66,6 +66,7 @@ langchain_openai                        #
 langchain_pinecone                      #
 langchain-text-splitters                # -----------------------------
 openai~=2.31                            # OpenAI API
+mcp~=2.2                                # Model Context Protocol SDK, for the MCPClient resource
 pinecone                                # Pinecone vector database support
 google-genai                            # Google Generative AI API
 llamaai                                 # Llama AI API
