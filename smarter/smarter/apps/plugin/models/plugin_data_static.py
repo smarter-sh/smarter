@@ -1,6 +1,5 @@
 """PluginDataStatic model for storing static plugin data configuration."""
 
-from functools import lru_cache
 from typing import Any, Optional, Union
 
 from django.db import models
@@ -101,12 +100,11 @@ class PluginDataStatic(PluginDataBase):
         return retval
 
     @property
-    @lru_cache(maxsize=128)
     def return_data_keys(self) -> Optional[list[str]]:
         """
         Return all keys present in the ``static_data`` attribute.
 
-        This property extracts, caches and returns a list of all keys found in the ``static_data`` field, supporting both dictionary and list formats:
+        This property extracts and returns a list of all keys found in the ``static_data`` field, supporting both dictionary and list formats:
 
         - If ``static_data`` is a dictionary, all nested keys are recursively collected and returned as a flat list.
         - If ``static_data`` is a list of dictionaries, the keys are extracted from each dictionary and returned as a list, truncated to ``smarter_settings.plugin_max_data_results`` items if necessary.

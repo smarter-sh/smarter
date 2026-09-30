@@ -91,7 +91,6 @@ class SAMPluginCommonSpecPromptKeys(SmarterEnumAbstract):
 class SAMStaticPluginSpecDataKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Data keys enumeration."""
 
-    DESCRIPTION = "description"
     STATIC = "staticData"
 
 

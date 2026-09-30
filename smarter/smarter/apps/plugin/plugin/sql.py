@@ -479,8 +479,9 @@ class SqlPlugin(PluginBase):
         connection_name = self._manifest.spec.connection if self._manifest else None
         if connection_name:
             # recast the Pydantic model to the PluginDataSql Django ORM model
+            plugin_data_sqlconnection: Optional[SqlConnection] = None
+            account = self.user_profile.cached_account if self.user_profile else None
             try:
-                account = self.user_profile.cached_account if self.user_profile else None
                 plugin_data_sqlconnection = SqlConnection.objects.get(
                     user_profile__account=account,
                     name=connection_name,
@@ -691,6 +692,7 @@ class SqlPlugin(PluginBase):
         logger.debug("%s.create() called.", self.formatted_class_name)
         super().create()
 
+    # pylint: disable=too-many-branches,too-many-statements
     def tool_call_fetch_plugin_response(
         self, function_args: Union[dict[str, Any], list]
     ) -> Optional[Union[dict, list, str]]:
@@ -724,18 +726,28 @@ class SqlPlugin(PluginBase):
         """
         logger.debug("%s.tool_call_fetch_plugin_response() called.", self.formatted_class_name)
 
-        def sql_value(val):
+        def sql_value(val, backslash_escapes: bool):
             if val is None:
                 return "NULL"
-            if isinstance(val, str):
-                # Escape single quotes for SQL
-                return "'" + val.replace("'", "''") + "'"
-            return str(val)
+            if isinstance(val, bool):
+                return "TRUE" if val else "FALSE"
+            if isinstance(val, (int, float)):
+                return str(val)
+            # everything else is quoted as a string literal. json encode lists and dicts
+            # rather than interpolating their raw python repr into the query.
+            if not isinstance(val, str):
+                val = json.dumps(val)
+            if backslash_escapes:
+                # MySQL and MariaDB treat backslash as an escape character inside string
+                # literals, which would otherwise allow a value to escape its closing quote.
+                val = val.replace("\\", "\\\\")
+            # Escape single quotes for SQL
+            return "'" + val.replace("'", "''") + "'"
 
-        def interpolate(sql, params):
+        def interpolate(sql, params, backslash_escapes: bool):
             def repl(match):
                 key = match.group(1)
-                return sql_value(params.get(key))
+                return sql_value(params.get(key), backslash_escapes)
 
             return re.sub(r"\{(\w+)\}", repl, sql)
 
@@ -768,6 +780,10 @@ class SqlPlugin(PluginBase):
         # combine the list of dictionaries into a single dictionary
         params = {}
         for d in function_args:
+            if not isinstance(d, dict):
+                raise SmarterSqlPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a list of dictionaries."
+                )
             params.update(d)
 
         # example sql query:
@@ -797,10 +813,12 @@ class SqlPlugin(PluginBase):
         #             )
         #         sql = sql.replace(f"{{{key}}}", str(value))
 
-        sql = interpolate(sql, params)
+        # normalize the query template *before* interpolating the arguments, so that
+        # the normalization cannot alter the arguments, nor their escaping.
         sql = sql.strip()
         sql = sql.replace("\n", " ")
         sql = re.sub(r"\\.", "", sql)
+        sql = interpolate(sql, params, backslash_escapes="mysql" in str(sql_connection.db_engine).lower())
         if not sql.endswith(";"):
             sql += ";"
 
@@ -808,20 +826,22 @@ class SqlPlugin(PluginBase):
             "%s.tool_call_fetch_plugin_response() executing remote SQL query: %s", self.formatted_class_name, sql
         )
 
+        limit = (
+            self.plugin_data.limit
+            if self.plugin_data.limit and self.plugin_data.limit < MAX_SQL_QUERY_LENGTH
+            else MAX_SQL_QUERY_LENGTH
+        )
+
+        # the cache key must include everything that can alter the result,
+        # including the connection, since identical sql can run against different databases.
         @cache_results()
-        def get_cached_query_result(sql: str) -> Any:
-            if not self.plugin_data:
+        def get_cached_query_result(connection_id: int, sql: str, limit: int) -> Any:
+            retval = sql_connection.execute_query(sql=sql, limit=limit)
+            if retval is False:
+                # raise rather than return so that failed queries are never cached.
                 raise SmarterSqlPluginError(
-                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query failed: {sql}"
                 )
-            retval = sql_connection.execute_query(
-                sql=sql,
-                limit=(
-                    self.plugin_data.limit
-                    if self.plugin_data.limit and self.plugin_data.limit < MAX_SQL_QUERY_LENGTH
-                    else MAX_SQL_QUERY_LENGTH
-                ),
-            )
             logger.debug(
                 "%s.tool_call_fetch_plugin_response() fetched and cached SQL query result for query: %s",
                 self.formatted_class_name,
@@ -829,7 +849,11 @@ class SqlPlugin(PluginBase):
             )
             return retval
 
-        retval = get_cached_query_result(sql)
+        try:
+            retval = get_cached_query_result(sql_connection.pk, sql, limit)
+        except SmarterSqlPluginError as e:
+            logger.warning("%s. Returning empty string.", e)
+            return ""
 
         if not retval:
             logger.warning(
@@ -889,6 +913,14 @@ class SqlPlugin(PluginBase):
                     )
                 retval[SAMKeys.SPEC.value][SAMPluginSpecKeys.SQL_DATA.value] = (
                     self.plugin_data_serializer.data if self.plugin_data_serializer else None
+                )
+                # parameters are stored in OpenAI function calling schema. convert them back to manifest format.
+                retval[SAMKeys.SPEC.value][SAMPluginSpecKeys.SQL_DATA.value]["parameters"] = (
+                    self.parameters_to_manifest(self.plugin_data.parameters if self.plugin_data else None)
+                )
+                # the connection is a top-level spec field in the manifest, not a field of the data section.
+                retval[SAMKeys.SPEC.value]["connection"] = (
+                    self.plugin_data.connection.name if self.plugin_data and self.plugin_data.connection else None
                 )
                 return json.loads(json.dumps(retval))
             raise SmarterPluginError(f"Invalid version: {version}")

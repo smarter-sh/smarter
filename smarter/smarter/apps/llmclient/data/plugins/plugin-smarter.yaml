@@ -24,7 +24,6 @@ metadata:
         interested in learning more about the Smarter platform.
 spec:
   data:
-    description: This tool provides detailed information about the Smarter platform. Use this for all inquiries about Smarter.
     staticData:
       installationOptions: |
         The command-line interface (CLI) for the Smarter platform is [free to download](https://smarter.sh/cli/)
