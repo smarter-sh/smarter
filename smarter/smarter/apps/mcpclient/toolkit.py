@@ -122,7 +122,7 @@ class MCPToolkit:
         :param name: The name of the tool, as the server reports it.
         :returns: The function name.
         """
-        candidate = f"mcp{mcpclient.id}_{FUNCTION_NAME_PATTERN.sub('_', name)}"[:MAX_FUNCTION_NAME_LENGTH]
+        candidate = f"mcp{mcpclient.id}_{FUNCTION_NAME_PATTERN.sub('_', name)}"[:MAX_FUNCTION_NAME_LENGTH]  # type: ignore
         if candidate in self.functions:
             suffix = "_" + hashlib.sha256(name.encode()).hexdigest()[:6]
             candidate = candidate[: MAX_FUNCTION_NAME_LENGTH - len(suffix)] + suffix

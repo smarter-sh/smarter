@@ -16,9 +16,10 @@ from smarter.apps.plugin.models import PluginMeta
 
 class TestLLMClientChildAdmins(TestAccountMixin):
     """
-    Test that the LLMClientPlugin and LLMClientFunctions admins list the records of the.
+    Test the LLMClientPlugin and LLMClientFunctions admins.
 
-    user's own LLMClients, and not those of another account's LLMClients.
+    They list the records of the user's own LLMClients, and not those of another
+    account's LLMClients.
 
     The non-admin user is used, because the test admin users are superusers, who may
     administer every record.
