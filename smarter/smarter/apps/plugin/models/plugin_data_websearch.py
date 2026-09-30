@@ -177,11 +177,22 @@ class PluginDataWebsearch(PluginDataBase):
         """
         Return the web search API's api key.
 
+        The Secret is read from the database, rather than from this instance, which may be a
+        cached copy that predates the Secret's deletion.
+
         :return: The api key, or None if web search is disabled or the Secret is unavailable.
         """
-        if not self.search_enabled or not self.search_api_key:
+        secret_id = self.search_api_key_id  # type: ignore[attr-defined]
+        if not self.search_enabled or not secret_id:
             return None
-        return self.search_api_key.get_secret()
+        secret = Secret.objects.filter(pk=secret_id).first()
+        if not secret:
+            return None
+        try:
+            return secret.get_secret()
+        except SmarterValueError as e:
+            logger.error("%s.api_key() the api key Secret could not be read: %s", self.formatted_class_name, e)
+            return None
 
     # pylint: disable=too-many-branches
     def validate(self) -> bool:

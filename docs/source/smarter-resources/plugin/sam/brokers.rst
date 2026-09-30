@@ -8,4 +8,5 @@ Brokers
     brokers/plugin-base
     brokers/sql-plugin
     brokers/skill-plugin
+    brokers/websearch-plugin
     brokers/static-plugin
