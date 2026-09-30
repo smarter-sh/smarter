@@ -12,7 +12,7 @@
 -r base.in
 -r mariadb.in
 
-pip-tools
+pip-tools>=7.6.1  # 7.5.x is incompatible with pip 26.2+ (stdlib_pkgs was removed)
 
 # Django dev tools
 # ------------

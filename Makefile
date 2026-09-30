@@ -288,7 +288,8 @@ python-init:
 	npm install && \
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
-	$(PIP) install pip==25.3 setuptools wheel pip-tools && \
+	$(PIP) install --upgrade pip && \
+	$(PIP) install setuptools wheel pip-tools && \
 	PIP_CACHE_DIR=.pypi_cache $(PIP) install -r smarter/requirements/local.txt
 
 python-lint:
@@ -316,10 +317,11 @@ python-requirements:
 	@echo "==============================================================================="
 	@echo "Compiling and updating Python dependency files using pip-compile ..."
 	@echo "==============================================================================="
-	pip install pip==25.3 setuptools wheel pip-tools
+	pip install --upgrade setuptools wheel "pip-tools>=7.6.1"
 	pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
 	pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
 	pip-compile smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
+	pip-compile smarter/requirements/in/docs.in -o smarter/requirements/docs.txt --no-strip-extras
 
 
 # ---------------------------------------------------------
