@@ -109,6 +109,12 @@ class Command(SmarterCommand):
             logger.error("Failed to initialize Guardrails: %s", e)
 
         try:
+            call_command("add_builtin_mcpclients")
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("Failed to initialize MCPClients: %s", e)
+
+        try:
             call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
         # pylint: disable=broad-except
         except Exception as e:
