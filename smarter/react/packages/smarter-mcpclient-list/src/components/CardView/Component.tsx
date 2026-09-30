@@ -56,7 +56,7 @@ function CardView({ sessionContext, objects, onRequery }: MCPClientCardViewProps
                     {renderDetailRow("ID", mcpclient.id, "number")}
                     {renderDetailRow("Status", mcpclient.status)}
                     {renderDetailRow("Manifest URL", mcpclient.manifestUrl, "url")}
-                    {renderDetailRow("Base URL", mcpclient.baseUrl, "url")}
+                    {renderDetailRow("Endpoint URL", mcpclient.endpointUrl, "url")}
                     {renderDetailRow("Owner", mcpclient.userProfile?.user?.username)}
                     {renderDetailRow("Owner Email", mcpclient.userProfile?.user?.email)}
                     {renderDetailRow("Account Number", mcpclient.userProfile?.account?.accountNumber)}

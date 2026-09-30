@@ -35,7 +35,6 @@ export type MCPClient = {
   updatedAt: string;
   name: string;
   userProfile: UserProfile;
-  baseUrl: string;
   status: MCPConnectionStatus;
   description: string;
   version: string;
@@ -47,16 +46,21 @@ export type MCPClient = {
 
   // --- connection ---
   transport: MCPTransport;
+  endpointUrl: string | null;
   command: string;
-  config: Record<string, unknown>;
+  headers: Record<string, string> | null;
+  timeout: number; // seconds
 
   // --- auth ---
   authType: MCPAuthType;
   credentials: string; // Secret name/slug reference
+  apiKeyHeader: string;
 
   // --- capability scope ---
   allowedTools: string[];
   allowedResources: string[];
+  includeInstructions: boolean;
+  cacheTtl: number; // seconds
 
   // --- lifecycle ---
   isActive: boolean;
@@ -64,6 +68,11 @@ export type MCPClient = {
 
   // --- versioning / provenance ---
   protocolVersion: string;
+  serverName: string | null;
+  serverVersion: string | null;
+  tools: string[] | null;
+  lastConnectedAt: string | null;
+  lastError: string | null;
 };
 
 
