@@ -1,0 +1,30 @@
+---
+# Query Square payments, orders, catalog and customers. Uses the legacy HTTP+SSE transport.
+# Documentation: https://developer.squareup.com/docs/mcp
+#
+# Prerequisite: a Smarter Secret named square_mcp_access_token, containing an OAuth access
+# token issued by Square's MCP authorization server. Smarter does not yet perform the
+# OAuth flow itself, and does not refresh the token.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: square
+  description: Query Square payments, orders, catalog and customers. Uses the legacy HTTP+SSE transport.
+  version: 1.0.0
+  tags:
+    - payments
+    - commerce
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://developer.squareup.com/docs/mcp
+spec:
+  config:
+    transport: sse
+    endpointUrl: https://mcp.squareup.com/sse
+    authType: oauth2
+    credentials: square_mcp_access_token
+    allowedTools: []            # all of the server's tools
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

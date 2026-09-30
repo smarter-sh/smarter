@@ -19,6 +19,7 @@ class _InternalKeys:
     TOOL_CHOICE = "tool_choice"
 
     SMARTER_PLUGIN_KEY = SMARTER_SYSTEM_KEY_PREFIX + "plugin"
+    SMARTER_MCPCLIENT_KEY = SMARTER_SYSTEM_KEY_PREFIX + "mcpclient"
     SMARTER_IS_NEW = SMARTER_SYSTEM_KEY_PREFIX + "is_new"
 
 

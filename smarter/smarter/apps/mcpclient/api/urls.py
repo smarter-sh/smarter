@@ -12,5 +12,5 @@ app_name = namespace
 
 urlpatterns = [
     path("", RedirectView.as_view(url="v1/")),
-    path("v1", include(mcpclient_api_v1_urls, namespace=v1_namespace)),
+    path("v1/", include(mcpclient_api_v1_urls, namespace=v1_namespace)),
 ]

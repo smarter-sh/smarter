@@ -135,6 +135,10 @@ class SAMLLMClientSpec(AbstractSAMSpecBase):
         None,
         description=f"{class_identifier}.guardrails[list]. Optional. The built-in Smarter Guardrails to add to the {MANIFEST_KIND}. Example: ['security_injection_input']. These are built-in backing functions written in Python that are fully compatible with OpenAI API-compatible function calling. These are not the same as OpenAI functions. See https://docs.smarter.sh/ for more information.",
     )
+    mcpClients: Optional[List[str]] = Field(
+        None,
+        description=f"{class_identifier}.mcpClients[list]. Optional. The names of the MCPClients whose MCP servers' tools the {MANIFEST_KIND} offers the LLM. Example: ['deepwiki']. Each must be an MCPClient that you own, or that is shared with you. Experimental.",
+    )
     apiKey: Optional[str] = Field(
         None,
         description=f"{class_identifier}.apiKey[str]. Optional. The name of the API key that this llmclient uses for authentication. Example: 'my_api_key'. API keys are only necessary for llmclients that are not public facing. This is the name of the API key that is used to authenticate the llmclient with the Smarter API. API keys are issued by a Smarter platform administrator and are used to authenticate the llmclient with the Smarter API.",

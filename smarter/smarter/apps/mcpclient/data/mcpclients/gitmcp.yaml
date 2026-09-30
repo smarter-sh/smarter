@@ -1,0 +1,28 @@
+---
+# Documentation and code search for any public GitHub repository, from GitMCP.
+# Documentation: https://gitmcp.io
+#
+# This server requires no authentication.
+apiVersion: smarter.sh/v1
+kind: MCPClient
+metadata:
+  name: gitmcp
+  description: Documentation and code search for any public GitHub repository, from GitMCP.
+  version: 1.0.0
+  tags:
+    - documentation
+    - github
+    - code
+  annotations:
+    - smarter.sh/mcpclient/documentation: https://gitmcp.io
+spec:
+  config:
+    transport: http
+    endpointUrl: https://gitmcp.io/docs
+    authType: none
+    allowedTools: []            # all of the server's tools
+    includeInstructions: true
+    timeout: 30
+    cacheTtl: 300
+    isActive: true
+    priority: 100

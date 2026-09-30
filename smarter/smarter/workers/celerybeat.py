@@ -27,6 +27,11 @@ app.conf.beat_schedule = {
         "schedule": timedelta(hours=1),
         "options": {"queue": "beat_tasks"},
     },
+    "refresh-mcpclients": {
+        "task": "smarter.apps.mcpclient.tasks.refresh_mcpclients",
+        "schedule": timedelta(hours=1),
+        "options": {"queue": "beat_tasks"},
+    },
 }
 app.conf.beat_schedule_filename = "/home/smarter_user/data/celery/celerybeat-schedule"
 

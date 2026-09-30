@@ -18,7 +18,10 @@ from smarter.apps.llmclient.manifest.models.llmclient.spec import (
 )
 from smarter.apps.llmclient.models import LLMClient
 from smarter.lib import json, logging
-from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
+from smarter.lib.manifest.broker import (
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+)
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
@@ -44,7 +47,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         super().setUp()
         self._broker_class = SAMLLMClientBroker
         self._here = os.path.abspath(os.path.dirname(__file__))
-        self._manifest_filespec = self.get_data_full_filepath("llmclient.yaml")
+        self._manifest_filespec = self.get_data_full_filepath("llm_client.yaml")
 
     @property
     def ready(self) -> bool:
@@ -414,18 +417,25 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.prompt(self.request, **self.kwargs)
 
-    def test_delete_account_not_found(self):
-        """Test delete method raises not found for missing account."""
-        self.broker.user = None
+    def not_found_broker(self) -> SAMLLMClientBroker:
+        """Return a broker, without a manifest, for an LLMClient that does not exist."""
+        broker = SAMLLMClientBroker(request=self.request, name="no_such_llmclient")
+        self.assertIsNone(broker.llmclient)
+        return broker
 
-        with self.assertRaises((LLMClient.DoesNotExist, LLMClient.user_profile.RelatedObjectDoesNotExist)):
-            self.broker.delete(self.request, **self.kwargs)
+    def test_delete_not_found(self):
+        """Test that delete() raises not found for an LLMClient that does not exist."""
+        broker = self.not_found_broker()
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.delete(self.request, **self.kwargs)
+        self.assertFalse(LLMClient.objects.filter(name="no_such_llmclient").exists())
 
-    def test_describe_account_not_found(self):
-        """Test describe method raises not found for missing account."""
-        self.broker.user = None
-        with self.assertRaises((LLMClient.DoesNotExist, LLMClient.user_profile.RelatedObjectDoesNotExist)):
-            self.broker.describe(self.request, **self.kwargs)
+    def test_describe_not_found(self):
+        """Test that describe() raises not found for an LLMClient that does not exist."""
+        broker = self.not_found_broker()
+        with self.assertRaises(SAMBrokerErrorNotReady):
+            broker.describe(self.request, **self.kwargs)
+        self.assertFalse(LLMClient.objects.filter(name="no_such_llmclient").exists())
 
     def test_logs_returns_ok(self):
         """Stub: test logs method returns ok response."""
