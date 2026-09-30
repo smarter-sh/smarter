@@ -40,6 +40,9 @@ from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
 from smarter.apps.plugin.manifest.brokers.skill_plugin import SAMSkillPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
+from smarter.apps.plugin.manifest.brokers.websearch_plugin import (
+    SAMWebsearchPluginBroker,
+)
 from smarter.apps.prompt.manifest.brokers.prompt import SAMPromptBroker
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
 from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
@@ -123,6 +126,7 @@ class Brokers:
         SAMKinds.USER.value: SAMUserBroker,
         SAMKinds.VECTORSTORE.value: SAMVectorstoreBroker,
         SAMKinds.VECTORSEARCH.value: SAMVectorsearchBroker,
+        SAMKinds.WEBSEARCH_PLUGIN.value: SAMWebsearchPluginBroker,
     }
 
     @classmethod

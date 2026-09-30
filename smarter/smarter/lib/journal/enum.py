@@ -196,6 +196,14 @@ class SmarterJournalThings(SmarterEnumAbstract):
     A Django ORM model instance.
     """
 
+    WEBSEARCH_PLUGIN = "WebsearchPlugin"
+    """Smarter Websearch Plugin AI resource.
+
+    Experimental.
+
+    A Django ORM model instance.
+    """
+
     @classmethod
     def choices(cls) -> list[tuple[str, str]]:
         """Django model choices for SmarterJournalThings."""
@@ -220,6 +228,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.USER.value, cls.USER.value),
             (cls.VECTORSEARCH.value, cls.VECTORSEARCH.value),
             (cls.VECTORSTORE.value, cls.VECTORSTORE.value),
+            (cls.WEBSEARCH_PLUGIN.value, cls.WEBSEARCH_PLUGIN.value),
         ]
 
 

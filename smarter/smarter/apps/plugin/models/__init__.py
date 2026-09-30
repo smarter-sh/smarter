@@ -8,6 +8,7 @@ from .plugin_data_base import PluginDataBase
 from .plugin_data_skill import PluginDataSkill
 from .plugin_data_sql import PluginDataSql
 from .plugin_data_static import PluginDataStatic
+from .plugin_data_websearch import PluginDataWebsearch
 from .plugin_meta import PluginMeta
 from .plugin_prompt import PluginPrompt
 from .plugin_selector import PluginSelector
@@ -17,12 +18,19 @@ from .plugin_selector_history import (
 )
 from .validators import validate_openai_parameters_dict
 
-PluginDataType = type[PluginDataStatic] | type[PluginDataApi] | type[PluginDataSql] | type[PluginDataSkill]
+PluginDataType = (
+    type[PluginDataStatic]
+    | type[PluginDataApi]
+    | type[PluginDataSql]
+    | type[PluginDataSkill]
+    | type[PluginDataWebsearch]
+)
 PLUGIN_DATA_MAP: dict[str, PluginDataType] = {
     SAMKinds.API_PLUGIN.value: PluginDataApi,
     SAMKinds.SQL_PLUGIN.value: PluginDataSql,
     SAMKinds.STATIC_PLUGIN.value: PluginDataStatic,
     SAMKinds.SKILL_PLUGIN.value: PluginDataSkill,
+    SAMKinds.WEBSEARCH_PLUGIN.value: PluginDataWebsearch,
 }
 
 
@@ -32,6 +40,7 @@ __all__ = [
     "PluginDataApi",
     "PluginDataSkill",
     "PluginDataSql",
+    "PluginDataWebsearch",
     "PluginMeta",
     "PluginPrompt",
     "PluginSelector",

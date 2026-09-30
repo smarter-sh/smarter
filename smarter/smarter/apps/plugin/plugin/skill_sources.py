@@ -14,9 +14,10 @@ with the plugin, so that tool calls never depend on the availability of the remo
 
 .. warning::
 
-    Skill source URLs are user supplied, so requests are restricted to https, to hosts
-    whose addresses are all public, and to a bounded number of redirects, response sizes
-    and files, in order to prevent server-side request forgery and resource exhaustion.
+    Skill source URLs are user supplied, so requests are made with
+    :py:mod:`smarter.apps.plugin.plugin.safe_http`, which restricts them to https, to hosts
+    whose addresses are all public, and to a bounded number of redirects and response sizes,
+    in order to prevent server-side request forgery and resource exhaustion.
 
 .. note::
 
@@ -30,14 +31,10 @@ with the plugin, so that tool calls never depend on the availability of the remo
     be documented.
 """
 
-import ipaddress
-import socket
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
-from urllib.parse import quote, urljoin, urlparse
-
-import requests
+from urllib.parse import quote
 
 from smarter.apps.plugin.manifest.models.skill_plugin.document import (
     MAX_RESOURCE_LENGTH,
@@ -57,6 +54,8 @@ from smarter.apps.plugin.manifest.models.skill_plugin.source import (
 )
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+
+from . import safe_http
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 
@@ -100,25 +99,18 @@ def validate_public_https_url(url: str) -> None:
 
     :raises SkillSourceError: If the URL is not https, has no host, cannot be resolved, or
         resolves to a loopback, private, link-local, reserved or otherwise non-public address.
+
+    .. seealso:: :py:func:`smarter.apps.plugin.plugin.safe_http.validate_public_url`
     """
-    parsed = urlparse(url)
-    if parsed.scheme != "https" or not parsed.hostname:
-        raise SkillSourceError(f"skill sources must be https urls: {url}")
     try:
-        addresses = socket.getaddrinfo(parsed.hostname, parsed.port or 443, proto=socket.IPPROTO_TCP)
-    except (socket.gaierror, UnicodeError) as e:
-        raise SkillSourceError(f"skill source host could not be resolved: {parsed.hostname}") from e
-    for address in addresses:
-        ip = ipaddress.ip_address(address[4][0].split("%", 1)[0])
-        if not ip.is_global:
-            raise SkillSourceError(f"skill source host must have a public address: {parsed.hostname}")
+        safe_http.validate_public_url(url)
+    except safe_http.SafeHttpError as e:
+        raise SkillSourceError(f"skill source is not permitted: {e}") from e
 
 
 def fetch(url: str, max_bytes: int = MAX_RESPONSE_BYTES, headers: Optional[dict[str, str]] = None) -> bytes:
     """
     Download a remote file, safely.
-
-    Redirects are followed manually, so that every hop is validated.
 
     :param url: The https URL to download.
     :param max_bytes: The maximum size of the response body.
@@ -126,31 +118,19 @@ def fetch(url: str, max_bytes: int = MAX_RESPONSE_BYTES, headers: Optional[dict[
     :return: The response body.
     :raises SkillSourceError: If the URL is not a public https URL, the request fails or
         times out, the response is not 200 OK, or the response is too large.
+
+    .. seealso:: :py:func:`smarter.apps.plugin.plugin.safe_http.fetch`
     """
-    request_headers = {"User-Agent": USER_AGENT, **(headers or {})}
-    for _ in range(MAX_REDIRECTS + 1):
-        validate_public_https_url(url)
-        try:
-            response = requests.get(
-                url, headers=request_headers, timeout=REQUEST_TIMEOUT, allow_redirects=False, stream=True
-            )
-        except requests.exceptions.RequestException as e:
-            raise SkillSourceError(f"skill source could not be retrieved from {url}: {e}") from e
-        try:
-            if response.status_code in (301, 302, 303, 307, 308) and response.headers.get("Location"):
-                url = urljoin(url, response.headers["Location"])
-                continue
-            if response.status_code != 200:
-                raise SkillSourceError(f"skill source could not be retrieved from {url}: HTTP {response.status_code}")
-            content = b""
-            for chunk in response.iter_content(chunk_size=65536):
-                content += chunk
-                if len(content) > max_bytes:
-                    raise SkillSourceError(f"skill source {url} exceeds the maximum size of {max_bytes} bytes.")
-            return content
-        finally:
-            response.close()
-    raise SkillSourceError(f"skill source {url} redirected more than {MAX_REDIRECTS} times.")
+    try:
+        return safe_http.fetch(
+            url,
+            headers={"User-Agent": USER_AGENT, **(headers or {})},
+            timeout=REQUEST_TIMEOUT,
+            max_bytes=max_bytes,
+            max_redirects=MAX_REDIRECTS,
+        ).content
+    except safe_http.SafeHttpError as e:
+        raise SkillSourceError(f"skill source could not be retrieved: {e}") from e
 
 
 def fetch_text(url: str, max_bytes: int = MAX_RESPONSE_BYTES) -> Optional[str]:

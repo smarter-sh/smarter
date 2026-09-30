@@ -1,0 +1,36 @@
+---
+# A WebsearchPlugin for unit testing, which searches with the Tavily API, and is
+# restricted to docs.example.com and its subdomains.
+apiVersion: smarter.sh/v1
+kind: WebsearchPlugin
+metadata:
+  name: test_websearch_plugin_docs
+  pluginClass: websearch
+  description: Answers questions from the example documentation, for unit testing.
+  version: 0.1.0
+  tags:
+    - websearch
+    - test
+  annotations:
+    - smarter.sh/websearch-test/purpose: unit testing
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: You are a documentation assistant for unit testing the WebsearchPlugin.
+    model: gpt-4o-mini
+    temperature: 0.0
+    maxTokens: 256
+  websearchData:
+    search:
+      provider: tavily
+      apiKey: test_tavily_api_key
+      maxResults: 5
+      freshness: month
+    fetch:
+      maxCharacters: 5000
+      respectRobotsTxt: false
+    allowedDomains:
+      - docs.example.com
+    cacheTtl: 0

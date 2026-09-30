@@ -27,6 +27,9 @@ class SAMPluginCommonMetadataClassValues(SmarterEnumAbstract):
     # to a database that returns a mysql readable object response
     SQL = "sql"
 
+    # a plugin that searches the open web, and reads web pages. Experimental.
+    WEBSEARCH = "websearch"
+
 
 class SAMPluginCommonSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
     """Smarter API Plugin Spec Selector keys enumeration."""
@@ -58,6 +61,7 @@ class SAMPluginCommonMetadataClass(SmarterEnumAbstract):
     SKILL = "skill"
     SQL = "sql"
     STATIC = "static"
+    WEBSEARCH = "websearch"
 
 
 class SAMPluginSpecKeys(SmarterEnumAbstract):
@@ -69,6 +73,7 @@ class SAMPluginSpecKeys(SmarterEnumAbstract):
     API_DATA = "apiData"
     SKILL_DATA = "skillData"
     SQL_DATA = "sqlData"
+    WEBSEARCH_DATA = "websearchData"
     CONNECTION = "connection"
 
 

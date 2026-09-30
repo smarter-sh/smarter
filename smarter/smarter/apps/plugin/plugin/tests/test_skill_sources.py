@@ -39,6 +39,7 @@ from .base_classes import (
     SKILL_REMOTE_TREE_URL,
     SKILL_REMOTE_URL,
     SKILL_SOURCES_DNS_PATCH,
+    SKILL_SOURCES_REQUESTS_PATCH,
     FakeSkillHost,
     mock_skill_host,
 )
@@ -197,7 +198,7 @@ class TestSkillSources(SmarterTestBase):
         with mock.patch(SKILL_SOURCES_DNS_PATCH, side_effect=resolves_to("140.82.112.3")):
             for error in (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
                 with (
-                    mock.patch("smarter.apps.plugin.plugin.skill_sources.requests.get", side_effect=error("boom")),
+                    mock.patch(SKILL_SOURCES_REQUESTS_PATCH, side_effect=error("boom")),
                     self.assertRaises(SkillSourceError, msg=f"error={error.__name__}"),
                 ):
                     fetch("https://example.com/a.md")
@@ -206,7 +207,7 @@ class TestSkillSources(SmarterTestBase):
         """Test that requests are made without automatic redirects, streaming, and with a timeout."""
         with (
             mock_skill_host() as host,
-            mock.patch("smarter.apps.plugin.plugin.skill_sources.requests.get", side_effect=host.get) as get,
+            mock.patch(SKILL_SOURCES_REQUESTS_PATCH, side_effect=host.request) as get,
         ):
             fetch(SKILL_REMOTE_RAW_URL + "SKILL.md")
         kwargs = get.call_args.kwargs

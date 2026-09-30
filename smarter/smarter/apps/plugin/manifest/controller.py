@@ -20,6 +20,7 @@ from ..plugin.api import ApiPlugin
 from ..plugin.skill import SkillPlugin
 from ..plugin.sql import SqlPlugin
 from ..plugin.static import StaticPlugin
+from ..plugin.websearch import WebsearchPlugin
 
 # common plugin
 from .enum import SAMPluginCommonMetadataClassValues
@@ -28,34 +29,43 @@ from .models.common.plugin.model import SAMPluginCommon
 from .models.skill_plugin.model import SAMSkillPlugin
 from .models.sql_plugin.model import SAMSqlPlugin
 from .models.static_plugin.model import SAMStaticPlugin
+from .models.websearch_plugin.model import SAMWebsearchPlugin
 
 VALID_MANIFEST_KINDS = [
     SAMKinds.STATIC_PLUGIN.value,
     SAMKinds.SQL_PLUGIN.value,
     SAMKinds.API_PLUGIN.value,
     SAMKinds.SKILL_PLUGIN.value,
+    SAMKinds.WEBSEARCH_PLUGIN.value,
 ]
-PluginType = type[ApiPlugin] | type[SqlPlugin] | type[StaticPlugin] | type[SkillPlugin]
-Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin, SkillPlugin]]
-SAMPluginType = type[SAMApiPlugin] | type[SAMSqlPlugin] | type[SAMStaticPlugin] | type[SAMSkillPlugin]
-SAMPlugins = Optional[Union[dict, SAMPluginCommon, SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin, SAMSkillPlugin]]
+PluginType = type[ApiPlugin] | type[SqlPlugin] | type[StaticPlugin] | type[SkillPlugin] | type[WebsearchPlugin]
+Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin, SkillPlugin, WebsearchPlugin]]
+SAMPluginType = (
+    type[SAMApiPlugin] | type[SAMSqlPlugin] | type[SAMStaticPlugin] | type[SAMSkillPlugin] | type[SAMWebsearchPlugin]
+)
+SAMPlugins = Optional[
+    Union[dict, SAMPluginCommon, SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin, SAMSkillPlugin, SAMWebsearchPlugin]
+]
 PLUGIN_MAP: dict[str, PluginType] = {
     SAMKinds.API_PLUGIN.value: ApiPlugin,
     SAMKinds.SQL_PLUGIN.value: SqlPlugin,
     SAMKinds.STATIC_PLUGIN.value: StaticPlugin,
     SAMKinds.SKILL_PLUGIN.value: SkillPlugin,
+    SAMKinds.WEBSEARCH_PLUGIN.value: WebsearchPlugin,
 }
 PLUGIN_META_CLASS_MAP = {
     SAMPluginCommonMetadataClassValues.API.value: ApiPlugin,
     SAMPluginCommonMetadataClassValues.SQL.value: SqlPlugin,
     SAMPluginCommonMetadataClassValues.STATIC.value: StaticPlugin,
     SAMPluginCommonMetadataClassValues.SKILL.value: SkillPlugin,
+    SAMPluginCommonMetadataClassValues.WEBSEARCH.value: WebsearchPlugin,
 }
 SAM_MAP: dict[str, SAMPluginType] = {
     SAMKinds.API_PLUGIN.value: SAMApiPlugin,
     SAMKinds.SQL_PLUGIN.value: SAMSqlPlugin,
     SAMKinds.STATIC_PLUGIN.value: SAMStaticPlugin,
     SAMKinds.SKILL_PLUGIN.value: SAMSkillPlugin,
+    SAMKinds.WEBSEARCH_PLUGIN.value: SAMWebsearchPlugin,
 }
 
 
@@ -268,6 +278,7 @@ class PluginController(AbstractController):
                 pass
         return self._plugin_meta
 
+    # pylint: disable=too-many-return-statements
     @property
     def plugin_class(self) -> Optional[str]:
         """Returns the plugin class based on the manifest kind."""
@@ -282,6 +293,8 @@ class PluginController(AbstractController):
             return SAMPluginCommonMetadataClassValues.STATIC.value
         if self.manifest.kind == SmarterJournalThings.SKILL_PLUGIN.value:
             return SAMPluginCommonMetadataClassValues.SKILL.value
+        if self.manifest.kind == SmarterJournalThings.WEBSEARCH_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.WEBSEARCH.value
         return None
 
     @property
