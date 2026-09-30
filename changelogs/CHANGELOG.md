@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.0-alpha.27](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.26...v0.15.0-alpha.27) (2026-09-30)
+
+### Features
+
+* **llmclient:** add built-in LLMClients that combine plugins, MCPClients and guardrails ([168caae](https://github.com/smarter-sh/smarter/commit/168caaefaeba26034670ac53e2e0b74ff72071fe))
+
 ## [0.15.0-alpha.26](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.25...v0.15.0-alpha.26) (2026-09-30)
 
 ### Bug Fixes
