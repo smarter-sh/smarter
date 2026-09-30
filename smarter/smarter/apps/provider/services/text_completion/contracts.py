@@ -22,9 +22,9 @@ from pydantic import BaseModel, ConfigDict, Field
 class GuardrailStage(str, Enum):
     """Which side of the model call the pipeline is running on.
 
-    Mirrors :class:`smarter.apps.guardrail.models.GuardrailType`, but
+    Mirrors :class:`smarter.apps.guardrail.models.GuardrailStage`, but
     named distinctly since a :class:`~smarter.apps.guardrail.models.Guardrail`
-    row with ``guardrail_type=BOTH`` runs on *both* stages, while a given
+    row with ``stage=both`` runs on *both* stages, while a given
     pipeline invocation is always exactly one.
 
     :cvar PRE: The pre-completion request, before it is sent to the LLM
@@ -271,38 +271,51 @@ class TextSegment(BaseModel):
 # ----------------------------------------------------------------------
 # Findings / outcomes
 # ----------------------------------------------------------------------
+class GuardrailMatch(BaseModel):
+    """One match of a guardrail within a text segment.
+
+    :ivar start: The index of the match's first character in the segment's text.
+    :vartype start: int
+    :ivar end: The index after the match's last character.
+    :vartype end: int
+    :ivar text: The matched text.
+    :vartype text: str
+    :ivar label: What matched, e.g. the detector ``credit_card``, or the keyword.
+    :vartype label: str or None
+    """
+
+    start: int
+    end: int
+    text: str
+    label: str | None = None
+
+
 class GuardrailFinding(BaseModel):
-    """What a single guardrail strategy discovered about a single segment.
+    """What a single guardrail found in a single text segment.
 
     :ivar guardrail_id: Primary key of the originating
         :class:`~smarter.apps.guardrail.models.Guardrail` row.
     :vartype guardrail_id: int
-    :ivar guardrail_name: Name of the originating guardrail, for
-        logging/display without a further lookup.
+    :ivar guardrail_name: Name of the originating guardrail.
     :vartype guardrail_name: str
-    :ivar category: The guardrail's
-        :class:`~smarter.apps.guardrail.models.GuardrailCategory` value.
+    :ivar category: The guardrail's category.
     :vartype category: str
-    :ivar match_strategy: The guardrail's
-        :class:`~smarter.apps.guardrail.models.MatchStrategy` value.
-    :vartype match_strategy: str
-    :ivar action: The guardrail's
-        :class:`~smarter.apps.guardrail.models.GuardrailAction` value.
+    :ivar strategy: The guardrail's strategy.
+    :vartype strategy: str
+    :ivar action: The guardrail's action.
     :vartype action: str
-    :ivar severity: The guardrail's configured severity, ``1`` (low) to
-        ``5`` (critical).
+    :ivar severity: The guardrail's severity, ``1`` (low) to ``5`` (critical).
     :vartype severity: int
-    :ivar triggered: Whether the strategy considered this segment a
-        match.
+    :ivar triggered: Whether the strategy considered this segment a match.
     :vartype triggered: bool
-    :ivar confidence: The strategy's confidence score, for scored
-        strategies (``semantic``, ``model``, ``llm_judge``).
+    :ivar confidence: The strategy's confidence score, for the scored strategies
+        (``semantic``, ``moderation``, ``llm_judge``), or ``1.0`` for the others.
     :vartype confidence: float or None
-    :ivar matched_text: The specific text that triggered the finding,
-        when available.
-    :vartype matched_text: str or None
-    :ivar segment_path: The :attr:`TextSegment.path` this finding
-        applies to, set only when ``triggered`` is ``True``.
+    :ivar matches: Every match within the segment, for the strategies that locate what they
+        match (``regex``, ``keyword``, ``detector``). Empty for the scored strategies, which
+        judge the segment as a whole.
+    :vartype matches: list[GuardrailMatch]
+    :ivar segment_path: The :attr:`TextSegment.path` of the segment.
     :vartype segment_path: str or None
     :ivar rationale: A human-readable explanation of the finding.
     :vartype rationale: str or None
@@ -311,43 +324,47 @@ class GuardrailFinding(BaseModel):
     guardrail_id: int
     guardrail_name: str
     category: str
-    match_strategy: str
+    strategy: str
     action: str
     severity: int
     triggered: bool
     confidence: float | None = None
-    matched_text: str | None = None
+    matches: list[GuardrailMatch] = Field(default_factory=list)
     segment_path: str | None = None
     rationale: str | None = None
+
+    @property
+    def matched_text(self) -> str | None:
+        """The first match's text, if any."""
+        return self.matches[0].text if self.matches else None
 
 
 class GuardrailOutcome(BaseModel):
     """Result of running one Guardrail row against the full payload.
 
-    :ivar guardrail_id: Primary key of the evaluated
-        :class:`~smarter.apps.guardrail.models.Guardrail` row.
+    :ivar guardrail_id: Primary key of the evaluated guardrail.
     :vartype guardrail_id: int
     :ivar guardrail_name: Name of the evaluated guardrail.
     :vartype guardrail_name: str
-    :ivar is_blocking: The guardrail's ``is_blocking`` flag at the time
-        of evaluation.
-    :vartype is_blocking: bool
-    :ivar priority: The guardrail's ``priority`` at the time of
-        evaluation; lower runs first.
+    :ivar mode: The guardrail's mode, ``enforce`` or ``monitor``.
+    :vartype mode: str
+    :ivar fail_closed: Whether the guardrail blocks when it fails to run.
+    :vartype fail_closed: bool
+    :ivar priority: The guardrail's priority; lower runs first.
     :vartype priority: int
-    :ivar findings: One finding per scanned segment.
+    :ivar findings: The triggered findings, one per segment that triggered.
     :vartype findings: list[GuardrailFinding]
-    :ivar error: A description of any error raised while evaluating
-        this guardrail, or ``None`` if evaluation succeeded.
+    :ivar error: A description of any error raised while evaluating this guardrail, or
+        ``None`` if evaluation succeeded.
     :vartype error: str or None
-    :ivar duration_ms: Wall-clock time spent evaluating this guardrail,
-        in milliseconds.
+    :ivar duration_ms: Wall-clock time spent evaluating this guardrail, in milliseconds.
     :vartype duration_ms: float or None
     """
 
     guardrail_id: int
     guardrail_name: str
-    is_blocking: bool
+    mode: str
+    fail_closed: bool = False
     priority: int
     findings: list[GuardrailFinding] = Field(default_factory=list)
     error: str | None = None
@@ -355,12 +372,7 @@ class GuardrailOutcome(BaseModel):
 
     @property
     def triggered(self) -> bool:
-        """Whether any finding for this guardrail triggered.
-
-        :returns: ``True`` if at least one entry in :attr:`findings` has
-            ``triggered=True``.
-        :rtype: bool
-        """
+        """Whether any finding for this guardrail triggered."""
         return any(f.triggered for f in self.findings)
 
 
@@ -371,8 +383,8 @@ class PipelineDisposition(str, Enum):
     :data:`smarter.apps.guardrail.services.pipeline._DISPOSITION_PRECEDENCE`
     for how multiple triggered guardrails are folded into one value.
 
-    :cvar ALLOWED: No guardrail triggered, or only shadow-mode
-        (``is_blocking=False``) guardrails triggered.
+    :cvar ALLOWED: No guardrail triggered, or only guardrails in monitor mode, or with
+        action ``LOG``, triggered.
     :cvar FLAGGED: A guardrail triggered with action ``FLAG``.
     :cvar REDACTED: A guardrail triggered with action ``REDACT``.
     :cvar TRANSFORMED: A guardrail triggered with action ``TRANSFORM``.
@@ -462,6 +474,7 @@ __all__ = [
     "Choice",
     "PostCompletionPayload",
     "TextSegment",
+    "GuardrailMatch",
     "GuardrailFinding",
     "GuardrailOutcome",
     "PipelineDisposition",

@@ -32,9 +32,7 @@ class GuardrailReverseNames:
 
     namespace = namespace
 
-    listview = to_snake_case(GuardrailListApiView.__name__)
     detailview = to_snake_case(GuardrailDetailView.__name__)
-
     listview = to_snake_case(GuardrailListView.__name__)
     listview_api = to_snake_case(GuardrailListApiView.__name__)
     listview_api_all = to_snake_case(GuardrailListApiView.__name__) + "_all"
@@ -56,17 +54,17 @@ urlpatterns = [
         name=GuardrailReverseNames.listview_api,
     ),
     path(
-        "react-integration/api/clone/<int:llmclient_id>/<str:new_name>/",
+        "react-integration/api/clone/<int:guardrail_id>/<str:new_name>/",
         GuardrailListApiCloneView.as_view(),
         name=GuardrailReverseNames.listview_api_clone,
     ),
     path(
-        "react-integration/api/delete/<int:llmclient_id>/",
+        "react-integration/api/delete/<int:guardrail_id>/",
         GuardrailListApiDeleteView.as_view(),
         name=GuardrailReverseNames.listview_api_delete,
     ),
     path(
-        "react-integration/api/rename/<int:llmclient_id>/<str:new_name>/",
+        "react-integration/api/rename/<int:guardrail_id>/<str:new_name>/",
         GuardrailListApiRenameView.as_view(),
         name=GuardrailReverseNames.listview_api_rename,
     ),

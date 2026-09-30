@@ -14,53 +14,50 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 class LLMClientGuardrails(TimestampedModel):
     """
-    Represents the set of callable guardrails that are available to a LLMClient instance within the Smarter platform.
+    The Guardrails that protect a LLMClient's prompts.
 
-    This model is used to define and manage the specific guardrails that an llmclient can access or invoke during its operation.
-    Each record in this model links an llmclient to a named guardrail, enabling fine-grained control over the llmclient's capabilities.
-    The available guardrails are defined by a fixed set of choices, such as "weather", "news", "prices", and "math".
-
-    By associating guardrails with llmclients, the platform allows for extensible and customizable llmclient behavior, supporting
-    use cases where different llmclients require access to different sets of features or integrations. This model is essential
-    for scenarios where llmclients need to perform actions, retrieve information, or interact with external APIs in a controlled
-    and auditable manner.
-
-    **Model Relationships**
-
-    - Each LLMClientGuardrails entry is linked to one :class:`LLMClient` instance.
-    - Each entry specifies a guardrail name from a predefined set of choices.
+    Each record links an LLMClient to a :class:`~smarter.apps.guardrail.models.Guardrail`, as
+    listed in the LLMClient manifest's ``spec.guardrails``. On each prompt, the linked, active
+    guardrails run on the user's message and the LLM's reply, in order of their priority.
 
     **Usage Example**
 
     .. code-block:: python
 
-        # Assign a guardrail to an llmclient
-        LLMClientGuardrails.objects.create(llmclient=my_llmclient, name="weather")
-
-        # List all guardrails available to an llmclient
-        guardrails = LLMClientGuardrails.objects.filter(llmclient=my_llmclient)
-
-    **Notes**
-
-    - The set of available guardrails is controlled by the ``CHOICES`` class attribute.
-    - This model is intended for internal use to manage and audit llmclient capabilities.
-    - Uniqueness is not enforced, so an llmclient may have multiple entries for the same guardrail if needed.
+        LLMClientGuardrails.objects.create(llmclient=my_llmclient, guardrail=my_guardrail)
+        guardrails = LLMClientGuardrails.guardrails_for(my_llmclient)
     """
 
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "LLMClient Guardrails"
+        unique_together = ("llmclient", "guardrail")
 
-    #: The LLMClient instance associated with this guardrail.
-    #: Example: LLMClient(id=1, name="my-llmclient")
+    #: The LLMClient that the guardrail protects.
     llmclient = models.ForeignKey(LLMClient, on_delete=models.CASCADE)
 
     guardrail = models.ForeignKey(
         Guardrail,
         on_delete=models.CASCADE,
-        related_name="guardrail",
+        related_name="llmclient_guardrails",
         help_text="The Guardrail.",
     )
+
+    @classmethod
+    def guardrails_for(cls, llmclient: LLMClient) -> list[Guardrail]:
+        """
+        Return the active Guardrails of a LLMClient, in order of priority and then id.
+
+        :param llmclient: The LLMClient.
+        :returns: The LLMClient's active guardrails.
+        :rtype: list[Guardrail]
+        """
+        return [
+            link.guardrail
+            for link in cls.objects.filter(llmclient=llmclient, guardrail__is_active=True)
+            .select_related("guardrail", "guardrail__user_profile__user")
+            .order_by("guardrail__priority", "guardrail__id")
+        ]
 
 
 __all__ = [

@@ -1,7 +1,8 @@
 """Smarter API Manifest - Guardrail.status."""
 
+import datetime
 import os
-from typing import ClassVar
+from typing import ClassVar, Optional
 
 from pydantic import Field
 
@@ -13,7 +14,12 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMGuardrailStatus(AbstractSAMStatusBase):
-    """Smarter API Guardrail Manifest - Status class."""
+    """
+    Smarter API Guardrail Manifest - Status class.
+
+    Read only. Besides ownership, it reports the LLMClients that use the guardrail, and its
+    events of the last 30 days.
+    """
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
@@ -23,4 +29,29 @@ class SAMGuardrailStatus(AbstractSAMStatusBase):
 
     username: str = Field(
         description=f"{class_identifier}.username: The Smarter user who created this {MANIFEST_KIND}. Read only.",
+    )
+
+    llmClients: Optional[list[str]] = Field(
+        default=None,
+        description=f"{class_identifier}.llmClients: the names of the LLMClients that use this {MANIFEST_KIND}. Read only.",
+    )
+
+    triggered: Optional[int] = Field(
+        default=None,
+        description=f"{class_identifier}.triggered: how many times this {MANIFEST_KIND} triggered in the last 30 days. Read only.",
+    )
+
+    blocked: Optional[int] = Field(
+        default=None,
+        description=f"{class_identifier}.blocked: how many prompts this {MANIFEST_KIND} blocked in the last 30 days. Read only.",
+    )
+
+    errors: Optional[int] = Field(
+        default=None,
+        description=f"{class_identifier}.errors: how many times this {MANIFEST_KIND} failed to run in the last 30 days. Read only.",
+    )
+
+    lastTriggered: Optional[datetime.datetime] = Field(
+        default=None,
+        description=f"{class_identifier}.lastTriggered: when this {MANIFEST_KIND} last triggered. Read only.",
     )

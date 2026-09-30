@@ -1,33 +1,23 @@
-"""Runtime pipeline for the Guardrail service.
+"""
+The runtime of the Guardrail service.
 
-The Harness calls into this package to evaluate an indefinite number
-of :class:`~smarter.apps.guardrail.models.Guardrail` rows against a
-pre-completion request and/or post-completion response, in priority
-order, folding their outcomes into a single verdict.
-
-Public surface:
-
-* :class:`~smarter.apps.guardrail.services.pipeline.GuardrailPipeline`
-  — the Harness-facing entry point.
-* :class:`~smarter.apps.guardrail.services.contracts.PipelineResult`
-  — what ``run_pre()``/``run_post()`` return.
-* :class:`~smarter.apps.guardrail.services.exceptions.GuardrailBlockedError`
-  — raised internally, rarely needed by callers.
-
-Everything else (``engine``, ``strategies``, ``actions``,
-``text_extraction``) is implementation detail the Harness shouldn't
-need to import directly.
+The prompt pipeline calls :class:`~smarter.apps.guardrail.services.pipeline.GuardrailPipeline`
+to run an LLMClient's guardrails on the user's message and the LLM's reply. Everything else
+(``engine``, ``strategies``, ``actions``, ``events`` and ``text_extraction``) is its
+implementation.
 """
 
 from smarter.apps.guardrail.services.exceptions import (
     GuardrailBlockedError,
     GuardrailConfigError,
+    GuardrailProviderError,
     GuardrailServiceError,
     GuardrailStrategyNotImplementedError,
 )
 from smarter.apps.guardrail.services.pipeline import GuardrailPipeline
 from smarter.apps.provider.services.text_completion.contracts import (
     GuardrailFinding,
+    GuardrailMatch,
     GuardrailOutcome,
     GuardrailStage,
     PipelineDisposition,
@@ -41,8 +31,10 @@ __all__ = [
     "GuardrailStage",
     "GuardrailOutcome",
     "GuardrailFinding",
+    "GuardrailMatch",
     "GuardrailServiceError",
     "GuardrailConfigError",
+    "GuardrailProviderError",
     "GuardrailStrategyNotImplementedError",
     "GuardrailBlockedError",
 ]

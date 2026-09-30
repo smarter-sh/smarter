@@ -1,64 +1,47 @@
 """Exceptions raised by the Guardrail service."""
 
-from smarter.apps.provider.services.text_completion.contracts import GuardrailFinding
-
 
 class GuardrailServiceError(Exception):
     """Base class for all guardrail-service errors."""
 
 
 class GuardrailConfigError(GuardrailServiceError):
-    """Raised for a :class:`~smarter.apps.guardrail.models.Guardrail` row.
+    """
+    Raised for a :class:`~smarter.apps.guardrail.models.Guardrail` whose configuration is.
 
-    with invalid or incomplete configuration for its
-    :class:`~smarter.apps.guardrail.models.MatchStrategy`.
+    invalid or incomplete for its strategy, e.g. ``strategy=regex`` without a ``pattern``.
 
-    For example, ``match_strategy=regex`` with an empty or invalid
-    ``pattern``, or ``match_strategy=semantic`` missing
-    ``config["reference_texts"]``.
+    Manifests are validated when they are applied, so this indicates a Guardrail that was
+    changed outside of a manifest, e.g. in the Django admin.
     """
 
 
 class GuardrailStrategyNotImplementedError(GuardrailServiceError):
-    """Raised when a Guardrail references a ``match_strategy`` for which.
+    """Raised when a Guardrail's strategy has no implementation."""
 
-    no strategy class is registered in
-    :mod:`smarter.apps.guardrail.services.strategies.registry`.
-    """
+
+class GuardrailProviderError(GuardrailServiceError):
+    """Raised when a strategy's call to an LLM provider fails, or returns an unusable result."""
 
 
 class GuardrailBlockedError(GuardrailServiceError):
-    """Raised internally to short-circuit execution when a blocking.
+    """
+    Raised by the prompt pipeline when an input guardrail blocks the user's message.
 
-    guardrail fires with ``action=BLOCK``.
-
-    Callers should generally prefer inspecting
-    :attr:`~smarter.apps.guardrail.services.contracts.PipelineResult.disposition`
-    over catching this — it exists mainly so action handlers can unwind
-    cleanly out of the per-guardrail evaluation loop.
-
-    :param finding: The finding that triggered the block.
-    :type finding: ~smarter.apps.guardrail.services.contracts.GuardrailFinding
-    :param fallback_message: The user-facing message to surface. Falls
-        back to a generic message if not given.
-    :type fallback_message: str or None
-
-    :ivar finding: The finding that triggered the block, as passed to
-        the constructor.
-    :vartype finding: ~smarter.apps.guardrail.services.contracts.GuardrailFinding
-    :ivar fallback_message: The resolved user-facing message.
-    :vartype fallback_message: str
+    :param message: The user-facing message to return instead of the LLM's reply.
+    :param guardrail_name: The name of the guardrail that blocked the message.
     """
 
-    def __init__(self, finding: GuardrailFinding, fallback_message: str | None = None):
-        self.finding = finding
-        self.fallback_message = fallback_message or "This request was blocked by a content guardrail."
-        super().__init__(self.fallback_message)
+    def __init__(self, message: str, guardrail_name: str | None = None):
+        self.message = message
+        self.guardrail_name = guardrail_name
+        super().__init__(message)
 
 
 __all__ = [
     "GuardrailServiceError",
     "GuardrailConfigError",
     "GuardrailStrategyNotImplementedError",
+    "GuardrailProviderError",
     "GuardrailBlockedError",
 ]

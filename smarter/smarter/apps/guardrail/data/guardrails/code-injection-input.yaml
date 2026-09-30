@@ -1,0 +1,28 @@
+---
+apiVersion: smarter.sh/v1
+kind: Guardrail
+metadata:
+  name: code_injection_input
+  description: Flags SQL and shell injection payloads, such as tautologies, stacked DROP statements, UNION
+    SELECT and chained rm -rf, in messages to assistants whose tools run queries or commands. It flags
+    rather than blocks, because developers legitimately ask about these.
+  version: 1.0.0
+  tags:
+  - security
+  - injection
+  - tools
+  annotations:
+  - smarter.sh/guardrail/builtin: 'true'
+spec:
+  config:
+    isActive: true
+    mode: enforce
+    stage: input
+    category: prompt_injection
+    strategy: regex
+    pattern: ('\s*or\s*'?1'?\s*=\s*'?1)|(;\s*drop\s+table)|(\bunion\s+(all\s+)?select\b)|(;\s*rm\s+-rf\s+/)|(\$\([^)]*\))
+    flags:
+    - IGNORECASE
+    action: flag
+    severity: 3
+    priority: 40

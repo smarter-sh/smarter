@@ -11,6 +11,7 @@ Models
    models/llmclient-custom-domain
    models/custom-domain-dns
    models/llmclient-functions
+   models/llmclient-guardrails
    models/llmclient-mcpclients
    models/llmclient-plugin
    models/llmclient-requests
