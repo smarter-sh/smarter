@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.0-alpha.21](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.20...v0.15.0-alpha.21) (2026-09-30)
+
+### Features
+
+* **mcpclient:** add experimental MCPClient for remote Model Context Protocol servers ([86c0ecd](https://github.com/smarter-sh/smarter/commit/86c0ecdc9c88d3490f1d1e3a88df584a8f9ee77a))
+
 ## [0.15.0-alpha.20](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.19...v0.15.0-alpha.20) (2026-09-30)
 
 ### Bug Fixes
