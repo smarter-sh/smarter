@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.0-alpha.28](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.27...v0.15.0-alpha.28) (2026-09-30)
+
+### Bug Fixes
+
+* incorrect camel casing in to_snake_case() ([3a4f1f0](https://github.com/smarter-sh/smarter/commit/3a4f1f054511e68925f1eeab4efb2c27cd8f5abf))
+
 ## [0.15.0-alpha.27](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.26...v0.15.0-alpha.27) (2026-09-30)
 
 ### Features
