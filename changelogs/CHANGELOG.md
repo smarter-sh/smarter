@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.0-alpha.20](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.19...v0.15.0-alpha.20) (2026-09-30)
+
+### Bug Fixes
+
+* add step 'Install MariaDB Connector/C' ([2ebcf64](https://github.com/smarter-sh/smarter/commit/2ebcf640aec9609a642813c83a8ce6c053c86d24))
+
 ## [0.15.0-alpha.19](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.18...v0.15.0-alpha.19) (2026-09-30)
 
 ### Bug Fixes
