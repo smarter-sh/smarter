@@ -33,9 +33,11 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Awaitable, Callable, Optional, TypeVar
 
 import anyio
+import anyio.to_thread
 import httpx2
 import mcp_types
 from mcp import Client
+from mcp.client import Transport
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
 
@@ -291,11 +293,18 @@ class MCPServerConnection:
             headers["Authorization"] = f"Bearer {self.credential()}"
         return headers
 
-    def server_target(self, http_client: httpx2.AsyncClient) -> Any:
+    def server_target(self, http_client: httpx2.AsyncClient) -> Transport:
         """
         Return what the MCP SDK's :class:`mcp.Client` connects to: the MCPClient's transport.
 
+        Both transports are async context managers that yield the SDK's ``TransportStreams``,
+        a (read stream, write stream) pair, which is the SDK's :class:`mcp.client.Transport`
+        protocol.
+
         :param http_client: The guarded httpx2 client, for the Streamable HTTP transport.
+        :returns: A :func:`~mcp.client.streamable_http.streamable_http_client` or
+            :func:`~mcp.client.sse.sse_client` context manager.
+        :rtype: mcp.client.Transport
         :raises SmarterMCPClientConfigurationError: If the transport is not supported.
         """
         url = self.mcpclient.endpoint_url or ""

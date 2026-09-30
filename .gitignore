@@ -34,6 +34,7 @@ service-account.b64
 
 # application local dev run-time data
 # -------------------------------------
+.mypy_cache
 .ruff_cache
 celerybeat-schedule
 mariadb-data
