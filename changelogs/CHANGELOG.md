@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.15.0-alpha.15](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.14...v0.15.0-alpha.15) (2026-09-30)
+
+### Bug Fixes
+
+* **plugin:** fix SQL injection, stale caches and manifest round trips in plugins ([533f0c5](https://github.com/smarter-sh/smarter/commit/533f0c54c421293a59bbdd94827d7b3abe83ee30))
+
 ## [0.15.0-alpha.14](https://github.com/smarter-sh/smarter/compare/v0.15.0-alpha.13...v0.15.0-alpha.14) (2026-09-28)
 
 ### Bug Fixes
