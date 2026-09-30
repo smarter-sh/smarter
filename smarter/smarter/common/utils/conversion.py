@@ -115,9 +115,7 @@ def to_camel_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
             if isinstance(value, dict) and is_recursive:
                 value = to_camel_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
             elif isinstance(value, list) and is_recursive:
-                value = [
-                    to_camel_case(item, convert_values=convert_values, is_recursive=is_recursive) for item in value
-                ]
+                value = to_camel_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
             elif convert_values and isinstance(value, str):
                 value = _convert_snake_to_camel(value)
             retval[key] = value
@@ -206,9 +204,7 @@ def to_snake_case(data: ConvertibleCaseType, convert_values: bool = False, is_re
             if isinstance(value, dict) and is_recursive:
                 value = to_snake_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
             elif isinstance(value, list) and is_recursive:
-                value = [
-                    to_snake_case(item, convert_values=convert_values, is_recursive=is_recursive) for item in value
-                ]
+                value = to_snake_case(data=value, convert_values=convert_values, is_recursive=is_recursive)
             elif convert_values and isinstance(value, str):
                 value = _convert_camel_to_snake(value)
             retval[key] = value
