@@ -60,7 +60,7 @@ const TableHeader = () => {
         <th className="d-none d-lg-table-cell width-100">Created</th>
         <th className="d-none d-lg-table-cell width-100">Updated</th>
         <th className="">Description</th>
-        <th className="">Type</th>
+        <th className="">Stage</th>
         <th className="d-none d-lg-table-cell">Category</th>
         <th className="d-none d-md-table-cell">Status</th>
         <th className="">Operations</th>
@@ -111,7 +111,7 @@ const GuardrailRow = React.memo(function GuardrailRow({
       </td>
       {/* Description */}
       <td className="">{guardrail.description}</td>
-      <td className="">{guardrail.guardrailType}</td>
+      <td className="">{guardrail.stage}</td>
       <td className="">{guardrail.category}</td>
       {/* Status */}
       <td className="d-none d-md-table-cell ">

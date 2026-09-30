@@ -1,6 +1,7 @@
 # pylint: disable=missing-class-docstring,W0212
 """Guardrail serializers."""
 
+from django.urls import reverse
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import MetaDataWithOwnershipModelSerializer
@@ -14,6 +15,10 @@ class GuardrailSerializer(MetaDataWithOwnershipModelSerializer):
     All fields are read only.
     """
 
+    manifest_url = serializers.SerializerMethodField()
+    ready = serializers.ReadOnlyField()
+    rfc1034_compliant_name = serializers.ReadOnlyField()
+
     class Meta:
         model = Guardrail
         fields = "__all__"
@@ -23,6 +28,15 @@ class GuardrailSerializer(MetaDataWithOwnershipModelSerializer):
         for field in fields.values():
             field.read_only = True
         return fields
+
+    def get_manifest_url(self, obj: Guardrail) -> str:
+        """The URL of the Guardrail's detail view, which renders its manifest."""
+        # pylint: disable=C0415
+        from .urls import GuardrailReverseNames
+
+        return reverse(
+            f"{GuardrailReverseNames.namespace}:{GuardrailReverseNames.detailview}", kwargs={"hashed_id": obj.hashed_id}
+        )
 
 
 class GuardrailEventSerializer(serializers.ModelSerializer):

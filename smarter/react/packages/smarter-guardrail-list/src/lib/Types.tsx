@@ -18,31 +18,38 @@ import type { SessionContext, Annotations, Tags, UserProfile } from "@smarter/co
 // ----------------------------------------------------------------------------
 // Guardrail Definition
 // ----------------------------------------------------------------------------
-export type GuardrailType = "input" | "output" | "both";
+export type GuardrailStage = "input" | "output" | "both";
 
 export type GuardrailCategory =
   | "pii"
+  | "secrets"
+  | "prompt_injection"
   | "jailbreak"
   | "toxicity"
+  | "self_harm"
   | "hallucination"
   | "off_topic"
   | "compliance"
+  | "formatting"
   | "custom";
 
-export type MatchStrategy =
+export type GuardrailStrategy =
   | "regex"
   | "keyword"
+  | "detector"
   | "semantic"
-  | "model"
+  | "moderation"
   | "llm_judge";
 
 export type GuardrailAction =
-  | "allow"
+  | "log"
   | "flag"
   | "redact"
   | "transform"
   | "block"
   | "escalate";
+
+export type GuardrailMode = "enforce" | "monitor";
 
 export type GuardrailConfig = {
   similarity_threshold?: number;
@@ -59,8 +66,6 @@ export type Guardrail = {
   updatedAt: string;
   name: string;
   userProfile: UserProfile;
-  baseUrl: string;
-  status: string;
   description: string;
   version: string;
   tags: Tags;
@@ -70,26 +75,26 @@ export type Guardrail = {
   rfc1034CompliantName: string | null;
 
   // --- classification ---
-  guardrailType: GuardrailType;
+  stage: GuardrailStage;
   category: GuardrailCategory;
 
   // --- detection logic ---
-  matchStrategy: MatchStrategy;
-  pattern: string;
-  config: GuardrailConfig;
+  strategy: GuardrailStrategy;
+  pattern: string | null;
+  config: GuardrailConfig | null;
+  threshold: number | null;
 
   // --- response behavior ---
   action: GuardrailAction;
+  replacement: string | null;
+  message: string | null;
   severity: number;
-  confidenceThreshold: number | null;
 
   // --- lifecycle ---
-  isActive: boolean;
-  isBlocking: boolean;
+  mode: GuardrailMode;
+  failClosed: boolean;
   priority: number;
-
-  // --- versioning / provenance ---
-  fallbackMessage: string;
+  isActive: boolean;
 };
 
 

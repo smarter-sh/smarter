@@ -54,9 +54,7 @@ function CardView({ sessionContext, objects, onRequery }: GuardrailCardViewProps
                 <table className="table table-bordered table-sm align-middle mb-0">
                   <tbody>
                     {renderDetailRow("ID", guardrail.id, "number")}
-                    {renderDetailRow("Status", guardrail.status)}
                     {renderDetailRow("Manifest URL", guardrail.manifestUrl, "url")}
-                    {renderDetailRow("Base URL", guardrail.baseUrl, "url")}
                     {renderDetailRow("Owner", guardrail.userProfile?.user?.username)}
                     {renderDetailRow("Owner Email", guardrail.userProfile?.user?.email)}
                     {renderDetailRow("Account Number", guardrail.userProfile?.account?.accountNumber)}
