@@ -542,7 +542,7 @@ uritemplate==4.2.0
     # via drf-yasg
 url-normalize==2.2.1
     # via requests-cache
-urllib3==2.6.3
+urllib3==2.8.0
     # via
     #   botocore
     #   mailchimp-marketing
